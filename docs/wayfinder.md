@@ -31,15 +31,20 @@
 
 ## In progress
 
-- **Phase 0 — 硬 fork** — paused on branch `openccx/phase-0-fork`（领先 `origin/main` 2 个提交）。
+- **Phase 0 — 硬 fork** — paused on branch `openccx/phase-0-fork`（领先 `origin/main` 3 个提交）。
   resume: `git log openccx/phase-0-fork`。
   已落地：`4c3555528` 删除 5,041 个 upstream 文件（devlog / docs-site / readme 多语言 /
-  docker+compose / CREDITS+SPONSORS+MAINTAINERS / deploy-docs.yml）；
-  `8fd9c9856` 改名 1,869 文件 + 24 条路径 + 包身份。
-  已验证：`bun run typecheck` 绿、`bun run src/cli/index.ts --version` 输出 `openccx 2.52.0`、
+  docker+compose / CREDITS+SPONSORS+MAINTAINERS / deploy-docs.yml）——
+  注意此提交非纯删除，`git add -A` 时吞进了改名进行中的 13 个文件；
+  `8fd9c9856` 改名 1,869 文件 + 24 条路径 + 包身份；
+  `3d04987e3` 修好改名漏掉的 upstream 包身份（`install.sh`/`install.ps1`、`src/update/index.ts`
+  的 `PKG`、`job.ts` 重装提示），并删掉 `release.yml` 与 `dev-version-bump.yml` ——
+  `.github/` 现已无任何远端写操作（已用 grep 验证）。
+  已验证：`bun run typecheck` 绿（tsc 加载 1,038 个 src 文件；注入 `__tsc_probe.ts` 可复现报错，
+  证明不是空跑）、`bun run src/cli/index.ts --version` 输出 `openccx 2.52.0`、
   上游 URL 与 MIT 版权行完整保留（`lidge-jun/opencodex` 23 文件、`opencodex.me` 17、
   `bitkyc08/opencodex` 32，畸形形态为 0）。
-  next: 拆 `.github/workflows/` 里写上游的动作，然后建仓库并推。
+  next: 建新仓库并推 —— 受 Waiting 的 `~/.opencodex` 决策阻塞。
 
 ## Waiting
 
@@ -52,6 +57,12 @@
   realpath 一致性校验会把**真实位置原本不存在**的目录名判为 junction/reparse 而拒绝。
   已用从未存在过的名字 `ZzqProbe9182` 证明同样被重定向，与本次改名无关。
   → 改名后的验收目前只到 typecheck + CLI 冒烟；跑测试要用**普通终端**（非本 App 容器）。
+  **第二次独立复现**（2026-09-12，本会话）：`bun test tests/ci-workflows/` 得
+  `0 pass / 34 fail / 34 error`，全部落在 `scripts/test-run-lock.ts:431`
+  `resolveDefaultTestRunLockPath`，栈顶同为 `src/codex/user-identity.ts:100`。
+  ⚠️ 更早一次同命令曾得「320 pass / 50 fail / 13 error」—— 那是在树改到一半、且该锁路径
+  尚可解析时测的，**数字无效，不可当基线**。这直接推翻了「Phase 0 验收＝测试全绿」的可行性，
+  Phase 1 的测试验收同样改用普通终端。
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。

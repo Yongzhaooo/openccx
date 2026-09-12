@@ -91,5 +91,15 @@
 
 ## Watching
 
+- **`structure:check` 有 33 处失败**（非阻塞，`ci.yml` **不**跑它，只在本地/prepush 之外手动跑）。
+  全是 `structure/*.md` 指向已删路径的散文引用：`devlog/` 17 处、`docs-site/` 10 处、
+  `.github/workflows/dev-version-bump.yml` 等。涉及 5 个文件：`ops/docs-and-release.md`、
+  `providers/chat-compat.md`、`providers/openai-tiers.md`、`providers/xai-grok.md`、`subagents.md`。
+  **刻意不修**：Phase 1-4 会继续删掉 `structure/` 正在描述的 adapter / provider / CLI，
+  现在修等于修四遍。留给 Phase 3 一并决定 `structure/` 这个上游治理层的去留。
+- **README.md 仍指向 upstream**：`@bitkyc08/opencodex` 的 npm 徽章与安装命令（第 7-13、84、190、350 行）、
+  `github.com/lidge-jun/opencodex` 的 LICENSE 链接。改名的机械替换没覆盖它（README 内容本身也需要重写，
+  不是替换能解决的）。推上去了不影响功能，但对外观感是错的。
+- **`scripts/release.ts` 已成死代码** —— 它派发的 `release.yml` 已被删。随 Phase 3 一起清。
 - `src/providers/registry.ts` 3665 行、`src/config.ts` 4385 行是全项目最大的两个上帝文件；
   Phase 2 会切到它们，届时评估是否值得拆分，**不要提前拆**。

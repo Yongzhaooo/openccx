@@ -67,6 +67,13 @@
 - **D5 Claude Desktop 与 Claude CLI 都保留**（2026-09-12 用户决定）。两个都是产品面。
   后果：`src/claude/desktop-*`（12 文件 / 2,096 行）**不删**，其经 `codex/desired-state` 与
   `codex/catalog` 的耦合保留。Phase 1 只删 Codex 专属面，不动 Claude 侧任何东西。
+- **Phase 1 切片 1 完成**（`86cd384cc`）：Codex 提示词面端到端删除 —— 实现 9 文件、
+  `codex-prompt-routes.ts` + 8 条路由注册、`occx inspect codex-prompt` + capabilities 条目、
+  GUI Prompt 面板（`codex-set-prompt.tsx`、`codex-set-tab.ts`、9 个 `components/codex-set/*`）、
+  契约测试清单条目、提示词 CSS、9 个 locale 的 `codexSet.tab.*`、11 个根测试 + 5 个 GUI 测试。
+  共删 36 / 改 23。`CodexSet` 页面保留为纯 Multi-auth，`app-routing` 不再认领 `codex-set/prompt`。
+  顺带清掉两处耦合残留：`ReplacePublisher` 的死成员 `"prompt-journal"`、`transition-state.ts`
+  指向已删文件的注释。
 
 ## Waiting
 
@@ -82,6 +89,9 @@
   ⚠️ 更早一次同命令曾得「320 pass / 50 fail / 13 error」—— 那是在树改到一半、且该锁路径
   尚可解析时测的，**数字无效，不可当基线**。这直接推翻了「Phase 0 验收＝测试全绿」的可行性，
   Phase 1 的测试验收同样改用普通终端。
+  **但 GUI 套件不受此限，可跑**（2026-09-12 实测）：`cd gui && bun test tests` 基线
+  **1979 pass / 0 fail**（248 文件 / 106 秒），`cd gui && bun run build` 亦通过。
+  所以凡带 GUI 的切片在本容器里**可以完整验收**；只有根套件必须换普通终端。
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。
@@ -94,15 +104,25 @@
    （Astra 修正：不再把「38 个文件」当删除指标）。每个切片同时处理
    **GUI 入口 / API / CLI / 启动停止钩子 / 实现 / 测试 / 文档**；实现和它的引用链一起走，
    不需要先提交「断引用」再提交「删文件」。
-   已知切片（都由 Codex 专属面撑着）：提示词与日志管理（`prompt-layers/*`、`log-guard/*`、
-   `prompt-journal`/`prompt-lock`/`prompt-text-probe`）、catalog 同步与注入（`sync`、`shim`、
-   `refresh`、`admission`、`catalog-admission`）、Codex 生命周期（`convergence*`、
-   `native-profile-api`、`app-server-restart-service`、`desktop-app-restart`、`autostart-health`）、
-   ChatGPT 额度与重置机器（`quota-auto-redeem`、`quota-auto-refresh`、`reset-credit-auto-redeem`）、
-   Codex 诊断与迁移（`plugins-doctor`、`cli-install-provenance`、`legacy-config-keys`、
-   `history-migration-guardian`、`retired-model-migration`、`occx-compaction-history`、`plan-from-token`）。
+
+   ✅ **切片 1「Codex 提示词面」已完成**（`86cd384cc`）。
+
+   剩余切片（都由 Codex 专属面撑着）：
+   - **Codex Set 页的 Multi-auth 半** —— `codex-set-multiauth.tsx` + `/api/codex-auth/*` + 账号池
+   - **日志保护** —— `log-guard/*`（9 文件）+ `codex-log-guard-doctor.ts` + `storage-log-guard-routes.ts`
+     + `StorageWorkspace` 面板（注意 `StorageWorkspace` 是共享宿主，只摘面板）
+   - **catalog 同步与注入** —— `sync`、`shim`、`refresh`、`admission`、`catalog-admission`
+   - **Codex 生命周期** —— `convergence*`、`native-profile-api`、`app-server-restart-service`、
+     `desktop-app-restart`、`autostart-health`
+   - **ChatGPT 额度与重置机器** —— `quota-auto-redeem`、`quota-auto-refresh`、`reset-credit-auto-redeem`
+   - **Codex 诊断与迁移** —— `plugins-doctor`、`cli-install-provenance`、`legacy-config-keys`、
+     `history-migration-guardian`、`retired-model-migration`、`occx-compaction-history`、`plan-from-token`
+
    ⚠️ **只删 dashboard 与 Codex CLI 调用点覆盖不全**：普通服务启动也调它们 ——
    `src/server/index.ts:1079` 注册额度刷新任务、`src/cli/index.ts:555` 启动历史守护。
+   ⚠️ **GUI 宿主常是共享的**（切片 1 的 `CodexSet` 宿主同时装 multiauth、`StorageWorkspace`
+   同时装日志面板）：只删属于该功能的面板，别顺手把宿主也端了。宿主若是纯 Codex 专属，
+   写成同一份切片或单列，别拆成两半留下畸形页面。
    *验收（Astra 修正版；typecheck + 余额查询不够）*：`bun run typecheck`；**GUI 构建与 GUI 测试**
    （根 `tsconfig.json` 只含 `src`，覆盖不到 `gui/`）；保留页面的实际显示验证；消息链路覆盖
    **流式与非流式、工具调用、错误处理**；启动/停止需验证**不再写 Codex 配置**。优先复用已有测试。

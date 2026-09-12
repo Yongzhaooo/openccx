@@ -74,24 +74,30 @@
   共删 36 / 改 23。`CodexSet` 页面保留为纯 Multi-auth，`app-routing` 不再认领 `codex-set/prompt`。
   顺带清掉两处耦合残留：`ReplacePublisher` 的死成员 `"prompt-journal"`、`transition-state.ts`
   指向已删文件的注释。
+- **⚠️ 更正：「本容器跑不了根测试套件」是错的**（2026-09-13，Astra 第二轮审阅后复核）。
+  `OCCX_TEST_NO_QUEUE=1` 可解锁，见 Waiting。我和 Astra 都曾把它记成环境铁律。
+  连带后果：**Phase 0 与切片 1 此前的验收全部只是结构性检查，行为从未被验证** ——
+  切片 1 因此**未被 Astra 通过审阅**。
+- **切片 1 审阅修补完成**（`56c875d29`）。Astra 第二轮指出四项遗漏，全部修复：
+  ① `skill:surface:check` 实测退出 1（生成的 `01_management_surface.md` 未同步 + `SKILL.md`
+  手写段落仍指导调用已删命令）—— **这条不受运行锁影响，我本可自己跑到**；
+  ② `tests/cli/cli-storage-inspect.test.ts` 仍断言已删命令成功，改为断言被拒绝且不发请求；
+  ③ `tests/server/system-routes.test.ts` 的 `"prompt-journal"` publisher 换成 `storage-cleanup`；
+  ④ `CodexSet.tsx` 摘掉没有 tablist 的 `role="tabpanel"`（保留 id）。
+  另按 Astra 指示把仍有效的跨平台 CI 契约（Windows 仅手动 dispatch、不在发货边界、
+  ~207 个既存失败被追踪而非 gate）迁入 `structure/ops/service-and-sidecars.md`。
+- **根因：Phase 0 改名漏了一处，正在打挂大量测试**（`tests/helpers/repo-root.ts:4`）。
+  `PACKAGE_NAME` 仍是 `@bitkyc08/opencodex`，改名只改了 `opencodex` 没改带 scope 的拼法，
+  于是 `repoRoot()` 找不到本包，**所有用它的测试全挂**。我在早先的 `@bitkyc08` 扫描里见过
+  这个字符串却没修。已改为 `openccx`。
 
 ## Waiting
 
-- **测试套件在本容器内无法运行** — 阻塞 Phase 0 的测试验收，但不阻塞 push。不是代码缺陷：
-  Claude Desktop 的 MSIX 容器把 `AppData\Local` 写入重定向到
-  `Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`，而 `src/codex/user-identity.ts:413` 的
-  realpath 一致性校验会把**真实位置原本不存在**的目录名判为 junction/reparse 而拒绝。
-  已用从未存在过的名字 `ZzqProbe9182` 证明同样被重定向，与本次改名无关。
-  → 改名后的验收目前只到 typecheck + CLI 冒烟；跑测试要用**普通终端**（非本 App 容器）。
-  **第二次独立复现**（2026-09-12，本会话）：`bun test tests/ci-workflows/` 得
-  `0 pass / 34 fail / 34 error`，全部落在 `scripts/test-run-lock.ts:431`
-  `resolveDefaultTestRunLockPath`，栈顶同为 `src/codex/user-identity.ts:100`。
-  ⚠️ 更早一次同命令曾得「320 pass / 50 fail / 13 error」—— 那是在树改到一半、且该锁路径
-  尚可解析时测的，**数字无效，不可当基线**。这直接推翻了「Phase 0 验收＝测试全绿」的可行性，
-  Phase 1 的测试验收同样改用普通终端。
-  **但 GUI 套件不受此限，可跑**（2026-09-12 实测）：`cd gui && bun test tests` 基线
-  **1979 pass / 0 fail**（248 文件 / 106 秒），`cd gui && bun run build` 亦通过。
-  所以凡带 GUI 的切片在本容器里**可以完整验收**；只有根套件必须换普通终端。
+- **根测试套件其实跑得起来**（2026-09-13 发现）—— 加 `OCCX_TEST_NO_QUEUE=1` 即可。
+  `scripts/test-run-lock.ts:189` 在该变量为 `1` 时直接跳过锁路径解析，于是绕开
+  `resolveDefaultTestRunLockPath` → `resolveWindowsRuntimeRoot` 的 junction 拒绝。
+  此后跑根测试一律 `OCCX_TEST_NO_QUEUE=1 bun test <file>`。
+  参见 Done 里的更正条目 —— 此前「本容器跑不了根套件」的结论是错的。
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。
@@ -108,7 +114,8 @@
    ✅ **切片 1「Codex 提示词面」已完成**（`86cd384cc`）。
 
    剩余切片（都由 Codex 专属面撑着）：
-   - **Codex Set 页的 Multi-auth 半** —— `codex-set-multiauth.tsx` + `/api/codex-auth/*` + 账号池
+   - **Codex Set 页的 Multi-auth 半** —— `codex-set-multiauth.tsx` + `/api/codex-auth/*` + 账号池。
+     账号池底层删除按下方专段的方法走，且**排在 provider 收敛之后**，不要现在动。
    - **日志保护** —— `log-guard/*`（9 文件）+ `codex-log-guard-doctor.ts` + `storage-log-guard-routes.ts`
      + `StorageWorkspace` 面板（注意 `StorageWorkspace` 是共享宿主，只摘面板）
    - **catalog 同步与注入** —— `sync`、`shim`、`refresh`、`admission`、`catalog-admission`
@@ -123,6 +130,21 @@
    ⚠️ **GUI 宿主常是共享的**（切片 1 的 `CodexSet` 宿主同时装 multiauth、`StorageWorkspace`
    同时装日志面板）：只删属于该功能的面板，别顺手把宿主也端了。宿主若是纯 Codex 专属，
    写成同一份切片或单列，别拆成两半留下畸形页面。
+
+   **账号池的删法（Astra 给的，取代我上轮的「不知道怎么办」）**：**按上游认证方式收缩，
+   不按客户端名称切。** DeepSeek 普通密钥请求的 `codexAccountMode` 是 `undefined`，
+   也不是 canonical ChatGPT forward transport，**不会进入账户选择分支**；但它仍穿过公共认证
+   包装，所以耦合确实存在、可消除，不能据此直接删账号文件。可用边界：
+   - `src/server/responses/core.ts:2118` 的 `resolveResponsesCodexAuth` —— 先把普通密钥
+     provider 的认证路径写明确，保留代理凭据过滤，解除对 Codex 认证上下文的依赖。
+   - ChatGPT 账户选择、401 刷新、额度记录、重试分支 —— 确认不再支持该上游后，**连同调用点
+     逐段删除**。
+   - `src/providers/quota.ts:3028` —— 删 ChatGPT 专属额度分支，**保留** DeepSeek /
+     opencode-go 的 reader。
+
+   动手前先查：模型映射、sidecar、fallback、compaction 是否仍能选到 ChatGPT。
+   **底层删除安排在 provider 收敛之后**，其间照常推进其他独立切片，**不需要先全面拆分 `core.ts`**。
+   D5 保留 Claude Desktop **不自动**要求保留 ChatGPT 上游。
    *验收（Astra 修正版；typecheck + 余额查询不够）*：`bun run typecheck`；**GUI 构建与 GUI 测试**
    （根 `tsconfig.json` 只含 `src`，覆盖不到 `gui/`）；保留页面的实际显示验证；消息链路覆盖
    **流式与非流式、工具调用、错误处理**；启动/停止需验证**不再写 Codex 配置**。优先复用已有测试。

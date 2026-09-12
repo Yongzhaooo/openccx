@@ -48,10 +48,22 @@
   可回退），并剔除陈旧的 `ocx.pid` / `runtime-port.json` / `system-env-port`（实测 pid 48880 已死）。
   `config.json` 6992B、`usage.jsonl` 154 行 / 279KB 完整；`auth.json` 两边都不存在，无需重登。
   注意 `~/.openccx` 里**没有** OAuth 凭据可继承，凭据在 `config.json` 内。
+  **「拷贝」不等于「共享」**（Astra 修正）：fork 默认用 `.openccx`，upstream 默认用 `.opencodex`，
+  两者不会互相踩。真正可能冲突的是 **Codex / Claude 客户端配置等外部资源**（`$CODEX_HOME/config.toml`、
+  Claude 侧配置库）—— 两个版本同时跑会争抢的是那些，不是状态目录。
 - **privacy-scan 回归的根因**（`a1ead2d66`）。扫描器的 bearer 模式要求 **24 字符以上**；
   改名把夹具 `ocx_data_test_admission` 从 **23** 推到 **24** 字符，正好越过门限，
   于是 `bun run privacy:scan`（`prepush` 一环）开始报 3 处测试夹具。
   在 `isAllowedBearerToken` 里按形状放行 `*_data_test_*`。
+- **`structure:check` 33 → 0**（`3e0f902b5`）。它**是 CI 门槛**：`tests/ci-workflows/structure-ssot.test.ts:114`
+  断言 `runStructureChecks(repoRoot())` 返回 `[]`。我先前记的「ci.yml 不跑它所以 CI 不红」是错的，已改。
+  做法：删掉整篇写 docs-site / devlog / 发布流程的 `structure/ops/docs-and-release.md`（它已无题材可写），
+  连带三个作废 ADR（0080 GitHub Pages、0081 容器配方、0083 治理 —— 对应功能均已删）。
+  仍活着的 ADR-0082 改归属 `ops/service-and-sidecars.md`，新章节的 present-tense 契约已对
+  `src/service.ts:2196/2203` 的 `exit /b 3` 分支核实过。`HISTORICAL_ROOTS` 保留 devlog/docs-site 是
+  **刻意**的 —— 那正是「被删的树持续被检查」的机制，别去清。
+- **Astra 独立审阅**（2026-09-12）推翻了本会话的三个数字与一个结论，均已修正：
+  可达性口径（见 Watching）、`structure:check` 的 CI 地位、Phase 1 的删除粒度与验收条件。
 
 ## Waiting
 
@@ -70,15 +82,32 @@
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。
+- **Claude Desktop 支持是否保留** — 独立范围问题，**不阻塞 Codex 专属面的删减**（Astra 指出）。
+  使用迹象：`~/.openccx/start-claude-desktop.ps1`（当天创建，跑 `occx claude desktop apply --static`）
+  与当天的 `desktop-backup-*`。但「脚本存在」只证明使用迹象，不等于「产品决定支持 Desktop」。
+  若砍掉：释放 `src/claude/desktop-*`（12 文件 / 2,096 行）及其 codex 耦合。需要一次明确决定。
 
 ## Next actions
 
 按顺序，每步有验收点。
 
-1. **Phase 1 — 删 Codex 客户端面**（按 D2）。*验收：* `bun run typecheck` 通过，且
-   `occx provider quota --refresh` 仍能取到 DeepSeek 余额。
-   测试验收**必须换普通终端**（本 App 容器跑不了，见 Waiting），所以别把「测试全绿」当成
-   本阶段的完成条件 —— 用 CLI 冒烟 + typecheck 代替。
+1. **Phase 1 — 删 Codex 客户端面**（按 D2）。**按完整功能切片删，不要按文件计数**
+   （Astra 修正：不再把「38 个文件」当删除指标）。每个切片同时处理
+   **GUI 入口 / API / CLI / 启动停止钩子 / 实现 / 测试 / 文档**；实现和它的引用链一起走，
+   不需要先提交「断引用」再提交「删文件」。
+   已知切片（都由 Codex 专属面撑着）：提示词与日志管理（`prompt-layers/*`、`log-guard/*`、
+   `prompt-journal`/`prompt-lock`/`prompt-text-probe`）、catalog 同步与注入（`sync`、`shim`、
+   `refresh`、`admission`、`catalog-admission`）、Codex 生命周期（`convergence*`、
+   `native-profile-api`、`app-server-restart-service`、`desktop-app-restart`、`autostart-health`）、
+   ChatGPT 额度与重置机器（`quota-auto-redeem`、`quota-auto-refresh`、`reset-credit-auto-redeem`）、
+   Codex 诊断与迁移（`plugins-doctor`、`cli-install-provenance`、`legacy-config-keys`、
+   `history-migration-guardian`、`retired-model-migration`、`occx-compaction-history`、`plan-from-token`）。
+   ⚠️ **只删 dashboard 与 Codex CLI 调用点覆盖不全**：普通服务启动也调它们 ——
+   `src/server/index.ts:1079` 注册额度刷新任务、`src/cli/index.ts:555` 启动历史守护。
+   *验收（Astra 修正版；typecheck + 余额查询不够）*：`bun run typecheck`；**GUI 构建与 GUI 测试**
+   （根 `tsconfig.json` 只含 `src`，覆盖不到 `gui/`）；保留页面的实际显示验证；消息链路覆盖
+   **流式与非流式、工具调用、错误处理**；启动/停止需验证**不再写 Codex 配置**。优先复用已有测试。
+   普通终端跑套件仍是最终验收；环境阻塞只能标「待验收」，不能用余额查询替代。
 2. **Phase 2 — 删其他 provider。** `src/adapters/registry.ts` 现为 8 个 provider 条目
    （codebuddy / anthropic / google / kiro / azure / cursor / devin / qoder），收敛到 DeepSeek
    需要的 2 条 wire；删 `cursor/`（~50 文件）、`devin/`、`devin-cli/`、`qoder/`、`codebuddy/`、
@@ -91,12 +120,13 @@
 
 ## Watching
 
-- **`structure:check` 有 33 处失败**（非阻塞，`ci.yml` **不**跑它，只在本地/prepush 之外手动跑）。
-  全是 `structure/*.md` 指向已删路径的散文引用：`devlog/` 17 处、`docs-site/` 10 处、
-  `.github/workflows/dev-version-bump.yml` 等。涉及 5 个文件：`ops/docs-and-release.md`、
-  `providers/chat-compat.md`、`providers/openai-tiers.md`、`providers/xai-grok.md`、`subagents.md`。
-  **刻意不修**：Phase 1-4 会继续删掉 `structure/` 正在描述的 adapter / provider / CLI，
-  现在修等于修四遍。留给 Phase 3 一并决定 `structure/` 这个上游治理层的去留。
+- **依赖可达性的正确口径**（本会话在这条轴上错了三次 —— 动手前先读这条）。
+  工具 `%TEMP%\reach.mjs`（约 60 行）。两种模式回答两个**不同**问题：静态边 = 「加载时是否拉起」；
+  `INCLUDE_DYNAMIC=1` = 「还有没有人用」——**删文件前该问的是后者**。
+  必须**排除 `import type`**（emit 时被擦除，不是运行时依赖）；把它算进去正是把数据面数字
+  从 78 抬到 100 的那个 bug。Astra 用 Bun 解析器独立核对：数据面静态 **78**、数据面+动态+Worker
+  **101**、全入口 **136**；我的工具得 78 / 98 / 133（差的 3 是未建模的 Worker 链）。
+  结论：**`src/codex/` 没有可整文件删除的死模块**；但「文件内部没有死代码」不成立，别扩大解读。
 - **README.md 仍指向 upstream**：`@bitkyc08/opencodex` 的 npm 徽章与安装命令（第 7-13、84、190、350 行）、
   `github.com/lidge-jun/opencodex` 的 LICENSE 链接。改名的机械替换没覆盖它（README 内容本身也需要重写，
   不是替换能解决的）。推上去了不影响功能，但对外观感是错的。

@@ -172,6 +172,11 @@ function isAllowedTokenLooking(file: string, token: string): boolean {
 
 function isAllowedBearerToken(file: string, token: string): boolean {
   if (!file.startsWith("tests/")) return false;
+  // `*_data_test_*` is the data-plane admission fixture sentinel, and it says it is fake.
+  // It is allowed by shape rather than by accident: the fork's `ocx` -> `occx` rename grew
+  // `ocx_data_test_admission` from 23 to 24 characters, which tripped the 24-char bearer
+  // threshold below and turned a passing fixture into a reported finding.
+  if (/^(?:occx|ocx)_data_test_[a-z_]+$/.test(token)) return true;
   return /^(?:access|stack|usage-debug)-token(?:-value)?-[A-Za-z0-9-]+$/.test(token);
 }
 

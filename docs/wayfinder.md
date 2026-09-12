@@ -31,26 +31,30 @@
 
 ## In progress
 
-- **Phase 0 — 硬 fork** — paused on branch `openccx/phase-0-fork`（领先 `origin/main` 3 个提交）。
-  resume: `git log openccx/phase-0-fork`。
-  已落地：`4c3555528` 删除 5,041 个 upstream 文件（devlog / docs-site / readme 多语言 /
-  docker+compose / CREDITS+SPONSORS+MAINTAINERS / deploy-docs.yml）——
-  注意此提交非纯删除，`git add -A` 时吞进了改名进行中的 13 个文件；
-  `8fd9c9856` 改名 1,869 文件 + 24 条路径 + 包身份；
-  `3d04987e3` 修好改名漏掉的 upstream 包身份（`install.sh`/`install.ps1`、`src/update/index.ts`
-  的 `PKG`、`job.ts` 重装提示），并删掉 `release.yml` 与 `dev-version-bump.yml` ——
-  `.github/` 现已无任何远端写操作（已用 grep 验证）。
-  已验证：`bun run typecheck` 绿（tsc 加载 1,038 个 src 文件；注入 `__tsc_probe.ts` 可复现报错，
-  证明不是空跑）、`bun run src/cli/index.ts --version` 输出 `openccx 2.52.0`、
-  上游 URL 与 MIT 版权行完整保留（`lidge-jun/opencodex` 23 文件、`opencodex.me` 17、
-  `bitkyc08/opencodex` 32，畸形形态为 0）。
-  next: 建新仓库并推 —— 受 Waiting 的 `~/.opencodex` 决策阻塞。
+（无。Phase 0 已完成并推送；Phase 1 尚未认领。）
+
+## Done (rolling)
+
+- **Phase 0 — 硬 fork 完成并推送**（2026-09-12）。新仓库 **https://github.com/Yongzhaooo/openccx**
+  （PUBLIC，默认分支 `main`，3,367 文件）；远端 `main` = `a1ead2d66`，已与本地 HEAD 核对一致。
+  remote 按硬 fork 结构重排：`origin` = 新仓库，`upstream` = `lidge-jun/opencodex`（只读参考）。
+  落地提交：`4c3555528` 删 5,041 个 upstream 文件（注意此提交非纯删除 —— `git add -A` 时吞进了
+  改名进行中的 13 个文件）；`8fd9c9856` 改名 `opencodex`→`openccx` / `ocx`→`occx`；
+  `3d04987e3` 修 upstream 包身份（install 脚本、`src/update` 的 `PKG`、重装提示）+ 删掉
+  `release.yml` 与 `dev-version-bump.yml`；`a1ead2d66` 修改名引入的 privacy-scan 回归。
+  验收：`bun run typecheck` 绿（tsc 加载 1,038 个 src 文件，注入探针可复现报错，非空跑）、
+  `bun run privacy:scan` 绿（带反向对照，见下）、`.github/` 无任何远端写操作（grep 验证）。
+- **状态目录已迁移**（2026-09-12）。`~/.opencodex` 整目录拷贝为 `~/.openccx`（旧目录保留未动，
+  可回退），并剔除陈旧的 `ocx.pid` / `runtime-port.json` / `system-env-port`（实测 pid 48880 已死）。
+  `config.json` 6992B、`usage.jsonl` 154 行 / 279KB 完整；`auth.json` 两边都不存在，无需重登。
+  注意 `~/.openccx` 里**没有** OAuth 凭据可继承，凭据在 `config.json` 内。
+- **privacy-scan 回归的根因**（`a1ead2d66`）。扫描器的 bearer 模式要求 **24 字符以上**；
+  改名把夹具 `ocx_data_test_admission` 从 **23** 推到 **24** 字符，正好越过门限，
+  于是 `bun run privacy:scan`（`prepush` 一环）开始报 3 处测试夹具。
+  在 `isAllowedBearerToken` 里按形状放行 `*_data_test_*`。
 
 ## Waiting
 
-- **`~/.opencodex` 已有真实状态** — 阻塞 push。实测 `~/.opencodex` 存在、`~/.openccx` 不存在，
-  说明本机已在用 upstream。改名会把 `config.json` / `auth.json` / `codex-accounts.json` /
-  `usage.jsonl` / 额度缓存全部孤立。需要决定：迁移旧状态，还是保留旧状态目录名。
 - **测试套件在本容器内无法运行** — 阻塞 Phase 0 的测试验收，但不阻塞 push。不是代码缺陷：
   Claude Desktop 的 MSIX 容器把 `AppData\Local` 写入重定向到
   `Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`，而 `src/codex/user-identity.ts:413` 的
@@ -71,25 +75,19 @@
 
 按顺序，每步有验收点。
 
-1. **Phase 0 — 硬 fork。** 建新仓库、改名、拆 `.github/workflows/` 里会写上游的动作：
-   `release.yml:348` `npm publish`、`:416` `git push origin refs/tags/*`、`:419` `gh release create`；
-   `deploy-docs.yml` 的 Pages 发布；`dev-version-bump.yml:211` `git push origin`。
-   *验收：* `npm pack` 不再产出 `@bitkyc08/opencodex`；仓库内无指向 upstream 的写操作。
-
-   实测规模（2026-09-12）：`openccx` 全仓库 20,872 处 / 3,170 文件，但其中
-   **`devlog/` 1,731 文件、`docs-site/` 337 文件、`readme/` 7 语言、CREDITS/SPONSORS/MAINTAINERS
-   共 106 处应当整片删除而非改名**；存活代码树只有 1,018 文件 / 8,783 处。先删后改，别先改名。
-2. **Phase 1 — 删 Codex 客户端面**（按 D2）。*验收：* `bun run typecheck` 与 `bun run test` 通过，
-   且 `occx provider quota --refresh` 仍能取到 DeepSeek 余额。
-3. **Phase 2 — 删其他 provider。** `src/adapters/registry.ts` 现为 8 个 provider 条目
+1. **Phase 1 — 删 Codex 客户端面**（按 D2）。*验收：* `bun run typecheck` 通过，且
+   `occx provider quota --refresh` 仍能取到 DeepSeek 余额。
+   测试验收**必须换普通终端**（本 App 容器跑不了，见 Waiting），所以别把「测试全绿」当成
+   本阶段的完成条件 —— 用 CLI 冒烟 + typecheck 代替。
+2. **Phase 2 — 删其他 provider。** `src/adapters/registry.ts` 现为 8 个 provider 条目
    （codebuddy / anthropic / google / kiro / azure / cursor / devin / qoder），收敛到 DeepSeek
    需要的 2 条 wire；删 `cursor/`（~50 文件）、`devin/`、`devin-cli/`、`qoder/`、`codebuddy/`、
    `kiro-*`、`google*`、`azure.ts`、`mimo-free.ts`、`ollama-native*`、`command-code.ts`，
    以及 `registry.ts` 里对应的 provider 行与跨厂商 model 表。
    *验收：* `src/adapters/` 只剩 `openai-chat.ts` / `openai-responses.ts` 及其共享叶子。
-4. **Phase 3 — 删 CLI 面**（`src/cli/` 现约 60 文件）。保留 start / status / provider /
+3. **Phase 3 — 删 CLI 面**（`src/cli/` 现约 60 文件）。保留 start / status / provider /
    quota / usage / claude / restore 所需，其余删除。*验收：* `occx --help` 的顶层命令面收敛。
-5. **Phase 4 — 跨平台收缩**（依赖 Waiting 中的 service/tray 决策）。
+4. **Phase 4 — 跨平台收缩**（依赖 Waiting 中的 service/tray 决策）。
 
 ## Watching
 

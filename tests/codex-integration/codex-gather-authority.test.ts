@@ -7,7 +7,7 @@ import {
 } from "../../src/codex/catalog";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { PROVIDER_REGISTRY, type ProviderModelDiscoverySpec } from "../../src/providers/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { withRegistryDiscovery } from "../helpers/provider-registry-discovery";
 
@@ -19,7 +19,7 @@ function deferred(): { readonly promise: Promise<void>; readonly resolve: () => 
   return { promise, resolve };
 }
 
-function togetherConfig(apiKey = "together-authority-secret"): OcxConfig {
+function togetherConfig(apiKey = "together-authority-secret"): OccxConfig {
   return withStubbedProviderFetch({
     port: 10100,
     defaultProvider: "together",
@@ -271,7 +271,7 @@ describe("catalog gather discovery-policy authority", () => {
       return Response.json({ data: [{ id: `model-${fetchCount}` }] });
     }) as typeof fetch;
 
-    const withEfforts = (efforts: readonly string[]): OcxConfig => {
+    const withEfforts = (efforts: readonly string[]): OccxConfig => {
       const config = togetherConfig();
       (config.providers.together as Record<string, unknown>).reasoningEfforts = [...efforts];
       return config;
@@ -296,7 +296,7 @@ describe("catalog gather discovery-policy authority", () => {
     }
   });
 
-  test("different combo retention sets cannot join another admission's flight (OCX-111)", async () => {
+  test("different combo retention sets cannot join another admission's flight (OCCX-111)", async () => {
     // retainConfiguredModelIds is part of providerGraphIdentity. Concurrent gathers that
     // share providers but differ in combo targets must not coalesce onto the wrong retain set.
     clearModelCache("or-flight");

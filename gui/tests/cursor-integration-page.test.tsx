@@ -31,7 +31,7 @@ function payload(overrides: Partial<CursorIntegrationStatus> = {}): CursorIntegr
   return {
     privateInference: { installed: true, path: "/Applications/Cursor Private Inference.app", version: "3.18.25" },
     regularCursor: { installed: true, path: "/Applications/Cursor.app" },
-    gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "placeholder", placeholder: "opencodex" },
+    gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "placeholder", placeholder: "openccx" },
     lastSeen: null,
     effortTable: { source: "bundle", version: "3.18.25", families: 16 },
     models: [
@@ -58,7 +58,7 @@ beforeEach(() => {
 
   requests = [];
   mountCount += 1;
-  apiBase = `http://ocx-cursor-${mountCount}.invalid`;
+  apiBase = `http://occx-cursor-${mountCount}.invalid`;
   statusResponse = () => json(payload());
   const mockFetch = (async (input: RequestInfo | URL) => {
     requests.push(String(input instanceof Request ? input.url : input));
@@ -107,7 +107,7 @@ test("reads its own status route and renders the gateway values with copy button
   expect(requests.some(url => url === `${apiBase}/api/native-integrations/cursor`)).toBe(true);
   const text = textOf();
   expect(text).toContain("http://127.0.0.1:10100/v1");
-  expect(text).toContain("opencodex");
+  expect(text).toContain("openccx");
   expect(text).toContain("3.18.25");
   expect(text).toContain("/Applications/Cursor Private Inference.app");
   const copies = Array.from(container.querySelectorAll("button")).filter(button => (button.textContent ?? "").trim() === "Copy");
@@ -161,10 +161,10 @@ test("no Cursor at all still hands over the gateway values", async () => {
 });
 
 test("credential mode links to the API Keys tab instead of inventing a key", async () => {
-  statusResponse = () => json(payload({ gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "credential", placeholder: "opencodex" } }));
+  statusResponse = () => json(payload({ gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "credential", placeholder: "openccx" } }));
   await mount();
   const text = textOf();
-  expect(text).toContain("One of your opencodex API keys");
+  expect(text).toContain("One of your openccx API keys");
   const copies = Array.from(container.querySelectorAll("button")).filter(button => (button.textContent ?? "").trim() === "Copy");
   expect(copies.length).toBe(1);
   const keysButton = Array.from(container.querySelectorAll("button")).find(button => (button.textContent ?? "").trim() === "API Keys");
@@ -187,7 +187,7 @@ test("Copy writes the value to the clipboard and flips the label", async () => {
   expect((copies[0]!.textContent ?? "").trim()).toBe("Copied");
   await act(async () => { copies[1]!.click(); });
   await act(async () => { await new Promise<void>(resolve => testWindow.setTimeout(resolve, 10)); });
-  expect(written).toEqual(["http://127.0.0.1:10100/v1", "opencodex"]);
+  expect(written).toEqual(["http://127.0.0.1:10100/v1", "openccx"]);
 });
 
 /**

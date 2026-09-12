@@ -18,13 +18,13 @@ import {
   stopUserCostOverlayReconciler,
   userCostOverlayInvalidReconcileCountForTests,
 } from "../../src/usage/user-cost-overlay-reconciler";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoRoot as resolveRepoRoot } from "../helpers/repo-root";
 
 const repoRoot = resolveRepoRoot();
 
-const DISK_CONFIG: OcxConfig = {
+const DISK_CONFIG: OccxConfig = {
   port: 0,
   hostname: "127.0.0.1",
   defaultProvider: "acme",
@@ -36,7 +36,7 @@ const DISK_CONFIG: OcxConfig = {
       models: ["model-x"],
     },
   },
-} as OcxConfig;
+} as OccxConfig;
 
 const OVERLAY = { input: 1, output: 2, cacheRead: 0.1, cacheWrite: 0 };
 
@@ -82,19 +82,19 @@ async function waitUntil(predicate: () => boolean, timeoutMs = 10_000): Promise<
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-overlay-live-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-overlay-live-"));
+  process.env.OPENCCX_HOME = testDir;
   writeFileSync(getConfigPath(), `${JSON.stringify(DISK_CONFIG, null, 2)}\n`, "utf8");
 });
 
 afterEach(() => {
   stopUserCostOverlayReconciler();
   resetUserCostOverlayReconcilerForTests();
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   resetPreservedDiskOnlyProvidersForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -107,8 +107,8 @@ describe("cross-process user cost overlay reconciliation", () => {
     startUserCostOverlayReconciler({ intervalMs: 20, liveConfig });
     const versionBefore = userCostOverlayVersion();
 
-    // Separate writer process: exactly what `ocx config set` does — a fresh
-    // module instance calling saveConfig() under the same OPENCODEX_HOME.
+    // Separate writer process: exactly what `occx config set` does — a fresh
+    // module instance calling saveConfig() under the same OPENCCX_HOME.
     const { exitCode, stderr } = await runChild(`
       const { loadConfig, saveConfig } = await import("./src/config.ts");
       const config = loadConfig();
@@ -133,7 +133,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // cannot erase the external edit.
     expect(liveConfig.providers.acme?.modelCosts).toEqual({ "model-x": OVERLAY });
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.acme?.modelCosts).toEqual({ "model-x": OVERLAY });
   });
 
@@ -142,11 +142,11 @@ describe("cross-process user cost overlay reconciliation", () => {
     startUserCostOverlayReconciler({ intervalMs: 20, liveConfig });
     const versionBefore = userCostOverlayVersion();
 
-    // Separate writer process: raw file edit, no ocx code at all.
+    // Separate writer process: raw file edit, no occx code at all.
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.acme.modelCosts = { "model-x": ${JSON.stringify(OVERLAY)} };
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -200,7 +200,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -222,7 +222,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // erase beta or its overlay.
     liveConfig.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta?.modelCosts).toEqual({ "beta-model": OVERLAY });
     expect(resolveMatchedPrice("beta", "beta-model")?.source).toBe("user");
   });
@@ -257,7 +257,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const edit = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.acme.modelCosts = { "model-x": { input: 3, output: 4, cacheRead: 0.3, cacheWrite: 0 } };
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -281,7 +281,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const add = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -299,7 +299,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const del = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       delete raw.providers.beta;
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -312,7 +312,7 @@ describe("cross-process user cost overlay reconciliation", () => {
 
     liveConfig.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
   });
 
@@ -324,7 +324,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -363,7 +363,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // disk-only after the preservation recompute on owner removal.
     liveConfigA.providers.acme!.models = ["model-x", "model-extra", "model-y"];
     saveConfig(liveConfigA);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta?.modelCosts).toEqual({ "beta-model": OVERLAY });
     expect(resolveMatchedPrice("beta", "beta-model")?.source).toBe("user");
 
@@ -379,7 +379,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -404,7 +404,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // provider from disk.
     liveConfigA.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfigA);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta?.modelCosts).toEqual({ "beta-model": OVERLAY });
     expect(resolveMatchedPrice("beta", "beta-model")?.source).toBe("user");
 
@@ -420,7 +420,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -441,7 +441,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const del = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       delete raw.providers.beta;
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -451,7 +451,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // An unrelated in-process save must NOT resurrect beta.
     liveConfig.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
   });
 
@@ -462,7 +462,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -481,7 +481,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const del = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       delete raw.providers.beta;
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -490,7 +490,7 @@ describe("cross-process user cost overlay reconciliation", () => {
 
     liveConfig.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
   });
 
@@ -501,7 +501,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const { exitCode, stderr } = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       raw.providers.beta = {
         adapter: "openai-chat",
@@ -522,7 +522,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     const del = await runChild(`
       import { readFileSync, writeFileSync } from "node:fs";
       import { join } from "node:path";
-      const path = join(process.env.OPENCODEX_HOME, "config.json");
+      const path = join(process.env.OPENCCX_HOME, "config.json");
       const raw = JSON.parse(readFileSync(path, "utf8"));
       delete raw.providers.beta;
       writeFileSync(path, JSON.stringify(raw, null, 2) + "\\n", "utf8");
@@ -532,7 +532,7 @@ describe("cross-process user cost overlay reconciliation", () => {
     // An unrelated in-process save must NOT resurrect beta.
     liveConfig.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfig);
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
   });
 });

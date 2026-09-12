@@ -4,15 +4,15 @@ import { createToolCallIdAllocator } from "./tool-call-id";
 import { createImageBudget, materializeInlineImage, MAX_ENCODED_BYTES_PER_IMAGE, artifactHttpUrl } from "../images/artifacts";
 import type {
   AdapterEvent,
-  OcxAssistantMessage,
-  OcxContentPart,
-  OcxParsedRequest,
-  OcxProviderConfig,
-  OcxProviderOpaqueToolCallMetadata,
-  OcxTextContent,
-  OcxToolCall,
-  OcxToolResultMessage,
-  OcxUsage,
+  OccxAssistantMessage,
+  OccxContentPart,
+  OccxParsedRequest,
+  OccxProviderConfig,
+  OccxProviderOpaqueToolCallMetadata,
+  OccxTextContent,
+  OccxToolCall,
+  OccxToolResultMessage,
+  OccxUsage,
 } from "../types";
 import { isAllowedToolChoice, namespacedToolName, resolveToolChoiceWireName, toolChoiceToolPredicate } from "../types";
 import { contentPartsToText, parseDataUrl } from "./image";
@@ -164,7 +164,7 @@ function resolveVertexApiKey(optKey?: string): string | undefined {
 
 /** Prefer Codex's stable opaque thread key; retain the existing deterministic fallback for clients
  * that omit it. The replay store hashes this value and never retains the raw session identifier. */
-function vertexReplaySessionId(parsed: OcxParsedRequest): string {
+function vertexReplaySessionId(parsed: OccxParsedRequest): string {
   const threadId = parsed._clientThreadId?.trim();
   return threadId || antigravitySessionId(parsed);
 }
@@ -195,7 +195,7 @@ function vertexReplaySessionId(parsed: OcxParsedRequest): string {
  * can be inlined; a remote URL has no mime type we can supply, so it is skipped here (the textual
  * result already carries an "[image]" marker via contentPartsToText).
  */
-function toolResultImageParts(content: string | OcxContentPart[]): unknown[] {
+function toolResultImageParts(content: string | OccxContentPart[]): unknown[] {
   if (typeof content === "string") return [];
   const parts: unknown[] = [];
   for (const p of content) {
@@ -230,14 +230,14 @@ function geminiTextPart(text: unknown): { text: string } | undefined {
  * actually carry (`toolResultImageParts` adds none). Fall back to the placeholder unless the content
  * has something representable.
  */
-function geminiToolResultText(content: string | OcxContentPart[]): string {
+function geminiToolResultText(content: string | OccxContentPart[]): string {
   if (typeof content === "string") return content || GEMINI_EMPTY_TOOL_OUTPUT_PLACEHOLDER;
   const hasContent = content.some(p => p.type !== "text" || p.text.length > 0);
   return hasContent ? contentPartsToText(content) : GEMINI_EMPTY_TOOL_OUTPUT_PLACEHOLDER;
 }
 
 function geminiToolResultParts(
-  msg: OcxToolResultMessage,
+  msg: OccxToolResultMessage,
   wireName: string,
   wireCallId: string,
 ): unknown[] {
@@ -259,12 +259,12 @@ function geminiMissingToolResultPart(wireName: string, wireCallId: string): unkn
   };
 }
 
-function geminiUnrepresentableToolCallPart(tc: OcxToolCall, wireName: string): unknown {
+function geminiUnrepresentableToolCallPart(tc: OccxToolCall, wireName: string): unknown {
   const args = typeof tc.arguments === "string" ? tc.arguments : JSON.stringify(tc.arguments);
   return { text: `[tool_use without a usable id: ${wireName}]\n${args}` };
 }
 
-function geminiOrphanToolResultParts(msg: OcxToolResultMessage): unknown[] {
+function geminiOrphanToolResultParts(msg: OccxToolResultMessage): unknown[] {
   const label = msg.toolName ? `${msg.toolName} (${msg.toolCallId})` : msg.toolCallId;
   return [
     { text: `[tool_result without adjacent tool_use: ${label}]\n${geminiToolResultText(msg.content)}` },
@@ -273,7 +273,7 @@ function geminiOrphanToolResultParts(msg: OcxToolResultMessage): unknown[] {
 }
 
 function messagesToGeminiFormat(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   identityModelId: string,
   stripRejectedClaudeSdkParagraph = false,
 ): { systemInstruction?: unknown; contents: unknown[]; replayedCallIds: string[] } {
@@ -296,11 +296,11 @@ function messagesToGeminiFormat(
   const callIds = createToolCallIdAllocator();
   for (const msg of parsed.context.messages) {
     if (msg.role === "assistant") {
-      for (const part of (msg as OcxAssistantMessage).content) {
-        if (part.type === "toolCall") callIds.reserve((part as OcxToolCall).id);
+      for (const part of (msg as OccxAssistantMessage).content) {
+        if (part.type === "toolCall") callIds.reserve((part as OccxToolCall).id);
       }
     } else if (msg.role === "toolResult") {
-      callIds.reserve((msg as OcxToolResultMessage).toolCallId);
+      callIds.reserve((msg as OccxToolResultMessage).toolCallId);
     }
   }
   for (let i = 0; i < parsed.context.messages.length; i++) {
@@ -312,7 +312,7 @@ function messagesToGeminiFormat(
           contents.push({ role: "user", parts: [{ text: msg.content || GEMINI_EMPTY_PLACEHOLDER }] });
         } else {
           const parts: unknown[] = [];
-          for (const p of msg.content as OcxContentPart[]) {
+          for (const p of msg.content as OccxContentPart[]) {
             if (p.type === "image") {
               const data = parseDataUrl(p.imageUrl);
               // Gemini takes base64 via inline_data; a remote URL needs a mime type we don't have, so
@@ -336,15 +336,15 @@ function messagesToGeminiFormat(
         break;
       }
       case "assistant": {
-        const aMsg = msg as OcxAssistantMessage;
+        const aMsg = msg as OccxAssistantMessage;
         const parts: unknown[] = [];
         const toolCalls: Array<{ wireCallId: string; wireName: string }> = [];
         for (const p of aMsg.content) {
           if (p.type === "text") {
-            const textPart = geminiTextPart((p as OcxTextContent).text);
+            const textPart = geminiTextPart((p as OccxTextContent).text);
             if (textPart) parts.push(textPart);
           } else if (p.type === "toolCall") {
-            const tc = p as OcxToolCall;
+            const tc = p as OccxToolCall;
             // Preserve the thought signature on the function-call part so Antigravity/Gemini-3
             // reasoning continuity survives history-driven (stateless) turns, not just same-process
             // streaming covered by the replay cache. Only forward a REAL upstream signature — the
@@ -391,11 +391,11 @@ function messagesToGeminiFormat(
           // function-call turn. Replayed histories can be interrupted, reversed, duplicated, or
           // contain an orphan result; repair only this wire boundary without inventing success.
           const requiredIds = new Set(toolCalls.map(call => call.wireCallId));
-          const resultsById = new Map<string, OcxToolResultMessage>();
-          const orphanResults: OcxToolResultMessage[] = [];
+          const resultsById = new Map<string, OccxToolResultMessage>();
+          const orphanResults: OccxToolResultMessage[] = [];
           let j = i + 1;
           while (j < parsed.context.messages.length && parsed.context.messages[j].role === "toolResult") {
-            const result = parsed.context.messages[j] as OcxToolResultMessage;
+            const result = parsed.context.messages[j] as OccxToolResultMessage;
             const wireResultId = callIds.lookup(result.toolCallId);
             if (wireResultId !== undefined && requiredIds.has(wireResultId) && !resultsById.has(wireResultId)) {
               resultsById.set(wireResultId, result);
@@ -423,7 +423,7 @@ function messagesToGeminiFormat(
         // A standalone functionResponse is invalid without an immediately preceding matching
         // functionCall batch. Preserve the result as explicit user text (plus any representable
         // image siblings) rather than manufacturing a successful call or sending a 400-prone shape.
-        contents.push({ role: "user", parts: geminiOrphanToolResultParts(msg as OcxToolResultMessage) });
+        contents.push({ role: "user", parts: geminiOrphanToolResultParts(msg as OccxToolResultMessage) });
         break;
       }
     }
@@ -444,7 +444,7 @@ function messagesToGeminiFormat(
   return { systemInstruction, contents, replayedCallIds };
 }
 
-function toolsToGeminiFormat(parsed: OcxParsedRequest): unknown[] | undefined {
+function toolsToGeminiFormat(parsed: OccxParsedRequest): unknown[] | undefined {
   if (!parsed.context.tools?.length) return undefined;
   const tools = isAllowedToolChoice(parsed.options.toolChoice)
     ? parsed.context.tools.filter(toolChoiceToolPredicate(parsed.options.toolChoice, parsed.context.tools))
@@ -465,7 +465,7 @@ function toolsToGeminiFormat(parsed: OcxParsedRequest): unknown[] | undefined {
  * so the common case is byte-identical. The allowedTools variant already filters the
  * declarations in toolsToGeminiFormat; only its "required" half needs a wire mode.
  */
-function toolChoiceToGeminiToolConfig(parsed: OcxParsedRequest): Record<string, unknown> | undefined {
+function toolChoiceToGeminiToolConfig(parsed: OccxParsedRequest): Record<string, unknown> | undefined {
   const choice = parsed.options.toolChoice;
   if (!choice || choice === "auto") return undefined;
   if (choice === "none") return { functionCallingConfig: { mode: "NONE" } };
@@ -481,7 +481,7 @@ function toolChoiceToGeminiToolConfig(parsed: OcxParsedRequest): Record<string, 
   };
 }
 
-function usageFromGemini(usage: Record<string, number> | undefined): OcxUsage | undefined {
+function usageFromGemini(usage: Record<string, number> | undefined): OccxUsage | undefined {
   if (!usage) return undefined;
   return {
     inputTokens: usage.promptTokenCount ?? 0,
@@ -557,7 +557,7 @@ function googlePartThoughtSignature(part: GoogleResponsePart): string | undefine
 function googleToolCallMetadataFromPart(
   part: GoogleResponsePart,
   fallbackSignature?: string,
-): { providerMetadata: OcxProviderOpaqueToolCallMetadata } | undefined {
+): { providerMetadata: OccxProviderOpaqueToolCallMetadata } | undefined {
   const signature = googlePartThoughtSignature(part) ?? fallbackSignature;
   if (!isLikelyRealThoughtSignature(signature)) return undefined;
   return { providerMetadata: { google: { thoughtSignature: signature } } };
@@ -717,7 +717,7 @@ function invalidGoogleShapeEvent(
   };
 }
 
-export function createGoogleAdapter(provider: OcxProviderConfig): ProviderAdapter {
+export function createGoogleAdapter(provider: OccxProviderConfig): ProviderAdapter {
   // Per-request closure: resolveAdapter builds a fresh adapter per request (server.ts), so buildRequest
   // can stash the CCA model/session for parseStream's reasoning-replay observation.
   let antigravityModel: string | undefined;
@@ -729,7 +729,7 @@ export function createGoogleAdapter(provider: OcxProviderConfig): ProviderAdapte
   let vertexReplaySession: string | undefined;
   let restoreGoogleToolName = (name: string): string => name;
   let lastInjectedCallIds: string[] = [];
-  let lastReasoningReplayScope: OcxParsedRequest["_reasoningReplayScope"];
+  let lastReasoningReplayScope: OccxParsedRequest["_reasoningReplayScope"];
 
   // Conservative batch invalidation: upstream Gemini/Antigravity errors (e.g.
   // "Function call is missing a thought_signature in functionCall parts") do not specify which
@@ -785,7 +785,7 @@ export function createGoogleAdapter(provider: OcxProviderConfig): ProviderAdapte
         }
       : {}),
 
-    async buildRequest(parsed: OcxParsedRequest) {
+    async buildRequest(parsed: OccxParsedRequest) {
       const routedModelId = provider.googleMode === "cloud-code-assist"
         ? resolveAntigravityEffortWireModel(
             parsed.modelId,
@@ -851,12 +851,12 @@ export function createGoogleAdapter(provider: OcxProviderConfig): ProviderAdapte
       if (provider.googleMode === "cloud-code-assist") {
         // Google Antigravity (Cloud Code Assist): wrap the flat Gemini body in the CCA envelope.
         const token = provider.apiKey?.trim();
-        if (!token) throw new Error("google-antigravity oauth token missing — run ocx login google-antigravity");
+        if (!token) throw new Error("google-antigravity oauth token missing — run occx login google-antigravity");
         const base = provider.baseUrl?.trim();
         if (!base) throw new Error("google-antigravity requires a non-empty baseUrl");
         const url = `${base}/v1internal:${method}${streamParam}`;
         const project = provider.project;
-        if (!project) throw new Error("Antigravity requires a discovered Cloud Code Assist project id (re-run `ocx login google-antigravity`).");
+        if (!project) throw new Error("Antigravity requires a discovered Cloud Code Assist project id (re-run `occx login google-antigravity`).");
         const sessionId = antigravitySessionId(parsed);
         const mappedEffort = mapReasoningEffort(provider, parsed.modelId, parsed.options.reasoning);
         const { wireModelId, thinkingLevel } = resolveAntigravityEffortWireModel(
@@ -993,7 +993,7 @@ export function createGoogleAdapter(provider: OcxProviderConfig): ProviderAdapte
       const budgetEncoder = new TextEncoder();
       let buffer = "";
       let bufferBytes = 0;
-      let pendingUsage: OcxUsage | undefined;
+      let pendingUsage: OccxUsage | undefined;
       let toolCallsStarted = 0;
       let lastFinishReason: string | undefined;
       let sawAnyFrame = false;

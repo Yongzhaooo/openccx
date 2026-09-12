@@ -6,7 +6,7 @@ import type { AdapterRequest } from "../../src/adapters/base";
 import { configuredReasoningEfforts, mapReasoningEffort, sanitizeCodexReasoningEfforts } from "../../src/reasoning-effort";
 import { routeModel } from "../../src/router";
 import { resolveWireProtocolOverride } from "../../src/server/adapter-resolve";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 function nativeTemplate(): Record<string, unknown> {
   return {
@@ -25,7 +25,7 @@ function nativeTemplate(): Record<string, unknown> {
   };
 }
 
-function parsed(modelId: string, providerOptions: OcxParsedRequest["options"]): OcxParsedRequest {
+function parsed(modelId: string, providerOptions: OccxParsedRequest["options"]): OccxParsedRequest {
   return {
     modelId,
     context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] },
@@ -34,15 +34,15 @@ function parsed(modelId: string, providerOptions: OcxParsedRequest["options"]): 
   };
 }
 
-function buildBody(provider: OcxProviderConfig, modelId: string, options: OcxParsedRequest["options"]): Record<string, unknown> {
+function buildBody(provider: OccxProviderConfig, modelId: string, options: OccxParsedRequest["options"]): Record<string, unknown> {
   const req = buildChatRequest(provider, modelId, options);
   return JSON.parse(req.body as string) as Record<string, unknown>;
 }
 
 function buildChatRequest(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
-  options: OcxParsedRequest["options"],
+  options: OccxParsedRequest["options"],
 ): AdapterRequest {
   return createOpenAIChatAdapter(provider).buildRequest(parsed(modelId, options)) as AdapterRequest;
 }
@@ -64,7 +64,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Z.AI GLM-5.2 keeps xhigh and max as distinct upstream efforts", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.z.ai/api/coding/paas/v4",
       modelReasoningEfforts: { "glm-5.2": ["low", "medium", "high", "xhigh", "max"] },
@@ -76,7 +76,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("low/medium/high-only models clamp stale xhigh and max requests to high", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.neuralwatt.com/v1",
       reasoningEfforts: ["low", "medium", "high"],
@@ -100,7 +100,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("xAI grok-4.6 forwards xhigh while grok-4.5 still clamps it to high", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xai",
       providers: {
@@ -129,7 +129,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("xAI grok-4.6 preserves an explicit narrower ladder and provider-wide downgrade map", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xai",
       providers: {
@@ -157,7 +157,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Neuralwatt GLM-5.2 sends direct max and preserves reasoning history", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.neuralwatt.com/v1",
       modelReasoningEfforts: { "glm-5.2": ["low", "medium", "high", "xhigh", "max"] },
@@ -186,7 +186,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("DeepSeek V4 thinking models replay reasoning_content beside tool calls", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "deepseek",
       providers: {
@@ -240,7 +240,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("DeepSeek legacy reasoner does not inherit V4 thinking-mode history replay", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "deepseek",
       providers: {
@@ -277,7 +277,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Kimi K2.7 Code does not receive unsupported OpenAI reasoning/sampling controls", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.moonshot.ai/v1",
       noReasoningModels: ["kimi-k2.7-code"],
@@ -306,7 +306,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Kimi K3 context aliases share the k3 wire id and normalize the documented effort tiers", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "kimi",
       providers: {
@@ -355,7 +355,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Kimi K3 stale max-only configs self-heal from the registry map without mutation", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "kimi",
       providers: {
@@ -378,7 +378,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat omits tool_choice when there are no tools", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.neuralwatt.com/v1",
     };
@@ -390,7 +390,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat omits tools and tool_choice when tool_choice is none", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.neuralwatt.com/v1",
     };
@@ -411,7 +411,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat advertises only the named tool when the provider downgrades the selector", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.moonshot.ai/v1",
       autoToolChoiceOnlyModels: ["kimi-k2.7-code"],
@@ -439,7 +439,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat filters tools for Responses allowed_tools choices", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.neuralwatt.com/v1",
     };
@@ -463,7 +463,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat accepts dot-style namespaced allowed_tools from Responses", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.umans.ai/v1",
     };
@@ -489,7 +489,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("OpenAI-compatible chat accepts a bare allowed_tools name for a unique namespace tool", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.umans.ai/v1",
     };
@@ -515,7 +515,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("named namespaced tool_choice resolves to the chat wire name", async () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.umans.ai/v1",
     };
@@ -552,7 +552,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Anthropic filters dot-style namespaced allowed_tools without dropping the tool", async () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "anthropic",
       baseUrl: "https://api.anthropic.com/v1",
       apiKey: "test-key",
@@ -579,7 +579,7 @@ describe("provider-specific reasoning effort mapping", () => {
   });
 
   test("Anthropic accepts a bare allowed_tools name for a unique namespace tool", async () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "anthropic",
       baseUrl: "https://api.anthropic.com/v1",
       apiKey: "test-key",
@@ -627,7 +627,7 @@ describe("provider-specific reasoning effort mapping", () => {
 });
 
 describe("thinking-toggle models (260707)", () => {
-  const toggleProvider: OcxProviderConfig = {
+  const toggleProvider: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://opencode.ai/zen/go/v1",
     thinkingToggleModels: ["mimo-v2.5", "glm-5"],
@@ -673,7 +673,7 @@ describe("thinking-toggle models (260707)", () => {
       port: 10100,
       defaultProvider: "opencode-go",
       providers: { "opencode-go": { adapter: "openai-chat", baseUrl: "https://opencode.ai/zen/go/v1", apiKey: "k" } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = routeModel(config, "opencode-go/mimo-v2.5");
     expect(route.provider.thinkingToggleModels).toContain("mimo-v2.5");
     expect(route.provider.modelReasoningEfforts?.["mimo-v2.5"]).toEqual(["low", "medium", "high", "xhigh", "max"]);
@@ -716,7 +716,7 @@ describe("thinking-toggle models (260707)", () => {
 });
 
 describe("Qwen reasoning wire contracts", () => {
-  const budgetProvider: OcxProviderConfig = {
+  const budgetProvider: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://api.neuralwatt.com/v1",
     thinkingBudgetModels: ["qwen3.5-397b"],
@@ -769,7 +769,7 @@ describe("Qwen reasoning wire contracts", () => {
       port: 10100,
       defaultProvider: "opencode-go",
       providers: { "opencode-go": { adapter: "openai-chat", baseUrl: "https://opencode.ai/zen/go/v1", apiKey: "k" } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = routeModel(config, "opencode-go/qwen3.7-max");
 
     expect(route.provider.adapter).toBe("openai-chat");
@@ -795,7 +795,7 @@ describe("Qwen reasoning wire contracts", () => {
           reasoningEffortMap: { xhigh: "max" },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = routeModel(config, "alibaba-token-plan/qwen3.8-max");
 
     expect(route.provider.modelInputModalities?.[route.modelId]).toEqual(["text", "image"]);
@@ -840,7 +840,7 @@ describe("Qwen reasoning wire contracts", () => {
           modelReasoningEffortMap: { "QWEN3.8-MAX": { medium: "high" } },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = routeModel(config, "alibaba-token-plan/qwen3.8-max");
 
     expect(route.provider.thinkingBudgetModels).toEqual([
@@ -859,7 +859,7 @@ describe("Qwen reasoning wire contracts", () => {
   });
 
   test("opencode-go Qwen models are no longer pinned to the Anthropic wire", () => {
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://opencode.ai/zen/go/v1" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://opencode.ai/zen/go/v1" };
 
     expect(resolveWireProtocolOverride("opencode-go", "qwen3.7-max", provider).adapter).toBe("openai-chat");
     expect(resolveWireProtocolOverride("opencode-go", "minimax-m3", provider).adapter).toBe("anthropic");
@@ -870,7 +870,7 @@ describe("Qwen reasoning wire contracts", () => {
       port: 10100,
       defaultProvider: "neuralwatt",
       providers: { neuralwatt: { adapter: "openai-chat", baseUrl: "https://api.neuralwatt.com/v1", apiKey: "k" } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = routeModel(config, "neuralwatt/qwen3.5-397b");
 
     expect(route.provider.thinkingBudgetModels).toContain("qwen3.5-397b");
@@ -879,7 +879,7 @@ describe("Qwen reasoning wire contracts", () => {
 });
 
 describe("ultra reasoning effort (upstream codex-rs parity)", () => {
-  const base: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://provider.example/v1" };
+  const base: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://provider.example/v1" };
 
   test("sanitize accepts ultra, dedupes, and orders it above max", () => {
     expect(sanitizeCodexReasoningEfforts(["ultra", "low", "max", "ultra"])).toEqual(["low", "max", "ultra"]);
@@ -928,10 +928,10 @@ describe("ultra reasoning effort (upstream codex-rs parity)", () => {
 });
 
 describe("stale reasoning-ladder self-heal", () => {
-  const base: OcxProviderConfig = { baseUrl: "https://x", apiKey: "k" };
+  const base: OccxProviderConfig = { baseUrl: "https://x", apiKey: "k" };
 
   test("ladder stopping at xhigh gains max when the wire map routes xhigh -> max", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       ...base,
       modelReasoningEfforts: { "glm-5.2": ["low", "medium", "high", "xhigh"] },
       modelReasoningEffortMap: { "glm-5.2": { low: "high", medium: "high", high: "high", xhigh: "max", max: "max" } },
@@ -942,7 +942,7 @@ describe("stale reasoning-ladder self-heal", () => {
   });
 
   test("thinking-toggle ladders can advertise five steps while the map emits enabled, never max", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       ...base,
       modelReasoningEfforts: { "mimo-v2.5": ["low", "medium", "high", "xhigh", "max"] },
       modelReasoningEffortMap: { "mimo-v2.5": { low: "disabled", medium: "enabled", high: "enabled", xhigh: "enabled", max: "enabled" } },
@@ -951,12 +951,12 @@ describe("stale reasoning-ladder self-heal", () => {
   });
 
   test("no wire map means no heal — an xhigh-top ladder without max evidence is preserved", () => {
-    const prov: OcxProviderConfig = { ...base, modelReasoningEfforts: { m: ["low", "medium", "high", "xhigh"] } };
+    const prov: OccxProviderConfig = { ...base, modelReasoningEfforts: { m: ["low", "medium", "high", "xhigh"] } };
     expect(configuredReasoningEfforts(prov, "m")).toEqual(["low", "medium", "high", "xhigh"]);
   });
 
   test("Codex-native mapped values restore multiple missing tiers but wire sentinels stay hidden", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       ...base,
       modelReasoningEfforts: { k3: ["max"] },
       modelReasoningEffortMap: {
@@ -967,7 +967,7 @@ describe("stale reasoning-ladder self-heal", () => {
   });
 
   test("an intentional empty ladder stays empty even when a wire map exists", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       ...base,
       modelReasoningEfforts: { model: [] },
       modelReasoningEffortMap: { model: { low: "low", high: "high" } },
@@ -976,7 +976,7 @@ describe("stale reasoning-ladder self-heal", () => {
   });
 
   test("per-effort omission sentinel (__omit__) drops reasoning_effort from the wire (#2356)", () => {
-    const ollamaProv: OcxProviderConfig = {
+    const ollamaProv: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "http://localhost:11434/v1",
       modelReasoningEfforts: {
@@ -1003,7 +1003,7 @@ describe("stale reasoning-ladder self-heal", () => {
     expect(mapReasoningEffort(ollamaProv, "qwen3.8-uncensored:27b-q4", "low")).toBe("low");
     expect(mapReasoningEffort(ollamaProv, "qwen3.8-uncensored:27b-q4", "medium")).toBe("medium");
 
-    const fallbackProv: OcxProviderConfig = {
+    const fallbackProv: OccxProviderConfig = {
       ...ollamaProv,
       modelReasoningEfforts: {
         "qwen3.8-uncensored:27b-q4": ["low", "high"],
@@ -1021,7 +1021,7 @@ describe("stale reasoning-ladder self-heal", () => {
       stream: false,
       context: { messages: [{ role: "user", content: "deep thinking" }] },
       options: { reasoning: "max" },
-    } as OcxParsedRequest);
+    } as OccxParsedRequest);
     const bodyMax = JSON.parse(reqMax.body as string);
     expect(bodyMax.reasoning_effort).toBeUndefined();
     expect(bodyMax).not.toHaveProperty("reasoning_effort");
@@ -1032,7 +1032,7 @@ describe("stale reasoning-ladder self-heal", () => {
       stream: false,
       context: { messages: [{ role: "user", content: "fast turn" }] },
       options: { reasoning: "low" },
-    } as OcxParsedRequest);
+    } as OccxParsedRequest);
     const bodyLow = JSON.parse(reqLow.body as string);
     expect(bodyLow.reasoning_effort).toBe("low");
   });

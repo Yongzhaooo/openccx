@@ -14,7 +14,7 @@ let root: string;
 let store: IntegrationStateStore;
 
 beforeEach(() => {
-  root = join(mkdtempSync(join(tmpdir(), "ocx-integrations-journal-")), "integrations");
+  root = join(mkdtempSync(join(tmpdir(), "occx-integrations-journal-")), "integrations");
   store = createIntegrationStateStore(root);
 });
 
@@ -184,7 +184,7 @@ describe("maintenance marker", () => {
 
 describe("store isolation", () => {
   test("everything a store writes stays under its own root", () => {
-    const other = join(mkdtempSync(join(tmpdir(), "ocx-other-")), "integrations");
+    const other = join(mkdtempSync(join(tmpdir(), "occx-other-")), "integrations");
     try {
       const otherStore = createIntegrationStateStore(other);
       otherStore.appendJournal(entry({ opId: "elsewhere" }));
@@ -271,11 +271,11 @@ describe("store isolation", () => {
   });
 
   test("a temp-rooted store leaves the real ownership manifest untouched", () => {
-    // atomicWriteFile records writes in the opencodex uninstall manifest, but
+    // atomicWriteFile records writes in the openccx uninstall manifest, but
     // that registration refuses any path outside the process config dir. This
     // pins the property every other test in this file depends on: an isolated
     // store touches no global state.
-    const manifest = join(getConfigDir(), ".opencodex-ownership.json");
+    const manifest = join(getConfigDir(), ".openccx-ownership.json");
     const before = existsSync(manifest) ? readFileSync(manifest, "utf8") : null;
     store.captureSnapshot("kimi", "manifest-probe", "bytes");
     const after = existsSync(manifest) ? readFileSync(manifest, "utf8") : null;
@@ -295,7 +295,7 @@ describe("store isolation", () => {
       configPath: "/home/dev/.pi/agent/models.json",
       fileFingerprint: "f".repeat(16),
       blockFingerprint: "b".repeat(16),
-      fragmentPaths: [["providers", "opencodex"]],
+      fragmentPaths: [["providers", "openccx"]],
       appliedAt: "2026-08-02T00:00:00.000Z",
       opId: "io-seam",
     };
@@ -306,7 +306,7 @@ describe("store isolation", () => {
 
     // A second store rooted elsewhere sees nothing of it, and dropping through
     // the seam removes it from the same place it was written.
-    const other = join(mkdtempSync(join(tmpdir(), "ocx-io-seam-")), "integrations");
+    const other = join(mkdtempSync(join(tmpdir(), "occx-io-seam-")), "integrations");
     try {
       expect(createIntegrationStateStore(other).readRecords().pi).toBeUndefined();
     } finally {
@@ -332,7 +332,7 @@ describe("store isolation", () => {
       configPath: "/home/dev/.kimi/config.toml",
       fileFingerprint: "0123456789abcdef",
       blockFingerprint: "fedcba9876543210",
-      fragmentPaths: [["providers", "opencodex"], ["models", "opencodex/x"]],
+      fragmentPaths: [["providers", "openccx"], ["models", "openccx/x"]],
       appliedAt: "2026-08-01T09:00:00.000Z",
       opId: "previous-op",
     };

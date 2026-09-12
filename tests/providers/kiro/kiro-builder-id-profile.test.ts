@@ -33,7 +33,7 @@ function seedKiroCliBuilderIdSession(): void {
   db.close();
 }
 import { saveCredential } from "../../../src/oauth/store";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 /**
  * Issue #993 follow-up: an AWS Builder ID account authenticates through SSO OIDC and never receives
@@ -49,7 +49,7 @@ const origUserProfile = process.env.USERPROFILE;
 const origRegion = process.env.KIRO_REGION;
 const origApiRegion = process.env.KIRO_API_REGION;
 const origArn = process.env.KIRO_PROFILE_ARN;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 let tmp: string;
 
 beforeEach(() => {
@@ -57,7 +57,7 @@ beforeEach(() => {
   process.env.HOME = tmp;
   process.env.LOCALAPPDATA = join(tmp, "AppData", "Local");
   process.env.USERPROFILE = tmp;
-  process.env.OPENCODEX_HOME = tmp;
+  process.env.OPENCCX_HOME = tmp;
   process.env.KIRO_REGION = "us-east-1";
   delete process.env.KIRO_API_REGION;
   delete process.env.KIRO_PROFILE_ARN;
@@ -70,7 +70,7 @@ afterEach(() => {
   if (origRegion === undefined) delete process.env.KIRO_REGION; else process.env.KIRO_REGION = origRegion;
   if (origApiRegion === undefined) delete process.env.KIRO_API_REGION; else process.env.KIRO_API_REGION = origApiRegion;
   if (origArn === undefined) delete process.env.KIRO_PROFILE_ARN; else process.env.KIRO_PROFILE_ARN = origArn;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = origOccxHome;
   removeTreeWithRetry(tmp);
 });
 
@@ -79,20 +79,20 @@ const provider = {
   baseUrl: "https://runtime.us-east-1.kiro.dev",
   authMode: "oauth",
   apiKey: "tok-123",
-} as unknown as OcxProviderConfig;
+} as unknown as OccxProviderConfig;
 
-function parsedWith(context: OcxParsedRequest["_kiroAuthContext"]): OcxParsedRequest {
+function parsedWith(context: OccxParsedRequest["_kiroAuthContext"]): OccxParsedRequest {
   const parsed = {
     modelId: "claude-sonnet-4.5",
     stream: true,
     options: {},
     context: { messages: [{ role: "user", content: "hi" }] },
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
   if (context) parsed._kiroAuthContext = context;
   return parsed;
 }
 
-async function buildBody(parsed: OcxParsedRequest): Promise<{
+async function buildBody(parsed: OccxParsedRequest): Promise<{
   headers: Record<string, string>;
   payload: { profileArn?: string; conversationState?: Record<string, unknown> };
 }> {
@@ -145,7 +145,7 @@ describe("kiro Builder ID request-scoped service profile", () => {
   });
 
   test("a Kiro API key never borrows the Builder ID service profile", async () => {
-    const apiKeyProvider = { ...provider, authMode: "key", apiKey: "ksk_example" } as unknown as OcxProviderConfig;
+    const apiKeyProvider = { ...provider, authMode: "key", apiKey: "ksk_example" } as unknown as OccxProviderConfig;
     const parsed = parsedWith({ authType: "aws_sso_oidc" });
 
     const request = await createKiroAdapter(apiKeyProvider).buildRequest(parsed);
@@ -183,7 +183,7 @@ describe("kiro Builder ID request-scoped service profile", () => {
 
     // ...while the on-disk credential store never learns about it. Asserting on the raw file rather
     // than a parsed view is deliberate: a leak through any unexpected key is still a leak.
-    // OPENCODEX_HOME is the config dir itself, so the store lives at the tmp root.
+    // OPENCCX_HOME is the config dir itself, so the store lives at the tmp root.
     const authStorePath = join(tmp, "auth.json");
     expect(existsSync(authStorePath)).toBe(true);
     const stored = readFileSync(authStorePath, "utf8");

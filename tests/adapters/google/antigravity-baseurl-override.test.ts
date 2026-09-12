@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { routeModel } from "../../../src/router";
 import { providerDestinationConfigError } from "../../../src/lib/destination-policy";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 
 /**
  * Regression coverage for the allowBaseUrlOverride opt-in on the
@@ -19,7 +19,7 @@ const PROVIDER = "google-antigravity";
 const REGISTRY_BASE_URL = "https://daily-cloudcode-pa.googleapis.com";
 const MODEL = PROVIDER + "/gemini-3.7-flash";
 
-function configFor(provider: OcxProviderConfig): OcxConfig {
+function configFor(provider: OccxProviderConfig): OccxConfig {
   return {
     port: 10100,
     defaultProvider: PROVIDER,
@@ -27,7 +27,7 @@ function configFor(provider: OcxProviderConfig): OcxConfig {
   };
 }
 
-function routeCapturingWarnings(config: OcxConfig): { baseUrl: string; warnings: string[] } {
+function routeCapturingWarnings(config: OccxConfig): { baseUrl: string; warnings: string[] } {
   const warnings: string[] = [];
   const originalWarn = console.warn;
   console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(" ")); };
@@ -43,7 +43,7 @@ test("google-antigravity honors a configured baseUrl override", () => {
   const { baseUrl, warnings } = routeCapturingWarnings(configFor({
     adapter: "google",
     baseUrl: "https://antigravity-relay.example.test",
-  } as OcxProviderConfig));
+  } as OccxProviderConfig));
 
   expect(baseUrl).toBe("https://antigravity-relay.example.test");
   // The override is applied, so the discarded-baseUrl diagnostic must not fire.
@@ -56,7 +56,7 @@ test("google-antigravity keeps the registry endpoint when the seeded baseUrl is 
   const { baseUrl, warnings } = routeCapturingWarnings(configFor({
     adapter: "google",
     baseUrl: REGISTRY_BASE_URL,
-  } as OcxProviderConfig));
+  } as OccxProviderConfig));
 
   expect(baseUrl).toBe(REGISTRY_BASE_URL);
   expect(warnings).toHaveLength(0);
@@ -67,14 +67,14 @@ test("google-antigravity requires a resolved baseUrl once override is enabled", 
   // re-pinning the registry endpoint; the seed guarantees real configs always carry one.
   expect(() => routeModel(configFor({
     adapter: "google",
-  } as OcxProviderConfig), MODEL)).toThrow(/Invalid baseUrl/);
+  } as OccxProviderConfig), MODEL)).toThrow(/Invalid baseUrl/);
 });
 
 test("google-antigravity rejects an unresolved template baseUrl override", () => {
   expect(() => routeModel(configFor({
     adapter: "google",
     baseUrl: "https://{region}.example.test",
-  } as OcxProviderConfig), MODEL)).toThrow(/Invalid baseUrl/);
+  } as OccxProviderConfig), MODEL)).toThrow(/Invalid baseUrl/);
 });
 
 /**
@@ -89,17 +89,17 @@ test("google-antigravity rejects a cleartext http override on the routing path",
   expect(() => routeModel(configFor({
     adapter: "google",
     baseUrl: "http://antigravity-relay.example.test",
-  } as OcxProviderConfig), MODEL)).toThrow(/https/);
+  } as OccxProviderConfig), MODEL)).toThrow(/https/);
 });
 
 test("google-antigravity rejects a cleartext http override on the discovery/config gate", () => {
   expect(providerDestinationConfigError(PROVIDER, {
     baseUrl: "http://antigravity-relay.example.test",
-  } as OcxProviderConfig)).toMatch(/https/);
+  } as OccxProviderConfig)).toMatch(/https/);
   // The https form of the same destination stays accepted.
   expect(providerDestinationConfigError(PROVIDER, {
     baseUrl: "https://antigravity-relay.example.test",
-  } as OcxProviderConfig)).toBeNull();
+  } as OccxProviderConfig)).toBeNull();
 });
 
 test("google-antigravity keeps http for an explicitly local relay", () => {
@@ -109,7 +109,7 @@ test("google-antigravity keeps http for an explicitly local relay", () => {
     adapter: "google",
     baseUrl: "http://127.0.0.1:47821",
     allowPrivateNetwork: true,
-  } as OcxProviderConfig));
+  } as OccxProviderConfig));
 
   expect(baseUrl).toBe("http://127.0.0.1:47821");
   expect(warnings).toHaveLength(0);

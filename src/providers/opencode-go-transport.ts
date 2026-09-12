@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { registryEntryForProviderDestination } from "./registry";
 
 export const OPENCODE_GO_SESSION_HEADER = "x-opencode-session";
@@ -15,11 +15,11 @@ function hasHeaderCaseInsensitive(
 /** Derive a provider-scoped opaque value without exposing Codex task or subagent ids. */
 export function deriveOpenCodeGoSessionId(sessionLane: string): string {
   const digest = createHash("sha256")
-    .update("opencodex/opencode-go/session/v1\0")
+    .update("openccx/opencode-go/session/v1\0")
     .update(sessionLane)
     .digest("hex")
     .slice(0, 32);
-  return `ocx_${digest}`;
+  return `occx_${digest}`;
 }
 
 /**
@@ -31,7 +31,7 @@ export function deriveOpenCodeGoSessionId(sessionLane: string): string {
  * for direct callers that have no request context; it is not a per-request identity of its own, and
  * minting one here would hand each retry a different value.
  */
-export function resolveOpenCodeGoTransport<T extends OcxProviderConfig>(
+export function resolveOpenCodeGoTransport<T extends OccxProviderConfig>(
   provider: T,
   sessionLane: string | undefined,
 ): T {

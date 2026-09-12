@@ -38,7 +38,7 @@ import {
   setCached,
   type ProviderModelDiscoveryStatus,
 } from "../../src/codex/model-cache";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { COMBO_NAMESPACE } from "../../src/combos";
 import type { NormalizedComboConfig } from "../../src/combos/types";
 import { enrichProviderFromRegistry, providerConfigSeed } from "../../src/providers/derive";
@@ -427,7 +427,7 @@ describe("combo catalog capability intersection", () => {
       ...nativeTemplate(),
       slug,
       owned_by: ownedBy,
-      description: `Routed via opencodex → ${sourceProvider} (${ownedBy}).`,
+      description: `Routed via openccx → ${sourceProvider} (${ownedBy}).`,
       input_modalities: ["text"],
     });
     const merged = mergeObservedForTest({
@@ -504,7 +504,7 @@ describe("combo catalog capability intersection", () => {
       expect(merged.find(entry => entry.slug === alias)).toMatchObject({
         display_name: "Nova1 - Sol",
         owned_by: "combo",
-        opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
       });
       expect(warning).not.toHaveBeenCalled();
     } finally {
@@ -939,12 +939,12 @@ describe("combo catalog capability intersection", () => {
       {
         ...nativeTemplate(),
         slug,
-        description: "Routed via opencodex → managed/model (managed).",
+        description: "Routed via openccx → managed/model (managed).",
       },
       {
         ...nativeTemplate(),
         slug,
-        opencodex_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
       },
     ]) {
       const merged = mergeObservedForTest({
@@ -967,7 +967,7 @@ describe("combo catalog capability intersection", () => {
       const account = {
         ...nativeTemplate(),
         slug,
-        opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       };
       const combo = {
         ...nativeTemplate(),
@@ -983,7 +983,7 @@ describe("combo catalog capability intersection", () => {
       });
 
       expect(merged.filter(entry => entry.slug === slug)).toEqual([
-        expect.objectContaining({ opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND }),
+        expect.objectContaining({ openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND }),
       ]);
       expect(warn.mock.calls.some(call => String(call[0]).includes("no pristine backup"))).toBe(false);
     } finally {
@@ -1063,7 +1063,7 @@ describe("combo catalog capability intersection", () => {
 
   test("gathers sorted rows, filters disabled combos, and deduplicates redacted warnings until reset", async () => {
     const warningSentinel = ["sk", "warning-secret-123456"].join("-");
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -1116,7 +1116,7 @@ describe("combo catalog capability intersection", () => {
   }, 15_000);
 
   test("gather warns about disjoint modalities without calling them incomplete (#516)", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -1165,7 +1165,7 @@ describe("combo catalog capability intersection", () => {
   }, 15_000);
 
   test("native aliases use native capability fallbacks when discovery returns only an id", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "Nova1",
       providers: {
@@ -1218,7 +1218,7 @@ describe("combo catalog capability intersection", () => {
 
   test("Astra native alias carries opt-in and cap through its max-input fallback", async () => {
     for (const [wide, cap, expected] of [[false, undefined, 272_000], [true, undefined, 872_000], [true, 500_000, 500_000]] as const) {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100, defaultProvider: "unknown",
         providers: { unknown: { adapter: "openai-chat", baseUrl: "https://unknown.example/v1", liveModels: false, models: ["unknown-model"] } },
         ...(wide ? { providerContextCaps: { openai: cap ?? 922_000 } } : {}),
@@ -1239,7 +1239,7 @@ describe("combo catalog capability intersection", () => {
 
   test("a bare native disable does not starve a combo targeting that native model", async () => {
     const alias = "gpt-5.6-sol";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -1270,7 +1270,7 @@ describe("combo catalog capability intersection", () => {
   });
 
   test("native aliases preserve explicit target capability limits", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "Nova1",
       providerContextCaps: { Nova1: 350_000 },
@@ -1311,7 +1311,7 @@ describe("combo catalog capability intersection", () => {
   });
 
   test("native aliases apply provider caps to explicit target windows", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "Nova1",
       providerContextCaps: { Nova1: 350_000 },
@@ -1369,7 +1369,7 @@ describe("combo catalog capability intersection", () => {
     // needs a confirmed roster to be visible at all.
     seedCodexModelEntitlementsForTests("main", ["gpt-5.6-sol"]);
     globalThis.fetch = (() => { throw new Error("forward providers must not fetch /models"); }) as typeof fetch;
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -1413,7 +1413,7 @@ describe("combo catalog capability intersection", () => {
     // they must NOT leak into the returned all[] array (they are already emitted via the
     // native catalog / /v1/models path).
     globalThis.fetch = (() => { throw new Error("forward providers must not fetch /models"); }) as typeof fetch;
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -1440,7 +1440,7 @@ describe("combo catalog capability intersection", () => {
   test("synthesizes missing combo targets from provider config metadata", async () => {
     // Target model is not in models[] (so never lands in memberByKey) but provider
     // config carries context/modalities/efforts — combo derivation must still catalog.
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -1727,7 +1727,7 @@ describe("combo catalog capability intersection", () => {
   });
 
   test("still omits combos when synthesis cannot recover hard failures", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -1784,8 +1784,8 @@ describe("combo catalog capability intersection", () => {
     }
   }, 15_000);
 
-  test("retains configured combo targets when authoritative live discovery omits them (OCX-111)", async () => {
-    // Repro from #1308 / OCX-111: live /models returns a different roster than the
+  test("retains configured combo targets when authoritative live discovery omits them (OCCX-111)", async () => {
+    // Repro from #1308 / OCCX-111: live /models returns a different roster than the
     // configured combo targets. Ids listed in providers.*.models are retained when
     // they are combo targets. Combo-only ids (not in models[]) still catalog the
     // combo via synthesis without leaking a standalone provider row (#1305).
@@ -1875,7 +1875,7 @@ describe("combo catalog capability intersection", () => {
     }
   }, 15_000);
 
-  test("warm cache still retains configured combo targets added inside the TTL (OCX-111)", async () => {
+  test("warm cache still retains configured combo targets added inside the TTL (OCCX-111)", async () => {
     // Owner / CodeRabbit blocker: retention must apply on fresh-cache reads, not only
     // after a live /models response. Warm the provider cache without a combo, then
     // gather again with a combo before TTL expiry — the configured target must return.
@@ -2358,7 +2358,7 @@ describe("configured CatalogModel displayName -> catalog display_name", () => {
       const row = entries.find(e => e.slug === "custom-provider/renamed-model");
       expect(row?.display_name).toBe("Renamed Model");
       expect(row?.slug).toBe("custom-provider/renamed-model");
-      expect(row?.opencodex_catalog_kind).toBe(CODEX_CUSTOM_MODEL_CATALOG_KIND);
+      expect(row?.openccx_catalog_kind).toBe(CODEX_CUSTOM_MODEL_CATALOG_KIND);
     } finally {
       globalThis.fetch = originalFetch;
       clearModelCache("custom-provider");
@@ -2818,7 +2818,7 @@ describe("legacy custom-model catalog ownership", () => {
     expect(merged.some(entry => entry.slug === "custom-provider/removed-model")).toBe(false);
   });
 
-  test("deletion evidence removes only an old unmarked OpenCodex custom row", () => {
+  test("deletion evidence removes only an old unmarked Openccx custom row", () => {
     const staleUnmarked = buildCatalogEntries(nativeTemplate(), [], [{
       provider: "custom-provider",
       id: "removed-model",
@@ -2859,7 +2859,7 @@ describe("legacy custom-model catalog ownership", () => {
     const acknowledged = rediscovered.find(entry => (
       entry.slug === "custom-provider/removed-model"
     ));
-    expect(acknowledged?.opencodex_catalog_kind).toBe(CODEX_PROVIDER_MODEL_CATALOG_KIND);
+    expect(acknowledged?.openccx_catalog_kind).toBe(CODEX_PROVIDER_MODEL_CATALOG_KIND);
 
     const degraded = mergeObservedForTest({
       catalogModels: rediscovered,
@@ -2870,7 +2870,7 @@ describe("legacy custom-model catalog ownership", () => {
     });
     expect(degraded).toContainEqual(expect.objectContaining({
       slug: "custom-provider/removed-model",
-      opencodex_catalog_kind: CODEX_PROVIDER_MODEL_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_PROVIDER_MODEL_CATALOG_KIND,
     }));
   });
 
@@ -2889,7 +2889,7 @@ describe("legacy custom-model catalog ownership", () => {
     });
     expect(readded).toContainEqual(expect.objectContaining({
       slug: "custom-provider/removed-model",
-      opencodex_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
     }));
 
     const deletedAgain = mergeObservedForTest({
@@ -2908,7 +2908,7 @@ describe("legacy custom-model catalog ownership", () => {
         provider: "custom-provider",
         id: "removed-model",
       }])[0],
-      opencodex_catalog_kind: "future-model-v2",
+      openccx_catalog_kind: "future-model-v2",
     };
     const merged = mergeObservedForTest({
       catalogModels: [unknownKind],
@@ -2919,7 +2919,7 @@ describe("legacy custom-model catalog ownership", () => {
     });
     expect(merged).toContainEqual(expect.objectContaining({
       slug: "custom-provider/removed-model",
-      opencodex_catalog_kind: "future-model-v2",
+      openccx_catalog_kind: "future-model-v2",
     }));
   });
 
@@ -2931,7 +2931,7 @@ describe("legacy custom-model catalog ownership", () => {
       slug: "team/gpt-5.4",
       display_name: "team / GPT-5.4",
       supported_in_api: true,
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     };
     const retiredBareRow = {
       ...nativeTemplate(),
@@ -2955,7 +2955,7 @@ describe("legacy custom-model catalog ownership", () => {
       ...nativeTemplate(),
       slug: "team/gpt-5.5",
       display_name: "team / GPT-5.5",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     };
     const accountMerged = mergeObservedForTest({
       catalogModels: [account],
@@ -2965,7 +2965,7 @@ describe("legacy custom-model catalog ownership", () => {
     });
     expect(accountMerged).toContainEqual(expect.objectContaining({
       slug: "team/gpt-5.5",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     }));
 
     const combo = {
@@ -3048,7 +3048,7 @@ test("a custom row inherits provider reasoning metadata from the provider-derive
   }
 });
 
-function openAiApiCatalogConfig(overrides: Record<string, unknown> = {}): OcxConfig {
+function openAiApiCatalogConfig(overrides: Record<string, unknown> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai-apikey",
@@ -3125,18 +3125,18 @@ function mergeObservedForTest(
 // Exercise both production callers: removing either caller's nativeDisplayNames argument
 // must fail the persisted-label assertion, even if the pure merge tests still pass.
 test.each(["retained", "convergence"] as const)("%s persists and restores native labels through the catalog writer", async writer => {
-  const envKeys = ["CODEX_HOME", "OPENCODEX_HOME", "CODEX_CLI_PATH"] as const;
+  const envKeys = ["CODEX_HOME", "OPENCCX_HOME", "CODEX_CLI_PATH"] as const;
   const previousEnv = envKeys.map(key => process.env[key]);
   const previousFetch = globalThis.fetch;
-  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-native-label-writer-")));
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-native-label-writer-")));
   const codexHome = join(root, "codex");
   const catalogPath = join(codexHome, "custom-catalog.json");
   let fetchCalls = 0;
   try {
     mkdirSync(codexHome);
-    mkdirSync(join(root, "ocx"));
+    mkdirSync(join(root, "occx"));
     process.env.CODEX_HOME = codexHome;
-    process.env.OPENCODEX_HOME = join(root, "ocx");
+    process.env.OPENCCX_HOME = join(root, "occx");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "custom-catalog.json"\n');
     const catalog = { models: [{ ...nativeTemplate(), slug: "gpt-5.6-sol", display_name: "Fixture Sol" }] };
     // Reuse the executable-fixture protocol from catalog-full-picker-order.test.ts so
@@ -3164,7 +3164,7 @@ test.each(["retained", "convergence"] as const)("%s persists and restores native
       fetchCalls += 1;
       throw new Error("native label writer fixture must not make a network request");
     }) as typeof fetch;
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100, defaultProvider: "openai",
       subagentModels: [], subagentModelsVersion: SUBAGENT_MODELS_VERSION,
       providers: {
@@ -3192,10 +3192,10 @@ test.each(["retained", "convergence"] as const)("%s persists and restores native
     const renamedBytes = readFileSync(catalogPath, "utf8");
     const native = renamed.find(row => row.slug === "gpt-5.6-sol")!;
     expect(native.display_name).toBe("Custom Sol");
-    expect(native.opencodex_native_display_name).toEqual({
+    expect(native.openccx_native_display_name).toEqual({
       slug: "gpt-5.6-sol", original: "Fixture Sol", applied: "Custom Sol",
     });
-    const { opencodex_native_display_name: marker, ...withoutMarker } = native;
+    const { openccx_native_display_name: marker, ...withoutMarker } = native;
     expect(marker).toBeDefined();
     expect({ ...withoutMarker, display_name: "Fixture Sol" })
       .toEqual(original.find(row => row.slug === "gpt-5.6-sol")!);
@@ -3235,7 +3235,7 @@ describe("Codex catalog routed normalization", () => {
     const renamed = mergeObservedForTest({ ...input, nativeDisplayNames: labels });
     const row = renamed.find(entry => entry.slug === "gpt-5.6-sol")!;
     expect(row.display_name).toBe("GPT 5.6 Sol");
-    expect({ ...row, display_name: undefined, opencodex_native_display_name: undefined }).toEqual({
+    expect({ ...row, display_name: undefined, openccx_native_display_name: undefined }).toEqual({
       ...original.find(entry => entry.slug === "gpt-5.6-sol"), display_name: undefined,
     });
     const regenerated = mergeObservedForTest({
@@ -3263,7 +3263,7 @@ describe("Codex catalog routed normalization", () => {
     const restored = mergeObservedForTest({ catalogModels: renamed, routedEntries: [] });
     const row = restored.find(entry => entry.slug === "gpt-5.6-sol")!;
     expect(row.display_name).toBe("Updated upstream Sol");
-    expect(row.opencodex_native_display_name).toBeUndefined();
+    expect(row.openccx_native_display_name).toBeUndefined();
   });
 
   test("native display names preserve pinned metadata upgrades and restore pinned names", () => {
@@ -3294,27 +3294,27 @@ describe("Codex catalog routed normalization", () => {
     expect(row).toEqual(original.find(entry => entry.slug === "gpt-6-astra")!);
     expect(row.display_name).not.toBe("External Astra name");
     expect(row.context_window).toBe(272_000);
-    expect(row.opencodex_native_display_name).toBeUndefined();
+    expect(row.openccx_native_display_name).toBeUndefined();
     expect(astra.display_name).toBe("External Astra name");
-    expect(astra.opencodex_native_display_name).toBeDefined();
+    expect(astra.openccx_native_display_name).toBeDefined();
   });
 
   test("native display names do not leak overlay markers through catalog templates", () => {
     const template = {
       ...nativeTemplate(),
-      opencodex_native_display_name: { slug: "gpt-5.6-sol", original: "Sol", applied: "Custom" },
+      openccx_native_display_name: { slug: "gpt-5.6-sol", original: "Sol", applied: "Custom" },
     };
     const entries = buildCatalogEntries(template, ["gpt-5.5"], [{ provider: "local", id: "qwen3-coder" }]);
     expect(entries.length).toBeGreaterThanOrEqual(2);
-    for (const entry of entries) expect(entry.opencodex_native_display_name).toBeUndefined();
-    expect(template.opencodex_native_display_name).toBeDefined();
+    for (const entry of entries) expect(entry.openccx_native_display_name).toBeUndefined();
+    expect(template.openccx_native_display_name).toBeDefined();
   });
 
   test("native display names do not relabel a routed combo occupying a native slug", () => {
     const routed = {
       ...nativeTemplate(), slug: "gpt-5.6-sol", display_name: "My combo",
-      owned_by: "combo", description: "Routed via opencodex → combo (combo).",
-      opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+      owned_by: "combo", description: "Routed via openccx → combo (combo).",
+      openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     };
     const rows = mergeObservedForTest({
       catalogModels: [], routedEntries: [routed],
@@ -3324,7 +3324,7 @@ describe("Codex catalog routed normalization", () => {
   });
 
   test("pending re-registration cannot recover ON rows from a degraded old catalog", () => {
-    const old = { ...nativeTemplate(), slug: "vendor/model-0", owned_by: "vendor", opencodex_catalog_kind: CODEX_PROVIDER_MODEL_CATALOG_KIND };
+    const old = { ...nativeTemplate(), slug: "vendor/model-0", owned_by: "vendor", openccx_catalog_kind: CODEX_PROVIDER_MODEL_CATALOG_KIND };
     const input = {
       catalogModels: [old], routedEntries: [],
       gatheredProviderNames: new Set(["vendor"]), degradedProviderNames: new Set(["vendor"]),
@@ -3339,8 +3339,8 @@ describe("Codex catalog routed normalization", () => {
       ...nativeTemplate(),
       slug: "gpt-5.6-sol",
       owned_by: "combo",
-      description: "Routed via opencodex → Nova1 (openai).",
-      opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+      description: "Routed via openccx → Nova1 (openai).",
+      openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     };
     const native = { ...nativeTemplate(), slug: "gpt-5.5", owned_by: "openai" };
 
@@ -3375,8 +3375,8 @@ describe("Codex catalog routed normalization", () => {
   });
 
   test("materializes bundled Codex catalog when no on-disk source exists", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-catalog-"));
-    const path = join(dir, "nested", "opencodex-catalog.json");
+    const dir = mkdtempSync(join(tmpdir(), "occx-catalog-"));
+    const path = join(dir, "nested", "openccx-catalog.json");
     try {
       const catalog = materializeBundledCodexCatalog(path, {
         commandCandidates: () => ["codex"],
@@ -3590,7 +3590,7 @@ describe("Codex catalog routed normalization", () => {
       expect(entry).toMatchObject(codex0151Contract);
     }
 
-    // ocx adaptations: client-version gate stripped; ws preference gated off by default.
+    // occx adaptations: client-version gate stripped; ws preference gated off by default.
     for (const e of [sol, terra, luna]) {
       expect(e).not.toHaveProperty("minimal_client_version");
       expect(e).not.toHaveProperty("prefer_websockets");
@@ -3901,7 +3901,7 @@ describe("Codex catalog routed normalization", () => {
 
   test("configured ChatGPT-forward Daybreak gets Sol native metadata without API-key crossover", async () => {
     globalThis.fetch = (() => { throw new Error("forward providers must not fetch /models"); }) as typeof fetch;
-    const forwardConfig: OcxConfig = {
+    const forwardConfig: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -3953,7 +3953,7 @@ describe("Codex catalog routed normalization", () => {
       supports_parallel_tool_calls: true,
       supports_search_tool: true,
       multi_agent_version: "v2",
-      opencodex_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_CUSTOM_MODEL_CATALOG_KIND,
     });
     expect(daybreak?.base_instructions).toContain("powered by the gpt-daybreak-blue-latest");
     expect(daybreak?.model_messages).toBeDefined();
@@ -3967,7 +3967,7 @@ describe("Codex catalog routed normalization", () => {
 
   test("a ChatGPT-forward custom Astra row projects the Astra product identity", async () => {
     globalThis.fetch = (() => { throw new Error("forward providers must not fetch /models"); }) as typeof fetch;
-    const forwardConfig: OcxConfig = {
+    const forwardConfig: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -4026,7 +4026,7 @@ describe("Codex catalog routed normalization", () => {
 
   test.each(nativeCustomEffortCases)("canonical custom Astra bounds $name through gather/build/merge", async fixture => {
     globalThis.fetch = (() => { throw new Error("canonical forward discovery must not fetch"); }) as typeof fetch;
-    const config = withStubbedProviderFetch<OcxConfig>({
+    const config = withStubbedProviderFetch<OccxConfig>({
       port: 10100,
       defaultProvider: "openai",
       providers: { openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", codexAccountMode: "pool" } },
@@ -4076,7 +4076,7 @@ describe("Codex catalog routed normalization", () => {
     { name: "openai", adapter: "openai-chat", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "key", modelId: "gpt-6-astra" },
     { name: "openai-apikey", adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", authMode: "key", modelId: "gpt-6-astra" },
     { name: "openai", adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward", modelId: "gpt-unproven" },
-  ] satisfies Array<{ name: string; adapter: OcxProviderConfig["adapter"]; baseUrl: string; authMode: OcxProviderConfig["authMode"]; modelId: string }>)(
+  ] satisfies Array<{ name: string; adapter: OccxProviderConfig["adapter"]; baseUrl: string; authMode: OccxProviderConfig["authMode"]; modelId: string }>)(
     "custom $name/$modelId does not infer native effort capability from $baseUrl / $authMode / $adapter",
     async fixture => {
       const models = await gatherRoutedModels({
@@ -4202,8 +4202,8 @@ describe("Codex catalog routed normalization", () => {
   });
 
   test("catalog sync upgrades fallback-quality gpt-5.6 entries but preserves genuine ones", () => {
-    // Fallback-quality: display_name stamped with the bare slug (ocx synthesis signature),
-    // wrong ladder (ultra on luna) left by an older ocx version.
+    // Fallback-quality: display_name stamped with the bare slug (occx synthesis signature),
+    // wrong ladder (ultra on luna) left by an older occx version.
     const synthesizedLuna = {
       ...nativeTemplate(),
       slug: "gpt-5.6-luna",
@@ -4265,7 +4265,7 @@ describe("Codex catalog routed normalization", () => {
       "default",
       new Set(),
       ["team"],
-    ).filter(entry => entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND);
+    ).filter(entry => entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND);
 
     for (const priority of [41, 9]) {
       const merged = mergeCatalogEntriesForSync(
@@ -4279,7 +4279,7 @@ describe("Codex catalog routed normalization", () => {
       expect(account?.base_instructions).toBe(bare?.base_instructions);
       expect(account?.description).toBe(bare?.description);
       expect(account?.comp_hash).toBe(bare?.comp_hash);
-      expect(account?.opencodex_catalog_kind).toBe(CODEX_ACCOUNT_BOUND_CATALOG_KIND);
+      expect(account?.openccx_catalog_kind).toBe(CODEX_ACCOUNT_BOUND_CATALOG_KIND);
     }
   });
 
@@ -4309,7 +4309,7 @@ describe("Codex catalog routed normalization", () => {
       context_window: 272_000,
       max_context_window: 272_000,
       auto_compact_token_limit: 120_000,
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     });
     expect(account?.context_window).toBe(bare?.context_window);
     expect(account?.max_context_window).toBe(bare?.max_context_window);
@@ -4635,7 +4635,7 @@ describe("Codex catalog routed normalization", () => {
       port: 10100,
       defaultProvider: providerName,
       providers: { [providerName]: provider },
-    } as OcxConfig;
+    } as OccxConfig;
     let fetchCalls = 0;
     globalThis.fetch = (() => {
       fetchCalls += 1;
@@ -4838,7 +4838,7 @@ describe("Codex catalog routed normalization", () => {
 
   // Retention of a dated id is a decision someone made, not an inference from a name.
   // Note what this set actually is: production fills `retainConfiguredModelIds` from combo
-  // targets, not from `providers.*.models`, so this pins the combo-target path (OCX-111).
+  // targets, not from `providers.*.models`, so this pins the combo-target path (OCCX-111).
   // The operator-facing opt-in is #1690's `retainModels`, which does not exist yet.
   test("a dated id named in retainConfiguredModelIds survives the drop", () => {
     const { models, droppedConfiguredIds } = mergeConfiguredModelsIntoLiveCatalog({
@@ -5745,7 +5745,7 @@ describe("Codex catalog routed normalization", () => {
     { label: "omitted", models: undefined },
     { label: "empty", models: [] as string[] },
   ])("static Go $label models expose only the inherited default, not the metadata roster", async ({ models: configuredModels }) => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat", baseUrl: "https://opencode-go.test/v1", apiKey: "sk-test",
       liveModels: false,
       ...(configuredModels === undefined ? {} : { models: configuredModels }),
@@ -5772,7 +5772,7 @@ describe("Codex catalog routed normalization", () => {
     { label: "omitted", models: undefined },
     { label: "empty", models: [] as string[] },
   ])("custom MiMo $label models remain empty without an effective default", async ({ models: configuredModels }) => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "mimo-free", baseUrl: "https://mimo-custom.example.test/v1", authMode: "key",
       liveModels: false,
       ...(configuredModels === undefined ? {} : { models: configuredModels }),
@@ -6115,7 +6115,7 @@ describe("Codex catalog routed normalization", () => {
     // This case used to substitute Z.AI's coding endpoint while claiming to be the reporter's
     // shape. That passed while the reported configuration stayed broken: `/api/coding/paas/v4`
     // on open.bigmodel.cn had no registry row at all, so the destination lookup found nothing.
-    const reported: OcxConfig["providers"][string] = {
+    const reported: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://open.bigmodel.cn/api/coding/paas/v4",
       authMode: "key",
@@ -6124,7 +6124,7 @@ describe("Codex catalog routed normalization", () => {
     expect(reported.modelSupportsReasoningSummaries?.["glm-5.2"]).toBe(true);
 
     // Z.AI's own Coding Plan endpoint is a different vendor route and keeps working.
-    const custom: OcxConfig["providers"][string] = {
+    const custom: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.z.ai/api/coding/paas/v4",
       authMode: "key",
@@ -6133,7 +6133,7 @@ describe("Codex catalog routed normalization", () => {
     expect(custom.modelSupportsReasoningSummaries?.["glm-5.2"]).toBe(true);
 
     // Same for a renamed row pointing at the BigModel pay-as-you-go endpoint.
-    const renamed: OcxConfig["providers"][string] = {
+    const renamed: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://open.bigmodel.cn/api/paas/v4",
       authMode: "key",
@@ -6146,7 +6146,7 @@ describe("Codex catalog routed normalization", () => {
     // The fallback matches by vendor endpoint. A provider pointing somewhere we do not
     // recognize must stay untouched — silently opting a random backend into summary delivery
     // would produce upstream 400s the user never asked for.
-    const unknown: OcxConfig["providers"][string] = {
+    const unknown: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.example.invalid/v1",
       authMode: "key",
@@ -6158,7 +6158,7 @@ describe("Codex catalog routed normalization", () => {
     // An earlier revision of this fallback bailed whenever any user map existed, which
     // recreated the whole-record bug the per-key merge was written to avoid: setting one
     // model's flag would silently disable the opt-in for every sibling model.
-    const opinionated: OcxConfig["providers"][string] = {
+    const opinionated: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.z.ai/api/coding/paas/v4",
       authMode: "key",
@@ -6182,7 +6182,7 @@ describe("Codex catalog routed normalization", () => {
     // today's registry defaults would freeze them as the user's own overrides, so a later
     // registry correction — e.g. learning a model's backend rejects summary delivery — would
     // never reach anyone who created their provider first.
-    const created: OcxConfig["providers"][string] = {
+    const created: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.deepseek.com",
       authMode: "key",
@@ -6193,7 +6193,7 @@ describe("Codex catalog routed normalization", () => {
     expect(created.models?.length).toBeGreaterThan(0);
 
     // A value the user actually submitted is preserved verbatim.
-    const submitted: OcxConfig["providers"][string] = {
+    const submitted: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.deepseek.com",
       authMode: "key",
@@ -6202,7 +6202,7 @@ describe("Codex catalog routed normalization", () => {
     enrichProviderFromCatalog("deepseek", submitted);
     expect(submitted.modelSupportsReasoningSummaries).toEqual({ "deepseek-v4-flash": false });
 
-    const xai: OcxConfig["providers"][string] = {
+    const xai: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.x.ai/v1",
       authMode: "key",
@@ -6210,7 +6210,7 @@ describe("Codex catalog routed normalization", () => {
     enrichProviderFromCatalog("xai", xai);
     expect(xai.modelSupportsVerbosity).toBeUndefined();
 
-    const submittedVerbosity: OcxConfig["providers"][string] = {
+    const submittedVerbosity: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.x.ai/v1",
       authMode: "key",
@@ -6221,7 +6221,7 @@ describe("Codex catalog routed normalization", () => {
   });
 
   test("explicit per-model overrides survive registry backfill", () => {
-    const provider: OcxConfig["providers"][string] = {
+    const provider: OccxConfig["providers"][string] = {
       adapter: "openai-chat",
       baseUrl: "https://api.deepseek.com",
       authMode: "key",
@@ -6818,7 +6818,7 @@ describe("OpenAI API trusted catalog augmentation", () => {
     expect(entries.find(row => row.slug === "openai-apikey/gpt-6-astra")).toMatchObject({
       context_window: 1_050_000, auto_compact_token_limit: 922_000,
       additional_speed_tiers: ["fast"],
-      // Routed catalogs advertise OCX's synthetic Ultra; the API wire ladder above stops at max.
+      // Routed catalogs advertise OCCX's synthetic Ultra; the API wire ladder above stops at max.
       supported_reasoning_levels: ["low", "medium", "high", "xhigh", "max", "ultra"].map(effort => expect.objectContaining({ effort })),
     });
     const capped = augmentRoutedModelsWithRegistryOpenAiApiRows([], openAiApiCatalogConfig({ modelMaxOutputTokens: { "gpt-6-astra": 16_000 } }));
@@ -6916,7 +6916,7 @@ describe("OpenAI API trusted catalog augmentation", () => {
       const ghost = {
         ...nativeTemplate(),
         slug: "openai-apikey/removed-ghost",
-        description: "Routed via opencodex → openai-apikey (openai-apikey).",
+        description: "Routed via openccx → openai-apikey (openai-apikey).",
       };
       const degraded = new Set(outcomes
         .filter(outcome => outcome.state === "degraded")
@@ -6935,7 +6935,7 @@ describe("OpenAI API trusted catalog augmentation", () => {
 
   test("actual gathering exposes no API rows when the API tier is absent or disabled", async () => {
     globalThis.fetch = async input => { throw new Error(`unexpected fetch: ${String(input)}`); };
-    const absent: OcxConfig = {
+    const absent: OccxConfig = {
       port: 10100,
       defaultProvider: "custom",
       providers: { custom: { adapter: "openai-chat", baseUrl: "https://example.test/v1", liveModels: false, models: ["model"] } },
@@ -6966,7 +6966,7 @@ describe("OpenAI API trusted catalog augmentation", () => {
 
   test("is a no-op when API tier is absent or disabled", () => {
     const source = [{ provider: "other", id: "model" }];
-    const absent: OcxConfig = { port: 10100, defaultProvider: "other", providers: { other: { adapter: "openai-chat", baseUrl: "https://example.test/v1" } } };
+    const absent: OccxConfig = { port: 10100, defaultProvider: "other", providers: { other: { adapter: "openai-chat", baseUrl: "https://example.test/v1" } } };
     expect(augmentRoutedModelsWithRegistryOpenAiApiRows(source, absent)).toBe(source);
     expect(augmentRoutedModelsWithRegistryOpenAiApiRows(source, openAiApiCatalogConfig({ disabled: true }))).toBe(source);
   });

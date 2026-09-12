@@ -27,7 +27,7 @@ import { resolveWireProtocolOverride } from "../../src/server/adapter-resolve";
 import { CURSOR_STATIC_MODELS, cursorModelIds } from "../../src/adapters/cursor/discovery";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Sandboxed agent environments deny `Bun.serve` outright ("Is port 0 in use?", EADDRINUSE on
@@ -133,7 +133,7 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 /** A saved config that reconciliation genuinely rewrites, so the persistence path is reached. */
-function staleConfig(): OcxConfig {
+function staleConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -145,24 +145,24 @@ function staleConfig(): OcxConfig {
         noVisionModels: cursorModelIds(CURSOR_STATIC_MODELS),
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** The exact startup sequence src/server/index.ts runs at :651 and :663, and nothing else. */
-function runStartupReconciliation(config: OcxConfig): void {
+function runStartupReconciliation(config: OccxConfig): void {
   reconcileOAuthProviders(runModelRenameStartupMigration(config));
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-startup-reconcile-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-startup-reconcile-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-startup-reconcile-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-startup-reconcile-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);

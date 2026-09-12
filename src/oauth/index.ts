@@ -1,7 +1,7 @@
 import type { KiroOAuthMetadata, OAuthController, OAuthCredentials } from "./types";
 import { initializeProviderModelSelection } from "../providers/initial-model-selection";
 import { parseCallbackInput } from "./callback-server";
-import type { OcxConfig, OcxProviderConfig, RefreshPolicy } from "../types";
+import type { OccxConfig, OccxProviderConfig, RefreshPolicy } from "../types";
 import { ConfigMutationLockError, loadConfig, mutatePersistedConfig, saveConfig } from "../config";
 import { resolveProviderApiKey } from "../providers/key-store";
 import { projectEmail } from "../lib/privacy";
@@ -183,16 +183,16 @@ export interface LoginFlowLifecycle {
 }
 
 interface OAuthProviderDef {
-  login(ctrl: OAuthController, opts?: LoginOpts, providerConfig?: OcxProviderConfig): Promise<OAuthCredentials>;
+  login(ctrl: OAuthController, opts?: LoginOpts, providerConfig?: OccxProviderConfig): Promise<OAuthCredentials>;
   refresh(
     refreshToken: string,
     signal?: AbortSignal,
     credential?: OAuthCredentials,
   ): Promise<OAuthCredentials>;
   /** provider entry written into config.json on first login. */
-  providerConfig: OcxProviderConfig;
+  providerConfig: OccxProviderConfig;
   /** Resolve login-owned config from the latest disk state (for configurable OAuth origins). */
-  resolveProviderConfig?: (config: OcxConfig) => OcxProviderConfig;
+  resolveProviderConfig?: (config: OccxConfig) => OccxProviderConfig;
   defaultModel: string;
   /**
    * Built-in proactive-refresh policy, risk-tiered by the provider's ToS exposure (devlog
@@ -202,7 +202,7 @@ interface OAuthProviderDef {
   defaultRefreshPolicy?: RefreshPolicy;
 }
 
-function oauthConfig(id: string): OcxProviderConfig {
+function oauthConfig(id: string): OccxProviderConfig {
   const config = deriveOAuthProviderConfig(id);
   if (!config) throw new Error(`OAuth provider missing from registry: ${id}`);
   return config;
@@ -360,7 +360,7 @@ function isRefreshPolicy(value: unknown): value is RefreshPolicy {
  * `config.providers[provider].refreshPolicy` if set, else the provider def's risk-tiered default,
  * else "lazy-only". The guardian acts only when this resolves to "proactive".
  */
-export function resolveRefreshPolicy(provider: string, config: OcxConfig): RefreshPolicy {
+export function resolveRefreshPolicy(provider: string, config: OccxConfig): RefreshPolicy {
   const override = config.providers[provider]?.refreshPolicy;
   if (isRefreshPolicy(override)) return override;
   const def = OAUTH_PROVIDERS[provider];
@@ -393,7 +393,7 @@ export class OAuthLoginRequiredError extends Error {
   readonly provider: string;
 
   constructor(provider: string) {
-    super(`Not logged in to ${provider}. Run: ocx login ${provider}`);
+    super(`Not logged in to ${provider}. Run: occx login ${provider}`);
     this.name = "OAuthLoginRequiredError";
     this.provider = provider;
   }
@@ -444,7 +444,7 @@ export function publicOAuthAuthenticationErrorMessage(error: unknown): string {
     || error instanceof OAuthTokenRefreshBusyError
     || error instanceof OAuthTokenRefreshStaleError
   ) return error.message;
-  return "OAuth authentication failed. Check the OpenCodex account status and retry.";
+  return "OAuth authentication failed. Check the Openccx account status and retry.";
 }
 
 function accessSnapshot(provider: string, accountId: string, cred: OAuthCredentials): OAuthAccessSnapshot {
@@ -694,7 +694,7 @@ function clearAnthropicRefreshIntentBestEffort(
       : clearOAuthRefreshIntent(provider, accountId, expected.generation);
   } catch {
     console.warn(
-      "[opencodex] Anthropic refresh intent cleanup failed; preserving the durable replay guard.",
+      "[openccx] Anthropic refresh intent cleanup failed; preserving the durable replay guard.",
     );
     return false;
   }
@@ -756,7 +756,7 @@ async function clearAnthropicRefreshIntentForKnownFailure(
     cleared = clearOAuthRefreshIntentIfMatch(provider, accountId, marked);
   } catch {
     console.warn(
-      "[opencodex] Anthropic refresh intent cleanup failed; retry-safe cleanup remains pending.",
+      "[openccx] Anthropic refresh intent cleanup failed; retry-safe cleanup remains pending.",
     );
     return false;
   }
@@ -1106,7 +1106,7 @@ async function refreshAndPersistAccessToken(
  * codex-catalog.ts:fetchProviderModels so OAuth providers' models are listed once logged in.
  * Returns undefined for forward-mode or oauth-not-logged-in (caller skips).
  */
-export async function resolveModelsAuthToken(name: string, prov: OcxProviderConfig): Promise<string | undefined> {
+export async function resolveModelsAuthToken(name: string, prov: OccxProviderConfig): Promise<string | undefined> {
   if (prov.authMode === "forward") return undefined;
   if (prov.authMode === "oauth") {
     try {
@@ -1118,7 +1118,7 @@ export async function resolveModelsAuthToken(name: string, prov: OcxProviderConf
   return resolveProviderApiKey(prov.apiKey);
 }
 
-function modelDiscoveryTransportSeed(providerName: string, prov: OcxProviderConfig): OcxProviderConfig {
+function modelDiscoveryTransportSeed(providerName: string, prov: OccxProviderConfig): OccxProviderConfig {
   const entry = getProviderRegistryEntry(providerName);
   if (
     prov.authMode !== "oauth"
@@ -1150,7 +1150,7 @@ export interface ModelsRequestObservedAuth {
 }
 
 export function buildModelsRequest(
-  prov: OcxProviderConfig,
+  prov: OccxProviderConfig,
   apiKey: string | undefined,
   providerName = "",
   observedAuth?: ModelsRequestObservedAuth,
@@ -1220,7 +1220,7 @@ export function buildModelsRequest(
  * Refresh OAuth-managed provider presets (`models`, `noReasoningModels`, and a stale `defaultModel`)
  * from the registry so a proxy update that revises a provider's models — e.g. dropping deprecated
  * Claude snapshots or adding a new grok endpoint not in the live `/models` — reaches EXISTING
- * configs on the next `ocx start`, instead of only fresh installs. The live `/models` fetch stays
+ * configs on the next `occx start`, instead of only fresh installs. The live `/models` fetch stays
  * the primary source; this keeps the static fallback (and models-not-in-/models) current.
  *
  * Only touches providers that are registry-managed AND still `authMode: "oauth"`. Preset fields
@@ -1233,7 +1233,7 @@ function cloneProviderField(value: unknown): unknown {
   return value;
 }
 
-const OAUTH_RECONCILE_FIELDS: (keyof OcxProviderConfig)[] = [
+const OAUTH_RECONCILE_FIELDS: (keyof OccxProviderConfig)[] = [
   "models",
   "contextWindow",
   "modelContextWindows",
@@ -1262,13 +1262,13 @@ const GOOGLE_ANTIGRAVITY_PROVIDER = "google-antigravity";
 const GOOGLE_ANTIGRAVITY_LIVE_DISCOVERY_VERSION = 2 as const;
 
 /** Only migrate the three-model experimental seed; an operator's later `liveModels: false` wins. */
-function isLegacyCommandCodeStaticCatalog(provider: OcxProviderConfig): boolean {
+function isLegacyCommandCodeStaticCatalog(provider: OccxProviderConfig): boolean {
   return provider.liveModels === false
     && provider.defaultModel === "deepseek-v4-flash"
     && JSON.stringify(provider.models) === JSON.stringify(["deepseek-v4-flash", "kimi-k3", "glm-5.2"]);
 }
 
-function isLegacyAntigravityStaticCatalog(provider: OcxProviderConfig): boolean {
+function isLegacyAntigravityStaticCatalog(provider: OccxProviderConfig): boolean {
   // A fingerprint of the shape version 1 actually shipped, NOT of the current registry.
   // These literals must stay frozen as the model list moves on: matching them is how we
   // know the row is the untouched v1 seed rather than a user's own selection.
@@ -1290,8 +1290,8 @@ function isLegacyAntigravityStaticCatalog(provider: OcxProviderConfig): boolean 
 
 /** Refresh registry-owned catalog fields while preserving valid operator selections. */
 function applyOAuthPresetCatalog(
-  provider: OcxProviderConfig,
-  preset: OcxProviderConfig,
+  provider: OccxProviderConfig,
+  preset: OccxProviderConfig,
 ): void {
   for (const field of OAUTH_RECONCILE_FIELDS) {
     if (JSON.stringify(provider[field]) === JSON.stringify(preset[field])) continue;
@@ -1320,7 +1320,7 @@ function applyOAuthPresetCatalog(
 }
 
 /** Promote only the versioned canonical static seed; unmarked `liveModels: false` remains user intent. */
-function migrateLegacyAntigravityStaticCatalog(config: OcxConfig): boolean {
+function migrateLegacyAntigravityStaticCatalog(config: OccxConfig): boolean {
   if (config.googleAntigravityStaticCatalogVersion !== 1) return false;
   const provider = config.providers[GOOGLE_ANTIGRAVITY_PROVIDER];
   if (provider && isLegacyAntigravityStaticCatalog(provider)) provider.liveModels = true;
@@ -1329,14 +1329,14 @@ function migrateLegacyAntigravityStaticCatalog(config: OcxConfig): boolean {
 }
 
 interface OAuthReconcileProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   touchedProviders: string[];
   touchedAntigravityVersion: boolean;
 }
 
 /** Pure projection over a clone: apply every reconciliation rule and report what it touched. */
-function projectOAuthProviderReconciliation(config: OcxConfig): OAuthReconcileProjection {
+function projectOAuthProviderReconciliation(config: OccxConfig): OAuthReconcileProjection {
   const projected = structuredClone(config);
   const touchedProviders = new Set<string>();
   const beforeAntigravity = JSON.stringify(projected.providers[GOOGLE_ANTIGRAVITY_PROVIDER]);
@@ -1379,7 +1379,7 @@ function projectOAuthProviderReconciliation(config: OcxConfig): OAuthReconcilePr
  * Deliberately key-by-key rather than a wholesale clear-and-reassign: a live reference held
  * elsewhere to an untouched provider sub-object must survive startup reconciliation.
  */
-function adoptOAuthReconciliation(config: OcxConfig, projection: OAuthReconcileProjection): void {
+function adoptOAuthReconciliation(config: OccxConfig, projection: OAuthReconcileProjection): void {
   for (const name of projection.touchedProviders) {
     const provider = projection.config.providers[name];
     if (provider) config.providers[name] = structuredClone(provider);
@@ -1417,7 +1417,7 @@ function withOAuthReconciliationTouchedKeys(
  * `src/codex/plan-from-token.ts`, `src/server/management/agent-settings-routes.ts`). Throwing
  * here would take the whole proxy down over a config file the operator can still repair.
  */
-export function reconcileOAuthProviders(config: OcxConfig, persist = true): boolean {
+export function reconcileOAuthProviders(config: OccxConfig, persist = true): boolean {
   const projection = projectOAuthProviderReconciliation(config);
   if (!projection.changed) return false;
   if (!persist) {
@@ -1431,7 +1431,7 @@ export function reconcileOAuthProviders(config: OcxConfig, persist = true): bool
   });
   if (outcome.status === "unavailable") {
     console.warn(
-      `[opencodex] OAuth provider reconciliation could not be persisted (${outcome.reason}); `
+      `[openccx] OAuth provider reconciliation could not be persisted (${outcome.reason}); `
       + "applying it in memory for this run only.",
     );
     adoptOAuthReconciliation(config, projection);
@@ -1442,9 +1442,9 @@ export function reconcileOAuthProviders(config: OcxConfig, persist = true): bool
 }
 
 /** Runtime guards: provider config is intentionally passthrough, so persisted fields may be malformed. */
-function preservableApiKeyPool(value: unknown): NonNullable<OcxProviderConfig["apiKeyPool"]> | undefined {
+function preservableApiKeyPool(value: unknown): NonNullable<OccxProviderConfig["apiKeyPool"]> | undefined {
   if (!Array.isArray(value)) return undefined;
-  const pool: NonNullable<OcxProviderConfig["apiKeyPool"]> = [];
+  const pool: NonNullable<OccxProviderConfig["apiKeyPool"]> = [];
   const ids = new Set<string>();
   const keys = new Set<string>();
   for (const entry of value as unknown[]) {
@@ -1480,10 +1480,10 @@ const OAUTH_LOGIN_OWNED_PROVIDER_FIELDS = [
   "responsesPath",
   "googleMode",
   "keyOptional",
-] as const satisfies readonly (keyof OcxProviderConfig)[];
+] as const satisfies readonly (keyof OccxProviderConfig)[];
 
 /** Add/refresh only an OAuth provider's login-owned config fields (does not persist). */
-export function upsertOAuthProvider(config: OcxConfig, provider: string): void {
+export function upsertOAuthProvider(config: OccxConfig, provider: string): void {
   if (provider === "chatgpt") return;
   const def = OAUTH_PROVIDERS[provider];
   if (!def) return;
@@ -1493,7 +1493,7 @@ export function upsertOAuthProvider(config: OcxConfig, provider: string): void {
   const existing = config.providers[provider];
   const providerConfig = def.resolveProviderConfig?.(config) ?? def.providerConfig;
   // Clone operator state, including xAI wire choices and their migration version.
-  const next: OcxProviderConfig = structuredClone(existing ?? providerConfig);
+  const next: OccxProviderConfig = structuredClone(existing ?? providerConfig);
   for (const field of OAUTH_LOGIN_OWNED_PROVIDER_FIELDS) {
     const value = providerConfig[field];
     if (value === undefined) delete next[field];
@@ -1868,7 +1868,7 @@ export function getLoginStatus(provider: string, maskEmails = true): { loggedIn:
 }
 
 /**
- * Token-safe per-provider login state for the CLI `ocx status` logins section. Never tokens; the
+ * Token-safe per-provider login state for the CLI `occx status` logins section. Never tokens; the
  * email follows the operator's `privacy.maskEmails` policy, masked by default (#3859).
  */
 export function oauthLoginSummary(maskEmails = true): Array<{ provider: string; loggedIn: boolean; email?: string }> {

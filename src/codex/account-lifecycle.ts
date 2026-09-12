@@ -18,7 +18,7 @@ import { forgetCodexAccountPause } from "./account-pause";
 import { clearCodexAccountPin, forgetCodexAccountPriority } from "./account-priority";
 import { forgetCodexQuotaAutoRefreshAccount } from "./quota-auto-refresh-state";
 import { codexAccountNamespaceEntries, codexAccountPickerEnabled } from "./account-namespaces";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 let observedMainChatgptAccountId: string | undefined;
 
@@ -134,8 +134,8 @@ export function resetMainCodexAccountIdentityTrackingForTests(): void {
   clearMainAccountCredentialPresence();
 }
 
-function restoreRuntimeConfig(target: OcxConfig, snapshot: OcxConfig): void {
-  for (const key of Object.keys(target) as Array<keyof OcxConfig>) delete target[key];
+function restoreRuntimeConfig(target: OccxConfig, snapshot: OccxConfig): void {
+  for (const key of Object.keys(target) as Array<keyof OccxConfig>) delete target[key];
   Object.assign(target, snapshot);
 }
 
@@ -156,7 +156,7 @@ function assertPersistedConfigUnchanged(configPath: string, previousBytes: Buffe
  *
  * Returns true when a picker-visible row disappeared and the catalog must converge.
  */
-export function deleteCodexAccount(runtimeConfig: OcxConfig, accountId: string): boolean {
+export function deleteCodexAccount(runtimeConfig: OccxConfig, accountId: string): boolean {
   let cleanupFailed = false;
   const pickerVisibilityChanged = withConfigMutationLockSync(() => {
     const previousConfig = structuredClone(runtimeConfig);

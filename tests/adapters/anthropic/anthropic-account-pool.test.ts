@@ -23,13 +23,13 @@ import {
 import { captureOAuthAccountSelection, getAccountSet, markAccountNeedsReauth, saveCredential, saveAccountCredential, setActiveAccount } from "../../../src/oauth/store";
 import { subscribeAccountSelections } from "../../../src/lib/account-selection-events";
 import { clearAccountQuotaCache, setCachedProviderAccountQuotaForTests } from "../../../src/providers/quota";
-import type { OcxAccountPoolQuotaWindow, OcxAccountPoolRotationStrategy, OcxConfig } from "../../../src/types";
+import type { OccxAccountPoolQuotaWindow, OccxAccountPoolRotationStrategy, OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home: string;
 
-async function admitAnthropic(sessionKey: string, config: OcxConfig) {
+async function admitAnthropic(sessionKey: string, config: OccxConfig) {
   const expected = captureOAuthAccountSelection("anthropic");
   const choice = resolveAnthropicAccountForSession(sessionKey, config);
   if (choice.accountId) {
@@ -42,8 +42,8 @@ async function admitAnthropic(sessionKey: string, config: OcxConfig) {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-anthropic-pool-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-anthropic-pool-"));
+  process.env.OPENCCX_HOME = home;
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   clearAccountQuotaCache("anthropic");
@@ -53,8 +53,8 @@ afterEach(() => {
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   clearAccountQuotaCache("anthropic");
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 
@@ -89,11 +89,11 @@ function cfg(
   enabled: boolean,
   threshold = 80,
   pool: {
-    strategy?: OcxAccountPoolRotationStrategy;
+    strategy?: OccxAccountPoolRotationStrategy;
     stickyLimit?: number;
-    quotaWindow?: OcxAccountPoolQuotaWindow;
+    quotaWindow?: OccxAccountPoolQuotaWindow;
   } = {},
-): OcxConfig {
+): OccxConfig {
   return {
     port: 0,
     defaultProvider: "anthropic",
@@ -105,7 +105,7 @@ function cfg(
       autoSwitchThreshold: threshold,
       ...pool,
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function seedThreeAccounts() {

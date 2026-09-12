@@ -16,7 +16,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const accounts = [{ id: 0, name: "Cloud" }, { id: 1, name: "Local one" }, { id: 2, name: "Local two" }];
 
 function fixture(run: (home: string, root: string) => void): void {
-  const home = mkdtempSync(join(tmpdir(), "ocx-aside-paths-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-aside-paths-"));
   const root = join(home, ".aside");
   try {
     for (const { id } of accounts) mkdirSync(join(root, "u", String(id)), { recursive: true });

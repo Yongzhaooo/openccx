@@ -1,7 +1,7 @@
 {
-  "name": "@bitkyc08/opencodex",
+  "name": "openccx",
   "version": "2.52.0",
-  "description": "Universal provider proxy for OpenAI Codex & Claude Code — use any LLM with Codex CLI/App/SDK and Claude Code",
+  "description": "Local proxy that lets Claude Code talk to DeepSeek, with quota display",
   "type": "module",
   "main": "./bin/package-main.mjs",
   "exports": {
@@ -12,8 +12,8 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "opencodex": "./bin/ocx.mjs",
-    "ocx": "./bin/ocx.mjs"
+    "openccx": "./bin/occx.mjs",
+    "occx": "./bin/occx.mjs"
   },
   "files": [
     "bin",
@@ -23,10 +23,7 @@
     "assets/architecture.png",
     "assets/claude-code-models.gif",
     "assets/codex-app-picker.png",
-    "assets/sponsors/orcarouter.png",
-    "assets/sponsors/packycode.png",
     "README.md",
-    "SPONSORS.md",
     "AGENTS_INSTALL.md",
     "LICENSE"
   ],
@@ -46,8 +43,8 @@
     "typecheck": "bun x tsc --noEmit",
     "audit:high": "bun audit --audit-level=high && cd gui && bun audit --audit-level=high",
     "privacy:scan": "bun scripts/privacy-scan.ts",
-    "skill:surface": "bun scripts/generate-ocx-skill-surface.ts",
-    "skill:surface:check": "bun scripts/generate-ocx-skill-surface.ts --check",
+    "skill:surface": "bun scripts/generate-occx-skill-surface.ts",
+    "skill:surface:check": "bun scripts/generate-occx-skill-surface.ts --check",
     "structure:index": "bun scripts/structure-ssot.ts --fix",
     "structure:check": "bun scripts/structure-ssot.ts",
     "generate:model-metadata": "bun scripts/generate-model-metadata.ts",
@@ -85,31 +82,24 @@
     "qs": "^6.16.0"
   },
   "keywords": [
-    "codex",
-    "openai",
-    "proxy",
-    "llm",
-    "ollama",
-    "anthropic",
-    "responses-api",
     "claude-code",
     "claude",
-    "codex-cli",
-    "gemini",
-    "grok",
     "deepseek",
-    "chatgpt",
+    "glm",
+    "kimi",
+    "anthropic",
+    "proxy",
+    "llm",
     "llm-proxy",
-    "ai-gateway",
-    "openrouter"
+    "ai-gateway"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lidge-jun/opencodex.git"
+    "url": "git+https://github.com/Yongzhaooo/openccx.git"
   },
-  "homepage": "https://lidge-jun.github.io/opencodex/",
+  "homepage": "https://github.com/Yongzhaooo/openccx",
   "bugs": {
-    "url": "https://github.com/lidge-jun/opencodex/issues"
+    "url": "https://github.com/Yongzhaooo/openccx/issues"
   },
   "license": "MIT"
 }

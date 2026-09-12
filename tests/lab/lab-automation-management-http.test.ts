@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest } from "../helpers/management-auth";
 import {
@@ -20,15 +20,15 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-http-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-http-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
-  process.env.OPENCODEX_HOME = dir;
+  process.env.OPENCCX_HOME = dir;
   return dir;
 }
 
-function config(): OcxConfig {
-  return { providers: {} } as OcxConfig;
+function config(): OccxConfig {
+  return { providers: {} } as OccxConfig;
 }
 
 function queuedRun(runId: string, runKey: string, createdAt: number): LabAutomationRunRecordV1 {
@@ -58,7 +58,7 @@ afterEach(() => {
   stopLabAutomationScheduler();
   resetLabAutomationSchedulerStateForTests();
   for (const dir of HOMES.splice(0)) removeTreeWithRetry(dir);
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 describe("CL-08 automation management HTTP", () => {

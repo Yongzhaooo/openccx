@@ -42,13 +42,13 @@ import {
 import { encodeLabCursor, verdictCursor } from "../../src/lab/query/cursor";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest } from "../helpers/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-cl04-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-cl04-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -62,12 +62,12 @@ afterEach(() => {
       /* ignore */
     }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function withHome<T>(fn: (home: string) => T): T {
   const home = tempHome();
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   return fn(home);
 }
 
@@ -110,8 +110,8 @@ function seedProjection(home: string, suiteId = "responses-core") {
   return rebuildLabProjection(home);
 }
 
-function config(home: string): OcxConfig {
-  return { providers: {} } as OcxConfig;
+function config(home: string): OccxConfig {
+  return { providers: {} } as OccxConfig;
 }
 
 async function apiGet(home: string, path: string): Promise<Response> {

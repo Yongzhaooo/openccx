@@ -71,18 +71,18 @@ function seedArchived(codexHome: string): void {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-worker-teardown-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-worker-teardown-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-worker-teardown-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-worker-teardown-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(async () => {
   await resetStorageCleanupPolicyJobForTestsAsync();
   setStorageCleanupPolicyJobTestHooks(null);
   await drainStorageWorkers();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -127,7 +127,7 @@ test.skipIf(skipNonWindowsWorkerSpawn)("repeated Windows-style spawn/reset cycle
     // Fresh CODEX_HOME each cycle so a prior worker's SQLite handle cannot
     // leave the seed DB locked/EBUSY on Windows after terminate.
     isolatedCodexHome?.restore();
-    isolatedCodexHome = installIsolatedCodexHome(`ocx-worker-teardown-cycle-${i}-`);
+    isolatedCodexHome = installIsolatedCodexHome(`occx-worker-teardown-cycle-${i}-`);
     setStorageCleanupPolicyJobTestHooks({ blockMs: 200 });
     seedArchived(isolatedCodexHome.path);
     const started = requestStorageCleanupPolicyRun({
@@ -153,7 +153,7 @@ test.skipIf(skipNonWindowsWorkerSpawn)("async beforeEach-style join between cycl
     expect(liveStorageWorkerCount()).toBe(0);
 
     isolatedCodexHome?.restore();
-    isolatedCodexHome = installIsolatedCodexHome(`ocx-worker-teardown-beforeeach-${i}-`);
+    isolatedCodexHome = installIsolatedCodexHome(`occx-worker-teardown-beforeeach-${i}-`);
     setStorageCleanupPolicyJobTestHooks({ blockMs: 250 });
     seedArchived(isolatedCodexHome.path);
     const started = requestStorageCleanupPolicyRun({

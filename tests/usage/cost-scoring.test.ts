@@ -4,25 +4,25 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { costEvidenceForCandidate, costScore } from "../../src/routing/cost";
 import { evaluatePolicyProfile, COST_UNKNOWN_PENALTY_SCORE } from "../../src/routing/evaluator";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-cost-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-cost-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",

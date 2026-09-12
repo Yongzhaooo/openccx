@@ -7,7 +7,7 @@ import { saveConfig } from "../../src/config";
 import { encodeMessage } from "../../src/lib/eventstream-decoder";
 import { startServer } from "../../src/server";
 import { clearRequestLogsForTests, getRequestLogEntries } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -15,24 +15,24 @@ const enc = new TextEncoder();
 const originalFetch = globalThis.fetch;
 
 let testDir = "";
-let previousOpenCodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousRegion: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousOpenCodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousRegion = process.env.KIRO_REGION;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-kiro-completion-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-kiro-completion-"));
-  process.env.OPENCODEX_HOME = testDir;
+  isolatedCodexHome = installIsolatedCodexHome("occx-kiro-completion-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-kiro-completion-"));
+  process.env.OPENCCX_HOME = testDir;
   process.env.KIRO_REGION = "us-east-1";
   globalThis.fetch = originalFetch;
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousRegion === undefined) delete process.env.KIRO_REGION;
   else process.env.KIRO_REGION = previousRegion;
   isolatedCodexHome?.restore();
@@ -70,7 +70,7 @@ function streamOf(frames: Uint8Array[]): ReadableStream<Uint8Array> {
   });
 }
 
-function kiroConfig(baseUrl: string): OcxConfig {
+function kiroConfig(baseUrl: string): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -86,7 +86,7 @@ function kiroConfig(baseUrl: string): OcxConfig {
         models: ["gpt-5.6-sol"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function scriptedKiroUpstream(attempts: Uint8Array[][]) {
@@ -318,7 +318,7 @@ describe("Kiro completion through public server endpoints", () => {
     for (const stream of [true, false]) {
       test(`a delivered final answer sends nothing upstream (emptyCompletionRetry=${emptyCompletionRetry}, stream=${stream})`, async () => {
         const upstream = scriptedKiroUpstream([]);
-        saveConfig({ ...kiroConfig(upstream.server.url.toString()), emptyCompletionRetry } as OcxConfig);
+        saveConfig({ ...kiroConfig(upstream.server.url.toString()), emptyCompletionRetry } as OccxConfig);
         const proxy = startServer(0);
         try {
           const response = await originalFetch(new URL("/v1/responses", proxy.url), {

@@ -26,7 +26,7 @@ const target: LiveProxy = {
 function proofResponse(init?: RequestInit): Response {
   const challenge = new Headers(init?.headers).get(LOCAL_ATTESTATION_CHALLENGE_HEADER)!;
   return Response.json({
-    service: "opencodex",
+    service: "openccx",
     status: "ok",
     version: "test",
     uptime: 1,
@@ -65,7 +65,7 @@ describe("local provider reload client", () => {
       fetchImpl: async input => {
         requests.push(String(input));
         return Response.json({
-          service: "opencodex",
+          service: "openccx",
           pid: target.pid,
           port: target.port,
           providerReloadCapability: LOCAL_PROVIDER_RELOAD_CAPABILITY_VERSION,
@@ -97,7 +97,7 @@ describe("local provider reload client", () => {
     const headers = new Headers(requests[1]!.init?.headers);
     expect(headers.get(LOCAL_PROVIDER_RELOAD_NAME_HEADER)).toBe("xai");
     expect(headers.has("authorization")).toBe(false);
-    expect(headers.has("x-opencodex-api-key")).toBe(false);
+    expect(headers.has("x-openccx-api-key")).toBe(false);
     expect(verifyLocalProviderReloadCapability(
       secret,
       nonce,
@@ -106,7 +106,7 @@ describe("local provider reload client", () => {
       "xai",
       target.pid!,
       target.port,
-      Number(headers.get("x-opencodex-provider-reload-expires-at")),
+      Number(headers.get("x-openccx-provider-reload-expires-at")),
       headers.get(LOCAL_PROVIDER_RELOAD_CAPABILITY_HEADER),
       now,
     )).toBe(true);

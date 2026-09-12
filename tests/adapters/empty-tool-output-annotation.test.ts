@@ -4,10 +4,10 @@ import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { routedProviderConfig } from "../../src/router";
 import { handleResponses } from "../../src/server/responses/core";
-import type { OcxConfig, OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 const ANNOTATION =
-  "[ocx] empty tool output: the tool ran but produced no stdout or return value; do not treat this as success, failure, or user-provided input.";
+  "[occx] empty tool output: the tool ran but produced no stdout or return value; do not treat this as success, failure, or user-provided input.";
 
 describe("annotateEmptyToolOutputs (DeepSeek default ON)", () => {
   test("deepseek registry seed defaults the option to true", () => {
@@ -22,7 +22,7 @@ describe("annotateEmptyToolOutputs (DeepSeek default ON)", () => {
 });
 
 describe("annotateEmptyToolOutputs runtime backfill (DeepSeek)", () => {
-  const deepseekSavedConfig: OcxProviderConfig = {
+  const deepseekSavedConfig: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://api.deepseek.com",
     apiKey: "sk-test",
@@ -40,8 +40,8 @@ describe("annotateEmptyToolOutputs runtime backfill (DeepSeek)", () => {
 });
 
 describe("openai-chat empty tool output annotation", () => {
-  function wire(provider: OcxProviderConfig, messages: OcxMessage[]): Array<Record<string, unknown>> {
-    const parsed: OcxParsedRequest = {
+  function wire(provider: OccxProviderConfig, messages: OccxMessage[]): Array<Record<string, unknown>> {
+    const parsed: OccxParsedRequest = {
       modelId: "test-model",
       context: { messages },
       stream: false,
@@ -51,7 +51,7 @@ describe("openai-chat empty tool output annotation", () => {
     return (JSON.parse(req.body) as { messages: Array<Record<string, unknown>> }).messages;
   }
 
-  function toolCallTurn(emptyResult: string | unknown[]): OcxMessage[] {
+  function toolCallTurn(emptyResult: string | unknown[]): OccxMessage[] {
     return [
       { role: "user", content: "hi", timestamp: 0 },
       {
@@ -63,7 +63,7 @@ describe("openai-chat empty tool output annotation", () => {
     ];
   }
 
-  const providerWithFlag: OcxProviderConfig = {
+  const providerWithFlag: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",
     apiKey: "sk-test",
@@ -71,7 +71,7 @@ describe("openai-chat empty tool output annotation", () => {
     annotateEmptyToolOutputs: true,
   };
 
-  const providerWithoutFlag: OcxProviderConfig = {
+  const providerWithoutFlag: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",
     apiKey: "sk-test",
@@ -150,7 +150,7 @@ describe("openai-responses empty tool output annotation", () => {
   const originalFetch = globalThis.fetch;
   afterEach(() => { globalThis.fetch = originalFetch; });
 
-  async function drive(config: OcxConfig, input: unknown[]): Promise<{ body: Record<string, unknown> }> {
+  async function drive(config: OccxConfig, input: unknown[]): Promise<{ body: Record<string, unknown> }> {
     const requests: Array<{ body: Record<string, unknown> }> = [];
     globalThis.fetch = (async (inputUrl: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ body: JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown> });
@@ -168,7 +168,7 @@ describe("openai-responses empty tool output annotation", () => {
     return requests[0] ?? { body: {} };
   }
 
-  function responsesConfig(annotate: boolean | undefined): OcxConfig {
+  function responsesConfig(annotate: boolean | undefined): OccxConfig {
     return {
       port: 0,
       defaultProvider: "test",
@@ -181,7 +181,7 @@ describe("openai-responses empty tool output annotation", () => {
           ...(annotate === undefined ? {} : { annotateEmptyToolOutputs: annotate }),
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   test("empty function_call_output is annotated when enabled", async () => {

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { handleResponses } from "../../src/server/responses/core";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 const originalFetch = globalThis.fetch;
 
@@ -11,10 +11,10 @@ afterEach(() => {
 
 function routedConfig(
   providerName: string,
-  adapter: OcxProviderConfig["adapter"],
+  adapter: OccxProviderConfig["adapter"],
   model: string,
-  wireAdapter?: OcxProviderConfig["adapter"],
-): OcxConfig {
+  wireAdapter?: OccxProviderConfig["adapter"],
+): OccxConfig {
   return {
     port: 0,
     defaultProvider: providerName,
@@ -27,7 +27,7 @@ function routedConfig(
         ...(wireAdapter ? { modelAdapters: { [model]: wireAdapter } } : {}),
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function responseSnapshot(model: unknown): Record<string, unknown> {
@@ -45,8 +45,8 @@ function responseSnapshot(model: unknown): Record<string, unknown> {
 async function post(args: {
   model: string;
   providerName?: string;
-  adapter?: OcxProviderConfig["adapter"];
-  wireAdapter?: OcxProviderConfig["adapter"];
+  adapter?: OccxProviderConfig["adapter"];
+  wireAdapter?: OccxProviderConfig["adapter"];
   stream?: boolean;
 }): Promise<{ response: Response; upstreamModel: unknown; logCtx: RequestLogContext }> {
   const providerName = args.providerName ?? "fixture-anthropic";

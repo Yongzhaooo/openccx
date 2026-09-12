@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { localAdmissionToken, localInferenceDestination } from "../lib/local-destinations";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export interface GatewayModelRow {
   id: string;
@@ -29,7 +29,7 @@ export interface GatewayModelCacheRefreshOptions {
    * equal the `ANTHROPIC_BASE_URL` the CLI is launched with or Claude Code ignores the whole
    * cache, so this has to resolve the same loopback listener `buildClaudeEnv` resolves (#4236).
    */
-  admissionConfig?: Pick<OcxConfig, "apiKeys" | "hostname" | "unauthenticatedLoopbackListener">;
+  admissionConfig?: Pick<OccxConfig, "apiKeys" | "hostname" | "unauthenticatedLoopbackListener">;
   env?: NodeJS.ProcessEnv;
   fetchImpl?: typeof fetch;
 }
@@ -90,13 +90,13 @@ export async function refreshGatewayModelCacheFromProxy(
     const admissionToken = typeof portOrTarget === "number"
       ? localAdmissionToken(options.admissionConfig, options.env ?? process.env)
       : portOrTarget.admissionToken;
-    if (admissionToken) headers.set("x-opencodex-api-key", admissionToken);
+    if (admissionToken) headers.set("x-openccx-api-key", admissionToken);
 
     const baseUrl = typeof portOrTarget === "number"
       ? localInferenceDestination(options.admissionConfig, portOrTarget).origin
       : new URL(portOrTarget.baseUrl).origin;
 
-    // ?ids=cli pins the readable claude-ocx id family deterministically (audit 051
+    // ?ids=cli pins the readable claude-occx id family deterministically (audit 051
     // #5): the cache prewrite must not depend on UA sniffing.
     const res = await (options.fetchImpl ?? fetch)(`${baseUrl}/v1/models?limit=1000&ids=cli`, {
       headers,

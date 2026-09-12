@@ -9,7 +9,7 @@ import {
   XAI_GROK_CLIENT_VERSION,
 } from "../../src/providers/xai-transport";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
@@ -50,10 +50,10 @@ function startXaiTestServer() {
 beforeEach(async () => {
   if (activeRoutedCase) throw new Error("previous routed-parent fixture has not finished cleanup");
   originalFetch = globalThis.fetch;
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-xai-responses-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-xai-responses-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-xai-responses-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-xai-responses-"));
+  process.env.OPENCCX_HOME = testDir;
   await saveCredential("xai", {
     access: "stream-access",
     refresh: "stream-refresh",
@@ -66,14 +66,14 @@ beforeEach(async () => {
 afterEach(async () => {
   await drainRoutedCase();
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 }, SERVER_BUDGET_MS);
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -92,7 +92,7 @@ function config(): OcxConfig {
         supportsOpenAiWebSearchToolFields: false,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function sse(payload: unknown): Uint8Array {
@@ -368,7 +368,7 @@ describe("xAI OAuth Responses streaming opt-in", () => {
       expect(outboundBody?.messages).toBeUndefined();
       expect(outboundBody?.reasoning_effort).toBeUndefined();
       expect(outboundHeaders?.get("authorization")).toBe("Bearer stream-access");
-      expect(outboundHeaders?.get("x-grok-client-identifier")).toBe("opencodex");
+      expect(outboundHeaders?.get("x-grok-client-identifier")).toBe("openccx");
       expect(outboundHeaders?.get("x-grok-client-version")).toBe(XAI_GROK_CLIENT_VERSION);
 
       releaseCompletion();

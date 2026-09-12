@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { drainAndShutdown } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "./isolated-codex-home";
 import {
   resetArchivedCleanupJobForTests,
@@ -26,7 +26,7 @@ import { drainStorageWorkers } from "../../src/storage/worker-lifecycle";
 import { removeTreeWithRetry } from "./remove-tree";
 import { INTERNAL_DEADLINE_MS } from "./test-budget";
 
-export function baseConfig(): OcxConfig {
+export function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -38,7 +38,7 @@ export function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 export function seedArchived(codexHome: string): void {
@@ -116,8 +116,8 @@ export type PolicyApiHarness = {
 };
 
 export async function installPolicyApiHarness(prefix: string): Promise<PolicyApiHarness> {
-  const previousHome = process.env.OPENCODEX_HOME;
-  // Join leftover Workers before allocating homes / mutating OPENCODEX_HOME.
+  const previousHome = process.env.OPENCCX_HOME;
+  // Join leftover Workers before allocating homes / mutating OPENCCX_HOME.
   // Sync reset used to fire-and-forget terminate and race the next spawn under
   // `bun test --isolate`; a rejected reset after env mutation would also leak.
   stopStorageCleanupScheduler();
@@ -130,13 +130,13 @@ export async function installPolicyApiHarness(prefix: string): Promise<PolicyApi
   try {
     isolatedCodexHome = installIsolatedCodexHome(`${prefix}-codex-`);
     testDir = mkdtempSync(join(tmpdir(), `${prefix}-`));
-    process.env.OPENCODEX_HOME = testDir;
+    process.env.OPENCCX_HOME = testDir;
     saveConfig(baseConfig());
     stopStorageCleanupScheduler();
     return { testDir, isolatedCodexHome, previousHome };
   } catch (error) {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     isolatedCodexHome?.restore();
     if (testDir) removeTreeWithRetry(testDir);
     throw error;
@@ -152,8 +152,8 @@ export async function uninstallPolicyApiHarness(h: PolicyApiHarness): Promise<vo
     await drainStorageWorkers();
     resetArchivedCleanupJobForTests();
   } finally {
-    if (h.previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = h.previousHome;
+    if (h.previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = h.previousHome;
     h.isolatedCodexHome.restore();
     if (h.testDir) removeTreeWithRetry(h.testDir);
   }

@@ -1,10 +1,10 @@
-import type { OcxRequestOptions, OcxTool } from "../types";
+import type { OccxRequestOptions, OccxTool } from "../types";
 import { isObj } from "./parser-content";
 import { WEB_SEARCH_TOOL_NAME } from "../web-search/synthetic-tool";
 import { buildImageTool, IMAGE_GEN_TOOL_NAME } from "../images/synthetic-tool";
 import { toolSearchDescription, toolSearchParameters } from "./tool-search-compat";
 
-export function mapToolChoice(value: unknown): OcxRequestOptions["toolChoice"] {
+export function mapToolChoice(value: unknown): OccxRequestOptions["toolChoice"] {
   if (value === undefined || value === null) return undefined;
   if (value === "auto" || value === "none" || value === "required") return value;
   if (isObj(value) && "type" in value) {
@@ -38,9 +38,9 @@ function allowedToolName(tool: unknown): string | undefined {
   return undefined;
 }
 
-export function buildTools(tools: unknown[] | undefined): OcxTool[] | undefined {
+export function buildTools(tools: unknown[] | undefined): OccxTool[] | undefined {
   if (!tools) return undefined;
-  const out: OcxTool[] = [];
+  const out: OccxTool[] = [];
   const normalizeParameters = (raw: unknown): Record<string, unknown> => {
     if (isObj(raw) && raw.type === "object") return raw;
     return { ...(isObj(raw) ? raw : {}), type: "object" };
@@ -55,7 +55,7 @@ export function buildTools(tools: unknown[] | undefined): OcxTool[] | undefined 
     ) {
       return;
     }
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: t.name as string,
       description: (t.description as string) ?? "",
       parameters: normalizeParameters(t.parameters),
@@ -82,7 +82,7 @@ export function buildTools(tools: unknown[] | undefined): OcxTool[] | undefined 
     const inputDescription = t.name === "apply_patch"
       ? "Raw tool input. For apply_patch, begin exactly with `*** Begin Patch` (no trailing `***`), then use its standard patch envelope."
       : "Raw freeform input for this tool.";
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: t.name as string,
       description: (t.description as string) ?? "",
       parameters: { type: "object", properties: { input: { type: "string", description: inputDescription } }, required: ["input"] },
@@ -147,7 +147,7 @@ export function buildTools(tools: unknown[] | undefined): OcxTool[] | undefined 
       else out.push(synthetic);
     }
     else if (typeof t.name === "string" && t.type !== "web_search" && t.type !== "image_generation") {
-      // Any OTHER named tool (e.g. a native/computer-use tool type opencodex doesn't explicitly
+      // Any OTHER named tool (e.g. a native/computer-use tool type openccx doesn't explicitly
       // model) is client-executed — pass it through as a function so the routed model can read and
       // call it naturally; the bridge relays its call as a function_call. Previously such tools were
       // silently dropped, so the model never saw them.

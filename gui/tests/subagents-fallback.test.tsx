@@ -8,7 +8,7 @@ import { LanguageProvider } from "../src/i18n/provider";
 import Subagents from "../src/pages/Subagents";
 import { readSessionListCache } from "../src/session-list-cache";
 
-const CACHE_KEY = "ocx.subagents.v1:";
+const CACHE_KEY = "occx.subagents.v1:";
 const FALLBACK_PATH = "/api/subagent-model-fallback";
 const ROSTER_PATH = "/api/subagent-models";
 const UNAVAILABLE_MODEL = "retired-provider/configured-model";

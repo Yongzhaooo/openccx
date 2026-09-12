@@ -22,7 +22,7 @@ import {
   setCompatibilityVersionOverrideForTests,
 } from "../../src/routing/compatibility/version";
 import { normalizeRouteDecisionTrace } from "../../src/routing/trace";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { CandidateCompatibilityEvidence } from "../../src/routing/compatibility/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -31,7 +31,7 @@ const SUBJECT_ID = "s".repeat(64);
 const SUITE_DIGEST = "a".repeat(64);
 let home = "";
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -58,7 +58,7 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
   };
 }
 
-function routed(provider: OcxConfig["providers"][string]) {
+function routed(provider: OccxConfig["providers"][string]) {
   return { ...provider };
 }
 
@@ -87,7 +87,7 @@ function evidence(
 const policy = getRoutingProfile(baseConfig(), "compat")!.compatibility!;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-cl06-"));
+  home = mkdtempSync(join(tmpdir(), "occx-cl06-"));
   readInstallationSalt(home);
   setCompatibilityVersionOverrideForTests(COMPAT_VERSION);
 });
@@ -175,7 +175,7 @@ describe("CL-06 routing compatibility", () => {
   });
 
   test("routing subject resolution never creates a missing Lab salt", () => {
-    const freshHome = mkdtempSync(join(tmpdir(), "ocx-cl06-nosalt-"));
+    const freshHome = mkdtempSync(join(tmpdir(), "occx-cl06-nosalt-"));
     try {
       const root = labRoot(freshHome);
       expect(existsSync(root)).toBe(false);
@@ -284,7 +284,7 @@ describe("CL-06 routing compatibility", () => {
   });
 
   test("incompatible projection is treated as unavailable without rebuild", () => {
-    const missingHome = mkdtempSync(join(tmpdir(), "ocx-cl06-missing-"));
+    const missingHome = mkdtempSync(join(tmpdir(), "occx-cl06-missing-"));
     try {
       const snap = loadCompatibilityEvidenceSnapshot(["missing-subject"], missingHome);
       expect(snap.projectionAvailable).toBe(false);
@@ -488,7 +488,7 @@ describe("CL-06 routing compatibility", () => {
       inboundProtocol: "openai-responses",
       upstreamProtocol: "openai-responses",
       surface: "responses-http",
-      opencodexCompatibilityVersion: COMPAT_VERSION,
+      openccxCompatibilityVersion: COMPAT_VERSION,
       behaviorFingerprint: "b".repeat(64),
       endpointFingerprint: "c".repeat(64),
       dependencies: [],

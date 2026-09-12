@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readBoundedResponseBody } from "../lib/bounded-body";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { isSelectableCodexPoolAccount } from "./account-id";
 import { getValidCodexToken, readCodexAccountRecord } from "./account-store";
 import {
@@ -716,7 +716,7 @@ async function modelsForCredential(
   return flight;
 }
 
-function candidateAccountIds(config: Pick<OcxConfig, "codexAccounts">): string[] {
+function candidateAccountIds(config: Pick<OccxConfig, "codexAccounts">): string[] {
   return [
     MAIN_CODEX_ACCOUNT_ID,
     ...(config.codexAccounts ?? [])
@@ -725,7 +725,7 @@ function candidateAccountIds(config: Pick<OcxConfig, "codexAccounts">): string[]
   ];
 }
 
-function normalizedCandidateAccountIds(config: Pick<OcxConfig, "codexAccounts">): string[] {
+function normalizedCandidateAccountIds(config: Pick<OccxConfig, "codexAccounts">): string[] {
   return [...new Set(candidateAccountIds(config))].sort();
 }
 
@@ -782,7 +782,7 @@ function entitlementEnsureFlightKey(
 }
 
 async function refreshCodexEntitlementWorkset(
-  config: Pick<OcxConfig, "codexAccounts">,
+  config: Pick<OccxConfig, "codexAccounts">,
   workset: readonly string[],
   identityVector: ReadonlyMap<string, string | null>,
   clientVersion: string,
@@ -844,7 +844,7 @@ function waitForEntitlementEnsureFlight(
  * the cache for the first poll after the shared flight settles.
  */
 export async function ensureCodexEntitlementFreshness(
-  config: Pick<OcxConfig, "codexAccounts">,
+  config: Pick<OccxConfig, "codexAccounts">,
   options: CodexEntitlementFreshnessOptions = {},
 ): Promise<void> {
   try {
@@ -904,7 +904,7 @@ export async function ensureCodexEntitlementFreshness(
 }
 
 export function getCodexModelEntitlementStatus(
-  config: Pick<OcxConfig, "codexAccounts">,
+  config: Pick<OccxConfig, "codexAccounts">,
   now = Date.now(),
   clientVersion?: string | null,
 ): CodexModelEntitlementStatus {
@@ -969,7 +969,7 @@ export function getCodexModelEntitlementStatus(
  *   pay one bounded discovery call per account; discovery failure temporarily hides the gated row.
  */
 export async function resolveCodexModelEntitlements(
-  config: Pick<OcxConfig, "codexAccounts">,
+  config: Pick<OccxConfig, "codexAccounts">,
   options: CodexModelEntitlementResolveOptions = {},
 ): Promise<CodexModelEntitlementSnapshot> {
   const now = options.now ?? Date.now();

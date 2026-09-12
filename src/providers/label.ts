@@ -1,5 +1,5 @@
 import { CODEX_ACCOUNT_LOG_LABEL_RE, oauthAccountLogLabel } from "../codex/account-label";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 
 export function canonicalUsageProviderLabel(provider: string): string {
   return provider === "chatgpt" || provider === "openai-multi" ? "openai" : provider;
@@ -41,7 +41,7 @@ export function baseProviderLabel(provider: string): string {
 export function stampOAuthAccountLabel(
   logCtx: { accountLogLabel?: string },
   providerName: string,
-  provider: Pick<OcxProviderConfig, "authMode">,
+  provider: Pick<OccxProviderConfig, "authMode">,
   accountId: string | undefined,
 ): void {
   if (!accountId) return;

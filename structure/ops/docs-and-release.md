@@ -35,7 +35,7 @@ The repository ships a root multi-stage `Dockerfile`, `compose.yaml`, narrow `.d
 container bootstrap helper, but still publishes no registry image. The source build pins the Bun
 base by multi-platform digest, runs non-root with a read-only root filesystem and dropped
 capabilities, publishes the data port on host loopback by default (remote binding is an explicit
-`OPENCODEX_BIND_ADDRESS` opt-in), persists `OPENCODEX_HOME`, and streams the initial data token through stdin into the
+`OPENCCX_BIND_ADDRESS` opt-in), persists `OPENCCX_HOME`, and streams the initial data token through stdin into the
 owner-only canonical token file. Before every image build, operators run
 `bun scripts/generate-compatibility-version.ts` in the host Git checkout. The runtime copies
 that untracked JSON artifact without including `.git` in the Docker context or changing the
@@ -65,7 +65,7 @@ Those controls still have no owner, so there is no image-publish workflow or off
 | `.github/workflows/dev-version-bump.yml` | Manual dispatch with an intended version and `pre-move` or `repair` mode | Opens the reviewed pull request that moves `dev` past a release target. The default `pre-move` mode runs before promotion and publication; explicit `repair` mode retains the post-publish catch-up path. It is neither called by `release.yml` nor triggered by publication. |
 | `.github/workflows/release.yml` | Manual dispatch only | npm publish/dry-run workflow. It requires successful Cross-platform CI for the exact `GITHUB_SHA`, requires `dev` to outrank the target, then checks the target against the freshly fetched global tag set before publish or dry-run. |
 | `.github/workflows/deploy-docs.yml` | `push` to `main` touching `docs-site/**` or the workflow, or manual dispatch | Build and publish the Astro/Starlight docs site to GitHub Pages. |
-| `.github/workflows/service-lifecycle.yml` | `pull_request` to `main`/`dev` and `push`, both filtered on the service path set (`src/service.ts`, `src/cli.ts`, `src/cli/index.ts`, `src/lib/bun-runtime.ts`, `package.json`, `bun.lock`, the workflow), or manual dispatch | Service-lifecycle smoke on three platforms: Linux systemd, macOS launchd, and Windows Scheduled Tasks. Each installs, verifies, stops via `ocx stop`, and uninstalls. The path list is kept in sync with the `release.yml` service-gate regex. |
+| `.github/workflows/service-lifecycle.yml` | `pull_request` to `main`/`dev` and `push`, both filtered on the service path set (`src/service.ts`, `src/cli.ts`, `src/cli/index.ts`, `src/lib/bun-runtime.ts`, `package.json`, `bun.lock`, the workflow), or manual dispatch | Service-lifecycle smoke on three platforms: Linux systemd, macOS launchd, and Windows Scheduled Tasks. Each installs, verifies, stops via `occx stop`, and uninstalls. The path list is kept in sync with the `release.yml` service-gate regex. |
 | `.github/workflows/enforce-pr-target.yml` | `pull_request_target` (opened, reopened, edited, labeled, unlabeled, ready_for_review, synchronize) plus default-branch `status` events filtered to successful `CodeRabbit` statuses | The `enforce-target` gate: rejects pull requests whose head ancestry sits on the `main` tip while far behind `dev`, rejects empty or malformed descriptions, requires a GUI screenshot when the title/body mentions `gui` (immediately waivable with the maintainer-controlled `gui-screenshot-waived` label; legacy maintainer comments remain compatibility evidence on later PR events), keeps contributor PRs in draft until a four-box readiness checklist is complete, verifies the CI / latest-dev / Codex+CodeRabbit-findings claims (review threads plus current-head CodeRabbit review-body findings outside the diff range), and adds a `review-ready` status label at the ready moment. CodeRabbit status SHAs must resolve to exactly one open current-head PR before writes. Stacked child PRs targeting another open PR's head skip the wrong-base gate. |
 | `.github/workflows/enforce-issue-quality.yml` | `issues` (opened, edited, reopened), `issue_comment` (created, edited), or manual dispatch with an issue number | Issue-template compliance gate. |
 | `.github/workflows/issue-quality-tests.yml` | `pull_request` and `push` filtered on the issue/PR automation scripts, templates, and their workflows | Tests the issue and PR automation scripts themselves, so the gates cannot rot silently. |
@@ -84,7 +84,7 @@ or selector output. Because this is a public user-owned repository and runner gr
 the repository setting **Fork pull request workflows from outside collaborators: Require approval
 for all outside collaborators** (`all_external_contributors`) must remain enabled before any self-
 hosted runner is registered. Maintainers must inspect workflow changes before approving an external
-run. If that setting cannot be verified, unset `OCX_SELF_HOSTED_WINDOWS` and deregister the runner;
+run. If that setting cannot be verified, unset `OCCX_SELF_HOSTED_WINDOWS` and deregister the runner;
 the workflow then fails back to `windows-latest` rather than exposing a persistent maintainer host.
 
 Docs-only changes intentionally route through the docs workflow instead of the runtime CI gate. If a
@@ -95,7 +95,7 @@ push and let `ci.yml` provide the Linux/Windows confirmation. Service-related ch
 
 ## Root README
 
-The root READMEs are the concise product entrypoint. They should explain what opencodex does, how to
+The root READMEs are the concise product entrypoint. They should explain what openccx does, how to
 install/start it, where Codex state is touched, and where the full docs live. Deep implementation
 invariants belong in `structure/`, not the README.
 
@@ -148,18 +148,18 @@ force-pushes and deletion blocked. `main` and `preview` retain their existing re
 ## Package runtime (bundled Bun)
 
 The source runs on Bun, but the published package does **not** require a user-installed Bun.
-`package.json` `bin` points at `bin/ocx.mjs` (a Node shim), and the Bun runtime ships as the `bun`
+`package.json` `bin` points at `bin/occx.mjs` (a Node shim), and the Bun runtime ships as the `bun`
 npm dependency (esbuild-style: a tiny main package plus platform-specific `@oven/bun-*`
 `optionalDependencies`, finalized by the dependency's own `postinstall: node install.js`).
 
 Invariants:
 
-- `bin/ocx.mjs` resolves the bundled binary via `require.resolve("bun/package.json")` and a size gate
+- `bin/occx.mjs` resolves the bundled binary via `require.resolve("bun/package.json")` and a size gate
   (`>= 1 MB`) that rejects the ~450-byte placeholder stub left by `--ignore-scripts`/pnpm; it then
   lazy-runs `install.js` and execs `src/cli/index.ts` under Bun, propagating exit code and signal.
 - `package.json` carries `"trustedDependencies": ["bun"]` so `bun install` runs the dependency's
   postinstall, and `"engines": { "node": ">=18" }` (Bun is no longer a user prerequisite).
-- The plain-Node launcher owns `OPENCODEX_BUN_PATH` selection before Bun can load project dotenv and
+- The plain-Node launcher owns `OPENCCX_BUN_PATH` selection before Bun can load project dotenv and
   stamps the chosen source/path pair. `src/service.ts` and `src/codex/shim.ts` bake that already-
   selected executable (normally the bundled binary, stable under the npm global prefix) into
   launchd/systemd/Task Scheduler and the Codex autostart shim. Bun-side code never re-selects a
@@ -169,7 +169,7 @@ Invariants:
 
 ## Release workflow
 
-Package release is npm-focused. `package.json` exposes `opencodex` and `ocx`, `prepublishOnly` runs
+Package release is npm-focused. `package.json` exposes `openccx` and `occx`, `prepublishOnly` runs
 typecheck and GUI build. `scripts/release.ts` accepts either an explicit version or
 `--bump patch|minor|major`; the stable and preview channels use separate resolvers in
 `scripts/version-line.ts`. It runs local typecheck, `bun test --isolate tests`, and
@@ -285,7 +285,7 @@ npm install
 npm run build:gui
 npm pack --json > pack.json
 npm install -g ./bitkyc08-opencodex-*.tgz
-ocx help
+occx help
 ```
 
 The CI intentionally does not build docs, run coverage, or perform remote Ubuntu/RDP smoke tests.

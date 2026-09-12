@@ -34,12 +34,12 @@ import {
   primeCodexPoolQuotas,
   updateAccountQuota,
 } from "../../src/codex/auth-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const STORE_DIR = join(import.meta.dir, ".tmp-main-rotation-store");
 const CODEX_DIR = join(import.meta.dir, ".tmp-main-rotation-codex");
-let prevOpencodexHome: string | undefined;
+let prevOpenccxHome: string | undefined;
 let prevCodexHome: string | undefined;
 
 function writeMainAuth(): void {
@@ -59,7 +59,7 @@ function saveCred(id: string): void {
   });
 }
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     providers: {},
     codexAccounts: [
@@ -70,7 +70,7 @@ function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     autoSwitchThreshold: 80,
     upstreamFailoverThreshold: 3,
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
@@ -81,11 +81,11 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 
 describe("main account rotation (Option A)", () => {
   beforeEach(() => {
-    prevOpencodexHome = process.env.OPENCODEX_HOME;
+    prevOpenccxHome = process.env.OPENCCX_HOME;
     prevCodexHome = process.env.CODEX_HOME;
     for (const d of [STORE_DIR, CODEX_DIR]) if (existsSync(d)) removeTreeWithRetry(d);
     mkdirSync(STORE_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = STORE_DIR;
+    process.env.OPENCCX_HOME = STORE_DIR;
     process.env.CODEX_HOME = CODEX_DIR;
     clearThreadAccountMap();
     clearCodexUpstreamHealth();
@@ -108,7 +108,7 @@ describe("main account rotation (Option A)", () => {
     setMainAccountPlan(null);
     for (const id of ["a", "b", MAIN_CODEX_ACCOUNT_ID]) clearAccountNeedsReauth(id);
     for (const d of [STORE_DIR, CODEX_DIR]) if (existsSync(d)) removeTreeWithRetry(d);
-    if (prevOpencodexHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = prevOpencodexHome;
+    if (prevOpenccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = prevOpenccxHome;
     if (prevCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = prevCodexHome;
   });
 

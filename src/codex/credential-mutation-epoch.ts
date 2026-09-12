@@ -1,6 +1,6 @@
 let credentialMutationEpoch = 0;
 
-/** Process-local fence advanced after every OpenCodex-owned credential publication. */
+/** Process-local fence advanced after every Openccx-owned credential publication. */
 export function codexCredentialMutationEpoch(): number {
   return credentialMutationEpoch;
 }

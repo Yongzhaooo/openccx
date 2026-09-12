@@ -5,7 +5,7 @@ import {
   applyAntigravityReplay,
 } from "../../../src/adapters/google-antigravity-replay";
 import { antigravitySessionId } from "../../../src/adapters/google-antigravity-wire";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createGoogleAdapter = (...args: Parameters<typeof createGoogleAdapterProduction>) =>
@@ -19,9 +19,9 @@ const provider = {
   googleMode: "vertex",
   baseUrl: "https://aiplatform.googleapis.com",
   apiKey: "vertex-test-key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
-function request(messages: OcxParsedRequest["context"]["messages"], stream: boolean): OcxParsedRequest {
+function request(messages: OccxParsedRequest["context"]["messages"], stream: boolean): OccxParsedRequest {
   return {
     modelId: MODEL,
     stream,
@@ -31,7 +31,7 @@ function request(messages: OcxParsedRequest["context"]["messages"], stream: bool
       tools: [{ name: "shell_command", description: "run a command", parameters: { type: "object" } }],
     },
     options: {},
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
 const firstTurn = (stream: boolean) => request([{ role: "user", content: "run pwd" }], stream);
@@ -56,10 +56,10 @@ const continuation = () => request([
 ], false);
 
 function scopedReplayRequest(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   threadId: string | undefined,
   promptCacheKey: string | undefined,
-): OcxParsedRequest {
+): OccxParsedRequest {
   if (threadId !== undefined) parsed._clientThreadId = threadId;
   if (promptCacheKey !== undefined) parsed.options.promptCacheKey = promptCacheKey;
   return parsed;

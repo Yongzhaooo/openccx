@@ -10,7 +10,7 @@ import { debugProviderDiagnostic } from "../../src/lib/debug";
 import { getInjectionDebugLogEntries, injectionDebugLog, resetInjectionDebugLogBufferForTests } from "../../src/lib/injection-debug-log";
 import { startServer } from "../../src/server";
 import { appendUsageDebug } from "../../src/usage/debug";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { RETAINED_TRUNCATION_MARKER, retainedUtf8Bytes } from "../../src/lib/admission";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -19,7 +19,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -31,7 +31,7 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function loopbackOrigin(server: { port: number }): string {
@@ -39,21 +39,21 @@ function loopbackOrigin(server: { port: number }): string {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-api-debug-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-api-debug-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-api-debug-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-api-debug-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
   resetDebugLogBufferForTests();
   resetInjectionDebugLogBufferForTests();
   clearDebugSettings();
-  delete process.env.OCX_DEBUG;
-  delete process.env.OPENCODEX_USAGE_DEBUG;
+  delete process.env.OCCX_DEBUG;
+  delete process.env.OPENCCX_USAGE_DEBUG;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   resetDebugLogBufferForTests();
@@ -179,8 +179,8 @@ describe("management API /api/debug/logs", () => {
 
   test("polling debug-log route remains JSON and never invents an SSE admission response", async () => {
     setDebugSettings({ debug: true });
-    appendDebugLogLine("[ocx:test:one]");
-    appendDebugLogLine("[ocx:test:two]");
+    appendDebugLogLine("[occx:test:one]");
+    appendDebugLogLine("[occx:test:two]");
 
     const server = startServer(0);
     try {
@@ -224,7 +224,7 @@ describe("management API /api/debug/logs", () => {
   });
 
   test("caps limit query param at 2000", async () => {
-    for (let i = 0; i < 5; i += 1) appendDebugLogLine(`[ocx:test:${i}]`);
+    for (let i = 0; i < 5; i += 1) appendDebugLogLine(`[occx:test:${i}]`);
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/api/debug/logs?limit=99999", server.url));
@@ -240,8 +240,8 @@ describe("management API /api/debug/logs", () => {
 describe("management API /api/debug/injection-logs", () => {
   test("returns buffered injection lines with seq cursor and limit", async () => {
     setDebugSettings({ injection: true });
-    injectionDebugLog("[opencodex] gpt-5.4: multi-agent guidance injected (surface=collab, 128 chars)");
-    injectionDebugLog("[opencodex] gpt-5.4: effort cap applied (ultra -> high, main turn)");
+    injectionDebugLog("[openccx] gpt-5.4: multi-agent guidance injected (surface=collab, 128 chars)");
+    injectionDebugLog("[openccx] gpt-5.4: effort cap applied (ultra -> high, main turn)");
 
     const server = startServer(0);
     try {
@@ -262,7 +262,7 @@ describe("management API /api/debug/injection-logs", () => {
   });
 
   test("caps limit query param at 2000", async () => {
-    for (let i = 0; i < 5; i += 1) injectionDebugLog(`[opencodex] inj:${i}`);
+    for (let i = 0; i < 5; i += 1) injectionDebugLog(`[openccx] inj:${i}`);
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/api/debug/injection-logs?limit=99999", server.url));
@@ -279,7 +279,7 @@ describe("management API /api/debug/usage-logs", () => {
   test("tails usage-debug.jsonl from the running proxy home", async () => {
     appendUsageDebug({
       ts: Date.now(),
-      requestId: "ocx-usage-wire",
+      requestId: "occx-usage-wire",
       provider: "cursor",
       model: "gpt-5.4",
       upstreamContentType: "text/event-stream",
@@ -296,7 +296,7 @@ describe("management API /api/debug/usage-logs", () => {
       const entries = await res.json() as { seq: number; line: string }[];
       expect(entries.length).toBeGreaterThanOrEqual(1);
       expect(entries[0]!.seq).toBe(1);
-      expect(entries[0]!.line).toContain("ocx-usage-wire");
+      expect(entries[0]!.line).toContain("occx-usage-wire");
 
       const tail = await fetch(new URL(`/api/debug/usage-logs?after=${entries[0]!.seq}`, server.url));
       expect(await tail.json()).toEqual([]);
@@ -308,7 +308,7 @@ describe("management API /api/debug/usage-logs", () => {
   test("serves redacted usage samples without leaking bearer tokens", async () => {
     appendUsageDebug({
       ts: Date.now(),
-      requestId: "ocx-usage-secret",
+      requestId: "occx-usage-secret",
       provider: "cursor",
       model: "gpt-5.4",
       upstreamContentType: "application/json",

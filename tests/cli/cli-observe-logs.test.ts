@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { handleObserveCommand } from "../../src/cli/observe";
 
 /**
- * #4057: `ocx logs` gained an `--account` filter so an operator running several accounts behind
+ * #4057: `occx logs` gained an `--account` filter so an operator running several accounts behind
  * one provider can ask "which requests did this account serve?" without grepping usage.jsonl.
  *
  * The filter is applied SERVER-side, so these tests assert the query string rather than the rows:
  * filtering client-side after the row cap would silently hide older matches, and a test that only
  * checked the printed output would pass either way.
  */
-describe("ocx logs --account", () => {
+describe("occx logs --account", () => {
   function capture(): { lines: string[]; restore: () => void } {
     const lines: string[] = [];
     const original = console.log;

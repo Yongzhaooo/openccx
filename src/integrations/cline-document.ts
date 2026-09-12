@@ -60,7 +60,7 @@ export function preserveClineSelection(previous: unknown, next: unknown): void {
   const entry = (document: Record<string, unknown>, part: string): Record<string, unknown> | undefined => {
     const root = document[part];
     const providers = isClineObject(root) ? root.providers : undefined;
-    return isClineObject(providers) && isClineObject(providers.opencodex) ? providers.opencodex : undefined;
+    return isClineObject(providers) && isClineObject(providers.openccx) ? providers.openccx : undefined;
   };
   const old = entry(previous, "settings");
   const current = entry(next, "settings");

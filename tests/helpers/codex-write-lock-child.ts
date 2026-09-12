@@ -13,7 +13,7 @@ import { withCodexWriteLock } from "../../src/codex/codex-write-lock";
 import type { AdmissionSnapshot } from "../../src/codex/convergence-types";
 import { existsSync, writeFileSync } from "node:fs";
 
-const payload = JSON.parse(process.env.OCX_LOCK_CHILD_PAYLOAD ?? "{}") as {
+const payload = JSON.parse(process.env.OCCX_LOCK_CHILD_PAYLOAD ?? "{}") as {
   timeoutMs?: number;
   holdMarker?: string;
   releaseMarker?: string;

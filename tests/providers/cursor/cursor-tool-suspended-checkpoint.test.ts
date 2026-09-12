@@ -3,14 +3,14 @@ import { createCursorAdapter as createCursorAdapterProduction } from "../../../s
 import { clearCursorCheckpointsForTests, cursorCheckpointShape, getCursorCheckpoint } from "../../../src/adapters/cursor/checkpoint-store";
 import { create, toBinary } from "@bufbuild/protobuf";
 import { ConversationStateStructureSchema } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import type { CursorServerMessage } from "../../../src/adapters/cursor/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createCursorAdapter = (...args: Parameters<typeof createCursorAdapterProduction>) =>
   withTestTranslatorBudget(createCursorAdapterProduction(...args));
 
-const provider: OcxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
+const provider: OccxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
 
 const checkpointBytes = toBinary(ConversationStateStructureSchema, create(ConversationStateStructureSchema, {
   pendingToolCalls: ["suspended-fixture"],
@@ -34,7 +34,7 @@ function toolSuspendedTransport() {
   };
 }
 
-function body(modelId: string): OcxParsedRequest {
+function body(modelId: string): OccxParsedRequest {
   return {
     modelId,
     context: { messages: [{ role: "user", content: "hi", timestamp: 1 }] },
@@ -42,7 +42,7 @@ function body(modelId: string): OcxParsedRequest {
     options: {},
     _cursorConversationId: "cursor_tool_suspend",
     _cursorIdentityScope: "acct-suspend",
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 describe("tool-suspended checkpoint commit (devlog 260826 050)", () => {

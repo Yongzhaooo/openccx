@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping with opencodex.
+Thanks for helping with openccx.
 
 - Start with the canonical guide: [Contributing](https://opencodex.me/contributing/)
 - Pull-request quality contract: [Review readiness and author responsibility](https://opencodex.me/contributing/pr-quality/)

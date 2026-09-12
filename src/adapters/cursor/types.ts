@@ -1,5 +1,5 @@
-import type { OcxUsage } from "../../types";
-import type { OcxMessage, OcxRequestOptions, OcxTool } from "../../types";
+import type { OccxUsage } from "../../types";
+import type { OccxMessage, OccxRequestOptions, OccxTool } from "../../types";
 import type { CursorRoutingLevel } from "./discovery";
 import type { CursorCheckpointInvalidationReason } from "./checkpoint-store";
 import type { ResolvedCursorImage } from "./images";
@@ -38,7 +38,7 @@ export interface CursorRunRequest {
   conversationId: string;
   system: string[];
   messages: CursorRequestMessage[];
-  rawMessages?: readonly OcxMessage[];
+  rawMessages?: readonly OccxMessage[];
   /**
    * Images for the active user/developer turn or an external model's trailing tool-result run.
    * Encoded as SelectedImage blobIdWithData refs under
@@ -48,8 +48,8 @@ export interface CursorRunRequest {
    * unchanged. History stays text-only. data: URLs only in this slice.
    */
   selectedImages?: readonly ResolvedCursorImage[];
-  tools?: OcxTool[];
-  toolChoice?: OcxRequestOptions["toolChoice"];
+  tools?: OccxTool[];
+  toolChoice?: OccxRequestOptions["toolChoice"];
   parallelToolCalls?: boolean;
   /**
    * Clear provider-private context-usage carry-forward before this run. Used when Codex starts a
@@ -87,8 +87,8 @@ export type CursorServerMessage =
   | { type: "tool_call_start"; id: string; name: string }
   | { type: "tool_call_delta"; arguments: string }
   | { type: "tool_call_end"; id?: string }
-  | { type: "done"; usage?: OcxUsage }
-  | { type: "error"; message: string; usage?: OcxUsage }
+  | { type: "done"; usage?: OccxUsage }
+  | { type: "error"; message: string; usage?: OccxUsage }
   | { type: "heartbeat" }
   | { type: "kv_get"; key: string }
   | { type: "kv_set"; key: string; value: Uint8Array }

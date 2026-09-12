@@ -7,26 +7,26 @@ import { isValidProviderName } from "../../src/config";
 import { getRoutingProfile } from "../../src/routing/profile";
 import { closeRequestHistoryIndex } from "../../src/routing/history/indexer";
 import { evidenceFromBody } from "../../src/routing/request-evidence";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-policy-exec-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-policy-exec-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   closeRequestHistoryIndex();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -71,7 +71,7 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     },
     routingProfiles: {
       fast: {
-        alias: "ocx/fast",
+        alias: "occx/fast",
         candidates: [
           { provider: "a", model: "m1" },
           { provider: "b", model: "m2" },
@@ -110,7 +110,7 @@ describe("policy execution (RI-05)", () => {
   });
 
   test("profile alias executes the same policy", () => {
-    const route = routeModel(baseConfig(), "ocx/fast");
+    const route = routeModel(baseConfig(), "occx/fast");
     expect(route.routeKind).toBe("policy");
     expect(route.providerName).toBe("a");
     expect(route.modelId).toBe("m1");

@@ -14,7 +14,7 @@ let testWindow: Window;
 const originalFetch = globalThis.fetch;
 
 const API_BASE = "http://localhost";
-const CACHE_KEY = `ocx.debug.settings.v1:${API_BASE}`;
+const CACHE_KEY = `occx.debug.settings.v1:${API_BASE}`;
 
 const BASE_SETTINGS: DebugSettings = {
   enabled: true,

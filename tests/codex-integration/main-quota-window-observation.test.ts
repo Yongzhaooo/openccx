@@ -27,14 +27,14 @@ let observationTime: number;
 let restoreObservationClock: () => void;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   previousFetch = globalThis.fetch;
   observationTime = Date.now();
   const clock = spyOn(Date, "now").mockImplementation(() => observationTime);
   restoreObservationClock = () => clock.mockRestore();
-  testDir = mkdtempSync(join(tmpdir(), "ocx-main-window-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-main-window-"));
+  process.env.OPENCCX_HOME = testDir;
   process.env.CODEX_HOME = testDir;
   clearAccountQuota();
   clearMainAccountInfoCache();
@@ -56,8 +56,8 @@ afterEach(async () => {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     removeTreeWithRetry(testDir);

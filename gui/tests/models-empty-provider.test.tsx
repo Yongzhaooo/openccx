@@ -110,7 +110,7 @@ test("Models page combines final visibility, atomic actions, discovery status, a
     setInterval: { configurable: true, value: recordPoll },
     clearInterval: { configurable: true, value: () => {} },
   });
-  testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
+  testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
   const provider = "fallback-provider";
   const ids = ["claude-opus", "claude-sonnet", "gemini-pro", "gemini-flash", "gpt-oss"];
   let selected = ["gemini-pro", "gemini-flash"];
@@ -135,7 +135,7 @@ test("Models page combines final visibility, atomic actions, discovery status, a
   let resolveModels!: (response: Response) => void;
   const firstModels = new Promise<Response>(resolve => { resolveModels = resolve; });
   const rows = () => ids.map(id => ({ provider, id, namespaced: `${provider}/${id}`, disabled: initialSelectionPending || disabled.has(id), ...(initialSelectionPending ? { initialSelectionPending: true } : {}) }));
-  testWindow.sessionStorage.setItem("ocx.models.catalog.v1:http://localhost", JSON.stringify({
+  testWindow.sessionStorage.setItem("occx.models.catalog.v1:http://localhost", JSON.stringify({
     models: rows(),
     providers: [{ name: provider, liveModels: true, models: ids }],
     selectedModels: { [provider]: selected },
@@ -821,7 +821,7 @@ test("a poll that resolves after a forced refresh cannot overwrite newer models"
     setInterval: { configurable: true, value: recordPoll },
     clearInterval: { configurable: true, value: () => {} },
   });
-  testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
+  testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
 
   const provider = "gen-provider";
   const staleIds = ["stale-a", "stale-b"];

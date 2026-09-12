@@ -13,7 +13,7 @@ describe("CLI command registry parity", () => {
 
   test("every top-level switch case resolves in the registry", () => {
     // `help`/`--help`/`-h` are head-handled pseudo-cases, not commands. They
-    // still exist as dispatch runners so a bare `ocx help` reaches printUsage,
+    // still exist as dispatch runners so a bare `occx help` reaches printUsage,
     // but they are not registry entries; exclude them only while dispatch does
     // not list them as commands.
     const headHandled = new Set(["help", "--help", "-h"]);
@@ -101,13 +101,13 @@ describe("CLI command registry parity", () => {
 
   test("system help exposes the exact Codex CLI inspection grammar", () => {
     const details = findCommand("system")?.details ?? [];
-    expect(details).toContain("ocx system codex-cli-update check [--json]");
+    expect(details).toContain("occx system codex-cli-update check [--json]");
     expect(details.some(line => line.includes("dry-run"))).toBe(false);
   });
 
   test("GUI registry usage documents explicit-origin single-use pairing", () => {
     const gui = findCommand("gui");
-    expect(gui?.usage).toBe("ocx gui [pair --origin <browser-origin> [--json]]");
+    expect(gui?.usage).toBe("occx gui [pair --origin <browser-origin> [--json]]");
     expect(gui?.details?.join(" ")).toContain("single-use");
     expect(gui?.details?.join(" ")).toContain("no localhost or config-derived default");
   });
@@ -119,7 +119,7 @@ describe("CLI command registry parity", () => {
     expect(connect?.usage).not.toContain("--token <");
     expect(connect?.usage).not.toContain("--admin-token <");
     expect(connect?.details?.join(" ")).toContain("not supported");
-    expect(findCommand("disconnect")?.usage).toBe("ocx disconnect [--keep-catalog] [--json]");
+    expect(findCommand("disconnect")?.usage).toBe("occx disconnect [--keep-catalog] [--json]");
   });
 });
 
@@ -142,9 +142,9 @@ describe("help banner command coverage", () => {
       if (entry.hidden) return false;
       if (aliasNames.has(entry.name)) return false;
       // A command counts as covered when the banner carries its full usage
-      // line or its canonical name at the start of an `ocx <name>` banner line.
+      // line or its canonical name at the start of an `occx <name>` banner line.
       const escaped = entry.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const commandLine = new RegExp(`^\\s*ocx\\s+${escaped}(?:\\s|$)`, "m");
+      const commandLine = new RegExp(`^\\s*occx\\s+${escaped}(?:\\s|$)`, "m");
       return !helpSrc.includes(entry.usage) && !commandLine.test(helpSrc);
     }).map(entry => entry.name);
 

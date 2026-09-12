@@ -126,7 +126,7 @@ export function claudeDesktopPolicyHealth(
       ok: false,
       status: "warning",
       state,
-      message: "OpenCodex could not verify Windows managed Claude policy; Desktop third-party profile health is unverified.",
+      message: "Openccx could not verify Windows managed Claude policy; Desktop third-party profile health is unverified.",
       action: "Check access to Windows machine policy and run the status check again before relying on Claude Desktop 3P.",
     };
   }

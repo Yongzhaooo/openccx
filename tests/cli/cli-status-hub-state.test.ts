@@ -1,7 +1,7 @@
 /**
- * `ocx status` on a connected client reports the HUB's state (#4236).
+ * `occx status` on a connected client reports the HUB's state (#4236).
  *
- * The defect was not a missing field. `ocx status` printed a complete, internally consistent,
+ * The defect was not a missing field. `occx status` printed a complete, internally consistent,
  * entirely local report — `xai ✗ not logged in`, no grok provider, five delegable models — on a
  * machine whose hub has xAI logged in and serves grok, and an agent reading it concluded the hub
  * could not serve grok. Nothing in the output said which machine it described except one buried
@@ -34,7 +34,7 @@ const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
 const FIXTURE_TOKEN = "status-hub-state-token";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
 function hubState(overrides: Partial<HubStateDTO> = {}): HubStateDTO {
@@ -67,7 +67,7 @@ function connectedConfig(serverUrl: string) {
       managementUrl: serverUrl,
       managementTransport: "direct",
       selectedClients: ["claude"],
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: "status-hub-state",
       tokenFingerprint: createHash("sha256").update(FIXTURE_TOKEN).digest("hex"),
       protocolVersion: 1,
@@ -89,13 +89,13 @@ function jsonFetch(body: unknown): typeof fetch {
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-status-hub-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-status-hub-"));
+  process.env.OPENCCX_HOME = testHome;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -193,11 +193,11 @@ describe("the hub banner and block", () => {
   });
 });
 
-describe("ocx status end to end on a connected client", () => {
+describe("occx status end to end on a connected client", () => {
   async function runStatus(home: string, codexHome: string, json: boolean) {
     const child = Bun.spawn([process.execPath, cliPath, "status", ...(json ? ["--json"] : [])], {
       cwd: repoRoot,
-      env: { ...process.env, OPENCODEX_HOME: home, CODEX_HOME: codexHome },
+      env: { ...process.env, OPENCCX_HOME: home, CODEX_HOME: codexHome },
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -210,7 +210,7 @@ describe("ocx status end to end on a connected client", () => {
   }
 
   test("a live hub drives the banner, the hub block and the (local) tags", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-status-hub-live-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-status-hub-live-"));
     const codexHome = join(home, "codex");
     mkdirSync(codexHome, { recursive: true });
     const hub = Bun.serve({
@@ -220,7 +220,7 @@ describe("ocx status end to end on a connected client", () => {
         const path = new URL(request.url).pathname;
         if (path !== "/v1/hub-state") return new Response("not found", { status: 404 });
         // Proof the client authenticates with its own data key and nothing else.
-        if (request.headers.get("x-opencodex-api-key") !== FIXTURE_TOKEN) {
+        if (request.headers.get("x-openccx-api-key") !== FIXTURE_TOKEN) {
           return Response.json({ error: {} }, { status: 401 });
         }
         return Response.json(hubState());
@@ -267,7 +267,7 @@ describe("ocx status end to end on a connected client", () => {
   }, SPAWN_BUDGET_MS);
 
   test("an unreachable hub degrades to unavailable instead of to local state", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-status-hub-down-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-status-hub-down-"));
     const codexHome = join(home, "codex");
     mkdirSync(codexHome, { recursive: true });
     try {
@@ -291,7 +291,7 @@ describe("ocx status end to end on a connected client", () => {
   }, SPAWN_BUDGET_MS);
 
   test("a standalone machine's report gains no banner and no (local) tags", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-status-standalone-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-status-standalone-"));
     const codexHome = join(home, "codex");
     mkdirSync(codexHome, { recursive: true });
     try {

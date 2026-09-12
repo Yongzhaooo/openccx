@@ -1,4 +1,4 @@
-import type { OcxUsage } from "../../types";
+import type { OccxUsage } from "../../types";
 import type { AgentServerMessage, McpArgs, ToolCall } from "./gen/agent_pb";
 import { decodeCursorArgsMap } from "./arg-codec";
 import { normalizeArgKeys } from "./arg-normalize";
@@ -12,7 +12,7 @@ import {
   isCursorStructuredEditToolName,
   normalizeCursorWireName,
   normalizeCursorTextToolMarkers,
-  OCX_RESPONSES_TOOL_PROVIDER,
+  OCCX_RESPONSES_TOOL_PROVIDER,
   resolveShellBridgeAliasKey,
   responsesToolNameFromCursorWire,
 } from "./tool-definitions";
@@ -130,7 +130,7 @@ export function createCursorContextUsageTracker(options: { maxEntries?: number; 
 }
 
 export interface CursorProtobufEventState {
-  usage: OcxUsage;
+  usage: OccxUsage;
   /**
    * Absolute conversation context size from Cursor's `conversationCheckpointUpdate.usedTokens`
    * (authoritative cumulative context, NOT a per-turn delta). Kept separate from `usage.outputTokens`
@@ -261,7 +261,7 @@ export function reportableContextTokens(state: CursorProtobufEventState): number
   return Math.max(current, carry);
 }
 
-export function usageFromContextTokens(state: CursorProtobufEventState, contextTokens: number): OcxUsage {
+export function usageFromContextTokens(state: CursorProtobufEventState, contextTokens: number): OccxUsage {
   return {
     ...state.usage,
     inputTokens: Math.max(0, contextTokens - state.usage.outputTokens),
@@ -273,7 +273,7 @@ export function usageFromContextTokens(state: CursorProtobufEventState, contextT
 export function mcpArgsFromToolCall(toolCall: ToolCall | undefined): McpArgs | undefined {
   if (toolCall?.tool.case !== "mcpToolCall") return undefined;
   const args = toolCall.tool.value.args;
-  return args?.providerIdentifier === OCX_RESPONSES_TOOL_PROVIDER ? args : undefined;
+  return args?.providerIdentifier === OCCX_RESPONSES_TOOL_PROVIDER ? args : undefined;
 }
 
 function mcpWireNameFromArgs(args: McpArgs | undefined): string | undefined {
@@ -1046,7 +1046,7 @@ export function mapSyntheticMcpExecToToolEvents(
   fallbackCallId = "cursor_mcp_exec",
   options: { allowEmptyArgs?: boolean; state?: CursorProtobufEventState } = {},
 ): CursorServerMessage[] {
-  if (args.providerIdentifier !== OCX_RESPONSES_TOOL_PROVIDER) return [];
+  if (args.providerIdentifier !== OCCX_RESPONSES_TOOL_PROVIDER) return [];
   if (options.state?.terminated) return [];
   if (options.allowEmptyArgs !== true && !hasMcpArgBytes(args)) return [];
   const cursorWireName = mcpWireNameFromArgs(args);
@@ -1341,7 +1341,7 @@ export function mapCursorProtobufServerMessage(
  * then the raw per-turn counters. Shared with the partial-usage path in live-transport
  * so a failed turn reports the same input side as a clean one (#373).
  */
-export function resolvedTurnUsage(state: CursorProtobufEventState): OcxUsage {
+export function resolvedTurnUsage(state: CursorProtobufEventState): OccxUsage {
   const contextTokens = reportableContextTokens(state);
   if (contextTokens !== undefined) return usageFromContextTokens(state, contextTokens);
   const estimate = state.estimatedInputTokens;

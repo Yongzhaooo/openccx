@@ -14,7 +14,7 @@ import {
   upsertOAuthProvider,
 } from "../../src/oauth";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { OAuthController } from "../../src/oauth/types";
 import { getCredential } from "../../src/oauth/store";
 import * as oauthStore from "../../src/oauth/store";
@@ -29,15 +29,15 @@ import { isApiAuthRequired, requireApiAuth } from "../../src/server/auth-cors";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-oauth-public-surface");
-const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
-const previousHome = process.env.OPENCODEX_HOME;
+const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
+const previousHome = process.env.OPENCCX_HOME;
 const canonical = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.com/backend-api/codex",
   authMode: "forward" as const,
 };
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -52,7 +52,7 @@ beforeEach(() => {
   clearLoginState("xai");
   removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(async () => {
@@ -60,8 +60,8 @@ afterEach(async () => {
   await flushConfigDirHardeningForTests();
   setIcaclsRunnerForTests(null);
   setAsyncIcaclsRunnerForTests(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(TEST_DIR);
 });
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { ensureStrictCatalogFields } from "../../src/codex/catalog/parsing";
 import { catalogHintsFromModelsApiItem } from "../../src/codex/catalog/provider-fetch";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Codex parses `input_modalities` as a closed enum of text | image | audio. A single out-of-enum
@@ -53,7 +53,7 @@ describe("catalog input_modalities stay inside the enum Codex accepts", () => {
 /*
  * The management API is the third ingress, and it was the one still open: the catalog writer
  * normalized on the way out, but a rejected value stored through /api/custom-models was handed
- * back to the GUI and CLI as if it were real, while the offline `ocx models add` path already
+ * back to the GUI and CLI as if it were real, while the offline `occx models add` path already
  * refused it. All three now agree.
  */
 describe("custom-model API rejects out-of-enum input modalities", () => {
@@ -64,7 +64,7 @@ describe("custom-model API rejects out-of-enum input modalities", () => {
   const fixtureConfig = {
     providers: { deepseek: { adapter: "openai-chat", baseUrl: "https://example.invalid/v1" } },
     customModels: [] as Array<{ id: string; provider: string; modelId: string; inputModalities?: string[] }>,
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 
   beforeEach(() => {
     // Seeded WITH modalities on purpose: a fixture without them would let the
@@ -91,7 +91,7 @@ describe("custom-model API rejects out-of-enum input modalities", () => {
       url,
       config: fixtureConfig,
       // This handler mutates and persists the config object it receives. The
-      // fixture must NEVER reach the process-global OPENCODEX_HOME; that exact bug
+      // fixture must NEVER reach the process-global OPENCCX_HOME; that exact bug
       // replaced a real 41KB provider config with this `existing-uuid` fixture.
       deps: {
         saveConfigPreservingClaudeCode: () => { persistCalls++; },
@@ -179,7 +179,7 @@ describe("custom-model API rejects out-of-enum input modalities", () => {
     expect(persistCalls).toBe(0);
   });
 
-  // `ocx models edit --modalities -` sends an empty array. That must clear the field, not 400.
+  // `occx models edit --modalities -` sends an empty array. That must clear the field, not 400.
   test("an empty array still clears the field rather than being rejected", async () => {
     persistCalls = 0;
     // The fixture starts with ["text", "image"], so this asserts a real clear, not a no-op.

@@ -11,7 +11,7 @@ import {
   KvServerMessageSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
 import type { CursorRunRequest } from "../../../src/adapters/cursor/types";
-import type { OcxMessage, OcxToolResultMessage } from "../../../src/types";
+import type { OccxMessage, OccxToolResultMessage } from "../../../src/types";
 
 function blobData(blobId: Uint8Array): Uint8Array {
   const reply = fromBinary(AgentClientMessageSchema, handleCursorNativeKv(create(KvServerMessageSchema, {
@@ -46,7 +46,7 @@ function decodedToolResult(bytes: Uint8Array) {
 }
 
 function requestWith(
-  resultContent: OcxToolResultMessage["content"],
+  resultContent: OccxToolResultMessage["content"],
   toolOverrides: Partial<{
     toolName: string;
     toolNamespace?: string;
@@ -55,7 +55,7 @@ function requestWith(
   }> = {},
   requestOverrides: Partial<CursorRunRequest> = {},
 ) {
-  const rawMessages: OcxMessage[] = [
+  const rawMessages: OccxMessage[] = [
     { role: "user", content: "run it", timestamp: 1 },
     {
       role: "assistant",

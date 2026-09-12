@@ -4,7 +4,7 @@ import { isJournalEntry } from "./journal";
 import { fingerprint, isOwnershipRecord, type OwnershipRecord } from "./ownership";
 import { validRefreshablePaths } from "./ownership-policy";
 
-const FRAGMENTS = [["catalog", "providers", "opencodex"], ["settings", "providers", "opencodex"]];
+const FRAGMENTS = [["catalog", "providers", "openccx"], ["settings", "providers", "openccx"]];
 const CONTAINERS = new Set(["catalog", "settings", "catalog\0providers", "settings\0providers"]);
 
 function clineRecord(value: unknown, configPath: string): value is OwnershipRecord | null {

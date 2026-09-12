@@ -26,7 +26,7 @@
   rather than assuming a single file;
 - invalidates `$CODEX_HOME/models_cache.json` when model visibility changes.
 
-On the default `opencodex-catalog.json` path, sync deliberately uses two catalog sources: Codex's
+On the default `openccx-catalog.json` path, sync deliberately uses two catalog sources: Codex's
 bundled catalog supplies a current native entry template, while the actual on-disk catalog supplies
 the rows being merged. This split is required because empty or partial provider discovery must
 preserve routed entries and genuine user-native rows from the file that will be overwritten; a
@@ -120,7 +120,7 @@ warning becomes failed. State is isolated per server instance.
 
 Exact unauthenticated `GET /readyz` returns sanitized identity fields plus pending, ready, or failed:
 `200` for ready, or `503` with `Retry-After: 1` for pending and terminal failed. The full CLI syntax
-is `ocx ready [--json] [--wait [--timeout <seconds>]]`. The probe validates the service, version,
+is `occx ready [--json] [--wait [--timeout <seconds>]]`. The probe validates the service, version,
 uptime, PID, port, status, and HTTP/status pairing. The default is one probe. With `--wait`, it
 applies one absolute deadline (45 seconds by default) across discovery, readiness probes, polling,
 and sleeps, but exits immediately on terminal failed. `--timeout <seconds>` requires `--wait` and
@@ -142,7 +142,7 @@ a label edit refresh Codex output.
 Supported bare native GPT rows also consume `providers.openai.modelDisplayNames`. Retained sync
 and convergence pass the same map to the observed-state merge. After native normalization and
 ordering, the merge applies the exact nonblank trimmed label and saves
-`opencodex_native_display_name: { slug, original, applied }` in the local catalog only. The next
+`openccx_native_display_name: { slug, original, applied }` in the local catalog only. The next
 merge detaches its inputs, removes that marker, and restores `original` only if the native slug
 still matches and the current name equals `applied`. Removing or blanking the override therefore
 restores the owned name before normal native metadata upgrades. Divergent external names remain
@@ -240,7 +240,7 @@ wire-clamps ultra/max to each model's real top rung (e.g. gpt-5.5 ultra → xhig
 (`src/server/effort-policy.ts`): they lower or preserve the requested effort rather than rejecting
 the request, and they never raise it.
 
-The `ocx effort` CLI accepts only the same canonical cap ladder before live probing or persistence.
+The `occx effort` CLI accepts only the same canonical cap ladder before live probing or persistence.
 Its status output preserves unsupported legacy cap values and reports that those fields are ignored;
 the read does not normalize or migrate them, and an ignored subagent field does not disable a valid
 main cap. Injection-effort input remains a separate contract.

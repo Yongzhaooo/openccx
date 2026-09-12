@@ -20,7 +20,7 @@
  *    the canonical OpenAI provider; a routed row with the same id owns its own
  *    explicit modalities.
  */
-import { modelInList, type OcxConfig, type OcxProviderConfig } from "../types";
+import { modelInList, type OccxConfig, type OccxProviderConfig } from "../types";
 import { modelRecordValue } from "../reasoning-effort";
 import { getModelMetadataCaseInsensitive, resolveMetadataProvider } from "../generated/model-metadata";
 import { nativeInputModalities } from "../codex/catalog/metadata";
@@ -67,7 +67,7 @@ export interface VisionModelOption {
   baseline?: boolean;
 }
 
-type EnrichedProviderCache = Map<string, OcxProviderConfig>;
+type EnrichedProviderCache = Map<string, OccxProviderConfig>;
 
 /**
  * Whether the proxy must describe images for this model before dispatching its main request.
@@ -77,7 +77,7 @@ type EnrichedProviderCache = Map<string, OcxProviderConfig>;
  * not a text-only model and must not be widened to image through the vision sidecar.
  */
 export function isModelVisionSidecarConsumer(
-  provider: Pick<OcxProviderConfig, "noVisionModels" | "modelInputModalities">,
+  provider: Pick<OccxProviderConfig, "noVisionModels" | "modelInputModalities">,
   modelId: string,
 ): boolean {
   if (modelInList(provider.noVisionModels, modelId)) return true;
@@ -102,10 +102,10 @@ function metadataImageInput(provider: string, modelId: string): boolean | undefi
  * checks many rows from one provider, so its caller shares this small call-local cache.
  */
 function enrichedProviderForVision(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   providerName: string,
   cache: EnrichedProviderCache,
-): OcxProviderConfig | undefined {
+): OccxProviderConfig | undefined {
   const cached = cache.get(providerName);
   if (cached) return cached;
   const configured = config.providers?.[providerName];
@@ -117,7 +117,7 @@ function enrichedProviderForVision(
 }
 
 function isVisionSidecarConsumerWithCache(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   providerName: string,
   modelId: string,
   cache: EnrichedProviderCache,
@@ -130,7 +130,7 @@ function isVisionSidecarConsumerWithCache(
  * Is this model listed as one the sidecar describes FOR? Such a model cannot be
  * the describer, and its advertised modalities are untrustworthy.
  */
-export function isVisionSidecarConsumer(config: Pick<OcxConfig, "providers">, providerName: string, modelId: string): boolean {
+export function isVisionSidecarConsumer(config: Pick<OccxConfig, "providers">, providerName: string, modelId: string): boolean {
   return isVisionSidecarConsumerWithCache(config, providerName, modelId, new Map());
 }
 
@@ -140,14 +140,14 @@ export function isVisionSidecarConsumer(config: Pick<OcxConfig, "providers">, pr
  * which callers treat as eligible.
  */
 export function modelAcceptsImageInput(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidate: VisionCandidateModel,
 ): boolean | undefined {
   return modelAcceptsImageInputWithCache(config, candidate, new Map());
 }
 
 function modelAcceptsImageInputWithCache(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidate: VisionCandidateModel,
   cache: EnrichedProviderCache,
 ): boolean | undefined {
@@ -162,14 +162,14 @@ function modelAcceptsImageInputWithCache(
 
 /** Eligible = not a sidecar consumer, and not positively known to be text-only. */
 export function isVisionEligibleModel(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidate: VisionCandidateModel,
 ): boolean {
   return isVisionEligibleModelWithCache(config, candidate, new Map());
 }
 
 function isVisionEligibleModelWithCache(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidate: VisionCandidateModel,
   cache: EnrichedProviderCache,
 ): boolean {
@@ -178,7 +178,7 @@ function isVisionEligibleModelWithCache(
 
 /** Which executor can describe through this row. */
 export function visionBackendForCandidate(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidate: VisionCandidateModel,
   anthropicProviderName?: string,
 ): VisionSidecarBackend | undefined {
@@ -230,7 +230,7 @@ function baselineCandidate(
  * backend, and only `value` reaches the client, so first-wins costs nothing.
  */
 export function visionEligibleModelOptions(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   candidates: readonly VisionCandidateModel[],
   enabledBackends: readonly VisionSidecarBackend[],
   anthropicProviderName?: string,

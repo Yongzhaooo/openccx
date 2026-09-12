@@ -10,7 +10,7 @@ import {
   MODEL_ADAPTER_OVERRIDE_ALLOWED,
   REASONING_SUMMARY_DELIVERY_VALUES,
   UPSTREAM_HTTP_VERSION_VALUES,
-  type OcxProviderConfig,
+  type OccxProviderConfig,
 } from "../types";
 
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
@@ -125,7 +125,7 @@ export function providerHeadersConfigError(headers: unknown): string | null {
 
 /** Keep the configured API-key header style scoped to Anthropic-compatible key auth. */
 export function apiKeyTransportConfigError(
-  provider: Pick<OcxProviderConfig, "adapter" | "authMode" | "apiKeyTransport">,
+  provider: Pick<OccxProviderConfig, "adapter" | "authMode" | "apiKeyTransport">,
 ): string | null {
   if (provider.apiKeyTransport === undefined) return null;
   if (provider.apiKeyTransport !== "x-api-key" && provider.apiKeyTransport !== "bearer") {
@@ -281,7 +281,7 @@ export function modelAdapterRecordConfigError(
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) return `${field} must be a plain object with own properties`;
   const entries = Object.entries(value);
-  if (entries.length > 0 && isCanonicalOpenAiForwardProvider(provider as OcxProviderConfig)) {
+  if (entries.length > 0 && isCanonicalOpenAiForwardProvider(provider as OccxProviderConfig)) {
     return `${field} is not supported on the canonical ChatGPT forward provider`;
   }
   for (const [key, entry] of entries) {

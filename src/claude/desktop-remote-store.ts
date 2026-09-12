@@ -66,7 +66,7 @@ export function inspectRemoteDesktopStore(owner: DesktopRemoteOwner): {
       if (bundle.state.phase === "cleaned") return { kind: "restored" };
       const meta = metadata(io, bundle.paths.library);
       selectedFile(io, bundle.paths.library, meta.value);
-      if (!meta.value.entries.some(e => e.id === bundle.state!.targetId && e.name === "opencodex")) return { kind: "conflict" };
+      if (!meta.value.entries.some(e => e.id === bundle.state!.targetId && e.name === "openccx")) return { kind: "conflict" };
       const file = io.read(profilePath(bundle.paths.library, bundle.state.targetId));
       if (projectionHash(file?.value ?? null) !== bundle.state.lastProjectionHash) return { kind: "conflict" };
       return { kind: bundle.state.phase === "restored" ? "restored" : "active" };
@@ -157,7 +157,7 @@ function restoreArtifact(io: StoreIO, bundle: Bundle, known: readonly string[]):
     if (observed !== state.pending.before && observed !== state.pending.after) throw new DesktopStoreError("conflict");
     const targetEntry = meta.value.entries.find(e => e.id === state.targetId);
     const uncommittedCreation = !baseline.targetExisted && state.lastProjectionHash === projectionHash(null);
-    if ((targetEntry && targetEntry.name !== "opencodex") || (!targetEntry && !uncommittedCreation)) throw new DesktopStoreError("conflict");
+    if ((targetEntry && targetEntry.name !== "openccx") || (!targetEntry && !uncommittedCreation)) throw new DesktopStoreError("conflict");
     const tokenFingerprint = observed === state.pending.after ? state.pending.tokenFingerprint : state.tokenFingerprint;
     // Transition the intent, not the last committed projection. A profile may
     // already exist while its new metadata row has never been committed.

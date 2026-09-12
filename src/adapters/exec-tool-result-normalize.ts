@@ -163,15 +163,15 @@ export const CODE_MODE_HOST_RECOVERY_PREFIX = "[recovery: ";
 const CODE_MODE_HOST_ERROR_PREFIX = /^(?:Script failed(?:[ \t]*(?:\r?\n|$)|:)|Script error:|(?:Error|TypeError|SyntaxError):|tool `apply_patch` expects a string input\b|apply_patch verification failed:|Unsupported import in exec:)/i;
 
 /** Namespaces under which Cursor displays Codex's own Responses tools (see cursor/tool-naming.ts). */
-const CODEX_RESPONSES_DISPLAY_NAMESPACES: ReadonlySet<string> = new Set(["opencodex-responses", "mcp__opencodex-responses"]);
+const CODEX_RESPONSES_DISPLAY_NAMESPACES: ReadonlySet<string> = new Set(["openccx-responses", "mcp__openccx-responses"]);
 /** Flattened spellings of the same code-mode exec when a client folds the namespace into the name. */
-const CODEX_CODE_MODE_EXEC_ALIASES: ReadonlySet<string> = new Set(["exec", "mcp__opencodex-responses__exec", "mcp_opencodex-responses_exec"]);
+const CODEX_CODE_MODE_EXEC_ALIASES: ReadonlySet<string> = new Set(["exec", "mcp__openccx-responses__exec", "mcp_openccx-responses_exec"]);
 
 /**
- * The code-mode `exec` tool by NAME — bare, or under Codex's own `opencodex-responses` display
+ * The code-mode `exec` tool by NAME — bare, or under Codex's own `openccx-responses` display
  * namespace, matched exactly. The four host strings above originate only in that isolate, so flat
  * shell bridges (`exec_command`, `shell`, …) and every other namespace (`mcp__docker`,
- * `mcp__foreign-opencodex-responses`) are excluded: an unrelated server's output that quotes the
+ * `mcp__foreign-openccx-responses`) are excluded: an unrelated server's output that quotes the
  * phrase must not receive Codex guidance. Narrower than `isCodexExecBridgeTool` on purpose; the
  * empty-output repair keeps the wider gate. Callers that KNOW the catalog shape (Kiro's
  * `codeModeExecName`, the Responses body gate) add that check on top; this predicate alone cannot
@@ -207,7 +207,7 @@ export function annotateCodeModeHostFailure(
  * here is almost always a code-mode cell that never called text()/notify().
  */
 export function isCodexExecBridgeTool(toolName?: string, toolNamespace?: string): boolean {
-  if (toolNamespace && toolNamespace.includes("opencodex-responses")) return true;
+  if (toolNamespace && toolNamespace.includes("openccx-responses")) return true;
   if (!toolName) return false;
   const lower = toolName.toLowerCase();
   return (
@@ -220,8 +220,8 @@ export function isCodexExecBridgeTool(toolName?: string, toolNamespace?: string)
     || lower === "shell"
     || lower === "local_shell"
     || lower === "container.exec"
-    || lower.startsWith("mcp_opencodex-responses_")
-    || lower.startsWith("mcp__opencodex-responses__")
+    || lower.startsWith("mcp_openccx-responses_")
+    || lower.startsWith("mcp__openccx-responses__")
   );
 }
 

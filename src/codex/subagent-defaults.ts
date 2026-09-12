@@ -7,8 +7,8 @@
  * this transform may later remove has its own immediately preceding marker.
  */
 
-export const MANAGED_SUBAGENT_DEFAULT_MARKER = "# Managed by opencodex: native subagent default";
-export const MANAGED_AGENTS_TABLE_MARKER = "# Managed by opencodex: native subagent defaults table";
+export const MANAGED_SUBAGENT_DEFAULT_MARKER = "# Managed by openccx: native subagent default";
+export const MANAGED_AGENTS_TABLE_MARKER = "# Managed by openccx: native subagent defaults table";
 
 export type ManagedSubagentDefaultKey =
   | "default_subagent_model"
@@ -411,7 +411,7 @@ function invalidInput(content: string, error: string): ManagedSubagentDefaultsTr
 }
 
 /**
- * Add/update opencodex-owned native subagent defaults, or remove them with
+ * Add/update openccx-owned native subagent defaults, or remove them with
  * `defaults = null`. Unmarked target keys are user-owned: they are retained and
  * returned as conflicts rather than overwritten. Ambiguous TOML is rejected
  * byte-for-byte so callers never have to guess what was changed.
@@ -483,7 +483,7 @@ export function transformManagedSubagentDefaults(
     if (!definition.owned) {
       continue;
     }
-    if (replaceManagedString(lines[definition.index]!.text, key, value ?? "__opencodex_validation__") === null) {
+    if (replaceManagedString(lines[definition.index]!.text, key, value ?? "__openccx_validation__") === null) {
       return invalidInput(content, `managed agents.${key} is not a supported single-line TOML string`);
     }
     if (value === undefined) {

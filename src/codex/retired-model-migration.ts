@@ -11,7 +11,7 @@
  * rewritten too. That is deliberate: there is no configuration in which continuing to
  * send a withdrawn model is what the operator wanted. Any other value is left alone.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /** July 9 21:00 UTC = KST July 10 06:00. */
 export const RETIRED_MODEL_MIGRATION_CUTOFF = Date.UTC(2026, 6, 9, 21, 0);
@@ -22,7 +22,7 @@ const REPLACEMENT_MODEL = "gpt-5.6-luna";
 /**
  * @returns true when the config changed and the caller should persist it.
  */
-export function runRetiredCodexModelMigration(config: OcxConfig, now = Date.now()): boolean {
+export function runRetiredCodexModelMigration(config: OccxConfig, now = Date.now()): boolean {
   if (now < RETIRED_MODEL_MIGRATION_CUTOFF) return false;
   let migrated = false;
   if (config.webSearchSidecar?.model === RETIRED_SIDECAR_MODEL) {

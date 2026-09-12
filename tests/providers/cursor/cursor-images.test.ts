@@ -1,7 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { create, fromBinary } from "@bufbuild/protobuf";
-import type { OcxMessage, OcxToolResultMessage } from "../../../src/types";
+import type { OccxMessage, OccxToolResultMessage } from "../../../src/types";
 import {
   CursorImageError,
   CURSOR_VISION_IMAGE_OMITTED,
@@ -50,10 +50,10 @@ async function oversizedDecodablePng(): Promise<Uint8Array> {
 }
 
 function toolImageResult(
-  content: OcxToolResultMessage["content"],
+  content: OccxToolResultMessage["content"],
   toolCallId = "call_view",
   toolName = "view_image",
-): OcxToolResultMessage {
+): OccxToolResultMessage {
   return { role: "toolResult", toolCallId, toolName, content, isError: false, timestamp: 1 };
 }
 
@@ -167,7 +167,7 @@ describe("Cursor opted-in trailing tool image preparation", () => {
   });
 
   test("leaves history before the contiguous run untouched and never mutates input", async () => {
-    const raw: OcxMessage[] = [
+    const raw: OccxMessage[] = [
       { role: "user", content: [{ type: "image", imageUrl: PNG_DATA_URL }], timestamp: 1 },
       toolImageResult(Array.from({ length: 13 }, () => ({ type: "image", imageUrl: PNG_DATA_URL })), "old"),
       { role: "assistant", content: [{ type: "text", text: "next tool call" }], timestamp: 2 },
@@ -213,7 +213,7 @@ describe("Cursor opted-in trailing tool image preparation", () => {
   test("later user/developer turns do not revive stale tool images or receive source labels", async () => {
     for (const role of ["user", "developer"] as const) {
       const stale = toolImageResult([{ type: "image", imageUrl: PNG_DATA_URL }]);
-      const raw: OcxMessage[] = [stale, { role, content: "new question", timestamp: 2 }];
+      const raw: OccxMessage[] = [stale, { role, content: "new question", timestamp: 2 }];
       const textOnly = await prepareCursorRawMessages(raw, undefined, { trailingToolImages: true });
       expect(textOnly.messages).toBe(raw);
       expect(textOnly.images).toEqual([]);

@@ -7,7 +7,7 @@ import {
 import { buildCatalogEntries, gatherRoutedModels as gatherRoutedModelsDirect, upstreamNativeEntry } from "../../../src/codex/catalog";
 import { getProviderRegistryEntry } from "../../../src/providers/registry";
 import { withStubbedProviderFetch } from "../../helpers/catalog-provider-fetch";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 const gatherRoutedModels: typeof gatherRoutedModelsDirect = (config, options) =>
   gatherRoutedModelsDirect(withStubbedProviderFetch(config), options);
@@ -15,7 +15,7 @@ const gatherRoutedModels: typeof gatherRoutedModelsDirect = (config, options) =>
 /** The four ids this transport is maintained against. */
 const TARGETS = ["glm-5.3-flash", "deepseek-v4-flash:0731", "glm-5.2", "kimi-k3"] as const;
 
-function ollamaProvider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function ollamaProvider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "ollama-native",
     baseUrl: "https://ollama.com/v1",
@@ -25,15 +25,15 @@ function ollamaProvider(overrides: Partial<OcxProviderConfig> = {}): OcxProvider
     models: [...TARGETS],
     modelReasoningEfforts: { "deepseek-v4-flash:0731": ["low", "medium", "high", "max"] },
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
 function parsedWith(
   messages: unknown[],
   options: Record<string, unknown> = {},
   modelId = "glm-5.3-flash",
-): OcxParsedRequest {
-  return { modelId, stream: true, options, context: { messages } } as unknown as OcxParsedRequest;
+): OccxParsedRequest {
+  return { modelId, stream: true, options, context: { messages } } as unknown as OccxParsedRequest;
 }
 
 describe("ollama-native — URL policy", () => {

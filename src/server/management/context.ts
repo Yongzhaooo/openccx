@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import type { NativeProfileApiDeps } from "../../codex/native-profile-api";
 import type { CodexLogGuardProtectionDeps } from "../../codex/log-guard/protection";
 import type { CodexLogGuardMaintenanceDeps } from "../../codex/log-guard/maintenance";
@@ -27,25 +27,25 @@ export interface ManagementApiDeps {
   platform?: NodeJS.Platform;
   toggleCodexMultiAgentV2?: (enabled: boolean) => void;
   toggleDefaultModeRequestUserInput?: (enabled: boolean) => void;
-  createManagementConvergeCodex?: (config: Readonly<OcxConfig>) => ConvergeCodex;
+  createManagementConvergeCodex?: (config: Readonly<OccxConfig>) => ConvergeCodex;
   /** Test-only destination for best-effort Claude agent-definition sync. */
   claudeAgentConfigDir?: string;
   /** Startup-health seam keeps route tests from launching platform probes. */
-  getCachedStartupHealth?: (config: Pick<OcxConfig, "codexAutoStart">) => Promise<StartupHealth>;
+  getCachedStartupHealth?: (config: Pick<OccxConfig, "codexAutoStart">) => Promise<StartupHealth>;
   /**
    * Persistence seam for route-level tests. Production leaves this unset and uses
    * `saveConfigPreservingClaudeCode`; tests that pass an in-memory fixture config
    * MUST inject a no-op/spy so the fixture can never overwrite the user's real
-   * OPENCODEX_HOME (incident: devlog 260730.../070).
+   * OPENCCX_HOME (incident: devlog 260730.../070).
    */
-  saveConfigPreservingClaudeCode?: (config: OcxConfig) => void;
+  saveConfigPreservingClaudeCode?: (config: OccxConfig) => void;
   /**
    * Catalog seam for the Grok toggle (WP2, devlog 260803_integrations_toggle_all
    * Rev 3 N2). Production leaves this unset and the route dynamic-imports the
    * real one — a static import would close a cycle with management-api.ts.
    * Tests stub it to orphan the fixture file mid-fetch (the r7 recheck test).
    */
-  fetchAllModels?: (config: OcxConfig) => Promise<CatalogModel[]>;
+  fetchAllModels?: (config: OccxConfig) => Promise<CatalogModel[]>;
   /**
    * Writer seam for the Grok toggle: lets a test place the file in any state
    * between the pre-write recheck and the write itself (the r8 post-inspection
@@ -66,7 +66,7 @@ export interface ManagementApiDeps {
   loadCursorEffortTable?: (install: CursorInstall | undefined) => CursorEffortTable | null;
   clearThreadAccountMap?: () => void;
   clearProviderQuotaCache?: () => void;
-  primeCodexPoolQuotas?: (config: OcxConfig, reason: string) => Promise<void> | void;
+  primeCodexPoolQuotas?: (config: OccxConfig, reason: string) => Promise<void> | void;
   runStartupInstallAction?: (
     action: StartupInstallAction,
     options?: { repair?: boolean },
@@ -113,7 +113,7 @@ export interface ManagementApiDeps {
 export interface ManagementContext {
   req: Request;
   url: URL;
-  config: OcxConfig;
+  config: OccxConfig;
   deps: ManagementApiDeps;
   /** Installed package version projected through bounded system identity routes. */
   version: string;

@@ -10,7 +10,7 @@ import {
   expandPreviousResponseInput,
   rememberResponseState,
 } from "../../responses/state";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../types";
 import { evaluateAssertions } from "./assertion";
 import { fixtureProviderConfig, upstreamAdapterForProtocol } from "./fixture-provider";
 import { withHarnessTranslatorBudget } from "./harness-budget";
@@ -91,7 +91,7 @@ async function parseUpstreamSse(adapter: ReturnType<typeof createOpenAIChatAdapt
   }
 }
 
-function parsedFromContext(vector: Record<string, unknown>): OcxParsedRequest {
+function parsedFromContext(vector: Record<string, unknown>): OccxParsedRequest {
   const context = vector.context as Record<string, unknown> | undefined;
   const options = vector.options as Record<string, unknown> | undefined;
   const messages = context?.messages as Array<Record<string, unknown>> | undefined;
@@ -122,7 +122,7 @@ function normalizeTools(tools: unknown[]): unknown[] {
   });
 }
 
-function createHarnessAdapter(provider: OcxProviderConfig) {
+function createHarnessAdapter(provider: OccxProviderConfig) {
   return withHarnessTranslatorBudget(
     provider.adapter === "openai-responses"
       ? createResponsesPassthroughAdapter(provider)
@@ -132,8 +132,8 @@ function createHarnessAdapter(provider: OcxProviderConfig) {
 
 async function runBuildRequest(
   observation: NormalizedObservation,
-  parsed: OcxParsedRequest,
-  provider: OcxProviderConfig,
+  parsed: OccxParsedRequest,
+  provider: OccxProviderConfig,
 ): Promise<NormalizedObservation> {
   const adapter = createHarnessAdapter(provider);
   try {
@@ -218,7 +218,7 @@ async function executeAdapterVector(caseRecord: CaseRecord): Promise<NormalizedO
 async function runToolRoundTrip(
   observation: NormalizedObservation,
   vector: Record<string, unknown>,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): Promise<NormalizedObservation> {
   const adapter = withHarnessTranslatorBudget(createOpenAIChatAdapter(provider));
   try {
@@ -295,7 +295,7 @@ async function runCustomToolRoundTrip(
 async function runToolResultContent(
   observation: NormalizedObservation,
   vector: Record<string, unknown>,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): Promise<NormalizedObservation> {
   const adapter = withHarnessTranslatorBudget(createOpenAIChatAdapter(provider));
   try {
@@ -338,7 +338,7 @@ function normalizeImageToolResultUpstream(body: Record<string, unknown>): Record
 async function runApplyPatchTurn(
   observation: NormalizedObservation,
   vector: Record<string, unknown>,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): Promise<NormalizedObservation> {
   const adapter = withHarnessTranslatorBudget(createOpenAIChatAdapter(provider));
   try {
@@ -424,13 +424,13 @@ async function runReasoningEffortMapping(
   observation: NormalizedObservation,
   vector: Record<string, unknown>,
 ): Promise<NormalizedObservation> {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     ...fixtureProviderConfig("openai-chat"),
     // This vector explicitly exercises the non-native gateway-object wire contract.
     // Keep it off api.openai.com so native Chat's reasoning_effort branch is tested separately.
     baseUrl: "http://127.0.0.1:1/v1",
     reasoningEffortMap: vector.reasoningEffortMap as Record<string, string>,
-    reasoningWireFormat: vector.reasoningWireFormat as OcxProviderConfig["reasoningWireFormat"],
+    reasoningWireFormat: vector.reasoningWireFormat as OccxProviderConfig["reasoningWireFormat"],
   };
   const parsed = parseRequest({
     model: "fixture-model",
@@ -445,7 +445,7 @@ async function runReasoningReplay(
   observation: NormalizedObservation,
   vector: Record<string, unknown>,
 ): Promise<NormalizedObservation> {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     ...fixtureProviderConfig("openai-responses"),
     // This Protocol V1 vector exercises a Responses-compatible target that accepts provider
     // replay fields verbatim. The adapter must therefore preserve raw reasoning content.

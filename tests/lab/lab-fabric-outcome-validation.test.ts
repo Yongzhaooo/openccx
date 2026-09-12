@@ -22,7 +22,7 @@ function routeSubject(): RouteSubjectV1 {
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
-    opencodexCompatibilityVersion: "b".repeat(64),
+    openccxCompatibilityVersion: "b".repeat(64),
     behaviorFingerprint: "c".repeat(64),
     endpointFingerprint: "d".repeat(64),
     dependencies: [],

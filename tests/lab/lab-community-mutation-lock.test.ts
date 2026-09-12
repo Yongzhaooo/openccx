@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 function configDir(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-community-lock-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-community-lock-"));
   roots.push(root);
   ensureLabDirs(root);
   return root;

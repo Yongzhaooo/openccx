@@ -1,5 +1,5 @@
 /**
- * The `ocx models` subcommands that live in `models-runtime` and talk to the
+ * The `occx models` subcommands that live in `models-runtime` and talk to the
  * management API, rather than editing `config.json` directly.
  *
  * This list is shared rather than duplicated on purpose. `handleModels` in
@@ -11,7 +11,7 @@
  *
  * It lives in its own leaf module so `models.ts` can read the set without
  * statically importing `models-runtime` — that import is deliberately dynamic
- * to keep the management-API client off the `ocx models add` path.
+ * to keep the management-API client off the `occx models add` path.
  */
 export const MODELS_RUNTIME_SUBCOMMANDS = [
   "live",

@@ -29,7 +29,7 @@ const sandboxes: Sandbox[] = [];
 interface Sandbox {
   readonly root: string;
   readonly codexHome: string;
-  readonly opencodexHome: string;
+  readonly openccxHome: string;
   readonly env: Record<string, string>;
   readonly serviceManagerEnv: Record<string, string>;
   readonly preloadPath?: string;
@@ -60,7 +60,7 @@ function catalogBytes(visibility = "list", routed = false): string {
       nativeEntry("gpt-5.5", visibility),
       ...(routed ? [{
         ...nativeEntry("vendor/old-model"),
-        description: "Routed via opencodex → vendor.",
+        description: "Routed via openccx → vendor.",
       }] : []),
     ],
   }, null, 2)}\n`;
@@ -69,22 +69,22 @@ function catalogBytes(visibility = "list", routed = false): string {
 function makeSandbox(prefix: string): Sandbox {
   const root = realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
   const codexHome = join(root, "codex-home");
-  const opencodexHome = join(root, "opencodex-home");
+  const openccxHome = join(root, "openccx-home");
   const home = join(root, "user-home");
   const runtime = join(root, "runtime");
-  for (const path of [codexHome, opencodexHome, home, runtime]) {
+  for (const path of [codexHome, openccxHome, home, runtime]) {
     mkdirSync(path, { recursive: true });
     chmodSync(path, 0o700);
   }
-  const serviceHome = claimOwnedServiceHome(codexHome, opencodexHome, home);
+  const serviceHome = claimOwnedServiceHome(codexHome, openccxHome, home);
   const sandbox = {
     root,
     codexHome,
-    opencodexHome,
+    openccxHome,
     env: {
       ...Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
       HOME: home,
       USERPROFILE: home,
       TMPDIR: runtime,
@@ -160,7 +160,7 @@ async function raceBarrier(result: Promise<ChildResult>, barrier: Promise<void>)
 }
 
 test("barrier diagnostics retain both pipes when the child exits first", async () => {
-  const sandbox = makeSandbox("ocx-retained-early-exit-");
+  const sandbox = makeSandbox("occx-retained-early-exit-");
   const child = Bun.spawn([process.execPath, "--eval", `
     process.stdout.write("fixture-stdout\\n");
     process.stderr.write("fixture-stderr\\n");
@@ -256,7 +256,7 @@ afterEach(async () => {
 });
 
 test("startup and CLI sync-cache cannot write models_cache while another process owns K", async () => {
-  const sandbox = makeSandbox("ocx-retained-cache-");
+  const sandbox = makeSandbox("occx-retained-cache-");
   seedCatalog(sandbox);
   const cachePath = join(sandbox.codexHome, "models_cache.json");
   const holder = await holdCatalogLock(sandbox);
@@ -308,9 +308,9 @@ test("startup and CLI sync-cache cannot write models_cache while another process
 }, SPAWN_BUDGET_MS);
 
 test("native restore cannot read-transform-write the catalog while another process owns K", async () => {
-  const sandbox = makeSandbox("ocx-retained-restore-");
+  const sandbox = makeSandbox("occx-retained-restore-");
   const catalogPath = seedCatalog(sandbox, catalogBytes("list", true));
-  writeFileSync(join(sandbox.opencodexHome, "catalog-backup.json"), catalogBytes("list", false));
+  writeFileSync(join(sandbox.openccxHome, "catalog-backup.json"), catalogBytes("list", false));
   const before = readFileSync(catalogPath, "utf8");
   const holder = await holdCatalogLock(sandbox);
   try {
@@ -358,7 +358,7 @@ async function runPublisher(
 
 for (const publisher of ["convergence", "retained"] as const) {
   test(`POST /api/sync gathered first and acquired K second does not clobber a newer ${publisher} catalog`, async () => {
-    const sandbox = makeSandbox(`ocx-retained-race-${publisher}-`);
+    const sandbox = makeSandbox(`occx-retained-race-${publisher}-`);
     const catalogPath = seedCatalog(sandbox);
     const initial = readFileSync(catalogPath, "utf8");
     const requested = join(sandbox.root, "provider-requested");
@@ -392,7 +392,7 @@ for (const publisher of ["convergence", "retained"] as const) {
       },
       disabledModels: ["gpt-5.5"],
     };
-    writeFileSync(join(sandbox.opencodexHome, "config.json"), JSON.stringify(config));
+    writeFileSync(join(sandbox.openccxHome, "config.json"), JSON.stringify(config));
     try {
       const sync = Bun.spawn([process.execPath, ...withOwnedServiceHomePreload(["--eval", `
         const config = ${JSON.stringify(config)};
@@ -445,12 +445,12 @@ for (const publisher of ["convergence", "retained"] as const) {
  * why it exists: nothing else in the suite covered that component.
  */
 test("a persisted runtime selection moved by another process during the await blocks the write", async () => {
-  const sandbox = makeSandbox("ocx-retained-runtime-move-");
+  const sandbox = makeSandbox("occx-retained-runtime-move-");
   const catalogPath = seedCatalog(sandbox);
   const initial = readFileSync(catalogPath, "utf8");
   const requested = join(sandbox.root, "provider-requested");
   const release = join(sandbox.root, "provider-release");
-  const runtimeStatePath = join(sandbox.opencodexHome, "codex-runtime.json");
+  const runtimeStatePath = join(sandbox.openccxHome, "codex-runtime.json");
   writeFileSync(runtimeStatePath, `${JSON.stringify({
     version: 1,
     command: "/usr/local/bin/codex-r1",
@@ -524,13 +524,13 @@ test("a persisted runtime selection moved by another process during the await bl
  * that follows approval rather than the edit.
  */
 test("two processes at the post-approval management seam serialize instead of interleaving", async () => {
-  const sandbox = makeSandbox("ocx-post-approval-race-");
+  const sandbox = makeSandbox("occx-post-approval-race-");
   const catalogPath = seedCatalog(sandbox);
   const seeded = readFileSync(catalogPath, "utf8");
   const barrier = join(sandbox.root, "seam-barrier");
 
   // Warm the config ownership + mutation database in a single process first.
-  // Two cold processes otherwise race to create `.opencodex-owner.json` and both
+  // Two cold processes otherwise race to create `.openccx-owner.json` and both
   // die with EEXIST before approval, which would make this test vacuous.
   const warm = Bun.spawn([process.execPath, "--eval", `
     const { withConfigMutationLockSync } = await import("./src/config.ts");

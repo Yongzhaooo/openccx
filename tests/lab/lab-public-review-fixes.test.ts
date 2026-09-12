@@ -80,7 +80,7 @@ function signedBundle(config: string) {
 }
 
 test("decoded community objects are depth-bounded before JCS canonicalization", () => {
-  const consumer = configDir("ocx-cl10-object-bound-");
+  const consumer = configDir("occx-cl10-object-bound-");
   let raw: unknown = { leaf: true };
   for (let index = 0; index < 20_000; index += 1) raw = { nested: raw };
 
@@ -99,7 +99,7 @@ test("public barrel does not expose private test fault setters", () => {
 });
 
 test("foreign origin entries do not consume marker quota but remain explicitly unsafe to list", () => {
-  const home = configDir("ocx-cl10-origin-bound-");
+  const home = configDir("occx-cl10-origin-bound-");
   ensureLabDirs(home);
   const dir = labPublicOriginDir(home);
   for (let index = 0; index < 1024; index += 1) {
@@ -116,7 +116,7 @@ test("foreign origin entries do not consume marker quota but remain explicitly u
 });
 
 test("public origin pressure reclaims markers with no community copy", () => {
-  const home = configDir("ocx-cl10-origin-reclaim-");
+  const home = configDir("occx-cl10-origin-reclaim-");
   ensureLabDirs(home);
   const dir = labPublicOriginDir(home);
   for (let index = 0; index < 1024; index += 1) {
@@ -137,7 +137,7 @@ test("public origin pressure reclaims markers with no community copy", () => {
 });
 
 test("corrupt origin provenance cannot retain mandatory local export bytes and reports incomplete classification", () => {
-  const home = configDir("ocx-cl10-origin-corrupt-");
+  const home = configDir("occx-cl10-origin-corrupt-");
   const bundle = signedBundle(home);
   writePublicEvidenceBundle(bundle, home);
   recordLocalPublicOrigin({ publisherKeyId: bundle.publisher.keyId, bundleId: bundle.bundleId }, home);
@@ -156,7 +156,7 @@ test("corrupt origin provenance cannot retain mandatory local export bytes and r
 });
 
 test("unsafe locally-originated community copies are removed without blocking sensitive export purge", () => {
-  const home = configDir("ocx-cl10-community-unsafe-");
+  const home = configDir("occx-cl10-community-unsafe-");
   const bundle = signedBundle(home);
   writePublicEvidenceBundle(bundle, home);
   recordLocalPublicOrigin({ publisherKeyId: bundle.publisher.keyId, bundleId: bundle.bundleId }, home);
@@ -172,7 +172,7 @@ test("unsafe locally-originated community copies are removed without blocking se
 });
 
 test("missing direct revocation bundle target reports stable revocation_target error", () => {
-  const home = configDir("ocx-cl10-missing-revocation-target-");
+  const home = configDir("occx-cl10-missing-revocation-target-");
   ensureLabDirs(home);
 
   let failure: unknown;
@@ -191,7 +191,7 @@ test("missing direct revocation bundle target reports stable revocation_target e
 });
 
 test("failed export purge is omitted from the durable tombstone action set", () => {
-  const home = configDir("ocx-cl10-tombstone-export-");
+  const home = configDir("occx-cl10-tombstone-export-");
   const paths = ensureLabDirs(home);
   writeFileSync(join(paths.scratchDir, "scratch.txt"), "scratch", { mode: 0o600 });
   writeFileSync(join(paths.exportDir, "sensitive.txt"), "sensitive", { mode: 0o600 });
@@ -217,7 +217,7 @@ test("failed export purge is omitted from the durable tombstone action set", () 
 });
 
 test("failed export plus ledger does not persist a targetless tombstone", () => {
-  const home = configDir("ocx-cl10-tombstone-export-ledger-");
+  const home = configDir("occx-cl10-tombstone-export-ledger-");
   const paths = ensureLabDirs(home);
   const restoreFault = setPublicEvidencePurgeFaultForTests("before_export_delete");
   let failure: unknown;
@@ -238,7 +238,7 @@ test("failed export plus ledger does not persist a targetless tombstone", () => 
 });
 
 test("failed export plus sqlite still rebuilds projection from the unchanged ledger", () => {
-  const home = configDir("ocx-cl10-tombstone-export-sqlite-");
+  const home = configDir("occx-cl10-tombstone-export-sqlite-");
   const paths = ensureLabDirs(home);
   expect(existsSync(paths.sqlitePath)).toBe(false);
   const restoreFault = setPublicEvidencePurgeFaultForTests("before_export_delete");

@@ -20,7 +20,7 @@ import type {
   CatalogSourceEvidence,
 } from "../../src/codex/convergence-types";
 import { saveConfig } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const CONDITIONAL_SOURCE_ROLES = [
@@ -51,38 +51,38 @@ const STRUCTURALLY_INVALID_EVIDENCE_ASSIGNABILITY: readonly [
 
 let testRoot = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function config(port = 10100): OcxConfig {
+function config(port = 10100): OccxConfig {
   return { port, providers: {}, defaultProvider: "openai" };
 }
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-catalog-admission-")));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-catalog-admission-")));
   codexHome = join(testRoot, "codex-home");
-  opencodexHome = join(testRoot, "opencodex-home");
+  openccxHome = join(testRoot, "openccx-home");
   mkdirSync(codexHome, { recursive: true });
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testRoot);
 });
 
 test("captures the given config reference, generation, and catalog target identities", () => {
   saveConfig(config(20200));
   const residentConfig = config(30300);
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), "{}\n");
+  writeFileSync(join(codexHome, "openccx-catalog.json"), "{}\n");
   writeFileSync(join(codexHome, "models_cache.json"), "{}\n");
 
   const snapshot = captureCatalogAdmissionSnapshot(residentConfig);
@@ -96,7 +96,7 @@ test("captures the given config reference, generation, and catalog target identi
     snapshotIdentity: expect.any(String),
   });
   expect(JSON.parse(snapshot.targets.catalog)).toMatchObject({
-    path: join(codexHome, "opencodex-catalog.json"),
+    path: join(codexHome, "openccx-catalog.json"),
     canonicalParent: codexHome,
     parentIdentity: { device: expect.any(String), inode: expect.any(String) },
     fileIdentity: { device: expect.any(String), inode: expect.any(String) },
@@ -189,7 +189,7 @@ test("ignores process-local symbol tags when binding the config snapshot identit
   const plainIdentity = captureCatalogAdmissionSnapshot(config(20200)).configIdentity;
 
   const tagged = config(20200);
-  Object.defineProperty(tagged, Symbol("opencodex.user-cost-overlay-preservation-owner"), {
+  Object.defineProperty(tagged, Symbol("openccx.user-cost-overlay-preservation-owner"), {
     value: { refs: 1, config: tagged, ownedProviders: Object.keys(tagged.providers ?? {}) },
     enumerable: true,
     configurable: true,

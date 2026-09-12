@@ -2,7 +2,7 @@ import { mutatePersistedConfig } from "../config";
 import { projectModelRenames } from "./model-rename-migration";
 import { projectStaleContextWindows } from "./stale-context-window-migration";
 import { projectDevinCliAuthMode } from "./devin-cli-authmode-migration";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /**
  * The startup projection: registry model renames, then the context-window
@@ -11,7 +11,7 @@ import type { OcxConfig } from "../types";
  * present one — so they share this pass rather than adding a second boot step
  * with its own persistence, adopt, and failure handling.
  */
-export function projectStartupConfigRepairs(config: OcxConfig): ReturnType<typeof projectModelRenames> {
+export function projectStartupConfigRepairs(config: OccxConfig): ReturnType<typeof projectModelRenames> {
   const renames = projectModelRenames(config);
   const windows = projectStaleContextWindows(renames.config);
   const devinCli = projectDevinCliAuthMode(windows.config);
@@ -25,7 +25,7 @@ export function projectStartupConfigRepairs(config: OcxConfig): ReturnType<typeo
 export interface ModelRenameStartupDeps {
   project: typeof projectModelRenames;
   /** Injected writer for tests and callers that own their own persistence. */
-  save?: (config: OcxConfig) => void;
+  save?: (config: OccxConfig) => void;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -56,7 +56,7 @@ function adoptRecord(live: Record<string, unknown>, next: Record<string, unknown
  * row at a time, so every sibling row — and the `providers` container itself — must survive
  * with its identity intact.
  */
-function adoptConfig(target: OcxConfig, source: OcxConfig): void {
+function adoptConfig(target: OccxConfig, source: OccxConfig): void {
   if (target === source) return;
   adoptRecord(
     target as unknown as Record<string, unknown>,
@@ -78,9 +78,9 @@ function adoptConfig(target: OcxConfig, source: OcxConfig): void {
  * boot path down.
  */
 export function runModelRenameStartupMigration(
-  config: OcxConfig,
+  config: OccxConfig,
   deps: ModelRenameStartupDeps = { project: projectStartupConfigRepairs },
-): OcxConfig {
+): OccxConfig {
   const projection = deps.project(structuredClone(config));
   if (!projection.changed) {
     for (const warning of projection.warnings) console.warn(`[model-rename-migration] ${warning}`);

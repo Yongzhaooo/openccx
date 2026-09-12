@@ -286,7 +286,7 @@ describe("idle poller", () => {
     } = await import("../../src/quota/reset-poller");
     // A real enabled config is what carries a tick past its early returns; the resolver reads
     // the config file rather than exposing an injection seam.
-    const home = mkdtempSync(join(tmpdir(), "ocx-poller-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-poller-"));
     writeFileSync(join(home, "config.json"), JSON.stringify({
       port: 10100,
       defaultProvider: "openai",
@@ -295,8 +295,8 @@ describe("idle poller", () => {
       },
       quotaResetNotify: { enabled: true, command: ["true"], pollSeconds: 900 },
     }));
-    const previousHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+    const previousHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     resetQuotaResetNotifyCacheForTests();
     try {
       startQuotaResetPoller(900_000);
@@ -317,8 +317,8 @@ describe("idle poller", () => {
       expect(quotaResetPollerTickCountForTests()).toBe(before + 1);
     } finally {
       stopQuotaResetPoller();
-      if (previousHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = previousHome;
+      if (previousHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = previousHome;
       resetQuotaResetNotifyCacheForTests();
     }
   });
@@ -339,9 +339,9 @@ describe("observation ordering under a burst", () => {
     // after the fix, 3/3 report none.
     const child = fileURLToPath(new URL("../helpers/quota-reset-burst-child.ts", import.meta.url));
     const proc = Bun.spawn([process.execPath, child], {
-      // A private OPENCODEX_HOME: the baseline is persisted, so a shared home would let one
+      // A private OPENCCX_HOME: the baseline is persisted, so a shared home would let one
       // run seed the next and turn this into a test of leftover state.
-      env: { ...process.env, OPENCODEX_HOME: mkdtempSync(join(tmpdir(), "ocx-burst-")) },
+      env: { ...process.env, OPENCCX_HOME: mkdtempSync(join(tmpdir(), "occx-burst-")) },
       stdout: "pipe",
       stderr: "pipe",
     });

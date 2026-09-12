@@ -14,10 +14,10 @@ const repoRoot = resolveRepoRoot();
 // child fails fast instead of burning the whole shard timeout on Linux CI.
 setDefaultTimeout(SPAWN_BUDGET_MS);
 
-function ownedEnvironment(codexHome: string, ocxHome: string): Record<string, string> {
-  const home = join(ocxHome, "home");
+function ownedEnvironment(codexHome: string, occxHome: string): Record<string, string> {
+  const home = join(occxHome, "home");
   mkdirSync(home, { recursive: true });
-  return { HOME: home, USERPROFILE: home, ...claimOwnedServiceHome(codexHome, ocxHome, home).env };
+  return { HOME: home, USERPROFILE: home, ...claimOwnedServiceHome(codexHome, occxHome, home).env };
 }
 
 function runCli(args: string[], env: Record<string, string>) {
@@ -29,42 +29,42 @@ function runCli(args: string[], env: Record<string, string>) {
   });
 }
 
-describe("ocx restore back", () => {
+describe("occx restore back", () => {
   test("restore durably disables Codex in an isolated home", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-cli-restore-codex-"));
-    const ocxHome = mkdtempSync(join(tmpdir(), "ocx-cli-restore-home-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-cli-restore-codex-"));
+    const occxHome = mkdtempSync(join(tmpdir(), "occx-cli-restore-home-"));
     try {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
-      writeFileSync(join(ocxHome, "config.json"), JSON.stringify({ providers: {}, defaultProvider: "openai", checkForUpdates: false }), "utf8");
+      writeFileSync(join(occxHome, "config.json"), JSON.stringify({ providers: {}, defaultProvider: "openai", checkForUpdates: false }), "utf8");
       const result = runCli(["restore"], {
-        ...ownedEnvironment(codexHome, ocxHome),
+        ...ownedEnvironment(codexHome, occxHome),
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: ocxHome,
+        OPENCCX_HOME: occxHome,
         CI: "1",
       });
       expect(result.status).toBe(0);
-      expect(JSON.parse(readFileSync(join(ocxHome, "config.json"), "utf8")).clientIntegrations.codex).toBe(false);
+      expect(JSON.parse(readFileSync(join(occxHome, "config.json"), "utf8")).clientIntegrations.codex).toBe(false);
       expect(`${result.stdout}\n${result.stderr}`).toContain("Codex integration is OFF and plain `codex` now runs natively.");
-      expect(result.stdout).toContain("ocx recover-history --ocx-compaction <thread-id> --yes");
+      expect(result.stdout).toContain("occx recover-history --occx-compaction <thread-id> --yes");
     } finally {
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(ocxHome);
+      removeTreeWithRetry(occxHome);
     }
   });
 
   test("restore --json emits a schema-complete envelope on the already-OFF no-op path", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-cli-json-noop-codex-"));
-    const ocxHome = mkdtempSync(join(tmpdir(), "ocx-cli-json-noop-home-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-cli-json-noop-codex-"));
+    const occxHome = mkdtempSync(join(tmpdir(), "occx-cli-json-noop-home-"));
     try {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
-      writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+      writeFileSync(join(occxHome, "config.json"), JSON.stringify({
         providers: {}, defaultProvider: "openai", checkForUpdates: false,
         clientIntegrations: { codex: false },
       }), "utf8");
       const result = runCli(["restore", "--json"], {
-        ...ownedEnvironment(codexHome, ocxHome),
+        ...ownedEnvironment(codexHome, occxHome),
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: ocxHome,
+        OPENCCX_HOME: occxHome,
       });
       expect(result.status).toBe(0);
       const envelope = JSON.parse(result.stdout) as {
@@ -83,26 +83,26 @@ describe("ocx restore back", () => {
       expect(envelope.artifacts.history).toHaveProperty("rows", 0);
     } finally {
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(ocxHome);
+      removeTreeWithRetry(occxHome);
     }
   });
 
   test("sync treats durable OFF as a successful no-write policy result", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-cli-sync-off-codex-"));
-    const ocxHome = mkdtempSync(join(tmpdir(), "ocx-cli-sync-off-home-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-cli-sync-off-codex-"));
+    const occxHome = mkdtempSync(join(tmpdir(), "occx-cli-sync-off-home-"));
     try {
       const configPath = join(codexHome, "config.toml");
       writeFileSync(configPath, 'model = "gpt-5"\n', "utf8");
-      writeFileSync(join(ocxHome, "config.json"), JSON.stringify({ providers: {}, defaultProvider: "openai", clientIntegrations: { codex: false }, checkForUpdates: false }), "utf8");
+      writeFileSync(join(occxHome, "config.json"), JSON.stringify({ providers: {}, defaultProvider: "openai", clientIntegrations: { codex: false }, checkForUpdates: false }), "utf8");
       const before = statSync(configPath).mtimeMs;
       const result = runCli(["sync"], {
-        ...ownedEnvironment(codexHome, ocxHome),
+        ...ownedEnvironment(codexHome, occxHome),
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: ocxHome,
+        OPENCCX_HOME: occxHome,
         CI: "1",
       });
       expect(result.status).toBe(0);
-      // #1931: explicit sync now refreshes the ocx-side catalog/cache while OFF when a
+      // #1931: explicit sync now refreshes the occx-side catalog/cache while OFF when a
       // catalog source exists ("refreshed") and reports "refresh skipped" otherwise
       // (CI has no Codex catalog source). The durable policy invariant is the same in
       // both: Codex config is untouched (mtime asserted below).
@@ -111,23 +111,23 @@ describe("ocx restore back", () => {
       expect(statSync(configPath).mtimeMs).toBe(before);
     } finally {
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(ocxHome);
+      removeTreeWithRetry(occxHome);
     }
   });
 
   test("sync exits nonzero when managed-default cleanup is ambiguous", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-cli-sync-codex-"));
-    const ocxHome = mkdtempSync(join(tmpdir(), "ocx-cli-sync-home-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-cli-sync-codex-"));
+    const occxHome = mkdtempSync(join(tmpdir(), "occx-cli-sync-home-"));
     try {
       writeFileSync(join(codexHome, "config.toml"), [
-        "# Managed by opencodex: native subagent defaults table",
+        "# Managed by openccx: native subagent defaults table",
         "[agents]",
-        "# Managed by opencodex: native subagent default",
+        "# Managed by openccx: native subagent default",
         "",
         'default_subagent_model = "gpt-5.6-sol"',
         "",
       ].join("\n"), "utf8");
-      writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+      writeFileSync(join(occxHome, "config.json"), JSON.stringify({
         providers: {
           fixture: {
             adapter: "openai-chat",
@@ -140,7 +140,7 @@ describe("ocx restore back", () => {
         defaultProvider: "fixture",
         checkForUpdates: false,
       }), "utf8");
-      const catalogPath = join(codexHome, "opencodex-catalog.json");
+      const catalogPath = join(codexHome, "openccx-catalog.json");
       const cachePath = join(codexHome, "models_cache.json");
       const catalogBefore = '{"models":[{"slug":"fixture/keep-me"}]}\n';
       const cacheBefore = '{"models":[{"slug":"fixture/cached-keep-me"}],"fetched_at":1}\n';
@@ -148,9 +148,9 @@ describe("ocx restore back", () => {
       writeFileSync(cachePath, cacheBefore, "utf8");
 
       const result = runCli(["sync"], {
-        ...ownedEnvironment(codexHome, ocxHome),
+        ...ownedEnvironment(codexHome, occxHome),
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: ocxHome,
+        OPENCCX_HOME: occxHome,
         CI: "1",
       });
 
@@ -161,33 +161,33 @@ describe("ocx restore back", () => {
       expect(readFileSync(cachePath, "utf8")).toBe(cacheBefore);
     } finally {
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(ocxHome);
+      removeTreeWithRetry(occxHome);
     }
   });
 
   test("help documents both directions of the switch", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-cli-help-codex-"));
-    const ocxHome = mkdtempSync(join(tmpdir(), "ocx-cli-help-home-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-cli-help-codex-"));
+    const occxHome = mkdtempSync(join(tmpdir(), "occx-cli-help-home-"));
     try {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
-      writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+      writeFileSync(join(occxHome, "config.json"), JSON.stringify({
         providers: {}, defaultProvider: "openai", checkForUpdates: false,
       }), "utf8");
       const env = {
-        ...ownedEnvironment(codexHome, ocxHome),
+        ...ownedEnvironment(codexHome, occxHome),
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: ocxHome,
+        OPENCCX_HOME: occxHome,
         CI: "1",
       };
       const usage = runCli(["help"], env);
       expect(usage.status).toBe(0);
-      expect(`${usage.stdout}\n${usage.stderr}`).toContain("ocx restore back");
+      expect(`${usage.stdout}\n${usage.stderr}`).toContain("occx restore back");
       const restoreHelp = runCli(["help", "restore"], env);
       expect(restoreHelp.status).toBe(0);
-      expect(`${restoreHelp.stdout}\n${restoreHelp.stderr}`).toContain("ocx restore [back]");
+      expect(`${restoreHelp.stdout}\n${restoreHelp.stderr}`).toContain("occx restore [back]");
     } finally {
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(ocxHome);
+      removeTreeWithRetry(occxHome);
     }
   });
 });

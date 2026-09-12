@@ -22,10 +22,10 @@ import { writeDesktopDisconnectReceipt } from "../../src/claude/desktop-remote-s
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
 
-function runStatusJson(opencodexHome: string) {
+function runStatusJson(openccxHome: string) {
   return spawnSync(process.execPath, [cliPath, "status", "--json"], {
     cwd: repoRoot,
-    env: { ...process.env, OPENCODEX_HOME: opencodexHome },
+    env: { ...process.env, OPENCCX_HOME: openccxHome },
     encoding: "utf8",
   });
 }
@@ -33,7 +33,7 @@ function runStatusJson(opencodexHome: string) {
 describe("status version skew projection", () => {
   test.each([
     ["0.0.1", "the running proxy is older"],
-    ["999999.0.0", "this ocx on PATH is older"],
+    ["999999.0.0", "this occx on PATH is older"],
     [packageVersion(), null],
     [`${packageVersion()}+skew-fixture`, "neither can be identified as older"],
     ["not-a-version", "neither can be identified as older"],
@@ -41,7 +41,7 @@ describe("status version skew projection", () => {
     ["0.0.0", null],
     [undefined, null],
   ] as const)("projects proxy %s in JSON and human output", async (proxyVersion, expected) => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-status-skew-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-status-skew-"));
     const codexHome = join(home, "codex");
     let server: ReturnType<typeof Bun.serve> | undefined;
     try {
@@ -51,7 +51,7 @@ describe("status version skew projection", () => {
         hostname: "127.0.0.1", port: 0,
         fetch(request) {
           return new URL(request.url).pathname === "/healthz"
-            ? Response.json({ service: "opencodex", status: "ok", version: proxyVersion, uptime: 1 })
+            ? Response.json({ service: "openccx", status: "ok", version: proxyVersion, uptime: 1 })
             : new Response("not found", { status: 404 });
         },
       });
@@ -62,7 +62,7 @@ describe("status version skew projection", () => {
         // Async child execution lets the fixture answer the real identity/health probes.
         const child = Bun.spawn([process.execPath, cliPath, "status", ...(json ? ["--json"] : [])], {
           cwd: repoRoot,
-          env: { ...process.env, OPENCODEX_HOME: home, CODEX_HOME: codexHome },
+          env: { ...process.env, OPENCCX_HOME: home, CODEX_HOME: codexHome },
           stdout: "pipe", stderr: "pipe",
         });
         let timedOut = false;
@@ -97,7 +97,7 @@ describe("status version skew projection", () => {
           await child.exited;
         }
       }
-      expect(existsSync(join(home, "ocx.pid"))).toBe(false);
+      expect(existsSync(join(home, "occx.pid"))).toBe(false);
     } finally {
       try {
         await server?.stop(true);
@@ -116,11 +116,11 @@ function withRecoveryStatusFixture(work: (fixture: {
   config: ReturnType<typeof recoveryStatusConfig>;
   writeConfig: () => void;
 }) => void): void {
-  const home = mkdtempSync(join(tmpdir(), "ocx-status-recovery-"));
-  const previousHome = process.env.OPENCODEX_HOME;
-  const previousDesktop = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_HOME = home;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(home, "desktop");
+  const home = mkdtempSync(join(tmpdir(), "occx-status-recovery-"));
+  const previousHome = process.env.OPENCCX_HOME;
+  const previousDesktop = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_HOME = home;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(home, "desktop");
   const tokenPath = join(home, "service-api-token");
   const config = recoveryStatusConfig();
   const writeConfig = () => writeFileSync(join(home, "config.json"), JSON.stringify(config));
@@ -130,10 +130,10 @@ function withRecoveryStatusFixture(work: (fixture: {
     work({ home, config, writeConfig, tokenPath, backupPath: `${tokenPath}.prev`,
       lockDeps: { lockPath: join(home, "locks", "lifecycle.sqlite") } });
   } finally {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
-    if (previousDesktop === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktop;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
+    if (previousDesktop === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktop;
     removeTreeWithRetry(home);
   }
 }
@@ -145,7 +145,7 @@ function recoveryStatusConfig() {
     runtimeRole: "client",
     client: {
       serverUrl: "https://hub.example.test", managementUrl: "https://hub.example.test",
-      managementTransport: "direct", selectedClients: ["claude"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      managementTransport: "direct", selectedClients: ["claude"], tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: "status-fixture", tokenFingerprint: createHash("sha256").update("status-fixture-token").digest("hex"),
       protocolVersion: 1, connectedAt: "2026-09-06T00:00:00.000Z",
     },
@@ -243,9 +243,9 @@ describe("CLI status JSON", () => {
   });
 
   test("status --json prints valid read-only diagnostics without secrets", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-json-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-json-"));
     try {
-      const configPath = join(opencodexHome, "config.json");
+      const configPath = join(openccxHome, "config.json");
       writeFileSync(configPath, JSON.stringify({
         port: 9,
         providers: {
@@ -260,14 +260,14 @@ describe("CLI status JSON", () => {
         codexAutoStart: false,
       }), "utf8");
 
-      const beforeFiles = readdirSync(opencodexHome).sort();
-      const result = runStatusJson(opencodexHome);
-      const afterFiles = readdirSync(opencodexHome).sort();
+      const beforeFiles = readdirSync(openccxHome).sort();
+      const result = runStatusJson(openccxHome);
+      const afterFiles = readdirSync(openccxHome).sort();
 
       expect(result.status).toBe(0);
       expect(result.stderr).toBe("");
       expect(afterFiles).toEqual(beforeFiles);
-      expect(existsSync(join(opencodexHome, "ocx.pid"))).toBe(false);
+      expect(existsSync(join(openccxHome, "occx.pid"))).toBe(false);
 
       const parsed = JSON.parse(result.stdout) as {
         schemaVersion?: unknown;
@@ -326,7 +326,7 @@ describe("CLI status JSON", () => {
       expect(parsed.listen?.port).toBe(9);
       expect(parsed.listen?.source).toBe("config");
       expect(parsed.paths?.config).toBe(configPath);
-      expect(parsed.paths?.pid).toBe(join(opencodexHome, "ocx.pid"));
+      expect(parsed.paths?.pid).toBe(join(openccxHome, "occx.pid"));
       expect(typeof parsed.paths?.runtime).toBe("string");
       expect(typeof parsed.runtime?.source).toBe("string");
       expect(parsed.codexAutostart).toBe(false);
@@ -365,7 +365,7 @@ describe("CLI status JSON", () => {
       });
       // #4207 gave a connected client a local-runtime readiness verdict. Observing that runtime
       // spawns a Codex process, so a machine with no client connection must not carry the field
-      // at all; its absence is what keeps every ordinary `ocx status` off that probe.
+      // at all; its absence is what keeps every ordinary `occx status` off that probe.
       expect(parsed.connection).not.toHaveProperty("readiness");
       expect(parsed.connection).not.toHaveProperty("readinessReason");
 
@@ -374,24 +374,24 @@ describe("CLI status JSON", () => {
         expect(serialized).not.toContain(forbidden);
       }
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("status --json reports catalogClamp.runtimeVersion when clamp is active", async () => {
     const { chmodSync } = await import("node:fs");
     const { persistEffortClamp, resetCodexRuntimeResolveCacheForTests } = await import("../../src/codex/runtime");
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-clamp-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-clamp-"));
     try {
-      writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+      writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
         port: 9,
         providers: {},
         defaultProvider: "openai",
       }), "utf8");
       const fakeCodex = process.platform === "win32"
-        ? join(opencodexHome, "bin", "codex.cmd")
-        : join(opencodexHome, "bin", "codex");
-      mkdirSync(join(opencodexHome, "bin"), { recursive: true });
+        ? join(openccxHome, "bin", "codex.cmd")
+        : join(openccxHome, "bin", "codex");
+      mkdirSync(join(openccxHome, "bin"), { recursive: true });
       if (process.platform === "win32") {
         writeFileSync(fakeCodex, "@echo off\r\necho codex-cli 0.133.0\r\n", "utf8");
       } else {
@@ -403,14 +403,14 @@ describe("CLI status JSON", () => {
         runtimeVersion: "0.133.0",
         removedEfforts: ["xhigh"],
         affectedModels: ["gpt-5.6-sol"],
-      }, { configDir: opencodexHome });
+      }, { configDir: openccxHome });
       resetCodexRuntimeResolveCacheForTests();
 
       const result = spawnSync(process.execPath, [cliPath, "status", "--json"], {
         cwd: repoRoot,
         env: {
           ...process.env,
-          OPENCODEX_HOME: opencodexHome,
+          OPENCCX_HOME: openccxHome,
           CODEX_CLI_PATH: fakeCodex,
           PATH: "",
         },
@@ -431,14 +431,14 @@ describe("CLI status JSON", () => {
       });
     } finally {
       resetCodexRuntimeResolveCacheForTests();
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("status rejects unknown flags instead of silently printing human text", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-json-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-json-"));
     try {
-      writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+      writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
         port: 9,
         providers: {},
         defaultProvider: "openai",
@@ -446,22 +446,22 @@ describe("CLI status JSON", () => {
 
       const result = spawnSync(process.execPath, [cliPath, "status", "--yaml"], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: opencodexHome },
+        env: { ...process.env, OPENCCX_HOME: openccxHome },
         encoding: "utf8",
       });
 
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain("Usage: ocx status [--json]");
+      expect(result.stderr).toContain("Usage: occx status [--json]");
       expect(result.stdout).toBe("");
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("status --json rejects additional flags", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-json-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-json-"));
     try {
-      writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+      writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
         port: 9,
         providers: {},
         defaultProvider: "openai",
@@ -469,27 +469,27 @@ describe("CLI status JSON", () => {
 
       const result = spawnSync(process.execPath, [cliPath, "status", "--json", "--yaml"], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: opencodexHome },
+        env: { ...process.env, OPENCCX_HOME: openccxHome },
         encoding: "utf8",
       });
 
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain("Usage: ocx status [--json]");
+      expect(result.stderr).toContain("Usage: occx status [--json]");
       expect(result.stdout).toBe("");
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("status --json on malformed config remains read-only and secret-safe", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-json-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-json-"));
     try {
-      const configPath = join(opencodexHome, "config.json");
+      const configPath = join(openccxHome, "config.json");
       writeFileSync(configPath, '{ "apiKey": "sk-status-secret", invalid json', "utf8");
-      const beforeFiles = readdirSync(opencodexHome).sort();
+      const beforeFiles = readdirSync(openccxHome).sort();
 
-      const result = runStatusJson(opencodexHome);
-      const afterFiles = readdirSync(opencodexHome).sort();
+      const result = runStatusJson(openccxHome);
+      const afterFiles = readdirSync(openccxHome).sort();
 
       expect(result.status).toBe(0);
       expect(result.stderr).toBe("");
@@ -508,7 +508,7 @@ describe("CLI status JSON", () => {
       expect(serialized).not.toContain("sk-status-secret");
       expect(serialized).not.toContain("apiKey");
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
@@ -621,20 +621,20 @@ describe("status hub block", () => {
   const TOKEN = "b".repeat(64);
 
   function withHome<T>(setup: (home: string) => void, body: () => T): T {
-    const home = mkdtempSync(join(tmpdir(), "ocx-status-hub-"));
-    const previous = process.env.OPENCODEX_HOME;
-    const previousToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-    process.env.OPENCODEX_HOME = home;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    const home = mkdtempSync(join(tmpdir(), "occx-status-hub-"));
+    const previous = process.env.OPENCCX_HOME;
+    const previousToken = process.env.OPENCCX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = home;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     try {
       mkdirSync(join(home), { recursive: true });
       setup(home);
       return body();
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
-      if (previousToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = previousToken;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
+      if (previousToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = previousToken;
       removeTreeWithRetry(home);
     }
   }
@@ -704,7 +704,7 @@ describe("status hub block", () => {
       const withShellVar = collectHubStatus(
         hub() as Parameters<typeof collectHubStatus>[0],
         { port: 10100 },
-        { OPENCODEX_API_AUTH_TOKEN: "from-the-shell" },
+        { OPENCCX_API_AUTH_TOKEN: "from-the-shell" },
       );
       expect(withShellVar?.dataToken).toBe("present (file)");
       expect(withShellVar?.dataTokenEnvInShell).toBe(true);
@@ -721,14 +721,14 @@ describe("status hub block", () => {
   test("a token file holding the ADMIN token is called out, not reported as present", () => {
     // The #4236 incident read `present (file)` while the hub crash-looped, because the file
     // held the MANAGEMENT token and nothing in the report compared the two.
-    const admin = `ocx_admin_${"f".repeat(43)}`;
+    const admin = `occx_admin_${"f".repeat(43)}`;
     withHome(home => writeFileSync(join(home, "service-api-token"), `${admin}\n`, "utf8"), () => {
       const status = collectHubStatus(hub() as Parameters<typeof collectHubStatus>[0], { port: 10100 }, {});
       expect(status?.dataToken).toBe("admin-collision (file)");
       const lines = hubStatusLines(status!).join("\n");
       expect(lines).toContain(status!.dataTokenPath);
       expect(lines).toContain("MANAGEMENT token");
-      expect(lines).toContain("ocx service repair");
+      expect(lines).toContain("occx service repair");
       expect([JSON.stringify(status), lines].join("\n")).not.toContain(admin);
     });
     // The same comparison doctor and the service chokepoint use: byte-equal to the configured
@@ -739,7 +739,7 @@ describe("status hub block", () => {
       const status = collectHubStatus(
         hub() as Parameters<typeof collectHubStatus>[0],
         { port: 10100 },
-        { OPENCODEX_ADMIN_AUTH_TOKEN: "hand-pasted-management-key" },
+        { OPENCCX_ADMIN_AUTH_TOKEN: "hand-pasted-management-key" },
       );
       expect(status?.dataToken).toBe("admin-collision (file)");
     });
@@ -760,7 +760,7 @@ describe("status hub block", () => {
     withHome(() => {}, () => {
       const lines = hubStatusLines(collectHubStatus(hub() as Parameters<typeof collectHubStatus>[0], { port: 10100 }, {})!);
       expect(lines[0]).toBe("Hub:");
-      expect(lines.at(-1)).toBe("  Invite a machine: ocx hub invite");
+      expect(lines.at(-1)).toBe("  Invite a machine: occx hub invite");
     });
   });
 });
@@ -861,7 +861,7 @@ describe("status reports stale process records end to end", () => {
   const seed = (home: string, opts: { pid?: number; runtime?: boolean; port: number }): void => {
     writeFileSync(join(home, "config.json"), JSON.stringify({ port: opts.port, codexAutoStart: false }), "utf8");
     const pid = opts.pid ?? findDeadPid();
-    if (opts.pid !== 0) writeFileSync(join(home, "ocx.pid"), String(pid), "utf8");
+    if (opts.pid !== 0) writeFileSync(join(home, "occx.pid"), String(pid), "utf8");
     if (opts.runtime) {
       writeFileSync(join(home, "runtime-port.json"), JSON.stringify({ pid, port: opts.port, hostname: "127.0.0.1" }), "utf8");
     }
@@ -901,7 +901,7 @@ describe("status reports stale process records end to end", () => {
   beforeEach(async () => { freePort = await allocateFreePort(); });
 
   test("a dead owner record surfaces in --json and in human output", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-stale-json-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-stale-json-"));
     try {
       seed(home, { runtime: true, port: freePort });
 
@@ -912,7 +912,7 @@ describe("status reports stale process records end to end", () => {
 
       const human = spawnSync(process.execPath, [cliPath, "status"], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: home },
+        env: { ...process.env, OPENCCX_HOME: home },
         encoding: "utf8",
       });
       expect(human.stdout).toContain("may have exited unexpectedly");
@@ -922,7 +922,7 @@ describe("status reports stale process records end to end", () => {
   });
 
   test("a clean home reports false and says nothing about a previous run", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-stale-clean-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-stale-clean-"));
     try {
       writeFileSync(join(home, "config.json"), JSON.stringify({ port: freePort, codexAutoStart: false }), "utf8");
 
@@ -932,7 +932,7 @@ describe("status reports stale process records end to end", () => {
 
       const human = spawnSync(process.execPath, [cliPath, "status"], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: home },
+        env: { ...process.env, OPENCCX_HOME: home },
         encoding: "utf8",
       });
       expect(human.stdout).not.toContain("may have exited unexpectedly");
@@ -944,7 +944,7 @@ describe("status reports stale process records end to end", () => {
   // Review blocker 3: a recycled pid must suppress rather than assert. This process is
   // certainly alive, so recording it stands in for a reused pid.
   test("a record naming a live pid is never reported as a stale exit", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-stale-livepid-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-stale-livepid-"));
     try {
       seed(home, { pid: process.pid, runtime: true, port: freePort });
 
@@ -963,14 +963,14 @@ describe("status reports stale process records end to end", () => {
   // two implementations apart. A listener that accepts and resets is what an in-flight
   // bind looks like, so a run that probed the configured port would suppress the report.
   test("a fallback-port record is judged on the recorded port, not the configured one", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-stale-fallback-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-stale-fallback-"));
     const occupied = createServer(socket => { socket.destroy(); });
     await new Promise<void>(resolve => { occupied.listen(0, "127.0.0.1", () => resolve()); });
     const occupiedPort = (occupied.address() as AddressInfo).port;
     try {
       const pid = findDeadPid();
       writeFileSync(join(home, "config.json"), JSON.stringify({ port: occupiedPort, codexAutoStart: false }), "utf8");
-      writeFileSync(join(home, "ocx.pid"), String(pid), "utf8");
+      writeFileSync(join(home, "occx.pid"), String(pid), "utf8");
 
       // The recorded port has to refuse for this to discriminate, and `allocateFreePort`
       // hands back a port it has already released. Confirm refusal immediately before and

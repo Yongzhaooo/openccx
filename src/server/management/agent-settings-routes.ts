@@ -55,7 +55,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import {
   visionCandidateRows,
   visionDescriberIsProvablyBlind,
@@ -96,7 +96,7 @@ class GrokApplyBusyError extends Error {}
  * profile PUT does exactly that) write the stale value back over the transition.
  * ON is the ABSENCE of the key, matching `setIntegrationEnabled`'s on-disk shape.
  */
-function mirrorDesiredEnabledOntoSnapshot(config: OcxConfig, client: "claude-desktop", enabled: boolean): void {
+function mirrorDesiredEnabledOntoSnapshot(config: OccxConfig, client: "claude-desktop", enabled: boolean): void {
   const integrations = { ...(config.clientIntegrations ?? {}) };
   if (enabled) delete integrations[client];
   else integrations[client] = false;
@@ -116,8 +116,8 @@ function mirrorDesiredEnabledOntoSnapshot(config: OcxConfig, client: "claude-des
  * unrelated key another writer just committed.
  */
 function persistDesktopProfileField(
-  config: OcxConfig,
-  desktopProfile: NonNullable<OcxConfig["claudeCode"]>["desktopProfile"],
+  config: OccxConfig,
+  desktopProfile: NonNullable<OccxConfig["claudeCode"]>["desktopProfile"],
 ): { ok: true } | { ok: false; reason: "missing" | "invalid" | "conflict" } {
   const outcome = mutatePersistedConfig(persisted => {
     persisted.claudeCode = { ...(persisted.claudeCode ?? {}), desktopProfile };
@@ -621,7 +621,7 @@ export async function handleAgentSettingsRoutes(ctx: ManagementContext): Promise
     const patch = body as Record<string, unknown>;
     const { isCodexReasoningEffort } = await import("../../reasoning-effort");
     const draft = { ...projectConfigRebaseProvenance(config) };
-    const touched: (keyof OcxConfig)[] = [];
+    const touched: (keyof OccxConfig)[] = [];
     for (const key of ["effortCap", "subagentEffortCap"] as const) {
       if (!Object.hasOwn(patch, key)) continue;
       const value = patch[key];
@@ -668,7 +668,7 @@ export async function handleAgentSettingsRoutes(ctx: ManagementContext): Promise
   }
 
   // Featured roster and saved picker order are separate settings. Native Codex advertises
-  // the first five eligible visible rows by display priority; OCX guidance uses natural ranks.
+  // the first five eligible visible rows by display priority; OCCX guidance uses natural ranks.
   if (url.pathname === "/api/subagent-models" && req.method === "GET") {
     const models = await (deps.fetchAllModels ?? fetchAllModels)(config);
     const disabled = new Set(config.disabledModels ?? []);
@@ -1209,7 +1209,7 @@ export async function handleAgentSettingsRoutes(ctx: ManagementContext): Promise
       // subscription. The old coercion made every save convert an untouched auto config
       // into a sticky manual subscription with no way back.
       authMode: authModeIntent(config),
-      /** Does the opencodex dummy marker get injected — NOT a claim about native auth. */
+      /** Does the openccx dummy marker get injected — NOT a claim about native auth. */
       markerMode: resolvedAuthMode.markerMode,
       authModeOrigin: resolvedAuthMode.origin,
       ...(resolvedAuthMode.foundBy ? { authFoundBy: resolvedAuthMode.foundBy } : {}),
@@ -1350,7 +1350,7 @@ export async function handleAgentSettingsRoutes(ctx: ManagementContext): Promise
       // The per-field validation above guarantees vision only ever carries the two-member
       // union; the cast is the loop's shared-shape compromise, not a wider write path.
       const requested = section as { backend?: "openai" | "anthropic" | "xai" | "gemini" | "exa" | null; model?: string };
-      const override = { ...next[field] } as NonNullable<OcxClaudeCodeConfig[typeof field]>;
+      const override = { ...next[field] } as NonNullable<OccxClaudeCodeConfig[typeof field]>;
       if (requested.backend === null) delete override.backend;
       else if (requested.backend !== undefined) override.backend = requested.backend as never;
       if (requested.model === "") delete override.model;
@@ -1514,7 +1514,7 @@ export async function handleAgentSettingsRoutes(ctx: ManagementContext): Promise
     save(config);
     const warnings: string[] = [];
     // authMode changes must reconcile the injected system env too: switching back to
-    // Subscription has to remove the opencodex-owned dummy ANTHROPIC_AUTH_TOKEN
+    // Subscription has to remove the openccx-owned dummy ANTHROPIC_AUTH_TOKEN
     // (audit R1 blocker #1/#2, devlog 260720_claude_authmode_persist).
     if (body.systemEnv !== undefined || body.authMode !== undefined) {
       try {

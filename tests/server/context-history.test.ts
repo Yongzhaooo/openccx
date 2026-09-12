@@ -7,16 +7,16 @@ import { resetContextRelayActivationForTests } from "../../src/codex/context-com
 import type { CodexAuthContext } from "../../src/codex/auth-context";
 import { recordContextSessionOwner, clearContextSessionOwnersForTests } from "../../src/codex/context-owner";
 import type { DataPlaneAdmission } from "../../src/server/auth-cors";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { RequestLogContext } from "../../src/server/request-log";
 
 type Selection = { headers: Headers; mode: string; options: { modelId: string; admission?: DataPlaneAdmission; substituteMainCredentialForDirect?: boolean; accountId?: string; requestScopedMainCredential?: boolean } };
 let selection: Selection | undefined;
-const config: OcxConfig = { port: 0, defaultProvider: "openai", providers: {} };
+const config: OccxConfig = { port: 0, defaultProvider: "openai", providers: {} };
 const logContext = (): RequestLogContext => ({ model: "context_history", provider: "" });
 
 // The relay only exists while Codex own config opts in, so these cases need a home that does.
-const codexHome = mkdtempSync(join(tmpdir(), "ocx-context-flag-"));
+const codexHome = mkdtempSync(join(tmpdir(), "occx-context-flag-"));
 const codexConfigPath = join(codexHome, "config.toml");
 const previousCodexHome = process.env.CODEX_HOME;
 process.env.CODEX_HOME = codexHome;
@@ -25,7 +25,7 @@ function setContextFeature(enabled: boolean): void {
   resetContextRelayActivationForTests();
 }
 setContextFeature(true);
-let materialized: { config: OcxConfig; modelId: string } | undefined;
+let materialized: { config: OccxConfig; modelId: string } | undefined;
 let materializationError: Error | undefined;
 let materializationOptions: { admission?: DataPlaneAdmission; substituteMainCredential?: boolean } | undefined;
 let outgoingBearer = "test-only";
@@ -44,16 +44,16 @@ const errors = {
 };
 mock.module("../../src/codex/auth-context",()=>({
   ...errors,
-  resolveCodexAuthContext:async(headers: Headers, _config: OcxConfig, mode: string, options: Selection["options"])=>{selection={headers,mode,options};duringSelection?.();if(directError)throw new errors.CodexDirectAuthenticationError();return {kind:"pool",accountId:"test-account",...(probe?{probeLeaseId:"test-probe"}:{})};},
+  resolveCodexAuthContext:async(headers: Headers, _config: OccxConfig, mode: string, options: Selection["options"])=>{selection={headers,mode,options};duringSelection?.();if(directError)throw new errors.CodexDirectAuthenticationError();return {kind:"pool",accountId:"test-account",...(probe?{probeLeaseId:"test-probe"}:{})};},
   isCodexAuthContextUsable:()=>true,
   releaseCodexAuthContextProbeLease:()=>{released++;},
-  materializeCodexUpstreamAuth: (_headers: Headers, _auth: unknown, options: { config: OcxConfig; modelId: string; admission?: DataPlaneAdmission; substituteMainCredential?: boolean }) => {
+  materializeCodexUpstreamAuth: (_headers: Headers, _auth: unknown, options: { config: OccxConfig; modelId: string; admission?: DataPlaneAdmission; substituteMainCredential?: boolean }) => {
     materializationOptions = options;
     materialized = { config: options.config, modelId: options.modelId };
     if (materializationError) throw materializationError;
     return new Headers({ authorization: `Bearer ${outgoingBearer}`, "chatgpt-account-id": outgoingAccount });
   },
-  headersForCodexAuthContext:(_headers: Headers, _auth: unknown, selectedConfig: OcxConfig, modelId: string) => {
+  headersForCodexAuthContext:(_headers: Headers, _auth: unknown, selectedConfig: OccxConfig, modelId: string) => {
     materialized = { config: selectedConfig, modelId };
     if (materializationError) throw materializationError;
     return new Headers({ authorization: "Bearer test-only", "chatgpt-account-id": outgoingAccount });
@@ -65,7 +65,7 @@ const realRouting = await import("../../src/codex/routing");
 mock.module("../../src/codex/routing",()=>({...realRouting, formatCodexProviderForLog:()=>"openai-test"}));
 mock.module("../../src/providers/openai-sidecar",()=>({listOpenAiForwardSidecarCandidates:()=>[{providerName:"openai",provider:{baseUrl:"https://chatgpt.com/backend-api/codex"},accountMode}]}));
 class ForwardAdmissionCredentialError extends Error {}
-mock.module("../../src/server/auth-cors",()=>({ForwardAdmissionCredentialError,resolveContextPrincipal:(_r:Request,_c:OcxConfig,a?:{contextPrincipalId?:string})=>a?.contextPrincipalId,validateForwardAdmissionCredential:(h:Headers)=>{validated++;if(!h.has("authorization") || h.get("authorization") === "Bearer ocx_data_test_admission")throw new ForwardAdmissionCredentialError("test credential missing");}}));
+mock.module("../../src/server/auth-cors",()=>({ForwardAdmissionCredentialError,resolveContextPrincipal:(_r:Request,_c:OccxConfig,a?:{contextPrincipalId?:string})=>a?.contextPrincipalId,validateForwardAdmissionCredential:(h:Headers)=>{validated++;if(!h.has("authorization") || h.get("authorization") === "Bearer occx_data_test_admission")throw new ForwardAdmissionCredentialError("test credential missing");}}));
 mock.module("../../src/server/responses",()=>({codexLogAccountId:()=>"test",decodeRequestErrorResponse:()=>new Response("invalid json",{status:400})}));
 mock.module("../../src/server/lifecycle",()=>({codexAccountSelectionForTurn:()=>()=>undefined}));
 const { handleContextHistory, contextSelectionHeaders } = await import("../../src/server/context-history");
@@ -266,7 +266,7 @@ test("an admission without a caller principal cannot reach context history", asy
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ error: {
       type: "permission_error", code: "permission_denied",
-      message: "Context history requires an opencodex API key on the request; admission alone carries no caller identity",
+      message: "Context history requires an openccx API key on the request; admission alone carries no caller identity",
     } });
   }
   expect(selection).toBe(before);
@@ -295,7 +295,7 @@ test("credential materialization rechecks hardlocks and maps auth errors", async
 
 const keyAdmission: DataPlaneAdmission = { kind: "configured", keyId: "synthetic-key", source: "dedicated", contextPrincipalId: "principal-a" };
 const bearerAdmission: DataPlaneAdmission = { kind: "configured", keyId: "synthetic-key", source: "bearer", contextPrincipalId: "principal-a" };
-const admissionHeaders = { authorization: "Bearer ocx_data_test_admission" };
+const admissionHeaders = { authorization: "Bearer occx_data_test_admission" };
 
 test("bearer-admitted context validates the body before selecting credentials", async () => {
   const response = await handleContextHistory(contextRequest("{}", admissionHeaders), config, logContext(), "alpha/notes/v2/read_file", undefined, bearerAdmission);
@@ -328,7 +328,7 @@ test("stored ownership remains fixed across current Direct and Pool settings", a
 test("proxy credentials cannot escape materialization or bypass non-bearer rejection", async () => {
   let calls = 0;
   setFetch(async () => { calls++; return new Response("unexpected"); });
-  outgoingBearer = "ocx_data_test_admission";
+  outgoingBearer = "occx_data_test_admission";
   const body = '{"context":{"session_id":"root"}}';
   const response = await handleContextHistory(contextRequest(body, admissionHeaders), config, logContext(), "alpha/notes/v2/read_file", undefined, bearerAdmission);
   expect(response.status).toBe(401);

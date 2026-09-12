@@ -10,12 +10,12 @@ import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { clearAccountNeedsReauth, markAccountNeedsReauth } from "../../src/codex/account-runtime-state";
 import { MAIN_CODEX_ACCOUNT_ID, MainAccountTokenRefreshError } from "../../src/codex/main-account";
 import { nativeMainRefreshFailureResponse } from "../../src/server/responses/codex-auth-error";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const STORE_DIR = join(import.meta.dir, ".tmp-unusable-reason-store");
 const CODEX_DIR = join(import.meta.dir, ".tmp-unusable-reason-codex");
-let prevOpencodexHome: string | undefined;
+let prevOpenccxHome: string | undefined;
 let prevCodexHome: string | undefined;
 
 function writeMainAuth(): void {
@@ -35,7 +35,7 @@ function saveCred(id: string): void {
   });
 }
 
-function makeConfig(): OcxConfig {
+function makeConfig(): OccxConfig {
   return {
     providers: {},
     codexAccounts: [
@@ -44,18 +44,18 @@ function makeConfig(): OcxConfig {
       { id: "uncredentialed", email: "none@test", isMain: false },
     ],
     activeCodexAccountId: "paid",
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 const ACCOUNT_IDS = ["paid", "stuck", "uncredentialed", MAIN_CODEX_ACCOUNT_ID];
 
 describe("codex account unusable reason", () => {
   beforeEach(() => {
-    prevOpencodexHome = process.env.OPENCODEX_HOME;
+    prevOpenccxHome = process.env.OPENCCX_HOME;
     prevCodexHome = process.env.CODEX_HOME;
     for (const dir of [STORE_DIR, CODEX_DIR]) if (existsSync(dir)) removeTreeWithRetry(dir);
     mkdirSync(STORE_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = STORE_DIR;
+    process.env.OPENCCX_HOME = STORE_DIR;
     process.env.CODEX_HOME = CODEX_DIR;
     for (const id of ACCOUNT_IDS) clearAccountNeedsReauth(id);
     saveCred("paid");
@@ -66,8 +66,8 @@ describe("codex account unusable reason", () => {
   afterEach(() => {
     for (const id of ACCOUNT_IDS) clearAccountNeedsReauth(id);
     for (const dir of [STORE_DIR, CODEX_DIR]) if (existsSync(dir)) removeTreeWithRetry(dir);
-    if (prevOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prevOpencodexHome;
+    if (prevOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prevOpenccxHome;
     if (prevCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = prevCodexHome;
   });

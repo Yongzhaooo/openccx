@@ -12,7 +12,7 @@
  * The message is deliberately thin, and it does NOT carry a direction. A caller
  * saying which way history should move is exactly what the durable operation
  * exists to prevent: `syncResumeHistory: false` means leave history alone, apply
- * targets opencodex only in legacy mode, and legacy recovery is a different
+ * targets openccx only in legacy mode, and legacy recovery is a different
  * operation from generic restore. So the Worker is told which JOB to run and
  * reads the operation from the coordinator row itself.
  *
@@ -46,7 +46,7 @@ import {
  */
 export type CodexHistoryWorkerOperation =
   | "skip"
-  | "apply-opencodex"
+  | "apply-openccx"
   | "migrate-openai"
   | "restore-openai"
   | "recover-legacy-openai";
@@ -63,7 +63,7 @@ export interface HistoryWorkerRunMessage {
   /** When set, prove this transition's desired direction while H is held. */
   readonly expectedDesiredEnabled?: boolean;
   /** Env snapshot: a Worker may not observe parent mutations on every platform. */
-  readonly env?: { readonly CODEX_HOME?: string; readonly OPENCODEX_HOME?: string };
+  readonly env?: { readonly CODEX_HOME?: string; readonly OPENCCX_HOME?: string };
 }
 
 export type HistoryWorkerResult =
@@ -81,7 +81,7 @@ export type HistoryWorkerResult =
 
 const OPERATIONS: ReadonlySet<string> = new Set<CodexHistoryWorkerOperation>([
   "skip",
-  "apply-opencodex",
+  "apply-openccx",
   "migrate-openai",
   "restore-openai",
   "recover-legacy-openai",
@@ -145,10 +145,10 @@ export function runHistoryUnitUnderLock(
         const proof = snapshotCodexHistoryNoop(message.canonicalStateDbPath, message.canonicalBackupPath);
         if (proof.kind === "verified-noop") return { verifiedNoop: proof } as const;
       }
-      // apply-opencodex routes history to opencodex; migrate/restore recover only
+      // apply-openccx routes history to openccx; migrate/restore recover only
       // manifest-backed original metadata. The provider is derived from the operation,
       // never from a caller; only recover-legacy-openai force-labels bare routed rows.
-      const provider = operation === "apply-opencodex" ? "opencodex" : "openai";
+      const provider = operation === "apply-openccx" ? "openccx" : "openai";
       return writeHistoryProviderTransition(permit, target, provider);
     },
   );
@@ -206,7 +206,7 @@ if (typeof self !== "undefined" && typeof (self as { onmessage?: unknown }) === 
     const message = event.data;
     try {
       if (message.env?.CODEX_HOME) process.env.CODEX_HOME = message.env.CODEX_HOME;
-      if (message.env?.OPENCODEX_HOME) process.env.OPENCODEX_HOME = message.env.OPENCODEX_HOME;
+      if (message.env?.OPENCCX_HOME) process.env.OPENCCX_HOME = message.env.OPENCCX_HOME;
       self.postMessage(runHistoryUnitUnderLock(message));
     } catch (error) {
       self.postMessage({

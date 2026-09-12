@@ -28,7 +28,7 @@ import { migrateStartupZaiResponses } from "./zai-responses-startup";
 import { reconcileOAuthProviders } from "../oauth";
 import { withCatalogWriteSerialization } from "../codex/catalog-write-serialization";
 import { invalidateCodexModelsCacheWithPermit } from "../codex/catalog/sync";
-import { currentServiceHomes, serviceStatePathsForOpenCodexHome } from "../service";
+import { currentServiceHomes, serviceStatePathsForOpenccxHome } from "../service";
 import { shouldSyncCodexOnStart } from "../codex/desired-state";
 import { effectiveLoopbackListenerPort } from "../codex/loopback-target";
 import {
@@ -311,10 +311,10 @@ async function readBoundedRequestText(req: Request, limit: number): Promise<stri
 function withRemoteCatalogKeyId(response: Response, admission: DataPlaneAdmission): Response {
   if (response.status !== 200 || admission.kind !== "configured") return response;
   if (!REMOTE_CATALOG_KEY_ID_PATTERN.test(admission.keyId)) {
-    console.warn("[remote-catalog] configured API key id is not header-safe; omitting x-opencodex-key-id");
+    console.warn("[remote-catalog] configured API key id is not header-safe; omitting x-openccx-key-id");
     return response;
   }
-  response.headers.set("x-opencodex-key-id", admission.keyId);
+  response.headers.set("x-openccx-key-id", admission.keyId);
   return response;
 }
 
@@ -550,7 +550,7 @@ function attachLiveSidebandUpstream(
 // trackSseForRequestLog(
 // export function relaySseWithHeartbeat
 
-const REQUEST_LOG_ID_RESPONSE_HEADER = "x-opencodex-request-id";
+const REQUEST_LOG_ID_RESPONSE_HEADER = "x-openccx-request-id";
 
 function withRequestLogId(response: Response, requestId: string): Response {
   const headers = new Headers(response.headers);
@@ -662,7 +662,7 @@ export function warnAgentTaskRecoveryStartup(config: {
 export function startServer(port?: number, deps: StartServerDeps = {}): Server<WsData> {
   const localAttestationSecret = deps.localAttestationSecret ?? createLocalAttestationSecret();
   // Captured before loadConfig() starts the optional ACL flight so stop() drains the same dir
-  // even if OPENCODEX_HOME changes underneath a long-lived process.
+  // even if OPENCCX_HOME changes underneath a long-lived process.
   const startupConfigDir = getConfigDir();
   const startupConfig = migrateStartupSubagentModels(
     runModelRenameStartupMigration(runAlibabaRegionStartupMigration(runOpenAiTierStartupMigration(loadConfig()))),
@@ -705,7 +705,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
   const startupWindowsTaskListingCache = createWindowsTaskListingCache();
   try {
     const homes = resolveServiceHomes();
-    const statePaths = serviceStatePathsForOpenCodexHome(homes.opencodexHome);
+    const statePaths = serviceStatePathsForOpenccxHome(homes.openccxHome);
     startupOwnershipHomes = homes;
     startupOwnershipStatePaths = statePaths;
   } catch { /* inspection below stays unknown */ }
@@ -739,7 +739,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
   // first save, which is the case the guard exists for.
   armClaudeCodeBaseline(config);
   // usage.jsonl already persists every request; rehydrate the in-memory Logs ring so
-  // /api/logs (and the GUI) survive `ocx stop` / `ocx start` process restarts.
+  // /api/logs (and the GUI) survive `occx stop` / `occx start` process restarts.
   hydrateRequestLogsFromDisk();
   registerDefaultAppOwnedMemoryStores();
   registerDefaultAppOwnedObservedBuffers();
@@ -814,7 +814,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
    * the exact methods and paths it serves (#3428).
    *
    * `POST /v1/messages` (Anthropic wire) and `POST /v1/chat/completions` (OpenAI chat wire)
-   * are the inference endpoints the hub's OWN local clients speak: `ocx claude` and the
+   * are the inference endpoints the hub's OWN local clients speak: `occx claude` and the
    * `system-env` injection and Claude Desktop 3P dial the first, Cursor Private Inference, the
    * vision `routed-describe` helper and aside/opencode the second (#4236). On a hub whose
    * public listener binds a tailnet address there is no other local socket for them, so
@@ -981,7 +981,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
     && startupOwnershipHomes !== null
     ? prepareNativeMainStartupLifecycle(
       deps.nativeMainStartup,
-      { codexHome: startupOwnershipHomes.codexHome, configDir: startupOwnershipHomes.opencodexHome },
+      { codexHome: startupOwnershipHomes.codexHome, configDir: startupOwnershipHomes.openccxHome },
     )
     : null;
   let retryOwnershipHomes = startupOwnershipHomes;
@@ -994,7 +994,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
     if (retryOwnershipHomes === null || retryOwnershipStatePaths === null) {
       try {
         const homes = resolveServiceHomes();
-        const statePaths = serviceStatePathsForOpenCodexHome(homes.opencodexHome);
+        const statePaths = serviceStatePathsForOpenccxHome(homes.openccxHome);
         retryOwnershipHomes = homes;
         retryOwnershipStatePaths = statePaths;
       } catch {
@@ -1007,7 +1007,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
     if (answer !== "owned") return answer;
     retryPreparedNativeMainLifecycle ??= prepareNativeMainStartupLifecycle(
       deps.nativeMainStartup,
-      { codexHome: homes.codexHome, configDir: homes.opencodexHome },
+      { codexHome: homes.codexHome, configDir: homes.openccxHome },
     );
     // An ownership verdict without a lifecycle bound to that same home is not
     // enough to reopen native-main admission.
@@ -1037,7 +1037,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           "ownership-unknown",
           // #2108: an `unknown` verdict means the probe could not answer, not that this host
           // is unownable. Hand the fence a way to re-ask so a host that becomes answerable
-          // after boot reopens on its own instead of needing `ocx restart`. A `foreign`
+          // after boot reopens on its own instead of needing `occx restart`. A `foreign`
           // verdict ignores this by design — that one is a fact, not a question.
           ownershipRetryOptions,
         )
@@ -1078,7 +1078,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
     backgroundLifecycle = acquireServerBackgroundLifecycle(applyPolicy);
     unregisterQuotaAutoRefresh = (deps.registerCodexQuotaAutoRefreshWorker
       ?? registerCodexQuotaAutoRefreshWorker)(config);
-    // External `ocx config set` / direct config.json edits run in other
+    // External `occx config set` / direct config.json edits run in other
     // processes; poll the file so Logs/Usage display prices follow them live.
     // Started inside the guarded startup transaction so the catch below can
     // release the owner-scoped lease on any listener failure.
@@ -1137,11 +1137,11 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         || readyzPath !== undefined
         || url.pathname.startsWith("/v1/")
       )) {
-        const message = "OpenCodex package files changed while this proxy was running; restart OpenCodex before retrying.";
+        const message = "Openccx package files changed while this proxy was running; restart Openccx before retrying.";
         const response = url.pathname === "/healthz" || readyzPath !== undefined
           ? jsonResponse({
               status: "restart_required",
-              service: "opencodex",
+              service: "openccx",
               version: VERSION,
               uptime: process.uptime(),
               pid: process.pid,
@@ -1182,7 +1182,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         }
         const admission = resolveResponsesApiAuth(req, policy);
         if (!admission) {
-          return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+          return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         }
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "WebSocket upgrade blocked: non-local Origin"), req, policy);
@@ -1218,7 +1218,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         const healthPort = server.port ?? listenPort;
         const response = jsonResponse({
           status: "ok",
-          service: "opencodex",
+          service: "openccx",
           version: VERSION,
           uptime: process.uptime(),
           pid: process.pid,
@@ -1249,11 +1249,11 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         // A draining proxy must never advertise ready: every data-plane branch
         // answers drainingResponse while isDraining() is set, but the one-shot
         // readiness gate is not mutated on shutdown (it is owned by the startup
-        // sync). Report pending so `ocx ready --wait` and external supervisors
+        // sync). Report pending so `occx ready --wait` and external supervisors
         // keep polling instead of promoting a proxy that is draining.
         const status = isDraining() ? "pending" : readinessGate.getStatus();
         const body = {
-          service: "opencodex",
+          service: "openccx",
           version: VERSION,
           uptime: process.uptime(),
           pid: process.pid,
@@ -1265,7 +1265,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return jsonResponse(body, 200, req, policy);
         }
         // Pending/failed: 503 with a conservative Retry-After so well-behaved clients
-        // (and `ocx ready --wait`) back off instead of hot-looping.
+        // (and `occx ready --wait`) back off instead of hot-looping.
         const resp = jsonResponse(body, 503, req, policy);
         const headers = new Headers(resp.headers);
         headers.set("Retry-After", "1");
@@ -1322,7 +1322,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         // header, a recognized bearer, or x-api-key is safe — and rejecting x-api-key would
         // 401 Anthropic-SDK clients holding a perfectly valid data credential.
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1377,7 +1377,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           "cache-control": "no-store",
         };
         const version = await persistedCodexVersion();
-        if (version) headers["x-opencodex-codex-version"] = version;
+        if (version) headers["x-openccx-codex-version"] = version;
         // No conditional handling: with no validator emitted, an If-None-Match on this route
         // can only have been guessed or copied from elsewhere, and honoring it would
         // reintroduce the cross-identity path above. Every request gets the full body.
@@ -1395,7 +1395,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
 
       if (url.pathname === "/v1/hub-state" && (req.method === "GET" || req.method === "HEAD")) {
         // #4236: a connected client had no way to learn which providers this hub can actually
-        // serve, so `ocx status` on the client reported the CLIENT's empty credential store as
+        // serve, so `occx status` on the client reported the CLIENT's empty credential store as
         // if it were the truth — "xai ✗ not logged in" on a machine whose hub has xAI logged
         // in. The fix is one least-privilege data-plane read, in the /v1/catalog (#809)
         // tradition: same admission resolver, same origin check, no parameters, no caller
@@ -1413,7 +1413,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         // Placed between /v1/catalog and /v1/models so all three least-privilege client reads
         // stay in sight of each other.
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1475,10 +1475,10 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         // that route's admission rationale exactly. Keep them adjacent so a future change to
         // one is made in sight of the other.
         // Model discovery never forwards Authorization upstream, so the broader admission
-        // set (Authorization / x-api-key / x-opencodex-api-key) is safe here and required by
+        // set (Authorization / x-api-key / x-openccx-api-key) is safe here and required by
         // remote OpenAI-style bearer clients and Claude gateway discovery (anthropic-version).
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1569,7 +1569,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         // ModelInfo shape incl. capabilities (effort ladder / thinking) — Desktop 3P can
         // only learn capabilities through discovery, and Claude Code 2.1.207 strips the
         // extra fields (backward-safe). Ids are the claude-opus-4-8-{code} Desktop
-        // aliases; legacy claude-ocx-* ids keep decoding via resolveAlias. Detection:
+        // aliases; legacy claude-occx-* ids keep decoding via resolveAlias. Detection:
         // anthropic-version header (Claude Code sends it) or explicit ?flavor=anthropic.
         // Codex catalog (client_version) and the OpenAI list shape below stay byte-identical.
         const wantsAnthropicList = wantsDesktopConfig || req.headers.get("anthropic-version") !== null
@@ -1628,7 +1628,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           const { activeDesktop3pAlias } = await import("../claude/desktop-3p");
           // Per-surface id family (devlog 050): explicit ?ids= wins; otherwise the
           // Claude Code CLI discovery UA (`claude-code/<version>`, binary n_()) gets
-          // readable claude-ocx ids and every other client (Desktop 3P) keeps the
+          // readable claude-occx ids and every other client (Desktop 3P) keeps the
           // hashed family its config was written with. Unknown UA -> hashed (safe).
           const idsParam = url.searchParams.get("ids");
           const idStyle = idsParam === "cli"
@@ -1873,7 +1873,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveResponsesApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1909,7 +1909,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1930,7 +1930,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
 
       if (req.method === "GET" && url.pathname.startsWith("/v1/opencodex/artifacts/")) {
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1966,7 +1966,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -1992,7 +1992,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -2016,7 +2016,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveResponsesApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -2028,7 +2028,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           ...admissionFields(admission),
           inboundProtocol: "responses",
         };
-        if (req.headers.get("x-opencodex-grok") === "1") logCtx.surface = "grok";
+        if (req.headers.get("x-openccx-grok") === "1") logCtx.surface = "grok";
         let logged = false;
         const finalizeNativePassthroughLog = (
           status: number,
@@ -2070,7 +2070,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         }
         const admission = resolveApiAuth(req, policy);
         if (!admission) {
-          return withCors(anthropicErrorResponse(401, "opencodex API key required", "authentication_error"), req, policy);
+          return withCors(anthropicErrorResponse(401, "openccx API key required", "authentication_error"), req, policy);
         }
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(anthropicErrorResponse(403, "cross-origin data-plane request blocked", "permission_error"), req, policy);
@@ -2089,7 +2089,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
         }
         const admission = resolveApiAuth(req, policy);
         if (!admission) {
-          return withCors(anthropicErrorResponse(401, "opencodex API key required", "authentication_error"), req, policy);
+          return withCors(anthropicErrorResponse(401, "openccx API key required", "authentication_error"), req, policy);
         }
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(anthropicErrorResponse(403, "cross-origin data-plane request blocked", "permission_error"), req, policy);
@@ -2120,7 +2120,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveResponsesApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -2154,7 +2154,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "cross-origin data-plane request blocked"), req, policy);
         }
@@ -2191,7 +2191,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
           return drainingResponse(req, policy);
         }
         const admission = resolveApiAuth(req, policy);
-        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "opencodex API key required"), req, policy);
+        if (!admission) return withCors(formatErrorResponse(401, "authentication_error", "openccx API key required"), req, policy);
         if (!isAllowedRequestOrigin(req, policy)) {
           return withCors(formatErrorResponse(403, "origin_rejected", "WebSocket upgrade blocked: non-local Origin"), req, policy);
         }
@@ -2630,7 +2630,7 @@ export function startServer(port?: number, deps: StartServerDeps = {}): Server<W
   boundPort = actualPort;
   setCorsOrigin(actualPort);
 
-  console.log(`🚀 opencodex proxy running on http://localhost:${actualPort}`);
+  console.log(`🚀 openccx proxy running on http://localhost:${actualPort}`);
   console.log(`   POST /v1/responses → provider translation`);
   console.log(`   POST /v1/chat/completions → OpenAI-compatible clients`);
   console.log(`   GET  /healthz      → health check`);

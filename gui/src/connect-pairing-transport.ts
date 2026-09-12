@@ -1,7 +1,7 @@
 import { installApiSessionFromHtml } from "./api";
 import type { ApiTarget } from "./api-targets";
 
-const PAIRING_CODE = /^ocx_pair_[A-Za-z0-9_-]{43}$/;
+const PAIRING_CODE = /^occx_pair_[A-Za-z0-9_-]{43}$/;
 
 /**
  * Exchange a pairing code for a shared-plane session.

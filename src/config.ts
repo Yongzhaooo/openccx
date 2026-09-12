@@ -76,14 +76,14 @@ import {
   pinnedWireAdapter,
   PROVIDER_WEB_SEARCH_BRIDGE_BACKENDS,
   UPSTREAM_HTTP_VERSION_VALUES,
-  type OcxClaudeCodeConfig,
-  type OcxConfig,
-  type OcxApiKeyEntry,
-  type OcxProviderConfig,
+  type OccxClaudeCodeConfig,
+  type OccxConfig,
+  type OccxApiKeyEntry,
+  type OccxProviderConfig,
   type FastWire,
   type ProviderCostOverlay,
 } from "./types";
-import type { OcxRuntimeRole } from "./types/config";
+import type { OccxRuntimeRole } from "./types/config";
 import { OPENAI_CODEX_PROVIDER_ID } from "./providers/openai-tiers";
 import { modelAutoCompactTokenLimitsConfigError } from "./providers/auto-compact-budget";
 import { fastWireDeclarationError, hasFastWireCapabilityConflict } from "./providers/fastwire";
@@ -138,8 +138,8 @@ export { expandUserPath, getConfigDir, getConfigPath, hardenConfigDir } from "./
 export {
   getPidPath,
   getRuntimePortPath,
-  isOcxStartCommandLine,
-  ocxStartProcessCacheSizeForTests,
+  isOccxStartCommandLine,
+  occxStartProcessCacheSizeForTests,
   parsePidFile,
   readAlivePid,
   readPid,
@@ -149,11 +149,11 @@ export {
   removePidIfValueIs,
   removeRuntimePort,
   removeRuntimePortIfPidIs,
-  setOcxStartProcessCacheForTests,
-  setOcxStartProcessProbeForTests,
+  setOccxStartProcessCacheForTests,
+  setOccxStartProcessProbeForTests,
   setProcessCommandLineExecForTests,
   setProcessCommandLinePlatformForTests,
-  sweepDeadOcxStartProcessCache,
+  sweepDeadOccxStartProcessCache,
   verifyPidIdentity,
   writePid,
   writeRuntimePort,
@@ -229,7 +229,7 @@ function isAlreadyExistsError(error: unknown): boolean {
  * - `"rollback"`: parses as a valid pre-migration (v1) config — a
  *   user-intentional rollback point that must never be silently destroyed.
  *
- * Shared by the startup migration backup path and `ocx init` cleanup so both
+ * Shared by the startup migration backup path and `occx init` cleanup so both
  * apply the same preservation policy (issue #257 / sol review 260722).
  */
 export function classifyOpenAiTierBackup(backupBytes: Uint8Array): "stale" | "rollback" {
@@ -274,7 +274,7 @@ export function backupConfigBeforeOpenAiTierMigration(
       // clearly not a user-intentional rollback point:
       //   - unparseable JSON: written by a different tool or truncated
       //   - already at tier version 2: the backup is from a post-migration config (e.g.
-      //     ocx init wrote a fresh v2 config, making the old backup obsolete)
+      //     occx init wrote a fresh v2 config, making the old backup obsolete)
       // A backup that parses as a valid pre-migration (v1) config is kept as-is and
       // we throw a collision error, because silently replacing a user-created rollback
       // point would be surprising and potentially destructive.
@@ -288,7 +288,7 @@ export function backupConfigBeforeOpenAiTierMigration(
       return "reused";
     }
   }
-  const temp = `${backup}.ocx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
+  const temp = `${backup}.occx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
   let published = false;
   let cleanupAttempted = false;
 
@@ -394,7 +394,7 @@ const OPENAI_TIER_ROLLBACK_PRESERVE_ATTEMPTS = 16;
  * `.pre-openai-tiers-v1-rollback.<timestamp>[suffix].bak` path, then unlink the
  * blocking v2 name. The original bytes are copied with no-replace publication;
  * the v2 path is removed only after the copy is verified. Shared by startup
- * migration recovery and `ocx init` cleanup so the two paths cannot drift.
+ * migration recovery and `occx init` cleanup so the two paths cannot drift.
  */
 export function preserveOpenAiTierRollbackSnapshot(
   configPath = getConfigPath(),
@@ -784,8 +784,8 @@ export function modelPreferHostedToolsConfigError(
   const registryTransportMatches = typeof provider.baseUrl === "string"
     && providerMatchesRegistryTransport(providerName, {
       baseUrl: provider.baseUrl,
-      adapter: provider.adapter as OcxProviderConfig["adapter"],
-      ...(typeof provider.authMode === "string" ? { authMode: provider.authMode as OcxProviderConfig["authMode"] } : {}),
+      adapter: provider.adapter as OccxProviderConfig["adapter"],
+      ...(typeof provider.authMode === "string" ? { authMode: provider.authMode as OccxProviderConfig["authMode"] } : {}),
     });
   const effectiveForwardAuth = registryTransportMatches
     ? registry?.authKind === "forward"
@@ -818,7 +818,7 @@ export function modelPreferHostedToolsConfigError(
         {
           baseUrl: provider.baseUrl,
           adapter: currentWire,
-          ...(typeof provider.authMode === "string" ? { authMode: provider.authMode as OcxProviderConfig["authMode"] } : {}),
+          ...(typeof provider.authMode === "string" ? { authMode: provider.authMode as OccxProviderConfig["authMode"] } : {}),
         },
         modelId,
         MODEL_ADAPTER_OVERRIDE_ALLOWED,
@@ -1052,7 +1052,7 @@ const hubConfigSchema = z.object({
   }).optional(),
   // Same canonical-origin rule as managementPublicOrigin, and deliberately NOT `.catch`ed:
   // a mistyped data origin must be rejected at write time, because silently dropping it
-  // makes `ocx hub invite` print the `http://<hostname>:<port>` fallback that the operator
+  // makes `occx hub invite` print the `http://<hostname>:<port>` fallback that the operator
   // set this field precisely to replace.
   dataPublicOrigin: z.string().transform((value, ctx) => {
     const origin = canonicalHttpOrigin(value);
@@ -1090,7 +1090,7 @@ const remoteGuiConfigSchema = z.object({
       seen.add(user);
     }
   }).optional(),
-  // Retired (see OcxRemoteGuiConfig): accepted so an existing file still loads, ignored by
+  // Retired (see OccxRemoteGuiConfig): accepted so an existing file still loads, ignored by
   // the pairing path. Removing it from a strict schema would reject the whole config.
   allowInsecureHttp: z.boolean().optional(),
 }).strict();
@@ -1114,7 +1114,7 @@ const clientConnectionSchema = z.object({
       ctx.addIssue({ code: "custom", message: "must contain unique client ids" });
     }
   }),
-  tokenEnv: z.literal("OPENCODEX_API_AUTH_TOKEN"),
+  tokenEnv: z.literal("OPENCCX_API_AUTH_TOKEN"),
   apiKeyId: z.string().trim().min(1).max(256),
   tokenFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   protocolVersion: z.literal(1),
@@ -1343,7 +1343,7 @@ const configSchema = z.object({
     if (!Array.isArray(value)) return undefined;
     return value
       .filter(row => apiKeyEntrySchema.safeParse(row).success)
-      .map(row => apiKeyEntrySchema.parse(row) as OcxApiKeyEntry);
+      .map(row => apiKeyEntrySchema.parse(row) as OccxApiKeyEntry);
   }),
 }).passthrough().superRefine((config, ctx) => {
   const claudeCode = (config as { claudeCode?: unknown }).claudeCode;
@@ -1485,7 +1485,7 @@ const configSchema = z.object({
       ctx.addIssue({
         code: "custom",
         // The provider key is caller-controlled and can be token-shaped; redact it
-        // before schemaDiagnosticsError serializes the path (ocx config validate/import).
+        // before schemaDiagnosticsError serializes the path (occx config validate/import).
         path: ["providers", redactSecretString(name), "modelCosts"],
         message: modelCostsError,
       });
@@ -1500,7 +1500,7 @@ const configSchema = z.object({
         message: modelDisplayNamesError,
       });
     }
-    const apiKeyTransportError = apiKeyTransportConfigError(provider as OcxProviderConfig);
+    const apiKeyTransportError = apiKeyTransportConfigError(provider as OccxProviderConfig);
     if (apiKeyTransportError) {
       ctx.addIssue({
         code: "custom",
@@ -1709,7 +1709,7 @@ const configSchema = z.object({
         // Pass the full map so cross-combo rules (alias uniqueness) apply at load time
         // too, not just via the management API; each combo is excluded from its own check.
         for (const issue of comboConfigIssues(id, raw, config.providers, {
-          combos: combos as Record<string, import("./types").OcxComboConfig>,
+          combos: combos as Record<string, import("./types").OccxComboConfig>,
           excludeComboId: id,
         })) {
           ctx.addIssue({
@@ -1729,8 +1729,8 @@ const configSchema = z.object({
       for (const [id, raw] of Object.entries(routingProfiles as Record<string, unknown>)) {
         for (const issue of routingProfileIssues(id, raw, {
           providers: config.providers,
-          combos: combos as Record<string, import("./types").OcxComboConfig> | undefined,
-          routingProfiles: routingProfiles as Record<string, import("./types").OcxRoutingProfileConfig>,
+          combos: combos as Record<string, import("./types").OccxComboConfig> | undefined,
+          routingProfiles: routingProfiles as Record<string, import("./types").OccxRoutingProfileConfig>,
           codexAccountNamespaces: accountNamespaces,
         }, { excludeProfileId: id })) {
           ctx.addIssue({
@@ -1800,7 +1800,7 @@ function sanitizeReasoningPinsForLoad(parsed: unknown): void {
  * `streamMode` to "auto"; surface that once so a hand-edited typo (e.g.
  * "legacy_tee") is discoverable instead of silently changing stream shape.
  */
-function warnDegradedStreamMode(rawParsed: unknown, validated: OcxConfig): void {
+function warnDegradedStreamMode(rawParsed: unknown, validated: OccxConfig): void {
   if (!rawParsed || typeof rawParsed !== "object") return;
   const raw = (rawParsed as Record<string, unknown>).streamMode;
   if (raw !== undefined && validated.streamMode === undefined) {
@@ -1951,7 +1951,7 @@ function sanitizeModelCostsForLoad(parsed: unknown): void {
  * falls back to loopback, which is the safe direction but not what the file asked for —
  * say so once instead of silently ignoring the field.
  */
-function warnDegradedHostname(rawParsed: unknown, validated: OcxConfig): void {
+function warnDegradedHostname(rawParsed: unknown, validated: OccxConfig): void {
   if (!rawParsed || typeof rawParsed !== "object") return;
   const raw = (rawParsed as Record<string, unknown>).hostname;
   if (raw !== undefined && validated.hostname === undefined) {
@@ -1964,7 +1964,7 @@ function warnDegradedHostname(rawParsed: unknown, validated: OcxConfig): void {
  * Priority is a preference, so the schema drops the whole map rather than failing
  * the parse — say so once, otherwise the pool silently reverts to flat ordering.
  */
-function degradedCodexAccountPriorityWarnings(rawParsed: unknown, validated: OcxConfig): string[] {
+function degradedCodexAccountPriorityWarnings(rawParsed: unknown, validated: OccxConfig): string[] {
   const record = rawConfigRecord(rawParsed);
   const warnings: string[] = [];
   // The pin degrades silently otherwise, which reads as the manual selection simply
@@ -1979,19 +1979,19 @@ function degradedCodexAccountPriorityWarnings(rawParsed: unknown, validated: Ocx
   return warnings;
 }
 
-function warnDegradedCodexAccountPriorities(rawParsed: unknown, validated: OcxConfig): void {
+function warnDegradedCodexAccountPriorities(rawParsed: unknown, validated: OccxConfig): void {
   for (const warning of degradedCodexAccountPriorityWarnings(rawParsed, validated)) {
     console.warn(`⚠️  config.json ${warning}`);
   }
 }
 
-function degradedCodexQuotaAutoRefreshWarning(rawParsed: unknown, validated: OcxConfig): string | null {
+function degradedCodexQuotaAutoRefreshWarning(rawParsed: unknown, validated: OccxConfig): string | null {
   const raw = rawConfigRecord(rawParsed)?.codexQuotaAutoRefresh;
   if (raw === undefined || validated.codexQuotaAutoRefresh !== undefined) return null;
   return "codexQuotaAutoRefresh is invalid — automatic quota-window activation is disabled";
 }
 
-function warnDegradedCodexQuotaAutoRefresh(rawParsed: unknown, validated: OcxConfig): void {
+function warnDegradedCodexQuotaAutoRefresh(rawParsed: unknown, validated: OccxConfig): void {
   const warning = degradedCodexQuotaAutoRefreshWarning(rawParsed, validated);
   if (warning) console.warn(`⚠️  config.json ${warning}`);
 }
@@ -2020,7 +2020,7 @@ function isUsableApiKeySecret(value: unknown): value is string {
  * randomness. It is not derived from the secret — a public identifier should
  * never be a function of key material.
  */
-function normalizeApiKeyIds(config: OcxConfig): OcxConfig {
+function normalizeApiKeyIds(config: OccxConfig): OccxConfig {
   const keys = config.apiKeys;
   if (!keys?.length) return config;
   // Reserve every explicit id BEFORE synthesizing any, or a synthetic
@@ -2050,7 +2050,7 @@ function normalizeApiKeyIds(config: OcxConfig): OcxConfig {
   return config;
 }
 
-function warnDegradedApiKeys(rawParsed: unknown, validated: OcxConfig): void {
+function warnDegradedApiKeys(rawParsed: unknown, validated: OccxConfig): void {
   if (!rawParsed || typeof rawParsed !== "object") return;
   const raw = (rawParsed as Record<string, unknown>).apiKeys;
   if (raw === undefined) return;
@@ -2089,7 +2089,7 @@ function warnDegradedApiKeys(rawParsed: unknown, validated: OcxConfig): void {
 
 const CLAUDE_SUBAGENT_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 
-function isClaudeSubagentEffort(value: unknown): value is NonNullable<OcxClaudeCodeConfig["subagentEffort"]> {
+function isClaudeSubagentEffort(value: unknown): value is NonNullable<OccxClaudeCodeConfig["subagentEffort"]> {
   return typeof value === "string" && CLAUDE_SUBAGENT_EFFORTS.includes(value as typeof CLAUDE_SUBAGENT_EFFORTS[number]);
 }
 
@@ -2100,9 +2100,9 @@ function rawClaudeSubagentEffort(rawParsed: unknown): unknown {
   return (claudeCode as Record<string, unknown>).subagentEffort;
 }
 
-function normalizePersistedClaudeCode(claudeCode: unknown): OcxConfig["claudeCode"] {
+function normalizePersistedClaudeCode(claudeCode: unknown): OccxConfig["claudeCode"] {
   if (!claudeCode || typeof claudeCode !== "object" || Array.isArray(claudeCode)) {
-    return claudeCode as OcxConfig["claudeCode"];
+    return claudeCode as OccxConfig["claudeCode"];
   }
   const normalized = { ...claudeCode } as Record<string, unknown>;
   if (Object.hasOwn(normalized, "subagentEffort") && !isClaudeSubagentEffort(normalized.subagentEffort)) {
@@ -2124,10 +2124,10 @@ function normalizePersistedClaudeCode(claudeCode: unknown): OcxConfig["claudeCod
     if (kept.length > 0) normalized.classifierFallbacks = kept;
     else delete normalized.classifierFallbacks;
   }
-  return normalized as OcxConfig["claudeCode"];
+  return normalized as OccxConfig["claudeCode"];
 }
 
-function normalizeClaudeSubagentEffort(config: OcxConfig, _rawParsed: unknown): OcxConfig {
+function normalizeClaudeSubagentEffort(config: OccxConfig, _rawParsed: unknown): OccxConfig {
   // Unconditional. This used to short-circuit when `subagentEffort` was absent or already valid,
   // which meant a config whose ONLY defect was elsewhere in `claudeCode` was never normalized.
   // The specialized subagentEffort WARNING is a separate concern and stays exactly as it is.
@@ -2302,7 +2302,7 @@ function warnDegradedCodexAccountPicker(rawParsed: unknown): void {
   if (warning) console.warn(`⚠️  config.json ${warning}. Other settings were preserved.`);
 }
 
-function nativeSubagentSyncDisabledReason(config: OcxConfig, rawParsed?: unknown): string | null {
+function nativeSubagentSyncDisabledReason(config: OccxConfig, rawParsed?: unknown): string | null {
   if (config.syncCodexSubagentDefaults !== true) return null;
   const malformed = malformedNativeSubagentFields(rawParsed);
   if (malformed.includes("injectionModel")) return "injectionModel must be a string";
@@ -2314,14 +2314,14 @@ function nativeSubagentSyncDisabledReason(config: OcxConfig, rawParsed?: unknown
   return null;
 }
 
-function normalizeNativeSubagentSync(config: OcxConfig, rawParsed?: unknown): OcxConfig {
+function normalizeNativeSubagentSync(config: OccxConfig, rawParsed?: unknown): OccxConfig {
   if (!nativeSubagentSyncDisabledReason(config, rawParsed)) return config;
   const normalized = { ...config };
   delete normalized.syncCodexSubagentDefaults;
   return normalized;
 }
 
-function warnDegradedNativeSubagentConfig(rawParsed: unknown, config: OcxConfig): void {
+function warnDegradedNativeSubagentConfig(rawParsed: unknown, config: OccxConfig): void {
   for (const field of malformedNativeSubagentFields(rawParsed)) {
     console.warn(`⚠️  config.json ${malformedNativeSubagentFieldWarning(field)}. Other settings were preserved.`);
   }
@@ -2339,7 +2339,7 @@ function warnDegradedNativeSubagentConfig(rawParsed: unknown, config: OcxConfig)
  * provider name can be redacted before it reaches diagnostics.
  */
 function inheritedFastWireConflictProviderNames(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
 ): string[] {
   const conflicts: string[] = [];
   for (const [name, provider] of Object.entries(config.providers)) {
@@ -2369,7 +2369,7 @@ function inheritedFastWireConflictWarning(name: string): string {
   return `providers.${redactSecretString(name)}.fastWire=null overrides service-tier capability inherited from the matching registry entry`;
 }
 
-function warnInheritedFastWireConflicts(configPath: string, config: OcxConfig): void {
+function warnInheritedFastWireConflicts(configPath: string, config: OccxConfig): void {
   const names = inheritedFastWireConflictProviderNames(config);
   if (names.length === 0 || warnedInheritedFastWireConflicts.has(configPath)) return;
   warnedInheritedFastWireConflicts.add(configPath);
@@ -2380,13 +2380,13 @@ function warnInheritedFastWireConflicts(configPath: string, config: OcxConfig): 
 }
 
 /**
- * Load and validate config.json into an OcxConfig. Missing files reset to
+ * Load and validate config.json into an OccxConfig. Missing files reset to
  * defaults and clear stale overlays. Broken existing files also fall back to
  * default routing (after backup), but keep the last-good cost-overlay registry
  * until a valid config or a genuinely missing file is observed. A partially-
  * invalid config is merged with defaults so providers and pool accounts survive.
  */
-export function loadConfig(): OcxConfig {
+export function loadConfig(): OccxConfig {
   const dir = getConfigDir();
   const configPath = getConfigPath();
   hardenConfigDir();
@@ -2405,7 +2405,7 @@ export function loadConfig(): OcxConfig {
     sanitizeModelCostsForLoad(parsed);
     const result = configSchema.safeParse(parsed);
     if (result.success) {
-      const config = normalizeApiKeyIds(result.data as OcxConfig);
+      const config = normalizeApiKeyIds(result.data as OccxConfig);
       warnInheritedFastWireConflicts(configPath, config);
       warnDegradedStreamMode(parsed, config);
       warnDegradedHostname(parsed, config);
@@ -2435,7 +2435,7 @@ export function loadConfig(): OcxConfig {
     const retryResult = configSchema.safeParse(merged);
     if (retryResult.success) {
       warnConfigRepaired(configPath, result.error);
-      const config = normalizeApiKeyIds(retryResult.data as OcxConfig);
+      const config = normalizeApiKeyIds(retryResult.data as OccxConfig);
       warnInheritedFastWireConflicts(configPath, config);
       warnDegradedHostname(parsed, config);
       warnDegradedApiKeys(parsed, config);
@@ -2557,13 +2557,13 @@ function sanitizeModelDisplayNamesForLoad(raw: unknown): void {
 }
 
 /** Refresh the user cost-overlay registry from `config` and return it unchanged. */
-function withRefreshedCostOverlays(config: OcxConfig): OcxConfig {
+function withRefreshedCostOverlays(config: OccxConfig): OccxConfig {
   refreshUserCostOverlays(config);
   return config;
 }
 
 export type ConfigDiagnostics = {
-  config: OcxConfig;
+  config: OccxConfig;
   source: "default" | "file" | "fallback";
   error: string | null;
   /** Non-fatal config concerns; absent when there are no warnings. */
@@ -2576,7 +2576,7 @@ type ConfigFileSnapshot = {
   raw?: string;
 };
 
-function configPlaceholderWarnings(config: OcxConfig): string[] {
+function configPlaceholderWarnings(config: OccxConfig): string[] {
   const warnings: string[] = [];
   for (const [name, provider] of Object.entries(config.providers)) {
     const placeholder = provider.baseUrl.match(/\{[^}]*\}/)?.[0];
@@ -2587,7 +2587,7 @@ function configPlaceholderWarnings(config: OcxConfig): string[] {
   return warnings;
 }
 
-function validFileConfigDiagnostics(config: OcxConfig, rawParsed: unknown): ConfigDiagnostics {
+function validFileConfigDiagnostics(config: OccxConfig, rawParsed: unknown): ConfigDiagnostics {
   // Unsafe hand-edited optional values are disabled in memory instead of rejecting
   // the entire config, which would hide unrelated providers/accounts. The next
   // ordinary save persists the normalized absence.
@@ -2633,7 +2633,7 @@ function validFileConfigDiagnostics(config: OcxConfig, rawParsed: unknown): Conf
 }
 
 export function subagentDefaultSyncEffective(
-  config: Pick<OcxConfig, "syncCodexSubagentDefaults" | "injectionModel">,
+  config: Pick<OccxConfig, "syncCodexSubagentDefaults" | "injectionModel">,
 ): boolean {
   return config.syncCodexSubagentDefaults === true && Boolean(config.injectionModel?.trim());
 }
@@ -2771,7 +2771,7 @@ function quotaResetNotifyError(value: unknown): string | null {
 
 /**
  * The read path degrades a malformed pool policy to undefined, which for an exclusion policy means
- * the excluded accounts quietly keep serving traffic. Reject it on write so `ocx config set` cannot
+ * the excluded accounts quietly keep serving traffic. Reject it on write so `occx config set` cannot
  * create a policy that looks applied and is not.
  */
 function codexPoolError(value: unknown): string | null {
@@ -2788,7 +2788,7 @@ function codexPoolError(value: unknown): string | null {
  * Same reasoning as {@link blankHostnameError}, and more urgent: the read path degrades a
  * malformed selection-order map to undefined, which on a write would drop every entry the
  * user had accumulated and still report success. A load-time degrade leaves the raw map in
- * the file to be repaired by hand; a degraded write erases it. One bad `ocx config set`
+ * the file to be repaired by hand; a degraded write erases it. One bad `occx config set`
  * must not cost the whole map, so a live caller is told instead.
  */
 function codexAccountPrioritiesError(value: unknown): string | null {
@@ -2876,7 +2876,7 @@ function oauthOpenBrowserError(value: unknown): string | null {
  * Letting either through would surface as a startup failure after the public listener already
  * bound, which reads like an unrelated port conflict.
  *
- * Both keys are read from the same candidate, so `ocx config set hostname 127.0.0.1` on a host
+ * Both keys are read from the same candidate, so `occx config set hostname 127.0.0.1` on a host
  * whose listener is already the companion form is refused by this same check, with the same
  * message, rather than breaking the next start.
  *
@@ -2987,7 +2987,7 @@ function managementIngressConfigError(value: unknown): string | null {
   return null;
 }
 
-export function validateConfigCandidate(value: unknown): { ok: true; config: OcxConfig } | { ok: false; error: string } {
+export function validateConfigCandidate(value: unknown): { ok: true; config: OccxConfig } | { ok: false; error: string } {
   const boundaryError = configReasoningPinsConfigError(value)
     ?? blankHostnameError(value)
     ?? claudeSubagentEffortError(value)
@@ -3011,7 +3011,7 @@ export function validateConfigCandidate(value: unknown): { ok: true; config: Ocx
   if (boundaryError) return { ok: false, error: boundaryError };
   const result = configSchema.safeParse(value);
   if (result.success) {
-    const config = normalizeApiKeyIds(result.data as OcxConfig);
+    const config = normalizeApiKeyIds(result.data as OccxConfig);
     return { ok: true, config };
   }
   return { ok: false, error: schemaDiagnosticsError(result.error) };
@@ -3029,13 +3029,13 @@ function configDiagnosticsFromRaw(raw: string): ConfigDiagnostics {
     sanitizeModelCostsForLoad(parsed);
     const result = configSchema.safeParse(parsed);
     if (result.success) {
-      return validFileConfigDiagnostics(normalizeApiKeyIds(result.data as OcxConfig), parsed);
+      return validFileConfigDiagnostics(normalizeApiKeyIds(result.data as OccxConfig), parsed);
     }
 
     const merged = mergeConfigDefaults(parsed);
     const retryResult = configSchema.safeParse(merged);
     if (retryResult.success) {
-      return validFileConfigDiagnostics(normalizeApiKeyIds(retryResult.data as OcxConfig), parsed);
+      return validFileConfigDiagnostics(normalizeApiKeyIds(retryResult.data as OccxConfig), parsed);
     }
 
     // #1785: one invalid routing profile must not make diagnostics report the built-in
@@ -3175,7 +3175,7 @@ function configMutationDatabasePath(): string {
         warnedConfigMutationDirectoryAcl = true;
         const diagnostics = error instanceof Error ? error.message : "ACL hardening failed";
         console.warn(
-          `[opencodex] Config mutation coordination directory ACL hardening did not complete; continuing without it. ${diagnostics}`,
+          `[openccx] Config mutation coordination directory ACL hardening did not complete; continuing without it. ${diagnostics}`,
         );
       }
     }
@@ -3369,7 +3369,7 @@ export const withExpectedConfigGenerationSync: WithExpectedConfigGenerationSync 
  * cost-overlay registry from the persisted config so runtime estimates follow
  * every save path.
  */
-function persistConfigUnlocked(config: OcxConfig): boolean {
+function persistConfigUnlocked(config: OccxConfig): boolean {
   const pinError = configReasoningPinsConfigError(config);
   if (pinError) throw new Error(pinError);
   const configPath = getConfigPath();
@@ -3411,7 +3411,7 @@ export type PersistedConfigInitializationOutcome = "created" | "exists" | "inval
 
 /** Initialize only a missing config; ordinary explicit updates still use saveConfig. */
 export function initializePersistedConfigIfMissing(
-  config: OcxConfig,
+  config: OccxConfig,
   io?: Partial<InitialConfigPublicationIO>,
 ): PersistedConfigInitializationOutcome {
   assertNotRealHomeUnderTest(getConfigDir());
@@ -3419,7 +3419,7 @@ export function initializePersistedConfigIfMissing(
   if (before !== "missing") return before;
   let published = false;
   try {
-    const persisted = withConfigMutationLockSync((): OcxConfig | "exists" | "invalid" => {
+    const persisted = withConfigMutationLockSync((): OccxConfig | "exists" | "invalid" => {
       const current = observeInitialConfigState();
       if (current !== "missing") return current;
       const projected = projectCustomModelCatalogMigration(undefined, projectConfigRebaseProvenance(config));
@@ -3446,7 +3446,7 @@ export function initializePersistedConfigIfMissing(
 }
 
 /** Persist `config` to config.json under the config-mutation lock. */
-export function saveConfig(config: OcxConfig): void {
+export function saveConfig(config: OccxConfig): void {
   const pinError = configReasoningPinsConfigError(config);
   if (pinError) throw new Error(pinError);
   // Keep the real-home assertion ahead of even lock-directory preparation.
@@ -3494,7 +3494,7 @@ function unavailableConfigMutationReason(snapshot: ConfigFileSnapshot): "missing
  * recreated from a prior snapshot.
  */
 export function mutatePersistedConfig<T>(
-  mutate: (config: OcxConfig) => PersistedConfigMutation<T>,
+  mutate: (config: OccxConfig) => PersistedConfigMutation<T>,
 ): PersistedConfigMutationOutcome<T> {
   // Avoid creating/opening the coordinator database for a read-path update that already knows
   // there is no valid config. The same check runs again under the transaction for authority.
@@ -3554,7 +3554,7 @@ export function mutatePersistedConfig<T>(
 
 function failClosedClientPersistenceError(
   raw: Record<string, unknown> | undefined,
-  candidate: OcxConfig,
+  candidate: OccxConfig,
 ): string | null {
   if (!raw) return null;
   const rawHasClient = Object.hasOwn(raw, "client") && raw.client !== undefined;
@@ -3577,7 +3577,7 @@ function failClosedClientPersistenceError(
   return "config write refused: malformed or mismatched remote client state must be repaired or explicitly cleared";
 }
 
-export function websocketsEnabled(config: Pick<OcxConfig, "websockets">): boolean {
+export function websocketsEnabled(config: Pick<OccxConfig, "websockets">): boolean {
   return config.websockets === true;
 }
 
@@ -3585,7 +3585,7 @@ export function websocketsEnabled(config: Pick<OcxConfig, "websockets">): boolea
  * Opt-in Ultra Fast, read with the house `=== true` idiom so an absent key and a
  * malformed one both mean off.
  */
-export function ultraFastTierEnabled(config: Pick<OcxConfig, "ultraFastTier">): boolean {
+export function ultraFastTierEnabled(config: Pick<OccxConfig, "ultraFastTier">): boolean {
   return config.ultraFastTier === true;
 }
 
@@ -3605,29 +3605,29 @@ export function ultraFastTierEnabled(config: Pick<OcxConfig, "ultraFastTier">): 
  * elsewhere must not refresh the baseline the long-lived server config is judged
  * against, or a later stale save would masquerade as "our own change".
  */
-const claudeCodeBaseline = new WeakMap<OcxConfig, unknown>();
+const claudeCodeBaseline = new WeakMap<OccxConfig, unknown>();
 /**
  * Full live-config baseline used to rebase unrelated cooperating writes. The
  * Claude subtree and the bound listener fields remain on their dedicated
  * reconciliation paths below.
  */
-const liveConfigBaseline = new WeakMap<OcxConfig, OcxConfig>();
+const liveConfigBaseline = new WeakMap<OccxConfig, OccxConfig>();
 /**
  * The live config retains the address of the socket Bun actually opened, while
  * this map retains the operator's desired address for the next process start.
  * Keeping them separate prevents an unrelated live save from restoring a stale
  * externally exposed bind after OAuth adopted a newer loopback disk config.
  */
-type PersistedServerBinding = Pick<OcxConfig, "port" | "hostname">;
+type PersistedServerBinding = Pick<OccxConfig, "port" | "hostname">;
 
-const persistedLiveServerBinding = new WeakMap<OcxConfig, PersistedServerBinding>();
+const persistedLiveServerBinding = new WeakMap<OccxConfig, PersistedServerBinding>();
 
 /**
  * Arm the baseline for a long-lived config. MANDATORY at `startServer`, not lazy on
  * first save — arming lazily would lose exactly the hand edit made before that first
  * save, which is the case the guard exists for.
  */
-export function armClaudeCodeBaseline(config: OcxConfig): void {
+export function armClaudeCodeBaseline(config: OccxConfig): void {
   liveConfigBaseline.set(config, structuredClone(config));
   claudeCodeBaseline.set(config, structuredClone(config.claudeCode));
 }
@@ -3639,10 +3639,10 @@ export function armClaudeCodeBaseline(config: OcxConfig): void {
  * adopted provider as an unsaved live edit that should defeat a newer disk change.
  */
 export function adoptPersistedProviderIntoLiveConfig(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
-  provider: OcxProviderConfig,
-  persistedConfig?: OcxConfig,
+  provider: OccxProviderConfig,
+  persistedConfig?: OccxConfig,
 ): void {
   config.providers[name] = structuredClone(provider);
   const baseline = liveConfigBaseline.get(config);
@@ -3651,7 +3651,7 @@ export function adoptPersistedProviderIntoLiveConfig(
 }
 
 /** Test seam only: is this instance armed? */
-export function claudeCodeBaselineArmed(config: OcxConfig): boolean {
+export function claudeCodeBaselineArmed(config: OccxConfig): boolean {
   return claudeCodeBaseline.has(config);
 }
 
@@ -3821,7 +3821,7 @@ function reconcileConfigValue(
  * snapshot from immediately before login; disjoint object edits merge recursively,
  * while same-leaf conflicts prefer live state.
  */
-export function reconcileLiveConfigFromDisk(config: OcxConfig, persistedBaseline: OcxConfig): void {
+export function reconcileLiveConfigFromDisk(config: OccxConfig, persistedBaseline: OccxConfig): void {
   const diagnostics = readConfigDiagnostics();
   if (diagnostics.source === "fallback") {
     throw new Error(`OAuth config reconciliation failed: ${diagnostics.error ?? "invalid config file"}`);
@@ -3905,7 +3905,7 @@ function readPersistedServerBinding(
  * Custom-model rows are merged by their stable `id`, preserving independent
  * edits and deletions across stale whole-config saves.
  */
-export function saveConfigPreservingClaudeCode(config: OcxConfig): void {
+export function saveConfigPreservingClaudeCode(config: OccxConfig): void {
   const pinError = configReasoningPinsConfigError(config);
   if (pinError) throw new Error(pinError);
   withConfigMutationLockSync(() => {
@@ -3971,7 +3971,7 @@ export function saveConfigPreservingClaudeCode(config: OcxConfig): void {
       ? readPersistedServerBinding(onDisk, bindingBaseline)
       : bindingBaseline;
     if (persistedBinding) {
-      const persistedConfig: OcxConfig = { ...projectedConfig, port: persistedBinding.port };
+      const persistedConfig: OccxConfig = { ...projectedConfig, port: persistedBinding.port };
       if (persistedBinding.hostname === undefined) delete persistedConfig.hostname;
       else persistedConfig.hostname = persistedBinding.hostname;
       if (persistConfigUnlocked(persistedConfig)) bumpGenerationForCooperatingConfigWrite();
@@ -3992,30 +3992,30 @@ export function saveConfigPreservingClaudeCode(config: OcxConfig): void {
   });
 }
 
-export function codexAutoStartEnabled(config: Pick<OcxConfig, "codexAutoStart">): boolean {
+export function codexAutoStartEnabled(config: Pick<OccxConfig, "codexAutoStart">): boolean {
   return config.codexAutoStart !== false;
 }
 
-export const CODEX_SHIM_AUTO_RESTORE_ENV = "OPENCODEX_CODEX_SHIM_AUTO_RESTORE";
+export const CODEX_SHIM_AUTO_RESTORE_ENV = "OPENCCX_CODEX_SHIM_AUTO_RESTORE";
 
 export function codexShimAutoRestoreEnabled(
-  config: Pick<OcxConfig, "codexShimAutoRestore">,
+  config: Pick<OccxConfig, "codexShimAutoRestore">,
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
   return config.codexShimAutoRestore !== false && env[CODEX_SHIM_AUTO_RESTORE_ENV] !== "0";
 }
 
 export function multiAgentGuidanceEnabled(
-  config: Pick<OcxConfig, "multiAgentGuidanceEnabled">,
+  config: Pick<OccxConfig, "multiAgentGuidanceEnabled">,
 ): boolean {
   return config.multiAgentGuidanceEnabled !== false;
 }
 
-export function runtimeRole(config: Pick<OcxConfig, "runtimeRole">): OcxRuntimeRole {
+export function runtimeRole(config: Pick<OccxConfig, "runtimeRole">): OccxRuntimeRole {
   return config.runtimeRole ?? "standalone";
 }
 
-export function getDefaultConfig(): OcxConfig {
+export function getDefaultConfig(): OccxConfig {
   // Fresh-install default: works out of the box with Codex's ChatGPT OAuth (no API key).
   // gpt-* requests forward the caller's incoming OAuth headers to the ChatGPT backend.
   // Adding extra providers (e.g. opencode-go) and switching defaultProvider is a user/runtime choice.
@@ -4083,13 +4083,13 @@ function warnProxyConfigDiscardOnce(kind: "proxy" | "noProxy" | "noProxyElements
  * running-proxy API calls stay direct. Call once per process entry that makes outbound provider
  * requests (server start, catalog sync).
  */
-export function applyProxyEnv(config: OcxConfig): void {
+export function applyProxyEnv(config: OccxConfig): void {
   applyProxyEnvWith(config);
 }
 
 /** Test seam for `proxy: "auto"`: the registry reader and platform are injectable. */
 export function applyProxyEnvWith(
-  config: OcxConfig,
+  config: OccxConfig,
   auto: { reader?: WindowsProxyRegistryReader; platform?: NodeJS.Platform } = {},
 ): void {
   // `proxy` and `noProxy` are not declared in the top-level schema, which ends in
@@ -4109,12 +4109,12 @@ export function applyProxyEnvWith(
     // "auto" into HTTP_PROXY; every non-proxy outcome leaves outbound routing as it was.
     if (process.env.HTTP_PROXY?.trim() || process.env.http_proxy?.trim()
       || process.env.HTTPS_PROXY?.trim() || process.env.https_proxy?.trim()) {
-      console.log("[opencodex] proxy \"auto\": existing HTTP_PROXY/HTTPS_PROXY environment wins; system proxy not consulted");
+      console.log("[openccx] proxy \"auto\": existing HTTP_PROXY/HTTPS_PROXY environment wins; system proxy not consulted");
       proxy = undefined;
     } else {
       const found = readWindowsSystemProxy(auto.reader, auto.platform);
       if (found.kind === "proxy") {
-        console.log(`[opencodex] proxy "auto": using Windows system proxy ${describeProxyForLog(found.url)}`);
+        console.log(`[openccx] proxy "auto": using Windows system proxy ${describeProxyForLog(found.url)}`);
         proxy = found.url;
       } else {
         const reason = found.kind === "unsupported"
@@ -4124,7 +4124,7 @@ export function applyProxyEnvWith(
             : found.kind === "socks-only"
               ? "Windows system proxy is SOCKS-only, which HTTP_PROXY cannot express; using direct egress"
               : "Windows proxy settings could not be read; using direct egress";
-        console.log(`[opencodex] proxy "auto": ${reason}`);
+        console.log(`[openccx] proxy "auto": ${reason}`);
         proxy = undefined;
       }
     }
@@ -4169,7 +4169,7 @@ function warnConfigRepaired(configPath: string, error: z.ZodError): void {
   if (warnedConfigFallbacks.has(configPath)) return;
   warnedConfigFallbacks.add(configPath);
   const fields = error.issues.map(i => i.path.join(".") || "config").join(", ");
-  console.error(`opencodex config at ${configPath}: repaired missing field(s) [${fields}] with defaults. Your providers and accounts are preserved.`);
+  console.error(`openccx config at ${configPath}: repaired missing field(s) [${fields}] with defaults. Your providers and accounts are preserved.`);
 }
 
 /**
@@ -4273,7 +4273,7 @@ function salvageConfigCandidate(
 ): {
   candidate: Record<string, unknown>;
   rawCandidate: unknown;
-  parsed: OcxConfig;
+  parsed: OccxConfig;
   dropped: string[];
   issues: z.ZodIssue[];
 } | null {
@@ -4294,7 +4294,7 @@ function salvageConfigCandidate(
     rawCandidate = deleteEntryPaths(rawCandidate, step.dropped);
     const result = configSchema.safeParse(candidate);
     if (result.success) {
-      return { candidate: step.candidate, rawCandidate, parsed: result.data as OcxConfig, dropped, issues };
+      return { candidate: step.candidate, rawCandidate, parsed: result.data as OccxConfig, dropped, issues };
     }
     error = result.error;
   }
@@ -4355,7 +4355,7 @@ function warnDroppedConfigSections(configPath: string, dropped: string[], issues
     .map(issue => `${redactIssuePath(issue.path)}: ${redactSecretString(issue.message)}`)
     .join("; ");
   console.error(
-    `opencodex config at ${configPath}: dropped [${dropped.map(redactEntryPath).join(", ")}] and loaded the rest — ${reasons}. `
+    `openccx config at ${configPath}: dropped [${dropped.map(redactEntryPath).join(", ")}] and loaded the rest — ${reasons}. `
     + "Everything else in your config, including providers and modelCosts, is preserved.",
   );
 }
@@ -4369,7 +4369,7 @@ function warnAndBackupInvalidConfig(configPath: string, error: unknown): void {
     ? error.issues.map(issue => `${issue.path.join(".") || "config"}: ${issue.message}`).join("; ")
     : error instanceof Error ? error.message : String(error);
   const backupNote = backupPath ? ` A backup was written to ${backupPath}.` : "";
-  console.error(`Could not load opencodex config at ${configPath}: ${reason}. Using default config.${backupNote}`);
+  console.error(`Could not load openccx config at ${configPath}: ${reason}. Using default config.${backupNote}`);
 }
 
 export function backupInvalidConfig(configPath: string): string | null {

@@ -15,7 +15,7 @@ describe("claude context-window map (devlog 260712 B2)", () => {
     const map = buildClaudeContextWindows([], routed);
     expect(map["cursor/gpt-5.6-luna"]).toBe(1_000_000);
     expect(map[desktop3pAlias("cursor", "gpt-5.6-luna")]).toBe(1_000_000);
-    expect(map["claude-ocx-cursor--gpt-5.6-luna"]).toBe(1_000_000);
+    expect(map["claude-occx-cursor--gpt-5.6-luna"]).toBe(1_000_000);
     expect(map["mock/small-model"]).toBe(128_000);
     expect(map["mock/no-window"]).toBeUndefined();
   });
@@ -27,7 +27,7 @@ describe("claude context-window map (devlog 260712 B2)", () => {
     // slug passed here does not register.
     expect(map["gpt-5.6-sol"]).toBe(272_000);
     expect(map[desktop3pAlias("native", "gpt-5.6-sol")]).toBe(272_000);
-    expect(map["claude-ocx-native--gpt-5.6-sol"]).toBe(272_000);
+    expect(map["claude-occx-native--gpt-5.6-sol"]).toBe(272_000);
     expect(map["gpt-5.3-codex-spark"]).toBe(100_000);
     expect(map["gpt-5.4"]).toBeUndefined();
   });
@@ -177,8 +177,8 @@ describe("auto-context (devlog 260712 020 + audit 021)", () => {
     const env = effectiveModelEnv({ model: "gpt-5.6-sol" }, windows);
     // Default 272k sits under the 829,800 compact window, so the marker stays off.
     expect(env.ANTHROPIC_MODEL).toBe("gpt-5.6-sol");
-    const readable = effectiveModelEnv({ model: "claude-ocx-native--gpt-5.6-sol" }, windows);
-    expect(readable.ANTHROPIC_MODEL).toBe("claude-ocx-native--gpt-5.6-sol");
+    const readable = effectiveModelEnv({ model: "claude-occx-native--gpt-5.6-sol" }, windows);
+    expect(readable.ANTHROPIC_MODEL).toBe("claude-occx-native--gpt-5.6-sol");
     // Opting into the measured 922k ceiling clears the compact window and marks [1m].
     const opted = buildClaudeContextWindows(["gpt-5.6-sol"], [], 922_000);
     expect(effectiveModelEnv({ model: "gpt-5.6-sol" }, opted).ANTHROPIC_MODEL).toBe("gpt-5.6-sol[1m]");

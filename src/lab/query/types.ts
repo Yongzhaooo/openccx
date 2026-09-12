@@ -44,7 +44,7 @@ export interface VerdictDto {
 export interface ProtocolSubjectDto {
   subjectKind: "protocol";
   subjectSchemaVersion: 1;
-  opencodexCompatibilityVersion: string;
+  openccxCompatibilityVersion: string;
   effectiveAdapter: string;
   inboundProtocol: string;
   upstreamProtocol: string;
@@ -75,7 +75,7 @@ export interface RouteSubjectDto {
   inboundProtocol: string;
   upstreamProtocol: string;
   surface: string;
-  opencodexCompatibilityVersion: string;
+  openccxCompatibilityVersion: string;
   behaviorFingerprint: string;
   endpointFingerprint: string;
   dependencies: RouteDependencyDto[];

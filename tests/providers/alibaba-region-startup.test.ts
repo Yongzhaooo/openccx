@@ -2,27 +2,27 @@ import { expect, test } from "bun:test";
 import { AlibabaBackupIntegrityError } from "../../src/providers/alibaba-region-backup";
 import { projectAlibabaRegionMigration } from "../../src/providers/alibaba-region-migration";
 import { runAlibabaRegionStartupMigration } from "../../src/providers/alibaba-region-startup";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const INTL_URL = "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1";
 
-function migratableConfig(): OcxConfig {
+function migratableConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "alibaba-token-plan",
     providers: {
       "alibaba-token-plan": { adapter: "openai-chat", apiKey: "sk-intl-key", baseUrl: INTL_URL },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-function collidingConfig(): OcxConfig {
+function collidingConfig(): OccxConfig {
   const config = migratableConfig();
   config.providers["alibaba-token-plan-intl"] = { adapter: "openai-chat", apiKey: "sk-other" } as never;
   return config;
 }
 
-function namespaceCollidingConfig(): OcxConfig {
+function namespaceCollidingConfig(): OccxConfig {
   return {
     ...migratableConfig(),
     codexAccountNamespaces: { "alibaba-token-plan-intl": "pool-a" },
@@ -31,7 +31,7 @@ function namespaceCollidingConfig(): OcxConfig {
 
 test("backs up strictly before saving, exactly once, when the projection changed", () => {
   const order: string[] = [];
-  const saved: OcxConfig[] = [];
+  const saved: OccxConfig[] = [];
   const result = runAlibabaRegionStartupMigration(migratableConfig(), {
     project: projectAlibabaRegionMigration,
     backup: () => { order.push("backup"); },
@@ -45,7 +45,7 @@ test("backs up strictly before saving, exactly once, when the projection changed
 
 test("a no-op never backs up or saves, but a collision still warns", () => {
   const order: string[] = [];
-  const saved: OcxConfig[] = [];
+  const saved: OccxConfig[] = [];
   const warnings: string[] = [];
   const originalWarn = console.warn;
   console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(" ")); };
@@ -88,7 +88,7 @@ test("an account namespace collision warns without backing up or saving", () => 
 test("a backup failure prevents the migration from saving", () => {
   // The fail-closed posture: no rollback point, no credential rewrite. The throw
   // propagates out of startServer, the same stance the OpenAI tier migration takes.
-  const saved: OcxConfig[] = [];
+  const saved: OccxConfig[] = [];
   expect(() => runAlibabaRegionStartupMigration(migratableConfig(), {
     project: projectAlibabaRegionMigration,
     backup: () => { throw new AlibabaBackupIntegrityError("disk full"); },

@@ -8,10 +8,10 @@ import {
   resetCommandCodeReasoningEffortsForTest,
 } from "../../src/providers/command-code-efforts";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "command-code",
   baseUrl: "https://api.commandcode.ai",
   authMode: "oauth",
@@ -19,7 +19,7 @@ const provider: OcxProviderConfig = {
   defaultMaxOutputTokens: 64_000,
 };
 
-function parsed(modelId = "deepseek/deepseek-v4-flash"): OcxParsedRequest {
+function parsed(modelId = "deepseek/deepseek-v4-flash"): OccxParsedRequest {
   return {
     modelId,
     stream: true,
@@ -447,7 +447,7 @@ describe("Command Code provider", () => {
         type: "tool-result", toolCallId: "call_1", toolName: "view_image",
         output: scenario === "duplicate"
           ? { type: "text", value: "first[image]" }
-          : { type: "error-text", value: "[ocx] no tool result was recorded for this tool call; execution status unknown." },
+          : { type: "error-text", value: "[occx] no tool result was recorded for this tool call; execution status unknown." },
       }] },
       scenario === "duplicate"
         ? { role: "user", content: [{ type: "image", image, mediaType: "image/png" }] }
@@ -495,7 +495,7 @@ describe("Command Code provider", () => {
       { role: "tool", content: [{ type: "tool-result", toolCallId: "call_1", toolName: "view_image", output: { type: "text", value: "[image]" } }] },
       { role: "tool", content: [{
         type: "tool-result", toolCallId: "call_2", toolName: "lookup",
-        output: { type: "error-text", value: "[ocx] no tool result was recorded for this tool call; execution status unknown." },
+        output: { type: "error-text", value: "[occx] no tool result was recorded for this tool call; execution status unknown." },
       }] },
       { role: "user", content: [{ type: "image", image, mediaType: "image/png" }] },
       { role: "user", content: [
@@ -662,7 +662,7 @@ describe("Command Code provider", () => {
         ? new Response(JSON.stringify({ error: "unsupported reasoning_effort" }), { status: 400 })
         : new Response("{}", { status: 200 });
     }) as typeof globalThis.fetch;
-    const adapter = createCommandCodeAdapter({ ...provider, fetch } as OcxProviderConfig);
+    const adapter = createCommandCodeAdapter({ ...provider, fetch } as OccxProviderConfig);
     const request = await adapter.buildRequest({ ...parsed(), options: { reasoning: "max" } });
     const response = await adapter.fetchResponse!(request);
     expect(response.ok).toBe(true);
@@ -878,28 +878,28 @@ describe("Command Code provider", () => {
   });
 
   test("whitespace thread and replay identities fall through to the next trusted identity at the wire", async () => {
-    const replay: OcxParsedRequest = {
+    const replay: OccxParsedRequest = {
       ...parsed(),
       _clientThreadId: " \t\n ",
       _reasoningReplayScope: { clientThreadId: "  replay-after-blank-thread  " },
       _promptCacheKeyIsSharedCohort: false,
       options: { ...parsed().options, promptCacheKey: "distinct-cache-fallback" },
     };
-    const cache: OcxParsedRequest = {
+    const cache: OccxParsedRequest = {
       ...replay,
       _reasoningReplayScope: { clientThreadId: " \t\n " },
       options: { ...parsed().options, promptCacheKey: "  cache-after-blank-replay  " },
     };
-    const cleanReplay: OcxParsedRequest = {
+    const cleanReplay: OccxParsedRequest = {
       ...parsed(),
       _reasoningReplayScope: { clientThreadId: "replay-after-blank-thread" },
     };
-    const cleanCache: OcxParsedRequest = {
+    const cleanCache: OccxParsedRequest = {
       ...parsed(),
       _promptCacheKeyIsSharedCohort: false,
       options: { ...parsed().options, promptCacheKey: "cache-after-blank-replay" },
     };
-    const cases: Array<[OcxParsedRequest, OcxParsedRequest]> = [[replay, cleanReplay], [cache, cleanCache]];
+    const cases: Array<[OccxParsedRequest, OccxParsedRequest]> = [[replay, cleanReplay], [cache, cleanCache]];
     for (const [withWhitespace, clean] of cases) {
       const built = await builtRequest(withWhitespace);
       const expected = await builtRequest(clean);
@@ -909,7 +909,7 @@ describe("Command Code provider", () => {
   });
 
   test("whitespace-only trusted identities produce fresh session headers", async () => {
-    const blank: OcxParsedRequest = {
+    const blank: OccxParsedRequest = {
       ...parsed(),
       _clientThreadId: " \t ",
       _reasoningReplayScope: { clientThreadId: "\n " },
@@ -926,7 +926,7 @@ describe("Command Code provider", () => {
 
   test("the same literal in thread, replay and cache namespaces yields distinct stable session headers", async () => {
     const literal = "same-identity-in-every-kind";
-    const requests: OcxParsedRequest[] = [
+    const requests: OccxParsedRequest[] = [
       { ...parsed(), _clientThreadId: literal },
       { ...parsed(), _reasoningReplayScope: { clientThreadId: literal } },
       {

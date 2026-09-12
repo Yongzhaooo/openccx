@@ -42,7 +42,7 @@ describe("container token bootstrap", () => {
 });
 
 describe("container deployment contract", () => {
-  test("persists separate OCX and Codex homes under the read-only root", () => {
+  test("persists separate OCCX and Codex homes under the read-only root", () => {
     const compose = Bun.YAML.parse(readFileSync(repoPath("compose.yaml"), "utf8")) as {
       services: { hub: {
         environment: Record<string, string>; volumes: string[]; read_only: boolean;
@@ -53,17 +53,17 @@ describe("container deployment contract", () => {
     const hub = compose.services.hub;
     expect(hub.environment?.CODEX_HOME).toBe("/home/bun/.codex");
     expect(hub.read_only).toBe(true);
-    expect(hub.volumes).toContain("ocx-state:/home/bun/.opencodex");
+    expect(hub.volumes).toContain("occx-state:/home/bun/.opencodex");
     expect(hub.volumes).toContain("codex-state:/home/bun/.codex");
-    expect(Object.hasOwn(compose.volumes, "ocx-state")).toBe(true);
+    expect(Object.hasOwn(compose.volumes, "occx-state")).toBe(true);
     expect(Object.hasOwn(compose.volumes, "codex-state")).toBe(true);
     expect(hub.security_opt).toContain("no-new-privileges:true");
     expect(hub.cap_drop).toContain("ALL");
 
     const runtime = readFileSync(repoPath("Dockerfile"), "utf8").split(" AS runtime")[1]!;
-    expect(runtime).toContain("OPENCODEX_HOME=/home/bun/.opencodex");
+    expect(runtime).toContain("OPENCCX_HOME=/home/bun/.opencodex");
     expect(runtime).toContain("CODEX_HOME=/home/bun/.codex");
-    expect(runtime).toContain("OCX_SERVICE=1");
+    expect(runtime).toContain("OCCX_SERVICE=1");
     expect(runtime).toContain("install -d -m 0700 -o bun -g bun /home/bun/.opencodex /home/bun/.codex");
     expect(runtime).toContain('VOLUME ["/home/bun/.opencodex", "/home/bun/.codex"]');
     expect(runtime).toContain("USER bun");
@@ -74,7 +74,7 @@ describe("container deployment contract", () => {
       services: { hub: { ports: string[] } };
     };
     expect(compose.services.hub.ports).toEqual([
-      "${OPENCODEX_BIND_ADDRESS:-127.0.0.1}:${OPENCODEX_PORT:-10100}:10100",
+      "${OPENCCX_BIND_ADDRESS:-127.0.0.1}:${OPENCCX_PORT:-10100}:10100",
     ]);
   });
 
@@ -97,7 +97,7 @@ describe("container deployment contract", () => {
     expect(runtime).toContain("COPY --from=build --chown=bun:bun /home/bun/app/scripts/model-metadata.source.json ./scripts/model-metadata.source.json");
     expect(runtime).toContain("COPY --chown=bun:bun src/generated/compatibility-version.json ./src/generated/compatibility-version.json");
     expect(runtime).toContain('RUN ["bun", "docker/verify-compatibility.ts"]');
-    expect(runtime).toContain("readOpenCodexCompatibilityVersion() ?? ''");
+    expect(runtime).toContain("readOpenccxCompatibilityVersion() ?? ''");
     expect(runtime).toContain("throw new Error('Missing or invalid generated compatibility manifest')");
   });
 });
@@ -113,15 +113,15 @@ afterEach(() => {
 });
 
 function catalogHomeFixture(codexDirectory = "codex-state") {
-  const root = mkdtempSync(join(tmpdir(), "ocx-container-catalog-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-container-catalog-"));
   snapshotDirs.push(root);
-  const ocxHome = join(root, "ocx-state");
+  const occxHome = join(root, "occx-state");
   const codexHome = join(root, codexDirectory);
-  mkdirSync(ocxHome, { mode: 0o700 });
+  mkdirSync(occxHome, { mode: 0o700 });
   mkdirSync(codexHome, { mode: 0o700 });
-  const ocxAuth = '{"fixture":"ocx-oauth-store"}';
+  const occxAuth = '{"fixture":"occx-oauth-store"}';
   const codexAuth = '{"fixture":"native-codex-store"}';
-  writeFileSync(join(ocxHome, "auth.json"), ocxAuth, { mode: 0o600 });
+  writeFileSync(join(occxHome, "auth.json"), occxAuth, { mode: 0o600 });
   writeFileSync(join(codexHome, "auth.json"), codexAuth, { mode: 0o600 });
   const moduleUrl = pathToFileURL(repoPath("src/server/catalog-download.ts")).href;
   const script = `
@@ -133,17 +133,17 @@ function catalogHomeFixture(codexDirectory = "codex-state") {
     const result = spawnSync(process.execPath, ["--eval", script], {
       cwd: repoPath(),
       env: { ...process.env, HOME: root, USERPROFILE: root,
-        OPENCODEX_HOME: ocxHome, CODEX_HOME: codexHome },
+        OPENCCX_HOME: occxHome, CODEX_HOME: codexHome },
       encoding: "utf8",
       timeout: 15000,
     });
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(0);
-    expect(readFileSync(join(ocxHome, "auth.json"), "utf8")).toBe(ocxAuth);
+    expect(readFileSync(join(occxHome, "auth.json"), "utf8")).toBe(occxAuth);
     expect(readFileSync(join(codexHome, "auth.json"), "utf8")).toBe(codexAuth);
     return JSON.parse(result.stdout);
   };
-  return { root, ocxHome, codexHome, read };
+  return { root, occxHome, codexHome, read };
 }
 
 function fixtureCatalog(slug: string) {
@@ -156,9 +156,9 @@ describe("container catalog home selection", () => {
     const fixture = catalogHomeFixture();
     const catalog = fixtureCatalog("fixture/codex-home");
     expect(fixture.read().body).toBeNull();
-    writeFileSync(join(fixture.ocxHome, "opencodex-catalog.json"), JSON.stringify(fixtureCatalog("fixture/ocx-home")), { mode: 0o600 });
+    writeFileSync(join(fixture.occxHome, "openccx-catalog.json"), JSON.stringify(fixtureCatalog("fixture/occx-home")), { mode: 0o600 });
     expect(fixture.read().body).toBeNull();
-    writeFileSync(join(fixture.codexHome, "opencodex-catalog.json"), JSON.stringify(catalog), { mode: 0o600 });
+    writeFileSync(join(fixture.codexHome, "openccx-catalog.json"), JSON.stringify(catalog), { mode: 0o600 });
     const serialized = fixture.read();
     expect(JSON.parse(serialized.body!)).toEqual(catalog);
     expect(serialized.bytes).toBe(Buffer.byteLength(JSON.stringify(catalog), "utf8"));
@@ -170,7 +170,7 @@ describe("container catalog home selection", () => {
   test("uses a custom Codex home containing spaces", () => {
     const fixture = catalogHomeFixture("custom codex state");
     const catalog = fixtureCatalog("fixture/custom-home");
-    writeFileSync(join(fixture.codexHome, "opencodex-catalog.json"), JSON.stringify(catalog), { mode: 0o600 });
+    writeFileSync(join(fixture.codexHome, "openccx-catalog.json"), JSON.stringify(catalog), { mode: 0o600 });
     expect(JSON.parse(fixture.read().body!)).toEqual(catalog);
   }, 60000);
 
@@ -183,7 +183,7 @@ describe("container catalog home selection", () => {
       mkdirSync(dirname(selectedPath), { recursive: true, mode: 0o700 });
       const configuredPath = selection === "relative" ? "catalogs/custom.json" : selectedPath;
       writeFileSync(join(fixture.codexHome, "config.toml"), `model_catalog_json = ${JSON.stringify(configuredPath)}\n`, { mode: 0o600 });
-      writeFileSync(join(fixture.codexHome, "opencodex-catalog.json"), JSON.stringify(fixtureCatalog("fixture/default")), { mode: 0o600 });
+      writeFileSync(join(fixture.codexHome, "openccx-catalog.json"), JSON.stringify(fixtureCatalog("fixture/default")), { mode: 0o600 });
       const catalog = fixtureCatalog(`fixture/${selection}`);
       writeFileSync(selectedPath, JSON.stringify(catalog), { mode: 0o600 });
       expect(JSON.parse(fixture.read().body!)).toEqual(catalog);
@@ -194,13 +194,13 @@ describe("container catalog home selection", () => {
 
   test("returns no catalog for malformed selected JSON without modifying auth stores", () => {
     const fixture = catalogHomeFixture();
-    writeFileSync(join(fixture.codexHome, "opencodex-catalog.json"), "not JSON", { mode: 0o600 });
+    writeFileSync(join(fixture.codexHome, "openccx-catalog.json"), "not JSON", { mode: 0o600 });
     expect(fixture.read().body).toBeNull();
   }, 60000);
 });
 
 function compatibilitySnapshot() {
-  const root = mkdtempSync(join(tmpdir(), "ocx-container-identity-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-container-identity-"));
   snapshotDirs.push(root);
   for (const path of snapshotPaths) {
     mkdirSync(dirname(join(root, path)), { recursive: true });

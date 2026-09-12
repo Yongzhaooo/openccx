@@ -12,7 +12,7 @@ import { SPAWN_BUDGET_MS } from "../helpers/test-budget";
  * exact-bytes restore no longer fires and the fallback strip is the only thing left.
  * That fallback recognizes an injected `openai_base_url` ONLY by the marker comment
  * on the line above it. An app rewrite reserializes the file and drops the comment, so
- * the proxy URL stops being recognized as ours and survives `ocx stop` / `ocx restore`
+ * the proxy URL stops being recognized as ours and survives `occx stop` / `occx restore`
  * while the command reports success -- leaving plain Codex pointed at a dead port.
  *
  * These tests reproduce that state literally: inject, drop every comment the way a TOML
@@ -94,7 +94,7 @@ const REINJECT_AND_READ_JOURNAL = [
   "  };",
   "  await injectCodexConfig(10100, config, { catalogPath: firstCatalog });",
   "  await injectCodexConfig(10200, { ...config, port: 10200 }, { catalogPath: secondCatalog });",
-  '  const journal = JSON.parse(fs.readFileSync(path.join(process.env.CODEX_HOME, "opencodex-journal.json"), "utf8"));',
+  '  const journal = JSON.parse(fs.readFileSync(path.join(process.env.CODEX_HOME, "openccx-journal.json"), "utf8"));',
   "  console.log(JSON.stringify({ url: journal.injectedOpenaiBaseUrl, catalog: journal.injectedCatalogPath }));",
   "})();",
 ].join(String.fromCharCode(10));
@@ -119,7 +119,7 @@ const REINJECT_AFTER_USER_EDIT_RESTORE = [
   '  const beforeRestore = fs.readFileSync(configPath, "utf8");',
   "  const result = restoreNativeCodex({ skipHistory: true });",
   '  const afterRestore = fs.readFileSync(configPath, "utf8");',
-  '  const profileExistsAfterRestore = fs.existsSync(path.join(process.env.CODEX_HOME, "opencodex.config.toml"));',
+  '  const profileExistsAfterRestore = fs.existsSync(path.join(process.env.CODEX_HOME, "openccx.config.toml"));',
   "  console.log(JSON.stringify({",
   "    success: result.success,",
   "    action: result.artifacts.config.action,",
@@ -132,7 +132,7 @@ const REINJECT_AFTER_USER_EDIT_RESTORE = [
 
 function runScript(codexHome: string, script: string): { stdout: string; stderr: string; status: number } {
   // Normally disabled; reproduces a healthy child exceeding the old case limit.
-  const delayMs = Number(process.env.OCX_TEST_CODEX_RESTORE_DELAY_MS ?? 0);
+  const delayMs = Number(process.env.OCCX_TEST_CODEX_RESTORE_DELAY_MS ?? 0);
   if (!Number.isFinite(delayMs) || delayMs < 0 || delayMs > 60_000) {
     throw new Error("invalid restore child delay fault");
   }
@@ -156,7 +156,7 @@ describe("#1798 restore after the Codex app rewrites the config", () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), "ocx-1798-"));
+    testDir = mkdtempSync(join(tmpdir(), "occx-1798-"));
   });
 
   afterEach(() => {

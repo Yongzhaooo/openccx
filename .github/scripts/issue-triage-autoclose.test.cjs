@@ -230,7 +230,7 @@ describe("deterministic duplicate auto-close", () => {
       candidateIssues: [{
         number: 1453,
         title: "Codex sync failure",
-        body: "ocx sync fails because the catalog is rewritten before injection.",
+        body: "occx sync fails because the catalog is rewritten before injection.",
       }],
       duplicateNumbers: ["1453"],
     });

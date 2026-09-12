@@ -5,19 +5,19 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-stale-state-purge-test");
-let prevOpencodexHome: string | undefined;
+let prevOpenccxHome: string | undefined;
 
 describe("snapshot-guarded stale-state purge", () => {
   beforeEach(() => {
-    prevOpencodexHome = process.env.OPENCODEX_HOME;
+    prevOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
-    if (prevOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prevOpencodexHome;
+    if (prevOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prevOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 

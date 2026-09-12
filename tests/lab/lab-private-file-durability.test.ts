@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 function tempRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-cl10-private-file-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-cl10-private-file-"));
   roots.push(root);
   return root;
 }

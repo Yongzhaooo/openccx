@@ -17,7 +17,7 @@ import { resolveProviderModelDiscovery } from "../../src/providers/model-discove
 import { PROVIDER_REGISTRY, type ProviderRegistryEntry } from "../../src/providers/registry";
 import { routedSlug } from "../../src/providers/slug-codec";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { fixturePath } from "../helpers/repo-root";
 
@@ -63,7 +63,7 @@ function registryEntry(id: ProviderId): ProviderRegistryEntry {
   return entry;
 }
 
-function providerConfig(id: ProviderId, overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function providerConfig(id: ProviderId, overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   const provider = PROVIDERS[id];
   return {
     port: 10100,
@@ -244,7 +244,7 @@ describe("SambaNova and Nebius providers", () => {
         sambanova: providerConfig("sambanova").providers.sambanova!,
         nebius: providerConfig("nebius").providers.nebius!,
       },
-    } satisfies OcxConfig);
+    } satisfies OccxConfig);
     const models = await gatherRoutedModels(config);
     const sambanovaModels = models.filter(row => row.provider === "sambanova");
     const nebiusModels = models.filter(row => row.provider === "nebius");
@@ -303,7 +303,7 @@ describe("SambaNova and Nebius providers", () => {
       providers: {
         [renamed]: providerConfig("nebius").providers.nebius!,
       },
-    } satisfies OcxConfig);
+    } satisfies OccxConfig);
     const models = await gatherRoutedModels(config);
     expect(models.filter(row => row.provider === renamed).map(row => row.id)).toEqual([
       "meta-llama/Meta-Llama-3.1-8B-Instruct-fast",

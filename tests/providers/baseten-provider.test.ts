@@ -15,7 +15,7 @@ import {
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { routedSlug } from "../../src/providers/slug-codec";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { fixturePath } from "../helpers/repo-root";
 
@@ -33,7 +33,7 @@ function basetenEntry() {
   return entry;
 }
 
-function basetenConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function basetenConfig(overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "baseten",

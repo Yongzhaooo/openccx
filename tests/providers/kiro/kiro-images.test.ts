@@ -6,7 +6,7 @@ import { createKiroAdapter } from "../../../src/adapters/kiro";
 import { normalizeKiroImages, KIRO_IMAGE_BASE64_BUDGET, KIRO_MAX_IMAGES_PER_MESSAGE, type KiroImage } from "../../../src/adapters/kiro-images";
 import { resetNormalizeStateForTests, TIER_SPECS, type EncodeFn } from "../../../src/adapters/anthropic-image-normalize";
 import { sniffImageDimensions } from "../../../src/adapters/anthropic-image-guard";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const origHome = process.env.HOME;
@@ -27,10 +27,10 @@ afterEach(() => {
   removeTreeWithRetry(tmp);
 });
 
-const provider = { adapter: "kiro", baseUrl: "https://runtime.us-east-1.kiro.dev", authMode: "oauth", apiKey: "tok-123" } as unknown as OcxProviderConfig;
+const provider = { adapter: "kiro", baseUrl: "https://runtime.us-east-1.kiro.dev", authMode: "oauth", apiKey: "tok-123" } as unknown as OccxProviderConfig;
 
-function parsedWith(messages: unknown[]): OcxParsedRequest {
-  return { modelId: "claude-sonnet-4.5", stream: true, options: {}, context: { messages } } as unknown as OcxParsedRequest;
+function parsedWith(messages: unknown[]): OccxParsedRequest {
+  return { modelId: "claude-sonnet-4.5", stream: true, options: {}, context: { messages } } as unknown as OccxParsedRequest;
 }
 
 function currentUim(body: string): Record<string, unknown> {

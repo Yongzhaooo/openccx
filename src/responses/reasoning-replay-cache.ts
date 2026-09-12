@@ -21,9 +21,9 @@
 
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import type {
-  OcxProviderConfig,
-  OcxReasoningReplayIdentity,
-  OcxReasoningReplayScopeRef,
+  OccxProviderConfig,
+  OccxReasoningReplayIdentity,
+  OccxReasoningReplayScopeRef,
 } from "../types";
 
 const MAX_ENTRIES = 64;
@@ -81,7 +81,7 @@ function nonEmpty(value: unknown): value is string {
 type ReasoningReplayIdentityTuple = readonly [string, string, string, string, string];
 
 function tupleForIdentity(
-  identity: Readonly<OcxReasoningReplayIdentity> | undefined,
+  identity: Readonly<OccxReasoningReplayIdentity> | undefined,
 ): ReasoningReplayIdentityTuple | undefined {
   if (
     !nonEmpty(identity?.providerName)
@@ -100,7 +100,7 @@ function tupleForIdentity(
 }
 
 function tupleForServingIdentity(
-  identity: Readonly<OcxReasoningReplayIdentity> | undefined,
+  identity: Readonly<OccxReasoningReplayIdentity> | undefined,
 ): ReasoningReplayIdentityTuple | undefined {
   if (
     !nonEmpty(identity?.providerName)
@@ -118,7 +118,7 @@ function tupleForServingIdentity(
   ];
 }
 
-function keyFor(callId: string, scope: OcxReasoningReplayScopeRef | undefined): string | undefined {
+function keyFor(callId: string, scope: OccxReasoningReplayScopeRef | undefined): string | undefined {
   const identity = tupleForIdentity(scope?.current);
   if (!nonEmpty(callId) || !nonEmpty(scope?.clientThreadId) || !identity) return undefined;
   return JSON.stringify([
@@ -142,7 +142,7 @@ function sweepExpiredServingIdentities(at: number): void {
 }
 
 function servingIdentityFor(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): { threadId: string; identity: string } | undefined {
   const threadId = scope?.clientThreadId;
   const identityTuple = tupleForServingIdentity(scope?.current);
@@ -151,7 +151,7 @@ function servingIdentityFor(
 }
 
 function opaqueBlobRejectionKeyFor(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): string | undefined {
   const current = servingIdentityFor(scope);
   return current ? JSON.stringify([current.threadId, current.identity]) : undefined;
@@ -182,7 +182,7 @@ function sweepExpiredOpaqueBlobRejections(at: number): void {
  * This store is process-local, so a backend switch spanning a proxy restart is not detected.
  */
 export function reasoningReplayServingIdentityChanged(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): boolean {
   const current = servingIdentityFor(scope);
   if (!current) return false;
@@ -194,7 +194,7 @@ export function reasoningReplayServingIdentityChanged(
 
 /** Record the route only after it has successfully served the conversation. */
 export function commitReasoningReplayServingIdentity(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): void {
   const current = servingIdentityFor(scope);
   if (!current) return;
@@ -237,7 +237,7 @@ export function commitReasoningReplayServingIdentity(
  * while expiry costs one visible recovery round trip and can safely re-establish the memo.
  */
 export function reasoningReplayOpaqueBlobRejectionMemoized(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): boolean {
   const key = opaqueBlobRejectionKeyFor(scope);
   if (!key) return false;
@@ -248,7 +248,7 @@ export function reasoningReplayOpaqueBlobRejectionMemoized(
 
 /** Record only after a blobless retry succeeded for this durable serving identity. */
 export function rememberReasoningReplayOpaqueBlobRejection(
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): void {
   const key = opaqueBlobRejectionKeyFor(scope);
   if (!key) return;
@@ -398,7 +398,7 @@ export function reasoningReplayOAuthCredentialIdentity(
 
 /** Bind key-auth provider material without putting raw secrets in the replay key. */
 export function reasoningReplayKeyCredentialIdentity(
-  provider: Pick<OcxProviderConfig, "apiKey" | "headers">,
+  provider: Pick<OccxProviderConfig, "apiKey" | "headers">,
 ): string | undefined {
   const apiKey = nonEmpty(provider.apiKey) ? provider.apiKey : undefined;
   // Public/static headers do not establish a physical credential boundary.
@@ -409,8 +409,8 @@ export function reasoningReplayKeyCredentialIdentity(
 
 /** Replace only the holder snapshot so parsed-request copies observe rotations. */
 export function bindReasoningReplayScope(
-  scope: OcxReasoningReplayScopeRef | undefined,
-  identity: OcxReasoningReplayIdentity | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
+  identity: OccxReasoningReplayIdentity | undefined,
 ): void {
   if (!scope) return;
   if (!identity || !keyFor("binding-check", { ...scope, current: identity })) {
@@ -429,7 +429,7 @@ export function bindReasoningReplayScope(
 export function rememberReasoningForCall(
   callId: string,
   text: string,
-  scope?: OcxReasoningReplayScopeRef,
+  scope?: OccxReasoningReplayScopeRef,
 ): void {
   // Never fall back to a process-wide namespace. Call ids are supplied by
   // clients/providers and are therefore neither unique nor trustworthy; an
@@ -478,7 +478,7 @@ export function rememberReasoningForCall(
  */
 export function peekReasoningForCall(
   callId: string,
-  scope?: OcxReasoningReplayScopeRef,
+  scope?: OccxReasoningReplayScopeRef,
 ): string | undefined {
   const key = keyFor(callId, scope);
   if (!key) return undefined;

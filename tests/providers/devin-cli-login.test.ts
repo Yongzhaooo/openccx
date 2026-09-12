@@ -93,7 +93,7 @@ describe("devin-cli login", () => {
     expect(cred.expires).toBe(Number.MAX_SAFE_INTEGER);
     expect(cred.source).toBe("local-cli");
     expect(cred.apiBaseUrl).toBe("https://server.codeium.com");
-    // onAuth is never called: there is nothing for opencodex to authorize.
+    // onAuth is never called: there is nothing for openccx to authorize.
     expect(ctrl.progress.join(" ")).not.toContain(KEY);
   });
 

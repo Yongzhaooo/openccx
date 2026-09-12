@@ -9,12 +9,12 @@ import {
   resetJwtPlanNotesForTests,
 } from "../../src/codex/plan-from-token";
 import { loadConfig, saveConfig } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-plan-test");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 function chatgptPlanJwt(plan: string, accountId = "acct"): string {
@@ -28,11 +28,11 @@ function chatgptPlanJwt(plan: string, accountId = "acct"): string {
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_CODEX_HOME, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   process.env.CODEX_HOME = TEST_CODEX_HOME;
   setMainAccountPlan(null);
   resetJwtPlanNotesForTests();
@@ -41,8 +41,8 @@ beforeEach(() => {
 afterEach(() => {
   setMainAccountPlan(null);
   resetJwtPlanNotesForTests();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
@@ -70,7 +70,7 @@ describe("extractChatgptPlanType", () => {
 
 describe("reconcileCodexPlansFromTokens", () => {
   test("persists a stale stored free plan from the live access-token JWT (#1989)", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -91,7 +91,7 @@ describe("reconcileCodexPlansFromTokens", () => {
   });
 
   test("leaves a non-JWT pool credential's stored plan alone", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -128,7 +128,7 @@ describe("getMainAccountPlan JWT fallback", () => {
 
 describe("WHAM-wins plan provenance gate (release-audit fix)", () => {
   test("a same-generation JWT cannot overwrite a WHAM-sourced plan", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -151,7 +151,7 @@ describe("WHAM-wins plan provenance gate (release-audit fix)", () => {
   });
 
   test("a newer-generation JWT (token refresh after the WHAM read) may write again", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -176,7 +176,7 @@ describe("WHAM-wins plan provenance gate (release-audit fix)", () => {
   });
 
   test("the gate survives a restart because provenance is persisted, not in-memory", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -219,7 +219,7 @@ describe("rotated-JWT plan reconciliation across propagated aliases (#2892 gap 3
         { id: "plan-owner", email: "owner@test", plan: "plus" },
         { id: "plan-alias", email: "alias@test", plan: "plus" },
       ],
-    } as OcxConfig);
+    } as OccxConfig);
 
     const rotatedJwt = chatgptPlanJwt("pro");
     const originalFetch = globalThis.fetch;

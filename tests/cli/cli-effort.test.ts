@@ -6,19 +6,19 @@ import { handleEffortCommand } from "../../src/cli/effort";
 import { dispatchCommand } from "../../src/cli/dispatch";
 import type { CliDispatchDeps } from "../../src/cli/dispatch";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 let tempHome: string | null = null;
-const savedHome = process.env.OPENCODEX_HOME;
+const savedHome = process.env.OPENCCX_HOME;
 let logOrig = console.log;
 let errorOrig = console.error;
 
 beforeEach(() => {
   logOrig = console.log;
   errorOrig = console.error;
-  tempHome = mkdtempSync(join(tmpdir(), "ocx-effort-test-"));
-  process.env.OPENCODEX_HOME = tempHome;
-  const initialConfig: OcxConfig = {
+  tempHome = mkdtempSync(join(tmpdir(), "occx-effort-test-"));
+  process.env.OPENCCX_HOME = tempHome;
+  const initialConfig: OccxConfig = {
     port: 10100,
     defaultProvider: "anthropic",
     providers: {
@@ -37,23 +37,23 @@ beforeEach(() => {
         models: ["model-1"],
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
   writeFileSync(join(tempHome, "config.json"), JSON.stringify(initialConfig, null, 2), "utf8");
 });
 
 afterEach(() => {
   console.log = logOrig;
   console.error = errorOrig;
-  if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedHome;
+  if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedHome;
   if (tempHome) {
     removeTreeWithRetry(tempHome);
     tempHome = null;
   }
 });
 
-function readTestConfig(): OcxConfig {
-  return JSON.parse(readFileSync(join(tempHome!, "config.json"), "utf8")) as OcxConfig;
+function readTestConfig(): OccxConfig {
+  return JSON.parse(readFileSync(join(tempHome!, "config.json"), "utf8")) as OccxConfig;
 }
 
 function fakeDeps(args: string[] = []): {
@@ -93,8 +93,8 @@ function fakeDeps(args: string[] = []): {
   return { deps, logs, errors };
 }
 
-describe("ocx effort offline config operations", () => {
-  test("ocx effort (bare) prints offline status", async () => {
+describe("occx effort offline config operations", () => {
+  test("occx effort (bare) prints offline status", async () => {
     const { deps, logs } = fakeDeps([]);
     const code = await handleEffortCommand([], deps);
     expect(code).toBe(0);
@@ -102,7 +102,7 @@ describe("ocx effort offline config operations", () => {
     expect(logs.join("\n")).toContain("Main agent effort cap:     (unset — no cap)");
   });
 
-  test("ocx effort status --json returns JSON envelope", async () => {
+  test("occx effort status --json returns JSON envelope", async () => {
     const { deps, logs } = fakeDeps(["status", "--json"]);
     const code = await handleEffortCommand(["status", "--json"], deps);
     expect(code).toBe(0);
@@ -186,8 +186,8 @@ describe("ocx effort offline config operations", () => {
         }
         expect(warnings.join("\n")).toContain(`effortCap="${main}" is invalid and is not applied`);
         expect(warnings.join("\n")).toContain(`subagentEffortCap="${subagent}" is invalid and is not applied`);
-        expect(warnings.join("\n")).toContain("ocx effort set --main");
-        expect(warnings.join("\n")).toContain("ocx effort set --subagent");
+        expect(warnings.join("\n")).toContain("occx effort set --main");
+        expect(warnings.join("\n")).toContain("occx effort set --subagent");
         expect(methods).toEqual(source === "runtime" ? ["GET", "GET"] : []);
         expect(readFileSync(configPath, "utf8")).toBe(configBefore);
       });
@@ -220,7 +220,7 @@ describe("ocx effort offline config operations", () => {
     expect(readTestConfig()).toEqual(conf);
   });
 
-  test("ocx effort <level> sets main effort cap offline", async () => {
+  test("occx effort <level> sets main effort cap offline", async () => {
     const { deps, logs } = fakeDeps(["high"]);
     const code = await handleEffortCommand(["high"], deps);
     expect(code).toBe(0);
@@ -228,7 +228,7 @@ describe("ocx effort offline config operations", () => {
     expect(readTestConfig().effortCap).toBe("high");
   });
 
-  test("ocx effort - clears main effort cap offline", async () => {
+  test("occx effort - clears main effort cap offline", async () => {
     const conf = readTestConfig();
     conf.effortCap = "high";
     writeFileSync(join(tempHome!, "config.json"), JSON.stringify(conf, null, 2), "utf8");
@@ -239,7 +239,7 @@ describe("ocx effort offline config operations", () => {
     expect(readTestConfig().effortCap).toBeUndefined();
   });
 
-  test("ocx effort set --main and --subagent sets both caps", async () => {
+  test("occx effort set --main and --subagent sets both caps", async () => {
     const { deps } = fakeDeps(["set", "--main", "max", "--subagent", "medium"]);
     const code = await handleEffortCommand(["set", "--main", "max", "--subagent", "medium"], deps);
     expect(code).toBe(0);
@@ -248,7 +248,7 @@ describe("ocx effort offline config operations", () => {
     expect(updated.subagentEffortCap).toBe("medium");
   });
 
-  test("ocx effort clear unsets both caps but preserves injection effort", async () => {
+  test("occx effort clear unsets both caps but preserves injection effort", async () => {
     const conf = readTestConfig();
     conf.effortCap = "high";
     conf.subagentEffortCap = "low";
@@ -264,7 +264,7 @@ describe("ocx effort offline config operations", () => {
     expect(updated.injectionEffort).toBe("max");
   });
 
-  test("ocx effort set --injection - clears injection without changing caps", async () => {
+  test("occx effort set --injection - clears injection without changing caps", async () => {
     const conf = readTestConfig();
     conf.effortCap = "high";
     conf.subagentEffortCap = "low";
@@ -280,14 +280,14 @@ describe("ocx effort offline config operations", () => {
     expect(updated.injectionEffort).toBeUndefined();
   });
 
-  test("ocx effort rejects unknown effort level with usage error 2", async () => {
+  test("occx effort rejects unknown effort level with usage error 2", async () => {
     const { deps, errors } = fakeDeps(["super-hyper-max"]);
     const code = await handleEffortCommand(["super-hyper-max"], deps);
     expect(code).toBe(2);
     expect(errors.join("\n")).toContain('unknown effort command or level "super-hyper-max"');
   });
 
-  test("ocx effort model inspects configured model reasoning metadata", async () => {
+  test("occx effort model inspects configured model reasoning metadata", async () => {
     const { deps, logs } = fakeDeps(["model", "anthropic/claude-sonnet-5"]);
     const code = await handleEffortCommand(["model", "anthropic/claude-sonnet-5"], deps);
     expect(code).toBe(0);
@@ -315,7 +315,7 @@ describe("ocx effort offline config operations", () => {
   });
 });
 
-describe("ocx effort online live-proxy integration & negative regressions", () => {
+describe("occx effort online live-proxy integration & negative regressions", () => {
   for (const value of ["none", "minimal"]) {
     test(`invalid cap values reject a mixed live update before any request (${value})`, async () => {
       const { deps, logs } = fakeDeps();
@@ -353,7 +353,7 @@ describe("ocx effort online live-proxy integration & negative regressions", () =
     expect(readTestConfig()).toEqual(configBefore);
   });
 
-  test("ocx effort uses live management API when proxy is active", async () => {
+  test("occx effort uses live management API when proxy is active", async () => {
     const requests: Array<{ path: string; method?: string; body?: unknown }> = [];
     const runtimeDeps = {
       baseUrl: "http://127.0.0.1:10100",
@@ -386,7 +386,7 @@ describe("ocx effort online live-proxy integration & negative regressions", () =
     expect(requests.some(r => r.path === "/api/effort-caps")).toBe(true);
   });
 
-  test("ocx effort set communicates mutation to live management API", async () => {
+  test("occx effort set communicates mutation to live management API", async () => {
     let liveCaps: { effortCap: string | null; subagentEffortCap: string | null } = {
       effortCap: null,
       subagentEffortCap: null,
@@ -544,7 +544,7 @@ describe("ocx effort online live-proxy integration & negative regressions", () =
     expect(parsed.injectionEffort).toBe("max");
   });
 
-  test("ocx effort dispatches through top-level dispatchCommand", async () => {
+  test("occx effort dispatches through top-level dispatchCommand", async () => {
     const argv = ["effort", "medium"];
     const { deps } = fakeDeps(argv);
     const code = await dispatchCommand({ kind: "command", command: "effort", args: argv }, deps);

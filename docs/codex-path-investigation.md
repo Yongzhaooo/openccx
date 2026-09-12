@@ -8,29 +8,29 @@ Date: 2026-06-19
 > [opencodex.me](https://opencodex.me/) and the
 > maintainer source-of-truth under [`structure/`](../structure).
 
-This note records the web/source investigation behind opencodex's Codex path
+This note records the web/source investigation behind openccx's Codex path
 handling. The short version is that modern Codex resolves almost all durable
-local state through `CODEX_HOME`, not a platform-specific opencodex guess. If
+local state through `CODEX_HOME`, not a platform-specific openccx guess. If
 `CODEX_HOME` is unset, Codex falls back to `~/.codex`.
 
 ## Primary conclusion
 
-opencodex should treat Codex's home directory exactly as Codex does:
+openccx should treat Codex's home directory exactly as Codex does:
 
 1. If `CODEX_HOME` is set and non-empty, it must already exist and be a
    directory.
 2. That directory is canonicalized.
 3. If `CODEX_HOME` is not set, the default is `<user home>/.codex`.
-4. All opencodex-managed Codex files should be written under that resolved root:
+4. All openccx-managed Codex files should be written under that resolved root:
    - `$CODEX_HOME/config.toml`
    - `$CODEX_HOME/opencodex.config.toml`
    - `$CODEX_HOME/opencodex-catalog.json`
    - `$CODEX_HOME/models_cache.json`
 
-The old opencodex behavior assumed `homedir()/.codex` everywhere. That happened
-to work on many macOS setups because Codex and opencodex both landed on the same
+The old openccx behavior assumed `homedir()/.codex` everywhere. That happened
+to work on many macOS setups because Codex and openccx both landed on the same
 default. It breaks when Codex is launched with a different `CODEX_HOME`, when
-the Desktop/App host injects one, or when a service manager starts opencodex
+the Desktop/App host injects one, or when a service manager starts openccx
 without the same shell environment.
 
 ## Web findings
@@ -84,19 +84,19 @@ reads `[profiles.profile-name]` from `config.toml`, and the top-level
 Source:
 https://developers.openai.com/codex/config-advanced
 
-For opencodex this means:
+For openccx this means:
 
 ```toml
 # $CODEX_HOME/opencodex.config.toml
-model_provider = "opencodex"
+model_provider = "openccx"
 model_catalog_json = "/absolute/path/to/opencodex-catalog.json"
 ```
 
 Do not write this as:
 
 ```toml
-[profiles.opencodex]
-model_provider = "opencodex"
+[profiles.openccx]
+model_provider = "openccx"
 ```
 
 ### `model_catalog_json`
@@ -118,7 +118,7 @@ https://github.com/openai/codex/blob/main/codex-rs/config/src/config_toml.rs
 https://github.com/openai/codex/blob/main/codex-rs/config/src/profile_toml.rs
 
 The source comments say this catalog is applied on startup only. Practically,
-opencodex must write or update the catalog before the target Codex process
+openccx must write or update the catalog before the target Codex process
 starts or must ask the user/process to restart. Editing the catalog while Codex
 is already running is not enough for all surfaces.
 
@@ -132,7 +132,7 @@ as 300 seconds.
 Source:
 https://github.com/openai/codex/blob/main/codex-rs/models-manager/src/manager.rs
 
-For opencodex this means invalidation must target:
+For openccx this means invalidation must target:
 
 ```text
 $CODEX_HOME/models_cache.json
@@ -163,9 +163,9 @@ override machine-local provider/auth/profile/telemetry keys such as
 Source:
 https://developers.openai.com/codex/config-advanced
 
-Therefore opencodex provider injection must remain user-level/profile-level. It
+Therefore openccx provider injection must remain user-level/profile-level. It
 should not rely on a project-local `.codex/config.toml` to install
-`model_provider` or `[model_providers.opencodex]`.
+`model_provider` or `[model_providers.openccx]`.
 
 ### Global instructions under Codex home
 
@@ -192,26 +192,26 @@ Default path when `CODEX_HOME` is unset:
 Why the old code often worked on macOS:
 
 - Terminal-launched Codex usually had no `CODEX_HOME`.
-- opencodex used `os.homedir()/.codex`.
+- openccx used `os.homedir()/.codex`.
 - Codex also fell back to `~/.codex`.
 
 So both processes touched the same files by coincidence. The implementation was
 still wrong because it ignored the official override.
 
 For launchd services, the plist must explicitly carry the same environment if
-opencodex was installed under a custom `CODEX_HOME`. The `launchd.plist` man
+openccx was installed under a custom `CODEX_HOME`. The `launchd.plist` man
 page defines `ProgramArguments` and `EnvironmentVariables`; the latter sets
 additional environment variables before running the job.
 
 Source:
 https://www.manpagez.com/man/5/launchd.plist/
 
-opencodex service plist should include:
+openccx service plist should include:
 
 ```xml
 <key>EnvironmentVariables</key>
 <dict>
-  <key>OCX_SERVICE</key><string>1</string>
+  <key>OCCX_SERVICE</key><string>1</string>
   <key>PATH</key><string>...</string>
   <key>CODEX_HOME</key><string>/Users/me/.codex-custom</string>
 </dict>
@@ -227,9 +227,9 @@ Default path when `CODEX_HOME` is unset:
 /home/<user>/.codex
 ```
 
-The direct `ocx start` path works if the shell environment matches the shell
+The direct `occx start` path works if the shell environment matches the shell
 that later launches Codex. The service path is different: `systemd --user`
-starts opencodex from a unit file, not necessarily from the same interactive
+starts openccx from a unit file, not necessarily from the same interactive
 shell environment.
 
 The systemd docs define `Environment=` for variables passed to executed
@@ -240,18 +240,18 @@ Sources:
 https://www.man7.org/linux/man-pages/man5/systemd.exec.5.html
 https://www.flatcar.org/docs/latest/setup/systemd/environment-variables/
 
-opencodex systemd units should pin the resolved install-time variables:
+openccx systemd units should pin the resolved install-time variables:
 
 ```ini
 [Service]
-Environment="OCX_SERVICE=1"
+Environment="OCCX_SERVICE=1"
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="CODEX_HOME=/home/me/.codex-custom"
 StandardOutput="append:/home/me/.opencodex/service.log"
 StandardError="append:/home/me/.opencodex/service.log"
 ```
 
-If `CODEX_HOME` is omitted from the unit, opencodex can inject one Codex home
+If `CODEX_HOME` is omitted from the unit, openccx can inject one Codex home
 while Codex reads another. That recreates the "model list only shows native
 models" bug on Linux service installs.
 
@@ -265,7 +265,7 @@ C:\Users\<user>\.codex
 
 This follows from Codex's `~/.codex` fallback plus Windows home-directory
 resolution. Node's `os.homedir()` uses `USERPROFILE` first on Windows, but again
-opencodex must prefer `CODEX_HOME` before touching `homedir()`.
+openccx must prefer `CODEX_HOME` before touching `homedir()`.
 
 OpenAI's Windows Codex docs also refer to diagnostics under `CODEX_HOME`, for
 example:
@@ -278,21 +278,21 @@ CODEX_HOME/.sandbox-secrets/
 Source:
 https://developers.openai.com/codex/windows
 
-For Windows services, opencodex currently uses Task Scheduler. Microsoft's
+For Windows services, openccx currently uses Task Scheduler. Microsoft's
 `schtasks /create` documentation says `/tr` is the program or command to run
 and `/sc onlogon` schedules a task whenever a user logs on. This means the
-registered task should run the opencodex command with paths fully quoted.
+registered task should run the openccx command with paths fully quoted.
 
 Source:
 https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-create
 
-Because Task Scheduler does not automatically encode opencodex-specific
-environment overrides into the command the way a shell session does, opencodex
+Because Task Scheduler does not automatically encode openccx-specific
+environment overrides into the command the way a shell session does, openccx
 service install writes a small `.cmd` wrapper under `~/.opencodex/`. That wrapper
-sets `OCX_SERVICE=1`, preserves `PATH`, preserves `CODEX_HOME` when present, and
-then starts opencodex.
+sets `OCCX_SERVICE=1`, preserves `PATH`, preserves `CODEX_HOME` when present, and
+then starts openccx.
 
-## Required opencodex behavior
+## Required openccx behavior
 
 ### Resolve paths once, from Codex rules
 
@@ -322,11 +322,11 @@ CODEX_MODELS_CACHE_PATH = $CODEX_HOME/models_cache.json
 Root `$CODEX_HOME/config.toml` should contain:
 
 ```toml
-model_provider = "opencodex"
+model_provider = "openccx"
 model_catalog_json = "/absolute/path/to/opencodex-catalog.json"
 
-[model_providers.opencodex]
-name = "OpenCodex Proxy"
+[model_providers.openccx]
+name = "Openccx Proxy"
 base_url = "http://127.0.0.1:10100/v1"
 wire_api = "responses"
 requires_openai_auth = true
@@ -340,14 +340,14 @@ project-local config.
 `$CODEX_HOME/opencodex.config.toml` should use top-level keys:
 
 ```toml
-model_provider = "opencodex"
+model_provider = "openccx"
 model_catalog_json = "/absolute/path/to/opencodex-catalog.json"
 ```
 
 This is the supported shape for:
 
 ```shell
-codex --profile opencodex
+codex --profile openccx
 ```
 
 ### Remove legacy profile tables
@@ -355,20 +355,20 @@ codex --profile opencodex
 Remove old blocks from `$CODEX_HOME/config.toml`:
 
 ```toml
-[profiles.opencodex]
+[profiles.openccx]
 ```
 
 and avoid writing:
 
 ```toml
-profile = "opencodex"
+profile = "openccx"
 ```
 
 for modern Codex.
 
 ### Keep catalog startup behavior in mind
 
-`model_catalog_json` is startup-loaded. After catalog changes, opencodex should:
+`model_catalog_json` is startup-loaded. After catalog changes, openccx should:
 
 - invalidate `$CODEX_HOME/models_cache.json` when appropriate;
 - ensure the catalog exists before Codex starts;
@@ -377,13 +377,13 @@ for modern Codex.
 
 ### Service managers must preserve relevant environment
 
-If a user runs `CODEX_HOME=/some/path ocx service install`, the service
+If a user runs `CODEX_HOME=/some/path occx service install`, the service
 definition should preserve that value:
 
 - Linux: add `Environment="CODEX_HOME=/some/path"` to the systemd user unit.
 - macOS: add `CODEX_HOME` under launchd `EnvironmentVariables`.
 - Windows: run Task Scheduler through an explicit `.cmd` wrapper that sets
-  `OCX_SERVICE=1` and preserves `CODEX_HOME` when present.
+  `OCCX_SERVICE=1` and preserves `CODEX_HOME` when present.
 
 ## Why macOS appeared fine
 
@@ -392,11 +392,11 @@ On a typical macOS terminal:
 
 ```text
 Codex default     -> /Users/<user>/.codex
-opencodex old     -> /Users/<user>/.codex
+openccx old     -> /Users/<user>/.codex
 ```
 
 So model catalog/profile files landed where Codex read them. Windows exposed the
-bug because the active Codex process and opencodex could disagree on the Codex
+bug because the active Codex process and openccx could disagree on the Codex
 home, and because modern Codex requires the new profile file plus startup model
 catalog path.
 
@@ -406,37 +406,37 @@ Run these cases before release:
 
 1. Windows default home:
    - unset `CODEX_HOME`
-   - run `ocx sync`
-   - verify `$USERPROFILE\.codex\opencodex.config.toml`
-   - verify `$USERPROFILE\.codex\opencodex-catalog.json`
+   - run `occx sync`
+   - verify `$USERPROFILE\.codex\openccx.config.toml`
+   - verify `$USERPROFILE\.codex\openccx-catalog.json`
    - verify `codex debug models` includes routed models
 
 2. Windows custom home:
    - create a temp directory
    - set `CODEX_HOME` to it
-   - run `ocx sync`
+   - run `occx sync`
    - verify no writes go to `$USERPROFILE\.codex` except unrelated existing
      files
 
 3. macOS default home:
    - unset `CODEX_HOME`
-   - run `ocx sync`
+   - run `occx sync`
    - verify `~/.codex/opencodex.config.toml`
 
 4. macOS custom home:
    - set `CODEX_HOME` to an existing directory
-   - run `ocx service install`
-   - inspect `~/Library/LaunchAgents/com.opencodex.proxy.plist`
+   - run `occx service install`
+   - inspect `~/Library/LaunchAgents/com.openccx.proxy.plist`
    - verify `CODEX_HOME` appears in `EnvironmentVariables`
 
 5. Linux default home:
    - unset `CODEX_HOME`
-   - run `ocx sync`
+   - run `occx sync`
    - verify `~/.codex/opencodex.config.toml`
 
 6. Linux custom home with service:
    - set `CODEX_HOME` to an existing directory
-   - run `ocx service install`
+   - run `occx service install`
    - inspect `~/.config/systemd/user/opencodex-proxy.service`
    - verify `Environment="CODEX_HOME=..."`
 

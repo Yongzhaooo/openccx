@@ -2,14 +2,14 @@ import type { AdapterRequest, IncomingMeta, ProviderAdapter } from "./base";
 import { randomUUID } from "node:crypto";
 import type {
   AdapterEvent,
-  OcxAssistantMessage,
-  OcxContentPart,
-  OcxMessage,
-  OcxParsedRequest,
-  OcxProviderConfig,
-  OcxThinkingContent,
-  OcxToolCall,
-  OcxUsage,
+  OccxAssistantMessage,
+  OccxContentPart,
+  OccxMessage,
+  OccxParsedRequest,
+  OccxProviderConfig,
+  OccxThinkingContent,
+  OccxToolCall,
+  OccxUsage,
 } from "../types";
 import {
   isAllowedToolChoice,
@@ -71,7 +71,7 @@ interface PendingToolCall {
   namespace?: string;
   wireName: string;
   order: number;
-  result?: OcxMessage & { role: "toolResult" };
+  result?: OccxMessage & { role: "toolResult" };
 }
 
 interface PendingToolBatch {
@@ -93,7 +93,7 @@ interface NativeStreamToolCall {
 interface NativeStreamState {
   toolCalls: Map<string, NativeStreamToolCall>;
   nextToolOrder: number;
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   stopReason?: string;
   sawMessage: boolean;
   terminal: boolean;
@@ -119,7 +119,7 @@ function isFiniteNonNegativeInteger(value: unknown): value is number {
 /**
  * Provider-owned call ids are carried into the client-visible Responses call_id field, so never
  * expose malformed or unbounded strings. A duplicate native id is treated like an unusable id:
- * Ollama is allowed to omit ids or repeat them across requests, while the OCX history contract
+ * Ollama is allowed to omit ids or repeat them across requests, while the OCCX history contract
  * requires one stable, globally unique pairing key.
  */
 function validNativeToolCallId(value: unknown): string | undefined {
@@ -175,7 +175,7 @@ function errorDetail(value: unknown): string | undefined {
 
 function nativeErrorEvent(
   detail: unknown,
-  usage?: OcxUsage,
+  usage?: OccxUsage,
   status = 502,
 ): Extract<AdapterEvent, { type: "error" }> {
   return {
@@ -188,7 +188,7 @@ function nativeErrorEvent(
   };
 }
 
-function malformedNativeEvent(message: string, usage?: OcxUsage): Extract<AdapterEvent, { type: "error" }> {
+function malformedNativeEvent(message: string, usage?: OccxUsage): Extract<AdapterEvent, { type: "error" }> {
   return {
     type: "error",
     status: 502,
@@ -199,7 +199,7 @@ function malformedNativeEvent(message: string, usage?: OcxUsage): Extract<Adapte
   };
 }
 
-function translationBudgetEvent(usage?: OcxUsage): Extract<AdapterEvent, { type: "error" }> {
+function translationBudgetEvent(usage?: OccxUsage): Extract<AdapterEvent, { type: "error" }> {
   return {
     type: "error",
     status: 502,
@@ -210,7 +210,7 @@ function translationBudgetEvent(usage?: OcxUsage): Extract<AdapterEvent, { type:
   };
 }
 
-function wireModelId(provider: OcxProviderConfig, modelId: string): string {
+function wireModelId(provider: OccxProviderConfig, modelId: string): string {
   if (!provider.modelSuffixBracketStrip) return modelId;
   const end = modelId.trimEnd();
   if (!end.endsWith("]")) return modelId;
@@ -250,7 +250,7 @@ function imageToBase64(imageUrl: string, label: string): string {
 }
 
 function contentToNative(
-  content: string | OcxContentPart[],
+  content: string | OccxContentPart[],
   label: string,
   allowImages = true,
 ): { content: string; images?: string[] } {
@@ -271,17 +271,17 @@ function contentToNative(
   return images.length > 0 ? { content: text, images } : { content: text };
 }
 
-function assistantTextThinkingAndCalls(message: OcxAssistantMessage): {
+function assistantTextThinkingAndCalls(message: OccxAssistantMessage): {
   content: string;
   thinking?: string;
-  calls: OcxToolCall[];
+  calls: OccxToolCall[];
 } {
   let content = "";
   let thinking = "";
-  const calls: OcxToolCall[] = [];
+  const calls: OccxToolCall[] = [];
   for (const part of message.content) {
     if (part.type === "text") content += part.text;
-    else if (part.type === "thinking") thinking += (part as OcxThinkingContent).thinking;
+    else if (part.type === "thinking") thinking += (part as OccxThinkingContent).thinking;
     else if (part.type === "toolCall") calls.push(part);
   }
   return {
@@ -292,7 +292,7 @@ function assistantTextThinkingAndCalls(message: OcxAssistantMessage): {
 }
 
 function buildNativeMessages(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   reservedToolCallIds: Set<string>,
 ): OllamaNativeMessage[] {
   const messages: OllamaNativeMessage[] = [];
@@ -302,7 +302,7 @@ function buildNativeMessages(
 
   // A request-boundary adapter is a fresh object in production. Reserve every id already
   // present in the parsed history before the next provider response is translated, so a provider
-  // id reused on a later request cannot become a duplicate OCX call_id. The set is deliberately
+  // id reused on a later request cannot become a duplicate OCCX call_id. The set is deliberately
   // owned by this adapter/request lifecycle rather than process-global state.
   reservedToolCallIds.clear();
   let pending: PendingToolBatch | undefined;
@@ -373,7 +373,7 @@ function buildNativeMessages(
           const args = assertObjectArguments(call.arguments, `assistant tool call ${call.id}`);
           // `customWireName` belongs to the prior caller/provider wire.  It must not override
           // this adapter's deterministic namespace flattening during replay: a native turn is
-          // paired by the OCX name/namespace, then lowered to the native wire name here.
+          // paired by the OCCX name/namespace, then lowered to the native wire name here.
           const wireName = namespacedToolName(call.namespace, call.name);
           if (!wireName) throw new Error(`ollama-native assistant tool call ${call.id} has no name`);
           const pendingCall: PendingToolCall = {
@@ -408,7 +408,7 @@ function buildNativeMessages(
   return messages;
 }
 
-function buildNativeTools(parsed: OcxParsedRequest): OllamaNativeTool[] | undefined {
+function buildNativeTools(parsed: OccxParsedRequest): OllamaNativeTool[] | undefined {
   const declared = parsed.context.tools;
   if (!declared || declared.length === 0 || parsed.options.toolChoice === "none") return undefined;
 
@@ -444,8 +444,8 @@ function buildNativeTools(parsed: OcxParsedRequest): OllamaNativeTool[] | undefi
 }
 
 function nativeThink(
-  provider: OcxProviderConfig,
-  parsed: OcxParsedRequest,
+  provider: OccxProviderConfig,
+  parsed: OccxParsedRequest,
 ): false | true | "low" | "medium" | "high" | "max" | undefined {
   const requested = parsed.options.reasoning;
   // The Responses parser leaves reasoning undefined when the caller made no reasoning decision.
@@ -497,7 +497,7 @@ function nativeThink(
 }
 
 function nativeFormat(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   endpointKind: OllamaNativeEndpointKind,
 ): "json" | Record<string, unknown> | undefined {
   const format = parsed.options.textFormat;
@@ -519,7 +519,7 @@ function nativeFormat(
   return format.schema;
 }
 
-function usageFromNative(value: JsonRecord | undefined): OcxUsage | undefined {
+function usageFromNative(value: JsonRecord | undefined): OccxUsage | undefined {
   if (!value) return undefined;
   const input = isFiniteNonNegativeInteger(value.prompt_eval_count) ? value.prompt_eval_count : undefined;
   const output = isFiniteNonNegativeInteger(value.eval_count) ? value.eval_count : undefined;
@@ -733,7 +733,7 @@ function formatNativeErrorBody(status: number, _headers: Headers, payloadText: s
 }
 
 function buildHeaders(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   endpointKind: OllamaNativeEndpointKind,
 ): { headers: Record<string, string>; hasCredential: boolean } {
   if (provider.authMode === "forward") {
@@ -1043,7 +1043,7 @@ async function parseOllamaNativeResponse(
   }
 }
 
-export function createOllamaNativeAdapter(provider: OcxProviderConfig): ProviderAdapter {
+export function createOllamaNativeAdapter(provider: OccxProviderConfig): ProviderAdapter {
   let requestAbortSignal: AbortSignal | undefined;
   let requestAllowsParallelToolCalls = true;
   const issuedToolCallIds = new Set<string>();
@@ -1051,7 +1051,7 @@ export function createOllamaNativeAdapter(provider: OcxProviderConfig): Provider
     name: "ollama-native",
     formatErrorBody: formatNativeErrorBody,
 
-    buildRequest(parsed: OcxParsedRequest, incoming?: IncomingMeta): AdapterRequest {
+    buildRequest(parsed: OccxParsedRequest, incoming?: IncomingMeta): AdapterRequest {
       requestAbortSignal = incoming?.abortSignal;
       requestAllowsParallelToolCalls = parsed.options.parallelToolCalls !== false;
       const url = ollamaNativeChatUrl(provider.baseUrl);

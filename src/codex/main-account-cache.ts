@@ -28,7 +28,7 @@ export function getMainQuotaCredentialGeneration(): number { return mainQuotaCre
 export type MainQuotaWriter = Readonly<{ identityKey: string; identityGeneration: number }>;
 
 function mainQuotaIdentityKey(accountId: string): string {
-  return createHash("sha256").update("opencodex-main-quota-v1\0").update(accountId).digest("hex");
+  return createHash("sha256").update("openccx-main-quota-v1\0").update(accountId).digest("hex");
 }
 
 /** Only an existing owned physical-identity read may publish this observation. */

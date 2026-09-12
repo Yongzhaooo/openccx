@@ -23,7 +23,7 @@ import {
   saveConfigPreservingClaudeCode,
   withExpectedConfigGenerationSync,
 } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath, repoRoot } from "../helpers/repo-root";
 
@@ -33,7 +33,7 @@ const generationGuardRaceScript = `
   import { existsSync, writeFileSync } from "node:fs";
   import { withExpectedConfigGenerationSync } from ${JSON.stringify(configModuleUrl)};
 
-  const payload = JSON.parse(process.env.OCX_TEST_PAYLOAD);
+  const payload = JSON.parse(process.env.OCCX_TEST_PAYLOAD);
   const waitFor = path => {
     const deadline = Date.now() + ${CHILD_TIMEOUT_MS};
     while (!existsSync(path)) {
@@ -55,9 +55,9 @@ const generationGuardRaceScript = `
 
 let testRoot = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function config(port = 10100): OcxConfig {
+function config(port = 10100): OccxConfig {
   return { port, providers: {}, defaultProvider: "openai" };
 }
 
@@ -88,26 +88,26 @@ async function collectGuardRaceChild(
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  testRoot = mkdtempSync(join(tmpdir(), "ocx-config-generation-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  testRoot = mkdtempSync(join(tmpdir(), "occx-config-generation-"));
   process.env.CODEX_HOME = testRoot;
-  process.env.OPENCODEX_HOME = testRoot;
+  process.env.OPENCCX_HOME = testRoot;
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testRoot);
 });
 
 test("observe-only generation reports a missing database without creating or chmodding paths", () => {
   const absentParent = join(testRoot, "missing-parent");
-  const absentHome = join(absentParent, "opencodex-home");
+  const absentHome = join(absentParent, "openccx-home");
   const rootBefore = statSync(testRoot, { bigint: true });
   process.env.CODEX_HOME = absentHome;
-  process.env.OPENCODEX_HOME = absentHome;
+  process.env.OPENCCX_HOME = absentHome;
 
   const absentObservation = observeConfigGeneration();
   expect(existsSync(join(absentHome, "config-mutation.sqlite"))).toBeFalse();
@@ -129,7 +129,7 @@ test("observe-only generation reports a missing database without creating or chm
   chmodSync(existingHome, 0o751);
   const existingMode = statSync(existingHome).mode & 0o777;
   process.env.CODEX_HOME = existingHome;
-  process.env.OPENCODEX_HOME = existingHome;
+  process.env.OPENCCX_HOME = existingHome;
 
   const existingObservation = observeConfigGeneration();
   expect(existsSync(join(existingHome, "config-mutation.sqlite"))).toBeFalse();
@@ -277,8 +277,8 @@ test("two real processes racing one generation run exactly one callback", async 
       env: {
         ...process.env,
         HOME: testRoot,
-        OPENCODEX_HOME: testRoot,
-        OCX_TEST_PAYLOAD: JSON.stringify(payload),
+        OPENCCX_HOME: testRoot,
+        OCCX_TEST_PAYLOAD: JSON.stringify(payload),
       },
       stdin: "ignore",
       stdout: "pipe",
@@ -334,7 +334,7 @@ test("busy and unavailable databases return typed outcomes instead of throwing",
   const unavailableHome = join(testRoot, "unavailable-home");
   mkdirSync(join(unavailableHome, "config-mutation.sqlite"), { recursive: true });
   process.env.CODEX_HOME = unavailableHome;
-  process.env.OPENCODEX_HOME = unavailableHome;
+  process.env.OPENCCX_HOME = unavailableHome;
   expect(readConfigGeneration()).toEqual({ kind: "unavailable", reason: "database" });
   expect(bumpConfigGeneration({ value: 0 })).toEqual({ kind: "unavailable", reason: "database" });
   expect(withExpectedConfigGenerationSync({ value: 0 }, () => "must-not-run"))

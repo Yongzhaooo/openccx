@@ -14,7 +14,7 @@ import { autoRestoreCodexShim, CODEX_SHIM_STATE_MAX_BYTES, installCodexShim } fr
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
-const SHIM_MARKER = "opencodex codex autostart shim";
+const SHIM_MARKER = "openccx codex autostart shim";
 
 function cliDeps(
   result: CodexShimAutoRestoreResult,
@@ -59,7 +59,7 @@ describe("Codex shim CLI auto-restore policy", () => {
     expect(maybeAutoRestoreCodexShim("status", ["status"], deps)).toBeUndefined();
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain("continuing without it");
-    expect(warnings[0]).toContain("ocx codex-shim install");
+    expect(warnings[0]).toContain("occx codex-shim install");
   });
 
   test("successful automatic repair warns exactly once", () => {
@@ -87,7 +87,7 @@ describe("Codex shim CLI auto-restore policy", () => {
   });
 
   test("opt-out config and environment are evaluated lazily only for a candidate", () => {
-    for (const [configValue, env] of [[false, {}], [true, { OPENCODEX_CODEX_SHIM_AUTO_RESTORE: "0" }]] as const) {
+    for (const [configValue, env] of [[false, {}], [true, { OPENCCX_CODEX_SHIM_AUTO_RESTORE: "0" }]] as const) {
       let enabledValue: boolean | undefined;
       const { deps, warnings } = cliDeps({ status: "disabled" }, {
         env,
@@ -108,10 +108,10 @@ describe("Codex shim CLI auto-restore policy", () => {
   });
 
   test("oversized shim state is bounded, skipped, and warned without loading config", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-oversized-state-"));
-    const oldHome = process.env.OPENCODEX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-oversized-state-"));
+    const oldHome = process.env.OPENCCX_HOME;
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       const statePath = join(home, "codex-shim.json");
       writeFileSync(statePath, Buffer.alloc(CODEX_SHIM_STATE_MAX_BYTES + 1, 0x20));
       const before = readFileSync(statePath);
@@ -125,25 +125,25 @@ describe("Codex shim CLI auto-restore policy", () => {
       expect(readConfigCalls()).toBe(0);
       expect(readFileSync(statePath)).toEqual(before);
     } finally {
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("an actionable shim replacement stays byte-identical for the updater inspection namespace", async () => {
     if (process.platform === "win32") return;
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-update-inspection-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-update-inspection-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-update-inspection-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-update-inspection-home-"));
     const wrapper = join(binDir, "codex");
-    const backup = join(binDir, "codex.opencodex-real");
+    const backup = join(binDir, "codex.openccx-real");
     const statePath = join(home, "codex-shim.json");
     const replacement = "#!/bin/sh\necho externally updated codex\n";
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     try {
       process.env.PATH = binDir;
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(wrapper, "#!/bin/sh\necho original codex\n", "utf8");
       chmodSync(wrapper, 0o755);
       expect(installCodexShim().installed).toBe(true);
@@ -159,7 +159,7 @@ describe("Codex shim CLI auto-restore policy", () => {
         "system", "codex-cli-update", "check", "--json",
       ], {
         encoding: "utf8",
-        env: { ...process.env, PATH: binDir, OPENCODEX_HOME: home },
+        env: { ...process.env, PATH: binDir, OPENCCX_HOME: home },
       });
 
       expect(result.status).toBe(0);
@@ -171,25 +171,25 @@ describe("Codex shim CLI auto-restore policy", () => {
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
   }, 20_000);
 
-  test("shim replaced -> next ocx command auto-restores and warns", async () => {
+  test("shim replaced -> next occx command auto-restores and warns", async () => {
     if (process.platform === "win32") return;
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-activation-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-activation-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-activation-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-activation-home-"));
     const wrapper = join(binDir, "codex");
-    const backup = join(binDir, "codex.opencodex-real");
+    const backup = join(binDir, "codex.openccx-real");
     const replacement = "#!/bin/sh\necho externally updated codex\n";
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     try {
       process.env.PATH = binDir;
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(wrapper, "#!/bin/sh\necho original codex\n", "utf8");
       chmodSync(wrapper, 0o755);
       expect(installCodexShim().installed).toBe(true);
@@ -199,7 +199,7 @@ describe("Codex shim CLI auto-restore policy", () => {
 
       const result = spawnSync(process.execPath, [repoPath("src", "cli", "index.ts"), "codex-shim", "status"], {
         encoding: "utf8",
-        env: { ...process.env, PATH: binDir, OPENCODEX_HOME: home },
+        env: { ...process.env, PATH: binDir, OPENCCX_HOME: home },
       });
 
       expect(result.status).toBe(0);
@@ -210,8 +210,8 @@ describe("Codex shim CLI auto-restore policy", () => {
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }

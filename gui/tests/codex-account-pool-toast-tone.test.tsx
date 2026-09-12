@@ -439,7 +439,7 @@ test("a saved removal with pending catalog refresh renders a warning tone", asyn
   });
 
   const warning = host.querySelector(".codex-auth-page-head__feedback.is-warn");
-  expect(warning?.textContent).toContain("ocx sync");
+  expect(warning?.textContent).toContain("occx sync");
   expect(warning?.textContent).not.toContain("pool@example.test");
   expect(host.querySelector(".codex-auth-page-head__feedback.is-err")).toBeNull();
 });

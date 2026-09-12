@@ -13,15 +13,15 @@ import {
 } from "./account-api";
 
 const USAGE = `Usage:
-  ocx account main doctor [--json]
-  ocx account main list [--json]
-  ocx account main register <label> [--json]
-  ocx account main add <label>
-  ocx account main switch <profile-id-or-label> --yes [--json]
-  ocx account main recover [--rollback --yes] [--json]
+  occx account main doctor [--json]
+  occx account main list [--json]
+  occx account main register <label> [--json]
+  occx account main add <label>
+  occx account main switch <profile-id-or-label> --yes [--json]
+  occx account main recover [--rollback --yes] [--json]
 
 Native main login profiles change the physical Codex App/CLI login in the effective CODEX_HOME.
-They are independent from the OpenCodex Pool selected by 'ocx account use openai'.`;
+They are independent from the Openccx Pool selected by 'occx account use openai'.`;
 
 const STAGE_LEASE_SAFETY_MARGIN_MS = 30_000;
 

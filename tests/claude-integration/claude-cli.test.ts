@@ -18,15 +18,15 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { LivenessIo, LiveProxy } from "../../src/server/proxy-liveness";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function cfg(extra?: Partial<OcxConfig>): OcxConfig {
+function cfg(extra?: Partial<OccxConfig>): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://x/v1" } },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /**
@@ -57,7 +57,7 @@ function buildClaudeEnv(
   });
 }
 
-describe("ocx claude proxy liveness", () => {
+describe("occx claude proxy liveness", () => {
   test("retries the initial liveness probe before spawning a proxy", async () => {
     const seen: (number | undefined)[] = [];
     const findLiveProxy = async (io?: LivenessIo): Promise<LiveProxy> => {
@@ -71,7 +71,7 @@ describe("ocx claude proxy liveness", () => {
   });
 });
 
-describe("ocx claude native fallback", () => {
+describe("occx claude native fallback", () => {
   test("routes unless configured or live Claude routing is explicitly disabled", () => {
     expect(claudeLaunchPlan(true, true)).toEqual({ kind: "routed" });
     expect(claudeLaunchPlan(true, undefined)).toEqual({ kind: "routed" });
@@ -96,15 +96,15 @@ describe("ocx claude native fallback", () => {
 
   test("removes proxy-owned state while preserving user credentials and native model ids", () => {
     const config = cfg({
-      apiKeys: [{ id: "local", name: "local", key: "ocx_data_local_key", createdAt: "2026-01-01" }],
+      apiKeys: [{ id: "local", name: "local", key: "occx_data_local_key", createdAt: "2026-01-01" }],
       providers: { mock: { adapter: "openai-chat", baseUrl: "http://x/v1" } },
     });
     const env = buildNativeClaudeEnv(config, {
       PATH: "/usr/bin",
       ANTHROPIC_BASE_URL: "http://127.0.0.1:10100",
-      ANTHROPIC_AUTH_TOKEN: "ocx_data_local_key",
+      ANTHROPIC_AUTH_TOKEN: "occx_data_local_key",
       ANTHROPIC_API_KEY: "sk-ant-user-key",
-      ANTHROPIC_MODEL: "claude-ocx-mock--model",
+      ANTHROPIC_MODEL: "claude-occx-mock--model",
       ANTHROPIC_DEFAULT_OPUS_MODEL: "mock/model",
       ANTHROPIC_DEFAULT_SONNET_MODEL: "sonnet",
       CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
@@ -142,16 +142,16 @@ describe("ocx claude native fallback", () => {
 
   test("keeps unrelated slash model ids and recognizes configured provider routes", () => {
     expect(isProxyOnlyModelId("mock/model", ["mock"])).toBe(true);
-    expect(isProxyOnlyModelId("claude-ocx2-abcd")).toBe(true);
+    expect(isProxyOnlyModelId("claude-occx2-abcd")).toBe(true);
     expect(isProxyOnlyModelId("arn:aws:bedrock:region:acct:inference-profile/us.anthropic.model", ["mock"])).toBe(false);
     expect(isProxyOnlyModelId("claude-opus-5")).toBe(false);
   });
 
   test("overrides a persisted proxy model only with a configured native model", () => {
-    expect(nativeModelOverride("claude-ocx2-abcd", "opus", [], ["mock"]))
+    expect(nativeModelOverride("claude-occx2-abcd", "opus", [], ["mock"]))
       .toMatchObject({ flag: ["--model", "opus"] });
-    expect(nativeModelOverride("claude-ocx2-abcd", "mock/model", [], ["mock"]).flag).toBeUndefined();
-    expect(nativeModelOverride("claude-ocx2-abcd", "opus", ["--model", "sonnet"], ["mock"]))
+    expect(nativeModelOverride("claude-occx2-abcd", "mock/model", [], ["mock"]).flag).toBeUndefined();
+    expect(nativeModelOverride("claude-occx2-abcd", "opus", ["--model", "sonnet"], ["mock"]))
       .toEqual({});
   });
 
@@ -163,7 +163,7 @@ describe("ocx claude native fallback", () => {
   // A corrupt settings.json used to be indistinguishable from an absent one, so the
   // "saved model requires the proxy" warning vanished exactly when the file was broken.
   test("an absent picker settings file is silent, a corrupt one warns and names the file", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-claude-picker-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-claude-picker-"));
     const warnings: string[] = [];
     const realWarn = console.warn;
     console.warn = (...parts: unknown[]) => { warnings.push(parts.join(" ")); };
@@ -171,14 +171,14 @@ describe("ocx claude native fallback", () => {
       expect(readPickerDefaultModel(dir)).toBeNull();
       expect(warnings).toEqual([]);
 
-      writeFileSync(join(dir, "settings.json"), '{"model": "claude-ocx2-abcd"');
+      writeFileSync(join(dir, "settings.json"), '{"model": "claude-occx2-abcd"');
       expect(readPickerDefaultModel(dir)).toBeNull();
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain(join(dir, "settings.json"));
-      expect(warnings[0]).not.toContain("claude-ocx2-abcd");
+      expect(warnings[0]).not.toContain("claude-occx2-abcd");
 
-      writeFileSync(join(dir, "settings.json"), '{"model": "claude-ocx2-abcd"}');
-      expect(readPickerDefaultModel(dir)).toBe("claude-ocx2-abcd");
+      writeFileSync(join(dir, "settings.json"), '{"model": "claude-occx2-abcd"}');
+      expect(readPickerDefaultModel(dir)).toBe("claude-occx2-abcd");
       expect(warnings).toHaveLength(1);
     } finally {
       console.warn = realWarn;
@@ -187,14 +187,14 @@ describe("ocx claude native fallback", () => {
   });
 });
 
-describe("ocx claude env assembly", () => {
+describe("occx claude env assembly", () => {
   test("connected target injects only the hub base and client admission token", () => {
     const env = buildClaudeEnv(cfg(), {
       baseUrl: "https://hub.example.test",
-      admissionToken: "ocx_data_connected",
+      admissionToken: "occx_data_connected",
     }, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_BASE_URL).toBe("https://hub.example.test");
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("ocx_data_connected");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("occx_data_connected");
     expect(env.ANTHROPIC_API_KEY).toBeUndefined();
     expect(env.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST).toBe("1");
   });
@@ -206,19 +206,19 @@ describe("ocx claude env assembly", () => {
     // like a Claude subscription must not strip the credential the launch was built with.
     const env = buildClaudeEnv(cfg(), {
       baseUrl: "https://hub.example.test",
-      admissionToken: "ocx_data_connected",
+      admissionToken: "occx_data_connected",
     }, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_BASE_URL).toBe("https://hub.example.test");
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("ocx_data_connected");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("occx_data_connected");
   });
 
   test("user-owned connected destination wins and cannot receive the hub token", () => {
     const env = buildClaudeEnv(cfg(), {
       baseUrl: "https://hub.example.test",
-      admissionToken: "ocx_data_connected",
+      admissionToken: "occx_data_connected",
     }, {
       ANTHROPIC_BASE_URL: "https://user-gateway.example.test",
-      ANTHROPIC_AUTH_TOKEN: "ocx_data_connected",
+      ANTHROPIC_AUTH_TOKEN: "occx_data_connected",
     }, {}, {
       ...AUTH_PRESENT,
       preBunAnthropicSlots: ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"],
@@ -263,14 +263,14 @@ describe("ocx claude env assembly", () => {
 
   test("injects base URL, discovery flag and model slots — NO auth token by default (subscription mode)", () => {
     const env = buildClaudeEnv(cfg({
-      claudeCode: { model: "claude-ocx-gemini--gemini-3-pro", smallFastModel: "gemini/gemini-3-flash" },
+      claudeCode: { model: "claude-occx-gemini--gemini-3-pro", smallFastModel: "gemini/gemini-3-flash" },
     }), 10123, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_BASE_URL).toBe("http://127.0.0.1:10123");
     // Setting ANTHROPIC_AUTH_TOKEN disables claude.ai connectors and kills subscription
     // OAuth — the launcher must leave it unset on an open loopback proxy.
     expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined();
     expect(env.CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY).toBe("1");
-    expect(env.ANTHROPIC_MODEL).toBe("claude-ocx-gemini--gemini-3-pro");
+    expect(env.ANTHROPIC_MODEL).toBe("claude-occx-gemini--gemini-3-pro");
     expect(env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("gemini/gemini-3-flash");
     expect(env.ANTHROPIC_SMALL_FAST_MODEL).toBe("gemini/gemini-3-flash");
     // Never both token vars (Claude Code auth-conflict warning, 003 E1).
@@ -281,15 +281,15 @@ describe("ocx claude env assembly", () => {
 
   test("configured API key becomes the auth token (admission required)", () => {
     const env = buildClaudeEnv(cfg({
-      apiKeys: [{ id: "1", name: "main", key: "sk-ocx-123", createdAt: "2026-01-01" }],
+      apiKeys: [{ id: "1", name: "main", key: "sk-occx-123", createdAt: "2026-01-01" }],
       claudeCode: { authMode: "proxy" },
     }), 10100, {});
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("sk-ocx-123");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("sk-occx-123");
   });
 
   test("subscription mode keeps configured proxy keys out of Claude auth", () => {
     const env = buildClaudeEnv(cfg({
-      apiKeys: [{ id: "1", name: "main", key: "sk-ocx-123", createdAt: "2026-01-01" }],
+      apiKeys: [{ id: "1", name: "main", key: "sk-occx-123", createdAt: "2026-01-01" }],
       claudeCode: { authMode: "subscription" },
     }), 10100, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined();
@@ -298,10 +298,10 @@ describe("ocx claude env assembly", () => {
 
   test("subscription mode removes an inherited proxy admission token", () => {
     const env = buildClaudeEnv(cfg({
-      apiKeys: [{ id: "1", name: "main", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01" }],
+      apiKeys: [{ id: "1", name: "main", key: "occx_data_this_proxy_key", createdAt: "2026-01-01" }],
       claudeCode: { authMode: "subscription" },
     }), 10100, {
-      ANTHROPIC_AUTH_TOKEN: "ocx_data_this_proxy_key",
+      ANTHROPIC_AUTH_TOKEN: "occx_data_this_proxy_key",
     }, {}, {
       ...AUTH_PRESENT,
       preBunAnthropicSlots: ["ANTHROPIC_AUTH_TOKEN"],
@@ -319,11 +319,11 @@ describe("ocx claude env assembly", () => {
 
   test("proxy-owned authentication sets CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST=1", () => {
     const proxy = buildClaudeEnv(cfg({ claudeCode: { authMode: "proxy" } }), 10100, {});
-    expect(proxy.ANTHROPIC_AUTH_TOKEN).toBe("opencodex-proxy");
+    expect(proxy.ANTHROPIC_AUTH_TOKEN).toBe("openccx-proxy");
     expect(proxy.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST).toBe("1");
 
     const admission = buildClaudeEnv(cfg({
-      apiKeys: [{ id: "1", name: "main", key: "sk-ocx-123", createdAt: "2026-01-01" }],
+      apiKeys: [{ id: "1", name: "main", key: "sk-occx-123", createdAt: "2026-01-01" }],
       claudeCode: { authMode: "proxy" },
     }), 10100, {});
     expect(admission.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST).toBe("1");
@@ -505,7 +505,7 @@ describe("ocx claude env assembly", () => {
     // The inherited token was minted by the proxy on :19999 that we just stopped targeting.
     const env = buildClaudeEnv(cfg(), 10100, {
       ANTHROPIC_BASE_URL: "http://127.0.0.1:19999",
-      ANTHROPIC_AUTH_TOKEN: "ocx_data_other_proxy_key",
+      ANTHROPIC_AUTH_TOKEN: "occx_data_other_proxy_key",
     }, {}, { ...AUTH_PRESENT, preBunAnthropicSlots: ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"] });
     expect(env.ANTHROPIC_BASE_URL).toBe("http://127.0.0.1:10100");
     // A surviving token makes Claude Code authenticate as a host-managed provider and
@@ -518,18 +518,18 @@ describe("ocx claude env assembly", () => {
     const env = buildClaudeEnv(
       cfg({
         claudeCode: { authMode: "proxy" },
-        apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+        apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
       }),
       10100,
       {
         ANTHROPIC_BASE_URL: "http://127.0.0.1:19999",
-        ANTHROPIC_AUTH_TOKEN: "ocx_data_other_proxy_key",
+        ANTHROPIC_AUTH_TOKEN: "occx_data_other_proxy_key",
       },
       {},
       { ...AUTH_PRESENT, preBunAnthropicSlots: ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"] },
     );
     expect(env.ANTHROPIC_BASE_URL).toBe("http://127.0.0.1:10100");
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("ocx_data_this_proxy_key");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("occx_data_this_proxy_key");
   });
 
   test("a user sk-ant- credential survives the stale base-URL rewrite (native passthrough auth)", () => {
@@ -544,21 +544,21 @@ describe("ocx claude env assembly", () => {
 });
 
 /**
- * Which local socket `ocx claude` dials (#4236).
+ * Which local socket `occx claude` dials (#4236).
  *
- * `ocx claude` is handed the live PUBLIC port. On a hub bound to a tailnet address nothing
+ * `occx claude` is handed the live PUBLIC port. On a hub bound to a tailnet address nothing
  * answers on `127.0.0.1:<public port>`, so the launch resolves the unauthenticated loopback
- * listener instead — the same port `ocx sync` already writes into Codex. With NO listener the
+ * listener instead — the same port `occx sync` already writes into Codex. With NO listener the
  * destination is the BIND address: reachable, but it demands a data-plane credential, so the
  * launch has to carry one or say out loud that it cannot. The first round of this change
  * returned loopback unconditionally and these tests pinned that as intended.
  */
-describe("ocx claude local inference destination", () => {
+describe("occx claude local inference destination", () => {
   const hub = (listener?: { enabled: boolean; port?: number }) => cfg({
     hostname: "100.76.170.81",
     runtimeRole: "hub",
     ...(listener ? { unauthenticatedLoopbackListener: listener } : {}),
-  } as Partial<OcxConfig>);
+  } as Partial<OccxConfig>);
 
   test("a ported listener moves the base URL to the listener's port", () => {
     const env = buildClaudeEnv(hub({ enabled: true, port: 10104 }), 10100, {});
@@ -582,24 +582,24 @@ describe("ocx claude local inference destination", () => {
       claudeCode: { authMode: "proxy" },
       hostname: "100.76.170.81",
       runtimeRole: "hub",
-      apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-    } as Partial<OcxConfig>);
+      apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    } as Partial<OccxConfig>);
     const env = buildClaudeEnv(config, 10100, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_BASE_URL).toBe("http://100.76.170.81:10100");
     // `targetsLocalClaudeProxy` has to recognize the value we just wrote, or the launch would
     // refuse to attach the credential to its own destination one line later.
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("ocx_data_this_proxy_key");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("occx_data_this_proxy_key");
   });
 
   test("a wildcard bind keeps loopback but still carries the credential it demands", () => {
     const config = cfg({
       claudeCode: { authMode: "proxy" },
       hostname: "0.0.0.0",
-      apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-    } as Partial<OcxConfig>);
+      apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    } as Partial<OccxConfig>);
     const env = buildClaudeEnv(config, 10100, {}, {}, AUTH_PRESENT);
     expect(env.ANTHROPIC_BASE_URL).toBe("http://127.0.0.1:10100");
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("ocx_data_this_proxy_key");
+    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("occx_data_this_proxy_key");
   });
 
   test("a subscription launch on a bind that demands admission degrades out loud", () => {
@@ -609,8 +609,8 @@ describe("ocx claude local inference destination", () => {
       claudeCode: { authMode: "subscription" },
       hostname: "100.76.170.81",
       runtimeRole: "hub",
-      apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-    } as Partial<OcxConfig>);
+      apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    } as Partial<OccxConfig>);
     const errors: string[] = [];
     const realError = console.error;
     console.error = (...args: unknown[]) => { errors.push(args.map(String).join(" ")); };
@@ -636,8 +636,8 @@ describe("ocx claude local inference destination", () => {
         hostname,
         runtimeRole: "hub",
         unauthenticatedLoopbackListener: { enabled: true, port: 10104 },
-        apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-      } as Partial<OcxConfig>);
+        apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+      } as Partial<OccxConfig>);
       for (const origin of ["http://127.0.0.1:10100", "http://127.0.0.1:10104"]) {
         const env = buildClaudeEnv(config, 10100, { ANTHROPIC_BASE_URL: origin }, {}, {
           ...AUTH_PRESENT,
@@ -645,7 +645,7 @@ describe("ocx claude local inference destination", () => {
         });
         expect({ hostname, origin, baseUrl: env.ANTHROPIC_BASE_URL }).toEqual({ hostname, origin, baseUrl: origin });
         expect({ hostname, origin, token: env.ANTHROPIC_AUTH_TOKEN })
-          .toEqual({ hostname, origin, token: "ocx_data_this_proxy_key" });
+          .toEqual({ hostname, origin, token: "occx_data_this_proxy_key" });
       }
     }
   });
@@ -659,8 +659,8 @@ describe("ocx claude local inference destination", () => {
       hostname: "100.76.170.81",
       runtimeRole: "hub",
       unauthenticatedLoopbackListener: { enabled: true, port: 10104 },
-      apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-    } as Partial<OcxConfig>);
+      apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    } as Partial<OccxConfig>);
     const env = buildClaudeEnv(config, 10100, { ANTHROPIC_BASE_URL: "http://127.0.0.1:10100" }, {}, {
       ...AUTH_PRESENT,
       preBunAnthropicSlots: ["ANTHROPIC_BASE_URL"],
@@ -694,12 +694,12 @@ describe("ocx claude local inference destination", () => {
       hostname: "100.76.170.81",
       runtimeRole: "hub",
       unauthenticatedLoopbackListener: { enabled: true, port: 10104 },
-      apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
-    } as Partial<OcxConfig>);
+      apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    } as Partial<OccxConfig>);
     for (const origin of ["http://127.0.0.1:10100", "http://127.0.0.1:10104"]) {
       const env = buildNativeClaudeEnv(config, {
         ANTHROPIC_BASE_URL: origin,
-        ANTHROPIC_AUTH_TOKEN: "ocx_data_this_proxy_key",
+        ANTHROPIC_AUTH_TOKEN: "occx_data_this_proxy_key",
       }, { preBunAnthropicSlots: ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"] });
       expect({ origin, baseUrl: env.ANTHROPIC_BASE_URL }).toEqual({ origin, baseUrl: undefined });
     }
@@ -710,20 +710,20 @@ describe("ocx claude local inference destination", () => {
  * The OTHER destination contract (#4236): `/api/claude-code` is management state, never served
  * by the unauthenticated loopback listener, so it resolves to the authenticated surface — a
  * hub's loopback management ingress when it has one — and keeps carrying the local admin token.
- * `enabled: false` from this call is what makes `ocx claude` launch natively, so a wrong
+ * `enabled: false` from this call is what makes `occx claude` launch natively, so a wrong
  * destination here downgrades every launch on the machine.
  */
-describe("ocx claude management discovery destination", () => {
-  const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  const FAKE_ADMIN_TOKEN = `ocx_admin_${"t".repeat(43)}`;
+describe("occx claude management discovery destination", () => {
+  const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  const FAKE_ADMIN_TOKEN = `occx_admin_${"t".repeat(43)}`;
 
-  async function captureDiscovery(config: OcxConfig): Promise<{ url: string; header: string | null }> {
+  async function captureDiscovery(config: OccxConfig): Promise<{ url: string; header: string | null }> {
     const realFetch = globalThis.fetch;
     let seen = { url: "", header: null as string | null };
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = FAKE_ADMIN_TOKEN;
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = FAKE_ADMIN_TOKEN;
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       const request = new Request(input as never, init);
-      seen = { url: request.url, header: request.headers.get("x-opencodex-api-key") };
+      seen = { url: request.url, header: request.headers.get("x-openccx-api-key") };
       return new Response(JSON.stringify({ enabled: true, contextWindows: { "claude-x": 200_000 } }), {
         headers: { "content-type": "application/json" },
       });
@@ -734,8 +734,8 @@ describe("ocx claude management discovery destination", () => {
       return seen;
     } finally {
       globalThis.fetch = realFetch;
-      if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-      else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
+      if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+      else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
     }
   }
 
@@ -745,7 +745,7 @@ describe("ocx claude management discovery destination", () => {
       runtimeRole: "hub",
       hub: { managementIngress: { enabled: true, port: 10102 } },
       unauthenticatedLoopbackListener: { enabled: true, port: 10104 },
-    } as Partial<OcxConfig>));
+    } as Partial<OccxConfig>));
     expect(seen.url).toBe("http://127.0.0.1:10102/api/claude-code");
     // The listener's port must NOT be used: it serves no /api/* at all.
     expect(seen.url).not.toContain("10104");
@@ -757,7 +757,7 @@ describe("ocx claude management discovery destination", () => {
       hostname: "100.76.170.81",
       runtimeRole: "hub",
       unauthenticatedLoopbackListener: { enabled: true },
-    } as Partial<OcxConfig>));
+    } as Partial<OccxConfig>));
     expect(seen.url).toBe("http://100.76.170.81:10100/api/claude-code");
     expect(seen.header).toBe(FAKE_ADMIN_TOKEN);
   });
@@ -773,7 +773,7 @@ describe("ocx claude management discovery destination", () => {
   });
 });
 
-describe("ocx claude Windows launch (devlog 260715_cross_platform_audit/020)", () => {
+describe("occx claude Windows launch (devlog 260715_cross_platform_audit/020)", () => {
   test("win32 .cmd shim launches through cmd.exe with preserved arg boundaries", () => {
     const deps = {
       env: { PATH: "C:\\Users\\u\\AppData\\Roaming\\npm", ComSpec: "C:\\WINDOWS\\system32\\cmd.exe" },

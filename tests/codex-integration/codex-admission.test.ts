@@ -24,16 +24,16 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const admitCodexWrite = (): ReturnType<typeof admitRaw> =>
   admitRaw({ inspectOwnership: () => ({ ownership: "owned", reason: "pinned by fixture" }) });
 import { JOURNAL_PATH } from "../../src/codex/journal";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 let root = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 const cleanup: string[] = [];
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -42,24 +42,24 @@ function baseConfig(): OcxConfig {
         baseUrl: "https://chatgpt.com/backend-api/codex",
         authMode: "forward",
       },
-    } as OcxConfig["providers"],
+    } as OccxConfig["providers"],
     defaultProvider: "openai",
   };
 }
 
 /** Everything the producer may read, and nothing it may create. */
-function seed(config: OcxConfig = baseConfig(), codexToml = 'model = "gpt-5"\n'): void {
-  writeFileSync(join(opencodexHome, "config.json"), JSON.stringify(config, null, 2));
+function seed(config: OccxConfig = baseConfig(), codexToml = 'model = "gpt-5"\n'): void {
+  writeFileSync(join(openccxHome, "config.json"), JSON.stringify(config, null, 2));
   writeFileSync(join(codexHome, "config.toml"), codexToml);
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-admission-"));
+  root = mkdtempSync(join(tmpdir(), "occx-admission-"));
   cleanup.push(root);
   codexHome = join(root, ".codex");
-  opencodexHome = join(root, ".opencodex");
+  openccxHome = join(root, ".openccx");
   mkdirSync(codexHome, { recursive: true });
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   /*
    * An OWNED environment. `bun test` isolates CODEX_HOME to a temp dir, so the
    * real service-state.json under ~/.opencodex names a different home and every
@@ -67,23 +67,23 @@ beforeEach(() => {
    * designed, against the wrong fixture. Same reason the Grok toggle tests write
    * this file.
    */
-  writeFileSync(join(opencodexHome, "service-state.json"), JSON.stringify({
+  writeFileSync(join(openccxHome, "service-state.json"), JSON.stringify({
     version: 2,
     codexHome,
-    opencodexHome,
+    openccxHome,
     backend: "scheduler",
   }));
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
 });
 
@@ -96,7 +96,7 @@ describe("it refuses rather than guessing", () => {
   });
 
   test("a malformed config refuses rather than falling back to defaults", () => {
-    writeFileSync(join(opencodexHome, "config.json"), "{ not json");
+    writeFileSync(join(openccxHome, "config.json"), "{ not json");
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n');
     const result = admitCodexWrite();
     expect(result.kind).toBe("refused");
@@ -132,25 +132,25 @@ describe("it creates nothing", () => {
    */
   test("a refusal leaves the filesystem exactly as it found it", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n');
-    const before = [...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort();
+    const before = [...readdirSync(codexHome), ...readdirSync(openccxHome)].sort();
 
     expect(admitCodexWrite().kind).toBe("refused");
 
-    const after = [...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort();
+    const after = [...readdirSync(codexHome), ...readdirSync(openccxHome)].sort();
     expect(after).toEqual(before);
   });
 
   test("a successful admission also creates nothing", () => {
     seed();
-    const before = [...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort();
+    const before = [...readdirSync(codexHome), ...readdirSync(openccxHome)].sort();
 
     expect(admitCodexWrite().kind).toBe("admitted");
 
-    const after = [...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort();
+    const after = [...readdirSync(codexHome), ...readdirSync(openccxHome)].sort();
     expect(after).toEqual(before);
     // Named explicitly, because these are the two an eager producer would make.
-    expect(existsSync(join(opencodexHome, "integrations"))).toBe(false);
-    expect(existsSync(join(codexHome, "opencodex.config.toml"))).toBe(false);
+    expect(existsSync(join(openccxHome, "integrations"))).toBe(false);
+    expect(existsSync(join(codexHome, "openccx.config.toml"))).toBe(false);
   });
 });
 
@@ -171,7 +171,7 @@ describe("the snapshot describes one decision", () => {
     expect(absent.kind === "admitted" && absent.snapshot.journalIdentity).toBe("absent");
 
     // The journal's own path, imported rather than re-derived. This fixture used
-    // to build OPENCODEX_HOME/codex-journal.json by hand and agreed with a
+    // to build OPENCCX_HOME/codex-journal.json by hand and agreed with a
     // producer that did the same — both wrong, and green because they matched.
     writeFileSync(JOURNAL_PATH, "{}");
     const present = admitCodexWrite();
@@ -239,11 +239,11 @@ describe("ownership is an authority, not a formality", () => {
 
   test("neither refusal creates anything", () => {
     seed();
-    const before = [...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort();
+    const before = [...readdirSync(codexHome), ...readdirSync(openccxHome)].sort();
     for (const ownership of ["foreign", "unknown"] as const) {
       expect(admitRaw({ inspectOwnership: () => ({ ownership, reason: "x" }) }).kind).toBe("refused");
     }
-    expect([...readdirSync(codexHome), ...readdirSync(opencodexHome)].sort()).toEqual(before);
+    expect([...readdirSync(codexHome), ...readdirSync(openccxHome)].sort()).toEqual(before);
   });
 
   test("the admitted snapshot carries the observed value, not a constant", () => {

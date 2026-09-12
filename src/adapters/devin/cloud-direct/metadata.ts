@@ -32,10 +32,10 @@ import { randomBytes } from 'node:crypto';
  * Pinned to the version the shipped desktop client reports
  * (`product.json` -> `windsurfVersion`) rather than to anything of ours. The
  * previous pin of "2.0.0" predates the Devin rebrand and no longer chats.
- * `OPENCODEX_DEVIN_CLIENT_VERSION` overrides it, which is the escape hatch when
+ * `OPENCCX_DEVIN_CLIENT_VERSION` overrides it, which is the escape hatch when
  * Cognition retires a version before this constant is updated.
  */
-const WINDSURF_VERSION_STRING = process.env.OPENCODEX_DEVIN_CLIENT_VERSION?.trim() || '3.9.19';
+const WINDSURF_VERSION_STRING = process.env.OPENCCX_DEVIN_CLIENT_VERSION?.trim() || '3.9.19';
 
 /**
  * Identity the hosted chat RPC expects, which is not the desktop client's.
@@ -44,7 +44,7 @@ const WINDSURF_VERSION_STRING = process.env.OPENCODEX_DEVIN_CLIENT_VERSION?.trim
  * opaque "an internal error occurred".
  */
 const CLOUD_CHAT_CLIENT_NAME = 'chisel';
-const CLOUD_CHAT_CLIENT_VERSION = process.env.OPENCODEX_DEVIN_CHAT_CLIENT_VERSION?.trim() || '2026.8.18';
+const CLOUD_CHAT_CLIENT_VERSION = process.env.OPENCCX_DEVIN_CHAT_CLIENT_VERSION?.trim() || '2026.8.18';
 const CLOUD_CHAT_OS = 'windows';
 
 /**

@@ -7,7 +7,7 @@ import {
   markResponseNonReplayable,
 } from "../../src/lib/upstream-retry";
 import { transientRetryPolicyFor } from "../../src/providers/key-failover";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 function bodyResponse(status: number, headers?: Record<string, string>): Response {
   // ReadableStream body so cancel() is observable.
@@ -27,7 +27,7 @@ describe("isTransientUpstreamStatus", () => {
 });
 
 describe("transientRetryPolicyFor", () => {
-  const base = { adapter: "openai-chat", authMode: "key" } as unknown as OcxProviderConfig;
+  const base = { adapter: "openai-chat", authMode: "key" } as unknown as OccxProviderConfig;
 
   test("is off unless the provider opts in", () => {
     expect(transientRetryPolicyFor(base)).toBeNull();
@@ -43,14 +43,14 @@ describe("transientRetryPolicyFor", () => {
     // The adapter gate is the accepted scope, not an incidental detail: without it any
     // generic key-auth provider would inherit the policy.
     for (const adapter of ["openai-responses", "anthropic", "google"]) {
-      expect(transientRetryPolicyFor({ ...base, adapter, transientRetryOn5xx: {} } as unknown as OcxProviderConfig)).toBeNull();
+      expect(transientRetryPolicyFor({ ...base, adapter, transientRetryOn5xx: {} } as unknown as OccxProviderConfig)).toBeNull();
     }
     // Fail closed on credential shape: OAuth/forward/local are never replayed here.
     for (const authMode of ["oauth", "forward", "local"]) {
-      expect(transientRetryPolicyFor({ ...base, authMode, transientRetryOn5xx: {} } as unknown as OcxProviderConfig)).toBeNull();
+      expect(transientRetryPolicyFor({ ...base, authMode, transientRetryOn5xx: {} } as unknown as OccxProviderConfig)).toBeNull();
     }
     // An omitted authMode is the documented key-auth default for custom providers.
-    expect(transientRetryPolicyFor({ adapter: "openai-chat", transientRetryOn5xx: {} } as unknown as OcxProviderConfig))
+    expect(transientRetryPolicyFor({ adapter: "openai-chat", transientRetryOn5xx: {} } as unknown as OccxProviderConfig))
       .toEqual({ enabled: true, attempts: 3 });
   });
 });

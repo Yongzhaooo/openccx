@@ -1,4 +1,4 @@
-import type { OcxContentPart, OcxParsedRequest, OcxTextContent } from "../types";
+import type { OccxContentPart, OccxParsedRequest, OccxTextContent } from "../types";
 import type { TranslatorBudget } from "../lib/translator-budget";
 
 export const descriptionEncoder = new TextEncoder();
@@ -25,7 +25,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
  * items (reasoning, calls, ids, compaction, and provider-specific metadata) remain byte-structurally
  * untouched.
  */
-export function syncRawBodyImageDescriptions(parsed: OcxParsedRequest, descriptions: readonly string[]): void {
+export function syncRawBodyImageDescriptions(parsed: OccxParsedRequest, descriptions: readonly string[]): void {
   const rawBody = parsed._rawBody;
   if (!isPlainRecord(rawBody) || !Array.isArray(rawBody.input)) return;
 
@@ -83,19 +83,19 @@ export function syncRawBodyImageDescriptions(parsed: OcxParsedRequest, descripti
  * raw images would 400 or silently confuse it. Replace each image with an explicit marker so the
  * model (and the user, via its reply) knows the image was dropped rather than ignored.
  */
-export function stripImagesInPlace(parsed: OcxParsedRequest, translatorBudget?: TranslatorBudget): boolean {
+export function stripImagesInPlace(parsed: OccxParsedRequest, translatorBudget?: TranslatorBudget): boolean {
   let stripped = false;
   const descriptions: string[] = [];
   for (const msg of parsed.context.messages) {
     if (!carriesImages(msg.role) || !Array.isArray(msg.content)) continue;
-    const parts = msg.content as OcxContentPart[];
+    const parts = msg.content as OccxContentPart[];
     if (!parts.some(p => p.type === "image")) continue;
     msg.content = parts.map(p => {
       if (p.type !== "image") return p;
-      const replacement = { type: "text", text: IMAGE_OMITTED_TEXT } as OcxContentPart;
-      descriptions.push((replacement as OcxTextContent).text);
+      const replacement = { type: "text", text: IMAGE_OMITTED_TEXT } as OccxContentPart;
+      descriptions.push((replacement as OccxTextContent).text);
       const reservation = translatorBudget?.reserveTransient(
-        descriptionEncoder.encode((replacement as OcxTextContent).text).byteLength,
+        descriptionEncoder.encode((replacement as OccxTextContent).text).byteLength,
         { kind: "request_copies" },
       );
       reservation?.commitRetained();

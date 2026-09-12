@@ -8,7 +8,7 @@ import { bundledBunPath } from "../../src/lib/bun-runtime";
 import { killProxy } from "../../src/lib/process-control";
 import { repoPath } from "../helpers/repo-root";
 
-const BIN_OCX = repoPath("bin", "ocx.mjs");
+const BIN_OCCX = repoPath("bin", "occx.mjs");
 const nodeAvailable = spawnSync("node", ["--version"], {
   stdio: "ignore",
   windowsHide: true,
@@ -59,7 +59,7 @@ async function healthAt(port: number): Promise<Health | null> {
     if (!response.ok) return null;
     const body = await response.json() as Health;
     return body?.status === "ok"
-      && body.service === "opencodex"
+      && body.service === "openccx"
       && Number.isSafeInteger(body.pid)
       && body.pid > 0
       && body.port === port
@@ -187,7 +187,7 @@ function removeTree(path: string): void {
 }
 
 async function effectiveRuntime(override: string): Promise<string> {
-  const root = mkdtempSync(join(tmpdir(), "ocx-launcher-runtime-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-launcher-runtime-"));
   let port: number | null = null;
   let launcher: ChildProcess | null = null;
   let launcherPid: number | null = null;
@@ -198,7 +198,7 @@ async function effectiveRuntime(override: string): Promise<string> {
   let primaryError: unknown;
   try {
     port = await freePort();
-    launcher = spawn("node", [BIN_OCX, "start", "--port", String(port)], {
+    launcher = spawn("node", [BIN_OCCX, "start", "--port", String(port)], {
       stdio: "ignore",
       windowsHide: true,
       env: isolatedLauncherEnv(root, override),
@@ -275,7 +275,7 @@ async function effectiveRuntime(override: string): Promise<string> {
   if (port !== null) {
     const lingeringProxy = await healthAt(port);
     if (lingeringProxy) {
-      cleanupErrors.push(`OpenCodex proxy PID ${lingeringProxy.pid} remained on owned port ${port}`);
+      cleanupErrors.push(`Openccx proxy PID ${lingeringProxy.pid} remained on owned port ${port}`);
     }
   }
   try {
@@ -294,33 +294,33 @@ async function effectiveRuntime(override: string): Promise<string> {
 }
 
 function isolatedLauncherEnv(root: string, override: string): NodeJS.ProcessEnv {
-  const opencodexHome = join(root, "opencodex");
+  const openccxHome = join(root, "openccx");
   const codexHome = join(root, "codex");
   const grokHome = join(root, "grok");
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   mkdirSync(codexHome, { recursive: true });
   mkdirSync(grokHome, { recursive: true });
   return {
     ...process.env,
     HOME: root,
     USERPROFILE: root,
-    OPENCODEX_HOME: opencodexHome,
+    OPENCCX_HOME: openccxHome,
     CODEX_HOME: codexHome,
     GROK_HOME: grokHome,
-    OPENCODEX_BUN_PATH: override,
+    OPENCCX_BUN_PATH: override,
   };
 }
 
-describe.skipIf(!nodeAvailable)("ocx package launcher relative Bun override", () => {
+describe.skipIf(!nodeAvailable)("occx package launcher relative Bun override", () => {
   test("resolves a valid bare relative override before spawning", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-launcher-relative-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-launcher-relative-"));
     try {
       const overrideName = `custom-bun${process.platform === "win32" ? ".exe" : ""}`;
       const override = join(root, overrideName);
       copyFileSync(process.execPath, override);
       chmodSync(override, 0o755);
 
-      const result = spawnSync("node", [BIN_OCX, "--version"], {
+      const result = spawnSync("node", [BIN_OCCX, "--version"], {
         cwd: root,
         encoding: "utf8",
         timeout: 30_000,
@@ -329,19 +329,19 @@ describe.skipIf(!nodeAvailable)("ocx package launcher relative Bun override", ()
       });
 
       expect(result.status).toBe(0);
-      expect(result.stderr).not.toContain("OPENCODEX_BUN_PATH is missing");
+      expect(result.stderr).not.toContain("OPENCCX_BUN_PATH is missing");
     } finally {
       removeTree(root);
     }
   }, 60_000);
 
   test("warns without exposing the rejected override path before bundled fallback", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-launcher-invalid-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-launcher-invalid-"));
     try {
       const overrideName = `stub-bun${process.platform === "win32" ? ".exe" : ""}`;
       writeFileSync(join(root, overrideName), "not a Bun executable", "utf8");
 
-      const result = spawnSync("node", [BIN_OCX, "--version"], {
+      const result = spawnSync("node", [BIN_OCCX, "--version"], {
         cwd: root,
         encoding: "utf8",
         timeout: 30_000,
@@ -350,7 +350,7 @@ describe.skipIf(!nodeAvailable)("ocx package launcher relative Bun override", ()
       });
 
       expect(result.status).toBe(0);
-      expect(result.stderr).toContain("OPENCODEX_BUN_PATH is missing, unreadable, or not a complete Bun binary");
+      expect(result.stderr).toContain("OPENCCX_BUN_PATH is missing, unreadable, or not a complete Bun binary");
       expect(result.stderr).not.toContain(root);
     } finally {
       removeTree(root);
@@ -358,9 +358,9 @@ describe.skipIf(!nodeAvailable)("ocx package launcher relative Bun override", ()
   }, 60_000);
 });
 
-describe.skipIf(!runnable)("ocx package launcher effective Bun runtime", () => {
-  test("uses a valid OPENCODEX_BUN_PATH for the actual proxy process", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-launcher-runtime-copy-"));
+describe.skipIf(!runnable)("occx package launcher effective Bun runtime", () => {
+  test("uses a valid OPENCCX_BUN_PATH for the actual proxy process", async () => {
+    const root = mkdtempSync(join(tmpdir(), "occx-launcher-runtime-copy-"));
     try {
       const override = join(root, "override-bun.exe");
       copyFileSync(process.execPath, override);
@@ -371,7 +371,7 @@ describe.skipIf(!runnable)("ocx package launcher effective Bun runtime", () => {
   }, EFFECTIVE_RUNTIME_TEST_TIMEOUT_MS);
 
   test("falls back to bundled Bun for a sub-1MB override stub", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-launcher-runtime-stub-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-launcher-runtime-stub-"));
     try {
       const stub = join(root, "stub-bun.exe");
       writeFileSync(stub, "not a Bun executable", "utf8");

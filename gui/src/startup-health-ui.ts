@@ -1,7 +1,7 @@
 import type { TKey } from "./i18n/shared";
 
 export interface StartupRiskDetail {
-  routingKind: "native" | "opencodex-local" | "custom-local" | "custom-remote" | "unknown";
+  routingKind: "native" | "openccx-local" | "custom-local" | "custom-remote" | "unknown";
   shimCoverage: "full" | "cli-only" | "none";
 }
 

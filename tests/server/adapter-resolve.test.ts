@@ -6,16 +6,16 @@
  */
 import { describe, expect, test } from "bun:test";
 import { resolveWireProtocolOverride } from "../../src/server/adapter-resolve";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
-function gateway(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function gateway(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://gateway.example/v1",
     authMode: "key",
     apiKey: "test-key",
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
 describe("per-model wire override (#404)", () => {
@@ -92,7 +92,7 @@ describe("per-model wire override (#404)", () => {
 });
 
 describe("registry per-model wire defaults", () => {
-  function xai(authMode: "oauth" | "key", overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+  function xai(authMode: "oauth" | "key", overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
     return gateway({
       baseUrl: "https://api.x.ai/v1",
       authMode,
@@ -143,7 +143,7 @@ describe("registry per-model wire defaults", () => {
       .toBe("openai-responses");
   });
 
-  function deepseek(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+  function deepseek(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
     return gateway({
       baseUrl: "https://api.deepseek.com",
       authMode: "key",

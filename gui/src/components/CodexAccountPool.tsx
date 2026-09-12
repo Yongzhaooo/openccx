@@ -30,7 +30,7 @@ export type { CodexAccountEntry } from "../hooks/useCodexAccountPool";
 import ProviderModelsNotice from "./ProviderModelsNotice";
 import { navigateHash } from "../hash-routing";
 
-const DOCTOR_CMD = "ocx doctor";
+const DOCTOR_CMD = "occx doctor";
 
 /**
  * Global ChatGPT / Codex account pool (main + extras), extracted from the Codex

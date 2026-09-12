@@ -2,21 +2,21 @@ import { describe, expect, test } from "bun:test";
 import { createGoogleAdapter } from "../../../src/adapters/google";
 import { chatCompletionsToResponsesBody } from "../../../src/chat/inbound";
 import { parseRequest } from "../../../src/responses/parser";
-import type { OcxParsedRequest } from "../../../src/types";
+import type { OccxParsedRequest } from "../../../src/types";
 
 const provider = { adapter: "google", baseUrl: "https://generativelanguage.googleapis.com", apiKey: "key" };
 
-function parsedWith(messages: unknown[], tools?: unknown[]): OcxParsedRequest {
-  return { modelId: "gemini-3-pro", stream: false, options: {}, context: { messages, tools } } as unknown as OcxParsedRequest;
+function parsedWith(messages: unknown[], tools?: unknown[]): OccxParsedRequest {
+  return { modelId: "gemini-3-pro", stream: false, options: {}, context: { messages, tools } } as unknown as OccxParsedRequest;
 }
 
-async function geminiContents(parsed: OcxParsedRequest): Promise<{ role: string; parts: Record<string, unknown>[] }[]> {
+async function geminiContents(parsed: OccxParsedRequest): Promise<{ role: string; parts: Record<string, unknown>[] }[]> {
   // buildRequest is async (google-vertex auth path); await before parsing the body.
   const { body } = await createGoogleAdapter(provider).buildRequest(parsed);
   return JSON.parse(body).contents;
 }
 
-async function geminiBody(parsed: OcxParsedRequest): Promise<Record<string, unknown>> {
+async function geminiBody(parsed: OccxParsedRequest): Promise<Record<string, unknown>> {
   const { body } = await createGoogleAdapter(provider).buildRequest(parsed);
   return JSON.parse(body);
 }
@@ -247,7 +247,7 @@ describe("google adapter — tool-call ids on the wire", () => {
           { role: "toolResult", toolCallId: "call_xyz", toolName: "bash", content: "ok", isError: false },
         ],
       },
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
 
     const { body } = await createGoogleAdapter(ccaProvider).buildRequest(parsed);
     const envelope = JSON.parse(body);
@@ -265,7 +265,7 @@ describe("google adapter — Antigravity system prompt compatibility", () => {
     project: "proj-123",
   } as const;
 
-  function systemPromptParsed(modelId: string): OcxParsedRequest {
+  function systemPromptParsed(modelId: string): OccxParsedRequest {
     return {
       modelId,
       stream: false,
@@ -275,7 +275,7 @@ describe("google adapter — Antigravity system prompt compatibility", () => {
         messages: [{ role: "user", content: "hi" }],
         tools: [],
       },
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
   }
 
   test("removes only the rejected standalone paragraph for CCA Gemini 3.7 Flash", async () => {
@@ -356,13 +356,13 @@ describe("google adapter — tool_choice on the wire", () => {
     { name: "shot", namespace: "mcp__chrome", parameters: { type: "object", properties: {} } },
   ];
 
-  function parsedWithChoice(toolChoice: unknown, tools: unknown[] | null = TOOLS): OcxParsedRequest {
+  function parsedWithChoice(toolChoice: unknown, tools: unknown[] | null = TOOLS): OccxParsedRequest {
     return {
       modelId: "gemini-3-pro",
       stream: false,
       options: toolChoice === undefined ? {} : { toolChoice },
       context: { messages: [{ role: "user", content: "hi" }], tools: tools ?? undefined },
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
   }
 
   test('"none" and "required" map to NONE and ANY', async () => {
@@ -440,16 +440,16 @@ describe("google adapter — tool_choice on the wire", () => {
 });
 
 describe("google adapter — direct -tiered wire renames", () => {
-  function renamedParsed(modelId: string): OcxParsedRequest {
+  function renamedParsed(modelId: string): OccxParsedRequest {
     return {
       modelId,
       stream: false,
       options: {},
       context: { messages: [{ role: "user", content: "hi" }], tools: [] },
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
   }
 
-  function identityParsed(modelId: string): OcxParsedRequest {
+  function identityParsed(modelId: string): OccxParsedRequest {
     return {
       modelId,
       stream: false,
@@ -459,7 +459,7 @@ describe("google adapter — direct -tiered wire renames", () => {
         messages: [{ role: "user", content: "hi" }],
         tools: [],
       },
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
   }
 
   test("default maps the picker id to the -tiered wire id", async () => {

@@ -4,7 +4,7 @@ import { decodeWindowsTextBytes } from "../../src/lib/windows-text";
 
 describe("Windows system text decoding (#1573)", () => {
   test("preserves strict UTF-8 before considering a legacy code page", () => {
-    const path = "C:\\Users\\한글\\.opencodex";
+    const path = "C:\\Users\\한글\\.openccx";
     expect(decodeWindowsTextBytes(Buffer.from(path, "utf8"), { locale: "ko-KR" })).toBe(path);
   });
 
@@ -38,7 +38,7 @@ describe("Windows system text decoding (#1573)", () => {
   });
 
   /*
-   * The exact bytes `schtasks /query /tn opencodex-proxy /xml` writes to stderr on
+   * The exact bytes `schtasks /query /tn openccx-proxy /xml` writes to stderr on
    * a zh-CN host (#2914). Before this, they fell through to a lossy UTF-8 decode
    * and every localized not-found message became unmatchable mojibake.
    */

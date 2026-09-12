@@ -13,7 +13,7 @@ interface Fixture {
   originalBearer: string;
 }
 
-const fixture: Fixture = JSON.parse(readFileSync(process.env.OCX_POLICY_STARTUP_FIXTURE!, "utf8"));
+const fixture: Fixture = JSON.parse(readFileSync(process.env.OCCX_POLICY_STARTUP_FIXTURE!, "utf8"));
 let upstreamCalls = 0;
 const unexpectedNetwork: string[] = [];
 // Install before product imports. Every response is synthetic; no endpoint can escape the fixture.
@@ -74,7 +74,7 @@ async function waitForReady() {
   }
 }
 const manager = new NativeProfileManager({
-  codexHome: process.env.CODEX_HOME!, configDir: process.env.OPENCODEX_HOME!,
+  codexHome: process.env.CODEX_HOME!, configDir: process.env.OPENCCX_HOME!,
   keyProvider: {
     async get() { return { keyRef: "memory:policy-startup", key: Buffer.alloc(32, 7) }; },
     async create() { return { keyRef: "memory:policy-startup", key: Buffer.alloc(32, 7) }; },

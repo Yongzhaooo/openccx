@@ -47,7 +47,7 @@ function createCurrentLogsDb(path: string): void {
 }
 
 function fixture(): { codexHome: string; databasePath: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-cr-protect-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-cr-protect-"));
   roots.push(root);
   const codexHome = join(root, "codex-home");
   mkdirSync(codexHome);
@@ -75,7 +75,7 @@ function reservedTriggers(databasePath: string): Array<{ name: string; sql: stri
   const db = new Database(databasePath, { readonly: true });
   try {
     return db.query<{ name: string; sql: string }, []>(
-      "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'opencodex_log_guard_%' ORDER BY name",
+      "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'openccx_log_guard_%' ORDER BY name",
     ).all();
   } finally {
     db.close();
@@ -84,7 +84,7 @@ function reservedTriggers(databasePath: string): Array<{ name: string; sql: stri
 
 describe("CodeRabbit protection regressions", () => {
   test("compatible but unsafe trigger path reports unknown protection state", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-cr-symlink-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-cr-symlink-"));
     roots.push(root);
     const codexHome = join(root, "codex-home");
     if (process.platform === "win32") {
@@ -120,7 +120,7 @@ describe("CodeRabbit protection regressions", () => {
         "/var/tmp/opencodex-log-guard/logs_2.sqlite",
       )).toBe(true);
 
-      const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-cr-path-"));
+      const root = mkdtempSync(join(tmpdir(), "occx-log-guard-cr-path-"));
       roots.push(root);
       const realParent = join(root, "real");
       const aliasParent = join(root, "alias");
@@ -161,14 +161,14 @@ describe("CodeRabbit protection regressions", () => {
     expect(result.status.protection.state).toBe("unsupported");
   });
 
-  test("unprotect recovers when both exact OpenCodex-owned triggers are present", () => {
+  test("unprotect recovers when both exact Openccx-owned triggers are present", () => {
     const { codexHome, databasePath } = fixture();
     const testDeps = deps(codexHome);
     expect(protectCodexLogs("compat", testDeps).ok).toBe(true);
 
     const db = new Database(databasePath);
     db.exec(`
-      CREATE TRIGGER opencodex_log_guard_quiet_v1
+      CREATE TRIGGER openccx_log_guard_quiet_v1
       BEFORE INSERT ON logs
       WHEN upper(NEW.level) = 'TRACE'
       BEGIN
@@ -188,7 +188,7 @@ describe("CodeRabbit protection regressions", () => {
 
     const db = new Database(databasePath);
     db.exec(`
-      CREATE TRIGGER opencodex_log_guard_quiet_v1
+      CREATE TRIGGER openccx_log_guard_quiet_v1
       BEFORE INSERT ON logs
       WHEN upper(NEW.level) = 'TRACE'
       BEGIN
@@ -219,7 +219,7 @@ describe("CodeRabbit protection regressions", () => {
  */
 describe("log guard path identity survives OS canonicalization", () => {
   test("a path that only differs by the OS's own canonical spelling is the same file", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-identity-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-identity-"));
     roots.push(root);
     const path = join(root, "logs_2.sqlite");
     writeFileSync(path, "");
@@ -231,7 +231,7 @@ describe("log guard path identity survives OS canonicalization", () => {
   // The guard this widening must not weaken: a redirection resolves somewhere else, and
   // "somewhere else" is still refused.
   test("a symlinked database is still refused", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-identity-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-identity-"));
     roots.push(root);
     const real = join(root, "real.sqlite");
     const link = join(root, "logs_2.sqlite");
@@ -246,7 +246,7 @@ describe("log guard path identity survives OS canonicalization", () => {
   });
 
   test("an unrelated sibling path is refused", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-identity-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-identity-"));
     roots.push(root);
     const path = join(root, "logs_2.sqlite");
     writeFileSync(path, "");

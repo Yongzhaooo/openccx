@@ -49,7 +49,7 @@ describe("isDeferralCurrent", () => {
 
 describe("maybeShowStarPrompt deferral flow (behavior)", () => {
   let home: string;
-  const priorHome = process.env.OPENCODEX_HOME;
+  const priorHome = process.env.OPENCCX_HOME;
   const priorThread = process.env.CODEX_THREAD_ID;
   const stdinTTY = process.stdin.isTTY;
   const stdoutTTY = process.stdout.isTTY;
@@ -63,8 +63,8 @@ describe("maybeShowStarPrompt deferral flow (behavior)", () => {
   const savedAgentEnv = new Map<string, string | undefined>();
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocx-star-deferral-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-star-deferral-"));
+    process.env.OPENCCX_HOME = home;
     for (const name of AGENT_ENV_VARS) {
       savedAgentEnv.set(name, process.env[name]);
       delete process.env[name];
@@ -84,8 +84,8 @@ describe("maybeShowStarPrompt deferral flow (behavior)", () => {
     Object.defineProperty(process.stdout, "isTTY", { value: stdoutTTY, configurable: true });
     if (priorThread === undefined) delete process.env.CODEX_THREAD_ID;
     else process.env.CODEX_THREAD_ID = priorThread;
-    if (priorHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = priorHome;
+    if (priorHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = priorHome;
     removeTreeWithRetry(home);
   });
 

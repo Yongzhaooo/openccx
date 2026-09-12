@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   DEFAULT_VISION_TIMEOUT_MS,
   MAX_VISION_TIMEOUT_MS,
@@ -14,7 +14,7 @@ import {
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-async function getSidecarSettings(config: OcxConfig): Promise<Response> {
+async function getSidecarSettings(config: OccxConfig): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(new Request(url), url, config);
   if (!response) throw new Error("sidecar settings route did not handle GET");
@@ -22,7 +22,7 @@ async function getSidecarSettings(config: OcxConfig): Promise<Response> {
 }
 
 async function putSidecarSettings(
-  config: OcxConfig,
+  config: OccxConfig,
   body: Record<string, unknown>,
 ): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
@@ -39,13 +39,13 @@ async function putSidecarSettings(
   return response;
 }
 
-function emptyConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function emptyConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "none",
     providers: {},
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 const FULL_VISION = {
@@ -69,14 +69,14 @@ describe("sidecar-settings remaining vision controls", () => {
   }
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    isolatedHome = mkdtempSync(join(tmpdir(), "ocx-sidecar-vision-controls-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    previousHome = process.env.OPENCCX_HOME;
+    isolatedHome = mkdtempSync(join(tmpdir(), "occx-sidecar-vision-controls-"));
+    process.env.OPENCCX_HOME = isolatedHome;
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (isolatedHome) removeTreeWithRetry(isolatedHome);
     isolatedHome = undefined;
   });

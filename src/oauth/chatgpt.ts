@@ -12,7 +12,7 @@ export const CHATGPT_TOKEN_URL = TOKEN_URL;
 const SCOPE = "openid profile email offline_access api.connectors.read api.connectors.invoke";
 const CALLBACK_PORT = 1455;
 const CALLBACK_PATH = "/auth/callback";
-const ORIGINATOR = "opencodex";
+const ORIGINATOR = "openccx";
 
 export function decodeJwtPayload(token: string): Record<string, unknown> | undefined {
   const parts = token.split(".");

@@ -8,15 +8,15 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath, repoRoot } from "../helpers/repo-root";
 import { INTERNAL_DEADLINE_MS, SPAWN_BUDGET_MS } from "../helpers/test-budget";
 
-const SHIM_MARKER = "opencodex codex autostart shim";
-const UNIX_SHIM_REVISION_MARKER = "opencodex unix codex shim revision 2";
+const SHIM_MARKER = "openccx codex autostart shim";
+const UNIX_SHIM_REVISION_MARKER = "openccx unix codex shim revision 2";
 
 /**
  * A child environment with the shim's recursion-guard state stripped.
  *
  * Every one of these tests reasons about a shim invocation starting from depth 0, but a developer
  * whose shell was itself launched through an installed Codex shim exports
- * `OCX_SHIM_ACTIVE_DEPTH=1` — so the guard fires a level early and the test measures whatever
+ * `OCCX_SHIM_ACTIVE_DEPTH=1` — so the guard fires a level early and the test measures whatever
  * ancestry the machine happened to have. CI has no shimmed ancestor, which is what let that bleed
  * hide: green there, red on a real developer's machine.
  *
@@ -28,9 +28,9 @@ const UNIX_SHIM_REVISION_MARKER = "opencodex unix codex shim revision 2";
  */
 function shimChildEnv(overrides: Record<string, string> = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env, ...overrides };
-  delete env.OCX_SHIM_ACTIVE_PID;
-  delete env.OCX_SHIM_ACTIVE_DEPTH;
-  delete env.OCX_SHIM_PROBE_ACTIVE;
+  delete env.OCCX_SHIM_ACTIVE_PID;
+  delete env.OCCX_SHIM_ACTIVE_DEPTH;
+  delete env.OCCX_SHIM_PROBE_ACTIVE;
   return env;
 }
 const skipStabilityWait = () => {};
@@ -92,16 +92,16 @@ function withInstalledShim(run: (paths: {
   backups: string[];
   statePath: string;
 }) => void): void {
-  const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-bin-"));
-  const home = mkdtempSync(join(tmpdir(), "ocx-shim-home-"));
+  const binDir = mkdtempSync(join(tmpdir(), "occx-shim-bin-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-shim-home-"));
   const oldPath = process.env.PATH;
-  const oldHome = process.env.OPENCODEX_HOME;
+  const oldHome = process.env.OPENCCX_HOME;
   const wrappers = process.platform === "win32"
     ? [join(binDir, "codex.cmd"), join(binDir, "codex.ps1"), join(binDir, "codex")]
     : [join(binDir, "codex")];
   try {
     process.env.PATH = prependPath(binDir, oldPath);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     for (const wrapper of wrappers) {
       writeFileSync(wrapper, process.platform === "win32" ? `real ${wrapper}\n` : "#!/bin/sh\necho real\n", "utf8");
       if (process.platform !== "win32") chmodSync(wrapper, 0o755);
@@ -120,36 +120,36 @@ function withInstalledShim(run: (paths: {
   } finally {
     if (oldPath === undefined) delete process.env.PATH;
     else process.env.PATH = oldPath;
-    if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = oldHome;
+    if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = oldHome;
     removeTreeWithRetry(binDir);
     removeTreeWithRetry(home);
   }
 }
 
 describe("Codex autostart shim", () => {
-  test("builds a Unix shim that starts ocx before execing Codex", () => {
+  test("builds a Unix shim that starts occx before execing Codex", () => {
     const script = buildUnixCodexShim("/usr/local/bin/codex-real", "/usr/local/bin/bun", "/opt/opencodex/src/cli.ts", "bundled");
 
     expect(script).toContain(SHIM_MARKER);
     expect(script).toContain("ensure");
     expect(script).not.toContain("sync-cache");
     expect(script).toContain("exec '/usr/local/bin/codex-real' \"$@\"");
-    expect(script).toContain("OPENCODEX_API_AUTH_TOKEN");
+    expect(script).toContain("OPENCCX_API_AUTH_TOKEN");
   });
 
   test("every shim flavor exports the Bun provenance it was built with (#848)", () => {
-    // The shim reaches the daemon through `ocx ensure`, which inherits this env;
+    // The shim reaches the daemon through `occx ensure`, which inherits this env;
     // without it a Codex-autostarted service reports no provenance at all.
     const unix = buildUnixCodexShim("/usr/local/bin/codex-real", "/usr/local/bin/bun", "/opt/opencodex/src/cli.ts", "override", "/tmp/token");
     // Source and the binary it describes are stamped as a pair.
-    expect(unix).toContain("OCX_BUN_RUNTIME_SOURCE='override' OCX_BUN_RUNTIME_PATH='/usr/local/bin/bun' '/usr/local/bin/bun' '/opt/opencodex/src/cli.ts' ensure");
+    expect(unix).toContain("OCCX_BUN_RUNTIME_SOURCE='override' OCCX_BUN_RUNTIME_PATH='/usr/local/bin/bun' '/usr/local/bin/bun' '/opt/opencodex/src/cli.ts' ensure");
 
-    expect(buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\ocx\\cli.ts", "override"))
-      .toContain('set "OCX_BUN_RUNTIME_SOURCE=override"');
+    expect(buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\occx\\cli.ts", "override"))
+      .toContain('set "OCCX_BUN_RUNTIME_SOURCE=override"');
 
-    expect(buildWindowsPowerShellCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\ocx\\cli.ts", "process"))
-      .toContain("$env:OCX_BUN_RUNTIME_SOURCE = 'process'");
+    expect(buildWindowsPowerShellCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\occx\\cli.ts", "process"))
+      .toContain("$env:OCCX_BUN_RUNTIME_SOURCE = 'process'");
   });
 
   test("the provenance marker never leaks into the real Codex process (#848 scoping)", () => {
@@ -158,54 +158,54 @@ describe("Codex autostart shim", () => {
     // would then carry provenance describing a binary it is not executing, and the
     // execPath relaunch paths would preserve that contradiction into the daemon.
     const unix = buildUnixCodexShim("/usr/local/bin/codex-real", "/usr/local/bin/bun", "/cli.ts", "override");
-    expect(unix).not.toContain("export OCX_BUN_RUNTIME_SOURCE");
+    expect(unix).not.toContain("export OCCX_BUN_RUNTIME_SOURCE");
     // The only occurrence is the one-shot assignment prefixed onto `ensure`.
-    expect((unix.match(/OCX_BUN_RUNTIME_SOURCE/g) ?? []).length).toBe(1);
-    expect((unix.match(/OCX_BUN_RUNTIME_PATH/g) ?? []).length).toBe(1);
-    expect(unix.indexOf("OCX_BUN_RUNTIME_SOURCE")).toBeGreaterThan(unix.indexOf("ocx_subcommand"));
+    expect((unix.match(/OCCX_BUN_RUNTIME_SOURCE/g) ?? []).length).toBe(1);
+    expect((unix.match(/OCCX_BUN_RUNTIME_PATH/g) ?? []).length).toBe(1);
+    expect(unix.indexOf("OCCX_BUN_RUNTIME_SOURCE")).toBeGreaterThan(unix.indexOf("occx_subcommand"));
 
     // cmd.exe: set inside a setlocal/endlocal pair around `ensure` only.
     const cmd = buildWindowsCodexShim("C:\\codex-real.exe", "C:\\bun.exe", "C:\\cli.ts", "override");
-    const ensureBlock = cmd.slice(cmd.indexOf(":ensure_ocx"), cmd.indexOf(":run_codex"));
+    const ensureBlock = cmd.slice(cmd.indexOf(":ensure_occx"), cmd.indexOf(":run_codex"));
     expect(ensureBlock).toContain("setlocal");
-    expect(ensureBlock).toContain('set "OCX_BUN_RUNTIME_SOURCE=override"');
+    expect(ensureBlock).toContain('set "OCCX_BUN_RUNTIME_SOURCE=override"');
     expect(ensureBlock).toContain("endlocal");
-    expect(ensureBlock).toContain("OCX_BUN_RUNTIME_PATH");
-    expect((cmd.match(/OCX_BUN_RUNTIME_SOURCE/g) ?? []).length).toBe(1);
-    expect((cmd.match(/OCX_BUN_RUNTIME_PATH/g) ?? []).length).toBe(1);
+    expect(ensureBlock).toContain("OCCX_BUN_RUNTIME_PATH");
+    expect((cmd.match(/OCCX_BUN_RUNTIME_SOURCE/g) ?? []).length).toBe(1);
+    expect((cmd.match(/OCCX_BUN_RUNTIME_PATH/g) ?? []).length).toBe(1);
 
     // PowerShell: assigned around the ensure call and restored/removed afterwards.
     const ps = buildWindowsPowerShellCodexShim("C:\\codex-real.ps1", "C:\\bun.exe", "C:\\cli.ts", "override");
-    expect(ps).toContain("$priorRuntimeSource = $env:OCX_BUN_RUNTIME_SOURCE");
-    expect(ps).toContain("Remove-Item Env:\\OCX_BUN_RUNTIME_SOURCE");
-    expect(ps).toContain("$env:OCX_BUN_RUNTIME_SOURCE = $priorRuntimeSource");
-    expect(ps.indexOf("OCX_BUN_RUNTIME_SOURCE")).toBeGreaterThan(ps.indexOf("$skipEnsure"));
+    expect(ps).toContain("$priorRuntimeSource = $env:OCCX_BUN_RUNTIME_SOURCE");
+    expect(ps).toContain("Remove-Item Env:\\OCCX_BUN_RUNTIME_SOURCE");
+    expect(ps).toContain("$env:OCCX_BUN_RUNTIME_SOURCE = $priorRuntimeSource");
+    expect(ps.indexOf("OCCX_BUN_RUNTIME_SOURCE")).toBeGreaterThan(ps.indexOf("$skipEnsure"));
   });
 
-  test("builds a Windows shim that starts ocx before running Codex", () => {
-    const script = buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\ocx\\cli.ts", "bundled");
+  test("builds a Windows shim that starts occx before running Codex", () => {
+    const script = buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\occx\\cli.ts", "bundled");
 
     expect(script).toContain(SHIM_MARKER);
     expect(script).toContain("ensure");
     expect(script).not.toContain("sync-cache");
-    expect(script).toContain('set "OCX_REAL_CODEX=C:\\Tools\\codex-real.exe"');
-    expect(script).toContain('set "OCX_API_TOKEN_FILE=');
-    expect(script).toContain('set /p OPENCODEX_API_AUTH_TOKEN=<"%OCX_API_TOKEN_FILE%"');
-    expect(script).toContain('"%OCX_REAL_CODEX%" %*');
+    expect(script).toContain('set "OCCX_REAL_CODEX=C:\\Tools\\codex-real.exe"');
+    expect(script).toContain('set "OCCX_API_TOKEN_FILE=');
+    expect(script).toContain('set /p OPENCCX_API_AUTH_TOKEN=<"%OCCX_API_TOKEN_FILE%"');
+    expect(script).toContain('"%OCCX_REAL_CODEX%" %*');
   });
 
   test("Windows cmd shim escapes executable paths through variables", () => {
     const script = buildWindowsCodexShim(
       "C:\\Tools&A\\100%codex^\\codex-real.exe",
       "C:\\Bun&Dir\\100%bun^\\bun.exe",
-      "C:\\ocx&Dir\\cli.ts",
+      "C:\\occx&Dir\\cli.ts",
       "bundled",
     );
 
-    expect(script).toContain('set "OCX_REAL_CODEX=C:\\Tools&A\\100%%codex^^\\codex-real.exe"');
-    expect(script).toContain('set "OCX_BUN=C:\\Bun&Dir\\100%%bun^^\\bun.exe"');
-    expect(script).toContain('set "OCX_CLI=C:\\ocx&Dir\\cli.ts"');
-    expect(script).toContain('"%OCX_BUN%" "%OCX_CLI%" ensure >nul 2>nul');
+    expect(script).toContain('set "OCCX_REAL_CODEX=C:\\Tools&A\\100%%codex^^\\codex-real.exe"');
+    expect(script).toContain('set "OCCX_BUN=C:\\Bun&Dir\\100%%bun^^\\bun.exe"');
+    expect(script).toContain('set "OCCX_CLI=C:\\occx&Dir\\cli.ts"');
+    expect(script).toContain('"%OCCX_BUN%" "%OCCX_CLI%" ensure >nul 2>nul');
     expect(script).not.toContain('"C:\\Bun&Dir\\100%bun^\\bun.exe"');
     expect(script).not.toContain('"C:\\Tools&A\\100%codex^\\codex-real.exe" %*');
   });
@@ -217,14 +217,14 @@ describe("Codex autostart shim", () => {
       process.env.USERPROFILE = "C:\\Users\\한글사용자";
       process.env.APPDATA = "C:\\Users\\한글사용자\\AppData\\Roaming";
       const script = buildWindowsCodexShim(
-        "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\codex.opencodex-real.cmd",
+        "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\codex.openccx-real.cmd",
         "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\bun\\bin\\bun.exe",
-        "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\opencodex\\src\\cli.ts",
+        "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\openccx\\src\\cli.ts",
         "bundled",
       );
 
-      expect(script).toContain('set "OCX_REAL_CODEX=%APPDATA%\\npm\\codex.opencodex-real.cmd"');
-      expect(script).toContain('set "OCX_BUN=%APPDATA%\\npm\\node_modules\\bun\\bin\\bun.exe"');
+      expect(script).toContain('set "OCCX_REAL_CODEX=%APPDATA%\\npm\\codex.openccx-real.cmd"');
+      expect(script).toContain('set "OCCX_BUN=%APPDATA%\\npm\\node_modules\\bun\\bin\\bun.exe"');
       expect(script).not.toContain("한글사용자");
       // No chcp in the shim: it runs in the USER's console and must not leak a codepage change.
       expect(script).not.toContain("chcp");
@@ -252,14 +252,14 @@ describe("Codex autostart shim", () => {
 
   test("Unix shim accepts an injected token-file path (Git-Bash shims need forward slashes everywhere)", () => {
     const script = buildUnixCodexShim(
-      "C:/Users/한글사용자/AppData/Roaming/npm/codex.opencodex-real",
+      "C:/Users/한글사용자/AppData/Roaming/npm/codex.openccx-real",
       "C:/Users/한글사용자/AppData/Roaming/npm/node_modules/bun/bin/bun.exe",
       "C:/Users/한글사용자/AppData/Roaming/npm/node_modules/opencodex/src/cli.ts",
       "bundled",
       "C:/Users/한글사용자/.opencodex/service-api-token",
     );
 
-    expect(script).toContain("exec 'C:/Users/한글사용자/AppData/Roaming/npm/codex.opencodex-real' \"$@\"");
+    expect(script).toContain("exec 'C:/Users/한글사용자/AppData/Roaming/npm/codex.openccx-real' \"$@\"");
     expect(script).toContain("[ -f 'C:/Users/한글사용자/.opencodex/service-api-token' ]");
     expect(script).not.toContain("\\\\");
   });
@@ -268,7 +268,7 @@ describe("Codex autostart shim", () => {
     const unix = buildUnixCodexShim("/bin/codex", "/bin/bun", "/cli.ts", "bundled");
     const win = buildWindowsCodexShim("C:\\codex.exe", "C:\\bun.exe", "C:\\cli.ts", "bundled");
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-test-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-test-"));
     const unixPath = join(dir, "codex-shim");
     const winPath = join(dir, "codex-shim.cmd");
 
@@ -280,7 +280,7 @@ describe("Codex autostart shim", () => {
   });
 
   test("non-shim file does not contain the marker", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-test-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-test-"));
     const fakeBinary = join(dir, "codex");
     writeFileSync(fakeBinary, "#!/bin/sh\necho hello\n", "utf8");
 
@@ -289,16 +289,16 @@ describe("Codex autostart shim", () => {
 
   test("Unix shim uses bypass env var to skip proxy start", () => {
     const script = buildUnixCodexShim("/bin/codex", "/bin/bun", "/cli.ts", "bundled");
-    expect(script).toContain("OCX_SHIM_BYPASS");
+    expect(script).toContain("OCCX_SHIM_BYPASS");
   });
 
   test("Unix shim stops same-process re-entry through a dynamic launcher", () => {
     if (process.platform === "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-reentry-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-reentry-"));
     const bunPath = join(dir, "bun");
     const misePath = join(dir, "mise");
-    const realCodexPath = join(dir, "codex.opencodex-real");
+    const realCodexPath = join(dir, "codex.openccx-real");
     const shimPath = join(dir, "codex");
     try {
       writeFileSync(bunPath, "#!/usr/bin/env sh\nexit 0\n", "utf8");
@@ -315,7 +315,7 @@ exit 64
       chmodSync(misePath, 0o755);
       chmodSync(realCodexPath, 0o755);
       chmodSync(shimPath, 0o755);
-      const env = shimChildEnv({ PATH: prependPath(dir, process.env.PATH) ?? "", OCX_SHIM_BYPASS: "1" });
+      const env = shimChildEnv({ PATH: prependPath(dir, process.env.PATH) ?? "", OCCX_SHIM_BYPASS: "1" });
 
       const result = spawnSync(shimPath, ["--help"], {
         encoding: "utf8",
@@ -326,7 +326,7 @@ exit 64
       expect(result.error).toBeUndefined();
       expect(result.status).toBe(126);
       expect(result.stderr).toContain("saved Codex launcher resolved back to the autostart shim");
-      expect(result.stderr).toContain("ocx codex-shim uninstall");
+      expect(result.stderr).toContain("occx codex-shim uninstall");
     } finally {
       removeTreeWithRetry(dir);
     }
@@ -335,16 +335,16 @@ exit 64
   test("Unix install rejects a recursive dynamic launcher and restores the original", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-reentry-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-reentry-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-reentry-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-reentry-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const misePath = join(binDir, "mise");
     const original = `#!/bin/sh\nexec "${misePath}" exec -- codex "$@"\n`;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(misePath, `#!/bin/sh
 if [ "$1" = exec ] && [ "$2" = -- ] && [ "$3" = codex ]; then
   shift 3
@@ -362,13 +362,13 @@ exit 64
       expect(installed.message).toContain("saved launcher resolved back to the generated shim");
       expect(installed.message).toContain("original launcher was restored");
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -377,10 +377,10 @@ exit 64
   test("Unix runtime guard stops argument-dependent child-process redispatch", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-runtime-child-reentry-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-runtime-child-reentry-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-runtime-child-reentry-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-runtime-child-reentry-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = `#!/bin/sh
 if [ "$1" = "--version" ]; then
@@ -390,7 +390,7 @@ codex "$@"
 `;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -398,7 +398,7 @@ codex "$@"
 
       const result = spawnSync(codexPath, ["--help"], {
         encoding: "utf8",
-        env: { ...process.env, OCX_SHIM_BYPASS: "1" },
+        env: { ...process.env, OCCX_SHIM_BYPASS: "1" },
         timeout: 3_000,
       });
       expect(result.error).toBeUndefined();
@@ -407,8 +407,8 @@ codex "$@"
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -417,18 +417,18 @@ codex "$@"
   test("Unix install drains an immediate recursive diagnostic before classifying the probe", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-immediate-reentry-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-immediate-reentry-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-immediate-reentry-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-immediate-reentry-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = `#!/bin/sh
-printf '%s\\n' 'opencodex: saved Codex launcher resolved back to the autostart shim; run ocx codex-shim uninstall and reinstall Codex before enabling codexAutoStart.' >&2
+printf '%s\\n' 'openccx: saved Codex launcher resolved back to the autostart shim; run occx codex-shim uninstall and reinstall Codex before enabling codexAutoStart.' >&2
 exit 126
 `;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -440,8 +440,8 @@ exit 126
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -450,14 +450,14 @@ exit 126
   test.skipIf(process.platform === "win32" || !existsSync("/bin/dash"))(
     "Unix install accepts a valid launcher when the probe shell is dash",
     () => {
-      const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-dash-bin-"));
-      const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-dash-home-"));
+      const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-dash-bin-"));
+      const home = mkdtempSync(join(tmpdir(), "occx-shim-install-dash-home-"));
       const oldPath = process.env.PATH;
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const codexPath = join(binDir, "codex");
       try {
         process.env.PATH = prependPath(binDir, oldPath);
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         writeFileSync(codexPath, successfulLauncher("dash-valid-launcher"), "utf8");
         chmodSync(codexPath, 0o755);
         setCodexShimProbeShellForTests("/bin/dash");
@@ -466,14 +466,14 @@ exit 126
 
         expect(installed.installed).toBe(true);
         expect(readFileSync(codexPath, "utf8")).toContain(SHIM_MARKER);
-        expect(readFileSync(`${codexPath}.opencodex-real`, "utf8")).toBe(successfulLauncher("dash-valid-launcher"));
+        expect(readFileSync(`${codexPath}.openccx-real`, "utf8")).toBe(successfulLauncher("dash-valid-launcher"));
         expect(existsSync(join(home, "codex-shim.json"))).toBe(true);
       } finally {
         setCodexShimProbeShellForTests(null);
         if (oldPath === undefined) delete process.env.PATH;
         else process.env.PATH = oldPath;
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         removeTreeWithRetry(binDir);
         removeTreeWithRetry(home);
       }
@@ -483,15 +483,15 @@ exit 126
   test("Unix install honors the injected probe shell path", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-missing-shell-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-missing-shell-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-missing-shell-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-missing-shell-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = successfulLauncher("missing-probe-shell");
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
       setCodexShimProbeShellForTests(join(binDir, "does-not-exist"));
@@ -502,13 +502,13 @@ exit 126
       expect(installed.message).not.toContain(binDir);
       expect(installed.message).not.toContain(home);
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
     } finally {
       setCodexShimProbeShellForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -516,21 +516,21 @@ exit 126
 
   test("Unix install reports a closed metadata phase without echoing probe content", () => {
     if (process.platform === "win32") return;
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-diagnostic-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-diagnostic-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-diagnostic-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-diagnostic-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const shellPath = join(binDir, "synthetic-sensitive-shell-path");
     const original = successfulLauncher("diagnostic-original");
     const rejectedDetail = "synthetic-sensitive-probe-detail".repeat(4);
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
       // No descendants: only invalidate bounded probe metadata, then exit.
-      writeFileSync(shellPath, `#!/bin/sh\nprintf '%s' '${rejectedDetail}' > "$OCX_SHIM_PROBE_REENTRY_PATH"\n`, "utf8");
+      writeFileSync(shellPath, `#!/bin/sh\nprintf '%s' '${rejectedDetail}' > "$OCCX_SHIM_PROBE_REENTRY_PATH"\n`, "utf8");
       chmodSync(shellPath, 0o755);
       setCodexShimProbeShellForTests(shellPath);
 
@@ -542,14 +542,14 @@ exit 126
       expect(installed.message).not.toContain(shellPath);
       expect(installed.message).not.toContain(home);
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       setCodexShimProbeShellForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -558,14 +558,14 @@ exit 126
   test.skipIf(process.platform === "win32" || !existsSync("/usr/bin/true"))(
     "Unix install probes a concrete native executable through the generated wrapper",
     () => {
-      const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-native-bin-"));
-      const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-native-home-"));
+      const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-native-bin-"));
+      const home = mkdtempSync(join(tmpdir(), "occx-shim-install-native-home-"));
       const oldPath = process.env.PATH;
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const codexPath = join(binDir, "codex");
       try {
         process.env.PATH = prependPath(binDir, oldPath);
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         copyFileSync("/usr/bin/true", codexPath);
         chmodSync(codexPath, 0o755);
 
@@ -573,12 +573,12 @@ exit 126
 
         expect(installed.installed).toBe(true);
         expect(readFileSync(codexPath, "utf8")).toContain(SHIM_MARKER);
-        expect(lstatSync(`${codexPath}.opencodex-real`).isFile()).toBe(true);
+        expect(lstatSync(`${codexPath}.openccx-real`).isFile()).toBe(true);
       } finally {
         if (oldPath === undefined) delete process.env.PATH;
         else process.env.PATH = oldPath;
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         removeTreeWithRetry(binDir);
         removeTreeWithRetry(home);
       }
@@ -588,26 +588,26 @@ exit 126
   test.skipIf(process.platform === "win32" || !existsSync("/usr/bin/true"))(
     "Unix install probes a symlinked native executable through the generated wrapper",
     () => {
-      const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-native-link-bin-"));
-      const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-native-link-home-"));
+      const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-native-link-bin-"));
+      const home = mkdtempSync(join(tmpdir(), "occx-shim-install-native-link-home-"));
       const oldPath = process.env.PATH;
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const codexPath = join(binDir, "codex");
       try {
         process.env.PATH = prependPath(binDir, oldPath);
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         symlinkSync("/usr/bin/true", codexPath);
 
         const installed = installCodexShim();
 
         expect(installed.installed).toBe(true);
         expect(readFileSync(codexPath, "utf8")).toContain(SHIM_MARKER);
-        expect(lstatSync(`${codexPath}.opencodex-real`).isSymbolicLink()).toBe(true);
+        expect(lstatSync(`${codexPath}.openccx-real`).isSymbolicLink()).toBe(true);
       } finally {
         if (oldPath === undefined) delete process.env.PATH;
         else process.env.PATH = oldPath;
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         removeTreeWithRetry(binDir);
         removeTreeWithRetry(home);
       }
@@ -617,10 +617,10 @@ exit 126
   test("Unix install rejects a launcher that leaves a background descendant", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-child-reentry-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-child-reentry-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-child-reentry-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-child-reentry-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const childPidPath = join(home, "background-child.pid");
     const groupIdPath = join(home, "background-child-group.pid");
@@ -633,7 +633,7 @@ exit 0
 `;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -642,7 +642,7 @@ exit 0
       expect(installed.installed).toBe(false);
       expect(installed.message).toContain("left background descendants running after --version");
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
       const childPid = Number.parseInt(readFileSync(childPidPath, "utf8").trim(), 10);
       const groupId = Number.parseInt(readFileSync(groupIdPath, "utf8").trim(), 10);
@@ -652,8 +652,8 @@ exit 0
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -662,10 +662,10 @@ exit 0
   test.skipIf(process.platform === "win32" || !python3Path)(
     "Unix install rejects delayed detached redispatch after the launcher closes its lease fd",
     () => {
-      const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-detached-reentry-bin-"));
-      const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-detached-reentry-home-"));
+      const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-detached-reentry-bin-"));
+      const home = mkdtempSync(join(tmpdir(), "occx-shim-install-detached-reentry-home-"));
       const oldPath = process.env.PATH;
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const codexPath = join(binDir, "codex");
       const childPidPath = join(home, "detached-reentry.pid");
       const original = `#!${python3Path}
@@ -686,7 +686,7 @@ os._exit(0)
 `;
       try {
         process.env.PATH = prependPath(binDir, oldPath);
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         setCodexShimProbeObservationMsForTests(1_500);
         writeFileSync(codexPath, original, "utf8");
         chmodSync(codexPath, 0o755);
@@ -696,7 +696,7 @@ os._exit(0)
         expect(installed.installed).toBe(false);
         expect(installed.message).toContain("saved launcher resolved back to the generated shim");
         expect(readFileSync(codexPath, "utf8")).toBe(original);
-        expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+        expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
         expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
         const childPid = Number.parseInt(readFileSync(childPidPath, "utf8"), 10);
         const childState = waitForProcessStop(childPid);
@@ -705,8 +705,8 @@ os._exit(0)
         setCodexShimProbeObservationMsForTests(20);
         if (oldPath === undefined) delete process.env.PATH;
         else process.env.PATH = oldPath;
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         removeTreeWithRetry(binDir);
         removeTreeWithRetry(home);
       }
@@ -722,10 +722,10 @@ os._exit(0)
     test(name, () => {
       if (process.platform === "win32") return;
 
-      const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-timeout-bin-"));
-      const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-timeout-home-"));
+      const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-timeout-bin-"));
+      const home = mkdtempSync(join(tmpdir(), "occx-shim-install-timeout-home-"));
       const oldPath = process.env.PATH;
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const codexPath = join(binDir, "codex");
       const childPidPath = join(home, "probe-child.pid");
       const groupIdPath = join(home, "probe-group.pid");
@@ -747,7 +747,7 @@ wait "$child"
       let groupId = 0;
       try {
         process.env.PATH = prependPath(binDir, oldPath);
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         writeFileSync(codexPath, original, "utf8");
         chmodSync(codexPath, 0o755);
 
@@ -818,7 +818,7 @@ wait "$child"
         }
         expect(installed.message).toContain("original launcher was restored");
         expect(readFileSync(codexPath, "utf8")).toBe(original);
-        expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+        expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
         expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
         expect(Number.isInteger(childPid)).toBe(true);
         expect(Number.isInteger(groupId)).toBe(true);
@@ -849,8 +849,8 @@ wait "$child"
         restoreKill?.();
         if (oldPath === undefined) delete process.env.PATH;
         else process.env.PATH = oldPath;
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         removeTreeWithRetry(binDir);
         removeTreeWithRetry(home);
       }
@@ -860,17 +860,17 @@ wait "$child"
   test("Unix install preserves an existing backup without probing or mutation", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-backup-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-backup-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-backup-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-backup-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
-    const backupPath = `${codexPath}.opencodex-real`;
+    const backupPath = `${codexPath}.openccx-real`;
     const original = "#!/bin/sh\nprintf '%s\\n' original\n";
     const backup = "#!/bin/sh\nprintf '%s\\n' preserved-backup\n";
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       writeFileSync(backupPath, backup, "utf8");
       chmodSync(codexPath, 0o755);
@@ -885,8 +885,8 @@ wait "$child"
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -895,15 +895,15 @@ wait "$child"
   test("Unix install rolls back when the saved launcher fails its version probe", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-failed-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-failed-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-failed-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-failed-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = "#!/bin/sh\nexit 127\n";
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -912,13 +912,13 @@ wait "$child"
       expect(installed.installed).toBe(false);
       expect(installed.message).toContain("saved launcher failed its --version probe");
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -927,15 +927,15 @@ wait "$child"
   test("Unix install rolls back when probe infrastructure throws", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-probe-error-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-probe-error-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-probe-error-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-probe-error-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = successfulLauncher("probe-error-original");
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
       setCodexShimProbeHookForTests(() => { throw new Error("synthetic probe infrastructure failure"); });
@@ -943,14 +943,14 @@ wait "$child"
       expect(() => installCodexShim()).toThrow("synthetic probe infrastructure failure");
 
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       setCodexShimProbeHookForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -959,15 +959,15 @@ wait "$child"
   test("Unix fresh install removes its marker-bearing partial wrapper before rollback", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-partial-write-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-partial-write-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-partial-write-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-partial-write-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = successfulLauncher("partial-write-original");
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
       setCodexShimFreshWriteHookForTests(() => {
@@ -978,14 +978,14 @@ wait "$child"
       expect(() => installCodexShim()).toThrow("synthetic fresh partial write failure");
 
       expect(readFileSync(codexPath, "utf8")).toBe(original);
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(false);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(false);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       setCodexShimFreshWriteHookForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -999,17 +999,17 @@ wait "$child"
     // answers "does this look like a healthy shim". Recording the backup with
     // that probe therefore left movedOriginalFingerprint unset, and rollback —
     // which requires a matching fingerprint before it will restore — refused,
-    // stranding the launcher at codex.opencodex-real. Identity is metadata, not
+    // stranding the launcher at codex.openccx-real. Identity is metadata, not
     // content, so the fingerprint must not depend on the file having bytes.
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-unprobeable-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-unprobeable-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-unprobeable-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-unprobeable-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
-    const backupPath = `${codexPath}.opencodex-real`;
+    const backupPath = `${codexPath}.openccx-real`;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, "", "utf8");
       chmodSync(codexPath, 0o755);
       setCodexShimFreshWriteHookForTests(() => {
@@ -1029,8 +1029,8 @@ wait "$child"
       setCodexShimFreshWriteHookForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -1045,17 +1045,17 @@ wait "$child"
     // uses link()+unlink(), which fails EEXIST instead. Only a hook inside that
     // window can reach this: publishing any earlier makes sourceOccupied true and
     // skips the restore branch entirely.
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-restore-window-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-restore-window-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-restore-window-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-restore-window-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
-    const backupPath = `${codexPath}.opencodex-real`;
+    const backupPath = `${codexPath}.openccx-real`;
     const original = successfulLauncher("restore-window-original");
     const intruder = successfulLauncher("restore-window-concurrent-installer");
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
       setCodexShimFreshWriteHookForTests(() => {
@@ -1079,8 +1079,8 @@ wait "$child"
       setCodexShimRollbackRestoreHookForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -1089,10 +1089,10 @@ wait "$child"
   test("Unix fresh install preserves a concurrent wrapper replacement after a successful probe", () => {
     if (process.platform === "win32") return;
 
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-install-concurrent-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-install-concurrent-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-install-concurrent-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-install-concurrent-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const concurrent = successfulLauncher("fresh concurrent updater replacement");
     const original = `#!/bin/sh
@@ -1104,7 +1104,7 @@ exit 0
 `;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -1115,14 +1115,14 @@ exit 0
       expect(readFileSync(codexPath, "utf8")).toBe(concurrent);
       // The backup is kept, not deleted: the source path is occupied by a file we
       // do not own, so this backup is the only copy of the user's real launcher.
-      // A stray `codex.opencodex-real` is recoverable; a deleted launcher is not.
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(true);
+      // A stray `codex.openccx-real` is recoverable; a deleted launcher is not.
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(true);
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -1132,20 +1132,20 @@ exit 0
     if (process.platform === "win32") return;
 
     // Ownership must come from the inode we staged, not from stat-ing the path
-    // afterwards. A replacement that lands in that window carries the OpenCodex
+    // afterwards. A replacement that lands in that window carries the Openccx
     // markers by coincidence or by design; adopting it means our rollback later
     // unlinks an executable we never wrote.
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-adopt-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-adopt-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-adopt-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-adopt-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const codexPath = join(binDir, "codex");
     const original = "#!/bin/sh\nexit 0\n";
     // Marker-bearing, so a marker/prefix check alone would happily adopt it.
     const intruder = `#!/bin/sh\n# ${SHIM_MARKER}\n# concurrent updater, not ours\nexit 0\n`;
     try {
       process.env.PATH = prependPath(binDir, oldPath);
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(codexPath, original, "utf8");
       chmodSync(codexPath, 0o755);
 
@@ -1168,18 +1168,18 @@ exit 0
       // The user's real launcher is preserved rather than deleted, because the
       // path is occupied by a file we do not own. A stray backup is recoverable;
       // a deleted launcher is not.
-      expect(existsSync(`${codexPath}.opencodex-real`)).toBe(true);
-      expect(readFileSync(`${codexPath}.opencodex-real`, "utf8")).toBe(original);
+      expect(existsSync(`${codexPath}.openccx-real`)).toBe(true);
+      expect(readFileSync(`${codexPath}.openccx-real`, "utf8")).toBe(original);
       // No install state is published for a refused install.
       expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
       // No staging artifact leaked into the user's PATH directory.
-      expect(readdirSync(binDir).filter(name => name.includes("opencodex-staging"))).toEqual([]);
+      expect(readdirSync(binDir).filter(name => name.includes("openccx-staging"))).toEqual([]);
     } finally {
       setCodexShimFreshWriteHookForTests(null);
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -1188,16 +1188,16 @@ exit 0
   test("Unix shim permits a real Codex process to start a new child invocation", () => {
     if (process.platform === "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-child-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-child-"));
     const bunPath = join(dir, "bun");
-    const realCodexPath = join(dir, "codex.opencodex-real");
+    const realCodexPath = join(dir, "codex.openccx-real");
     const shimPath = join(dir, "codex");
     try {
       writeFileSync(bunPath, "#!/usr/bin/env sh\nexit 0\n", "utf8");
       writeFileSync(realCodexPath, `#!/usr/bin/env sh
-if [ -z "$OCX_TEST_CHILD" ]; then
-  OCX_TEST_CHILD=1
-  export OCX_TEST_CHILD
+if [ -z "$OCCX_TEST_CHILD" ]; then
+  OCCX_TEST_CHILD=1
+  export OCCX_TEST_CHILD
   "${shimPath}" --version
   exit $?
 fi
@@ -1207,7 +1207,7 @@ printf '%s\\n' child-codex
       chmodSync(bunPath, 0o755);
       chmodSync(realCodexPath, 0o755);
       chmodSync(shimPath, 0o755);
-      const env = shimChildEnv({ OCX_SHIM_BYPASS: "1" });
+      const env = shimChildEnv({ OCCX_SHIM_BYPASS: "1" });
 
       const result = spawnSync(shimPath, ["--help"], {
         encoding: "utf8",
@@ -1226,21 +1226,21 @@ printf '%s\\n' child-codex
 
   test("Windows shim uses bypass env var to skip proxy start", () => {
     const script = buildWindowsCodexShim("C:\\codex.exe", "C:\\bun.exe", "C:\\cli.ts", "bundled");
-    expect(script).toContain("OCX_SHIM_BYPASS");
+    expect(script).toContain("OCCX_SHIM_BYPASS");
   });
 
   test("PowerShell shim uses bypass env var to skip proxy start", () => {
     const script = buildWindowsPowerShellCodexShim("C:\\codex-real.ps1", "C:\\bun.exe", "C:\\cli.ts", "bundled");
-    expect(script).toContain("OCX_SHIM_BYPASS");
+    expect(script).toContain("OCCX_SHIM_BYPASS");
     expect(script).toContain("Test-Path -LiteralPath");
-    expect(script).toContain("OPENCODEX_API_AUTH_TOKEN");
+    expect(script).toContain("OPENCCX_API_AUTH_TOKEN");
     expect(script).toContain("& 'C:\\codex-real.ps1' @args");
   });
 
   test("Unix shim treats executable paths as literals instead of shell interpolation", () => {
     if (process.platform === "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-quote-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-quote-"));
     const logPath = join(dir, "calls.log");
     const bunPath = join(dir, "bun-$(touch pwned)");
     const realCodexPath = join(dir, "codex-`touch real-pwned`");
@@ -1266,19 +1266,19 @@ printf '%s\\n' child-codex
   test("Unix shim exports persisted service API token before running Codex", () => {
     if (process.platform === "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-token-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-token-"));
     const logPath = join(dir, "calls.log");
     const bunPath = join(dir, "bun");
     const realCodexPath = join(dir, "codex-real");
     const shimPath = join(dir, "codex");
-    const oldHome = process.env.OPENCODEX_HOME;
-    const oldToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const oldHome = process.env.OPENCCX_HOME;
+    const oldToken = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
-      process.env.OPENCODEX_HOME = dir;
-      delete process.env.OPENCODEX_API_AUTH_TOKEN;
+      process.env.OPENCCX_HOME = dir;
+      delete process.env.OPENCCX_API_AUTH_TOKEN;
       writeFileSync(join(dir, "service-api-token"), "local-secret\n", "utf8");
       writeFileSync(bunPath, `#!/usr/bin/env sh\nexit 0\n`, "utf8");
-      writeFileSync(realCodexPath, `#!/usr/bin/env sh\necho "token:$OPENCODEX_API_AUTH_TOKEN" >> "${logPath}"\n`, "utf8");
+      writeFileSync(realCodexPath, `#!/usr/bin/env sh\necho "token:$OPENCCX_API_AUTH_TOKEN" >> "${logPath}"\n`, "utf8");
       writeFileSync(shimPath, buildUnixCodexShim(realCodexPath, bunPath, "/opt/opencodex/src/cli.ts", "bundled"), "utf8");
       chmodSync(bunPath, 0o755);
       chmodSync(realCodexPath, 0o755);
@@ -1289,10 +1289,10 @@ printf '%s\\n' child-codex
       expect(result.status).toBe(0);
       expect(readFileSync(logPath, "utf8")).toBe("token:local-secret\n");
     } finally {
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
-      if (oldToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = oldToken;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
+      if (oldToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = oldToken;
     }
   });
 
@@ -1305,10 +1305,10 @@ printf '%s\\n' child-codex
     ];
     for (const { callerToken, bypass, label } of cases) {
       test.skipIf(process.platform !== "win32")(`Windows ${shell} shim restores the caller token (${label})`, () => {
-        const dir = mkdtempSync(join(tmpdir(), "ocx-shim-token-scope-"));
-        const oldHome = process.env.OPENCODEX_HOME;
+        const dir = mkdtempSync(join(tmpdir(), "occx-shim-token-scope-"));
+        const oldHome = process.env.OPENCCX_HOME;
         try {
-          process.env.OPENCODEX_HOME = dir;
+          process.env.OPENCCX_HOME = dir;
           const extension = shell === "cmd" ? "cmd" : "ps1";
           const realPath = join(dir, `codex-real.${extension}`);
           const wrapperPath = join(dir, `codex.${extension}`);
@@ -1318,21 +1318,21 @@ printf '%s\\n' child-codex
           writeFileSync(join(dir, "service-api-token"), "file-token\n");
           writeFileSync(ensurePath, `import { writeFileSync } from "node:fs"; writeFileSync(${JSON.stringify(ensureLog)}, "ensure"); process.exit(19);`);
           if (shell === "cmd") {
-            writeFileSync(realPath, "@echo off\r\necho child:%OPENCODEX_API_AUTH_TOKEN%\r\nexit /b 37\r\n");
+            writeFileSync(realPath, "@echo off\r\necho child:%OPENCCX_API_AUTH_TOKEN%\r\nexit /b 37\r\n");
             writeFileSync(wrapperPath, buildWindowsCodexShim(realPath, process.execPath, ensurePath, "process"));
-            writeFileSync(driverPath, `@echo off\r\ncall "${wrapperPath}" exec "arg value"\r\nset "result=%ERRORLEVEL%"\r\necho after:%OPENCODEX_API_AUTH_TOKEN%\r\necho result:%result%\r\nexit /b 0\r\n`);
+            writeFileSync(driverPath, `@echo off\r\ncall "${wrapperPath}" exec "arg value"\r\nset "result=%ERRORLEVEL%"\r\necho after:%OPENCCX_API_AUTH_TOKEN%\r\necho result:%result%\r\nexit /b 0\r\n`);
           } else {
-            writeFileSync(realPath, '"child:$env:OPENCODEX_API_AUTH_TOKEN"\nexit 37\n');
+            writeFileSync(realPath, '"child:$env:OPENCCX_API_AUTH_TOKEN"\nexit 37\n');
             writeFileSync(wrapperPath, `\uFEFF${buildWindowsPowerShellCodexShim(realPath, process.execPath, ensurePath, "process")}`);
-            const emptyToken = callerToken === "" ? "$env:OPENCODEX_API_AUTH_TOKEN = ''\n" : "";
-            writeFileSync(driverPath, `\uFEFF$ErrorActionPreference = 'Stop'\n${emptyToken}$beforePresence = Test-Path Env:\\OPENCODEX_API_AUTH_TOKEN\n& '${wrapperPath.replace(/'/g, "''")}' exec 'arg value'\n$result = $LASTEXITCODE\n"after:$env:OPENCODEX_API_AUTH_TOKEN"\n"result:$result"\n"presence-preserved:$($beforePresence -eq (Test-Path Env:\\OPENCODEX_API_AUTH_TOKEN))"\n`);
+            const emptyToken = callerToken === "" ? "$env:OPENCCX_API_AUTH_TOKEN = ''\n" : "";
+            writeFileSync(driverPath, `\uFEFF$ErrorActionPreference = 'Stop'\n${emptyToken}$beforePresence = Test-Path Env:\\OPENCCX_API_AUTH_TOKEN\n& '${wrapperPath.replace(/'/g, "''")}' exec 'arg value'\n$result = $LASTEXITCODE\n"after:$env:OPENCCX_API_AUTH_TOKEN"\n"result:$result"\n"presence-preserved:$($beforePresence -eq (Test-Path Env:\\OPENCCX_API_AUTH_TOKEN))"\n`);
           }
           const env = shimChildEnv({
-            OPENCODEX_HOME: dir,
-            OPENCODEX_API_AUTH_TOKEN: callerToken ?? "",
-            OCX_SHIM_BYPASS: bypass ? "1" : "",
+            OPENCCX_HOME: dir,
+            OPENCCX_API_AUTH_TOKEN: callerToken ?? "",
+            OCCX_SHIM_BYPASS: bypass ? "1" : "",
           });
-          if (callerToken === undefined) delete env.OPENCODEX_API_AUTH_TOKEN;
+          if (callerToken === undefined) delete env.OPENCCX_API_AUTH_TOKEN;
           const result = shell === "cmd"
             ? spawnSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/c", "driver.cmd"], { cwd: dir, env, encoding: "utf8", timeout: INTERNAL_DEADLINE_MS, windowsHide: true })
             : spawnSync(`${shell}.exe`, ["-NoProfile", "-NonInteractive", "-File", driverPath], { env, encoding: "utf8", timeout: INTERNAL_DEADLINE_MS, windowsHide: true });
@@ -1345,8 +1345,8 @@ printf '%s\\n' child-codex
           ]);
           expect(existsSync(ensureLog)).toBe(!bypass);
         } finally {
-          if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-          else process.env.OPENCODEX_HOME = oldHome;
+          if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+          else process.env.OPENCCX_HOME = oldHome;
           removeTreeWithRetry(dir);
         }
       }, SPAWN_BUDGET_MS);
@@ -1357,10 +1357,10 @@ printf '%s\\n' child-codex
     for (const executable of ["powershell.exe", "pwsh.exe"]) {
       for (const callerToken of [undefined, "", "caller-token"]) {
         test.skipIf(process.platform !== "win32")(`Windows ${executable} shim restores ${callerToken === undefined ? "missing" : callerToken === "" ? "empty" : "explicit"} caller token when ${failurePhase} throws`, () => {
-          const dir = mkdtempSync(join(tmpdir(), "ocx-shim-token-error-"));
-          const oldHome = process.env.OPENCODEX_HOME;
+          const dir = mkdtempSync(join(tmpdir(), "occx-shim-token-error-"));
+          const oldHome = process.env.OPENCCX_HOME;
           try {
-            process.env.OPENCODEX_HOME = dir;
+            process.env.OPENCCX_HOME = dir;
             const wrapperPath = join(dir, "codex.ps1");
             const ensurePath = join(dir, "throw.ps1");
             const driverPath = join(dir, "driver.ps1");
@@ -1369,10 +1369,10 @@ printf '%s\\n' child-codex
             writeFileSync(ensurePath, failurePhase === "ensure" ? "throw 'fixture ensure failure'\n" : "exit 19\n");
             writeFileSync(realPath, "throw 'fixture Codex failure'\n");
             writeFileSync(wrapperPath, `\uFEFF${buildWindowsPowerShellCodexShim(realPath, ensurePath, "unused.ts", "process")}`);
-            const emptyToken = callerToken === "" ? "$env:OPENCODEX_API_AUTH_TOKEN = ''\n" : "";
-            writeFileSync(driverPath, `\uFEFF$ErrorActionPreference = 'Stop'\n${emptyToken}$beforePresence = Test-Path Env:\\OPENCODEX_API_AUTH_TOKEN\ntry { & '${wrapperPath.replace(/'/g, "''")}' exec } catch { "error:$($_.Exception.Message)" }\n"after:$env:OPENCODEX_API_AUTH_TOKEN"\n"presence-preserved:$($beforePresence -eq (Test-Path Env:\\OPENCODEX_API_AUTH_TOKEN))"\n`);
-            const env = shimChildEnv({ OPENCODEX_HOME: dir, OPENCODEX_API_AUTH_TOKEN: callerToken ?? "", OCX_SHIM_BYPASS: "" });
-            if (callerToken === undefined) delete env.OPENCODEX_API_AUTH_TOKEN;
+            const emptyToken = callerToken === "" ? "$env:OPENCCX_API_AUTH_TOKEN = ''\n" : "";
+            writeFileSync(driverPath, `\uFEFF$ErrorActionPreference = 'Stop'\n${emptyToken}$beforePresence = Test-Path Env:\\OPENCCX_API_AUTH_TOKEN\ntry { & '${wrapperPath.replace(/'/g, "''")}' exec } catch { "error:$($_.Exception.Message)" }\n"after:$env:OPENCCX_API_AUTH_TOKEN"\n"presence-preserved:$($beforePresence -eq (Test-Path Env:\\OPENCCX_API_AUTH_TOKEN))"\n`);
+            const env = shimChildEnv({ OPENCCX_HOME: dir, OPENCCX_API_AUTH_TOKEN: callerToken ?? "", OCCX_SHIM_BYPASS: "" });
+            if (callerToken === undefined) delete env.OPENCCX_API_AUTH_TOKEN;
             const result = spawnSync(executable, ["-NoProfile", "-NonInteractive", "-File", driverPath], {
               env, encoding: "utf8", timeout: INTERNAL_DEADLINE_MS, windowsHide: true,
             });
@@ -1393,8 +1393,8 @@ printf '%s\\n' child-codex
             expect(uncaught.status, uncaught.stderr).not.toBe(0);
             expect(uncaught.stderr).toContain(`fixture ${failurePhase} failure`);
           } finally {
-            if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-            else process.env.OPENCODEX_HOME = oldHome;
+            if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+            else process.env.OPENCCX_HOME = oldHome;
             removeTreeWithRetry(dir);
           }
         }, SPAWN_BUDGET_MS);
@@ -1402,10 +1402,10 @@ printf '%s\\n' child-codex
     }
   }
 
-  test("Unix shim skips ocx startup only for Codex management commands", () => {
+  test("Unix shim skips occx startup only for Codex management commands", () => {
     if (process.platform === "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-test-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-test-"));
     const logPath = join(dir, "calls.log");
     const bunPath = join(dir, "bun");
     const realCodexPath = join(dir, "codex-real");
@@ -1418,7 +1418,7 @@ printf '%s\\n' child-codex
     chmodSync(realCodexPath, 0o755);
     chmodSync(shimPath, 0o755);
     const env = { ...process.env };
-    delete env.OCX_SHIM_BYPASS;
+    delete env.OCCX_SHIM_BYPASS;
 
     const doctor = spawnSync(shimPath, ["doctor"], { encoding: "utf8", env });
     expect(doctor.status).toBe(0);
@@ -1447,8 +1447,8 @@ printf '%s\\n' child-codex
     );
   });
 
-  test("Windows shim skips ocx startup only for Codex management commands", () => {
-    const script = buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\ocx\\cli.ts", "bundled");
+  test("Windows shim skips occx startup only for Codex management commands", () => {
+    const script = buildWindowsCodexShim("C:\\Tools\\codex-real.exe", "C:\\Bun\\bun.exe", "C:\\occx\\cli.ts", "bundled");
 
     expect(script).toContain(':scan_codex_args');
     expect(script).toContain('if /I "%~1"=="-s" goto skip_option_value');
@@ -1459,7 +1459,7 @@ printf '%s\\n' child-codex
     expect(script).not.toContain('if /I "%~1"=="resume" goto run_codex');
     expect(script).not.toContain('if /I "%~1"=="review" goto run_codex');
     expect(script).toContain('if /I "%~1"=="--help" goto run_codex');
-    expect(script).toContain('"%OCX_REAL_CODEX%" %*');
+    expect(script).toContain('"%OCCX_REAL_CODEX%" %*');
   });
 
   test("PowerShell shim scans past value-taking global options", () => {
@@ -1476,10 +1476,10 @@ printf '%s\\n' child-codex
   test("Windows install backs up cmd, ps1, and the bare Git-Bash launcher", () => {
     if (process.platform !== "win32") return;
 
-    const dir = mkdtempSync(join(tmpdir(), "ocx-shim-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-home-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-shim-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-home-"));
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     const cmd = join(dir, "codex.cmd");
     const ps1 = join(dir, "codex.ps1");
     const bare = join(dir, "codex");
@@ -1489,7 +1489,7 @@ printf '%s\\n' child-codex
 
     try {
       process.env.PATH = dir;
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(cmd, cmdOriginal, "utf8");
       writeFileSync(ps1, ps1Original, "utf8");
       writeFileSync(bare, bareOriginal, "utf8");
@@ -1500,9 +1500,9 @@ printf '%s\\n' child-codex
       expect(readFileSync(cmd, "utf8")).toContain(SHIM_MARKER);
       expect(readFileSync(ps1, "utf8")).toContain(SHIM_MARKER);
       expect(readFileSync(bare, "utf8")).toContain(SHIM_MARKER);
-      expect(readFileSync(join(dir, "codex.opencodex-real.cmd"), "utf8")).toBe(cmdOriginal);
-      expect(readFileSync(join(dir, "codex.opencodex-real.ps1"), "utf8")).toBe(ps1Original);
-      expect(readFileSync(join(dir, "codex.opencodex-real"), "utf8")).toBe(bareOriginal);
+      expect(readFileSync(join(dir, "codex.openccx-real.cmd"), "utf8")).toBe(cmdOriginal);
+      expect(readFileSync(join(dir, "codex.openccx-real.ps1"), "utf8")).toBe(ps1Original);
+      expect(readFileSync(join(dir, "codex.openccx-real"), "utf8")).toBe(bareOriginal);
 
       const state = JSON.parse(readFileSync(join(home, "codex-shim.json"), "utf8"));
       expect(state.wrappers).toHaveLength(3);
@@ -1517,8 +1517,8 @@ printf '%s\\n' child-codex
       expect(readFileSync(bare, "utf8")).toBe(bareOriginal);
     } finally {
       process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(dir);
       removeTreeWithRetry(home);
     }
@@ -1895,20 +1895,20 @@ exit 127
   });
 
   test("an aged lock held by a live restore owner is never reclaimed", async () => {
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-concurrent-bin-"));
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-concurrent-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-concurrent-bin-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-concurrent-home-"));
     const readyPath = join(home, "first-lock-ready");
     const releasePath = join(home, "release-first-lock");
     const restoreLockPath = join(home, "codex-shim.autorestore.lock");
     const wrapper = join(binDir, process.platform === "win32" ? "codex.cmd" : "codex");
-    const backup = join(binDir, process.platform === "win32" ? "codex.opencodex-real.cmd" : "codex.opencodex-real");
+    const backup = join(binDir, process.platform === "win32" ? "codex.openccx-real.cmd" : "codex.openccx-real");
     const replacement = successfulLauncher("concurrent replacement launcher");
     const oldPath = process.env.PATH;
-    const oldHome = process.env.OPENCODEX_HOME;
+    const oldHome = process.env.OPENCCX_HOME;
     let first: ReturnType<typeof Bun.spawn> | undefined;
     try {
       process.env.PATH = binDir;
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(wrapper, process.platform === "win32" ? "@echo off\r\necho original\r\n" : "#!/bin/sh\necho original\n", "utf8");
       if (process.platform !== "win32") chmodSync(wrapper, 0o755);
       expect(installCodexShim().installed).toBe(true);
@@ -1941,7 +1941,7 @@ exit 127
         setCodexShimProbeObservationMsForTests(20);
         console.log(JSON.stringify(autoRestoreCodexShim({ enabled: () => true, stabilitySleep: () => {} })));
       `;
-      const childEnv = { ...process.env, PATH: binDir, OPENCODEX_HOME: home };
+      const childEnv = { ...process.env, PATH: binDir, OPENCCX_HOME: home };
       first = Bun.spawn([process.execPath, "-e", firstScript], {
         cwd: repoRoot(),
         env: childEnv,
@@ -1975,8 +1975,8 @@ exit 127
       if (first) await first.exited;
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(binDir);
       removeTreeWithRetry(home);
     }
@@ -2057,7 +2057,7 @@ exit 127
     withInstalledShim(({ binDir, wrappers, backups, statePath }) => {
       if (wrappers.length === 1) {
         const sibling = join(binDir, "codex.ps1");
-        const siblingBackup = join(binDir, "codex.opencodex-real.ps1");
+        const siblingBackup = join(binDir, "codex.openccx-real.ps1");
         writeFileSync(sibling, readFileSync(wrappers[0]));
         chmodSync(sibling, 0o755);
         writeFileSync(siblingBackup, "prior sibling launcher\n", "utf8");
@@ -2117,13 +2117,13 @@ exit 127
   });
 
   test("multi-wrapper restore rolls back when a later sibling fingerprint changes", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-transaction-home-"));
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-shim-transaction-bin-"));
-    const oldHome = process.env.OPENCODEX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-transaction-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-shim-transaction-bin-"));
+    const oldHome = process.env.OPENCCX_HOME;
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       const wrappers = [join(binDir, "codex.cmd"), join(binDir, "codex.ps1")];
-      const backups = [join(binDir, "codex.opencodex-real.cmd"), join(binDir, "codex.opencodex-real.ps1")];
+      const backups = [join(binDir, "codex.openccx-real.cmd"), join(binDir, "codex.openccx-real.ps1")];
       const wrapperBytes = ["replacement cmd\n", "replacement ps1\n"];
       const backupBytes = ["prior cmd\n", "prior ps1\n"];
       wrappers.forEach((path, index) => writeFileSync(path, wrapperBytes[index], "utf8"));
@@ -2161,8 +2161,8 @@ exit 127
       [...wrappers, ...backups].forEach((path, index) => expect(statSync(path).mode & 0o777).toBe(modes[index]));
       expect(readdirSync(binDir).filter(name => name.includes(".autorestore-"))).toEqual([]);
     } finally {
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(home);
       removeTreeWithRetry(binDir);
     }
@@ -2251,7 +2251,7 @@ describe("WSL PATH interop guard", () => {
 });
 
 // #2412: a version-manager upgrade (mise/asdf/volta) rewrites its install tree
-// in place, destroying both the shim and its sibling .opencodex-real backup.
+// in place, destroying both the shim and its sibling .openccx-real backup.
 // The bail was silent, and the CLI warns only when a message exists, so start /
 // ensure / service repair all reported success while routing stayed native.
 describe("version-manager shim destruction (#2412)", () => {
@@ -2286,14 +2286,14 @@ describe("version-manager shim destruction (#2412)", () => {
 describe("Codex shim read-only backing inspection", () => {
   test("local inspection paths reject Windows remote and device namespaces", () => {
     expect(isLocalAbsoluteInspectionPath("/usr/local/bin/codex", "linux")).toBe(true);
-    expect(isLocalAbsoluteInspectionPath("C:\\OpenCodex\\codex.cmd", "win32")).toBe(true);
+    expect(isLocalAbsoluteInspectionPath("C:\\Openccx\\codex.cmd", "win32")).toBe(true);
     for (const path of [
       "\\Windows\\codex.cmd",
       "/Windows/codex.cmd",
       "\\\\server\\share\\codex.cmd",
       "//server/share/codex.cmd",
-      "\\\\?\\C:\\OpenCodex\\codex.cmd",
-      "//?/C:/OpenCodex/codex.cmd",
+      "\\\\?\\C:\\Openccx\\codex.cmd",
+      "//?/C:/Openccx/codex.cmd",
       "\\\\.\\PhysicalDrive0",
     ]) {
       expect(isLocalAbsoluteInspectionPath(path, "win32")).toBe(false);
@@ -2305,7 +2305,7 @@ describe("Codex shim read-only backing inspection", () => {
     expect(inspectCodexShimBackingForCommand(
       "C:\\remote-or-local\\codex.cmd",
       "win32",
-      "C:\\OpenCodex",
+      "C:\\Openccx",
     )).toEqual({
       status: "unknown",
       reason: "binding_unavailable",
@@ -2357,10 +2357,10 @@ describe("Codex shim read-only backing inspection", () => {
   });
 
   test.skipIf(process.platform === "win32")("distinguishes absent state from invalid state", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shim-inspect-invalid-"));
-    const oldHome = process.env.OPENCODEX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-shim-inspect-invalid-"));
+    const oldHome = process.env.OPENCCX_HOME;
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       expect(inspectCodexShimBackingForCommand(join(home, "codex"))).toEqual({ status: "not-tracked" });
       writeFileSync(join(home, "codex-shim.json"), "{broken", "utf8");
       expect(inspectCodexShimBackingForCommand(join(home, "codex"))).toEqual({
@@ -2368,8 +2368,8 @@ describe("Codex shim read-only backing inspection", () => {
         reason: "state_invalid",
       });
     } finally {
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldHome;
       removeTreeWithRetry(home);
     }
   });

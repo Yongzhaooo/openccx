@@ -1,9 +1,9 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
-type GatherRoutedModels = (config: OcxConfig) => Promise<unknown>;
+type GatherRoutedModels = (config: OccxConfig) => Promise<unknown>;
 
 export type CatalogPrewarmDeps = {
-  loadConfig?: () => OcxConfig;
+  loadConfig?: () => OccxConfig;
   importCatalog?: () => Promise<{ gatherRoutedModels: GatherRoutedModels }>;
 };
 

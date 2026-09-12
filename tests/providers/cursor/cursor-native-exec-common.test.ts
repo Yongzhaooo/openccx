@@ -44,7 +44,7 @@ describe("execBytes serialization (TS 7 generic signature)", () => {
             requestContext: create(RequestContextSchema, {
               tools: [{
                 name: "fs_read",
-                providerIdentifier: "opencodex",
+                providerIdentifier: "openccx",
                 toolName: "fs_read",
                 description: "read a file",
                 inputSchema: new Uint8Array(),

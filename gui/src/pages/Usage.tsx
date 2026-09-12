@@ -782,7 +782,7 @@ const usageMemoryCache = new Map<string, UsageResponse>();
 type UsageScope = "machine" | "hub";
 
 function usageCacheKey(apiBase: string, range: Range, surface: UsageSurface, connected: boolean, scope: UsageScope, apiKeyId?: string): string {
-  return `ocx.usage.v2:${apiBase}:${connected ? "connected" : "standalone"}:${scope}:${apiKeyId ?? ""}:${range}:${surface}`;
+  return `occx.usage.v2:${apiBase}:${connected ? "connected" : "standalone"}:${scope}:${apiKeyId ?? ""}:${range}:${surface}`;
 }
 
 function readHeldUsage(apiBase: string, range: Range, surface: UsageSurface, connected: boolean, scope: UsageScope, apiKeyId?: string): UsageResponse | null {

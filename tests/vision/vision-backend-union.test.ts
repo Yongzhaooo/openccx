@@ -31,14 +31,14 @@ import {
 import { activeVisionBackends } from "../../src/vision/backends";
 import { visionBackendForCandidate } from "../../src/vision/eligibility";
 import { resolveSidecarAuth } from "../../src/sidecar/auth";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
-const xaiOAuth: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://api.x.ai/v1", authMode: "oauth" };
-const antigravityOAuth: OcxProviderConfig = { adapter: "google-antigravity", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" };
-const volc: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://ark.volces.test/v1", apiKey: "k" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
+const xaiOAuth: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://api.x.ai/v1", authMode: "oauth" };
+const antigravityOAuth: OccxProviderConfig = { adapter: "google-antigravity", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" };
+const volc: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://ark.volces.test/v1", apiKey: "k" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -104,7 +104,7 @@ describe("routed vision backend (#2188 roadmap 170 revised)", () => {
 });
 
 describe("management routes: routed union + coherence", () => {
-  async function putVision(cfg: OcxConfig, vision: Record<string, unknown>): Promise<Response> {
+  async function putVision(cfg: OccxConfig, vision: Record<string, unknown>): Promise<Response> {
     const url = new URL("http://localhost/api/sidecar-settings");
     const response = await handleManagementAPI(
       new Request(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ vision }) }),

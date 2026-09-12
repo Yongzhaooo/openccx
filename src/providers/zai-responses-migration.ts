@@ -1,5 +1,5 @@
 import { getProviderRegistryEntry, providerMatchesRegistryTransport } from "./registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export const ZAI_PROVIDER_ID = "zai";
 export const ZAI_RESPONSES_DEFAULT_VERSION = 1;
@@ -11,7 +11,7 @@ export const ZAI_RESPONSES_DEFAULT_VERSION = 1;
  * /api/v1 (#4297). A config written before that move still stores the Chat adapter and the old
  * base URL, and `routedProviderConfig()` rewrites both on every request because the registry
  * entry owns a fixed destination. The row therefore already talks Responses while the dashboard,
- * `ocx doctor` and any direct config reader show the retired Chat endpoint, and each boot logs a
+ * `occx doctor` and any direct config reader show the retired Chat endpoint, and each boot logs a
  * "configured baseUrl is ignored" warning about a value the user never chose.
  *
  * This migration writes the canonical pair once so the stored row matches the live wire. It is
@@ -23,7 +23,7 @@ export const ZAI_RESPONSES_DEFAULT_VERSION = 1;
  * does not canonicalize it, so rewriting it would change a wire the operator actually configured;
  * `destinationAliases` already gives it this row's metadata.
  */
-export function migrateZaiResponsesDefault(config: OcxConfig): boolean {
+export function migrateZaiResponsesDefault(config: OccxConfig): boolean {
   const provider = config.providers[ZAI_PROVIDER_ID];
   if (!provider || (provider.zaiResponsesDefaultVersion ?? 0) >= ZAI_RESPONSES_DEFAULT_VERSION) return false;
   const entry = getProviderRegistryEntry(ZAI_PROVIDER_ID);

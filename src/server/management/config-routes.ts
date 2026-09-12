@@ -98,7 +98,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import { shadowCallTargetError } from "./shadow-call-validation";
 import { drainAndShutdown } from "../lifecycle";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "../request-log";
@@ -117,14 +117,14 @@ import type { MetricUnavailableReason, TokPerSecondResult, CostEstimateReason, C
 import type { ManagementContext } from "./context";
 import { readManagementJsonBody, rethrowManagementBodyTooLarge } from "./body";
 
-function quotaAutoRefreshSettings(config: OcxConfig) {
+function quotaAutoRefreshSettings(config: OccxConfig) {
   return Object.fromEntries(Object.entries(config.codexQuotaAutoRefresh ?? {}).map(([id, setting]) => [
     id,
     { fiveHour: setting.fiveHour === true, weekly: setting.weekly === true },
   ]));
 }
 
-async function sidecarVisionResponseSettings(config: OcxConfig): Promise<{
+async function sidecarVisionResponseSettings(config: OccxConfig): Promise<{
   model: string;
   reasoning: string;
   models: Awaited<ReturnType<typeof visionModelOptionsFor>>;
@@ -162,11 +162,11 @@ interface ClientIntegrationSyncOutcome {
 
 /**
  * Re-inject native clients that are switched ON and every file integration whose
- * OpenCodex ownership record is the operator's durable opt-in.
+ * Openccx ownership record is the operator's durable opt-in.
  *
  * Only Codex used to run here, so a catalog change reached Codex and nothing else: a Grok
  * fence or a written Desktop profile kept the context windows it was created with until the
- * next `ocx start`. The startup path already gates each client on its own toggle
+ * next `occx start`. The startup path already gates each client on its own toggle
  * (`src/cli/index.ts`), and this is that same fan-out for the on-demand command.
  *
  * File integrations use the catalog-refresh coordinator so owned blocks are
@@ -180,7 +180,7 @@ interface ClientIntegrationSyncOutcome {
  */
 export async function syncEnabledClientIntegrations(
   port: number | undefined,
-  config: OcxConfig,
+  config: OccxConfig,
   deps: Pick<ManagementContext["deps"], "fetchAllModels" | "writeDesktop3pConfig"> = {},
 ): Promise<ClientIntegrationSyncOutcome[]> {
   if (port === undefined) return [];
@@ -243,7 +243,7 @@ export async function syncEnabledClientIntegrations(
 }
 
 function publicVisionSidecarSettings(
-  config: OcxConfig,
+  config: OccxConfig,
   vision: Awaited<ReturnType<typeof sidecarVisionResponseSettings>>,
 ) {
   const vs = config.visionSidecar ?? {};
@@ -296,11 +296,11 @@ export async function handleConfigRoutes(ctx: ManagementContext): Promise<Respon
     if (clampActive) {
       const clampVersion = lastClamp?.runtimeVersion ?? resolved.runtime.version ?? "an older binary";
       warningParts.push(
-        `Some reasoning effort options were hidden because OpenCodex used Codex ${clampVersion}.${resolved.newerAvailable ? " A newer Codex installation is available." : ""}`,
+        `Some reasoning effort options were hidden because Openccx used Codex ${clampVersion}.${resolved.newerAvailable ? " A newer Codex installation is available." : ""}`,
       );
     } else if (resolved.newerAvailable) {
       warningParts.push(
-        `OpenCodex is using an older Codex binary (${resolved.runtime.version ?? "unknown"}). A newer Codex installation is available.`,
+        `Openccx is using an older Codex binary (${resolved.runtime.version ?? "unknown"}). A newer Codex installation is available.`,
       );
     }
     return jsonResponse({

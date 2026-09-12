@@ -7,7 +7,7 @@ import {
 } from "../../src/responses/reasoning-replay-cache";
 import { parseRequest } from "../../src/responses/parser";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
-import type { AdapterEvent, OcxReasoningReplayScopeRef } from "../../src/types";
+import type { AdapterEvent, OccxReasoningReplayScopeRef } from "../../src/types";
 
 async function* replay(events: AdapterEvent[]): AsyncGenerator<AdapterEvent> {
   for (const event of events) yield event;
@@ -33,7 +33,7 @@ async function collectSse(stream: ReadableStream<Uint8Array>): Promise<{ event?:
     });
 }
 
-const REPLAY_SCOPE: OcxReasoningReplayScopeRef = {
+const REPLAY_SCOPE: OccxReasoningReplayScopeRef = {
   clientThreadId: "hidden-replay-thread",
   current: {
     providerName: "routed",
@@ -43,7 +43,7 @@ const REPLAY_SCOPE: OcxReasoningReplayScopeRef = {
     credentialIdentity: "key:test",
   },
 };
-const GLOBAL_SCOPE: OcxReasoningReplayScopeRef = { ...REPLAY_SCOPE, clientThreadId: "global" };
+const GLOBAL_SCOPE: OccxReasoningReplayScopeRef = { ...REPLAY_SCOPE, clientThreadId: "global" };
 const sseOpts = (hide: boolean) => ({ hideThinkingSummary: hide, replayCacheScope: REPLAY_SCOPE });
 
 describe("hidden raw reasoning (hideThinkingSummary parity for reasoning_raw_delta)", () => {

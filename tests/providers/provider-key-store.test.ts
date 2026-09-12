@@ -18,7 +18,7 @@ import { routedProviderConfig } from "../../src/router";
 import { managementFetch as fetch } from "../helpers/management-auth";
 import { startServer } from "../../src/server";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /** In-memory keychain: service/account → secret, with optional fault injection. */
@@ -42,7 +42,7 @@ let isolated: IsolatedCodexHome | null = null;
 const SECRET = "plain-key-material-first-entry";
 const POOL_SECRET = "plain-key-material-second-entry";
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -50,21 +50,21 @@ function baseConfig(): OcxConfig {
     providers: {
       relay: { adapter: "openai-chat", baseUrl: "https://relay.example/v1", apiKey: SECRET },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolated = installIsolatedCodexHome("ocx-keychain-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-keychain-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolated = installIsolatedCodexHome("occx-keychain-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-keychain-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
 });
 
 afterEach(() => {
   setProviderKeychainEntryFactoryForTests(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolated?.restore();
   isolated = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -72,13 +72,13 @@ afterEach(() => {
 
 describe("provider key resolver (#1221)", () => {
   test("plain and env values resolve exactly as before", () => {
-    process.env.OCX_TEST_KEY_REF = "from-env";
+    process.env.OCCX_TEST_KEY_REF = "from-env";
     try {
       expect(resolveProviderApiKey(SECRET)).toBe(SECRET);
-      expect(resolveProviderApiKey("${OCX_TEST_KEY_REF}")).toBe("from-env");
+      expect(resolveProviderApiKey("${OCCX_TEST_KEY_REF}")).toBe("from-env");
       expect(resolveProviderApiKey(undefined)).toBeUndefined();
     } finally {
-      delete process.env.OCX_TEST_KEY_REF;
+      delete process.env.OCCX_TEST_KEY_REF;
     }
   });
 

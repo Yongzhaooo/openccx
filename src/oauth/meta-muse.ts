@@ -45,7 +45,7 @@ const CONSENT_WARNING = [
   "Meta scopes the Muse Code credential to the Muse Code CLI.",
   "Using it here is UNSUPPORTED: Meta does not authorize subscription coverage outside its own CLI,",
   "how these calls settle is not observable from the API, and you should treat every call as billable.",
-  "The key you import or paste is copied into OpenCodex's auth store (~/.opencodex/auth.json, 0600).",
+  "The key you import or paste is copied into Openccx's auth store (~/.opencodex/auth.json, 0600).",
   "Supported alternative: the meta-model provider with your own key (META_MODEL_API_KEY).",
 ].join(" ");
 
@@ -187,7 +187,7 @@ export async function loginMetaMuse(
     const pasted = await manualKeyCredential(ctrl, reason);
     if (pasted === null) {
       throw new Error(
-        `${reason} This client cannot prompt for a key, so run \`ocx login meta-muse\` from the CLI `
+        `${reason} This client cannot prompt for a key, so run \`occx login meta-muse\` from the CLI `
           + `or the dashboard and paste yours from ${MANUAL_KEY_URL}, `
           + "or use the meta-model provider with your own key (META_MODEL_API_KEY).",
       );
@@ -327,7 +327,7 @@ export async function refreshMetaMuseToken(
   _signal?: AbortSignal,
   credential?: OAuthCredentials,
 ): Promise<OAuthCredentials> {
-  if (!apiKey) throw new Error("Meta Muse Code API key missing; run `ocx login meta-muse`");
+  if (!apiKey) throw new Error("Meta Muse Code API key missing; run `occx login meta-muse`");
   return {
     access: apiKey,
     refresh: apiKey,

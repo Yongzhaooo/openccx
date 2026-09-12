@@ -24,7 +24,7 @@ function native(supported: boolean): Buffer {
 }
 
 function runtimeFixture(index: number, supported: boolean): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-features-cache-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-features-cache-"));
   roots.push(root);
   const command = join(root, `codex-${index}`);
   writeFileSync(command, native(supported));

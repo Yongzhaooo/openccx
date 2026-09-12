@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types/config";
+import type { OccxConfig } from "../types/config";
 
 export const REMOTE_HUB_PROTOCOL = 1;
 export const MINIMUM_REMOTE_CLIENT_PROTOCOL = 1;
@@ -15,7 +15,7 @@ export type RemoteProtocolCompatibility =
   | { ok: false; reason: "invalid" | "hub-too-new" | "hub-too-old"; message: string };
 
 const INVALID_REMOTE_PROTOCOL_MESSAGE =
-  "OpenCodex hub returned invalid remote protocol metadata; upgrade or repair ocx on the hub.";
+  "Openccx hub returned invalid remote protocol metadata; upgrade or repair occx on the hub.";
 
 function positiveSafeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
@@ -43,7 +43,7 @@ function observedManagementOrigin(req: Request): string | null {
   }
 }
 
-export function readyProtocolMetadata(config: OcxConfig, req: Request): RemoteReadyMetadata {
+export function readyProtocolMetadata(config: OccxConfig, req: Request): RemoteReadyMetadata {
   const configured = config.runtimeRole === "hub"
     ? managementOrigin(config.hub?.managementPublicOrigin)
     : null;
@@ -93,14 +93,14 @@ export function checkRemoteProtocolCompatibility(
     return {
       ok: false,
       reason: "hub-too-new",
-      message: `OpenCodex hub requires remote protocol ${metadata.minimumClientProtocol}; this client supports protocol ${client.protocol}. Upgrade ocx on this client.`,
+      message: `Openccx hub requires remote protocol ${metadata.minimumClientProtocol}; this client supports protocol ${client.protocol}. Upgrade occx on this client.`,
     };
   }
   if (metadata.protocol < client.minimumHubProtocol) {
     return {
       ok: false,
       reason: "hub-too-old",
-      message: `OpenCodex hub provides remote protocol ${metadata.protocol}; this client requires at least ${client.minimumHubProtocol}. Upgrade ocx on the hub.`,
+      message: `Openccx hub provides remote protocol ${metadata.protocol}; this client requires at least ${client.minimumHubProtocol}. Upgrade occx on the hub.`,
     };
   }
   const supported = new Set(client.features ?? []);

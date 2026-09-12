@@ -13,7 +13,7 @@ const { parseAiResponse, scrubLine, repairInvalidJsonStringEscapes } = require("
 function runParser(aiResponse) {
   const outFile = path.join(
     os.tmpdir(),
-    `ocx-parse-out-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.txt`,
+    `occx-parse-out-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.txt`,
   );
   fs.writeFileSync(outFile, "");
   const result = spawnSync(process.execPath, [SCRIPT], {

@@ -66,11 +66,11 @@ test("the guard rejects an over-long label", () => {
 });
 
 test("writeDesktop3pConfig emits a config whose model list passes the guard end to end", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-desktop-guard-"));
-  const prev = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  const previousHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = dir;
-  process.env.OPENCODEX_HOME = join(dir, "ocx");
+  const dir = mkdtempSync(join(tmpdir(), "occx-desktop-guard-"));
+  const prev = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  const previousHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = dir;
+  process.env.OPENCCX_HOME = join(dir, "occx");
   try {
     const result = writeDesktop3pConfig(
       10100,
@@ -90,10 +90,10 @@ test("writeDesktop3pConfig emits a config whose model list passes the guard end 
     const kimi = written.inferenceModels.find(m => m.labelOverride.includes("kimi"));
     expect(kimi?.labelOverride).toBe("K3 1M (kimi)");
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (prev === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(dir);
   }
 });

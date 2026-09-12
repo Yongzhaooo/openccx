@@ -15,7 +15,7 @@ const {
  */
 const READINESS_MARKER = "<!-- pr-quality-readiness -->";
 /** Marks the bot's consolidated PR gate message. */
-const GATE_MARKER = "<!-- opencodex-pr-gate -->";
+const GATE_MARKER = "<!-- openccx-pr-gate -->";
 /** Marks the hygiene status block inside the consolidated gate comment. */
 const HYGIENE_MARKER = "<!-- pr-hygiene -->";
 /** HTML comment wrapping the hygiene block so it survives gate rebuilds. */

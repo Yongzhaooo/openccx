@@ -11,7 +11,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
-const binPath = join(repoRoot, "bin", "ocx.mjs");
+const binPath = join(repoRoot, "bin", "occx.mjs");
 
 // Every case below spawns the real CLI. A hung child without a spawnSync timeout can
 // pin the whole shard for the full 15-minute CI budget (observed on Linux test 3/4
@@ -38,10 +38,10 @@ describe("CLI subcommand help", () => {
   test("version commands print a single script-friendly line", () => {
     for (const args of [["--version"], ["-v"], ["version"]]) {
       const result = runCli(args);
-      expectSpawnFinished(result, `ocx ${args.join(" ")}`);
+      expectSpawnFinished(result, `occx ${args.join(" ")}`);
       expect(result.status).toBe(0);
       expect(result.stderr).toBe("");
-      expect(result.stdout.trim()).toMatch(/^opencodex \d+\.\d+\.\d+/);
+      expect(result.stdout.trim()).toMatch(/^openccx \d+\.\d+\.\d+/);
       expect(result.stdout.trim().split("\n")).toHaveLength(1);
     }
 
@@ -51,47 +51,47 @@ describe("CLI subcommand help", () => {
       encoding: "utf8",
       timeout: SPAWN_TIMEOUT_MS,
     });
-    expectSpawnFinished(binResult, "bin/ocx.mjs --version");
+    expectSpawnFinished(binResult, "bin/occx.mjs --version");
     expect(binResult.status).toBe(0);
-    expect(binResult.stdout.trim()).toMatch(/^opencodex \d+\.\d+\.\d+/);
+    expect(binResult.stdout.trim()).toMatch(/^openccx \d+\.\d+\.\d+/);
     expect(binResult.stdout.trim().split("\n")).toHaveLength(1);
   });
 
   test("help command routes to subcommand help", () => {
     const result = runCli(["help", "start"]);
-    expectSpawnFinished(result, "ocx help start");
+    expectSpawnFinished(result, "occx help start");
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: ocx start [--port <port>]");
+    expect(result.stdout).toContain("Usage: occx start [--port <port>]");
     expect(result.stdout).toContain("Start the proxy server and sync models to Codex.");
   });
 
   test("top-level help counts every export client and export help names them", () => {
     const topLevel = runCli([]);
-    expectSpawnFinished(topLevel, "ocx help");
+    expectSpawnFinished(topLevel, "occx help");
     expect(topLevel.status).toBe(0);
     // Derived, not frozen: a hard-coded literal here agreed with a stale
     // literal in help.ts, so the pair stayed self-consistent and wrong
     // while the registry grew. help.ts keeps its literal on purpose —
     // importing the export registry there would load node:os/node:path
-    // machinery on the `ocx --help` path — so this assertion is what
+    // machinery on the `occx --help` path — so this assertion is what
     // holds the two in lockstep.
     expect(topLevel.stdout).toContain(`(${EXPORT_CLIENT_IDS.length} clients)`);
 
     const exportHelp = runCli(["help", "export"]);
-    expectSpawnFinished(exportHelp, "ocx help export");
+    expectSpawnFinished(exportHelp, "occx help export");
     expect(exportHelp.status).toBe(0);
     expect(exportHelp.stdout).toContain("opencode|pi|omp|hermes|openclaw|kimi|gajae|dsh");
     expect(exportHelp.stdout).toContain("DeepSeek Harness");
   });
 
   test("top-level help forms exit before Codex shim auto-restore can mutate launchers", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-help-shim-home-"));
-    const binDir = mkdtempSync(join(tmpdir(), "ocx-help-shim-bin-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-help-shim-home-"));
+    const binDir = mkdtempSync(join(tmpdir(), "occx-help-shim-bin-"));
     try {
       const wrapper = join(binDir, process.platform === "win32" ? "codex.cmd" : "codex");
-      const backup = join(binDir, process.platform === "win32" ? "codex.opencodex-real.cmd" : "codex.opencodex-real");
-      const statePath = join(opencodexHome, "codex-shim.json");
+      const backup = join(binDir, process.platform === "win32" ? "codex.openccx-real.cmd" : "codex.openccx-real");
+      const statePath = join(openccxHome, "codex-shim.json");
       const replacement = "replacement that help must not promote\n";
       writeFileSync(wrapper, replacement, "utf8");
       writeFileSync(backup, "known-good prior launcher\n", "utf8");
@@ -107,23 +107,23 @@ describe("CLI subcommand help", () => {
       Bun.sleepSync(120);
 
       for (const args of [[], ["help"], ["--help"], ["-h"]]) {
-        const result = runCli(args, { OPENCODEX_HOME: opencodexHome, PATH: binDir });
-        expectSpawnFinished(result, `ocx ${args.join(" ") || "(no args)"}`);
+        const result = runCli(args, { OPENCCX_HOME: openccxHome, PATH: binDir });
+        expectSpawnFinished(result, `occx ${args.join(" ") || "(no args)"}`);
         expect(result.status).toBe(0);
-        expect(result.stdout).toContain("opencodex (ocx)");
+        expect(result.stdout).toContain("openccx (occx)");
         expect(readFileSync(wrapper, "utf8")).toBe(replacement);
         expect(readFileSync(backup)).toEqual(backupBefore);
         expect(readFileSync(statePath)).toEqual(stateBefore);
       }
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
       removeTreeWithRetry(binDir);
     }
   });
 
   test("tray help documents the install-only no-start flag", () => {
     const result = runCli(["help", "tray"]);
-    expectSpawnFinished(result, "ocx help tray");
+    expectSpawnFinished(result, "occx help tray");
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("--no-start");
@@ -131,40 +131,40 @@ describe("CLI subcommand help", () => {
 
   test("GUI help documents explicit-origin pairing without making a live request", () => {
     const result = runCli(["help", "gui"]);
-    expectSpawnFinished(result, "ocx help gui");
+    expectSpawnFinished(result, "occx help gui");
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: ocx gui [pair --origin <browser-origin> [--json]]");
+    expect(result.stdout).toContain("Usage: occx gui [pair --origin <browser-origin> [--json]]");
     expect(result.stdout).toContain("single-use");
     expect(result.stdout).toContain("must not be persisted");
   });
 
   test("connect help exposes stdin-only credentials and offline disconnect", () => {
     const connect = runCli(["help", "connect"]);
-    expectSpawnFinished(connect, "ocx help connect");
+    expectSpawnFinished(connect, "occx help connect");
     expect(connect.status).toBe(0);
     expect(connect.stdout).toContain("--pairing-code-stdin");
     expect(connect.stdout).toContain("--admin-token-stdin");
     expect(connect.stdout).not.toContain("--admin-token <");
 
     const disconnect = runCli(["help", "disconnect"]);
-    expectSpawnFinished(disconnect, "ocx help disconnect");
+    expectSpawnFinished(disconnect, "occx help disconnect");
     expect(disconnect.status).toBe(0);
     expect(disconnect.stdout).toContain("--keep-catalog");
   });
 
   test("unknown command with help flag remains an error", () => {
     const result = runCli(["foobar", "--help"]);
-    expectSpawnFinished(result, "ocx foobar --help");
+    expectSpawnFinished(result, "occx foobar --help");
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Unknown command: foobar");
-    expect(result.stdout).toContain("opencodex (ocx)");
+    expect(result.stdout).toContain("openccx (occx)");
   });
 
   test("status prints diagnostics without starting the proxy", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-status-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-status-"));
     try {
-      const configPath = join(opencodexHome, "config.json");
+      const configPath = join(openccxHome, "config.json");
       writeFileSync(configPath, JSON.stringify({
         port: 9,
         providers: {
@@ -180,24 +180,24 @@ describe("CLI subcommand help", () => {
 
       const result = spawnSync(process.execPath, [cliPath, "status"], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: opencodexHome },
+        env: { ...process.env, OPENCCX_HOME: openccxHome },
         encoding: "utf8",
         timeout: SPAWN_TIMEOUT_MS,
       });
 
-      expectSpawnFinished(result, "ocx status");
+      expectSpawnFinished(result, "occx status");
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("Proxy:");
       expect(result.stdout).toContain("Health: http://127.0.0.1:9/healthz");
       expect(result.stdout).toContain("Dashboard: http://localhost:9/");
       expect(result.stdout).toContain(`Config: ${configPath}`);
-      expect(result.stdout).toContain(`PID file: ${join(opencodexHome, "ocx.pid")}`);
+      expect(result.stdout).toContain(`PID file: ${join(openccxHome, "occx.pid")}`);
       expect(result.stdout).toContain("Runtime:");
       expect(result.stdout).toContain("Runtime source:");
       expect(result.stdout).toContain("Default provider: openai");
       expect(result.stdout).toContain("Codex autostart: disabled");
       expect(result.stdout).toContain("Service:");
-      expect(result.stdout).toContain(join(opencodexHome, "service.log"));
+      expect(result.stdout).toContain(join(openccxHome, "service.log"));
       expect(result.stdout).toContain("Codex autostart shim");
       // #2411: status must name the routing kind it already computes. The
       // proxy is down in this fixture, so the unused-proxy warning must stay
@@ -205,18 +205,18 @@ describe("CLI subcommand help", () => {
       expect(result.stdout).toContain("routing=");
       expect(result.stdout).not.toContain("the running proxy is unused");
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("restore --help prints usage without mutating Codex config", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-help-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-help-"));
     try {
       const configPath = join(codexHome, "config.toml");
       const before = [
-        'model_provider = "opencodex"',
+        'model_provider = "openccx"',
         "",
-        "[model_providers.opencodex]",
+        "[model_providers.openccx]",
         'base_url = "http://localhost:10100/v1"',
         'wire_api = "responses"',
         "",
@@ -230,9 +230,9 @@ describe("CLI subcommand help", () => {
         timeout: SPAWN_TIMEOUT_MS,
       });
 
-      expectSpawnFinished(result, "ocx restore --help");
+      expectSpawnFinished(result, "occx restore --help");
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("Usage: ocx restore");
+      expect(result.stdout).toContain("Usage: occx restore");
       expect(result.stdout).not.toContain("Plain `codex` now runs natively");
       expect(readFileSync(configPath, "utf8")).toBe(before);
     } finally {
@@ -241,41 +241,41 @@ describe("CLI subcommand help", () => {
   });
 
   test("mutating command help exits before local state changes", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-help-state-"));
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-help-codex-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-help-state-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-help-codex-"));
     try {
       const configPath = join(codexHome, "config.toml");
-      const markerPath = join(opencodexHome, "service-state.json");
-      const before = 'model_provider = "opencodex"\n';
+      const markerPath = join(openccxHome, "service-state.json");
+      const before = 'model_provider = "openccx"\n';
       writeFileSync(configPath, before, "utf8");
       writeFileSync(markerPath, '{"installed":true}', "utf8");
 
       const cases = [
-        { args: ["stop", "--help"], expected: "Usage: ocx stop" },
-        { args: ["uninstall", "--help"], expected: "Usage: ocx uninstall" },
-        { args: ["service", "uninstall", "--help"], expected: "Usage: ocx service" },
-        { args: ["codex-shim", "uninstall", "--help"], expected: "Usage: ocx codex-shim" },
+        { args: ["stop", "--help"], expected: "Usage: occx stop" },
+        { args: ["uninstall", "--help"], expected: "Usage: occx uninstall" },
+        { args: ["service", "uninstall", "--help"], expected: "Usage: occx service" },
+        { args: ["codex-shim", "uninstall", "--help"], expected: "Usage: occx codex-shim" },
       ];
 
       for (const testCase of cases) {
         const result = runCli(testCase.args, {
           CODEX_HOME: codexHome,
-          OPENCODEX_HOME: opencodexHome,
+          OPENCCX_HOME: openccxHome,
         });
-        expectSpawnFinished(result, `ocx ${testCase.args.join(" ")}`);
+        expectSpawnFinished(result, `occx ${testCase.args.join(" ")}`);
         expect(result.status).toBe(0);
         expect(result.stdout).toContain(testCase.expected);
         expect(readFileSync(configPath, "utf8")).toBe(before);
         expect(readFileSync(markerPath, "utf8")).toBe('{"installed":true}');
       }
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
       removeTreeWithRetry(codexHome);
     }
   });
 
   test("recover-history --help prints usage without opening history database", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-help-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-help-"));
     try {
       const statePath = join(codexHome, "state_5.sqlite");
 
@@ -286,9 +286,9 @@ describe("CLI subcommand help", () => {
         timeout: SPAWN_TIMEOUT_MS,
       });
 
-      expectSpawnFinished(result, "ocx recover-history --help");
+      expectSpawnFinished(result, "occx recover-history --help");
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("Usage: ocx recover-history (--legacy-openai | --ocx-compaction <thread-id>) --yes");
+      expect(result.stdout).toContain("Usage: occx recover-history (--legacy-openai | --occx-compaction <thread-id>) --yes");
       expect(result.stdout).toContain("Recover legacy provider metadata or one OpenCodeX-compacted thread");
       expect(result.stdout).not.toContain("Recovered");
       expect(result.stderr).toBe("");
@@ -299,13 +299,13 @@ describe("CLI subcommand help", () => {
   });
 
   test("recover-history requires exact confirmation before mutating history", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-recover-confirm-"));
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-recover-confirm-state-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-recover-confirm-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-recover-confirm-state-"));
     try {
       const rollout = join(codexHome, "rollout.jsonl");
       writeFileSync(rollout, `${JSON.stringify({
         type: "session_meta",
-        payload: { id: "thread-1", model_provider: "opencodex", source: "exec" },
+        payload: { id: "thread-1", model_provider: "openccx", source: "exec" },
       })}\n`);
       const statePath = join(codexHome, "state_5.sqlite");
       const db = new Database(statePath, { create: true });
@@ -313,18 +313,18 @@ describe("CLI subcommand help", () => {
         id TEXT PRIMARY KEY, rollout_path TEXT, model_provider TEXT,
         source TEXT, has_user_event INTEGER, first_user_message TEXT
       )`);
-      db.run("INSERT INTO threads VALUES ('thread-1', ?, 'opencodex', 'exec', 1, 'legacy')", [rollout]);
+      db.run("INSERT INTO threads VALUES ('thread-1', ?, 'openccx', 'exec', 1, 'legacy')", [rollout]);
       db.close();
       const databaseBefore = readFileSync(statePath);
       const rolloutBefore = readFileSync(rollout);
-      const env = { CODEX_HOME: codexHome, OPENCODEX_HOME: opencodexHome };
+      const env = { CODEX_HOME: codexHome, OPENCCX_HOME: openccxHome };
 
       for (const command of [
         ["recover-history", "--legacy-openai"],
         ["recover-history", "--legacy-openai", "--yes", "--extra"],
       ]) {
         const refused = runCli(command, env);
-        expectSpawnFinished(refused, `ocx ${command.join(" ")}`);
+        expectSpawnFinished(refused, `occx ${command.join(" ")}`);
         expect(refused.status).toBe(1);
         expect(refused.stderr).toContain("--legacy-openai --yes");
         expect(readFileSync(statePath).equals(databaseBefore)).toBe(true);
@@ -332,7 +332,7 @@ describe("CLI subcommand help", () => {
       }
 
       const confirmed = runCli(["recover-history", "--legacy-openai", "--yes"], env);
-      expectSpawnFinished(confirmed, "ocx recover-history --legacy-openai --yes");
+      expectSpawnFinished(confirmed, "occx recover-history --legacy-openai --yes");
       expect(confirmed.status).toBe(0);
       expect(confirmed.stdout).toContain("Recovered 1 legacy thread(s)");
       const restored = new Database(statePath, { readonly: true });
@@ -340,21 +340,21 @@ describe("CLI subcommand help", () => {
         .toEqual({ model_provider: "openai", source: "cli" });
       restored.close();
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
       removeTreeWithRetry(codexHome);
     }
   });
 
-  test("recover-history repairs one explicitly selected ocx1-compacted thread", () => {
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-recover-compaction-"));
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-recover-compaction-state-"));
+  test("recover-history repairs one explicitly selected occx1-compacted thread", () => {
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-recover-compaction-"));
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-recover-compaction-state-"));
     try {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
       const threadId = "01a018e6-242f-7801-81b8-ffc0a5c6d589";
       const rolloutDir = join(codexHome, "sessions", "2026", "09", "07");
       mkdirSync(rolloutDir, { recursive: true });
       const rollout = join(rolloutDir, `rollout-fixture-${threadId}.jsonl`);
-      const summary = `ocx1:${Buffer.from("portable summary", "utf8").toString("base64")}`;
+      const summary = `occx1:${Buffer.from("portable summary", "utf8").toString("base64")}`;
       writeFileSync(rollout, `${JSON.stringify({
         type: "compacted",
         payload: {
@@ -368,21 +368,21 @@ describe("CLI subcommand help", () => {
       db.close();
 
       const result = runCli(
-        ["recover-history", "--ocx-compaction", threadId, "--yes"],
-        { CODEX_HOME: codexHome, OPENCODEX_HOME: opencodexHome, CI: "1" },
+        ["recover-history", "--occx-compaction", threadId, "--yes"],
+        { CODEX_HOME: codexHome, OPENCCX_HOME: openccxHome, CI: "1" },
       );
 
-      expectSpawnFinished(result, "ocx recover-history --ocx-compaction");
+      expectSpawnFinished(result, "occx recover-history --occx-compaction");
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("Recovered 1 ocx1 compaction item(s)");
+      expect(result.stdout).toContain("Recovered 1 occx1 compaction item(s)");
       expect(readFileSync(rollout, "utf8")).toContain("portable summary");
-      expect(readFileSync(rollout, "utf8")).not.toContain("ocx1:");
-      const backupDir = join(opencodexHome, "history-recovery-backups", threadId);
+      expect(readFileSync(rollout, "utf8")).not.toContain("occx1:");
+      const backupDir = join(openccxHome, "history-recovery-backups", threadId);
       const backups = readdirSync(backupDir);
       expect(backups).toHaveLength(1);
-      expect(readFileSync(join(backupDir, backups[0]), "utf8")).toContain("ocx1:");
+      expect(readFileSync(join(backupDir, backups[0]), "utf8")).toContain("occx1:");
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
       removeTreeWithRetry(codexHome);
     }
   });
@@ -390,13 +390,13 @@ describe("CLI subcommand help", () => {
   test("start rejects unknown and partially numeric port arguments", () => {
     const cases = [
       { args: ["start", "--port", "123abc"], expected: "Invalid port number" },
-      { args: ["start", "--bad"], expected: "Usage: ocx start [--port <port>]" },
-      { args: ["start", "--port", "1234", "--extra"], expected: "Usage: ocx start [--port <port>]" },
+      { args: ["start", "--bad"], expected: "Usage: occx start [--port <port>]" },
+      { args: ["start", "--port", "1234", "--extra"], expected: "Usage: occx start [--port <port>]" },
     ];
 
     for (const testCase of cases) {
       const result = runCli(testCase.args);
-      expectSpawnFinished(result, `ocx ${testCase.args.join(" ")}`);
+      expectSpawnFinished(result, `occx ${testCase.args.join(" ")}`);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain(testCase.expected);
       expect(result.stdout).not.toContain("Plain `codex`");
@@ -405,21 +405,21 @@ describe("CLI subcommand help", () => {
 
   test("start help wins before port validation", () => {
     const result = runCli(["start", "--port", "123abc", "--help"]);
-    expectSpawnFinished(result, "ocx start --port 123abc --help");
+    expectSpawnFinished(result, "occx start --port 123abc --help");
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: ocx start [--port <port>]");
+    expect(result.stdout).toContain("Usage: occx start [--port <port>]");
   });
 
   test("invalid service and codex-shim usage include remove alias", () => {
     const cases = [
-      { args: ["service", "nope"], expected: "Usage: ocx service [install|repair|restart|start|stop|status|uninstall|remove]" },
-      { args: ["codex-shim", "nope"], expected: "Usage: ocx codex-shim <install|status|uninstall|remove>" },
+      { args: ["service", "nope"], expected: "Usage: occx service [install|repair|restart|start|stop|status|uninstall|remove]" },
+      { args: ["codex-shim", "nope"], expected: "Usage: occx codex-shim <install|status|uninstall|remove>" },
     ];
 
     for (const testCase of cases) {
       const result = runCli(testCase.args);
-      expectSpawnFinished(result, `ocx ${testCase.args.join(" ")}`);
+      expectSpawnFinished(result, `occx ${testCase.args.join(" ")}`);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain(testCase.expected);
       expect(result.stdout).toBe("");

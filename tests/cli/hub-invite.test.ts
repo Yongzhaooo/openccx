@@ -14,25 +14,25 @@ import {
 } from "../../src/cli/hub";
 import type { GuiPairRequestResult } from "../../src/cli/gui-pair-client";
 import type { LiveProxy } from "../../src/server/proxy-liveness";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
- * `ocx hub invite` (#4236).
+ * `occx hub invite` (#4236).
  *
  * The command's whole value is that the line it prints can be pasted on the other machine and
  * work, so these tests pin the two things that decide that: WHICH origins end up in the command,
  * and WHICH configurations are refused before a single-use code is burned on a request the hub
  * would have rejected anyway.
  *
- * The mint itself is not re-tested here -- it is the existing attested `ocx gui pair` route, and
+ * The mint itself is not re-tested here -- it is the existing attested `occx gui pair` route, and
  * `requestPairingGrant` is injected so no proxy, no socket and no real grant is involved.
  */
-const GRANT = `ocx_pair_${"A".repeat(43)}`;
+const GRANT = `occx_pair_${"A".repeat(43)}`;
 const EXPIRES_AT = 1_767_225_600_000;
 
 const LIVE: LiveProxy = { pid: 4242, port: 10100, hostname: "100.64.0.10", source: "runtime" };
 
-function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function hubConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     hostname: "100.64.0.10",
@@ -40,12 +40,12 @@ function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     corsAllowOrigins: ["http://localhost:10100"],
     hub: { managementPublicOrigin: "https://hub.tailnet.ts.net" },
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function invite(
   args: string[],
-  config: OcxConfig,
+  config: OccxConfig,
   options: { live?: LiveProxy | null; result?: GuiPairRequestResult } = {},
 ): Promise<{ code: number; out: string[]; err: string[]; boundOrigin: string | null }> {
   const out: string[] = [];
@@ -115,7 +115,7 @@ describe("hub invite argument and origin helpers", () => {
   });
 
   test("the grant binds to the connecting machine's loopback origin, not the hub's", () => {
-    // `ocx connect` sends Origin: http://localhost:<its own port> (client/connect.ts
+    // `occx connect` sends Origin: http://localhost:<its own port> (client/connect.ts
     // localGuiOrigin), so only a loopback entry in the hub's allow-list can ever match.
     expect(selectInviteBrowserOrigin(hubConfig())).toBe("http://localhost:10100");
     expect(selectInviteBrowserOrigin(hubConfig({ corsAllowOrigins: ["http://localhost:9999"] })))
@@ -147,24 +147,24 @@ describe("hub invite argument and origin helpers", () => {
   });
 
   test("the surfaced config commands work on a config that has no hub object yet", () => {
-    // `ocx config set hub.x` exits with `config parent path not found: hub` when `hub` is
+    // `occx config set hub.x` exits with `config parent path not found: hub` when `hub` is
     // absent (setPath in config-command.ts walks existing parents only).
-    expect(configSetHubLines({ hub: undefined } as Partial<OcxConfig>, "dataPublicOrigin", "https://d.test"))
-      .toEqual(["ocx config set hub '{}'", `ocx config set hub.dataPublicOrigin '"https://d.test"'`]);
-    expect(configSetHubLines({ hub: {} } as Partial<OcxConfig>, "managementPublicOrigin", "https://m.test"))
-      .toEqual([`ocx config set hub.managementPublicOrigin '"https://m.test"'`]);
+    expect(configSetHubLines({ hub: undefined } as Partial<OccxConfig>, "dataPublicOrigin", "https://d.test"))
+      .toEqual(["occx config set hub '{}'", `occx config set hub.dataPublicOrigin '"https://d.test"'`]);
+    expect(configSetHubLines({ hub: {} } as Partial<OccxConfig>, "managementPublicOrigin", "https://m.test"))
+      .toEqual([`occx config set hub.managementPublicOrigin '"https://m.test"'`]);
   });
 
   test("the corsAllowOrigins command adds to the list instead of replacing it", () => {
-    // `ocx config set corsAllowOrigins '[...]'` overwrites, so a one-element literal would
+    // `occx config set corsAllowOrigins '[...]'` overwrites, so a one-element literal would
     // tell an operator with an existing allow-list to delete it.
     expect(appendCorsAllowOriginsCommand({ corsAllowOrigins: ["https://a.test"] }, "http://localhost:10100"))
-      .toBe(`ocx config set corsAllowOrigins '["https://a.test","http://localhost:10100"]'`);
+      .toBe(`occx config set corsAllowOrigins '["https://a.test","http://localhost:10100"]'`);
     expect(appendCorsAllowOriginsCommand({}, "http://localhost:10100"))
-      .toBe(`ocx config set corsAllowOrigins '["http://localhost:10100"]'`);
+      .toBe(`occx config set corsAllowOrigins '["http://localhost:10100"]'`);
     // Idempotent: never suggest a duplicate entry.
     expect(appendCorsAllowOriginsCommand({ corsAllowOrigins: ["http://localhost:10100"] }, "http://localhost:10100"))
-      .toBe(`ocx config set corsAllowOrigins '["http://localhost:10100"]'`);
+      .toBe(`occx config set corsAllowOrigins '["http://localhost:10100"]'`);
   });
 
   test("the bound browser origin is always stated, and a non-default one names the client's port", () => {
@@ -173,13 +173,13 @@ describe("hub invite argument and origin helpers", () => {
     ]);
     const notes = inviteBoundOriginNotes("http://localhost:9999", { corsAllowOrigins: ["http://localhost:9999"] });
     expect(notes[0]).toContain("http://localhost:9999");
-    expect(notes.join(" ")).toContain("ocx config set port 9999");
+    expect(notes.join(" ")).toContain("occx config set port 9999");
     expect(notes.join(" ")).toContain(`'["http://localhost:9999","http://localhost:10100"]'`);
   });
 
   test("the printed command carries --clients only when the operator asked for it", () => {
     expect(hubInviteCommand(GRANT, "https://d.test:8443", "https://m.test", []))
-      .toBe(`echo '${GRANT}' | ocx connect https://d.test:8443 --management-url https://m.test --pairing-code-stdin`);
+      .toBe(`echo '${GRANT}' | occx connect https://d.test:8443 --management-url https://m.test --pairing-code-stdin`);
     expect(hubInviteCommand(GRANT, "https://d.test:8443", "https://m.test", ["codex"]))
       .toContain("--clients codex --pairing-code-stdin");
   });
@@ -192,7 +192,7 @@ describe("hub invite output", () => {
     expect(boundOrigin).toBe("http://localhost:10100");
     expect(out.join("\n")).toContain("# Run on the other machine:");
     expect(out.join("\n")).toContain(
-      `echo '${GRANT}' | ocx connect http://100.64.0.10:10100 --management-url https://hub.tailnet.ts.net --pairing-code-stdin`,
+      `echo '${GRANT}' | occx connect http://100.64.0.10:10100 --management-url https://hub.tailnet.ts.net --pairing-code-stdin`,
     );
     // The warning is advice, not output a script should capture.
     expect(err.join("\n")).toContain("single-use");
@@ -202,19 +202,19 @@ describe("hub invite output", () => {
   test("the bound browser origin reaches stderr in both modes, with a warning when it differs", async () => {
     const plain = await invite(["invite"], hubConfig());
     expect(plain.err.join("\n")).toContain("Bound browser origin: http://localhost:10100");
-    expect(plain.err.join("\n")).not.toContain("ocx config set port");
+    expect(plain.err.join("\n")).not.toContain("occx config set port");
 
     const asJson = await invite(["invite", "--json"], hubConfig());
     expect(asJson.err.join("\n")).toContain("Bound browser origin: http://localhost:10100");
 
     // `selectInviteBrowserOrigin` silently fell back to the first admitted loopback origin, and
-    // a remote `ocx connect` only sends http://localhost:<its own port> -- so without this the
+    // a remote `occx connect` only sends http://localhost:<its own port> -- so without this the
     // single-use code was spent with nothing saying why.
     const other = await invite(["invite"], hubConfig({ corsAllowOrigins: ["http://localhost:9999"] }));
     expect(other.code).toBe(0);
     expect(other.boundOrigin).toBe("http://localhost:9999");
     expect(other.err.join("\n")).toContain("Bound browser origin: http://localhost:9999");
-    expect(other.err.join("\n")).toContain("ocx config set port 9999");
+    expect(other.err.join("\n")).toContain("occx config set port 9999");
   });
 
   test("hub.dataPublicOrigin replaces the derived origin, and --data-url replaces both", async () => {
@@ -222,10 +222,10 @@ describe("hub invite output", () => {
       hub: { managementPublicOrigin: "https://hub.tailnet.ts.net", dataPublicOrigin: "https://hub.tailnet.ts.net:8443" },
     });
     const fromConfig = await invite(["invite"], configured);
-    expect(fromConfig.out.join("\n")).toContain("ocx connect https://hub.tailnet.ts.net:8443 ");
+    expect(fromConfig.out.join("\n")).toContain("occx connect https://hub.tailnet.ts.net:8443 ");
 
     const overridden = await invite(["invite", "--data-url", "https://front.test"], configured);
-    expect(overridden.out.join("\n")).toContain("ocx connect https://front.test ");
+    expect(overridden.out.join("\n")).toContain("occx connect https://front.test ");
   });
 
   test("--json emits exactly the documented envelope", async () => {
@@ -236,7 +236,7 @@ describe("hub invite output", () => {
       expiresAt: new Date(EXPIRES_AT).toISOString(),
       dataUrl: "http://100.64.0.10:10100",
       managementUrl: "https://hub.tailnet.ts.net",
-      command: `echo '${GRANT}' | ocx connect http://100.64.0.10:10100 --management-url https://hub.tailnet.ts.net --clients codex,claude --pairing-code-stdin`,
+      command: `echo '${GRANT}' | occx connect http://100.64.0.10:10100 --management-url https://hub.tailnet.ts.net --clients codex,claude --pairing-code-stdin`,
     });
   });
 });
@@ -244,10 +244,10 @@ describe("hub invite output", () => {
 describe("hub invite refuses before burning a code", () => {
   test("a non-hub gets one line naming its own role and the command it should run", async () => {
     for (const role of [undefined, "standalone", "client"] as const) {
-      const { code, err } = await invite(["invite"], hubConfig({ runtimeRole: role } as Partial<OcxConfig>));
+      const { code, err } = await invite(["invite"], hubConfig({ runtimeRole: role } as Partial<OccxConfig>));
       expect(code).toBe(1);
       expect(err.join(" ")).toContain("runs on a hub");
-      expect(err.join(" ")).toContain("ocx connect");
+      expect(err.join(" ")).toContain("occx connect");
     }
   });
 
@@ -255,14 +255,14 @@ describe("hub invite refuses before burning a code", () => {
     const { code, err } = await invite(["invite"], hubConfig({ hub: {} }));
     expect(code).toBe(1);
     expect(err.join(" ")).toContain("hub.managementPublicOrigin");
-    expect(err.join(" ")).not.toContain("ocx config set hub '{}'");
+    expect(err.join(" ")).not.toContain("occx config set hub '{}'");
 
     // With no `hub` object at all the dotted form exits `config parent path not found: hub`,
     // so the parent-creating line has to come with it.
     const absent = await invite(["invite"], hubConfig({ hub: undefined }));
     expect(absent.code).toBe(1);
-    expect(absent.err.join("\n")).toContain("ocx config set hub '{}'");
-    expect(absent.err.join("\n")).toContain("ocx config set hub.managementPublicOrigin");
+    expect(absent.err.join("\n")).toContain("occx config set hub '{}'");
+    expect(absent.err.join("\n")).toContain("occx config set hub.managementPublicOrigin");
   });
 
   test("a --management-url that differs from the configured origin is refused, not printed", async () => {
@@ -293,7 +293,7 @@ describe("hub invite refuses before burning a code", () => {
 
   test("a loopback-derived data origin is refused before a code is minted", async () => {
     // The incident shape: a hub bound to loopback (or a wildcard) with no hub.dataPublicOrigin
-    // printed `ocx connect http://localhost:10100`, which on the other machine means "dial
+    // printed `occx connect http://localhost:10100`, which on the other machine means "dial
     // yourself" -- and the code was gone.
     for (const bind of ["127.0.0.1", "0.0.0.0"] as const) {
       const { code, err, boundOrigin } = await invite(
@@ -321,13 +321,13 @@ describe("hub invite refuses before burning a code", () => {
       hub: { managementPublicOrigin: "https://hub.tailnet.ts.net", dataPublicOrigin: "https://hub.tailnet.ts.net:8443" },
     }), { live: { pid: 4242, port: 10100, hostname: "127.0.0.1", source: "runtime" } });
     expect(viaConfig.code).toBe(0);
-    expect(viaConfig.out.join("\n")).toContain("ocx connect https://hub.tailnet.ts.net:8443 ");
+    expect(viaConfig.out.join("\n")).toContain("occx connect https://hub.tailnet.ts.net:8443 ");
   });
 
   test("no running hub, a malformed origin, and a refused mint each exit 1 with a reason", async () => {
     const down = await invite(["invite"], hubConfig(), { live: null });
     expect(down.code).toBe(1);
-    expect(down.err.join(" ")).toContain("No running attested OpenCodex hub");
+    expect(down.err.join(" ")).toContain("No running attested Openccx hub");
 
     const bad = await invite(["invite", "--data-url", "https://front.test/path"], hubConfig());
     expect(bad.code).toBe(1);
@@ -344,7 +344,7 @@ describe("hub invite refuses before burning a code", () => {
     for (const args of [[], ["status"], ["invite-machine"]]) {
       const { code, err } = await invite(args, hubConfig());
       expect(code).toBe(1);
-      expect(err.join(" ")).toContain("ocx hub invite");
+      expect(err.join(" ")).toContain("occx hub invite");
     }
   });
 });

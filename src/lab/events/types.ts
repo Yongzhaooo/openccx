@@ -19,7 +19,7 @@ export interface LabProducer {
 export interface ProtocolSubjectV1 {
   subjectSchemaVersion: 1;
   subjectKind: "protocol";
-  opencodexCompatibilityVersion: string;
+  openccxCompatibilityVersion: string;
   effectiveAdapter: string;
   inboundProtocol: string;
   upstreamProtocol: string;
@@ -50,7 +50,7 @@ export interface RouteSubjectV1 {
   inboundProtocol: string;
   upstreamProtocol: string;
   surface: string;
-  opencodexCompatibilityVersion: string;
+  openccxCompatibilityVersion: string;
   behaviorFingerprint: string;
   endpointFingerprint: string;
   dependencies: RouteDependencyV1[];
@@ -94,7 +94,7 @@ export interface FailureRecordV1 {
   class: FailureClassification;
   code: string;
   retryable: boolean;
-  attribution: "opencodex" | "route" | "environment" | "harness";
+  attribution: "openccx" | "route" | "environment" | "harness";
 }
 
 export interface LabEventBase {

@@ -75,7 +75,7 @@ export default function Combos({
   onCountChange?: (count: number) => void;
 }) {
   const t = useT();
-  const cacheKey = `ocx.combos.workspace.v1:${apiBase}`;
+  const cacheKey = `occx.combos.workspace.v1:${apiBase}`;
   const cached = useMemo(() => seedCombos(cacheKey), [cacheKey]);
 
   /*
@@ -232,7 +232,7 @@ export default function Combos({
       : {};
   }, [apiBase]);
   const quotaResource = useDataSurface<ProviderQuotasDto>(
-    `ocx.combos.provider-quotas.v1:${apiBase}`,
+    `occx.combos.provider-quotas.v1:${apiBase}`,
     [apiBase],
     loadProviderQuotas,
     {

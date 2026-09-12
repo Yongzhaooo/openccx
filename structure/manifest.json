@@ -14,7 +14,7 @@
     {
       "id": 1,
       "name": "Foundation",
-      "purpose": "What opencodex is, what it owns on disk, and the invariants nothing may break."
+      "purpose": "What openccx is, what it owns on disk, and the invariants nothing may break."
     },
     {
       "id": 2,
@@ -115,7 +115,7 @@
       "path": "codex-home.md",
       "tier": 2,
       "title": "Codex Home",
-      "scope": "CODEX_HOME resolution, the files opencodex manages there, and Codex-home diagnostics.",
+      "scope": "CODEX_HOME resolution, the files openccx manages there, and Codex-home diagnostics.",
       "documents": [
         "src/codex/"
       ]

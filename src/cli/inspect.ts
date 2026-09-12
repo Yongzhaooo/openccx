@@ -1,5 +1,5 @@
 /**
- * `ocx system-surface` — the remaining routes that had no CLI caller at all (wp7).
+ * `occx system-surface` — the remaining routes that had no CLI caller at all (wp7).
  *
  * These are grouped by what an operator is trying to do, not by which server module owns them:
  * inspecting effective configuration, reading the generated client-config snippet, toggling the
@@ -24,18 +24,18 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx inspect config [--json]
-  ocx inspect catalog [--json]
-  ocx inspect routing-analytics [--json]
-  ocx inspect pacing [--name <provider>] [--json]
-  ocx inspect key-providers [--json]
-  ocx inspect codex-prompt [--text] [--json]
-  ocx inspect client-config --client <id> [--json]
-  ocx inspect star [--json]
-  ocx inspect windows-tray [--json]
-  ocx integration native [list] [--json]
-  ocx integration native <claude|claude-desktop|codex|grok> <on|off> [--json]
-  ocx agent request-user-input [on|off] [--json]`;
+  occx inspect config [--json]
+  occx inspect catalog [--json]
+  occx inspect routing-analytics [--json]
+  occx inspect pacing [--name <provider>] [--json]
+  occx inspect key-providers [--json]
+  occx inspect codex-prompt [--text] [--json]
+  occx inspect client-config --client <id> [--json]
+  occx inspect star [--json]
+  occx inspect windows-tray [--json]
+  occx integration native [list] [--json]
+  occx integration native <claude|claude-desktop|codex|grok> <on|off> [--json]
+  occx agent request-user-input [on|off] [--json]`;
 
 /** A read that takes no arguments beyond `--json`. */
 async function read(path: string, argv: string[], deps: RuntimeApiDeps): Promise<void> {
@@ -119,7 +119,7 @@ async function nativeIntegration(argv: string[], deps: RuntimeApiDeps): Promise<
 }
 
 /**
- * Exported unwrapped so `ocx agent request-user-input` can call it INSIDE its own
+ * Exported unwrapped so `occx agent request-user-input` can call it INSIDE its own
  * `runCliAction`. Wrapping an already-wrapped handler reports one failure twice: the inner
  * wrapper prints the error and returns a code, and the outer one prints again on the rethrow.
  */

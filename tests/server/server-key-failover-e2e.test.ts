@@ -7,14 +7,14 @@ import { clearKeyCooldowns, rotateKeyOn429 } from "../../src/providers/key-failo
 import { deriveXaiConvId } from "../../src/providers/xai-transport";
 import { clearReasoningReplayCacheForTests } from "../../src/responses/reasoning-replay-cache";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { managementFetch } from "../helpers/management-auth";
 import { resetProviderRequestPacingForTest, setProviderRequestPacingRuntimeForTest, waitForProviderRequestSlot } from "../../src/providers/request-pacing";
 import { providerApiKeySelectionIsCurrent, resolveCurrentProviderApiKeyTransport } from "../../src/providers/api-key-selection";
 import { routedProviderConfig } from "../../src/router";
-import type { OcxProviderTransport } from "../../src/providers/xai-transport";
+import type { OccxProviderTransport } from "../../src/providers/xai-transport";
 
 let testDir = "";
 let previousHome: string | undefined;
@@ -22,10 +22,10 @@ let isolatedCodexHome: IsolatedCodexHome | null = null;
 let upstream: ReturnType<typeof Bun.serve> | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-keyfail-e2e-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-keyfail-e2e-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-keyfail-e2e-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-keyfail-e2e-"));
+  process.env.OPENCCX_HOME = testDir;
   clearKeyCooldowns();
   clearReasoningReplayCacheForTests();
 });
@@ -33,8 +33,8 @@ beforeEach(() => {
 afterEach(() => {
   upstream?.stop(true);
   upstream = null;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -45,13 +45,13 @@ afterEach(() => {
 describe("server 429 key failover (end-to-end)", () => {
   test("physical key selection rejects disabled, removed, and changed-auth providers", () => {
     const provider = { adapter: "openai-chat", baseUrl: "https://example.test/v1", authMode: "key", apiKey: "synthetic-first" } as const;
-    const config = { providers: { current: { ...provider } } } as unknown as OcxConfig;
+    const config = { providers: { current: { ...provider } } } as unknown as OccxConfig;
     const routed = routedProviderConfig("current", config.providers.current);
     expect(providerApiKeySelectionIsCurrent(config, "current", routed)).toBe(true);
     // A model-level wire override does not change which key was selected.
     expect(providerApiKeySelectionIsCurrent(config, "current", { ...routed, adapter: "openai-responses" })).toBe(true);
     for (const replacement of [{ ...provider, disabled: true }, { ...provider, authMode: "oauth" }, { ...provider, apiKey: undefined }]) {
-      config.providers.current = replacement as OcxConfig["providers"][string];
+      config.providers.current = replacement as OccxConfig["providers"][string];
       expect(providerApiKeySelectionIsCurrent(config, "current", routed)).toBe(false);
       expect(resolveCurrentProviderApiKeyTransport(config, "current", routed)).toBeNull();
     }
@@ -64,9 +64,9 @@ describe("server 429 key failover (end-to-end)", () => {
     const config = { providers: { current: {
       adapter: "openai-chat", baseUrl: "https://example.test/v1", authMode: "key", apiKey: "synthetic-first",
       headers: { "x-old-static": "old" }, apiKeySelectionRevision: "first-revision",
-    } } } as unknown as OcxConfig;
+    } } } as unknown as OccxConfig;
     const executor = (async () => Response.json({})) as typeof fetch;
-    const routed: OcxProviderTransport = {
+    const routed: OccxProviderTransport = {
       ...routedProviderConfig("current", config.providers.current), fetch: executor,
       headers: { "x-old-static": "old", "x-opencode-session": "runtime-session" },
     };
@@ -74,7 +74,7 @@ describe("server 429 key failover (end-to-end)", () => {
       apiKeySelectionRevision: "second-revision", headers: { "x-new-static": "new" },
     };
     expect(providerApiKeySelectionIsCurrent(config, "current", routed)).toBe(false);
-    const current = resolveCurrentProviderApiKeyTransport(config, "current", routed) as OcxProviderTransport;
+    const current = resolveCurrentProviderApiKeyTransport(config, "current", routed) as OccxProviderTransport;
     expect(current.apiKey).toBe("synthetic-second");
     expect(current.fetch).toBe(executor);
     expect(current.headers).toEqual({ "x-new-static": "new", "x-opencode-session": "runtime-session" });
@@ -107,7 +107,7 @@ describe("server 429 key failover (end-to-end)", () => {
       authMode: "key", apiKey: "synthetic-first", headers: { "x-static-test": "retained" },
       apiKeyPool: [{ id: "first", key: "synthetic-first" }, { id: "second", key: "synthetic-second" }],
       requestPacing: { enabled: true, minIntervalMs: 100 },
-    } } } as OcxConfig;
+    } } } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     const abort = new AbortController();
@@ -140,7 +140,7 @@ describe("server 429 key failover (end-to-end)", () => {
 
   test.each(["responses", "chat/completions"])("%s carries the configured env-key identity through 429 recovery", async inbound => {
     const seen: string[] = [];
-    process.env.OCX_SELECTION_E2E_KEY = "synthetic-env-first";
+    process.env.OCCX_SELECTION_E2E_KEY = "synthetic-env-first";
     upstream = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(req) {
       seen.push(req.headers.get("authorization") ?? "");
       if (seen.length === 1) return Response.json({ error: { message: "rate limited" } }, { status: 429 });
@@ -151,10 +151,10 @@ describe("server 429 key failover (end-to-end)", () => {
     } });
     saveConfig({ port: 0, hostname: "127.0.0.1", defaultProvider: "pooled", providers: { pooled: {
       adapter: "openai-chat", baseUrl: `http://127.0.0.1:${upstream.port}/v1`, allowPrivateNetwork: true,
-      authMode: "key", apiKey: "${OCX_SELECTION_E2E_KEY}", apiKeyPool: [
-        { id: "first", key: "${OCX_SELECTION_E2E_KEY}" }, { id: "second", key: "synthetic-second" },
+      authMode: "key", apiKey: "${OCCX_SELECTION_E2E_KEY}", apiKeyPool: [
+        { id: "first", key: "${OCCX_SELECTION_E2E_KEY}" }, { id: "second", key: "synthetic-second" },
       ],
-    } } } as OcxConfig);
+    } } } as OccxConfig);
     const server = startServer(0);
     try {
       const response = await fetch(new URL(`/v1/${inbound}`, server.url), {
@@ -170,7 +170,7 @@ describe("server 429 key failover (end-to-end)", () => {
       expect(loadConfig().providers.pooled._apiKeyAttempt).toBeUndefined();
     } finally {
       await server.stop(true);
-      delete process.env.OCX_SELECTION_E2E_KEY;
+      delete process.env.OCCX_SELECTION_E2E_KEY;
     }
   });
 
@@ -201,7 +201,7 @@ describe("server 429 key failover (end-to-end)", () => {
 
     let server: ReturnType<typeof startServer> | null = null;
     try {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 0,
         hostname: "127.0.0.1",
         defaultProvider: "xai",
@@ -217,7 +217,7 @@ describe("server 429 key failover (end-to-end)", () => {
             ],
           },
         },
-      } as OcxConfig;
+      } as OccxConfig;
       saveConfig(config);
       server = startServer(0);
       const res = await originalFetch(new URL("/v1/responses", server.url), {
@@ -287,7 +287,7 @@ describe("server 429 key failover (end-to-end)", () => {
 
     let server: ReturnType<typeof startServer> | null = null;
     try {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 0,
         hostname: "127.0.0.1",
         defaultProvider: "kimi-code",
@@ -304,7 +304,7 @@ describe("server 429 key failover (end-to-end)", () => {
             ],
           },
         },
-      } as OcxConfig;
+      } as OccxConfig;
       saveConfig(config);
       server = startServer(0);
       const res = await originalFetch(new URL("/v1/responses", server.url), {
@@ -351,7 +351,7 @@ describe("server 429 key failover (end-to-end)", () => {
         }), { headers: { "content-type": "application/json" } });
       },
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "pooled",
       providers: {
         pooled: {
@@ -365,7 +365,7 @@ describe("server 429 key failover (end-to-end)", () => {
           ],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -435,7 +435,7 @@ describe("server 429 key failover (end-to-end)", () => {
         });
       },
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "reasoning-pool",
       providers: {
         "reasoning-pool": {
@@ -451,7 +451,7 @@ describe("server 429 key failover (end-to-end)", () => {
           requiresReasoningPlaceholderModels: [model],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     const headers = {
@@ -521,7 +521,7 @@ describe("server 429 key failover (end-to-end)", () => {
       return originalFetch(input, init);
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "pooled-network-failure",
       providers: {
         "pooled-network-failure": {
@@ -534,7 +534,7 @@ describe("server 429 key failover (end-to-end)", () => {
           ],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -568,7 +568,7 @@ describe("server 429 key failover (end-to-end)", () => {
         }), { headers: { "content-type": "application/json" } });
       },
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "textonly",
       providers: {
         textonly: {
@@ -580,7 +580,7 @@ describe("server 429 key failover (end-to-end)", () => {
         },
         // No forward provider in config → planVisionSidecar cannot run.
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -631,7 +631,7 @@ describe("server 429 key failover (end-to-end)", () => {
       return originalFetch(input, init);
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "google-direct",
       providers: {
         "google-direct": {
@@ -645,7 +645,7 @@ describe("server 429 key failover (end-to-end)", () => {
           ],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -684,7 +684,7 @@ describe("server 429 key failover (end-to-end)", () => {
       authMode: "key", apiKey: "synthetic-first",
       ...(strategy ? { apiKeyPoolStrategy: strategy } : {}),
       apiKeyPool: [{ id: "first", key: "synthetic-first" }, { id: "second", key: "synthetic-second" }],
-    } } } as OcxConfig);
+    } } } as OccxConfig);
     // Cool the committed key exactly the way a real 429 does, then point the stored selection
     // back at it. Cooldowns are process-local, so the server started below shares this state.
     const live = loadConfig();
@@ -758,20 +758,20 @@ describe("server 429 key failover (end-to-end)", () => {
         usage: { prompt_tokens: 1, completion_tokens: 1 },
       });
     } });
-    process.env.OCX_KEYFAIL_COOLED = "resolved-cooled";
-    process.env.OCX_KEYFAIL_WARM = "resolved-warm";
+    process.env.OCCX_KEYFAIL_COOLED = "resolved-cooled";
+    process.env.OCCX_KEYFAIL_WARM = "resolved-warm";
     saveConfig({ port: 0, hostname: "127.0.0.1", defaultProvider: "env-pooled", providers: { "env-pooled": {
       adapter: "openai-chat", baseUrl: `http://127.0.0.1:${upstream.port}/v1`, allowPrivateNetwork: true,
-      authMode: "key", apiKey: "\${OCX_KEYFAIL_COOLED}", apiKeyPoolStrategy: "round-robin",
+      authMode: "key", apiKey: "\${OCCX_KEYFAIL_COOLED}", apiKeyPoolStrategy: "round-robin",
       apiKeyPool: [
-        { id: "cooled", key: "\${OCX_KEYFAIL_COOLED}" },
-        { id: "warm", key: "\${OCX_KEYFAIL_WARM}" },
+        { id: "cooled", key: "\${OCCX_KEYFAIL_COOLED}" },
+        { id: "warm", key: "\${OCCX_KEYFAIL_WARM}" },
       ],
-    } } } as OcxConfig);
+    } } } as OccxConfig);
     const live = loadConfig();
-    rotateKeyOn429(live, "env-pooled", null, Date.now(), "\${OCX_KEYFAIL_COOLED}");
+    rotateKeyOn429(live, "env-pooled", null, Date.now(), "\${OCCX_KEYFAIL_COOLED}");
     const restored = loadConfig();
-    restored.providers["env-pooled"]!.apiKey = "\${OCX_KEYFAIL_COOLED}";
+    restored.providers["env-pooled"]!.apiKey = "\${OCCX_KEYFAIL_COOLED}";
     saveConfig(restored);
     const server = startServer(0);
     try {
@@ -783,7 +783,7 @@ describe("server 429 key failover (end-to-end)", () => {
       expect(seen).toEqual(["Bearer resolved-warm"]);
     } finally {
       await server.stop(true);
-      delete process.env.OCX_KEYFAIL_COOLED;
-      delete process.env.OCX_KEYFAIL_WARM;
+      delete process.env.OCCX_KEYFAIL_COOLED;
+      delete process.env.OCCX_KEYFAIL_WARM;
     }
   });

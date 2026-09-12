@@ -14,13 +14,13 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const BEGIN_MARKER = "# >>> opencodex managed block — do not edit (removed by `ocx stop`) >>>";
-const END_MARKER = "# <<< opencodex managed block <<<";
+const BEGIN_MARKER = "# >>> openccx managed block — do not edit (removed by `occx stop`) >>>";
+const END_MARKER = "# <<< openccx managed block <<<";
 
 export interface GrokStatusModel {
   /** Alias of the emitted `[model.<alias>]` table. */
   alias: string;
-  /** The model id opencodex routes for. */
+  /** The model id openccx routes for. */
   id: string;
   contextWindow?: number;
 }
@@ -108,14 +108,14 @@ export function readGrokStatus(opts: { grokHome?: string } = {}): GrokStatus {
  * lands in our log. The user sees a correct context window (the stale entry carries it)
  * and an endless "Retrying (attempt N/15)". That is a silent failure unless someone
  * compares the fence's port against the port we actually bound — which is exactly what
- * `ocx status` is for.
+ * `occx status` is for.
  *
  * Returns null when there is nothing to say: no fence, an unparsable endpoint, or a
  * fence that already agrees with a port we are actually listening on.
  *
  * "Listening on" is a SET, not one number (#4236). A hub with an unauthenticated loopback
  * listener answers on the public port and on the listener's port; a fence pointing at the
- * latter is exactly what `ocx sync` wrote, so reporting it as drift told the operator their
+ * latter is exactly what `occx sync` wrote, so reporting it as drift told the operator their
  * working config was broken. `loopbackPort` is that second reachable port, already resolved
  * through `effectiveLoopbackListenerPort`, or null when no such listener is configured.
  */

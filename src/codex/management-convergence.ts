@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { resolvePendingInitialModelSelection } from "../providers/initial-model-selection-runtime";
 import { captureCatalogAdmissionSnapshot } from "./catalog-admission";
 import { convergeCodexCatalog } from "./convergence";
@@ -141,7 +141,7 @@ export function projectCatalogOnlyOutcome({
  * funnel. This module is intentionally not re-exported by a public Codex facade.
  */
 export function createManagementConvergeCodex(
-  config: Readonly<OcxConfig>,
+  config: Readonly<OccxConfig>,
 ): ConvergeCodex {
   const retainedConfig = config;
   return async request => {
@@ -154,7 +154,7 @@ export function createManagementConvergeCodex(
         });
       }
       // Registration choices are committed independently, before sealing catalog authority.
-      await resolvePendingInitialModelSelection(retainedConfig as OcxConfig);
+      await resolvePendingInitialModelSelection(retainedConfig as OccxConfig);
       const snapshot = captureCatalogAdmissionSnapshot(retainedConfig);
       const result = await convergeCodexCatalog(snapshot, request, {
         onCommitBegin: () => { commitBegan = true; },

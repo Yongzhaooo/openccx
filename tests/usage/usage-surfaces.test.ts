@@ -60,20 +60,20 @@ test("parseUsageSurface accepts grok and still rejects unknown values", () => {
 // The serializer regression: a whitelist that drops unknown surfaces at write time
 // would make the grok tag invisible after a restart. This is the write->read proof.
 test("a grok surface survives the usage-log round trip", async () => {
-  const home = mkdtempSync(join(tmpdir(), "ocx-usage-grok-"));
-  const prev = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  const home = mkdtempSync(join(tmpdir(), "occx-usage-grok-"));
+  const prev = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = home;
   try {
-    appendUsageEntry(entry("grok", "ocx-kimi-k3"));
+    appendUsageEntry(entry("grok", "occx-kimi-k3"));
     appendUsageEntry(entry(undefined, "plain-codex"));
     const entries = await readUsageEntries();
-    const grok = entries.find(e => e.model === "ocx-kimi-k3");
+    const grok = entries.find(e => e.model === "occx-kimi-k3");
     const plain = entries.find(e => e.model === "plain-codex");
     expect(grok?.surface).toBe("grok");
     expect(plain?.surface).toBeUndefined();
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prev;
+    if (prev === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prev;
     removeTreeWithRetry(home);
   }
 });

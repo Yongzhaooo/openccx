@@ -335,7 +335,7 @@ for (const withSnapshot of [true, false]) {
 test("Sync now preserves distinct refusal reasons on the affected profiles after refetch", async () => {
   await ready();
   mutationResponse = () => json({ ok: false, clientId: "aside", results: [
-    { client: "aside", profileId: 0, ok: false, reason: "Work file changed outside opencodex" },
+    { client: "aside", profileId: 0, ok: false, reason: "Work file changed outside openccx" },
     { client: "aside", profileId: 7, ok: false, reason: "Profile 7 file cannot be read" },
   ] }, 207);
   const before = listReads();
@@ -344,11 +344,11 @@ test("Sync now preserves distinct refusal reasons on the affected profiles after
   const work = button("Manage Work").closest(".aside-profile-row")!;
   const unnamed = button("Manage Profile 7").closest(".aside-profile-row")!;
   const personal = button("Manage Personal").closest(".aside-profile-row")!;
-  expect(work.textContent).toContain("Work file changed outside opencodex");
+  expect(work.textContent).toContain("Work file changed outside openccx");
   expect(work.textContent).not.toContain("Profile 7 file cannot be read");
   expect(unnamed.textContent).toContain("Profile 7 file cannot be read");
-  expect(unnamed.textContent).not.toContain("Work file changed outside opencodex");
-  expect(personal.textContent).not.toContain("Work file changed outside opencodex");
+  expect(unnamed.textContent).not.toContain("Work file changed outside openccx");
+  expect(personal.textContent).not.toContain("Work file changed outside openccx");
   expect(personal.textContent).not.toContain("Profile 7 file cannot be read");
   expect(button("Sync Personal").getAttribute("aria-pressed")).toBe("false");
   expect(writes()).toEqual([{ path: syncPath, method: "POST", body: {} }]);

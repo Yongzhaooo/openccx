@@ -19,11 +19,11 @@ let previousFetch: typeof fetch;
  * `null` means the server said nothing, which every reader must treat as standalone.
  */
 function setRuntimeRole(role: string | null): void {
-  const existing = win.document.querySelector('meta[name="opencodex-runtime-role"]');
+  const existing = win.document.querySelector('meta[name="openccx-runtime-role"]');
   existing?.remove();
   if (role === null) return;
   const meta = win.document.createElement("meta");
-  meta.setAttribute("name", "opencodex-runtime-role");
+  meta.setAttribute("name", "openccx-runtime-role");
   meta.setAttribute("content", role);
   win.document.head.append(meta);
 }

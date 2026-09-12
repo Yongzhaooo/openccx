@@ -53,7 +53,7 @@ let codexHome = "";
 let otherCodexHome = "";
 let targetDir = "";
 let previousCodexHome: string | undefined;
-let previousOpenCodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 function atomicIo(effects: string[]): AtomicWriteIO {
   return {
@@ -162,23 +162,23 @@ function withLivePermit<T>(callback: (permit: CatalogWritePermit) => T): T {
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpenCodexHome = process.env.OPENCODEX_HOME;
-  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-catalog-writer-")));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-catalog-writer-")));
   codexHome = join(testRoot, "codex-home");
   otherCodexHome = join(testRoot, "other-codex-home");
   targetDir = join(testRoot, "external-catalog-targets");
-  for (const path of [codexHome, otherCodexHome, targetDir, join(testRoot, "opencodex-home")]) {
+  for (const path of [codexHome, otherCodexHome, targetDir, join(testRoot, "openccx-home")]) {
     mkdirSync(path, { recursive: true });
   }
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = join(testRoot, "opencodex-home");
+  process.env.OPENCCX_HOME = join(testRoot, "openccx-home");
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
 
   const identity = resolveEffectiveUserIdentity();
   for (const home of [codexHome, otherCodexHome]) {

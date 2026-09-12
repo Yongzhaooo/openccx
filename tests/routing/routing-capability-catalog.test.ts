@@ -7,7 +7,7 @@ import { applyCatalogModelMetadata } from "../../src/codex/catalog/effort";
 import { applyCatalogMetadata, ensureStrictCatalogFields } from "../../src/codex/catalog/parsing";
 import type { CatalogModel, RawEntry } from "../../src/codex/catalog/parsing";
 import { parseAntigravityAvailableModels } from "../../src/providers/antigravity-models";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -16,7 +16,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  * The catalog branch of `candidateCapabilityEvidence` was dead code: the reader
  * filtered on `id`/`provider` while the writer emits `slug`/`context_window`/
  * `input_modalities`, so every row was discarded. The repair reads an explicit
- * `opencodex_capability_provenance` block instead of the compatibility-shaped
+ * `openccx_capability_provenance` block instead of the compatibility-shaped
  * fields, because `ensureStrictCatalogFields` synthesizes those for Codex's
  * strict parser and they therefore cannot distinguish an assertion from a
  * placeholder.
@@ -30,7 +30,7 @@ let previousCodexHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-capability-catalog-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-capability-catalog-"));
   process.env.CODEX_HOME = codexHome;
 });
 
@@ -52,17 +52,17 @@ function serialize(model: CatalogModel): RawEntry {
 
 function writeCatalog(models: CatalogModel[]): void {
   const entries = models.map(serialize);
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), JSON.stringify({ models: entries }));
+  writeFileSync(join(codexHome, "openccx-catalog.json"), JSON.stringify({ models: entries }));
 }
 
-function configFor(providers: string[]): OcxConfig {
+function configFor(providers: string[]): OccxConfig {
   // Providers declare NO modelContextWindows / modelInputModalities, so the
   // catalog is the only possible evidence source for those dimensions.
   const entries = providers.map(name => [name, {
     adapter: "openai-chat" as const,
     baseUrl: `https://${name}.example/v1`,
   }]);
-  return { providers: Object.fromEntries(entries) } as unknown as OcxConfig;
+  return { providers: Object.fromEntries(entries) } as unknown as OccxConfig;
 }
 
 describe("catalog-sourced capability evidence (#1796)", () => {
@@ -126,7 +126,7 @@ describe("catalog-sourced capability evidence (#1796)", () => {
       inputModalities: ["text"],
     } as CatalogModel);
 
-    expect(entry.opencodex_capability_provenance).toBeUndefined();
+    expect(entry.openccx_capability_provenance).toBeUndefined();
     // The synthesized value still ships to Codex, which is what makes it parse.
     expect(entry.context_window).toBe(128000);
   });
@@ -138,7 +138,7 @@ describe("provenance sources beyond the CatalogModel (#1796)", () => {
     // ever touching a CatalogModel, so a stamp reading `model.*` alone would
     // drop every provider that depends on it.
     const entry = serialize({ provider: "opencode-go", id: "grok-4.6" } as CatalogModel);
-    const provenance = entry.opencodex_capability_provenance as Record<string, unknown> | undefined;
+    const provenance = entry.openccx_capability_provenance as Record<string, unknown> | undefined;
 
     expect(provenance).toBeDefined();
     expect(provenance?.context_window).toBe(entry.context_window);
@@ -149,7 +149,7 @@ describe("provenance sources beyond the CatalogModel (#1796)", () => {
     // The entry is capped before serialization; provenance must carry the same
     // value or routing would advertise a window the cap already refused.
     const entry = serialize({ provider: "opencode-go", id: "grok-4.6", contextCap: 350000 } as CatalogModel);
-    const provenance = entry.opencodex_capability_provenance as Record<string, unknown> | undefined;
+    const provenance = entry.openccx_capability_provenance as Record<string, unknown> | undefined;
 
     expect(entry.context_window).toBe(350000);
     expect(provenance?.context_window).toBe(350000);

@@ -17,10 +17,10 @@ import {
   type GenerationContext,
 } from "../../src/lib/state-store-sweeper";
 import {
-  ocxStartProcessCacheSizeForTests,
-  setOcxStartProcessCacheForTests,
-  setOcxStartProcessProbeForTests,
-  sweepDeadOcxStartProcessCache,
+  occxStartProcessCacheSizeForTests,
+  setOccxStartProcessCacheForTests,
+  setOccxStartProcessProbeForTests,
+  sweepDeadOccxStartProcessCache,
 } from "../../src/config";
 import { STATE_STORE_REGISTRATIONS, setLiveStateStoreConfig, reconcileLiveStateStores } from "../../src/lib/state-store-registrations";
 import { clearComboRecallForTests, recallComboForLane, rememberComboForLane } from "../../src/server/responses/combo-session-recall";
@@ -31,7 +31,7 @@ import {
   fetchProviderQuotaReports,
   getCachedProviderAccountQuota,
 } from "../../src/providers/quota";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { __resetVertexTokenCache, getVertexAccessToken } from "../../src/lib/gcp-adc";
 import {
   configureAppOwnedMemoryBudget,
@@ -68,16 +68,16 @@ function context(
 }
 
 // The responses-continuation store now reclaims abandoned atomic-write temps on the liveness
-// tick, so any test that drives a real tick performs filesystem work under OPENCODEX_HOME.
+// tick, so any test that drives a real tick performs filesystem work under OPENCCX_HOME.
 // Without this isolation the suite would scan (and could unlink inside) a developer's real
 // ~/.opencodex as a side effect of a unit test.
 let sweeperHome: string;
 let previousSweeperHome: string | undefined;
 
 beforeEach(() => {
-  previousSweeperHome = process.env.OPENCODEX_HOME;
-  sweeperHome = mkdtempSync(join(tmpdir(), "ocx-sweeper-home-"));
-  process.env.OPENCODEX_HOME = sweeperHome;
+  previousSweeperHome = process.env.OPENCCX_HOME;
+  sweeperHome = mkdtempSync(join(tmpdir(), "occx-sweeper-home-"));
+  process.env.OPENCCX_HOME = sweeperHome;
   resetStateStoreSweeperForTests();
   clearComboRecallForTests();
   resetAppOwnedMemoryForTests();
@@ -90,10 +90,10 @@ afterEach(() => {
   resetAppOwnedMemoryForTests();
   clearResponseStateMemoryForTests();
   __resetAntigravityReplayCache();
-  setOcxStartProcessCacheForTests([]);
-  setOcxStartProcessProbeForTests(null);
-  if (previousSweeperHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousSweeperHome;
+  setOccxStartProcessCacheForTests([]);
+  setOccxStartProcessProbeForTests(null);
+  if (previousSweeperHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousSweeperHome;
   removeTreeWithRetry(sweeperHome);
 });
 
@@ -157,13 +157,13 @@ describe("state-store sweeper", () => {
       "gcp-adc",
       "config-ownership",
       "oauth-flow-state",
-      "ocx-start-process-cache",
+      "occx-start-process-cache",
     ]);
   });
 
   test("registered combo recall cleanup rejects an old completion after delete and recreate while retaining another owner", () => {
     registerStateStore(STATE_STORE_REGISTRATIONS.find(row => row.name === "combo-session-recall")!);
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, defaultProvider: "a",
       providers: { a: { adapter: "openai-chat", baseUrl: "https://a.example/v1" } },
       combos: {
@@ -195,7 +195,7 @@ describe("state-store sweeper", () => {
     const owners = context(0, {
       comboIds: new Set(["first"]), comboTargets: new Set(["first::a/m1"]), providerNames: new Set(["a"]),
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, defaultProvider: "a", providers: { a: { adapter: "openai-chat", baseUrl: "https://a.example/v1" } },
       combos: { first: { targets: [{ provider: "a", model: "m1" }] } },
     };
@@ -462,7 +462,7 @@ describe("state-store sweeper", () => {
     const warning = spyOn(console, "warn").mockImplementation(() => {});
     const previousCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const previousCloudSdk = process.env.CLOUDSDK_CONFIG;
-    const home = mkdtempSync(join(tmpdir(), "ocx-sweeper-gcp-live-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-sweeper-gcp-live-"));
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     process.env.CLOUDSDK_CONFIG = home;
     __resetVertexTokenCache();
@@ -514,10 +514,10 @@ describe("state-store sweeper", () => {
   });
 
   test("provider-quota late completion cannot resurrect a deleted provider or account row", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-sweeper-quota-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-sweeper-quota-"));
     const originalFetch = globalThis.fetch;
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     clearAccountQuotaCache();
     clearProviderQuotaCache();
     try {
@@ -547,8 +547,8 @@ describe("state-store sweeper", () => {
         providers: {
           anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com/v1" },
         },
-      } as OcxConfig;
-      const staleConfig = { ...config, providers: { ...config.providers } } as OcxConfig;
+      } as OccxConfig;
+      const staleConfig = { ...config, providers: { ...config.providers } } as OccxConfig;
       const quotaRegistration = STATE_STORE_REGISTRATIONS.find(row => row.name === "provider-quota-history")!;
       registerStateStore(quotaRegistration);
 
@@ -566,16 +566,16 @@ describe("state-store sweeper", () => {
       globalThis.fetch = originalFetch;
       clearAccountQuotaCache();
       clearProviderQuotaCache();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("PID liveness probes at most 64, rotates, and deletes only ESRCH", () => {
-    setOcxStartProcessCacheForTests(Array.from({ length: 70 }, (_, index) => [index + 1, true] as const));
+    setOccxStartProcessCacheForTests(Array.from({ length: 70 }, (_, index) => [index + 1, true] as const));
     const probed: number[] = [];
-    setOcxStartProcessProbeForTests(pid => {
+    setOccxStartProcessProbeForTests(pid => {
       probed.push(pid);
       if (pid === 1) {
         const error = new Error("gone") as NodeJS.ErrnoException;
@@ -590,23 +590,23 @@ describe("state-store sweeper", () => {
       if (pid === 3) throw new Error("unknown");
     });
 
-    expect(sweepDeadOcxStartProcessCache()).toBe(1);
+    expect(sweepDeadOccxStartProcessCache()).toBe(1);
     expect(probed).toHaveLength(64);
-    expect(ocxStartProcessCacheSizeForTests()).toBe(69);
+    expect(occxStartProcessCacheSizeForTests()).toBe(69);
     probed.length = 0;
-    sweepDeadOcxStartProcessCache();
+    sweepDeadOccxStartProcessCache();
     expect(probed.length).toBeLessThanOrEqual(64);
     expect(probed).toContain(70);
-    expect(ocxStartProcessCacheSizeForTests()).toBe(69);
+    expect(occxStartProcessCacheSizeForTests()).toBe(69);
   });
 
   test("PID liveness discards invalid keys without probing them", () => {
-    setOcxStartProcessCacheForTests([[0, true], [-1, true], [1.5, true], [42, true]]);
+    setOccxStartProcessCacheForTests([[0, true], [-1, true], [1.5, true], [42, true]]);
     const probed: number[] = [];
-    setOcxStartProcessProbeForTests(pid => { probed.push(pid); });
+    setOccxStartProcessProbeForTests(pid => { probed.push(pid); });
 
-    expect(sweepDeadOcxStartProcessCache()).toBe(3);
+    expect(sweepDeadOccxStartProcessCache()).toBe(3);
     expect(probed).toEqual([42]);
-    expect(ocxStartProcessCacheSizeForTests()).toBe(1);
+    expect(occxStartProcessCacheSizeForTests()).toBe(1);
   });
 });

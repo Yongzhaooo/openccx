@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { projectDevinCliAuthMode } from "../../src/providers/devin-cli-authmode-migration";
 import { projectStartupConfigRepairs } from "../../src/providers/model-rename-startup";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function cfg(row: Record<string, unknown> | undefined): OcxConfig {
-  return { providers: row ? { "devin-cli": row } : {} } as unknown as OcxConfig;
+function cfg(row: Record<string, unknown> | undefined): OccxConfig {
+  return { providers: row ? { "devin-cli": row } : {} } as unknown as OccxConfig;
 }
 
 describe("devin-cli authMode migration", () => {

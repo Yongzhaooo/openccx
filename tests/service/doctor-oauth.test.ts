@@ -9,21 +9,21 @@ import { getAccountSet, getAuthStorePath, markAccountNeedsReauth, saveCredential
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const origHome = process.env.HOME;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 let tmp: string;
 
 beforeEach(() => {
   tmp = join(tmpdir(), `doctor-oauth-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(tmp, { recursive: true });
   process.env.HOME = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
 });
 
 afterEach(() => {
   if (origHome === undefined) delete process.env.HOME;
   else process.env.HOME = origHome;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = origOccxHome;
   removeTreeWithRetry(tmp);
 });
 
@@ -49,7 +49,7 @@ describe("collectOAuthDoctorChecks", () => {
     );
     expect(warn).toBeTruthy();
     expect(warn!.message).toContain("Action:");
-    expect(warn!.message).toContain("ocx login openai");
+    expect(warn!.message).toContain("occx login openai");
     expect(warn!.message).toContain("account-…");
     expect(warn!.message).not.toContain(accountId);
     expect(warn!.message).not.toContain("access-token");
@@ -109,7 +109,7 @@ describe("collectOAuthDoctorChecks", () => {
     );
     expect(warn).toBeTruthy();
     expect(warn!.message).toContain(`Action: ${CODEX_REAUTH_ACTION}`);
-    expect(warn!.message).not.toContain("ocx login codex");
+    expect(warn!.message).not.toContain("occx login codex");
     expect(checks.some((c) => c.message.includes("Codex account health unavailable"))).toBe(false);
   });
 
@@ -153,7 +153,7 @@ describe("collectOAuthDoctorChecks", () => {
   });
 
   test("doctor does not backup corrupt auth.json", async () => {
-    mkdirSync(join(tmp, "ocx"), { recursive: true });
+    mkdirSync(join(tmp, "occx"), { recursive: true });
     const path = getAuthStorePath();
     writeFileSync(path, "{not-json", { mode: 0o600 });
 
@@ -161,7 +161,7 @@ describe("collectOAuthDoctorChecks", () => {
 
     expect(readFileSync(path, "utf8")).toBe("{not-json");
     // loadAuthStore would create auth.json.bak*; peek must not.
-    const dirEntries = readdirSync(join(tmp, "ocx"));
+    const dirEntries = readdirSync(join(tmp, "occx"));
     expect(dirEntries.some((name) => name.includes(".bak"))).toBe(false);
   });
 });

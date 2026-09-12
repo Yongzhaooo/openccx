@@ -9,19 +9,19 @@ import {
   resetCodexModelEntitlementCacheForTests,
   seedCodexModelEntitlementsForTests,
 } from "../../src/codex/model-entitlements";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { resolveOpenAiVisionModel } from "../../src/vision";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-async function getVision(config: OcxConfig): Promise<Response> {
+async function getVision(config: OccxConfig): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(new Request(url), url, config);
   if (!response) throw new Error("sidecar settings route did not handle request");
   return response;
 }
 
-async function putVision(config: OcxConfig, vision: Record<string, unknown>): Promise<Response> {
+async function putVision(config: OccxConfig, vision: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(
     new Request(url, {
@@ -62,7 +62,7 @@ describe("vision reasoning capability contracts", () => {
     // This contract is about the effort ladders themselves; Sol/Luna are account-gated,
     // so confirm a roster or their rows would be filtered before the ladder is read.
     seedCodexModelEntitlementsForTests("main", ["gpt-5.6-sol", "gpt-5.6-luna"]);
-    const config: OcxConfig = { port: 10100, defaultProvider: "none", providers: {} };
+    const config: OccxConfig = { port: 10100, defaultProvider: "none", providers: {} };
     const rows = await listManagementModelRows(config);
     const efforts = (id: string) => (rows.find(row => row.native === true && row.id === id) as
       | { reasoningEfforts?: string[] }
@@ -81,7 +81,7 @@ describe("vision reasoning capability contracts", () => {
         defaultProvider: "none",
         providers: {},
         visionSidecar: { ...(model === undefined ? {} : { model }), reasoning: "max" },
-      } as OcxConfig;
+      } as OccxConfig;
       const response = await getVision(config);
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
@@ -93,12 +93,12 @@ describe("vision reasoning capability contracts", () => {
   });
 
   test("management normalizes native model/effort pairs on every relevant partial update", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const isolatedHome = mkdtempSync(join(tmpdir(), "ocx-vision-reasoning-contract-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    const previousHome = process.env.OPENCCX_HOME;
+    const isolatedHome = mkdtempSync(join(tmpdir(), "occx-vision-reasoning-contract-"));
+    process.env.OPENCCX_HOME = isolatedHome;
 
     try {
-      const direct = { port: 10100, defaultProvider: "none", providers: {} } as OcxConfig;
+      const direct = { port: 10100, defaultProvider: "none", providers: {} } as OccxConfig;
       let response = await putVision(direct, { model: "gpt-5.5", reasoning: "max" });
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
@@ -111,7 +111,7 @@ describe("vision reasoning capability contracts", () => {
         defaultProvider: "none",
         providers: {},
         visionSidecar: { model: "gpt-5.5", reasoning: "low" },
-      } as OcxConfig;
+      } as OccxConfig;
       response = await putVision(reasoningOnly, { reasoning: "max" });
       expect(response.status).toBe(200);
       expect(reasoningOnly.visionSidecar?.reasoning).toBe("xhigh");
@@ -121,7 +121,7 @@ describe("vision reasoning capability contracts", () => {
         defaultProvider: "none",
         providers: {},
         visionSidecar: { reasoning: "low" },
-      } as OcxConfig;
+      } as OccxConfig;
       response = await putVision(unsetModel, { reasoning: "max" });
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
@@ -135,7 +135,7 @@ describe("vision reasoning capability contracts", () => {
         defaultProvider: "none",
         providers: {},
         visionSidecar: { model: "gpt-5.6-luna", reasoning: "max" },
-      } as OcxConfig;
+      } as OccxConfig;
       response = await putVision(modelOnly, { model: "gpt-5.5" });
       expect(response.status).toBe(200);
       expect(modelOnly.visionSidecar).toMatchObject({ model: "gpt-5.5", reasoning: "xhigh" });
@@ -145,7 +145,7 @@ describe("vision reasoning capability contracts", () => {
         defaultProvider: "none",
         providers: {},
         visionSidecar: { model: "gpt-5.5", reasoning: "max" },
-      } as OcxConfig;
+      } as OccxConfig;
       response = await putVision(reset, { model: "" });
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
@@ -154,21 +154,21 @@ describe("vision reasoning capability contracts", () => {
       expect(reset.visionSidecar?.model).toBeUndefined();
       expect(reset.visionSidecar?.reasoning).toBe("max");
 
-      const custom = { port: 10100, defaultProvider: "none", providers: {} } as OcxConfig;
+      const custom = { port: 10100, defaultProvider: "none", providers: {} } as OccxConfig;
       response = await putVision(custom, { model: "custom-vision", reasoning: "max" });
       expect(response.status).toBe(200);
       expect(custom.visionSidecar).toMatchObject({ model: "custom-vision", reasoning: "max" });
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(isolatedHome);
     }
   });
 
   test("CLI import normalizes reasoning against omitted and blank runtime model defaults", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const isolatedHome = mkdtempSync(join(tmpdir(), "ocx-vision-reasoning-cli-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    const previousHome = process.env.OPENCCX_HOME;
+    const isolatedHome = mkdtempSync(join(tmpdir(), "occx-vision-reasoning-cli-"));
+    process.env.OPENCCX_HOME = isolatedHome;
     const importPath = join(isolatedHome, "import.json");
 
     try {
@@ -184,22 +184,22 @@ describe("vision reasoning capability contracts", () => {
       expect(persisted.visionSidecar).toMatchObject({ model: "", reasoning: "max" });
       expect(resolveOpenAiVisionModel({ visionSidecar: persisted.visionSidecar })).toBe("gpt-5.6-luna");
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(isolatedHome);
     }
   });
 
   test("invalid effort is rejected without mutation and unrelated patches preserve reasoning", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const isolatedHome = mkdtempSync(join(tmpdir(), "ocx-vision-reasoning-invalid-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    const previousHome = process.env.OPENCCX_HOME;
+    const isolatedHome = mkdtempSync(join(tmpdir(), "occx-vision-reasoning-invalid-"));
+    process.env.OPENCCX_HOME = isolatedHome;
     const config = {
       port: 10100,
       defaultProvider: "none",
       providers: {},
       visionSidecar: { model: "gpt-5.6-luna", reasoning: "high", maxDescriptionsPerTurn: 8 },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       let response = await putVision(config, { reasoning: "ultra" });
@@ -214,8 +214,8 @@ describe("vision reasoning capability contracts", () => {
         maxDescriptionsPerTurn: 4,
       });
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(isolatedHome);
       resetCodexModelEntitlementCacheForTests();
     }

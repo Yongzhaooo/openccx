@@ -28,7 +28,7 @@ import { providerDestinationConfigError } from "../lib/destination-policy";
 import { redactSecretString } from "../lib/redact";
 import { effectiveGoogleMode, getProviderRegistryEntry, providerCodexAccountMode, providerMatchesRegistryTransport, registryEntryForProviderDestination } from "../providers/registry";
 import { providerConfigSeed } from "../providers/derive";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { openRouterRoutingConfigError } from "../providers/openrouter-routing";
 import { modelAutoCompactTokenLimitsConfigError } from "../providers/auto-compact-budget";
 import { vercelGatewayRoutingConfigError } from "../providers/vercel-gateway-routing";
@@ -120,7 +120,7 @@ function comparableOrigin(value: string): string | null {
   }
 }
 
-export function managementRequestOrigin(req: Request, config: OcxConfig): string | null {
+export function managementRequestOrigin(req: Request, config: OccxConfig): string | null {
   const host = req.headers.get("Host");
   const parsedHost = parseHttpHost(host);
   if (!host || !parsedHost) return null;
@@ -156,7 +156,7 @@ export function managementRequestOrigin(req: Request, config: OcxConfig): string
   }
 }
 
-export function isAllowedManagementOrigin(req: Request, config: OcxConfig): boolean {
+export function isAllowedManagementOrigin(req: Request, config: OccxConfig): boolean {
   const requestOrigin = managementRequestOrigin(req, config);
   if (!requestOrigin) return false;
   const origin = req.headers.get("Origin");
@@ -179,7 +179,7 @@ export function browserSecurityHeaders(): Record<string, string> {
  * relayed by the /v1/live call-create path.
  */
 const STATIC_ALLOWED_REQUEST_HEADERS =
-  "Content-Type, Authorization, X-OpenCodex-API-Key, X-Api-Key, Anthropic-Version, Anthropic-Beta, ChatGPT-Account-Id, OpenAI-Alpha, X-Session-Id, Session-Id, Thread-Id, Originator, X-OAI-Attestation";
+  "Content-Type, Authorization, X-Openccx-API-Key, X-Api-Key, Anthropic-Version, Anthropic-Beta, ChatGPT-Account-Id, OpenAI-Alpha, X-Session-Id, Session-Id, Thread-Id, Originator, X-OAI-Attestation";
 
 /**
  * A fixed allow-list cannot enumerate vendor telemetry headers: the OpenAI and Anthropic
@@ -223,9 +223,9 @@ export function corsHeaders(req?: Request, config?: RequestPolicyView): Record<s
   };
 }
 
-export function managementCorsHeaders(req?: Request, config?: OcxConfig): Record<string, string> {
+export function managementCorsHeaders(req?: Request, config?: OccxConfig): Record<string, string> {
   const headers = corsHeaders();
-  headers["Access-Control-Allow-Headers"] = `${STATIC_ALLOWED_REQUEST_HEADERS}, X-OpenCodex-GUI-Origin, X-OpenCodex-CSRF-Token`;
+  headers["Access-Control-Allow-Headers"] = `${STATIC_ALLOWED_REQUEST_HEADERS}, X-Openccx-GUI-Origin, X-Openccx-CSRF-Token`;
   const origin = req?.headers.get("Origin");
   if (origin && req && config && isAllowedManagementOrigin(req, config)) {
     headers["Access-Control-Allow-Origin"] = origin;
@@ -245,7 +245,7 @@ export function withCors(response: Response, req: Request, config: RequestPolicy
   });
 }
 
-export function withManagementCors(response: Response, req: Request, config: OcxConfig): Response {
+export function withManagementCors(response: Response, req: Request, config: OccxConfig): Response {
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(managementCorsHeaders(req, config))) {
     headers.set(name, value);
@@ -265,16 +265,16 @@ export function jsonResponse(data: unknown, status = 200, req?: Request, config?
 }
 
 // The parameter is vestigial — the token has always come from the environment — but callers
-// pass a config, so keep accepting one. Typed as `unknown` rather than `OcxConfig` so a narrow
-// policy view can reach it too (#1102); widening to OcxConfig here would force every caller in
+// pass a config, so keep accepting one. Typed as `unknown` rather than `OccxConfig` so a narrow
+// policy view can reach it too (#1102); widening to OccxConfig here would force every caller in
 // the admission path back to the full config.
 export function configuredApiAuthToken(_config?: unknown): string | undefined {
-  const token = process.env.OPENCODEX_API_AUTH_TOKEN?.trim();
+  const token = process.env.OPENCCX_API_AUTH_TOKEN?.trim();
   return token || undefined;
 }
 
 export function configuredAdminAuthToken(): string | undefined {
-  const token = process.env.OPENCODEX_ADMIN_AUTH_TOKEN?.trim();
+  const token = process.env.OPENCCX_ADMIN_AUTH_TOKEN?.trim();
   return token || undefined;
 }
 
@@ -285,7 +285,7 @@ export function isLoopbackHostname(hostname: string | undefined): boolean {
   return normalized === "" || normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1" || normalized === "[::1]";
 }
 
-export function isApiAuthRequired(config: Pick<OcxConfig, "hostname">): boolean {
+export function isApiAuthRequired(config: Pick<OccxConfig, "hostname">): boolean {
   return !isLoopbackHostname(config.hostname);
 }
 
@@ -305,10 +305,10 @@ export function isApiAuthRequired(config: Pick<OcxConfig, "hostname">): boolean 
  * So this type is deliberately narrow: it cannot masquerade as a business config, and a policy
  * view that leaks into a routing path fails to typecheck rather than silently taking effect.
  */
-export type RequestPolicyView = Pick<OcxConfig, "hostname" | "corsAllowOrigins" | "apiKeys">;
+export type RequestPolicyView = Pick<OccxConfig, "hostname" | "corsAllowOrigins" | "apiKeys">;
 
 /** Derive the per-request policy view for a listener. Cheap enough to build per request. */
-export function requestPolicyView(config: OcxConfig, bindHostname: string): RequestPolicyView {
+export function requestPolicyView(config: OccxConfig, bindHostname: string): RequestPolicyView {
   return {
     hostname: bindHostname,
     ...(config.corsAllowOrigins ? { corsAllowOrigins: config.corsAllowOrigins } : {}),
@@ -316,12 +316,12 @@ export function requestPolicyView(config: OcxConfig, bindHostname: string): Requ
   };
 }
 
-export function assertServerAuthConfig(config: OcxConfig): void {
+export function assertServerAuthConfig(config: OccxConfig): void {
   const hasConfiguredDataCredential = !!configuredApiAuthToken(config)
     || (config.apiKeys ?? []).some(entry => !!entry.key.trim());
   if (isApiAuthRequired(config) && !hasConfiguredDataCredential) {
     throw new Error(
-      "A data-plane credential (OPENCODEX_API_AUTH_TOKEN or config.apiKeys) is required when binding opencodex to a non-loopback hostname",
+      "A data-plane credential (OPENCCX_API_AUTH_TOKEN or config.apiKeys) is required when binding openccx to a non-loopback hostname",
     );
   }
 }
@@ -389,7 +389,7 @@ export type DataPlaneAdmission =
  */
 export function resolveDataPlaneAdmissionSecret(
   token: string,
-  config: Pick<OcxConfig, "apiKeys">,
+  config: Pick<OccxConfig, "apiKeys">,
   source: DataPlaneAdmissionSource = "dedicated",
 ): DataPlaneAdmission | null {
   const actual = token.trim();
@@ -419,16 +419,16 @@ export function contextPrincipalIdOf(admission: DataPlaneAdmission | undefined):
  *
  * The default bind is loopback, where admission deliberately never reads a token, so an admitted
  * request carries no caller identity. History ownership needs one, so the relay asks separately:
- * a caller that presents a real opencodex API key gets that key’s principal even on loopback,
+ * a caller that presents a real openccx API key gets that key’s principal even on loopback,
  * and a caller that presents none gets nothing and is refused. This adds identity where the caller
  * volunteered it; it does not admit anyone who was not already admitted, and it does not change
  * which credential goes upstream.
  */
-export function resolveContextPrincipal(req: Request, config: OcxConfig, admission: DataPlaneAdmission | undefined): string | undefined {
+export function resolveContextPrincipal(req: Request, config: OccxConfig, admission: DataPlaneAdmission | undefined): string | undefined {
   const named = contextPrincipalIdOf(admission);
   if (named) return named;
   if (admission?.kind !== "loopback") return undefined;
-  const dedicated = req.headers.get("x-opencodex-api-key")?.trim();
+  const dedicated = req.headers.get("x-openccx-api-key")?.trim();
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   const apiKey = req.headers.get("x-api-key")?.trim();
   for (const [token, source] of [[dedicated, "dedicated"], [bearer, "bearer"], [apiKey, "x-api-key"]] as const) {
@@ -441,7 +441,7 @@ export function resolveContextPrincipal(req: Request, config: OcxConfig, admissi
 }
 
 /** Whether `token` is a data-plane admission secret. */
-export function isDataPlaneAdmissionSecret(token: string, config: OcxConfig): boolean {
+export function isDataPlaneAdmissionSecret(token: string, config: OccxConfig): boolean {
   return resolveDataPlaneAdmissionSecret(token, config) !== null;
 }
 
@@ -508,27 +508,27 @@ export function isManagementAdmissionSecret(token: string): boolean {
 }
 
 /** Whether `token` is one of the proxy's own admission secrets and must never reach an upstream. */
-export function isProxyAdmissionSecret(token: string, config: OcxConfig): boolean {
+export function isProxyAdmissionSecret(token: string, config: OccxConfig): boolean {
   const actual = token.trim();
   if (!actual) return false;
-  if (/^ocx_(?:data|admin|session)_/.test(actual) || /^ocx_[0-9a-f]{40}$/.test(actual)) return true;
+  if (/^occx_(?:data|admin|session)_/.test(actual) || /^occx_[0-9a-f]{40}$/.test(actual)) return true;
   return isDataPlaneAdmissionSecret(actual, config) || isManagementAdmissionSecret(actual);
 }
 
 export class ForwardAdmissionCredentialError extends Error {
   constructor() {
-    super("OpenCodex admission credentials cannot be forwarded upstream");
+    super("Openccx admission credentials cannot be forwarded upstream");
     this.name = "ForwardAdmissionCredentialError";
   }
 }
 
-export function validateForwardAdmissionCredential(headers: Headers, config: OcxConfig): void {
+export function validateForwardAdmissionCredential(headers: Headers, config: OccxConfig): void {
   const bearer = headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (bearer && isProxyAdmissionSecret(bearer, config)) throw new ForwardAdmissionCredentialError();
 }
 
 /** Whether Authorization carries a caller-owned native Codex credential safe to forward. */
-export function hasForwardableCodexBearer(headers: Headers, config: OcxConfig): boolean {
+export function hasForwardableCodexBearer(headers: Headers, config: OccxConfig): boolean {
   const bearer = headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   const accountId = headers.get("chatgpt-account-id")?.trim()
     || (bearer ? extractAccountId(undefined, bearer) : undefined);
@@ -542,7 +542,7 @@ export function hasForwardableCodexBearer(headers: Headers, config: OcxConfig): 
 export function resolveApiAuth(req: Request, config: RequestPolicyView): DataPlaneAdmission | null {
   // A loopback bind never reads a token at all, so there is no key to name.
   if (!isApiAuthRequired(config)) return { kind: "loopback", source: "loopback" };
-  const dedicated = req.headers.get("x-opencodex-api-key")?.trim();
+  const dedicated = req.headers.get("x-openccx-api-key")?.trim();
   if (dedicated) return resolveDataPlaneAdmissionSecret(dedicated, config, "dedicated");
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (bearer) return resolveDataPlaneAdmissionSecret(bearer, config, "bearer");
@@ -558,7 +558,7 @@ export function hasValidApiAuth(req: Request, config: RequestPolicyView): boolea
 
 export function requireApiAuth(req: Request, config: RequestPolicyView, _kind: "data-plane"): Response | null {
   if (hasValidApiAuth(req, config)) return null;
-  return formatErrorResponse(401, "authentication_error", "opencodex API key required");
+  return formatErrorResponse(401, "authentication_error", "openccx API key required");
 }
 
 /**
@@ -569,7 +569,7 @@ export function requireApiAuth(req: Request, config: RequestPolicyView, _kind: "
 export function resolveResponsesApiAuth(req: Request, config: RequestPolicyView): DataPlaneAdmission | null {
   if (!isApiAuthRequired(config)) return { kind: "loopback", source: "loopback" };
   // The dedicated header still WINS, because it is unambiguous.
-  const dedicated = req.headers.get("x-opencodex-api-key")?.trim();
+  const dedicated = req.headers.get("x-openccx-api-key")?.trim();
   if (dedicated) return resolveDataPlaneAdmissionSecret(dedicated, config, "dedicated");
   // #1686: a bearer may also be one of OUR admission secrets. Rejecting it outright meant a
   // Codex client configured with `env_key` could not reach Direct at all. Admitting it is only
@@ -586,7 +586,7 @@ export function resolveResponsesApiAuth(req: Request, config: RequestPolicyView)
 
 export function requireResponsesApiAuth(req: Request, config: RequestPolicyView): Response | null {
   if (resolveResponsesApiAuth(req, config)) return null;
-  return formatErrorResponse(401, "authentication_error", "opencodex API key required");
+  return formatErrorResponse(401, "authentication_error", "openccx API key required");
 }
 
 const FORBIDDEN_PROVIDER_RUNTIME_FIELDS = [
@@ -595,7 +595,7 @@ const FORBIDDEN_PROVIDER_RUNTIME_FIELDS = [
   "_apiKeyAttempt",
 ] as const;
 
-function sameCanonicalProviderSeed(actual: Record<string, unknown>, expected: OcxProviderConfig): boolean {
+function sameCanonicalProviderSeed(actual: Record<string, unknown>, expected: OccxProviderConfig): boolean {
   const actualKeys = Object.keys(actual).sort();
   const expectedKeys = Object.keys(expected).sort();
   if (actualKeys.length !== expectedKeys.length || actualKeys.some((key, i) => key !== expectedKeys[i])) return false;
@@ -690,7 +690,7 @@ export function providerManagementConfigError(name: unknown, provider: unknown):
   } else if (Object.hasOwn(raw, "codexAccountMode")) {
     return `provider ${name} must not include codexAccountMode`;
   }
-  const typed = provider as unknown as OcxProviderConfig;
+  const typed = provider as unknown as OccxProviderConfig;
   const baseUrlError = providerBaseUrlConfigError(typed.baseUrl);
   if (baseUrlError) return `provider ${name} ${baseUrlError}`;
   if (effectiveGoogleMode(name, typed) === "vertex" && typed.location !== undefined) {
@@ -818,9 +818,9 @@ export function publicProviderBaseUrl(baseUrl: string): string {
   }
 }
 
-export function copyIfDefined<K extends keyof OcxProviderConfig>(
+export function copyIfDefined<K extends keyof OccxProviderConfig>(
   out: Record<string, unknown>,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   key: K,
 ): void {
   const value = provider[key];
@@ -829,7 +829,7 @@ export function copyIfDefined<K extends keyof OcxProviderConfig>(
 
 /**
  * Exhaustive provider-field policy shared by dashboard redaction and editor
- * admission. `satisfies Record<keyof OcxProviderConfig, ...>` makes a newly added
+ * admission. `satisfies Record<keyof OccxProviderConfig, ...>` makes a newly added
  * provider field fail typecheck until it is deliberately classified.
  *
  * `editor` fields are user-authored, `redacted` fields may contain credentials,
@@ -958,7 +958,7 @@ const PROVIDER_CONFIG_FIELD_POLICY = {
   desktopExecutor: "redacted",
   unsafeAllowNativeLocalExec: "editor",
   nativeLocalExec: "editor",
-} as const satisfies Record<keyof OcxProviderConfig, ProviderConfigFieldPolicy>;
+} as const satisfies Record<keyof OccxProviderConfig, ProviderConfigFieldPolicy>;
 
 type ProviderFieldWithPolicy<Policy extends ProviderConfigFieldPolicy> = {
   [Field in keyof typeof PROVIDER_CONFIG_FIELD_POLICY]:
@@ -988,7 +988,7 @@ export const PROVIDER_EDITOR_DENIED_FIELDS = [
   ...PROVIDER_EDITOR_DERIVED_FIELDS,
 ] as const;
 
-export type ProviderEditorProviderDTO = Omit<OcxProviderConfig, RedactedProviderField | RuntimeProviderField>
+export type ProviderEditorProviderDTO = Omit<OccxProviderConfig, RedactedProviderField | RuntimeProviderField>
   & Record<string, unknown>;
 
 export interface ProviderEditorConfigDTO {
@@ -1012,9 +1012,9 @@ function isPlainDataRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Project one provider through the same redaction path used by both the public
  * config DTO and the raw editor. Persisted unknown fields remain on disk but are
- * not exposed until OcxProviderConfig classifies them as editor-safe.
+ * not exposed until OccxProviderConfig classifies them as editor-safe.
  */
-function providerEditorProviderDTO(name: string, provider: OcxProviderConfig): ProviderEditorProviderDTO {
+function providerEditorProviderDTO(name: string, provider: OccxProviderConfig): ProviderEditorProviderDTO {
   const dto = Object.fromEntries(Object.entries(provider)
     .filter(([field]) => PROVIDER_CONFIG_FIELD_SET.has(field) && !PROVIDER_EDITOR_DENIED_FIELD_SET.has(field))
     .map(([field, value]) => [field, structuredClone(value)])) as Record<string, unknown>;
@@ -1033,7 +1033,7 @@ function providerEditorProviderDTO(name: string, provider: OcxProviderConfig): P
 }
 
 /** The complete non-secret provider shape the raw GUI editor may round-trip. */
-export function providerEditorConfigDTO(config: OcxConfig): ProviderEditorConfigDTO {
+export function providerEditorConfigDTO(config: OccxConfig): ProviderEditorConfigDTO {
   const providers: Record<string, ProviderEditorProviderDTO> = Object.create(null);
   for (const [name, provider] of Object.entries(config.providers)) {
     providers[name] = providerEditorProviderDTO(name, provider);
@@ -1080,7 +1080,7 @@ export function parseProviderEditorConfigDTO(value: unknown): ProviderEditorConf
 }
 
 /** Public dashboard DTO for config.json: provider entries with secrets stripped and documented fields exposed (including `modelCosts`). */
-export function safeConfigDTO(config: OcxConfig): unknown {
+export function safeConfigDTO(config: OccxConfig): unknown {
   const editor = providerEditorConfigDTO(config);
   const providers: Record<string, Record<string, unknown>> = {};
   for (const [name, provider] of Object.entries(config.providers)) {

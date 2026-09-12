@@ -3,14 +3,14 @@
  *
  * The installed CLI writes `credentials.toml` after `devin auth login`, and the
  * `windsurf_api_key` in it is an ordinary `devin-session-token$<JWT>` — the same
- * shape RegisterUser returns for `ocx login devin`, and the same one the
+ * shape RegisterUser returns for `occx login devin`, and the same one the
  * cloud-direct client already speaks. Measured against a signed-in CLI: it mints
  * a user_jwt, opens the full model catalog, and streams chat.
  *
  * So this is kiro's import-first login with the same substance: adopt a signed-in
  * local CLI's own session rather than starting a browser flow the CLI already
  * completed. No browser is ever opened, because there is nothing left for
- * opencodex to authorize.
+ * openccx to authorize.
  *
  * The file also carries `devin_webapp_host` and `devin_api_url`, which belong to
  * the Devin *session* product (`cog_` keys, agent VMs) rather than to model
@@ -33,7 +33,7 @@ import type { OAuthController, OAuthCredentials } from "./types";
 type DevinCliLoginOpts = { forceLogin?: boolean };
 
 /** Absolute-path override, for a CLI installed somewhere this resolver does not model. */
-export const DEVIN_CLI_CREDENTIALS_ENV = "OPENCODEX_DEVIN_CLI_CREDENTIALS";
+export const DEVIN_CLI_CREDENTIALS_ENV = "OPENCCX_DEVIN_CLI_CREDENTIALS";
 
 export interface DevinCliLoginDeps {
   env?: NodeJS.ProcessEnv;

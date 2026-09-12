@@ -20,7 +20,7 @@ function writeJson(path: string, value: unknown): void {
 }
 
 function validArtifacts(): { root: string; paths: string[] } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-provider-option-evidence-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-provider-option-evidence-"));
   roots.push(root);
   writeJson(join(root, "030_e2e.json"), {
     schemaVersion: 1,
@@ -219,44 +219,44 @@ describe("OpenAI provider-option live policy and runtime isolation", () => {
       openai_base_url: "sentinel",
       CODEX_HOME: "sentinel",
       codex_api_key: "sentinel",
-      OPENCODEX_HOME: "sentinel",
-      opencodex_base_url: "sentinel",
+      OPENCCX_HOME: "sentinel",
+      openccx_base_url: "sentinel",
       HTTP_PROXY: "sentinel",
       https_proxy: "sentinel",
       ALL_PROXY: "sentinel",
       all_proxy: "sentinel",
     };
-    const env = buildSanitizedRuntimeEnv(source, "/tmp/ocx", "/tmp/codex");
+    const env = buildSanitizedRuntimeEnv(source, "/tmp/occx", "/tmp/codex");
     expect(env.PATH).toBe("/bin");
     expect(env.OPENAI_API_KEY).toBeUndefined();
     expect(env.openai_base_url).toBeUndefined();
     expect(env.codex_api_key).toBeUndefined();
-    expect(env.opencodex_base_url).toBeUndefined();
+    expect(env.openccx_base_url).toBeUndefined();
     expect(env.HTTP_PROXY).toBeUndefined();
     expect(env.https_proxy).toBeUndefined();
     expect(env.ALL_PROXY).toBeUndefined();
     expect(env.all_proxy).toBeUndefined();
-    expect(env.OPENCODEX_HOME).toBe("/tmp/ocx");
+    expect(env.OPENCCX_HOME).toBe("/tmp/occx");
     expect(env.CODEX_HOME).toBe("/tmp/codex");
     expect(env.NO_PROXY).toBe("127.0.0.1,localhost,::1");
     expect(env.no_proxy).toBe("127.0.0.1,localhost,::1");
-    expect(env.OCX_SHIM_BYPASS).toBe("1");
+    expect(env.OCCX_SHIM_BYPASS).toBe("1");
   });
 
   test("keeps the fixture admission token through an installed Unix shim without reading its token file", () => {
     if (process.platform === "win32") return;
-    const root = mkdtempSync(join(tmpdir(), "ocx-runtime-shim-isolation-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-runtime-shim-isolation-"));
     roots.push(root);
     const tokenFile = join(root, "service-token");
     const realCodex = join(root, "codex-real");
     const shim = join(root, "codex");
     writeFileSync(tokenFile, "real-state-sentinel\n", { mode: 0o600 });
-    writeFileSync(realCodex, "#!/bin/sh\nprintf '%s\\n' \"$OPENCODEX_API_AUTH_TOKEN\"\n", { mode: 0o700 });
+    writeFileSync(realCodex, "#!/bin/sh\nprintf '%s\\n' \"$OPENCCX_API_AUTH_TOKEN\"\n", { mode: 0o700 });
     writeFileSync(shim, buildUnixCodexShim(realCodex, process.execPath, "/fixture/cli.ts", "bundled", tokenFile), { mode: 0o700 });
     chmodSync(realCodex, 0o700);
     chmodSync(shim, 0o700);
 
-    const env = buildSanitizedRuntimeEnv({ PATH: process.env.PATH }, "/tmp/ocx", "/tmp/codex");
+    const env = buildSanitizedRuntimeEnv({ PATH: process.env.PATH }, "/tmp/occx", "/tmp/codex");
     const result = Bun.spawnSync([shim, "--version"], { env, stdout: "pipe", stderr: "pipe" });
     expect(result.exitCode).toBe(0);
     expect(new TextDecoder().decode(result.stdout).trim()).toBe("fixture-admission");

@@ -9,16 +9,16 @@ import { clearApiKeyUsageCacheForTests, readApiKeyUsageRollup, rollupApiKeyUsage
 import { resetUsageAggregateCacheForTests } from "../../src/server/management/usage-aggregate-cache";
 import * as usageLedgerScannerModule from "../../src/usage/ledger-scanner";
 import { normalizeUsageEntryForTest, usageLogPath, type PersistedUsageEntry } from "../../src/usage/log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const ADMIN_TOKEN = "admin-secret-for-attribution";
-const previousHome = process.env.OPENCODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 let testHome = "";
 
-function remoteConfig(): OcxConfig {
+function remoteConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -27,8 +27,8 @@ function remoteConfig(): OcxConfig {
       test: { adapter: "openai-chat", baseUrl: "https://example.test/v1", disabled: true, models: ["gpt-test"] },
     },
     apiKeys: [
-      { id: "key-one", name: "one", key: "ocx_data_attributionone", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "key-two", name: "two", key: "ocx_data_attributiontwo", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "key-one", name: "one", key: "occx_data_attributionone", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "key-two", name: "two", key: "occx_data_attributiontwo", createdAt: "2026-07-31T00:00:00.000Z" },
     ],
   };
 }
@@ -43,28 +43,28 @@ function usageRows(): PersistedUsageEntry[] {
 
 async function keysGet(server: { url: URL }): Promise<Record<string, unknown>> {
   const res = await fetch(new URL("/api/keys", server.url), {
-    headers: { "x-opencodex-api-key": ADMIN_TOKEN },
+    headers: { "x-openccx-api-key": ADMIN_TOKEN },
   });
   return await res.json() as Record<string, unknown>;
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-attribution-"));
-  process.env.OPENCODEX_HOME = testHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = ADMIN_TOKEN;
+  testHome = mkdtempSync(join(tmpdir(), "occx-attribution-"));
+  process.env.OPENCCX_HOME = testHome;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = ADMIN_TOKEN;
   clearApiKeyUsageCacheForTests();
   resetUsageAggregateCacheForTests();
 });
 
 afterEach(() => {
   resetUsageAggregateCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -75,26 +75,26 @@ describe("attribution reaches usage.jsonl", () => {
     const server = startServer(0);
     const send = (token: string) => fetch(new URL("/v1/chat/completions", server.url), {
       method: "POST",
-      headers: { "content-type": "application/json", "x-opencodex-api-key": token },
+      headers: { "content-type": "application/json", "x-openccx-api-key": token },
       body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
     });
     const manage = async (path: string, method: string, body: unknown) => {
       const response = await fetch(new URL(path, server.url), {
         method,
-        headers: { "content-type": "application/json", "x-opencodex-api-key": ADMIN_TOKEN },
+        headers: { "content-type": "application/json", "x-openccx-api-key": ADMIN_TOKEN },
         body: JSON.stringify(body),
       });
       return { response, body: await response.json() as Record<string, unknown> };
     };
     try {
-      await send("ocx_data_attributionone");
+      await send("occx_data_attributionone");
       const started = await manage("/api/keys/rotate", "POST", { id: "key-one" });
       const pendingKey = started.body.key as string;
       const rotationId = started.body.rotationId as string;
       await send(pendingKey);
       await manage("/api/keys/rotate/commit", "POST", { id: "key-one", rotationId });
       await send(pendingKey);
-      expect((await send("ocx_data_attributionone")).status).toBe(401);
+      expect((await send("occx_data_attributionone")).status).toBe(401);
       expect(usageRows().slice(-3).map(row => row.apiKeyId)).toEqual(["key-one", "key-one", "key-one"]);
     } finally {
       await server.stop(true);
@@ -107,7 +107,7 @@ describe("attribution reaches usage.jsonl", () => {
     try {
       await fetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributiontwo" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributiontwo" },
         body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
       });
 
@@ -131,7 +131,7 @@ describe("attribution reaches usage.jsonl", () => {
     try {
       await fetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
         body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
       });
 
@@ -153,7 +153,7 @@ describe("attribution reaches usage.jsonl", () => {
     try {
       await fetch(new URL("/v1/messages", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
         body: JSON.stringify({ model: "test/gpt-test", max_tokens: 1, messages: [{ role: "user", content: "hi" }] }),
       });
       const row = usageRows().at(-1);
@@ -173,12 +173,12 @@ describe("attribution reaches usage.jsonl", () => {
       // no count when the number is used to decide whether a key is safe to delete.
       await fetch(new URL("/v1/responses/compact", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
         body: JSON.stringify({ model: "test/gpt-test", input: "hi" }),
       });
       await fetch(new URL("/v1/images/generations", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
         body: JSON.stringify({ model: "test/gpt-test", prompt: "hi" }),
       });
       const attributed = usageRows().filter(r => r.apiKeyId === "key-one");
@@ -214,13 +214,13 @@ describe("attribution reaches usage.jsonl", () => {
   });
 
   test("the environment token records its own kind", async () => {
-    process.env.OPENCODEX_API_AUTH_TOKEN = "env-data-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "env-data-secret";
     saveConfig(remoteConfig());
     const server = startServer(0);
     try {
       await fetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "env-data-secret" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "env-data-secret" },
         body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
       });
       const row = usageRows().at(-1);
@@ -228,7 +228,7 @@ describe("attribution reaches usage.jsonl", () => {
       expect(row?.apiKeyId).toBeUndefined();
     } finally {
       await server.stop(true);
-      delete process.env.OPENCODEX_API_AUTH_TOKEN;
+      delete process.env.OPENCCX_API_AUTH_TOKEN;
     }
   });
 
@@ -243,7 +243,7 @@ describe("attribution reaches usage.jsonl", () => {
         const before = usageRows().length;
         await fetch(new URL(path, server.url), {
           method: "POST",
-          headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+          headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
           body: JSON.stringify({ model: "test/gpt-test", input: "hi", query: "hi" }),
         }).catch(() => undefined);
         const rows = usageRows();
@@ -268,7 +268,7 @@ describe("attribution reaches usage.jsonl", () => {
       const before = usageRows().length;
       const settled = await new Promise<boolean>(resolve => {
         const socket = new WebSocket(target, {
-          headers: { "X-OpenCodex-API-Key": "ocx_data_attributiontwo" },
+          headers: { "X-Openccx-API-Key": "occx_data_attributiontwo" },
         } as unknown as string[]);
         const done = (v: boolean) => { clearTimeout(timer); try { socket.close(); } catch { /* gone */ } resolve(v); };
         socket.addEventListener("open", () => {
@@ -297,7 +297,7 @@ describe("attribution reaches usage.jsonl", () => {
     try {
       await fetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
         body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
       });
       const before = await keysGet(server);
@@ -308,7 +308,7 @@ describe("attribution reaches usage.jsonl", () => {
       const created = (before.keys as Array<Record<string, unknown>>)[1]!;
       await fetch(new URL("/api/keys", server.url), {
         method: "DELETE",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": ADMIN_TOKEN },
+        headers: { "content-type": "application/json", "x-openccx-api-key": ADMIN_TOKEN },
         body: JSON.stringify({ id: created.id }),
       });
       const after = await keysGet(server);
@@ -364,7 +364,7 @@ describe("attribution reaches usage.jsonl", () => {
     const server = startServer(0);
     try {
       const usage = await fetch(new URL("/api/usage?range=all", server.url), {
-        headers: { "x-opencodex-api-key": ADMIN_TOKEN },
+        headers: { "x-openccx-api-key": ADMIN_TOKEN },
       }).then(response => response.json()) as Record<string, unknown>;
       expect(usage.historyTruncated).toBe(false);
       expect(scans).toBe(1);
@@ -441,13 +441,13 @@ describe("attribution reaches usage.jsonl", () => {
   test("a long key id survives the round trip intact", async () => {
     const config = remoteConfig();
     const longId = "k".repeat(80);
-    config.apiKeys = [{ id: longId, name: "long", key: "ocx_data_longid", createdAt: "2026-07-31T00:00:00.000Z" }];
+    config.apiKeys = [{ id: longId, name: "long", key: "occx_data_longid", createdAt: "2026-07-31T00:00:00.000Z" }];
     saveConfig(config);
     const server = startServer(0);
     try {
       await fetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_longid" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_longid" },
         body: JSON.stringify({ model: "test/gpt-test", messages: [{ role: "user", content: "hi" }] }),
       });
       // The metadata cap would truncate this to 64 characters, and the rollup
@@ -471,7 +471,7 @@ describe("attribution reaches usage.jsonl", () => {
       ] as const) {
         await fetch(new URL(path, server.url), {
           method: "POST",
-          headers: { "content-type": "application/json", "x-opencodex-api-key": "ocx_data_attributionone" },
+          headers: { "content-type": "application/json", "x-openccx-api-key": "occx_data_attributionone" },
           body: JSON.stringify(body),
         });
       }
@@ -620,12 +620,12 @@ describe("AUTH_MATRIX is true of the running server", () => {
   test("every cell matches a real request", async () => {
     saveConfig(remoteConfig());
     const server = startServer(0);
-    const key = "ocx_data_attributionone";
+    const key = "occx_data_attributionone";
     try {
       for (const row of AUTH_MATRIX) {
         const cases: Array<[string, Record<string, string>]> = [
           [row.bearer, { authorization: `Bearer ${key}` }],
-          [row.dedicated, { "x-opencodex-api-key": key }],
+          [row.dedicated, { "x-openccx-api-key": key }],
           [row.xApiKey, { "x-api-key": key }],
         ];
         for (const [disposition, headers] of cases) {

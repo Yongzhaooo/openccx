@@ -50,7 +50,7 @@ import {
   verifyGuiPairCapability,
 } from "../lib/gui-pair-capability";
 import { forgetEphemeralSecretPath, forgetHardenedSecretPath, hardenSecretDir, hardenSecretPath } from "../lib/windows-secret-acl";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import {
   isDataPlaneAdmissionSecret,
 } from "./auth-cors";
@@ -104,7 +104,7 @@ function assertSafeDirectory(path: string): void {
   }
   if (!hardened.ok) {
     throw new Error(
-      "management token directory ACL hardening did not complete; set OPENCODEX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
+      "management token directory ACL hardening did not complete; set OPENCCX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
     );
   }
 }
@@ -123,11 +123,11 @@ function readExistingToken(path: string): string {
   }
   if (!hardened.ok) {
     throw new Error(
-      "management token file ACL hardening did not complete; set OPENCODEX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
+      "management token file ACL hardening did not complete; set OPENCCX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
     );
   }
   const token = readFileSync(path, "utf8").trim();
-  if (!/^ocx_admin_[A-Za-z0-9_-]{43}$/.test(token)) throw new Error("management token file is invalid");
+  if (!/^occx_admin_[A-Za-z0-9_-]{43}$/.test(token)) throw new Error("management token file is invalid");
   return token;
 }
 
@@ -151,7 +151,7 @@ export function removeManagementTokenPathBestEffort(
 
 function createTokenFile(path: string): string {
   const directory = dirname(path);
-  const token = `ocx_admin_${randomBytes(32).toString("base64url")}`;
+  const token = `occx_admin_${randomBytes(32).toString("base64url")}`;
   const temporary = join(directory, `.${randomUUID()}.admin-token.tmp`);
   let linked = false;
   let fd: number | null = null;
@@ -171,7 +171,7 @@ function createTokenFile(path: string): string {
     }
     if (!temporaryHardened.ok) {
       throw new Error(
-        "management token temporary ACL hardening did not complete; set OPENCODEX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
+        "management token temporary ACL hardening did not complete; set OPENCCX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
       );
     }
     try {
@@ -189,7 +189,7 @@ function createTokenFile(path: string): string {
     }
     if (!finalHardened.ok) {
       throw new Error(
-        "management token file ACL hardening did not complete; set OPENCODEX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
+        "management token file ACL hardening did not complete; set OPENCCX_ADMIN_AUTH_TOKEN to use an environment token instead of a file-backed token",
       );
     }
     return token;
@@ -204,15 +204,15 @@ function createTokenFile(path: string): string {
   }
 }
 
-function ready(token: string, source: "environment" | "file", config: OcxConfig): ManagementAuthState {
+function ready(token: string, source: "environment" | "file", config: OccxConfig): ManagementAuthState {
   if (isDataPlaneAdmissionSecret(token, config)) {
     return fail("management credential conflicts with a data-plane credential");
   }
   return { available: true, token, source, sessions: new Map(), pairingGrants: new Map() };
 }
 
-export function initializeManagementAuthState(config: OcxConfig): ManagementAuthState {
-  const environmentToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN?.trim();
+export function initializeManagementAuthState(config: OccxConfig): ManagementAuthState {
+  const environmentToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN?.trim();
   if (environmentToken) {
     return ready(environmentToken, "environment", config);
   }
@@ -241,7 +241,7 @@ function equalSecret(actual: string, expected: string): boolean {
 
 export function issueGuiSession(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   state: ManagementAuthState,
   context?: GuiSessionRequestContext,
 ): GuiSessionBootstrap | null {
@@ -252,12 +252,12 @@ export function issueGuiSession(
 export interface ManagementSessionControl {
   revokeCurrent(req: Request): boolean;
   /** Revalidate a long-lived request against current authority, without cached admission or renewal. */
-  isCurrent(req: Request, config: OcxConfig): boolean;
+  isCurrent(req: Request, config: OccxConfig): boolean;
 }
 
 export function createManagementSessionControl(state: ManagementAuthState): ManagementSessionControl {
   return {
-    isCurrent(req: Request, config: OcxConfig): boolean {
+    isCurrent(req: Request, config: OccxConfig): boolean {
       if (!state.available) return false;
       const credential = requestManagementCredential(req);
       if (!credential) return false;
@@ -479,7 +479,7 @@ function hasGuiPairCapability(
 }
 
 function requestManagementCredential(req: Request): string | null {
-  return req.headers.get("x-opencodex-api-key")?.trim()
+  return req.headers.get("x-openccx-api-key")?.trim()
     || req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
     || null;
 }
@@ -487,7 +487,7 @@ function requestManagementCredential(req: Request): string | null {
 function resolveManagementAdmission(
   req: Request,
   state: ManagementAuthState,
-  config?: OcxConfig,
+  config?: OccxConfig,
   local?: LocalManagementAuthContext,
 ): ManagementPrincipal | null {
   const cached = admittedManagementRequests.get(req);
@@ -516,7 +516,7 @@ function resolveManagementAdmission(
 export function managementPrincipal(
   req: Request,
   state: ManagementAuthState,
-  config?: OcxConfig,
+  config?: OccxConfig,
   local?: LocalManagementAuthContext,
 ): ManagementPrincipal | null {
   return resolveManagementAdmission(req, state, config, local);
@@ -525,7 +525,7 @@ export function managementPrincipal(
 export function requireManagementAuth(
   req: Request,
   state: ManagementAuthState,
-  config?: OcxConfig,
+  config?: OccxConfig,
   local?: LocalManagementAuthContext,
 ): Response | null {
   if (resolveManagementAdmission(req, state, config, local)) return null;
@@ -533,8 +533,8 @@ export function requireManagementAuth(
     return Response.json({
       error: "management API unavailable",
       reason: state.reason,
-      hint: "Set OPENCODEX_ADMIN_AUTH_TOKEN to bypass file-backed admin token ACL hardening",
+      hint: "Set OPENCCX_ADMIN_AUTH_TOKEN to bypass file-backed admin token ACL hardening",
     }, { status: 503 });
   }
-  return Response.json({ error: "opencodex admin token required" }, { status: 401 });
+  return Response.json({ error: "openccx admin token required" }, { status: 401 });
 }

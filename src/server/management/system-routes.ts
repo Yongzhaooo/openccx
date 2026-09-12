@@ -56,7 +56,7 @@ export async function handleSystemRoutes(ctx: ManagementContext): Promise<Respon
     // still needs bounded process identity and PID replacement evidence (#3158).
     return jsonResponse({
       status: "ok",
-      service: "opencodex",
+      service: "openccx",
       version,
       uptime: process.uptime(),
       pid: process.pid,

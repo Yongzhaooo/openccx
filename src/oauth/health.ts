@@ -85,7 +85,7 @@ export function projectOAuthAccountHealth(input: {
   return { status: "healthy" };
 }
 
-/** Codex pool accounts are not a public `ocx login` provider; reauth is dashboard-driven. */
+/** Codex pool accounts are not a public `occx login` provider; reauth is dashboard-driven. */
 export const CODEX_REAUTH_ACTION = "reauthenticate via the dashboard Codex account pool";
 
 function actionFor(provider: string, health: OAuthAccountHealth): string | undefined {
@@ -94,14 +94,14 @@ function actionFor(provider: string, health: OAuthAccountHealth): string | undef
   }
   if (health.status === "reauth_required") {
     if (provider === "codex") return CODEX_REAUTH_ACTION;
-    return `run \`ocx login ${provider}\``;
+    return `run \`occx login ${provider}\``;
   }
   if (health.status === "cooldown") {
     // Keep the transported deadline machine-readable (ISO); presentation layers localize/format.
     return `wait until ${health.until} or start a new session with another eligible account`;
   }
   if (health.status === "warning" && health.reason === "refresh_conflict") {
-    return "re-run `ocx doctor` after ensuring only one proxy process writes the credential store";
+    return "re-run `occx doctor` after ensuring only one proxy process writes the credential store";
   }
   return undefined;
 }
@@ -310,7 +310,7 @@ function collectLocalCodexEntries(now: number): OAuthHealthEntry[] {
     if (!hasPoolCredential && !needsReauth && !snap) continue;
 
     // Call the projector rather than inlining a second copy of it. This collector serves the CLI
-    // (`ocx status`, `ocx doctor`) while the dashboard DTO goes through projectCodexAccountHealth,
+    // (`occx status`, `occx doctor`) while the dashboard DTO goes through projectCodexAccountHealth,
     // and the duplicated body is exactly how the CLI would have kept reporting a revoked account
     // as healthy after the dashboard stopped.
     const health = projectCodexAccountHealth({ accountId, needsReauth, now });
@@ -411,7 +411,7 @@ export type OAuthCliHealthReport = {
   codexHealthSource: CodexHealthSource;
 };
 
-/** Shown by `ocx status` / `ocx doctor` when the proxy management API is unreachable. */
+/** Shown by `occx status` / `occx doctor` when the proxy management API is unreachable. */
 export const CODEX_HEALTH_UNAVAILABLE_NOTE =
   "Codex health: unavailable (proxy not running; live cooldown/reauth requires the management API)";
 export const CODEX_HEALTH_AUTH_FAILED_NOTE =

@@ -41,16 +41,16 @@ describe("pnpm installation detection", () => {
   });
 
   test("recognises isolated, store-link, and preserved-symlink layouts", () => {
-    expect(detectInstallFromPath("/tmp/test-user/.local/share/pnpm/global/v11/node_modules/.pnpm/@bitkyc08+opencodex@2.49.0/node_modules/@bitkyc08/opencodex/bin")).toBe("pnpm");
+    expect(detectInstallFromPath("/tmp/test-user/.local/share/pnpm/global/v11/node_modules/.pnpm/@bitkyc08+openccx@2.49.0/node_modules/@bitkyc08/opencodex/bin")).toBe("pnpm");
     expect(detectInstallFromPath("/tmp/test-user/.local/share/pnpm/store/v11/links/@bitkyc08/opencodex/2.49.0/node_modules/@bitkyc08/opencodex/bin")).toBe("pnpm");
     expect(detectInstallFromPath("/tmp/test-user/.local/share/pnpm/global/11/group/node_modules/@bitkyc08/opencodex/bin", {
       exists: path => path === "/tmp/test-user/.local/share/pnpm/global/11/group/node_modules/.pnpm",
     })).toBe("pnpm");
-    expect(detectInstallFromPath("C:\\work\\node_modules\\.pnpm\\@bitkyc08+opencodex@2.49.0\\node_modules\\@bitkyc08\\opencodex\\bin")).toBe("pnpm");
+    expect(detectInstallFromPath("C:\\work\\node_modules\\.pnpm\\@bitkyc08+openccx@2.49.0\\node_modules\\@bitkyc08\\openccx\\bin")).toBe("pnpm");
   });
 
   test("follows a preserved npm-looking symlink to the pnpm package target", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-detect-link-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-detect-link-"));
     try {
       const target = join(root, "pnpm", "global", "v11", "node_modules", ".pnpm", "pkg", "node_modules", PKG, "bin");
       const exposed = join(root, "prefix", "node_modules", PKG, "bin");
@@ -120,8 +120,8 @@ const ownerFor = (version = "1.0.0"): PnpmGlobalOwner => ({
 
 describe("pnpm global owner binding", () => {
   test("selects the candidate whose global listing owns the running package", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-owner-"));
-    const packagePath = join(root, "home-b", "global", "v11", "node_modules", "@bitkyc08", "opencodex");
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-owner-"));
+    const packagePath = join(root, "home-b", "global", "v11", "node_modules", "@bitkyc08", "openccx");
     const groupB = join(root, "home-b", "global", "v11");
     const baseB = join(root, "home-b", "global");
     const binB = join(root, "home-b", "bin");
@@ -132,7 +132,7 @@ describe("pnpm global owner binding", () => {
         calls.push({ command, args: [...args] });
         if (args[0] === "list") {
           const listed = command === "/pnpm/a/bin/pnpm"
-            ? join(root, "home-a", "global", "v11", "node_modules", "@bitkyc08", "opencodex")
+            ? join(root, "home-a", "global", "v11", "node_modules", "@bitkyc08", "openccx")
             : packagePath;
           const group = command === "/pnpm/a/bin/pnpm" ? join(root, "home-a", "global", "v11") : groupB;
           return {
@@ -180,7 +180,7 @@ describe("pnpm global owner binding", () => {
   });
 
   test("uses the running shim to disambiguate same-version pnpm homes", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-shim-owner-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-shim-owner-"));
     const packagePath = join(root, "shared", "node_modules", PKG);
     const groupA = join(root, "home-a", "global", "v11");
     const groupB = join(root, "home-b", "global", "v11");
@@ -188,7 +188,7 @@ describe("pnpm global owner binding", () => {
     const baseB = join(root, "home-b", "global");
     const binA = join(root, "home-a", "bin");
     const binB = join(root, "home-b", "bin");
-    const runningShim = join(binB, "ocx");
+    const runningShim = join(binB, "occx");
     mkdirSync(packagePath, { recursive: true });
     try {
       const run = (command: string, args: readonly string[]): PnpmRunResult => {
@@ -225,7 +225,7 @@ describe("pnpm global owner binding", () => {
   });
 
   test("derives pnpm's default global-dir base when config get is undefined", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-default-owner-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-default-owner-"));
     const base = join(root, "global");
     const group = join(base, "v11");
     const bin = join(root, "bin");
@@ -321,7 +321,7 @@ function makePackageFixture(
     version: "2.0.0",
     dependencies: { bun: "1", zod: "1" },
   }));
-  writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
+  writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
   writeFileSync(join(bunDir, "package.json"), JSON.stringify({ name: "bun" }));
   writeFileSync(join(bunDir, "bin", "bun.exe"), Buffer.alloc(10 * 1024 * 1024 + 1));
   writeFileSync(join(zodDir, "package.json"), JSON.stringify({ name: "zod" }));
@@ -334,7 +334,7 @@ function makePackageFixture(
 
 describe("pnpm package tree verification", () => {
   test("resolves dependencies through a custom virtual store and hoisted-style links", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-tree-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-tree-"));
     try {
       const packageDir = makePackageFixture(root, join(root, "custom-virtual-store", "node_modules"));
       expect(verifyPnpmInstallTree(packageDir, "2.0.0")).toEqual({ ok: true, failures: [] });
@@ -344,11 +344,11 @@ describe("pnpm package tree verification", () => {
   });
 
   test("resolves a genuinely hoisted package from an ancestor node_modules", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-hoisted-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-hoisted-"));
     try {
       const hoistedRoot = join(root, "global", "node_modules");
       const packageDir = makePackageFixture(root, hoistedRoot, {
-        packageDir: join(hoistedRoot, "@bitkyc08", "opencodex"),
+        packageDir: join(hoistedRoot, "@bitkyc08", "openccx"),
         linkDependenciesInside: false,
       });
       // A hoisted group is owned by pnpm only when pnpm's own bookkeeping says so; a bare
@@ -361,7 +361,7 @@ describe("pnpm package tree verification", () => {
   });
 
   test("resolves dependencies through a pnpm package-root symlink", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-linked-tree-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-linked-tree-"));
     try {
       const target = makePackageFixture(root, join(root, "store", "node_modules"));
       const exposed = join(root, "global", "v11", "node_modules", PKG);
@@ -374,7 +374,7 @@ describe("pnpm package tree verification", () => {
   });
 
   test("does not accept a package tree whose runtime dependency cannot resolve", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-tree-missing-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-tree-missing-"));
     try {
       const packageDir = makePackageFixture(root, join(root, "deps"));
       rmSync(join(packageDir, "node_modules", "zod"), { force: true });
@@ -386,8 +386,8 @@ describe("pnpm package tree verification", () => {
 });
 
 describe("pnpm generated shims", () => {
-  function writeHostShims(globalBinDir: string, targetPackageDir: string, commands = ["ocx", "opencodex"]): void {
-    const target = relative(globalBinDir, join(targetPackageDir, "bin", "ocx.mjs"));
+  function writeHostShims(globalBinDir: string, targetPackageDir: string, commands = ["occx", "openccx"]): void {
+    const target = relative(globalBinDir, join(targetPackageDir, "bin", "occx.mjs"));
     for (const command of commands) {
       if (process.platform === "win32") {
         const windowsTarget = target.replaceAll("/", "\\");
@@ -402,16 +402,16 @@ describe("pnpm generated shims", () => {
   }
 
   test("verifies host-native shims point at the active package", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-shims-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-shims-"));
     try {
       const packageDir = join(root, "global", "v11", "node_modules", PKG);
       const globalBinDir = join(root, "bin");
       mkdirSync(join(packageDir, "bin"), { recursive: true });
       mkdirSync(globalBinDir, { recursive: true });
-      writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n");
+      writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n");
       writeHostShims(globalBinDir, packageDir);
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir)).toEqual({ ok: true });
-      writeHostShims(globalBinDir, join(root, "global", "v11", "node_modules", "old"), ["opencodex"]);
+      writeHostShims(globalBinDir, join(root, "global", "v11", "node_modules", "old"), ["openccx"]);
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir).ok).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -419,7 +419,7 @@ describe("pnpm generated shims", () => {
   });
 
   test("accepts a pnpm group alias when it resolves to the active package", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-shim-alias-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-shim-alias-"));
     try {
       const activeGroup = join(root, "global", "v11", "active");
       const aliasGroup = join(root, "global", "v11", "stable-link");
@@ -427,7 +427,7 @@ describe("pnpm generated shims", () => {
       const globalBinDir = join(root, "bin");
       mkdirSync(join(packageDir, "bin"), { recursive: true });
       mkdirSync(globalBinDir, { recursive: true });
-      writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n");
+      writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n");
       symlinkSync(activeGroup, aliasGroup, "dir");
       writeHostShims(globalBinDir, join(aliasGroup, "node_modules", PKG));
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir)).toEqual({ ok: true });
@@ -438,20 +438,20 @@ describe("pnpm generated shims", () => {
 
   // Windows does not expose POSIX execute bits; target/alias coverage above still runs there.
   test.skipIf(process.platform === "win32")("requires executable permissions on POSIX shims", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-posix-mode-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-posix-mode-"));
     try {
       const packageDir = join(root, "node_modules", PKG);
       const globalBinDir = join(root, "bin");
       mkdirSync(join(packageDir, "bin"), { recursive: true });
       mkdirSync(globalBinDir, { recursive: true });
-      writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n");
+      writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n");
       writeHostShims(globalBinDir, packageDir);
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir)).toEqual({ ok: true });
-      chmodSync(join(globalBinDir, "ocx"), 0o644);
+      chmodSync(join(globalBinDir, "occx"), 0o644);
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir)).toEqual({
-        ok: false, reason: "pnpm generated shim verification failed (ocx)",
+        ok: false, reason: "pnpm generated shim verification failed (occx)",
       });
-      chmodSync(join(globalBinDir, "ocx"), 0o755);
+      chmodSync(join(globalBinDir, "occx"), 0o755);
       expect(verifyPnpmGlobalShims(packageDir, globalBinDir)).toEqual({ ok: true });
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -459,15 +459,15 @@ describe("pnpm generated shims", () => {
   });
 
   test("verifies Windows cmd and PowerShell shim forms", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-pnpm-win-shims-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-pnpm-win-shims-"));
     try {
       const packageDir = join(root, "global", "v11", "node_modules", PKG);
       const globalBinDir = join(root, "bin");
       mkdirSync(join(packageDir, "bin"), { recursive: true });
       mkdirSync(globalBinDir, { recursive: true });
-      writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n");
-      const target = relative(globalBinDir, join(packageDir, "bin", "ocx.mjs")).replaceAll("/", "\\");
-      for (const name of ["ocx.cmd", "ocx.ps1", "opencodex.cmd", "opencodex.ps1"]) {
+      writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n");
+      const target = relative(globalBinDir, join(packageDir, "bin", "occx.mjs")).replaceAll("/", "\\");
+      for (const name of ["occx.cmd", "occx.ps1", "openccx.cmd", "openccx.ps1"]) {
         const body = name.endsWith(".cmd")
           ? `@echo off\r\nnode "%~dp0\\${target}" %*\r\n`
           : `$basedir = Split-Path $MyInvocation.MyCommand.Definition -Parent\n& "$basedir\\${target}" @args\n`;
@@ -629,7 +629,7 @@ describe("shared registry integrity pre-flight", () => {
   });
 
   test("both launcher and Bun worker use the shared helper before stopping", () => {
-    const launcher = readFileSync(join(dirname(import.meta.dir), "..", "bin", "ocx.mjs"), "utf8");
+    const launcher = readFileSync(join(dirname(import.meta.dir), "..", "bin", "occx.mjs"), "utf8");
     const update = readFileSync(join(dirname(import.meta.dir), "..", "src", "update", "index.ts"), "utf8");
     expect(launcher).toContain("checkRegistryPackageIntegrity");
     expect(launcher.indexOf("checkRegistryPackageIntegrity")).toBeLessThan(launcher.indexOf("Stopping the running proxy"));

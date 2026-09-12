@@ -38,7 +38,7 @@ function capture(): { lines: string[]; errors: string[]; restore: () => void } {
   return { lines, errors, restore: () => { console.log = log; console.error = err; } };
 }
 
-describe("ocx account grok-reset-coupons", () => {
+describe("occx account grok-reset-coupons", () => {
   test("--consume without --yes refuses locally, before any fetch", async () => {
     const calls: Captured[] = [];
     const out = capture();

@@ -157,7 +157,7 @@ export const CAP_OPTION_SET = new Set(CAP_OPTIONS);
  *
  * Deliberately three values, not the generic 100k…950k ladder: these are the windows the
  * native GPT-5.6 family actually has a contract for — 272,000 (what the live catalog
- * reports), 372,000 (the previous opencodex contract), and 922,000 (the current advertised
+ * reports), 372,000 (the previous openccx contract), and 922,000 (the current advertised
  * cap, measured; see devlog/_plan/260817_native_gpt56_1m_context). A cap only ever lowers a
  * window, so listing a value above the advertised one would be an inert choice.
  * Anything else goes through "Custom".
@@ -171,7 +171,7 @@ export const THREAD_OPTIONS = [4, 8, 16, 32, 64, 128, 256, 500, 1000];
 export const THREAD_OPTION_SET = new Set(THREAD_OPTIONS);
 export const PAGE = 60; // rows rendered per provider before a "show more"
 
-export const COLLAPSED_KEY_V2 = "ocx-models-collapsed:v2";
+export const COLLAPSED_KEY_V2 = "occx-models-collapsed:v2";
 
 /**
  * Compact token display (350k, 1.05M) — the unit suffix is technical notation, not prose,

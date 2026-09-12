@@ -30,7 +30,7 @@
  * `requiresAdmissionToken` cannot tell a free socket from one that will 401, and the only
  * honest answers are "attach the data-plane credential" or "say so in a log line".
  *
- * The credential in question is the DATA-PLANE one — `OPENCODEX_API_AUTH_TOKEN`, the hardened
+ * The credential in question is the DATA-PLANE one — `OPENCCX_API_AUTH_TOKEN`, the hardened
  * service token file, or a configured `apiKeys` entry, the same ladder
  * `standaloneCodexRoutingTarget` / the Codex provider table already uses. Never the admin
  * token: no exported client configuration may carry management authority (reviewer constraint
@@ -39,10 +39,10 @@
 import { effectiveLoopbackListenerPort, isLoopbackHostname, isWildcardHostname, shouldInjectApiAuthHeader } from "../codex/loopback-target";
 import { probeHostname } from "../server/proxy-liveness";
 import { loadServiceTokenFromFile, serviceApiTokenFilePath } from "./service-secrets";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
-export type LocalInferenceConfig = Pick<OcxConfig, "hostname" | "unauthenticatedLoopbackListener">;
-export type LocalManagementConfig = Pick<OcxConfig, "hostname" | "runtimeRole" | "hub">;
+export type LocalInferenceConfig = Pick<OccxConfig, "hostname" | "unauthenticatedLoopbackListener">;
+export type LocalManagementConfig = Pick<OccxConfig, "hostname" | "runtimeRole" | "hub">;
 
 export interface LocalInferenceDestination {
   /** Origin a local client wire dials, e.g. `http://127.0.0.1:10104`. */
@@ -50,7 +50,7 @@ export interface LocalInferenceDestination {
   /** Port component of `origin`. */
   port: number;
   /**
-   * Does the listener at `origin` demand `x-opencodex-api-key`?
+   * Does the listener at `origin` demand `x-openccx-api-key`?
    *
    * False only for the unauthenticated loopback listener and a genuinely loopback public bind.
    * A caller that cannot attach a credential must log that it is degrading rather than write a
@@ -97,7 +97,7 @@ export function localInferenceDestination(
  *
  * On a tailnet bind with no loopback listener the set is EMPTY, and that is the point: a
  * leftover `http://127.0.0.1:10100` from a previous loopback-bound install is a dead socket
- * there, so `ocx claude` must replace it rather than preserve it as its own destination.
+ * there, so `occx claude` must replace it rather than preserve it as its own destination.
  */
 export function localLoopbackInferencePorts(
   config: LocalInferenceConfig | undefined,
@@ -114,20 +114,20 @@ export function localLoopbackInferencePorts(
 /**
  * The DATA-PLANE admission credential this host can present to its own public listener.
  *
- * Same ladder the Codex provider table and `ocx opencode` already use — environment token,
+ * Same ladder the Codex provider table and `occx opencode` already use — environment token,
  * hardened service token file, first configured `apiKeys` entry — and deliberately NOT the
  * admin token, which must never leave the management surface. `undefined` means the caller has
  * nothing to attach and has to degrade loudly.
  */
 export function localAdmissionToken(
-  config: Pick<OcxConfig, "apiKeys"> | undefined,
+  config: Pick<OccxConfig, "apiKeys"> | undefined,
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined {
-  const envToken = env.OPENCODEX_API_AUTH_TOKEN?.trim();
+  const envToken = env.OPENCCX_API_AUTH_TOKEN?.trim();
   if (envToken) return envToken;
-  const lookup = env.OCX_API_TOKEN_FILE?.trim()
+  const lookup = env.OCCX_API_TOKEN_FILE?.trim()
     ? env
-    : { ...env, OCX_API_TOKEN_FILE: serviceApiTokenFilePath() };
+    : { ...env, OCCX_API_TOKEN_FILE: serviceApiTokenFilePath() };
   const fileToken = loadServiceTokenFromFile(lookup as Record<string, string | undefined>)?.trim();
   // Shape-check the FILE candidate only. The env var and `apiKeys` are values an operator set
   // deliberately and pass through verbatim; a path, by contrast, can be pointed at or replaced

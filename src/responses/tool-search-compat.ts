@@ -1,6 +1,6 @@
 export const TOOL_SEARCH_FUNCTION_NAME = "tool_search";
 export const TOOL_SEARCH_DEFAULT_DESCRIPTION = "Search for additional tools to load for the next turn.";
-const TOOL_SEARCH_WIRE_ALIAS_PREFIX = "opencodex_tool_search";
+const TOOL_SEARCH_WIRE_ALIAS_PREFIX = "openccx_tool_search";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);

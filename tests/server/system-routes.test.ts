@@ -20,9 +20,9 @@ import {
   resetWindowsReplaceRetryCountersForTests,
   type ReplacePublisher,
 } from "../../src/lib/windows-atomic-replace";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -34,7 +34,7 @@ function config(): OcxConfig {
         defaultModel: "gpt-test",
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 const url = "http://127.0.0.1:10100/api/system/windows-replace-retries";
@@ -132,7 +132,7 @@ describe("windows replace retry counters", () => {
       "tray:EBUSY",
     ]);
     // @ts-expect-error a path is not a ReplacePublisher
-    renameAtomicFile("a", "b", flakyIo(0), "C:\\Users\\someone\\.opencodex");
+    renameAtomicFile("a", "b", flakyIo(0), "C:\\Users\\someone\\.openccx");
   });
 });
 

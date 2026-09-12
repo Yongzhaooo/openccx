@@ -15,7 +15,7 @@ export interface CodexHistoryBackupEntry {
    *
    * Routing derives the post-image `has_user_event` from the message AT SNAPSHOT TIME
    * (`history-provider.ts` `routeOpenai`), so a restore that recomputes it from the
-   * message as it is NOW will mistake the user's first message for OpenCodex's own write
+   * message as it is NOW will mistake the user's first message for Openccx's own write
    * and erase it. Only the emptiness is recorded, never the text: this manifest is a file
    * on disk and the message is user content.
    *
@@ -25,7 +25,7 @@ export interface CodexHistoryBackupEntry {
    */
   hadFirstUserMessage?: boolean;
   /**
-   * Whether OpenCodex's routing relabel is known to have landed for this entry.
+   * Whether Openccx's routing relabel is known to have landed for this entry.
    *
    * `pending` is written before the routing write and resolved after it, so a crash
    * between the two leaves an honest "unknown" rather than a confident wrong answer. The
@@ -90,7 +90,7 @@ function hasAllowedProvenance(entry: Record<string, unknown>): boolean {
       && CODEX_HISTORY_RESUMABLE_SOURCES.includes(
         entry.source as (typeof CODEX_HISTORY_RESUMABLE_SOURCES)[number],
       ))
-    || (entry.modelProvider === "opencodex" && entry.source === "exec");
+    || (entry.modelProvider === "openccx" && entry.source === "exec");
 }
 
 /**

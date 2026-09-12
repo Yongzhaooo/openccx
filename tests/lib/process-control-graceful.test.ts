@@ -119,12 +119,12 @@ describe("stopProxyGracefully", () => {
       }) as typeof fetch,
       waitExit: () => true,
       env: {
-        OPENCODEX_API_AUTH_TOKEN: "data-secret",
-        OPENCODEX_ADMIN_AUTH_TOKEN: "admin-secret",
+        OPENCCX_API_AUTH_TOKEN: "data-secret",
+        OPENCCX_ADMIN_AUTH_TOKEN: "admin-secret",
       },
     });
 
-    expect(headers?.["x-opencodex-api-key"]).toBe("admin-secret");
+    expect(headers?.["x-openccx-api-key"]).toBe("admin-secret");
   });
 
   test("returns false when no runtime port is recorded (caller falls back to killProxy)", async () => {
@@ -173,7 +173,7 @@ describe("409 refusal reporting", () => {
     // whose proxy is simply the service to a CODEX_HOME that does not exist.
     const selfUnload = "This proxy is running as the installed service, so stopping the manager"
       + " from inside it would end this process before native Codex is restored."
-      + " Run `ocx stop`, which stops the service from outside and completes the restore."
+      + " Run `occx stop`, which stops the service from outside and completes the restore."
       + " Nothing was changed.";
     const result = await stopProxyGracefully(7, {
       readRuntime: () => ({ port: 10100 }),
@@ -246,27 +246,27 @@ describe("409 refusal reporting", () => {
 
     const respawnable = await refusalFor("respawnable_service");
     expect(respawnable).toContain("respawn");
-    // Not `ocx stop`: the only callers of stopProxy are `ocx stop` and the service
+    // Not `occx stop`: the only callers of stopProxy are `occx stop` and the service
     // manager's own cleanup, so recommending it here is the #4169 loop. The fallback names
     // the cause and refusalNextStep names the command.
-    expect(respawnable).not.toContain("ocx stop");
+    expect(respawnable).not.toContain("occx stop");
 
     const selfUnload = await refusalFor("self_unload_service");
     expect(selfUnload).toContain("installed service itself");
-    expect(selfUnload).not.toContain("ocx stop");
+    expect(selfUnload).not.toContain("occx stop");
 
     const unknownState = await refusalFor("service_state_unknown");
     expect(unknownState).toContain("could not be read");
-    expect(unknownState).not.toContain("ocx stop");
+    expect(unknownState).not.toContain("occx stop");
 
     const noBody = await refusalFor(null);
     expect(noBody).toContain("sent no reason");
-    expect(noBody).not.toContain("ocx stop");
+    expect(noBody).not.toContain("occx stop");
 
     // None of them may assert the cause that #4169 was filed for.
     for (const message of [respawnable, selfUnload, unknownState, noBody]) {
       expect(message).not.toContain("CODEX_HOME");
-      expect(message).not.toContain("OPENCODEX_HOME");
+      expect(message).not.toContain("OPENCCX_HOME");
     }
   });
 
@@ -295,14 +295,14 @@ describe("409 refusal reporting", () => {
   });
 
   test("no next step sends the operator back to the command that just refused", () => {
-    // #4169's loop: POST /api/stop answers "the stop must be run by `ocx stop`", and
-    // `ocx stop` reprints it. Whatever the cause, the next step has to be something else,
+    // #4169's loop: POST /api/stop answers "the stop must be run by `occx stop`", and
+    // `occx stop` reprints it. Whatever the cause, the next step has to be something else,
     // because the service manager was already asked to stop before this point.
     for (const code of ["respawnable_service", "self_unload_service", "service_state_unknown", null]) {
       const step = refusalNextStep(code);
-      // Naming `ocx stop` in order to rule it out is the point; recommending it is the loop.
-      expect(step).not.toMatch(/Run `ocx stop`/);
-      expect(step).toContain("ocx service status");
+      // Naming `occx stop` in order to rule it out is the point; recommending it is the loop.
+      expect(step).not.toMatch(/Run `occx stop`/);
+      expect(step).toContain("occx service status");
     }
     // The two service causes say why repeating the stop is not the missing step, since the
     // server's message printed just above them recommends exactly that.

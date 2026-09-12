@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { drainAndShutdown } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { endStorageMutation, getActiveStorageMutation, tryBeginStorageMutation } from "../../src/storage/storage-mutation-coordinator";
 import {
   resetArchivedCleanupJobForTests,
@@ -49,7 +49,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -61,7 +61,7 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function seedArchivedPair(codexHome: string): void {
@@ -178,8 +178,8 @@ function removeTree(path: string): void {
 }
 
 beforeEach(async () => {
-  previousHome = process.env.OPENCODEX_HOME;
-  // Join leftover Workers before allocating homes / mutating OPENCODEX_HOME —
+  previousHome = process.env.OPENCCX_HOME;
+  // Join leftover Workers before allocating homes / mutating OPENCCX_HOME —
   // same order as installPolicyApiHarness (startServer also arms the unref'd
   // policy scheduler; bare server.stop does not clear it).
   stopStorageCleanupScheduler();
@@ -191,9 +191,9 @@ beforeEach(async () => {
   // as resetRestoreTrashJobForTestsAsync / policy-job's mutation-slot finally.
   resetArchivedCleanupJobForTests();
   resetStorageMutationCoordinatorForTests();
-  isolatedCodexHome = installIsolatedCodexHome("ocx-storage-mutation-race-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-storage-mutation-race-"));
-  process.env.OPENCODEX_HOME = testDir;
+  isolatedCodexHome = installIsolatedCodexHome("occx-storage-mutation-race-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-storage-mutation-race-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
   stopStorageCleanupScheduler();
 });
@@ -209,8 +209,8 @@ afterEach(async () => {
   setRestoreTrashJobTestHooks(null);
   setArchivedCleanupJobTestHooks(null);
   setStorageCleanupPolicyJobTestHooks(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTree(testDir);
@@ -331,7 +331,7 @@ describe("storage mutation coordinator", () => {
       expect((await restoreRes.json()).error).toBe("storage_mutation_busy");
 
       // Drain the blocked policy job before stop/teardown — leaving it mid-block leaves
-      // Windows holding OPENCODEX_HOME (SQLite/job handles) and afterEach rmSync fails EBUSY.
+      // Windows holding OPENCCX_HOME (SQLite/job handles) and afterEach rmSync fails EBUSY.
       await waitForPolicyJob(server.url, startedAt);
     } finally {
       await stopRaceServer(server);

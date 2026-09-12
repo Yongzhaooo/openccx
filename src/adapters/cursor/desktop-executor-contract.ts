@@ -1,5 +1,5 @@
 /**
- * Opt-in external executor for computer-use / record-screen. opencodex is a headless proxy and
+ * Opt-in external executor for computer-use / record-screen. openccx is a headless proxy and
  * cannot drive a screen itself; set these commands only when running on a host that can. Each
  * command receives the request as JSON on stdin and must print a JSON result on stdout.
  */

@@ -58,7 +58,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import { drainAndShutdown } from "../lifecycle";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "../request-log";
 import { estimateComboCost, estimateRequestCost, normalizeCostTokens, tokensPerSecond } from "../../usage/cost";
@@ -835,9 +835,9 @@ export async function handleOauthAccountRoutes(ctx: ManagementContext): Promise<
     const { readApiKeyUsageRollup } = await import("./api-key-usage");
     const { rollup, attributionSince, historyTruncated } = await readApiKeyUsageRollup(keys.map(k => k.id), config.managementUsageMaxReadBytes);
     return jsonResponse({
-      // 8 random hex past the fixed `ocx_data_` literal: enough to tell two keys
+      // 8 random hex past the fixed `occx_data_` literal: enough to tell two keys
       // apart in a list, with 128 bits of the tail still unrevealed. Masking only
-      // 8 characters showed `ocx_data...` for every key ever generated.
+      // 8 characters showed `occx_data...` for every key ever generated.
       keys: keys.map(k => ({
         id: k.id,
         name: k.name,
@@ -913,7 +913,7 @@ export async function handleOauthAccountRoutes(ctx: ManagementContext): Promise<
     // made this secret's safety argument depend on string concatenation rather
     // than the RNG. 20 bytes is the same 40 hex characters as before, so nothing
     // that pattern-matches the key shape changes.
-    const key = "ocx_data_" + randomBytes(20).toString("hex");
+    const key = "occx_data_" + randomBytes(20).toString("hex");
     const entry = { id: randomUUID(), name, key, createdAt: new Date().toISOString() };
     config.apiKeys = [...(config.apiKeys ?? []), entry];
     saveConfigPreservingClaudeCode(config);

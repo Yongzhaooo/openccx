@@ -16,15 +16,15 @@ import {
   rememberReasoningForCall,
   rememberReasoningReplayOpaqueBlobRejection,
 } from "../../src/responses/reasoning-replay-cache";
-import type { AdapterEvent, OcxReasoningReplayScopeRef } from "../../src/types";
+import type { AdapterEvent, OccxReasoningReplayScopeRef } from "../../src/types";
 
 const THREAD = "thread-identity";
 const CALL_ID = "call_identity_collision";
 const REASONING = "private reasoning";
 
 function scope(
-  overrides: Partial<NonNullable<OcxReasoningReplayScopeRef["current"]>> = {},
-): OcxReasoningReplayScopeRef {
+  overrides: Partial<NonNullable<OccxReasoningReplayScopeRef["current"]>> = {},
+): OccxReasoningReplayScopeRef {
   return {
     clientThreadId: THREAD,
     current: {
@@ -40,7 +40,7 @@ function scope(
   };
 }
 
-async function drain(events: AsyncIterable<AdapterEvent>, replayScope: OcxReasoningReplayScopeRef): Promise<void> {
+async function drain(events: AsyncIterable<AdapterEvent>, replayScope: OccxReasoningReplayScopeRef): Promise<void> {
   const reader = bridgeToResponsesSSE(
     events,
     "deepseek-v4-flash",
@@ -204,7 +204,7 @@ describe("reasoning replay provider and credential identity", () => {
     const servingScope = (
       threadId: string,
       modelId: string,
-    ): OcxReasoningReplayScopeRef => ({
+    ): OccxReasoningReplayScopeRef => ({
       ...scope({ modelId }),
       clientThreadId: threadId,
     });
@@ -228,7 +228,7 @@ describe("reasoning replay provider and credential identity", () => {
   });
 
   test("incomplete, unscoped, and legacy thread-only namespaces fail closed", () => {
-    const incomplete: OcxReasoningReplayScopeRef[] = [
+    const incomplete: OccxReasoningReplayScopeRef[] = [
       { clientThreadId: THREAD },
       scope({ credentialIdentity: "" }),
     ];
@@ -238,8 +238,8 @@ describe("reasoning replay provider and credential identity", () => {
     }
     rememberReasoningForCall(CALL_ID, REASONING);
     expect(peekReasoningForCall(CALL_ID)).toBeUndefined();
-    rememberReasoningForCall(CALL_ID, REASONING, THREAD as unknown as OcxReasoningReplayScopeRef);
-    expect(peekReasoningForCall(CALL_ID, THREAD as unknown as OcxReasoningReplayScopeRef)).toBeUndefined();
+    rememberReasoningForCall(CALL_ID, REASONING, THREAD as unknown as OccxReasoningReplayScopeRef);
+    expect(peekReasoningForCall(CALL_ID, THREAD as unknown as OccxReasoningReplayScopeRef)).toBeUndefined();
   });
 
   test("invalidating a bound holder prevents writes under its stale identity", () => {

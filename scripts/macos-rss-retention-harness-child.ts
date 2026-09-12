@@ -1,8 +1,8 @@
 import { startSelfSampler } from "./macos-rss-retention-sampler";
 
-const [opencodexHome, codexHome, upstream, seriesPath, enabled] = Bun.argv.slice(2);
+const [openccxHome, codexHome, upstream, seriesPath, enabled] = Bun.argv.slice(2);
 if (
-  !opencodexHome
+  !openccxHome
   || !codexHome
   || !upstream
   || !seriesPath
@@ -13,7 +13,7 @@ if (
 
 for (const key of Object.keys(process.env)) {
   if (
-    /^(?:OPENAI_|CODEX_|OPENCODEX_)/.test(key)
+    /^(?:OPENAI_|CODEX_|OPENCCX_)/.test(key)
     || /^(?:http|https|all)_proxy$/i.test(key)
   ) {
     delete process.env[key];
@@ -21,9 +21,9 @@ for (const key of Object.keys(process.env)) {
 }
 
 Object.assign(process.env, {
-  OPENCODEX_HOME: opencodexHome,
+  OPENCCX_HOME: openccxHome,
   CODEX_HOME: codexHome,
-  OPENCODEX_API_AUTH_TOKEN: "fixture-admission",
+  OPENCCX_API_AUTH_TOKEN: "fixture-admission",
   NO_PROXY: "127.0.0.1,localhost,::1",
   no_proxy: "127.0.0.1,localhost,::1",
 });
@@ -70,7 +70,7 @@ process.stdout.write(JSON.stringify({
  * SIGUSR2 runs a full collection INSIDE the measured process and reports a
  * timestamped receipt with the measured pause on the same stdout JSONL channel
  * as "ready". Only the GC-relief evaluation orchestrator uses it, and it sets
- * OCX_GC_EVAL=1 to install the handler.
+ * OCCX_GC_EVAL=1 to install the handler.
  *
  * The gate is an env var rather than a comment because the locked 7h retention
  * protocol must not be able to collect mid-run: a stray SIGUSR2 from any source
@@ -78,7 +78,7 @@ process.stdout.write(JSON.stringify({
  * "Our orchestrator never sends it" is a claim about one sender, not a property
  * of the process.
  */
-if (process.env.OCX_GC_EVAL === "1") {
+if (process.env.OCCX_GC_EVAL === "1") {
   process.on("SIGUSR2", () => {
   const t0 = Bun.nanoseconds();
   try {

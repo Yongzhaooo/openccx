@@ -9,17 +9,17 @@
  * (compact_remote_v2.rs) or it fatals with "expected exactly one compaction output item".
  *
  * Routed models cannot produce OpenAI's encrypted blob, so the proxy runs the model as a plain
- * summarizer and wraps the summary text in a transparent envelope: `ocx1:` + base64(utf8 summary).
+ * summarizer and wraps the summary text in a transparent envelope: `occx1:` + base64(utf8 summary).
  * Codex stores the item and replays it in later input; the parser decodes our envelope back into
- * plain text for routed models. Real OpenAI-encrypted blobs (no `ocx1:` prefix) are opaque —
+ * plain text for routed models. Real OpenAI-encrypted blobs (no `occx1:` prefix) are opaque —
  * routed models get a short "history was compacted" note instead.
  */
 
-export const OCX_COMPACTION_PREFIX = "ocx1:";
+export const OCCX_COMPACTION_PREFIX = "occx1:";
 
-export const OCX_NATIVE_REPLAY_RECOVERY_NOTE =
-  "Threads compacted through a routed provider can contain OpenCodeX-owned ocx1 state. "
-  + "Before resuming one through native Codex, run `ocx recover-history --ocx-compaction <thread-id> --yes`.";
+export const OCCX_NATIVE_REPLAY_RECOVERY_NOTE =
+  "Threads compacted through a routed provider can contain OpenCodeX-owned occx1 state. "
+  + "Before resuming one through native Codex, run `occx recover-history --occx-compaction <thread-id> --yes`.";
 
 /** Mirrors codex-rs core/templates/compact/prompt.md (the local-compaction instruction). */
 export const COMPACT_PROMPT = `You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM that will resume the task.
@@ -56,14 +56,14 @@ export function isCompactionItemType(type: unknown): boolean {
 }
 
 export function encodeCompactionSummary(summary: string): string {
-  return OCX_COMPACTION_PREFIX + Buffer.from(summary, "utf-8").toString("base64");
+  return OCCX_COMPACTION_PREFIX + Buffer.from(summary, "utf-8").toString("base64");
 }
 
-/** Decode an `ocx1:` envelope; returns null for real (OpenAI-encrypted) blobs or garbage. */
+/** Decode an `occx1:` envelope; returns null for real (OpenAI-encrypted) blobs or garbage. */
 export function decodeCompactionSummary(encryptedContent: string): string | null {
-  if (!encryptedContent.startsWith(OCX_COMPACTION_PREFIX)) return null;
+  if (!encryptedContent.startsWith(OCCX_COMPACTION_PREFIX)) return null;
   try {
-    return Buffer.from(encryptedContent.slice(OCX_COMPACTION_PREFIX.length), "base64").toString("utf-8");
+    return Buffer.from(encryptedContent.slice(OCCX_COMPACTION_PREFIX.length), "base64").toString("utf-8");
   } catch {
     return null;
   }

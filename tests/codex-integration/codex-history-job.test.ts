@@ -42,7 +42,7 @@ function makeFixture(prefix: string): Fixture {
   const rollout = join(codexHome, "rollout.jsonl");
   writeFileSync(rollout, `${JSON.stringify({
     type: "session_meta",
-    payload: { id: "thread-1", model_provider: "opencodex", source: "exec" },
+    payload: { id: "thread-1", model_provider: "openccx", source: "exec" },
   })}\n`);
 
   const db = new Database(stateDb, { create: true });
@@ -50,7 +50,7 @@ function makeFixture(prefix: string): Fixture {
     id TEXT PRIMARY KEY, rollout_path TEXT, model_provider TEXT,
     source TEXT, has_user_event INTEGER, first_user_message TEXT
   )`);
-  db.run("INSERT INTO threads VALUES ('thread-1', ?, 'opencodex', 'exec', 1, 'hi')", [rollout]);
+  db.run("INSERT INTO threads VALUES ('thread-1', ?, 'openccx', 'exec', 1, 'hi')", [rollout]);
   db.close();
 
   previousCodexHome = process.env.CODEX_HOME;
@@ -74,10 +74,10 @@ test("the operation is derived from admitted intent, not chosen by a caller", ()
   expect(deriveCodexHistoryOperation({ direction: "restore", resumeHistory: false, legacyMode: true }))
     .toBe("skip");
 
-  // Legacy mode is the only case that routes history TO opencodex; the ordinary
+  // Legacy mode is the only case that routes history TO openccx; the ordinary
   // apply migrates to native so a later restore has nothing to undo.
   expect(deriveCodexHistoryOperation({ direction: "apply", resumeHistory: true, legacyMode: true }))
-    .toBe("apply-opencodex");
+    .toBe("apply-openccx");
   expect(deriveCodexHistoryOperation({ direction: "apply", resumeHistory: true, legacyMode: false }))
     .toBe("migrate-openai");
   expect(deriveCodexHistoryOperation({ direction: "restore", resumeHistory: true, legacyMode: false }))
@@ -87,7 +87,7 @@ test("the operation is derived from admitted intent, not chosen by a caller", ()
 test("the failure wording names the real reason instead of always blaming the Codex app", () => {
   const busy = { kind: "blocked", reason: "busy" } as const;
   expect(describeHistoryJobFailure(busy, "apply", false)).toContain("history DB is locked");
-  expect(describeHistoryJobFailure(busy, "apply", true)).toContain("Close it and rerun 'ocx start'");
+  expect(describeHistoryJobFailure(busy, "apply", true)).toContain("Close it and rerun 'occx start'");
   expect(describeHistoryJobFailure(busy, "restore")).toContain("holding the history database");
   expect(describeHistoryJobFailure(busy, "recover-legacy")).toContain("Close it and rerun this command");
 
@@ -108,7 +108,7 @@ test("the failure wording names the real reason instead of always blaming the Co
   const unsafe = { kind: "blocked", reason: "unsafe-path" } as const;
   const unsafeText = describeHistoryJobFailure(unsafe, "apply");
   expect(unsafeText).toContain("not a Codex app lock");
-  expect(unsafeText).toContain("'ocx doctor'");
+  expect(unsafeText).toContain("'occx doctor'");
 
   const database = { kind: "blocked", reason: "database" } as const;
   expect(describeHistoryJobFailure(database, "restore")).toContain("coordinator database is unavailable");
@@ -120,7 +120,7 @@ test("the failure wording names the real reason instead of always blaming the Co
     historyFailureReason: "permission",
   } as const;
   expect(describeHistoryJobFailure(permission, "apply")).toContain("permission was denied");
-  expect(describeHistoryJobFailure(permission, "apply")).toContain("'ocx doctor'");
+  expect(describeHistoryJobFailure(permission, "apply")).toContain("'occx doctor'");
 
   const integrity = {
     kind: "failed",
@@ -139,7 +139,7 @@ test("the failure wording names the real reason instead of always blaming the Co
   const ambiguous = { ...integrity, historyIntegrityCode: "history_apply_ambiguous_reroute" } as const;
   expect(describeHistoryJobFailure(ambiguous, "apply")).toContain("cannot prove whether an earlier relabel was undone");
   expect(describeHistoryJobFailure(ambiguous, "apply")).toContain("Resolve it manually");
-  expect(describeHistoryJobFailure(ambiguous, "apply")).not.toContain("'ocx doctor'");
+  expect(describeHistoryJobFailure(ambiguous, "apply")).not.toContain("'occx doctor'");
 
   const partialPermission = { ...permission, rows: 1, files: 1 } as const;
   expect(describeHistoryJobFailure(partialPermission, "apply")).toContain("changed but did not converge");
@@ -150,7 +150,7 @@ test("the failure wording names the real reason instead of always blaming the Co
 
   const workerError = { kind: "failed", reason: "worker-error", message: "unable to open database file" } as const;
   expect(describeHistoryJobFailure(workerError, "apply")).toContain("unable to open database file");
-  expect(describeHistoryJobFailure(workerError, "apply")).toContain("'ocx doctor'");
+  expect(describeHistoryJobFailure(workerError, "apply")).toContain("'occx doctor'");
 
   const died = { kind: "failed", reason: "worker-died", message: "history_worker_closed_early" } as const;
   expect(describeHistoryJobFailure(died, "apply")).toContain("exited unexpectedly");
@@ -167,7 +167,7 @@ test("the failure wording names the real reason instead of always blaming the Co
 });
 
 test("skip resolves without spawning a thread and writes nothing", async () => {
-  const fixture = makeFixture("ocx-history-job-skip-");
+  const fixture = makeFixture("occx-history-job-skip-");
 
   const outcome = await runCodexHistoryJob({ ...fixture, operation: "skip" });
   expect(outcome).toEqual({ kind: "skipped" });
@@ -177,7 +177,7 @@ test("skip resolves without spawning a thread and writes nothing", async () => {
     "SELECT model_provider FROM threads WHERE id = 'thread-1'",
   ).get();
   db.close();
-  expect(row?.model_provider).toBe("opencodex");
+  expect(row?.model_provider).toBe("openccx");
 });
 
 /**
@@ -185,7 +185,7 @@ test("skip resolves without spawning a thread and writes nothing", async () => {
  * before returning, so the caller never observes a half-applied transition.
  */
 test("a real Worker performs the transition and the parent joins it", async () => {
-  const fixture = makeFixture("ocx-history-job-run-");
+  const fixture = makeFixture("occx-history-job-run-");
 
   const outcome = await runCodexHistoryJob({ ...fixture, operation: "recover-legacy-openai" });
   expect(outcome.kind).toBe("converged");
@@ -200,7 +200,7 @@ test("a real Worker performs the transition and the parent joins it", async () =
 }, 30_000);
 
 test("the history job does not resolve before its Worker closes", async () => {
-  const fixture = makeFixture("ocx-history-job-close-");
+  const fixture = makeFixture("occx-history-job-close-");
   const NativeWorker = globalThis.Worker;
   let workerClosed = false;
 
@@ -240,7 +240,7 @@ test("the history job does not resolve before its Worker closes", async () => {
  * back would turn a successful change into a 500.
  */
 test("an overrun Worker returns a typed timeout rather than hanging", async () => {
-  const fixture = makeFixture("ocx-history-job-timeout-");
+  const fixture = makeFixture("occx-history-job-timeout-");
 
   const started = Date.now();
   const outcome = await runCodexHistoryJob(
@@ -261,7 +261,7 @@ test("an overrun Worker returns a typed timeout rather than hanging", async () =
  * its real message so the diagnosis is possible at all.
  */
 test("a hard history error reaches the caller with its real message", async () => {
-  const fixture = makeFixture("ocx-history-job-hard-error-");
+  const fixture = makeFixture("occx-history-job-hard-error-");
   // A directory at the state-DB path cannot be opened as SQLite.
   rmSync(fixture.canonicalStateDbPath, { force: true });
   mkdirSync(fixture.canonicalStateDbPath);
@@ -281,34 +281,34 @@ test("a hard history error reaches the caller with its real message", async () =
  * Proven by BEHAVIOR in a child process. The provider resolves its state
  * database from a module-load constant, so the fixture `CODEX_HOME` must be in
  * the environment before the module loads — a spawned child gives exactly that.
- * The fixture DB holds a manifest-backed OpenCodex post-image; `skipHistory: true`
+ * The fixture DB holds a manifest-backed Openccx post-image; `skipHistory: true`
  * must leave it tagged, and the default must restore its exact original tuple.
  */
 test("the synchronous restore body is gated on skipHistory", () => {
   const repoRoot = resolveRepoRoot();
-  const root = mkdtempSync(join(tmpdir(), "ocx-restore-skiphistory-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-restore-skiphistory-"));
   const fixtureCodexHome = join(root, ".codex");
-  const fixtureOcxHome = join(root, ".opencodex");
+  const fixtureOccxHome = join(root, ".openccx");
   mkdirSync(fixtureCodexHome, { recursive: true });
-  mkdirSync(fixtureOcxHome, { recursive: true });
+  mkdirSync(fixtureOccxHome, { recursive: true });
   try {
     writeFileSync(join(fixtureCodexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
     const rollout = join(fixtureCodexHome, "rollout.jsonl");
     writeFileSync(rollout, JSON.stringify({
       type: "session_meta",
-      payload: { id: "thread-1", model_provider: "opencodex", source: "cli", cwd: fixtureCodexHome },
+      payload: { id: "thread-1", model_provider: "openccx", source: "cli", cwd: fixtureCodexHome },
     }) + "\n");
     const dbPath = join(fixtureCodexHome, "state_5.sqlite");
     const db = new Database(dbPath);
     db.run(`CREATE TABLE threads (
       id TEXT PRIMARY KEY, rollout_path TEXT NOT NULL, model_provider TEXT NOT NULL,
       source TEXT NOT NULL, first_user_message TEXT NOT NULL, has_user_event INTEGER NOT NULL DEFAULT 0)`);
-    db.run(`INSERT INTO threads VALUES ('thread-1', ?, 'opencodex', 'cli', 'hello', 1)`, rollout);
+    db.run(`INSERT INTO threads VALUES ('thread-1', ?, 'openccx', 'cli', 'hello', 1)`, rollout);
     db.close();
     const canonicalDbPath = join(realpathSync.native(fixtureCodexHome), "state_5.sqlite");
     const normalizedDb = process.platform === "win32" ? resolve(canonicalDbPath).toLowerCase() : resolve(canonicalDbPath);
     const backupId = createHash("sha256").update(normalizedDb).digest("hex").slice(0, 16);
-    writeFileSync(join(fixtureOcxHome, `codex-history-backup-${backupId}.json`), JSON.stringify({
+    writeFileSync(join(fixtureOccxHome, `codex-history-backup-${backupId}.json`), JSON.stringify({
       version: 1,
       stateDbPath: canonicalDbPath,
       entries: {
@@ -328,7 +328,7 @@ test("the synchronous restore body is gated on skipHistory", () => {
       'console.log(JSON.stringify({ history: result.artifacts.history.state }));',
     ].join("\n")], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_HOME: fixtureCodexHome, OPENCODEX_HOME: fixtureOcxHome },
+      env: { ...process.env, CODEX_HOME: fixtureCodexHome, OPENCCX_HOME: fixtureOccxHome },
       encoding: "utf8",
     });
     const provider = () => {
@@ -344,7 +344,7 @@ test("the synchronous restore body is gated on skipHistory", () => {
     const skipped = runRestore("{ skipHistory: true }");
     expect(skipped.status).toBe(0);
     expect(JSON.parse(skipped.stdout.trim().split("\n").filter(Boolean).pop() ?? "{}")).toEqual({ history: "skipped" });
-    expect(provider()).toBe("opencodex");
+    expect(provider()).toBe("openccx");
 
     // Default: the same body restores history itself.
     const restored = runRestore("{}");

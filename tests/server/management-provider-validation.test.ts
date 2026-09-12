@@ -38,7 +38,7 @@ import {
   resolveCodexModelEntitlements,
   type CodexModelEntitlementCredentialSnapshot,
 } from "../../src/codex/model-entitlements";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import * as destinationPolicy from "../../src/lib/destination-policy";
@@ -55,17 +55,17 @@ import { setCachedProviderQuotaForTests } from "../../src/providers/quota-routin
 // default 5s per-test budget (same flake class as 810fa115 / claude-management-api).
 setDefaultTimeout(60_000);
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const originalGlobalFetch = globalThis.fetch;
 // A per-run directory, not a fixed path. The 665b65643 split copied server-auth.test.ts's
 // ".tmp-server-auth-test" literal verbatim, so both files deleted and recreated the same
-// directory while pointing OPENCODEX_HOME at it. See the comment in server-auth.test.ts for
+// directory while pointing OPENCCX_HOME at it. See the comment in server-auth.test.ts for
 // the full failure mode; mkdtempSync also covers two concurrent runs of this file alone.
-const TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-management-provider-validation-"));
+const TEST_DIR = mkdtempSync(join(tmpdir(), "occx-management-provider-validation-"));
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function config(hostname?: string): OcxConfig {
+function config(hostname?: string): OccxConfig {
   return {
     port: 10100,
     hostname,
@@ -89,7 +89,7 @@ const canonicalDirect = {
   codexAccountMode: "direct",
 } as const;
 
-function poolProviders(): OcxConfig["providers"] {
+function poolProviders(): OccxConfig["providers"] {
   return {
     openai: { ...canonicalDirect, codexAccountMode: "pool" },
   };
@@ -121,15 +121,15 @@ function stubModelDiscoveryFor(...origins: string[]): void {
 }
 
 beforeEach(() => {
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-auth-codex-");
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-auth-codex-");
 });
 
 afterEach(() => {
   globalThis.fetch = originalGlobalFetch;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   clearCodexUpstreamHealth();
@@ -139,13 +139,13 @@ afterEach(() => {
 });
 
 describe("provider quota routing state", () => {
-  function quotaConfig(name = "openrouter", baseUrl = "https://openrouter.ai/api/v1"): OcxConfig {
+  function quotaConfig(name = "openrouter", baseUrl = "https://openrouter.ai/api/v1"): OccxConfig {
     return { port: 10100, defaultProvider: name, providers: { [name]: {
       adapter: "openai-chat", authMode: "key", baseUrl, apiKey: "synthetic-probed-key",
     } } };
   }
 
-  async function readQuota(cfg: OcxConfig, force = false) {
+  async function readQuota(cfg: OccxConfig, force = false) {
     const url = new URL(`http://localhost/api/provider-quotas${force ? "?refresh=1" : ""}`);
     const response = await handleManagementAPI(new Request(url), url, cfg);
     expect(response?.status).toBe(200);
@@ -154,7 +154,7 @@ describe("provider quota routing state", () => {
 
   beforeEach(() => {
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearProviderQuotaCache();
     setProviderQuotaBeforePublishForTests(null);
   });
@@ -165,7 +165,7 @@ describe("provider quota routing state", () => {
   });
 
   test("projects bound inference state without mutating display reports", async () => {
-    const cfg: OcxConfig = {
+    const cfg: OccxConfig = {
       port: 10100,
       defaultProvider: "openrouter",
       providers: {
@@ -233,7 +233,7 @@ describe("provider quota routing state", () => {
   });
 
   test("search-only and MCP-only display windows have no inference authority", async () => {
-    const cfg: OcxConfig = { port: 10100, defaultProvider: "synthetic", providers: {
+    const cfg: OccxConfig = { port: 10100, defaultProvider: "synthetic", providers: {
       ...quotaConfig("synthetic", "https://api.synthetic.new/v2").providers,
       ...quotaConfig("zai", "https://api.z.ai/api/coding/paas/v4").providers,
     } };
@@ -289,8 +289,8 @@ describe("provider management validation", () => {
   test("provider reload adopts only the validated disk row without rewriting config", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "xai",
@@ -343,8 +343,8 @@ describe("provider management validation", () => {
   test("provider reload rejects an untrusted principal and a disk rewrite during DNS validation", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "xai",
@@ -421,7 +421,7 @@ describe("provider management validation", () => {
           modelSupportsServiceTier: { verified: true },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const dto = withProviderServiceTierDTO(
       { providers: { relay: { hasApiKey: true } } },
       config,
@@ -456,14 +456,14 @@ describe("provider management validation", () => {
       port: 10100,
       defaultProvider: "relay",
       providers: { relay: provider },
-    } as OcxConfig) as { providers: Record<string, { noStructuredOutputModels?: string[] }> };
+    } as OccxConfig) as { providers: Record<string, { noStructuredOutputModels?: string[] }> };
     expect(dto.providers.relay?.noStructuredOutputModels).toEqual(["deepseek-v4-flash"]);
   });
 
   test("normalizes hand-edited structured-output model opt-outs at load", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     writeFileSync(join(TEST_DIR, "config.json"), JSON.stringify({
       ...config("127.0.0.1"),
       defaultProvider: "relay",
@@ -496,12 +496,12 @@ describe("provider management validation", () => {
       port: 10100,
       defaultProvider: "relay",
       providers: { relay: provider },
-    } as OcxConfig) as { providers: Record<string, { retainModels?: string[] }> };
+    } as OccxConfig) as { providers: Record<string, { retainModels?: string[] }> };
     expect(dto.providers.relay?.retainModels).toEqual(["gemini-3.7-flash"]);
 
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     writeFileSync(join(TEST_DIR, "config.json"), JSON.stringify({
       ...config("127.0.0.1"),
       defaultProvider: "relay",
@@ -554,12 +554,12 @@ describe("provider management validation", () => {
       port: 10100,
       defaultProvider: "relay",
       providers: { relay: provider },
-    } as OcxConfig) as { providers: Record<string, { omitReasoningEffortWithToolsModels?: string[] }> };
+    } as OccxConfig) as { providers: Record<string, { omitReasoningEffortWithToolsModels?: string[] }> };
     expect(dto.providers.relay?.omitReasoningEffortWithToolsModels).toEqual(["picky-model"]);
 
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     writeFileSync(join(TEST_DIR, "config.json"), JSON.stringify({
       ...config("127.0.0.1"),
       defaultProvider: "relay",
@@ -593,7 +593,7 @@ describe("provider management validation", () => {
   test("provider POST rejects a non-boolean annotateEmptyToolOutputs at the management boundary", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     // The canonical seed path only engages for the real forward seed, so the plain fixture
     // provider would never reach the comparison this test exists to cover.
     saveConfig({ ...config("127.0.0.1"), providers: poolProviders() });
@@ -624,7 +624,7 @@ describe("provider management validation", () => {
   test("provider PATCH sets, clears, and rejects annotateEmptyToolOutputs", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -842,8 +842,8 @@ describe("provider management validation", () => {
   test("provider request pacing PATCH persists provider and model limits without catalog churn", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "nvidia",
@@ -943,7 +943,7 @@ describe("provider management validation", () => {
   test("provider discovery stays ok while entitlement status changes independently", async () => {
     const accountId = "pool-entitlement-diagnostic";
     const now = Date.now();
-    const liveConfig: OcxConfig = {
+    const liveConfig: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: poolProviders(),
@@ -966,7 +966,7 @@ describe("provider management validation", () => {
       chatgptAccountId: "chatgpt-entitlement-diagnostic",
       credentialIdentity: `pool:${generation}:chatgpt-entitlement-diagnostic`,
     };
-    const readOpenAi = async (config: OcxConfig): Promise<Record<string, unknown>> => {
+    const readOpenAi = async (config: OccxConfig): Promise<Record<string, unknown>> => {
       const requestUrl = new URL("http://127.0.0.1/api/providers");
       const response = await handleManagementAPI(new Request(requestUrl), requestUrl, config);
       const providers = await response!.json() as Array<Record<string, unknown>>;
@@ -1014,7 +1014,7 @@ describe("provider management validation", () => {
   test("provider management rejects externally supplied forward auth providers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1043,7 +1043,7 @@ describe("provider management validation", () => {
   test("provider POST overwrite preserves modelCosts when the payload omits it", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1079,7 +1079,7 @@ describe("provider management validation", () => {
   test("provider POST overwrite preserves modelDisplayNames when the payload omits it", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1117,7 +1117,7 @@ describe("provider management validation", () => {
   test("provider POST rejects unsafe submitted modelDisplayNames", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1145,7 +1145,7 @@ describe("provider management validation", () => {
   test("provider POST overwrite preserves the account-failover opt-out when the payload omits it (#2568d)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1191,7 +1191,7 @@ describe("provider management validation", () => {
     // validation accepted this field and the seed check then refused the very same request.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1228,7 +1228,7 @@ describe("provider management validation", () => {
   test("full provider edit preserves aliases owned by the dedicated APIs", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const overlays = {
       alias: "codex-native",
       modelAliases: { "gpt-5.6-luna": "luna" },
@@ -1239,7 +1239,7 @@ describe("provider management validation", () => {
       openaiProviderTierVersion: 2,
       defaultProvider: "openai",
       providers: { openai: { ...canonicalDirect, ...overlays } },
-    } as OcxConfig);
+    } as OccxConfig);
     const resolvedError = spyOn(destinationPolicy, "providerDestinationResolvedError").mockResolvedValue(null);
     const server = startServer(0);
     try {
@@ -1269,7 +1269,7 @@ describe("provider management validation", () => {
   test("general provider writes cannot introduce a provider alias collision", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       openaiProviderTierVersion: 2,
@@ -1278,7 +1278,7 @@ describe("provider management validation", () => {
         openai: { ...canonicalDirect },
         deepseek: { adapter: "openai-chat", baseUrl: "https://api.deepseek.com/v1" },
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       const before = readFileSync(join(TEST_DIR, "config.json"));
@@ -1305,13 +1305,13 @@ describe("provider management validation", () => {
   test("general provider writes reject reserved duplicate and invalid model aliases", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       openaiProviderTierVersion: 2,
       defaultProvider: "openai",
       providers: { openai: { ...canonicalDirect } },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       const before = readFileSync(join(TEST_DIR, "config.json"));
@@ -1342,13 +1342,13 @@ describe("provider management validation", () => {
   test("malformed alias overlays return bounded 4xx without config persistence", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       openaiProviderTierVersion: 2,
       defaultProvider: "openai",
       providers: { openai: { ...canonicalDirect } },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       const before = readFileSync(join(TEST_DIR, "config.json"));
@@ -1383,7 +1383,7 @@ describe("provider management validation", () => {
   test("canonical transport tampering stays rejected with persisted alias overlays", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const overlays = {
       alias: "codex-native",
       modelAliases: { "gpt-5.6-luna": "luna" },
@@ -1394,7 +1394,7 @@ describe("provider management validation", () => {
       openaiProviderTierVersion: 2,
       defaultProvider: "openai",
       providers: { openai: { ...canonicalDirect, ...overlays } },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       for (const tampering of [
@@ -1418,7 +1418,7 @@ describe("provider management validation", () => {
   test("unrelated non-openai provider edits preserve persisted alias overlays", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       openaiProviderTierVersion: 2,
@@ -1432,7 +1432,7 @@ describe("provider management validation", () => {
           defaultAliases: false,
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const resolvedError = spyOn(destinationPolicy, "providerDestinationResolvedError").mockResolvedValue(null);
     const server = startServer(0);
     try {
@@ -1457,7 +1457,7 @@ describe("provider management validation", () => {
   test("canonical OpenAI with defaultAliases can still PATCH modelContextWindows", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       // Match a post-migration config (openaiProviderTierVersion set) so the startup
@@ -1468,7 +1468,7 @@ describe("provider management validation", () => {
       providers: {
         openai: { ...canonicalDirect, defaultAliases: true },
       },
-    } as OcxConfig);
+    } as OccxConfig);
     // This test targets the seed comparison, not the DNS policy; stub the destination
     // probe so the assertion stays independent of how chatgpt.com resolves locally.
     const resolvedError = spyOn(destinationPolicy, "providerDestinationResolvedError").mockResolvedValue(null);
@@ -1494,7 +1494,7 @@ describe("provider management validation", () => {
   test("provider POST overwrite preserves an explicit annotateEmptyToolOutputs: false", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1581,7 +1581,7 @@ describe("provider management validation", () => {
     function freshHome(): void {
       if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
       mkdirSync(TEST_DIR, { recursive: true });
-      process.env.OPENCODEX_HOME = TEST_DIR;
+      process.env.OPENCCX_HOME = TEST_DIR;
       saveConfig(config("127.0.0.1"));
     }
 
@@ -1691,7 +1691,7 @@ describe("provider management validation", () => {
   test("provider management accepts modelCosts on the canonical openai provider", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1715,7 +1715,7 @@ describe("provider management validation", () => {
   test("provider management rejects runtime metadata and accepts only canonical OpenAI option seeds", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "openai",
@@ -1977,7 +1977,7 @@ describe("provider management validation", () => {
   test("provider management does not persist registry-only static auth headers for opencode-free", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1996,7 +1996,7 @@ describe("provider management validation", () => {
       });
       expect(response.status).toBe(200);
 
-      const saved = JSON.parse(readFileSync(join(TEST_DIR, "config.json"), "utf8")) as OcxConfig;
+      const saved = JSON.parse(readFileSync(join(TEST_DIR, "config.json"), "utf8")) as OccxConfig;
       expect(saved.providers["opencode-free"]).toBeDefined();
       expect(saved.providers["opencode-free"]?.headers).toBeUndefined();
       expect(saved.providers["opencode-free"]?.keyOptional).toBe(true);
@@ -2008,7 +2008,7 @@ describe("provider management validation", () => {
   test("management selections preserve an OpenAI API Pro selected id without wire rewriting", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const selected = "openai-apikey/gpt-5.6-sol-pro";
     saveConfig({
       port: 0,
@@ -2063,7 +2063,7 @@ describe("provider management validation", () => {
   test("provider management rejects namespace-breaking or reserved provider names", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2093,7 +2093,7 @@ describe("provider management validation", () => {
   test("provider management rejects names owned by a Codex account namespace without mutating config", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const cfg = {
       ...config("127.0.0.1"),
       codexAccountNamespaces: { side: "side-account-id" },
@@ -2131,7 +2131,7 @@ describe("provider management validation", () => {
   test("provider management rejects base URLs with embedded credentials", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2159,7 +2159,7 @@ describe("provider management validation", () => {
   test("provider management rejects invalid or non-http base URLs", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2189,7 +2189,7 @@ describe("provider management validation", () => {
   test("provider management rejects private-network destinations without explicit opt-in", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2218,7 +2218,7 @@ describe("provider management validation", () => {
   test("provider management allows private-network destinations only with explicit opt-in", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
     stubModelDiscoveryFor("http://127.0.0.1:11434");
 
@@ -2250,7 +2250,7 @@ describe("provider management validation", () => {
   test("provider management always rejects metadata endpoints", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2280,7 +2280,7 @@ describe("provider management validation", () => {
   test("provider PATCH can enable allowPrivateNetwork and then change baseUrl to localhost", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
     stubModelDiscoveryFor("https://api.example.com", "http://127.0.0.1:11434");
 
@@ -2327,7 +2327,7 @@ describe("provider management validation", () => {
   test("provider PATCH rejects disabling allowPrivateNetwork while baseUrl is private", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
     stubModelDiscoveryFor("http://127.0.0.1:8080");
 
@@ -2361,7 +2361,7 @@ describe("provider management validation", () => {
   test("provider PATCH persists liveModels and provider metadata exposes the normalized state", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2419,7 +2419,7 @@ describe("provider management validation", () => {
   test("provider PATCH persists and clears structured-output model opt-outs", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2512,7 +2512,7 @@ describe("provider management validation", () => {
  test("provider management rejects sensitive or injectable provider headers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2547,7 +2547,7 @@ describe("provider management validation", () => {
   test("provider deletion does not treat inherited object keys as configured providers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2564,7 +2564,7 @@ describe("provider management validation", () => {
   test("provider deletion removes the deleted provider's OAuth credential", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -2609,7 +2609,7 @@ describe("provider management validation", () => {
   test("provider deletion removes stale provider context caps", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -2645,7 +2645,7 @@ describe("provider management validation", () => {
   test("provider deletion removes that provider's custom models (#1273)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -2708,7 +2708,7 @@ describe("provider management validation", () => {
   test("provider management switches the default and reassigns it when removed", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "alpha",
@@ -2751,7 +2751,7 @@ describe("provider management validation", () => {
   test("provider management rejects POST setDefault for a disabled provider", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "alpha",
@@ -2793,7 +2793,7 @@ describe("provider management validation", () => {
   test("provider management refuses to delete the default when only a disabled replacement remains", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "alpha",
@@ -2836,7 +2836,7 @@ describe("provider management validation", () => {
   test("provider management can disable and re-enable non-default providers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 10100,
       hostname: "127.0.0.1",
@@ -2891,7 +2891,7 @@ describe("provider management validation", () => {
   test("provider management rejects disabling the default provider", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -2913,7 +2913,7 @@ describe("provider management validation", () => {
   test("provider management accepts canonical OpenAI modes and rejects legacy Multi", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -2924,7 +2924,7 @@ describe("provider management validation", () => {
           apiKey: "sk-secret-value",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -2974,8 +2974,8 @@ describe("provider management validation", () => {
   test("canonical OpenAI POST passes allowBenchmarkAddresses into destination resolution", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       defaultProvider: "test-openai",
       providers: {
@@ -3030,8 +3030,8 @@ describe("provider management validation", () => {
   test("canonical OpenAI POST still rejects non-benchmark private destination answers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       defaultProvider: "test-openai",
       providers: {
@@ -3077,8 +3077,8 @@ describe("provider management validation", () => {
     // answers still fail closed (covered by destination-policy-resolved tests and below).
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       defaultProvider: "openai",
       providers: {
@@ -3117,8 +3117,8 @@ describe("provider management validation", () => {
     // the fake-IP exception: their PATCHes still fail closed on benchmark answers.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       defaultProvider: "openai",
       providers: {
@@ -3178,8 +3178,8 @@ describe("provider management validation", () => {
     // classifies the canonical destination as loopback/private/metadata, the PATCH fails.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       defaultProvider: "openai",
       providers: {
@@ -3215,8 +3215,8 @@ describe("provider management validation", () => {
   test("disabled-only PATCH cannot re-enable a noncanonical openai row unchanged", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "extra",
@@ -3266,7 +3266,7 @@ describe("provider management validation", () => {
   test("disabled-only PATCH re-enables canonical openai and fills missing pool mode", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       hostname: "127.0.0.1",
@@ -3314,8 +3314,8 @@ describe("provider management validation", () => {
   test("disabled OpenAI recovery accepts pure Clash fake-IP via destination check", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "extra",
@@ -3363,14 +3363,14 @@ describe("provider management validation", () => {
   test("disabled OpenAI recovery rejects loopback, RFC1918, and metadata and stays disabled", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const disabledCanonical = {
       adapter: "openai-responses",
       baseUrl: "https://chatgpt.com/backend-api/codex",
       authMode: "forward",
       disabled: true,
     } as const;
-    const liveConfig: OcxConfig = {
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "extra",
@@ -3427,8 +3427,8 @@ describe("provider management validation", () => {
   test("disabled OpenAI recovery ignores persisted allowPrivateNetwork for DNS guard", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "extra",
@@ -3484,8 +3484,8 @@ describe("provider management validation", () => {
   test("disabled OpenAI recovery strips allowPrivateNetwork after successful re-enable", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "extra",
@@ -3540,7 +3540,7 @@ describe("provider management validation", () => {
     test(`disabled-only PATCH normalizes ${label} before save-and-reload`, async () => {
       if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
       mkdirSync(TEST_DIR, { recursive: true });
-      process.env.OPENCODEX_HOME = TEST_DIR;
+      process.env.OPENCCX_HOME = TEST_DIR;
       saveConfig({
         port: 0,
         hostname: "127.0.0.1",
@@ -3593,8 +3593,8 @@ describe("provider management validation", () => {
   test("provider mode PATCH is strict, persists live state, clears caches and affinity, and primes Pool only", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -3613,7 +3613,7 @@ describe("provider management validation", () => {
       clearThreadAccountMap: () => { affinityClears += 1; },
       clearProviderQuotaCache: () => { quotaCacheClears += 1; },
       createManagementConvergeCodex: catalogConvergenceFactory(() => { catalogRefreshes += 1; }),
-      primeCodexPoolQuotas: (_config: OcxConfig, reason: string) => { primes.push(reason); },
+      primeCodexPoolQuotas: (_config: OccxConfig, reason: string) => { primes.push(reason); },
     };
     const patch = async (name: string, body: unknown) => {
       const req = new Request(`http://127.0.0.1/api/providers?name=${name}`, {
@@ -3667,8 +3667,8 @@ describe("provider management validation", () => {
   test("xAI wire selection reports effective state and persists later Chat opt-in across provider overwrite", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "xai",
@@ -3781,8 +3781,8 @@ describe("provider management validation", () => {
   test("provider PATCH field-mask edits non-reserved providers and rejects unsafe fields (WP040)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -3867,8 +3867,8 @@ describe("provider management validation", () => {
   test("provider management exposes and persists context-window hints for Models GUI (#1073)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -3988,8 +3988,8 @@ describe("provider management validation", () => {
   test("provider PATCH manages custom headers with merge and clear semantics", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -4055,10 +4055,10 @@ describe("provider management validation", () => {
   test("GET /api/providers exposes hasHeaders but never header names or values (#959)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const sentinelName = "x-fingerprint-sentinel";
     const sentinelValue = "sentinel-secret-header-value";
-    const liveConfig: OcxConfig = {
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -4087,8 +4087,8 @@ describe("provider management validation", () => {
   test("provider PATCH merges headers case-insensitively", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -4121,8 +4121,8 @@ describe("provider management validation", () => {
   test("provider PATCH clear keeps registry static headers", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -4158,7 +4158,7 @@ describe("provider management validation", () => {
       "User-Agent": "opencode",
       "x-opencode-client": "desktop",
     });
-    const saved = JSON.parse(readFileSync(join(TEST_DIR, "config.json"), "utf8")) as OcxConfig;
+    const saved = JSON.parse(readFileSync(join(TEST_DIR, "config.json"), "utf8")) as OccxConfig;
     expect(saved.providers["opencode-free"]?.headers).toEqual({
       "User-Agent": "opencode",
       "x-opencode-client": "desktop",
@@ -4167,8 +4167,8 @@ describe("provider management validation", () => {
   test("concurrent provider PATCHes serialize mixed fields and per-model soft budgets", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    const liveConfig: OcxConfig = {
+    process.env.OPENCCX_HOME = TEST_DIR;
+    const liveConfig: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: "openai",
@@ -4216,7 +4216,7 @@ describe("provider management validation", () => {
   test("provider context-cap API persists toggles and annotates model rows", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -4292,7 +4292,7 @@ describe("provider management validation", () => {
   test("provider context-cap API supports global value and set-all toggles", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig({
       port: 0,
       defaultProvider: "test-openai",
@@ -4483,7 +4483,7 @@ describe("provider management validation", () => {
 });
 
 describe("provider transport option management contract (#1668, #2816)", () => {
-  function makeConfig(): OcxConfig {
+  function makeConfig(): OccxConfig {
     return {
       port: 0,
       hostname: "127.0.0.1",
@@ -4500,7 +4500,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
 
   // Direct handleManagementAPI calls (no startServer) keep the whole contract in one
   // synchronous authority, matching the request-pacing PATCH tests above.
-  async function withRequest(liveConfig: OcxConfig, run: (request: (path: string, init?: RequestInit) => Promise<Response | null>) => Promise<void>): Promise<void> {
+  async function withRequest(liveConfig: OccxConfig, run: (request: (path: string, init?: RequestInit) => Promise<Response | null>) => Promise<void>): Promise<void> {
     const resolvedError = spyOn(destinationPolicy, "providerDestinationResolvedError")
       .mockResolvedValue(null);
     try {
@@ -4519,7 +4519,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("POST accepts a valid upstreamHttpVersion and persists it; GET exposes it", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4554,7 +4554,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
     // next start and the operator landed in invalid-config recovery for a value the API accepted.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4597,7 +4597,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
     // Compatibility for anything the old POST path already wrote to disk.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     const raw = JSON.parse(readFileSync(join(TEST_DIR, "config.json"), "utf-8")) as any;
@@ -4613,7 +4613,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("POST rejects an invalid upstreamHttpVersion at the write boundary without persisting", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4640,7 +4640,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("PATCH sets, then clears upstreamHttpVersion with live + disk persistence", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4675,7 +4675,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("safeConfigDTO exposes upstreamHttpVersion without leaking it into the live row", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     liveConfig.providers.nvidia = {
       ...liveConfig.providers.nvidia!,
@@ -4709,7 +4709,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("upstreamWebsocket round-trips through POST, GET, and PATCH", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4772,7 +4772,7 @@ describe("provider transport option management contract (#1668, #2816)", () => {
   test("POST overwrite preserves omitted upstreamWebsocket and honors explicit false", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const liveConfig = makeConfig();
     saveConfig(liveConfig);
     await withRequest(liveConfig, async (request) => {
@@ -4841,8 +4841,8 @@ describe("provider transport option management contract (#1668, #2816)", () => {
 
 test("OpenAI provider cap remembers an explicit window across off, reload, and on", async () => {
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  let live: OcxConfig = {
+  process.env.OPENCCX_HOME = TEST_DIR;
+  let live: OccxConfig = {
     port: 0, defaultProvider: "openai", contextCapValue: 350_000,
     providers: { openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex", liveModels: false } },
   };
@@ -4868,8 +4868,8 @@ test("OpenAI provider cap remembers an explicit window across off, reload, and o
 });
 
 describe("remembered provider context selections", () => {
-  function selectionConfig(remembered = true): OcxConfig {
-    const live: OcxConfig = {
+  function selectionConfig(remembered = true): OccxConfig {
+    const live: OccxConfig = {
       port: 0,
       defaultProvider: "alpha",
       contextCapValue: 350_000,
@@ -4881,12 +4881,12 @@ describe("remembered provider context selections", () => {
       ...(remembered ? { providerContextCapValues: { alpha: 128_000, beta: 256_000 } } : {}),
     };
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(live);
     return loadConfig();
   }
 
-  async function request(live: OcxConfig, path: string, method: string, body?: unknown): Promise<Response> {
+  async function request(live: OccxConfig, path: string, method: string, body?: unknown): Promise<Response> {
     const url = new URL(path, "http://localhost");
     const response = await handleManagementAPI(new Request(url, {
       method,

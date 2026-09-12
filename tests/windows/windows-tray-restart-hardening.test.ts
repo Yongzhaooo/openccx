@@ -27,9 +27,9 @@ describe("Windows tray restart process hardening", () => {
   });
 
   test("tracks Start Proxy and Stop Proxy exit codes like Restart Proxy", () => {
-    expect(source).toContain('$startProcess = Start-OcxCommand @("__tray-start") -TrackExit');
+    expect(source).toContain('$startProcess = Start-OccxCommand @("__tray-start") -TrackExit');
     expect(source).toContain('$script:pendingProcess = $startProcess');
-    expect(source).toContain('$stopProcess = Start-OcxCommand @("stop") -TrackExit');
+    expect(source).toContain('$stopProcess = Start-OccxCommand @("stop") -TrackExit');
     expect(source).toContain('$script:pendingProcess = $stopProcess');
   });
 });

@@ -195,7 +195,7 @@ describe("agent task recovery security", () => {
       "xai/grok-4.5",
       encryptedInput(),
       {
-        authorization: "Bearer ocx_data_testsecret",
+        authorization: "Bearer occx_data_testsecret",
         "chatgpt-account-id": "acct-forged",
         originator: "codex_cli_rs",
         "x-openai-subagent": "collab_spawn",
@@ -206,7 +206,7 @@ describe("agent task recovery security", () => {
     expect(forwardedBody).toBe("");
   });
 
-  for (const apiKeyHeader of ["x-opencodex-api-key", "x-api-key"] as const) {
+  for (const apiKeyHeader of ["x-openccx-api-key", "x-api-key"] as const) {
     test(`rejects callers admitted through ${apiKeyHeader}`, async () => {
       let fetchCalls = 0;
       globalThis.fetch = (async () => {

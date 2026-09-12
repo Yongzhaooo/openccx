@@ -22,8 +22,8 @@ let previousCodexHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  codexHome = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-k-home-")));
-  otherHome = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-k-other-")));
+  codexHome = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-k-home-")));
+  otherHome = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-k-other-")));
   process.env.CODEX_HOME = codexHome;
 });
 

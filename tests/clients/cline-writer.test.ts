@@ -10,7 +10,7 @@ import { createIntegrationStateStore } from "../../src/integrations/store";
 import { readIntegrationState } from "../../src/integrations/state";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import type { IntegrationTransaction } from "../../src/integrations/config-io";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { refreshOwnedCatalogIntegrations } from "../../src/integrations/catalog-refresh";
 
 let root: string;
@@ -22,14 +22,14 @@ const originalCatalog = '{\n "version":1, "providers":{"mine":{"models":{"keep":
 const models = [{ namespaced: "mock/a", provider: "mock", id: "a", contextWindow: 120000 }, { namespaced: "mock/b", provider: "mock", id: "b" }];
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-cline-"));
+  root = mkdtempSync(join(tmpdir(), "occx-cline-"));
   const home = join(root, "home");
   settings = clineConfigPath({}, home);
   catalog = join(dirname(settings), "models.json");
   mkdirSync(dirname(settings), { recursive: true });
   input = {
     clientId: "cline", home, env: {}, models, port: 10100,
-    config: { hostname: "127.0.0.1", port: 10100, defaultProvider: "mock", providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } } } as OcxConfig,
+    config: { hostname: "127.0.0.1", port: 10100, defaultProvider: "mock", providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } } } as OccxConfig,
     store: createIntegrationStateStore(join(root, "store")),
   };
 });
@@ -49,7 +49,7 @@ describe("Cline journaled pair", () => {
     expect(applyIntegration(input).ok).toBe(true);
     expect(await refreshOwnedCatalogIntegrations(request, ["cline"])).toEqual([{ client: "cline", ok: true, changed: true }]);
     expect(loads).toBe(1);
-    expect(Object.keys(catalogDoc().providers.opencodex.models)).toEqual(["mock/a"]);
+    expect(Object.keys(catalogDoc().providers.openccx.models)).toEqual(["mock/a"]);
   });
   test("preserves foreign providers/default, journals both originals, and restores exact bytes", () => {
     seed();
@@ -57,7 +57,7 @@ describe("Cline journaled pair", () => {
     expect(applied.ok).toBe(true);
     expect(settingsDoc().lastUsedProvider).toBe("mine");
     expect(catalogDoc().providers.mine.models.keep.name).toBe("Keep");
-    expect(Object.keys(catalogDoc().providers.opencodex.models)).toEqual(["mock/a", "mock/b"]);
+    expect(Object.keys(catalogDoc().providers.openccx.models)).toEqual(["mock/a", "mock/b"]);
     expect(readIntegrationState(input).state).toBe("current");
     const op = input.store!.listOperations("cline")[0]!;
     const snapshot = input.store!.readSnapshot(op);
@@ -84,18 +84,18 @@ describe("Cline journaled pair", () => {
     seed();
     expect(applyIntegration(input).ok).toBe(true);
     const edited = settingsDoc();
-    edited.providers.opencodex.settings.model = "mock/b";
-    edited.providers.opencodex.updatedAt = "2026-09-12T00:00:00.000Z";
+    edited.providers.openccx.settings.model = "mock/b";
+    edited.providers.openccx.updatedAt = "2026-09-12T00:00:00.000Z";
     writeFileSync(settings, JSON.stringify(edited));
     expect(refreshIntegration({ ...input, port: 12100 }).ok).toBe(true);
-    expect(settingsDoc().providers.opencodex.settings.model).toBe("mock/b");
-    expect(settingsDoc().providers.opencodex.settings.baseUrl).toContain(":12100/");
+    expect(settingsDoc().providers.openccx.settings.model).toBe("mock/b");
+    expect(settingsDoc().providers.openccx.settings.baseUrl).toContain(":12100/");
     expect(refreshIntegration({ ...input, models: [models[0]!] }).ok).toBe(true);
-    expect(Object.keys(catalogDoc().providers.opencodex.models)).toEqual(["mock/a"]);
-    expect(settingsDoc().providers.opencodex.settings.model).toBeUndefined();
+    expect(Object.keys(catalogDoc().providers.openccx.models)).toEqual(["mock/a"]);
+    expect(settingsDoc().providers.openccx.settings.model).toBeUndefined();
     expect(disableIntegration(input).ok).toBe(true);
-    expect(settingsDoc().providers.opencodex).toBeUndefined();
-    expect(catalogDoc().providers.opencodex).toBeUndefined();
+    expect(settingsDoc().providers.openccx).toBeUndefined();
+    expect(catalogDoc().providers.openccx).toBeUndefined();
     expect(settingsDoc().version).toBe(1);
     expect(settingsDoc().lastUsedProvider).toBe("mine");
   });
@@ -105,7 +105,7 @@ describe("Cline journaled pair", () => {
     const applied = applyIntegration(input);
     if (!applied.ok || !applied.opId) throw new Error("apply failed");
     const edited = settingsDoc();
-    edited.providers.opencodex.settings.baseUrl = "http://127.0.0.1:9999/v1";
+    edited.providers.openccx.settings.baseUrl = "http://127.0.0.1:9999/v1";
     writeFileSync(settings, JSON.stringify(edited));
     expect(readIntegrationState(input).state).toBe("conflict");
     expect(refreshIntegration(input).ok).toBe(false);
@@ -143,7 +143,7 @@ describe("Cline journaled pair", () => {
   test("occupied custom provider requires explicit overwrite and remains reversible", () => {
     seed();
     const doc = settingsDoc();
-    doc.providers.opencodex = { settings: { provider: "opencodex", baseUrl: "http://127.0.0.1:9999/v1" }, updatedAt: "2026-01-01T00:00:00.000Z", tokenSource: "manual" };
+    doc.providers.openccx = { settings: { provider: "openccx", baseUrl: "http://127.0.0.1:9999/v1" }, updatedAt: "2026-01-01T00:00:00.000Z", tokenSource: "manual" };
     const before = JSON.stringify(doc);
     writeFileSync(settings, before);
     expect(applyIntegration(input).ok).toBe(false);
@@ -310,7 +310,7 @@ describe("Cline journaled pair", () => {
     if (!result.ok) expect(result.residual).toBe(true);
     const marker = clinePendingPath(store, settings);
     const pending = JSON.parse(readFileSync(marker, "utf8")) as IntegrationTransaction;
-    const priorRecord = { ...pending.record!, fragmentPaths: [["settings\0providers", "opencodex"], ["catalog", "providers", "opencodex"]] };
+    const priorRecord = { ...pending.record!, fragmentPaths: [["settings\0providers", "openccx"], ["catalog", "providers", "openccx"]] };
     const malformed = JSON.stringify({ ...pending, priorRecord, entry: { ...pending.entry, priorRecord } });
     writeFileSync(marker, malformed);
     const before = [readFileSync(settings, "utf8"), readFileSync(catalog, "utf8"), readFileSync(join(store.root, "records.json"), "utf8")];

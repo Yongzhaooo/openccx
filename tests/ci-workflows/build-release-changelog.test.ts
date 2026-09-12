@@ -240,7 +240,7 @@ describe("release metadata parsers", () => {
   });
 
   test("parses actual NUL-delimited git-log output without control-byte collisions", () => {
-    const repo = mkdtempSync(join(tmpdir(), "ocx-release-log-"));
+    const repo = mkdtempSync(join(tmpdir(), "occx-release-log-"));
     const gitText = (args: string[]): string => {
       const result = Bun.spawnSync(["git", "-C", repo, ...args], {
         stdout: "pipe",
@@ -260,7 +260,7 @@ describe("release metadata parsers", () => {
       const firstMessage = join(repo, "first-message.txt");
       writeFileSync(firstMessage, `${firstBody}\n`, "utf8");
       const first = gitText([
-        "-c", "user.name=OpenCodex Test",
+        "-c", "user.name=Openccx Test",
         "-c", "user.email=test@example.test",
         "commit-tree", tree,
         "-F", firstMessage,
@@ -269,7 +269,7 @@ describe("release metadata parsers", () => {
       const secondMessage = join(repo, "second-message.txt");
       writeFileSync(secondMessage, "feat: second\n", "utf8");
       const second = gitText([
-        "-c", "user.name=OpenCodex Test",
+        "-c", "user.name=Openccx Test",
         "-c", "user.email=test@example.test",
         "commit-tree", tree,
         "-p", first,

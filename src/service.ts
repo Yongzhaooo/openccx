@@ -1,7 +1,7 @@
 /**
- * `ocx service` — run the proxy as a background service that auto-starts on login and
+ * `occx service` — run the proxy as a background service that auto-starts on login and
  * auto-restarts on crash. macOS → launchd; Windows → Task Scheduler; Linux → systemd user unit.
- * The service sets OCX_SERVICE=1 so the proxy's shutdown handler does NOT restore native
+ * The service sets OCCX_SERVICE=1 so the proxy's shutdown handler does NOT restore native
  * Codex on a service-managed restart (the restarted instance re-injects); explicit stop/uninstall
  * restore it via the command.
  */
@@ -18,11 +18,11 @@ import { isWslRuntime, resolveCodexHomeDir, type CodexHomeDeps } from "./codex/h
 import { BUN_RUNTIME_PATH_ENV, BUN_RUNTIME_SOURCE_ENV, durableBunRuntime } from "./lib/bun-runtime";
 
 /**
- * Written only by the launchd plist and the systemd unit. `OCX_SERVICE=1` cannot stand in
- * for it: `ocx claude` and `ocx opencode` set that on the proxies they spawn to borrow its
+ * Written only by the launchd plist and the systemd unit. `OCCX_SERVICE=1` cannot stand in
+ * for it: `occx claude` and `occx opencode` set that on the proxies they spawn to borrow its
  * routing-preservation meaning, so a proxy carrying it is not necessarily the managed job.
  */
-export const SERVICE_MANAGED_ENV = "OCX_SERVICE_MANAGED";
+export const SERVICE_MANAGED_ENV = "OCCX_SERVICE_MANAGED";
 import type { BunRuntimeSource, DurableBunRuntime } from "./lib/bun-runtime";
 import { isProcessAlive, stopProxy } from "./lib/process-control";
 import { readServiceApiTokenState, serviceApiTokenFilePath } from "./lib/service-secrets";
@@ -31,7 +31,7 @@ import { PROXY_ENV_KEYS } from "./lib/proxy-env";
 import { randomBytes, randomUUID } from "node:crypto";
 import {
   ELEVATION_REQUEST_TIMEOUT_MS,
-  OCX_ELEVATED_PROTOCOL_FAILED,
+  OCCX_ELEVATED_PROTOCOL_FAILED,
   raceWithTimeout,
   resolveTrustedWindowsPowerShellExe,
   resolveTrustedWindowsSchtasksExe,
@@ -65,13 +65,13 @@ import { maybeShowStarPrompt } from "./cli/star-prompt";
 import { systemdProperty } from "./service-manager-probe";
 import { assertNotRealLaunchAgentsUnderTest, isProtectedHomeUnderTest, isTestHomeGuardArmed } from "./lib/test-home-guard";
 
-const LABEL = "com.opencodex.proxy";
-const TASK = "opencodex-proxy";
+const LABEL = "com.openccx.proxy";
+const TASK = "openccx-proxy";
 
 export type ServiceBackend = "scheduler" | "native";
 
 function cliEntry(runtime: DurableBunRuntime = durableBunRuntime()): { bun: string; bunRuntimeSource: BunRuntimeSource; cli: string } {
-  // Bake the bundled Bun (manager-owned global package directory, survives `ocx update`) rather than
+  // Bake the bundled Bun (manager-owned global package directory, survives `occx update`) rather than
   // a transient system Bun, so launchd/systemd/schtasks keep resolving even if a
   // standalone Bun is later removed. The CLI entry lives at src/cli/index.ts.
   //
@@ -81,34 +81,34 @@ function cliEntry(runtime: DurableBunRuntime = durableBunRuntime()): { bun: stri
 }
 
 /**
- * The stable `ocx` launcher to bake into a systemd unit, or null to fall back to the
+ * The stable `occx` launcher to bake into a systemd unit, or null to fall back to the
  * Bun + CLI pair.
  *
  * `cliEntry()` resolves both of its paths from `import.meta.dir`, so they point INSIDE
  * the installed package tree. Under a version manager that tree is a versioned directory:
- * `~/.local/share/mise/installs/npm-opencodex/2.35.0/...`. An upgrade installs 2.36.0 and
+ * `~/.local/share/mise/installs/npm-openccx/2.35.0/...`. An upgrade installs 2.36.0 and
  * deletes 2.35.0, after which the unit's `exec <old-bun> <old-cli>` cannot resolve, and
  * `Restart=on-failure` turns that into a restart loop (#2898). The shim in
- * `~/.local/share/mise/shims/ocx` survives the upgrade and dispatches to whatever version
+ * `~/.local/share/mise/shims/occx` survives the upgrade and dispatches to whatever version
  * is current, so it is the durable thing to name.
  *
  * Deliberately LEXICAL. Resolving the symlink would write the versioned target back into
  * the unit and reintroduce the bug — the indirection is the entire point.
  *
- * Only an absolute path is accepted. A bare `ocx` would be re-resolved through `PATH` on
+ * Only an absolute path is accepted. A bare `occx` would be re-resolved through `PATH` on
  * every restart, which turns a service definition into a PATH-hijacking surface; naming
  * one validated absolute file keeps the target fixed at install time.
  *
- * The RECORDED launcher wins over a fresh PATH walk. `ocx service repair` runs from
- * whatever shell the operator (or `ocx update`, or a tray helper) happened to have, and a
- * context without `ocx` on `PATH` used to resolve null here — rewriting a working
+ * The RECORDED launcher wins over a fresh PATH walk. `occx service repair` runs from
+ * whatever shell the operator (or `occx update`, or a tray helper) happened to have, and a
+ * context without `occx` on `PATH` used to resolve null here — rewriting a working
  * launcher-form plist into the version-pinned Bun + CLI pair and then booting the healthy
  * job out to load it (#4236, defect 1g). A launcher that is still an executable file is
  * the thing the installed service already runs, so repair must keep naming it; only a
  * recorded launcher that has disappeared falls through to discovery.
  *
  * That preference is NOT macOS-only: `installSystemd` resolves this same function, so a
- * Linux `ocx service repair` from a PATH-less context keeps the `ExecStart` the unit
+ * Linux `occx service repair` from a PATH-less context keeps the `ExecStart` the unit
  * already has instead of rewriting it to the version-pinned pair — the #2898 shape this
  * function exists to avoid. The failure mode it prevents is milder there (systemd
  * `daemon-reload` + `restart` does not evict-then-maybe-nothing the way launchd did), but
@@ -135,7 +135,7 @@ export function stableLauncherEntry(deps: {
   const entries = (env.PATH ?? "").split(deps.pathDelimiter ?? delimiter);
   for (const entry of entries) {
     if (!entry || !isAbsolute(entry)) continue;
-    const candidate = join(entry, "ocx");
+    const candidate = join(entry, "occx");
     if (isExecutableFile(candidate)) return candidate;
   }
   return null;
@@ -154,42 +154,42 @@ export function serviceLogPath(): string {
 }
 
 function windowsServiceScriptPath(): string {
-  return join(getConfigDir(), "opencodex-service.cmd");
+  return join(getConfigDir(), "openccx-service.cmd");
 }
 
 function windowsLauncherVbsPath(): string {
-  return join(getConfigDir(), "opencodex-service-launcher.vbs");
+  return join(getConfigDir(), "openccx-service-launcher.vbs");
 }
 
 function windowsTaskXmlPath(): string {
-  return join(getConfigDir(), "opencodex-service-task.xml");
+  return join(getConfigDir(), "openccx-service-task.xml");
 }
 
 function serviceStatePath(): string {
   return join(getConfigDir(), "service-state.json");
 }
 
-function defaultOpenCodexHome(): string {
-  return resolve(join(homedir(), ".opencodex"));
+function defaultOpenccxHome(): string {
+  return resolve(join(homedir(), ".openccx"));
 }
 
-export function serviceStatePathsForOpenCodexHome(opencodexHome: string): string[] {
-  const paths = [join(opencodexHome, "service-state.json")];
-  const defaultPath = join(defaultOpenCodexHome(), "service-state.json");
+export function serviceStatePathsForOpenccxHome(openccxHome: string): string[] {
+  const paths = [join(openccxHome, "service-state.json")];
+  const defaultPath = join(defaultOpenccxHome(), "service-state.json");
   if (normalizePathForCompare(defaultPath) !== normalizePathForCompare(paths[0])) paths.push(defaultPath);
   return paths;
 }
 
 function serviceStatePaths(): string[] {
-  const paths = serviceStatePathsForOpenCodexHome(currentOpenCodexHome());
+  const paths = serviceStatePathsForOpenccxHome(currentOpenccxHome());
   if (!isTestHomeGuardArmed()) return paths;
   /*
    * Under an armed test process the legacy default-home entry IS the developer's real
    * `~/.opencodex/service-state.json`. It is there so an install made before
-   * OPENCODEX_HOME was set can still be found, but it means a test whose OPENCODEX_HOME
+   * OPENCCX_HOME was set can still be found, but it means a test whose OPENCCX_HOME
    * points at a sandbox still writes their live install state — observed while building
    * the launchd repair coverage: one case replaced the real record's codexHome and
-   * opencodexHome with temp-directory paths. Drop it rather than deny the write, so the
+   * openccxHome with temp-directory paths. Drop it rather than deny the write, so the
    * sandbox path keeps working and the real one is simply not in the list.
    *
    * The predicate is the guard's own, not a local `resolve()` compare: the guard
@@ -204,7 +204,7 @@ function serviceStatePaths(): string[] {
  * The state paths a WRITE may use. Same list, but an empty one is an error instead of a
  * silent no-op.
  *
- * With OPENCODEX_HOME unset under an armed test process, `currentOpenCodexHome()` falls
+ * With OPENCCX_HOME unset under an armed test process, `currentOpenccxHome()` falls
  * back to the real `~/.opencodex` (`os.homedir()` ignores `$HOME`), the filter above then
  * removes every candidate, and `writeServiceInstallState` wrote NOTHING while reporting
  * success — a test asserting on install state would read the previous run's record, or
@@ -215,7 +215,7 @@ function serviceStateWritePaths(): string[] {
   if (paths.length > 0) return paths;
   throw new Error(
     "refusing to write service install state with no writable state path: every candidate "
-    + "resolved to the real OpenCodex home and was filtered out. Point OPENCODEX_HOME at a "
+    + "resolved to the real Openccx home and was filtered out. Point OPENCCX_HOME at a "
     + "temp directory for this test (the preload does it for every invocation; something "
     + "deleted the variable without restoring it).",
   );
@@ -239,7 +239,7 @@ function currentCodexSqliteHomeAbsolute(target: "native" | "windows" = "native")
   // into `D:\tmp\x` — neither is a path the target can use. A relative value still resolves,
   // because a service unit has no meaningful working directory.
   //
-  // CODEX_HOME and OPENCODEX_HOME are carried through literally, so without this the same
+  // CODEX_HOME and OPENCCX_HOME are carried through literally, so without this the same
   // generated file disagreed with itself about two variables holding the same kind of value.
   if (target === "windows") {
     return win32.isAbsolute(expanded) ? win32.normalize(expanded) : resolve(expanded);
@@ -247,8 +247,8 @@ function currentCodexSqliteHomeAbsolute(target: "native" | "windows" = "native")
   return posix.isAbsolute(expanded) ? posix.normalize(expanded) : resolve(expanded);
 }
 
-function currentOpenCodexHome(): string {
-  // getConfigDir() already resolves OPENCODEX_HOME with ~ expansion; keep the
+function currentOpenccxHome(): string {
+  // getConfigDir() already resolves OPENCCX_HOME with ~ expansion; keep the
   // install-state comparison on the same normalization or `~/...` values falsely
   // fail the environment-match check depending on cwd.
   return getConfigDir();
@@ -262,12 +262,12 @@ function normalizePathForCompare(path: string): string {
 export interface ServiceInstallState {
   version: 1 | 2;
   codexHome: string;
-  opencodexHome: string;
+  openccxHome: string;
   /** Baked at install; lets status flag paths gone stale after npm prefix/nvm moves. */
   bunPath?: string;
   cliPath?: string;
   /**
-   * launchd and systemd. The stable `ocx` launcher the service definition actually invokes,
+   * launchd and systemd. The stable `occx` launcher the service definition actually invokes,
    * when one was found. Present means `bunPath`/`cliPath` are provenance for the install,
    * NOT what the service runs — so staleness must be judged against THIS path instead. A version-manager
    * upgrade replaces the directory those two point into while the launcher survives, and
@@ -285,7 +285,7 @@ export function parseServiceInstallState(value: unknown): ServiceInstallState | 
   const state = value as Record<string, unknown>;
   if (state.version !== 1 && state.version !== 2) return null;
   if (typeof state.codexHome !== "string" || state.codexHome.length === 0) return null;
-  if (typeof state.opencodexHome !== "string" || state.opencodexHome.length === 0) return null;
+  if (typeof state.openccxHome !== "string" || state.openccxHome.length === 0) return null;
   for (const key of ["bunPath", "cliPath", "launcherPath", "winswVersion", "winswSha256"] as const) {
     if (state[key] !== undefined && (typeof state[key] !== "string" || state[key].length === 0)) return null;
   }
@@ -302,7 +302,7 @@ function writeServiceInstallState(backend: ServiceBackend = "scheduler", launche
   const state: ServiceInstallState = {
     version: 2,
     codexHome: currentCodexHome(),
-    opencodexHome: currentOpenCodexHome(),
+    openccxHome: currentOpenccxHome(),
     bunPath: bun,
     cliPath: cli,
     ...(launcherPath ? { launcherPath } : {}),
@@ -375,8 +375,8 @@ export function inspectServiceStateEvidence(
 }
 
 /** The homes this process is actually using, for comparison against a claim. */
-export function currentServiceHomes(deps: CodexHomeDeps = {}): { codexHome: string; opencodexHome: string } {
-  return { codexHome: currentCodexHome(deps), opencodexHome: currentOpenCodexHome() };
+export function currentServiceHomes(deps: CodexHomeDeps = {}): { codexHome: string; openccxHome: string } {
+  return { codexHome: currentCodexHome(deps), openccxHome: currentOpenccxHome() };
 }
 
 export function serviceHomeMatches(a: string, b: string): boolean {
@@ -389,7 +389,7 @@ export function readServiceBackend(): ServiceBackend {
 }
 
 /**
- * The `ocx` argv that refreshes an already-installed service after an update.
+ * The `occx` argv that refreshes an already-installed service after an update.
  *
  * `repair` discovers the installed backend itself. A healthy Windows scheduler task only
  * gets refreshed assets plus a restart; a stale live definition is re-registered and may
@@ -402,13 +402,13 @@ export function serviceReinstallArgs(): string[] {
   return ["service", "repair"];
 }
 
-/** The `ocx` argv that registers a service from scratch, preserving the chosen backend. */
+/** The `occx` argv that registers a service from scratch, preserving the chosen backend. */
 export function serviceInstallArgs(): string[] {
   return readServiceBackend() === "native" ? ["service", "install", "--native"] : ["service", "install"];
 }
 
 /**
- * The service was installed under a different CODEX_HOME/OPENCODEX_HOME, so this process may not
+ * The service was installed under a different CODEX_HOME/OPENCCX_HOME, so this process may not
  * touch it. Distinct from "stop failed": the manager was never even contacted, which means the
  * installed service is still live and shared state (native Codex config, the Grok fence) must be
  * left alone — tearing it down would strip config out from under a running service.
@@ -423,7 +423,7 @@ export function isServiceOwnershipError(err: unknown): err is ServiceOwnershipEr
 
 /**
  * True when no installed service exists, or the installed one belongs to THIS
- * CODEX_HOME/OPENCODEX_HOME. Callers use it to decide whether they may tear down shared state
+ * CODEX_HOME/OPENCCX_HOME. Callers use it to decide whether they may tear down shared state
  * (native Codex config, the Grok fence) that a foreign service would still be relying on.
  */
 export function serviceEnvironmentOwnedHere(): boolean {
@@ -448,12 +448,12 @@ export function assertServiceEnvironmentMatchesInstall(): void {
         "Run the service command from the same Codex home so native Codex restore updates the correct config.",
     );
   }
-  const expectedOpenCodexHome = normalizePathForCompare(state.opencodexHome);
-  const actualOpenCodexHome = normalizePathForCompare(currentOpenCodexHome());
-  if (expectedOpenCodexHome !== actualOpenCodexHome) {
+  const expectedOpenccxHome = normalizePathForCompare(state.openccxHome);
+  const actualOpenccxHome = normalizePathForCompare(currentOpenccxHome());
+  if (expectedOpenccxHome !== actualOpenccxHome) {
     throw new ServiceOwnershipError(
-      `Service was installed with OPENCODEX_HOME=${state.opencodexHome}, but current OPENCODEX_HOME=${currentOpenCodexHome()}. ` +
-        "Run the service command from the same OpenCodex home so service state and secrets match.",
+      `Service was installed with OPENCCX_HOME=${state.openccxHome}, but current OPENCCX_HOME=${currentOpenccxHome()}. ` +
+        "Run the service command from the same Openccx home so service state and secrets match.",
     );
   }
 }
@@ -474,7 +474,7 @@ function isLoopbackHostname(hostname: string | undefined): boolean {
 }
 
 /**
- * The `ocx` command a user should rerun for the service state they actually have.
+ * The `occx` command a user should rerun for the service state they actually have.
  *
  * `installed` alone is not enough: `repairService()` refuses a Task-Scheduler-plus-WinSW
  * conflict outright, so recommending repair there names a command guaranteed to fail.
@@ -484,14 +484,14 @@ function isLoopbackHostname(hostname: string | undefined): boolean {
 export function serviceRetryCommand(
   diag: Pick<ServiceDiagnostic, "installed" | "conflict"> = diagnoseService(),
 ): string {
-  return diag.installed && !diag.conflict ? "ocx service repair" : "ocx service install";
+  return diag.installed && !diag.conflict ? "occx service repair" : "occx service install";
 }
 
 /**
  * Refuse a management (admin) token as the data-plane secret.
  *
  * The service exports the contents of the service token file as
- * `OPENCODEX_API_AUTH_TOKEN` before starting the proxy. When that value is the admin
+ * `OPENCCX_API_AUTH_TOKEN` before starting the proxy. When that value is the admin
  * token, the server treats the management credential as a data-plane admission secret
  * and fails the ENTIRE management plane closed at boot, so every `/api/*` request
  * returns 503 — even on a loopback install that never needed a data-plane secret.
@@ -501,7 +501,7 @@ export function serviceRetryCommand(
  * Nothing in this codebase puts an admin token in that env var; it arrives from the
  * installing shell. This function is the chokepoint that should refuse it rather than
  * writing a file that produces a broken service. Comparison is the same helper doctor
- * uses: minted `ocx_admin_…` prefix, or byte-equal to configuredAdminToken (env or file).
+ * uses: minted `occx_admin_…` prefix, or byte-equal to configuredAdminToken (env or file).
  *
  * `source` selects the remedy, not the rule. The token can also arrive from an EXISTING
  * `service-api-token` that install/repair reuses, and there `unset` is meaningless advice —
@@ -516,21 +516,21 @@ export function assertNotAdminToken(
   if (source === "file") {
     // The file branch of `writeServiceApiTokenFile` used to skip this check entirely, so a
     // hand-pasted admin token already on disk (pre-#2696, or the exact #4236 incident) was
-    // silently reused: `ocx status` said `present (file)` and the hub crash-looped at boot.
+    // silently reused: `occx status` said `present (file)` and the hub crash-looped at boot.
     // The remedy is NOT `unset` -- there is nothing in the environment to unset.
     throw new Error(
       `${serviceApiTokenFilePath()} holds a management (admin) token, not a data-plane token. `
         + "The service exports that file as the data-plane secret, which fences the whole management "
-        + "API closed and makes every ocx management command fail with 503, so the hub crash-loops at "
-        + `boot. Delete the file (rm ${serviceApiTokenFilePath()}), then rerun \`ocx service repair\` `
-        + "(or `ocx service install` when the service is not installed yet): a fresh owner-only "
+        + "API closed and makes every occx management command fail with 503, so the hub crash-loops at "
+        + `boot. Delete the file (rm ${serviceApiTokenFilePath()}), then rerun \`occx service repair\` `
+        + "(or `occx service install` when the service is not installed yet): a fresh owner-only "
         + "data-plane token is generated and nothing needs to be exported by hand.",
     );
   }
   throw new Error(
-    "OPENCODEX_API_AUTH_TOKEN holds a management (admin) token. The service exports it "
+    "OPENCCX_API_AUTH_TOKEN holds a management (admin) token. The service exports it "
       + "as the data-plane secret, which fences the whole management API closed and makes "
-      + "every ocx management command fail with 503. Run `unset OPENCODEX_API_AUTH_TOKEN` "
+      + "every occx management command fail with 503. Run `unset OPENCCX_API_AUTH_TOKEN` "
       + "and rerun: nothing needs to be exported by hand, because the service provisions "
       + `its own owner-only data-plane token at ${serviceApiTokenFilePath()}.`,
   );
@@ -539,10 +539,10 @@ export function assertNotAdminToken(
 /**
  * Preflight for `service install` / `service repair` on the data-plane credential.
  *
- * It used to DEMAND `OPENCODEX_API_AUTH_TOKEN` for a non-loopback hostname, and it threw
+ * It used to DEMAND `OPENCCX_API_AUTH_TOKEN` for a non-loopback hostname, and it threw
  * even when `~/.opencodex/service-api-token` already held a perfectly good token. That is
  * the defect behind the incident this unit exists to close (#4236): an operator exported the
- * ADMIN token as OPENCODEX_API_AUTH_TOKEN because `install` asked for a token, the hub then
+ * ADMIN token as OPENCCX_API_AUTH_TOKEN because `install` asked for a token, the hub then
  * crash-looped on `assertNotAdminToken`, and `service repair` asked for the same env var
  * again — so the only remembered way to make the command proceed was the thing that broke it.
  *
@@ -557,7 +557,7 @@ export function assertServiceAuthEnvironment(): void {
   // exists, whatever the hostname): a management token in either source fences the whole
   // management plane closed at boot, even on a loopback install that needs no admission
   // secret. Returning early is what let that broken state through.
-  const present = process.env.OPENCODEX_API_AUTH_TOKEN?.trim();
+  const present = process.env.OPENCCX_API_AUTH_TOKEN?.trim();
   if (present) assertNotAdminToken(present);
   const state = readServiceApiTokenState();
   // An existing FILE holding the admin token is the incident shape itself, and the first round
@@ -606,11 +606,11 @@ function persistServiceApiToken(token: string): string {
  * EVERY backend funnels through here — launchd, systemd, the Windows scheduler wrapper and
  * WinSW native — because the launch wrapper's only source of the secret is this file
  * (`buildServiceShellCommand` cats it into the environment; WinSW reads it through
- * `OCX_API_TOKEN_FILE`). One chokepoint is also what makes the admin-token refusal
+ * `OCCX_API_TOKEN_FILE`). One chokepoint is also what makes the admin-token refusal
  * unskippable (#2696).
  *
  * Precedence, in order:
- *  1. `OPENCODEX_API_AUTH_TOKEN` from the installing shell — still refused outright when it is
+ *  1. `OPENCCX_API_AUTH_TOKEN` from the installing shell — still refused outright when it is
  *     an admin token. An operator who deliberately exports a key keeps full control of it.
  *  2. An existing owner-only `service-api-token`. Reusing it is what makes `repair`, a
  *     reinstall and a restart idempotent; regenerating would silently invalidate every client
@@ -626,13 +626,13 @@ function persistServiceApiToken(token: string): string {
  * The PATH is logged; the value never is, and never reaches argv, a unit file or a plist.
  */
 export function writeServiceApiTokenFile(): ProvisionedServiceApiToken | null {
-  const token = process.env.OPENCODEX_API_AUTH_TOKEN?.trim();
+  const token = process.env.OPENCCX_API_AUTH_TOKEN?.trim();
   if (token) {
     // Last line of defence: every install/repair path funnels through here, so a
     // collision cannot reach disk regardless of which caller ran (#2696).
     assertNotAdminToken(token);
     const path = persistServiceApiToken(token);
-    console.log(`🔐 Data-plane token taken from OPENCODEX_API_AUTH_TOKEN and stored at ${path} (owner-only).`);
+    console.log(`🔐 Data-plane token taken from OPENCCX_API_AUTH_TOKEN and stored at ${path} (owner-only).`);
     return { path, origin: "env" };
   }
   if (isLoopbackHostname(loadConfig().hostname)) return null;
@@ -640,7 +640,7 @@ export function writeServiceApiTokenFile(): ProvisionedServiceApiToken | null {
   if (existing.kind === "present") {
     // The collision check is NOT only for the env branch. A file that already holds the admin
     // token -- hand-pasted before #2696, or written by the very incident this unit closes --
-    // was silently accepted here, so `ocx status` reported `present (file)` and the hub
+    // was silently accepted here, so `occx status` reported `present (file)` and the hub
     // crash-looped at boot with no command pointing at the cause.
     const path = serviceApiTokenFilePath();
     assertNotAdminToken(existing.token, process.env, "file");
@@ -657,12 +657,12 @@ export function writeServiceApiTokenFile(): ProvisionedServiceApiToken | null {
   if (existing.kind === "unsafe") throw new Error(`${existing.reason}: ${serviceApiTokenFilePath()}`);
   const path = persistServiceApiToken(randomBytes(32).toString("hex"));
   console.log(`🔐 Provisioned an owner-only data-plane token at ${path}; nothing needs to be exported by hand.`);
-  console.log("   Remote machines get their own per-client key — run 'ocx hub invite' instead of copying this file.");
+  console.log("   Remote machines get their own per-client key — run 'occx hub invite' instead of copying this file.");
   return { path, origin: "generated" };
 }
 
 /**
- * Render the launchd plist. Mirrors `buildUnit`: when `deps.launcher` names a stable `ocx`
+ * Render the launchd plist. Mirrors `buildUnit`: when `deps.launcher` names a stable `occx`
  * executable, the job execs that launcher instead of the package-local Bun + CLI pair, so a
  * version-manager upgrade (mise, asdf, nvm) that replaces the package directory is picked up
  * on the next launchd start instead of leaving the old build serving (#3464 — the macOS
@@ -680,10 +680,10 @@ export function buildPlist(
   const path = process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin";
   const codexHome = process.env.CODEX_HOME?.trim();
   const codexSqliteHome = currentCodexSqliteHomeAbsolute();
-  const opencodexHome = process.env.OPENCODEX_HOME?.trim();
+  const openccxHome = process.env.OPENCCX_HOME?.trim();
   const envLines = [
-    `    <key>OCX_SERVICE</key><string>1</string>`,
-    // OCX_SERVICE alone cannot identify the managed job: `ocx claude` and `ocx opencode`
+    `    <key>OCCX_SERVICE</key><string>1</string>`,
+    // OCCX_SERVICE alone cannot identify the managed job: `occx claude` and `occx opencode`
     // also set it on the proxies they spawn, to borrow its routing-preservation meaning
     // (src/cli/index.ts preserveRouting). Only the wrapper writes this second marker, so
     // the dashboard-stop refusal below can tell a real launchd job from an ordinary child.
@@ -701,7 +701,7 @@ export function buildPlist(
     `    <key>PATH</key><string>${plistString(path)}</string>`,
     codexHome ? `    <key>CODEX_HOME</key><string>${plistString(codexHome)}</string>` : null,
     codexSqliteHome ? `    <key>CODEX_SQLITE_HOME</key><string>${plistString(codexSqliteHome)}</string>` : null,
-    opencodexHome ? `    <key>OPENCODEX_HOME</key><string>${plistString(opencodexHome)}</string>` : null,
+    openccxHome ? `    <key>OPENCCX_HOME</key><string>${plistString(openccxHome)}</string>` : null,
     ...proxyEnv.map(({ name, value }) =>
       `    <key>${name}</key><string>${plistString(value)}</string>`),
   ].filter((line): line is string => Boolean(line)).join("\n");
@@ -740,8 +740,8 @@ const PLIST_PATH_ENTRY = /^(\s*<key>PATH<\/key><string>)([^\n]*)(<\/string>)$/m;
  * The rendered plist with the PREVIOUS definition's `PATH` put back — or null when `PATH`
  * is not the only difference.
  *
- * `buildPlist` bakes `process.env.PATH`, and `ocx service repair` is run by whatever has a
- * shell: a tray helper, `ocx update`'s child, an ssh session, a cron job. Each of those
+ * `buildPlist` bakes `process.env.PATH`, and `occx service repair` is run by whatever has a
+ * shell: a tray helper, `occx update`'s child, an ssh session, a cron job. Each of those
  * carries a DIFFERENT PATH from the login shell that installed the service, so comparing
  * whole-file bytes made the "nothing to repair" pre-check miss almost every time it
  * mattered: a healthy hub was evicted, and its PATH rewritten to the narrower one, purely
@@ -776,7 +776,7 @@ function shellQuote(value: string): string {
 
 /**
  * Listen port baked into service wrappers / WinSW XML.
- * Priority: explicit override → OCX_BAKE_PORT (update restart) → config.port → 10100.
+ * Priority: explicit override → OCCX_BAKE_PORT (update restart) → config.port → 10100.
  * `config.port === 0` means ephemeral for interactive start; services need a stable pin,
  * so treat 0 / invalid like unset (default 10100) instead of baking `--port 0`.
  */
@@ -784,7 +784,7 @@ export function resolveServiceListenPort(override?: number): number {
   if (typeof override === "number" && Number.isFinite(override) && override > 0 && override <= 65535) {
     return Math.trunc(override);
   }
-  const baked = process.env.OCX_BAKE_PORT?.trim();
+  const baked = process.env.OCCX_BAKE_PORT?.trim();
   if (baked && /^\d+$/.test(baked)) {
     const n = Number(baked);
     if (n > 0 && n <= 65535) return n;
@@ -796,18 +796,18 @@ export function resolveServiceListenPort(override?: number): number {
 
 function buildServiceShellCommand(bun: string, cli: string, port = resolveServiceListenPort()): string {
   const tokenFile = serviceApiTokenFilePath();
-  return `if [ -f ${shellQuote(tokenFile)} ]; then OPENCODEX_API_AUTH_TOKEN="$(cat ${shellQuote(tokenFile)})"; export OPENCODEX_API_AUTH_TOKEN; fi; exec ${shellQuote(bun)} ${shellQuote(cli)} start --port ${port}`;
+  return `if [ -f ${shellQuote(tokenFile)} ]; then OPENCCX_API_AUTH_TOKEN="$(cat ${shellQuote(tokenFile)})"; export OPENCCX_API_AUTH_TOKEN; fi; exec ${shellQuote(bun)} ${shellQuote(cli)} start --port ${port}`;
 }
 
 /**
- * The same command shape, launched through a stable `ocx` executable instead of an
+ * The same command shape, launched through a stable `occx` executable instead of an
  * explicit Bun + CLI pair. The token-file preamble is identical and deliberately shared
  * in form: the service still reads the token from disk at start and never carries it in
  * the unit.
  */
 function buildServiceLauncherShellCommand(launcher: string, port = resolveServiceListenPort()): string {
   const tokenFile = serviceApiTokenFilePath();
-  return `if [ -f ${shellQuote(tokenFile)} ]; then OPENCODEX_API_AUTH_TOKEN="$(cat ${shellQuote(tokenFile)})"; export OPENCODEX_API_AUTH_TOKEN; fi; exec ${shellQuote(launcher)} start --port ${port}`;
+  return `if [ -f ${shellQuote(tokenFile)} ]; then OPENCCX_API_AUTH_TOKEN="$(cat ${shellQuote(tokenFile)})"; export OPENCCX_API_AUTH_TOKEN; fi; exec ${shellQuote(launcher)} start --port ${port}`;
 }
 
 /**
@@ -850,7 +850,7 @@ export function expectedLaunchdCommand(
  * assumes it covers systemd or the Windows wrapper.
  *
  * `start` needs this because it does NOT rewrite the plist: an install made under
- * OCX_BAKE_PORT, or any later config.port edit, would otherwise leave launchd serving
+ * OCCX_BAKE_PORT, or any later config.port edit, would otherwise leave launchd serving
  * one port while the confirmation probes another, failing a healthy service.
  *
  * Anchored on the closing tag and matched LAST: the command also carries the Bun and
@@ -961,7 +961,7 @@ export function serviceInstallHealthMs(
  *
  * Probes the BAKED target rather than resolving one. `findLiveProxy` resolves through
  * pidfile -> runtime-port -> config.port, and a service reinstall has just invalidated
- * the first two while `resolveServiceListenPort` (OCX_BAKE_PORT precedence, config.port
+ * the first two while `resolveServiceListenPort` (OCCX_BAKE_PORT precedence, config.port
  * === 0 normalization) can disagree with the third.
  *
  * Soft: returns the outcome, never throws; the caller chooses between a checkmark and
@@ -1025,7 +1025,7 @@ export async function reportServiceServing(
   const serving = await confirmServiceServing({ ...deps, timeoutMs: healthBudgetMs });
   const waitedMs = Math.max(0, now() - startedAt);
   if (serving.ok) {
-    console.log(`✅ opencodex service ${verb} and serving on port ${serving.port}.`);
+    console.log(`✅ openccx service ${verb} and serving on port ${serving.port}.`);
     return;
   }
   console.error(
@@ -1033,7 +1033,7 @@ export async function reportServiceServing(
     + `${Math.round(waitedMs / 1000)}s.\n`
     + `   The manager registered the job; that is not the same as serving.\n`
     + `   Log:       ${serviceLogPath()}\n`
-    + `   Meanwhile: ocx start   (serves in the foreground)`,
+    + `   Meanwhile: occx start   (serves in the foreground)`,
   );
   process.exitCode = 1;
 }
@@ -1041,12 +1041,12 @@ export async function reportServiceServing(
 /**
  * The command that repairs the CURRENTLY INSTALLED backend without switching it.
  *
- * `ocx service repair` reads the recorded backend itself, so it cannot silently switch a
- * WinSW install to Task Scheduler the way a plain `ocx service install` would. A healthy
+ * `occx service repair` reads the recorded backend itself, so it cannot silently switch a
+ * WinSW install to Task Scheduler the way a plain `occx service install` would. A healthy
  * scheduler definition needs no elevation; a stale definition can be re-registered and prompt.
  */
 function serviceRepairCommand(): string {
-  return "ocx service repair";
+  return "occx service repair";
 }
 
 function systemdQuote(value: string): string {
@@ -1071,7 +1071,7 @@ function systemdEnvironmentAssignment(name: string, value: string | undefined): 
  * `.bashrc`, which is where proxy exports usually live. So a user who needs a proxy to
  * reach the upstream got a service that dialed direct: the socket was reset, the retry
  * budget drained, and the request surfaced as `502 Provider unreachable` (#2107). The
- * same install driven through `ocx codex-shim` worked, because that path spawns with
+ * same install driven through `occx codex-shim` worked, because that path spawns with
  * `{ ...process.env }`.
  *
  * Lower-case variants are honored because curl-style tooling sets them and the runtime's
@@ -1106,17 +1106,17 @@ const SERVICE_MANAGER_COMMAND = /^(?:launchctl|systemctl)\b/;
 /**
  * Refuse to mutate a live service manager from an armed test process.
  *
- * The test preload isolates HOME, OPENCODEX_HOME and CODEX_HOME, and that is enough for
+ * The test preload isolates HOME, OPENCCX_HOME and CODEX_HOME, and that is enough for
  * anything addressed by path. It is not enough here. `systemctl --user stop
- * opencodex-proxy.service` is addressed by job NAME and talks to the user manager that is
+ * openccx-proxy.service` is addressed by job NAME and talks to the user manager that is
  * already running, so it stops the proxy the developer is actually using no matter what
- * HOME says. `launchctl bootout gui/<uid>/com.opencodex.proxy` has the same shape.
+ * HOME says. `launchctl bootout gui/<uid>/com.openccx.proxy` has the same shape.
  *
  * Windows already had this guard: `querySchtasks` refuses every non-query call while the
  * test-home guard is armed, after a partially-faked test replaced a real scheduled task
  * with a launcher inside a temporary test home. macOS and Linux were left without the
  * equivalent, which means the person most likely to run this suite - someone running
- * opencodex on the machine they are developing it on - is the person it can disrupt.
+ * openccx on the machine they are developing it on - is the person it can disrupt.
  *
  * Read-only verbs stay allowed: probing what the manager reports is the whole point of
  * the diagnostics, and observation cannot take a service down.
@@ -1140,7 +1140,7 @@ export function assertLiveServiceManagerAllowed(command: string): void {
  * every already-bootstrapped job. `sh()` above is execSync, which throws only on a
  * non-zero exit, so install and start both reported success for a load that did
  * nothing — leaving launchd running the PREVIOUS plist while a freshly written one
- * sat unused on disk. That is the 2026-08-02 report: `ocx service` prints a
+ * sat unused on disk. That is the 2026-08-02 report: `occx service` prints a
  * checkmark, `launchctl list` shows the job, and the port answers nothing.
  *
  * spawnSync, NOT execFileSync: execFileSync discards stderr when the child exits 0,
@@ -1229,7 +1229,7 @@ const LAUNCHCTL_BOOTOUT_NO_SUCH_PROCESS = 3;
  * {@link probeLaunchdLoadState} asks `gui/<uid>` AND `user/<uid>` because the two domains
  * are independent and hold separate service sets, while every MUTATING verb in this file
  * addressed `gui/<uid>` alone. So a `user/`-domain registration of our Label used to:
- * survive `ocx service stop` (`bootout gui/<uid>/<label>` exits 3, "No such process", which
+ * survive `occx service stop` (`bootout gui/<uid>/<label>` exits 3, "No such process", which
  * the stop path correctly reads as "nothing was loaded" — in the wrong domain); survive the
  * install cleanup whose whole job is evicting a live manager before new assets land, which
  * then installed over a serving job; and stay registered while `installLaunchd` bootstrapped
@@ -1263,7 +1263,7 @@ function launchctlBootoutBenign(status: number | null): boolean {
  * - `loaded-stale` — a domain answers 0 but runs a different command (an older plist).
  * - `not-loaded` — every domain answered 112/113, which is proof of absence.
  * - `unknown` — launchctl could not be asked, or answered something undocumented. NOT
- *   evidence of a problem, and deliberately not a reason to recommend `ocx service
+ *   evidence of a problem, and deliberately not a reason to recommend `occx service
  *   repair`: that command evicts the job, so recommending it on a failed probe is how
  *   #4236 turned a healthy hub into an outage.
  */
@@ -1284,7 +1284,7 @@ export interface LaunchdLoadProbe {
  * Replaces `launchctl list | grep <label>`, which enumerated the CALLER's bootstrap domain
  * (so a healthy `gui/$uid` job was invisible from ssh/cron), swallowed every exit code
  * through `|| true`, and matched the label unanchored anywhere on a line (so
- * `com.opencodex.proxy.helper` read as ours). `gui/` and `user/` are independent and hold
+ * `com.openccx.proxy.helper` read as ours). `gui/` and `user/` are independent and hold
  * separate service sets — measured on macOS 27.0: the shipped agent answers 0 under
  * `gui/<uid>` and 113 under `user/<uid>` — so asking one leaves the other free to hold a
  * job this probe would then call absent (same reasoning as `inspectLaunchd`).
@@ -1397,9 +1397,9 @@ function windowsWscript(): string {
 let querySchtasksForTests: ((args: string[]) => string) | null = null;
 
 function querySchtasks(args: string[]): string {
-  // The repository preload isolates HOME and OPENCODEX_HOME, but Task Scheduler is
+  // The repository preload isolates HOME and OPENCCX_HOME, but Task Scheduler is
   // machine-global. A partially-faked service test once fell through here and replaced the
-  // user's real `opencodex-proxy` task with a launcher inside its temporary test home; the
+  // user's real `openccx-proxy` task with a launcher inside its temporary test home; the
   // test passed and cleanup deleted that launcher. Queries are observation-only, but every
   // other operation must be injected while the explicit test-home guard is armed.
   if (
@@ -1451,27 +1451,27 @@ export function formatWindowsSchedulerServiceStatus(
 ): string {
   if (task.status === "present") {
     if (proxy.status === "running") {
-      return `✅ service installed (Task Scheduler); OpenCodex proxy running on port ${proxy.port}.`;
+      return `✅ service installed (Task Scheduler); Openccx proxy running on port ${proxy.port}.`;
     }
     if (proxy.status === "not-running") {
-      return "⚠️  service installed (Task Scheduler); OpenCodex proxy not running.";
+      return "⚠️  service installed (Task Scheduler); Openccx proxy not running.";
     }
-    return "⚠️  service installed (Task Scheduler); OpenCodex proxy status unknown.";
+    return "⚠️  service installed (Task Scheduler); Openccx proxy status unknown.";
   }
   if (task.status === "absent") {
     if (proxy.status === "running") {
-      return `❌ service not installed (Task Scheduler); OpenCodex proxy is running independently on port ${proxy.port}.`;
+      return `❌ service not installed (Task Scheduler); Openccx proxy is running independently on port ${proxy.port}.`;
     }
     if (proxy.status === "unknown") {
-      return "❌ service not installed (Task Scheduler); OpenCodex proxy status unknown.";
+      return "❌ service not installed (Task Scheduler); Openccx proxy status unknown.";
     }
     return "❌ service not installed (Task Scheduler).";
   }
   if (proxy.status === "running") {
-    return `⚠️  Task Scheduler registration unknown; OpenCodex proxy running on port ${proxy.port}.`;
+    return `⚠️  Task Scheduler registration unknown; Openccx proxy running on port ${proxy.port}.`;
   }
   if (proxy.status === "not-running") {
-    return "⚠️  service status unknown (Task Scheduler query failed); OpenCodex proxy not running.";
+    return "⚠️  service status unknown (Task Scheduler query failed); Openccx proxy not running.";
   }
   return "⚠️  service status unknown (Task Scheduler and proxy checks failed).";
 }
@@ -1521,7 +1521,7 @@ export function windowsSchedulerCsvIncludesTask(csv: string, taskName: string): 
 }
 
 /**
- * Probe whether the OpenCodex Task Scheduler task exists.
+ * Probe whether the Openccx Task Scheduler task exists.
  * Query failures fall back to a CSV listing before concluding absence; if both
  * fail, returns `unknown` so callers can fail closed instead of releasing locks.
  */
@@ -1604,7 +1604,7 @@ export function evaluateWindowsSchedulerInstallVerification(inputs: {
             ? "Task Scheduler registration is present but unhealthy."
             : "Task Scheduler task is present but its XML could not be read.")
           : nativeStatusUnknown
-            ? "The Task Scheduler task was created, but OpenCodex could not verify that the native WinSW service is absent."
+            ? "The Task Scheduler task was created, but Openccx could not verify that the native WinSW service is absent."
             : "ok";
   return {
     taskInstalled: inputs.taskInstalled,
@@ -1763,7 +1763,7 @@ async function reconcileUnknownElevatedOutcome(exitCode: number): Promise<void> 
   const parts = [
     "The elevated Task Scheduler operation returned an unknown result.",
     `Exit code: ${exitCode}.`,
-    "OpenCodex could not prove whether task creation completed, so installation state was not written.",
+    "Openccx could not prove whether task creation completed, so installation state was not written.",
   ];
   if (probe.status === "unknown") {
     parts.push(`Task Scheduler presence could not be verified: ${probe.detail}`);
@@ -1771,7 +1771,7 @@ async function reconcileUnknownElevatedOutcome(exitCode: number): Promise<void> 
     throwPartialInstall(parts);
   }
   if (probe.status === "absent") {
-    parts.push("No OpenCodex Task Scheduler task was found after the elevated operation.");
+    parts.push("No Openccx Task Scheduler task was found after the elevated operation.");
     throwPartialInstall(parts);
   }
   parts.push("A Task Scheduler task is present; attempting cleanup.");
@@ -2007,7 +2007,7 @@ export async function finalizeWindowsSchedulerServiceRegistration(
     // Signal after Start-Process may leave an elevated child; reconcile conservatively.
     if (error instanceof WindowsElevationError && error.reason === "terminated") {
       try {
-        await reconcileUnknownElevatedOutcome(OCX_ELEVATED_PROTOCOL_FAILED);
+        await reconcileUnknownElevatedOutcome(OCCX_ELEVATED_PROTOCOL_FAILED);
       } catch (reconcileError) {
         // Prefer the reconciliation detail (partial install / cleanup guidance) over the
         // generic signal message so callers can block retries when a task remains.
@@ -2036,7 +2036,7 @@ export async function finalizeWindowsSchedulerServiceRegistration(
       }
       if (error instanceof WindowsElevationError && error.reason === "terminated") {
         try {
-          await reconcileUnknownElevatedOutcome(OCX_ELEVATED_PROTOCOL_FAILED);
+          await reconcileUnknownElevatedOutcome(OCCX_ELEVATED_PROTOCOL_FAILED);
           return "released";
         } catch (reconcileError) {
           return isPartialInstallError(reconcileError) ? "blocked-partial" : "released";
@@ -2163,49 +2163,49 @@ export function buildWindowsServiceScript(
     // The wrapper console is hidden by the wscript launcher (window style 0), so switching
     // it to UTF-8 is safe (no leak into user shells) and lets cmd parse UTF-8 remnants.
     "chcp 65001 >nul",
-    windowsBatchSet("OCX_SERVICE", "1"),
+    windowsBatchSet("OCCX_SERVICE", "1"),
     windowsBatchSet(BUN_RUNTIME_SOURCE_ENV, bunRuntimeSource),
     windowsBatchSet(BUN_RUNTIME_PATH_ENV, bun, "path"),
     windowsBatchSet("PATH", path, "pathList"),
     windowsBatchSet("CODEX_HOME", process.env.CODEX_HOME?.trim(), "path"),
     windowsBatchSet("CODEX_SQLITE_HOME", currentCodexSqliteHomeAbsolute("windows"), "path"),
-    windowsBatchSet("OPENCODEX_HOME", process.env.OPENCODEX_HOME?.trim(), "path"),
+    windowsBatchSet("OPENCCX_HOME", process.env.OPENCCX_HOME?.trim(), "path"),
     ...proxyEnv.map(({ name, value }) => windowsBatchSet(name, value)),
-    windowsBatchSet("OCX_API_TOKEN_FILE", serviceApiTokenFilePath(), "path"),
-    windowsBatchSet("OCX_SERVICE_LOG", serviceLogPath(), "path"),
-    windowsBatchSet("OCX_BUN", bun, "path"),
-    windowsBatchSet("OCX_CLI", cli, "path"),
+    windowsBatchSet("OCCX_API_TOKEN_FILE", serviceApiTokenFilePath(), "path"),
+    windowsBatchSet("OCCX_SERVICE_LOG", serviceLogPath(), "path"),
+    windowsBatchSet("OCCX_BUN", bun, "path"),
+    windowsBatchSet("OCCX_CLI", cli, "path"),
     // Package root for the transactional-update restore path (#1942): cli is
     // <pkg>\src\cli\index.ts, so the package dir is three levels up.
-    'for %%I in ("%OCX_CLI%\\..\\..\\..") do set "OCX_PKG_DIR=%%~fI"',
-    'if exist "%OCX_API_TOKEN_FILE%" (',
-    '  set /p OPENCODEX_API_AUTH_TOKEN=<"%OCX_API_TOKEN_FILE%"',
+    'for %%I in ("%OCCX_CLI%\\..\\..\\..") do set "OCCX_PKG_DIR=%%~fI"',
+    'if exist "%OCCX_API_TOKEN_FILE%" (',
+    '  set /p OPENCCX_API_AUTH_TOKEN=<"%OCCX_API_TOKEN_FILE%"',
     ")",
     ":loop",
-    '>>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] opencodex service wrapper start',
-    '>>"%OCX_SERVICE_LOG%" echo bun="%OCX_BUN%"',
-    `>>"%OCX_SERVICE_LOG%" echo bun_source="${bunRuntimeSource}"`,
-    '>>"%OCX_SERVICE_LOG%" echo cli="%OCX_CLI%"',
-    '>>"%OCX_SERVICE_LOG%" echo opencodex_home="%OPENCODEX_HOME%"',
-    '>>"%OCX_SERVICE_LOG%" echo codex_home="%CODEX_HOME%"',
-    '>>"%OCX_SERVICE_LOG%" echo token_file="%OCX_API_TOKEN_FILE%"',
-    'if not exist "%OCX_BUN%" (',
+    '>>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] openccx service wrapper start',
+    '>>"%OCCX_SERVICE_LOG%" echo bun="%OCCX_BUN%"',
+    `>>"%OCCX_SERVICE_LOG%" echo bun_source="${bunRuntimeSource}"`,
+    '>>"%OCCX_SERVICE_LOG%" echo cli="%OCCX_CLI%"',
+    '>>"%OCCX_SERVICE_LOG%" echo openccx_home="%OPENCCX_HOME%"',
+    '>>"%OCCX_SERVICE_LOG%" echo codex_home="%CODEX_HOME%"',
+    '>>"%OCCX_SERVICE_LOG%" echo token_file="%OCCX_API_TOKEN_FILE%"',
+    'if not exist "%OCCX_BUN%" (',
     "  call :restore_backup",
     ")",
-    'if not exist "%OCX_BUN%" (',
-    '  >>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] installation is incomplete: bundled Bun is missing; reinstall opencodex, then run ocx service repair',
+    'if not exist "%OCCX_BUN%" (',
+    '  >>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] installation is incomplete: bundled Bun is missing; reinstall openccx, then run occx service repair',
     "  exit /b 3",
     ")",
-    'if not exist "%OCX_CLI%" (',
+    'if not exist "%OCCX_CLI%" (',
     "  call :restore_backup",
     ")",
-    'if not exist "%OCX_CLI%" (',
-    '  >>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] installation is incomplete: CLI entry is missing; reinstall opencodex, then run ocx service repair',
+    'if not exist "%OCCX_CLI%" (',
+    '  >>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] installation is incomplete: CLI entry is missing; reinstall openccx, then run occx service repair',
     "  exit /b 3",
     ")",
-    `"%OCX_BUN%" "%OCX_CLI%" start --port ${port} >>"%OCX_SERVICE_LOG%" 2>&1`,
+    `"%OCCX_BUN%" "%OCCX_CLI%" start --port ${port} >>"%OCCX_SERVICE_LOG%" 2>&1`,
     "if %ERRORLEVEL% NEQ 0 (",
-    '  >>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] child exited with code %ERRORLEVEL%; restarting in 5s',
+    '  >>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] child exited with code %ERRORLEVEL%; restarting in 5s',
     // `timeout` needs console stdin and dies with "Input redirection is not supported"
     // under Task Scheduler, turning the 5s cooldown into a hot restart loop; ping doesn't.
     "  ping -n 6 127.0.0.1 >nul",
@@ -2215,22 +2215,22 @@ export function buildWindowsServiceScript(
     "goto :eof",
     "",
     // #1942/#1849: a power loss mid-swap leaves the live package dir missing/broken and
-    // a sibling .ocx-backup-* holding the previous version. This wrapper lives OUTSIDE
+    // a sibling .occx-backup-* holding the previous version. This wrapper lives OUTSIDE
     // the package tree, so it can restore when the launcher itself is gone — the exact
     // window the in-launcher boot probe cannot reach.
     ":restore_backup",
-    '>>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] install incomplete - looking for a transactional-update backup to restore',
-    'for /f "delims=" %%B in (\'dir /b /ad /o-n "%OCX_PKG_DIR%\\..\\.ocx-backup-*" 2^>nul\') do (',
-    '  if exist "%OCX_PKG_DIR%\\..\\%%B\\opencodex\\package.json" (',
-    '    if exist "%OCX_PKG_DIR%" rmdir /s /q "%OCX_PKG_DIR%" 2>nul',
-    '    move "%OCX_PKG_DIR%\\..\\%%B\\opencodex" "%OCX_PKG_DIR%" >nul 2>&1',
-    '    if exist "%OCX_PKG_DIR%\\package.json" (',
-    '      >>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] restored previous install from %%B',
+    '>>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] install incomplete - looking for a transactional-update backup to restore',
+    'for /f "delims=" %%B in (\'dir /b /ad /o-n "%OCCX_PKG_DIR%\\..\\.occx-backup-*" 2^>nul\') do (',
+    '  if exist "%OCCX_PKG_DIR%\\..\\%%B\\openccx\\package.json" (',
+    '    if exist "%OCCX_PKG_DIR%" rmdir /s /q "%OCCX_PKG_DIR%" 2>nul',
+    '    move "%OCCX_PKG_DIR%\\..\\%%B\\openccx" "%OCCX_PKG_DIR%" >nul 2>&1',
+    '    if exist "%OCCX_PKG_DIR%\\package.json" (',
+    '      >>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] restored previous install from %%B',
     "      goto :eof",
     "    )",
     "  )",
     ")",
-    '>>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] no restorable backup found',
+    '>>"%OCCX_SERVICE_LOG%" echo [%DATE% %TIME%] no restorable backup found',
     "goto :eof",
   ].filter((line): line is string => Boolean(line));
   return `${lines.join("\r\n")}\r\n`;
@@ -2257,8 +2257,8 @@ export function buildWindowsSchtasksCreateArgsForXml(xml: string, replace = true
 export function buildWindowsLauncherVbs(script = windowsServiceScriptPath()): string {
   const escaped = script.replace(/"/g, '""');
   const lines = [
-    "' OpenCodex service launcher — runs the batch wrapper with a hidden window.",
-    "' Generated by `ocx service install`; do not edit.",
+    "' Openccx service launcher — runs the batch wrapper with a hidden window.",
+    "' Generated by `occx service install`; do not edit.",
     'Set shell = CreateObject("WScript.Shell")',
     // WshShell.Run(command, windowStyle 0 = hidden, bWaitOnReturn True = stay resident).
     `shell.Run """${escaped}""", 0, True`,
@@ -2268,8 +2268,8 @@ export function buildWindowsLauncherVbs(script = windowsServiceScriptPath()): st
 
 function windowsTaskDescription(attemptNonce?: string): string {
   return attemptNonce
-    ? `OpenCodex proxy service wrapper; install-attempt=${attemptNonce}`
-    : "OpenCodex proxy service wrapper";
+    ? `Openccx proxy service wrapper; install-attempt=${attemptNonce}`
+    : "Openccx proxy service wrapper";
 }
 
 /**
@@ -2461,14 +2461,14 @@ function taskXmlDecodedValueEquals(xml: string, tag: string, expected: string): 
 const CODE_PAGE_SUBSTITUTIONS = /^[?\uFFFD]*$/;
 
 /**
- * Compare a value that OpenCodex itself wrote against what `schtasks /query /xml` read
+ * Compare a value that Openccx itself wrote against what `schtasks /query /xml` read
  * back, tolerating ONLY the characters the console code page could not carry.
  *
  * `runFile` already reads the query as bytes, so this is not a spawn-decoding bug: the
  * conversion happens inside `schtasks` before the bytes exist. A profile named outside
  * the active code page — `C:\\Users\\김병준\\...` — comes back as `C:\\Users\\???\\...`, so an
  * exact comparison rejected a registration this process had just created correctly and
- * `ocx service install` rolled it back (#3064).
+ * `occx service install` rolled it back (#3064).
  *
  * The tolerance is deliberately narrow. Each unrepresentable RUN in the expected value
  * may match only a run of substitution characters — never arbitrary text, and never a
@@ -2590,7 +2590,7 @@ function windowsTaskTriggerScopeAcceptable(
   return expectedValues.some(value => taskXmlDecodedValueEquals(element, "UserId", value));
 }
 
-/** Validate the stable OpenCodex action, principal, settings, and logon trigger. */
+/** Validate the stable Openccx action, principal, settings, and logon trigger. */
 function windowsTaskRegistrationBaseHealthy(
   xml: string,
   wscript = windowsWscript(),
@@ -2649,7 +2649,7 @@ export function windowsTaskRegistrationHealthy(
 }
 
 /**
- * The only stale definition repair may replace automatically: the previous OpenCodex task
+ * The only stale definition repair may replace automatically: the previous Openccx task
  * shape whose action/principal/settings are byte-exact and which has no session triggers yet.
  * Arbitrary unhealthy or partially modified fixed-name tasks are preserved for manual review.
  */
@@ -2739,7 +2739,7 @@ export interface LaunchdInstallOutcome {
  * it a second time and the error claimed "IS NOT RUNNING" about a job that was up). An
  * `unknown` probe is not evidence, so it refuses to evict instead.
  *
- * Protocol (#4236, defect 1). `ocx service repair` on darwin IS this function, and it
+ * Protocol (#4236, defect 1). `occx service repair` on darwin IS this function, and it
  * evicts the running job — a public proxy, a management ingress and a loopback listener on
  * a hub. So:
  *
@@ -2770,7 +2770,7 @@ export function installLaunchd(deps: {
    * Where to write the plist. Only tests pass it: `os.homedir()` reads the password
    * database rather than `$HOME`, so the suite's HOME sandbox does NOT move
    * `plistPath()`, and a case without this seam rewrites the developer's live
-   * `com.opencodex.proxy.plist`. `assertNotRealLaunchAgentsUnderTest` below makes that
+   * `com.openccx.proxy.plist`. `assertNotRealLaunchAgentsUnderTest` below makes that
    * refusal mechanical rather than a convention.
    */
   plistPath?: string;
@@ -2810,7 +2810,7 @@ export function installLaunchd(deps: {
       + "The job may be RUNNING, and this command evicts it, so nothing was changed.\n"
       + `Check it with:\n  launchctl print ${guiTarget}\n  launchctl print user/${uid}/${LABEL}\n`
       + "A non-Aqua context (ssh, cron, a launchd daemon) cannot always reach gui/<uid>; re-run "
-      + `'${wasInstalled ? "ocx service repair" : "ocx service install"}' from a GUI login session.`,
+      + `'${wasInstalled ? "occx service repair" : "occx service install"}' from a GUI login session.`,
     );
   }
 
@@ -2847,7 +2847,7 @@ export function installLaunchd(deps: {
     writeServiceInstallState("scheduler", launcher);
     console.log("ℹ️  service is already loaded from the current plist; nothing to do.");
     // The ONLY `reloaded: false` exit: the process launchd was running when this command
-    // started is still running, same pid. `ocx service restart` turns that into a kickstart.
+    // started is still running, same pid. `occx service restart` turns that into a kickstart.
     return { reloaded: false };
   }
 
@@ -2979,7 +2979,7 @@ export function installLaunchd(deps: {
       + `Inspect it with:\n  launchctl print ${guiTarget}\n  launchctl print-disabled ${guiDomain}\n`
       // macOS `service repair` delegates straight to installLaunchd, so this fires for
       // an already-installed service too; repair reloads it without re-registering.
-      + `then re-run '${wasInstalled ? "ocx service repair" : "ocx service install"}'.`,
+      + `then re-run '${wasInstalled ? "occx service repair" : "occx service install"}'.`,
     );
   }
   writeServiceInstallState("scheduler", launcher);
@@ -2990,7 +2990,7 @@ export function installLaunchd(deps: {
   return { reloaded: true };
 }
 /**
- * Restart the loaded job IN PLACE — the `restart` half of `ocx service restart`.
+ * Restart the loaded job IN PLACE — the `restart` half of `occx service restart`.
  *
  * Only reached when {@link installLaunchd} reported `reloaded: false`, i.e. the plist is
  * already the current one and the probe proved the job is loaded from it. Nothing has to be
@@ -3037,7 +3037,7 @@ export function restartLaunchdJob(deps: {
       + `The ${LABEL} job ${state}.\n`
       + `Restart it manually with:\n  launchctl kickstart -k ${target}\n`
       + `Inspect it with:\n  launchctl print ${target}\n`
-      + "and run 'ocx service repair' if it is absent.",
+      + "and run 'occx service repair' if it is absent.",
     );
   }
   if (verdict.state === "unknown") {
@@ -3069,7 +3069,7 @@ export function startLaunchd(deps: {
   // `Load failed` on start is AMBIGUOUS in a way it is not on install: the job may
   // already be bootstrapped from THIS plist, which is a no-op rather than an error.
   // `install` can assume a stale job (it just rewrote the plist); `start` cannot, and
-  // throwing here would break `ocx service start` on every healthy service.
+  // throwing here would break `occx service start` on every healthy service.
   const live = (deps.matches ?? launchdJobMatchesPlist)(
     expectedLaunchdCommand(installedServiceListenPort()),
   );
@@ -3080,8 +3080,8 @@ export function startLaunchd(deps: {
   throw new Error(
     `launchctl could not load ${p}: ${loaded.stderr || "load reported failure"}\n`
     + (live.loaded
-      ? `launchd is running an OLDER plist. Fix:\n  launchctl bootout ${launchdGuiDomain()}/${LABEL}\n  ocx service repair`
-      : "The job is not loaded. Run 'ocx service repair' to reload it."),
+      ? `launchd is running an OLDER plist. Fix:\n  launchctl bootout ${launchdGuiDomain()}/${LABEL}\n  occx service repair`
+      : "The job is not loaded. Run 'occx service repair' to reload it."),
   );
 }
 /**
@@ -3117,7 +3117,7 @@ function stopLaunchd(deps: { launchctl?: typeof runLaunchctl } = {}): void {
 }
 
 /**
- * Registration for `ocx service stop`'s "is anything installed?" guard, as a human string.
+ * Registration for `occx service stop`'s "is anything installed?" guard, as a human string.
  * Empty means "no job of ours is loaded"; the tri-state lives in
  * {@link probeLaunchdLoadState}, which `diagnoseService` uses instead of this.
  */
@@ -3223,7 +3223,7 @@ function writeWindowsSchedulerAssets(): void {
   );
 }
 
-const WINDOWS_SCHEDULER_STAGE_PREFIX = "opencodex-service-stage-";
+const WINDOWS_SCHEDULER_STAGE_PREFIX = "openccx-service-stage-";
 const ownedWindowsSchedulerStages = new Set<string>();
 
 export interface WindowsSchedulerRegistrationStageDeps {
@@ -3381,7 +3381,7 @@ export async function registerFreshWindowsSchedulerTask(
     !windowsTaskRegistrationHealthy(expectedXml)
     || !windowsTaskRegistrationOwnedByAttempt(expectedXml, attemptNonce)
   ) {
-    throw new Error("The staged Task Scheduler registration failed OpenCodex ownership or shape validation.");
+    throw new Error("The staged Task Scheduler registration failed Openccx ownership or shape validation.");
   }
   try {
     (deps.create ?? schtasks)(args);
@@ -3449,7 +3449,7 @@ export async function registerFreshWindowsSchedulerTask(
   ) {
     const rollback = await rollbackTask();
     throw new Error(
-      "Task Scheduler registration was created but failed the OpenCodex action/trigger or attempt-ownership verification."
+      "Task Scheduler registration was created but failed the Openccx action/trigger or attempt-ownership verification."
       + (rollback ? ` Cleanup also failed: ${rollback}` : " The invalid registration was rolled back."),
     );
   }
@@ -3722,11 +3722,11 @@ export async function repairService(deps: RepairServiceDeps = {}): Promise<void>
   if (diag.conflict) {
     throw new Error(
       "Cannot repair while Task Scheduler and native WinSW are both present. "
-        + "Run 'ocx service uninstall' then reinstall one backend with 'ocx service install'.",
+        + "Run 'occx service uninstall' then reinstall one backend with 'occx service install'.",
     );
   }
   if (!diag.installed) {
-    throw new Error("Background service is not installed. Run 'ocx service install' first.");
+    throw new Error("Background service is not installed. Run 'occx service install' first.");
   }
 
   (deps.assertEnv ?? assertServiceEnvironmentMatchesInstall)();
@@ -3791,7 +3791,7 @@ export async function repairService(deps: RepairServiceDeps = {}): Promise<void>
         scopedButUnresolved
           ? "The registered Task Scheduler triggers name an account, but the current Windows identity could not be resolved, so the registration could not be verified. "
             + "It was preserved and not replaced; re-run repair once the account can be resolved."
-          : "Task Scheduler registration is not a recognized legacy OpenCodex definition; it was preserved for manual review.",
+          : "Task Scheduler registration is not a recognized legacy Openccx definition; it was preserved for manual review.",
       );
     }
     try { (deps.stopScheduler ?? stopWindows)(); } catch { /* not running */ }
@@ -3850,7 +3850,7 @@ export async function repairService(deps: RepairServiceDeps = {}): Promise<void>
                 attemptOwned
                   ? "The failed repair left an unhealthy attempt-owned registration; it was preserved and not started."
                   : windowsTaskRegistrationHealthy(currentXml)
-                    ? "A different healthy OpenCodex Task Scheduler registration appeared during repair; it was preserved and not started."
+                    ? "A different healthy Openccx Task Scheduler registration appeared during repair; it was preserved and not started."
                     : "A different or unhealthy Task Scheduler registration appeared during repair; it was preserved and not started.",
               ));
             }
@@ -3935,7 +3935,7 @@ export async function repairService(deps: RepairServiceDeps = {}): Promise<void>
 }
 
 /**
- * Opt-in native backend (`ocx service install --native`). Transactional: removes the
+ * Opt-in native backend (`occx service install --native`). Transactional: removes the
  * scheduler backend first; on failure the machine is left with NO service (explicitly
  * reported) — never a silent fallback to the scheduler.
  */
@@ -3946,7 +3946,7 @@ export function assertWindowsNativeServiceAccountSupported(): void {
   if (source?.toLowerCase() === "microsoftaccount") {
     throw new Error(
       "The native (WinSW) service backend cannot run under a Microsoft-account Windows login. "
-        + "Keep the Task Scheduler backend (`ocx service install`) or sign in with a local/domain account before `ocx service install --native`.",
+        + "Keep the Task Scheduler backend (`occx service install`) or sign in with a local/domain account before `occx service install --native`.",
     );
   }
 }
@@ -3999,7 +3999,7 @@ async function installWindowsNative(): Promise<void> {
   try {
     await installWinswService(defaultWinswEntry(import.meta.dir));
   } catch (err) {
-    if (hadScheduler) console.error("⚠️  Native install failed AFTER removing the Task Scheduler backend — no service is installed now. Run `ocx service install` to restore the scheduler backend, or retry `--native`.");
+    if (hadScheduler) console.error("⚠️  Native install failed AFTER removing the Task Scheduler backend — no service is installed now. Run `occx service install` to restore the scheduler backend, or retry `--native`.");
     throw err;
   }
   writeServiceInstallState("native");
@@ -4098,12 +4098,12 @@ export function bakedServicePathsDiagnostic(): string | null {
   // is not, which is exactly what #2898 made routine).
   if (state?.launcherPath) {
     if (existsSync(state.launcherPath)) return null;
-    return `STALE baked paths (missing: ${state.launcherPath}) — run 'ocx service repair' to re-bake`;
+    return `STALE baked paths (missing: ${state.launcherPath}) — run 'occx service repair' to re-bake`;
   }
   if (!state?.bunPath || !state?.cliPath) return null;
   const missing = [state.bunPath, state.cliPath].filter(path => !existsSync(path));
   if (missing.length === 0) return null;
-  return `STALE baked paths (missing: ${missing.join(", ")}) — run 'ocx service repair' to re-bake`;
+  return `STALE baked paths (missing: ${missing.join(", ")}) — run 'occx service repair' to re-bake`;
 }
 
 function serviceDiagnosticsSummary(): string {
@@ -4134,9 +4134,9 @@ export function buildUnit(
   const path = process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin";
   const codexHome = systemdEnvironmentAssignment("CODEX_HOME", process.env.CODEX_HOME?.trim());
   const codexSqliteHome = systemdEnvironmentAssignment("CODEX_SQLITE_HOME", currentCodexSqliteHomeAbsolute());
-  const opencodexHome = systemdEnvironmentAssignment("OPENCODEX_HOME", process.env.OPENCODEX_HOME?.trim());
+  const openccxHome = systemdEnvironmentAssignment("OPENCCX_HOME", process.env.OPENCCX_HOME?.trim());
   const envLines = [
-    systemdEnvironmentAssignment("OCX_SERVICE", "1"),
+    systemdEnvironmentAssignment("OCCX_SERVICE", "1"),
     systemdEnvironmentAssignment(SERVICE_MANAGED_ENV, "1"),
     ...(launcher ? [] : [
       systemdEnvironmentAssignment(BUN_RUNTIME_SOURCE_ENV, bunRuntimeSource),
@@ -4151,12 +4151,12 @@ export function buildUnit(
     systemdEnvironmentAssignment("PATH", path),
     codexHome,
     codexSqliteHome,
-    opencodexHome,
+    openccxHome,
     ...proxyEnv.map(({ name, value }) => systemdEnvironmentAssignment(name, value)),
   ].filter((line): line is string => Boolean(line)).join("\n");
   const command = `${launcher ? buildServiceLauncherShellCommand(launcher) : buildServiceShellCommand(bun, cli)} >> ${shellQuote(log)} 2>&1`;
   return `[Unit]
-Description=OpenCodex Proxy Server
+Description=Openccx Proxy Server
 After=network-online.target
 Wants=network-online.target
 
@@ -4200,7 +4200,7 @@ function isSystemd(): boolean {
   ensureUserBusEnv();
   // Prefer the user-bus probe; but an SSH session without a user D-Bus fails it even when systemd
   // is present (F9). Fall back to the per-user runtime dir existing — a strong signal the user
-  // systemd instance is available — so a first-time `ocx service install` isn't wrongly refused.
+  // systemd instance is available — so a first-time `occx service install` isn't wrongly refused.
   try { execSync("systemctl --user show-environment", { stdio: "pipe" }); return true; } catch { /* no user bus in this session */ }
   return userRuntimeDir() !== null;
 }
@@ -4246,8 +4246,8 @@ export function systemdNeedsDaemonReload(deps: { show?: () => string } = {}): bo
 function startSystemd(): void {
   ensureUserBusEnv();
   if (!existsSync(unitPath())) {
-    console.error(`opencodex service is not installed: ${unitPath()}`);
-    console.error("Run `ocx service install` first to create and enable the systemd user unit.");
+    console.error(`openccx service is not installed: ${unitPath()}`);
+    console.error("Run `occx service install` first to create and enable the systemd user unit.");
     process.exit(1);
   }
   // The unit on disk may be newer than what systemd loaded; starting now would run
@@ -4319,11 +4319,11 @@ function platformOps(backend: ServiceBackend = "scheduler"): ServiceOps | null {
   }
   if (process.platform === "linux") {
     if (existsSync("/.dockerenv")) {
-      console.error("Docker detected. Run 'ocx start' directly instead of using the service manager.");
+      console.error("Docker detected. Run 'occx start' directly instead of using the service manager.");
       process.exit(1);
     }
     if (!isSystemd() && !existsSync(unitPath())) {
-      console.error("systemd not found. Run 'ocx start' under your process supervisor.");
+      console.error("systemd not found. Run 'occx start' under your process supervisor.");
       if (isWslRuntime()) {
         console.error("WSL detected: enable systemd by adding [boot] systemd=true to /etc/wsl.conf, then run 'wsl --shutdown' from Windows and reopen the distro (WSL 0.67.6+).");
       }
@@ -4419,7 +4419,7 @@ function verifiedKillTarget(pid: number | null | undefined): number | null {
  *
  * `ops.stop()` reports the outcome of the STOP COMMAND, not of the process. A Windows scheduler
  * task whose wrapper survives `schtasks /end` respawns its child a few seconds later, so a stop
- * that returned success can still leave a live proxy — and `ocx service stop` then restored
+ * that returned success can still leave a live proxy — and `occx service stop` then restored
  * native Codex on top of a running one (#764). The tracked-pid cleanup does not catch it either:
  * the respawned child writes a different pid, or none this process knows about.
  *
@@ -4474,7 +4474,7 @@ async function stopTrackedProxyIfRunning(): Promise<TrackedProxyCleanupResult> {
     removeRuntimePort(pid);
   }
   // Orphan recovery: the pid file can be missing/stale while the service wrapper keeps
-  // a live proxy running — mirror `ocx stop`'s identity-checked findLiveProxy fallback.
+  // a live proxy running — mirror `occx stop`'s identity-checked findLiveProxy fallback.
   // Cap multi-candidate discovery so stop cleanup cannot hang for three full retry budgets.
   const live = await findLiveProxy({
     ...SERVICE_STOP_LIVENESS,
@@ -4629,7 +4629,7 @@ export async function installFreshWindowsSchedulerSafely(
     const ownershipRecorded = recordOwnership();
     if (!ownershipRecorded && configRootWasAbsent) {
       throw new Error(
-        "The fresh OpenCodex config root could not be claimed for safe uninstall; "
+        "The fresh Openccx config root could not be claimed for safe uninstall; "
         + "aborting before service-manager cleanup or asset publication.",
       );
     }
@@ -4654,7 +4654,7 @@ export async function installFreshWindowsSchedulerSafely(
     if (started) {
       throw new Error(
         `${detail}\nThe scheduler task started, but install state was not published. `
-        + "The task was left in place; inspect `ocx service status` before retrying.",
+        + "The task was left in place; inspect `occx service status` before retrying.",
       );
     }
     throw error;
@@ -4703,12 +4703,12 @@ export function installedServiceRespawnRisk(
   // `openai_base_url`, `experimental_realtime_ws_base_url` and `model_catalog_json`
   // pointed at a proxy that is gone. Reordering teardown ahead of the manager stop is not
   // available here: the #3008 contract requires the manager to be proven stopped first.
-  // So refuse, exactly as Windows does, and send the operator to `ocx stop`, which stops
+  // So refuse, exactly as Windows does, and send the operator to `occx stop`, which stops
   // the proxy from the outside and owns the teardown through its receipt.
   if (platform !== "win32") {
     const env = io.env ?? process.env;
-    // Discriminate on the wrapper-only marker, not on OCX_SERVICE: `ocx claude` and
-    // `ocx opencode` set OCX_SERVICE=1 on the proxies they spawn (for preserveRouting),
+    // Discriminate on the wrapper-only marker, not on OCCX_SERVICE: `occx claude` and
+    // `occx opencode` set OCCX_SERVICE=1 on the proxies they spawn (for preserveRouting),
     // and refusing their dashboard stop would break a proxy that no manager supervises.
     if (env[SERVICE_MANAGED_ENV] !== "1") return "none";
     const exists = io.exists ?? existsSync;
@@ -4722,7 +4722,7 @@ export function installedServiceRespawnRisk(
     // through, and the route then killed scheduler wrappers before refusing.
     //
     // "unknown" is kept SEPARATE from "respawnable" because the remedies differ. Telling
-    // an operator whose schtasks query is broken to run `ocx stop` is circular: that
+    // an operator whose schtasks query is broken to run `occx stop` is circular: that
     // command maps the same unknown to a stop failure, so it cannot finish either.
     const status = probe().status;
     if (status === "absent") return "none";
@@ -4747,7 +4747,7 @@ export function installedServiceRespawnRisk(
  * instance while the `cmd :loop` wrapper survives and respawns its child seconds later
  * (#764). Only that backend needs the restart-window wait — launchd, systemd and WinSW
  * are down when they report stopped, and making them pay a seven-second poll would be a
- * regression in every ordinary `ocx stop`.
+ * regression in every ordinary `occx stop`.
  */
 /**
  * `state-unknown` is kept apart from `failed` because the remedies differ. A manager that
@@ -4784,7 +4784,7 @@ export function stopServiceIfInstalledDetailed(): ServiceStopOutcome {
     }
   } else if (process.platform === "win32") {
     // Query BOTH backends regardless of state: a failed switch or stale state can leave
-    // two managers installed, and either one would respawn the proxy after `ocx stop`.
+    // two managers installed, and either one would respawn the proxy after `occx stop`.
     let stopped = false;
     let failed = false;
     let schedulerStopped = false;
@@ -4818,7 +4818,7 @@ export function stopServiceIfInstalledDetailed(): ServiceStopOutcome {
   return "absent";
 }
 
-/** Delete install-state files; stale state would make `ocx update` "reinstall" a service that no longer exists. */
+/** Delete install-state files; stale state would make `occx update` "reinstall" a service that no longer exists. */
 function removeServiceInstallState(): void {
   for (const path of serviceStatePaths()) {
     try { if (existsSync(path)) unlinkSync(path); } catch { /* best-effort */ }
@@ -4843,7 +4843,7 @@ export function setUninstallServiceHooksForTests(hooks: UninstallServiceHooksFor
 }
 
 /**
- * Best-effort service removal for full uninstall. Unlike `ocx service uninstall`, this is quiet
+ * Best-effort service removal for full uninstall. Unlike `occx service uninstall`, this is quiet
  * when no service exists or the platform has no service manager. An installed native Windows
  * service or scheduler task that cannot be removed throws so the caller cannot erase state and
  * report success.
@@ -5009,9 +5009,9 @@ export function deriveWindowsServiceDiagnostic(inputs: WindowsServiceDiagnosticI
       ? schedulerEnabled && schedulerAssetsHealthy
       : inputs.nativeStatus === "started" || inputs.nativeStatus === "stopped");
   const detail = conflict
-    ? "CONFLICT: Task Scheduler and native WinSW are both present — run 'ocx service uninstall' then reinstall one"
+    ? "CONFLICT: Task Scheduler and native WinSW are both present — run 'occx service uninstall' then reinstall one"
     : stale
-      ? "stale or missing service assets — run 'ocx service repair'"
+      ? "stale or missing service assets — run 'occx service repair'"
       : schedulerInstalled
         ? schedulerEnabled ? "Task Scheduler enabled" : "Task Scheduler disabled"
         : nativeInstalled
@@ -5056,14 +5056,14 @@ export interface LaunchdServiceDiagnosticInputs {
  *
  * `unknown` is the one that used to do damage. The old probe collapsed "launchctl could
  * not be asked" into "not loaded", which printed `installed, not loaded` for a serving hub
- * and recommended `ocx service repair` — the command that evicts the job (#4236). So:
+ * and recommended `occx service repair` — the command that evicts the job (#4236). So:
  *
  * - the summary says the state could not be verified and names NO repair command, and
  * - `viable` stays true, because `isServiceViable() === false` is what makes
  *   `src/update/index.ts` and `src/update/job.ts` treat a successful repair as a dead
  *   supervisor and start a competing proxy on the service's own port. A failed probe is
  *   not evidence against the service; `startable` is likewise left alone so the tray can
- *   still hand a start to `ocx service start`, which no-ops on an already-loaded job.
+ *   still hand a start to `occx service start`, which no-ops on an already-loaded job.
  *
  * `loaded-stale` keeps the viability the `launchctl list` era gave it (loaded ⇒ viable, so
  * the update fallback behaves as before), and only the summary is upgraded — the operator
@@ -5187,7 +5187,7 @@ export async function serviceStatusReport(
   const stalePlist = deps.matchesPlist?.() ?? (process.platform === "darwin"
     ? (() => {
         // Pass the INSTALLED port explicitly: the default third argument is
-        // resolveServiceListenPort(), which reads OCX_BAKE_PORT/config.port, so after
+        // resolveServiceListenPort(), which reads OCCX_BAKE_PORT/config.port, so after
         // a config edit the expected string would never match and every run would
         // print a false "OLDER plist".
         return launchdJobMatchesPlist(expectedLaunchdCommand(installedServiceListenPort()));
@@ -5195,7 +5195,7 @@ export async function serviceStatusReport(
     : null);
   const staleLine = stalePlist && stalePlist.loaded && !stalePlist.matchesPlist
     ? "   launchd is running an OLDER plist than the one on disk.\n"
-      + `   Fix:    launchctl bootout gui/$(id -u)/${LABEL} && ocx service repair\n`
+      + `   Fix:    launchctl bootout gui/$(id -u)/${LABEL} && occx service repair\n`
     : "";
 
   return `⚠️  ${diag.summary}\n`
@@ -5203,17 +5203,17 @@ export async function serviceStatusReport(
     + staleLine
     + `   Log:    ${serviceLogPath()}\n`
     + `   Repair: ${serviceRepairCommand()}\n`
-    + "   Meanwhile: ocx start           (serves in the foreground)";
+    + "   Meanwhile: occx start           (serves in the foreground)";
 }
 
 /**
  * `restart` is NO LONGER folded into `repair`.
  *
  * It used to be, and on macOS that made it a lie: `repair` now returns early when the plist
- * is already current and the job is loaded from it (#4236), so `ocx service restart` of a
+ * is already current and the job is loaded from it (#4236), so `occx service restart` of a
  * healthy service restarted nothing and the operator had to run `launchctl kickstart -k` by
  * hand. The two verbs share the whole repair path and diverge only in `repairService`, which
- * kicks the launchd job the no-op left running. A BARE `ocx service` still maps to `repair`
+ * kicks the launchd job the no-op left running. A BARE `occx service` still maps to `repair`
  * (see {@link selectServiceSubcommand}): it is an idempotent "make it current", not a
  * request to bounce a healthy hub.
  */
@@ -5315,7 +5315,7 @@ export function planServiceCommand(
     return { ok: false, message: `Unknown service option: ${parsed.invalid.join(" ")}` };
   }
   if (parsed.backend && parsed.sub !== "install") {
-    return { ok: false, message: "--native/--scheduler apply to `ocx service install` only; other subcommands use the installed backend." };
+    return { ok: false, message: "--native/--scheduler apply to `occx service install` only; other subcommands use the installed backend." };
   }
   if (parsed.backend === "native" && (options.platform ?? process.platform) !== "win32") {
     return { ok: false, message: "--native (WinSW) is Windows-only." };
@@ -5329,7 +5329,7 @@ export function planServiceCommand(
       const suffix = probe.detail ? ` (${probe.detail})` : "";
       return {
         ok: false,
-        message: `Could not safely determine whether the service is installed${suffix}. Run 'ocx service status' and retry; use explicit 'ocx service install' only after confirming it is absent.`,
+        message: `Could not safely determine whether the service is installed${suffix}. Run 'occx service status' and retry; use explicit 'occx service install' only after confirming it is absent.`,
       };
     }
     installed = probe.state === "installed";
@@ -5342,7 +5342,7 @@ export function planServiceCommand(
 }
 
 /**
- * `ocx service [sub] [--native|--scheduler]`. The first non-flag token is the
+ * `occx service [sub] [--native|--scheduler]`. The first non-flag token is the
  * subcommand; backend flags are only meaningful for `install` (validated by the caller).
  */
 export function parseServiceArgs(args: string[]): ParsedServiceArgs {
@@ -5406,7 +5406,7 @@ export async function serviceCommand(...args: (string | undefined)[]): Promise<v
   const backend: ServiceBackend = parsed.backend ?? (process.platform === "win32" ? readServiceBackend() : "scheduler");
   const ops = platformOps(backend);
   if (!ops) {
-    console.error("ocx service supports macOS (launchd), Windows (Task Scheduler), and Linux (systemd).");
+    console.error("occx service supports macOS (launchd), Windows (Task Scheduler), and Linux (systemd).");
     process.exit(1);
   }
   switch (command) {
@@ -5443,8 +5443,8 @@ export async function serviceCommand(...args: (string | undefined)[]): Promise<v
       // installed artifact instead.
       await reportServiceServing("installed", { port: resolveServiceListenPort() });
       if (process.platform === "linux") console.log("   For auto-start on boot: loginctl enable-linger $USER");
-      // Service users never reach the `ocx start` prompt: the proxy they run is the
-      // supervised child, which always carries OCX_SERVICE=1. This command, though, is
+      // Service users never reach the `occx start` prompt: the proxy they run is the
+      // supervised child, which always carries OCCX_SERVICE=1. This command, though, is
       // hand-typed in a real terminal, so it is the one interactive moment they get.
       // Same one-time marker and same guards (TTY, gh auth, agent deferral) apply.
       await maybeShowStarPrompt();
@@ -5470,15 +5470,15 @@ export async function serviceCommand(...args: (string | undefined)[]): Promise<v
           console.error(
             `❌ service stop did not take effect: a proxy is still listening on port ${survivor.port}.`
             + "\nNative Codex was NOT restored, because doing so while the proxy is running leaves"
-            + " both pointing at each other. Check for a second service backend (`ocx service status`)"
-            + " or a manually started proxy, then re-run `ocx service stop`.",
+            + " both pointing at each other. Check for a second service backend (`occx service status`)"
+            + " or a manually started proxy, then re-run `occx service stop`.",
           );
           process.exitCode = 1;
           break;
         }
         const restore = await restoreNativeCodexAsync();
         if (restore.success) console.log("✅ service stopped + native Codex restored.");
-        else console.error(`⚠️ service stopped, but native Codex restore FAILED: ${restore.message}\nRun \`ocx restore\` (or check $CODEX_HOME/config.toml) before using native Codex.`);
+        else console.error(`⚠️ service stopped, but native Codex restore FAILED: ${restore.message}\nRun \`occx restore\` (or check $CODEX_HOME/config.toml) before using native Codex.`);
         if (!restore.success) process.exitCode = 1;
         // The Grok fence is the other managed config this command owns. Leaving it behind
         // pointed grok at a dead endpoint while native Codex was already restored.
@@ -5516,13 +5516,13 @@ export async function serviceCommand(...args: (string | undefined)[]): Promise<v
         ops.uninstall();
       } catch (err) {
         console.error(`❌ Service uninstall failed: ${err instanceof Error ? err.message : String(err)}`);
-        console.error("The service may still be installed. Check with 'ocx service status' or remove manually.");
+        console.error("The service may still be installed. Check with 'occx service status' or remove manually.");
         process.exit(1);
       }
       {
         const restore = await restoreNativeCodexAsync();
         if (!restore.success) {
-          console.error(`⚠️ native Codex restore FAILED: ${restore.message}\nRun \`ocx restore\` before using native Codex.`);
+          console.error(`⚠️ native Codex restore FAILED: ${restore.message}\nRun \`occx restore\` before using native Codex.`);
           process.exitCode = 1;
         }
         const grok = stripGrokConfig();
@@ -5537,7 +5537,7 @@ export async function serviceCommand(...args: (string | undefined)[]): Promise<v
       console.log("✅ service uninstalled.");
       break;
     default:
-      console.error("Usage: ocx service [install|repair|restart|start|stop|status|uninstall|remove] [--native|--scheduler]");
+      console.error("Usage: occx service [install|repair|restart|start|stop|status|uninstall|remove] [--native|--scheduler]");
       console.error("       With no subcommand, installs when absent or repairs/restarts an existing service.");
       console.error("       repair: refresh the installed backend, reloading it only when the definition changed; stale Windows tasks may request admin approval.");
       console.error("       restart: the same refresh, but always restarts the service — on macOS a healthy job is kickstarted in place.");

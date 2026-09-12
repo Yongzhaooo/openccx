@@ -9,7 +9,7 @@ import { getObservedMainQuotaIdentityKey, isMainQuotaWriterLive, type MainQuotaW
 import type { StoredAccountQuota, WhamUsageResponse, WhamUsageWindow } from "./quota-types";
 export type { StoredAccountQuota, WhamUsageResponse } from "./quota-types";
 
-/** Disk snapshot under OPENCODEX_HOME — quota and policy identity only, never credential tags. */
+/** Disk snapshot under OPENCCX_HOME — quota and policy identity only, never credential tags. */
 const QUOTA_CACHE_FILENAME = "codex-quota-cache.json";
 /** Keep last-known bars across restarts; WHAM still refreshes on TTL in live/prime paths. */
 const QUOTA_DISK_MAX_AGE_MS = 6 * 60 * 60_000;

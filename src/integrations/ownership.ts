@@ -1,5 +1,5 @@
 /**
- * What opencodex remembers about a client between operations.
+ * What openccx remembers about a client between operations.
  *
  * Two hashes, because the two questions are genuinely independent: the FILE
  * hash identifies the exact result for restore and for clients whose writer

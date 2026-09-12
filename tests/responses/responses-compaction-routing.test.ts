@@ -37,7 +37,7 @@ import { clearUpstreamHostHealth } from "../../src/codex/upstream-host-health";
 import { supportsNativeResponsesCompactEndpoint } from "../../src/providers/openai-tiers";
 import type { RequestLogContext } from "../../src/server/request-log";
 import { acquireNativeMainProfileDrain, tryAdmitTurn } from "../../src/server/lifecycle";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { clearComboRecallForTests, recallComboForLane, rememberComboForLane } from "../../src/server/responses/combo-session-recall";
 import { captureConfigGeneration } from "../../src/lib/state-store-sweeper";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -48,7 +48,7 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-function keyProviderConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function keyProviderConfig(overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   return {
     defaultProvider: "gw",
     providers: {
@@ -60,10 +60,10 @@ function keyProviderConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfi
         ...overrides,
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-function nativePoolConfig(): OcxConfig {
+function nativePoolConfig(): OccxConfig {
   return {
     defaultProvider: "openai",
     activeCodexAccountId: "pool-a",
@@ -81,16 +81,16 @@ function nativePoolConfig(): OcxConfig {
       isMain: false,
       chatgptAccountId: "pool_acc",
     }],
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** Two-account pool: the alternate-attempt tests need somewhere for the retry to go. */
-function twoAccountPoolConfig(): OcxConfig {
+function twoAccountPoolConfig(): OccxConfig {
   const config = nativePoolConfig();
   config.codexAccounts = [
     { id: "pool-a", email: "a@example.test", isMain: false, chatgptAccountId: "pool_acc_a" },
     { id: "pool-b", email: "b@example.test", isMain: false, chatgptAccountId: "pool_acc_b" },
-  ] as OcxConfig["codexAccounts"];
+  ] as OccxConfig["codexAccounts"];
   return config;
 }
 
@@ -151,12 +151,12 @@ describe("supportsNativeResponsesCompactEndpoint (#422)", () => {
     adapter: "openai-responses",
     baseUrl: "https://chatgpt.com/backend-api/codex",
     authMode: "forward",
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
   const officialApi = {
     adapter: "openai-responses",
     baseUrl: "https://api.openai.com/v1",
     authMode: "key",
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 
   test("accepts the canonical ChatGPT backend and the official OpenAI API", () => {
     expect(supportsNativeResponsesCompactEndpoint("openai", canonicalForward)).toBe(true);
@@ -172,7 +172,7 @@ describe("supportsNativeResponsesCompactEndpoint (#422)", () => {
       adapter: "openai-responses",
       baseUrl: "https://gateway.example/v1",
       authMode: "key",
-    } as OcxProviderConfig)).toBe(false);
+    } as OccxProviderConfig)).toBe(false);
     // Right provider id, wrong destination.
     expect(supportsNativeResponsesCompactEndpoint("openai-apikey", {
       ...officialApi,
@@ -354,7 +354,7 @@ describe("native compact usage reporting", () => {
           apiKey: "sk-test",
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     globalThis.fetch = (async () => jsonResponse(completedPayload("native summary"))) as typeof fetch;
     const logCtx: RequestLogContext = { model: "", provider: "" };
     const response = await handleResponsesCompact(
@@ -369,10 +369,10 @@ describe("native compact usage reporting", () => {
   });
 
   test("main-pool and legacy added accounts carry their effective usage labels", async () => {
-    const testDir = mkdtempSync(join(tmpdir(), "ocx-compact-account-label-"));
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
+    const testDir = mkdtempSync(join(tmpdir(), "occx-compact-account-label-"));
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
-    process.env.OPENCODEX_HOME = testDir;
+    process.env.OPENCCX_HOME = testDir;
     process.env.CODEX_HOME = testDir;
     try {
       const mainConfig = nativePoolConfig();
@@ -402,8 +402,8 @@ describe("native compact usage reporting", () => {
       globalThis.fetch = originalFetch;
       clearAccountQuota();
       removeTreeWithRetry(testDir);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
     }
@@ -412,14 +412,14 @@ describe("native compact usage reporting", () => {
 
 describe("native Codex pool compaction", () => {
   test("keeps a Spark reset cooldown separate from a Terra compact request (#590)", async () => {
-    const testDir = mkdtempSync(join(tmpdir(), "ocx-compact-scope-"));
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
+    const testDir = mkdtempSync(join(tmpdir(), "occx-compact-scope-"));
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
     const config = nativePoolConfig();
     const resetAt = Math.floor((Date.now() + 4 * 24 * 60 * 60_000) / 1_000);
     let sparkPhase = true;
     try {
-      process.env.OPENCODEX_HOME = testDir;
+      process.env.OPENCCX_HOME = testDir;
       process.env.CODEX_HOME = testDir;
       clearCodexUpstreamHealth();
       saveCodexAccountCredential("pool-a", {
@@ -471,16 +471,16 @@ describe("native Codex pool compaction", () => {
       globalThis.fetch = originalFetch;
       clearCodexUpstreamHealth();
       removeTreeWithRetry(testDir);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
     }
   });
 
   test("a cancelled Spark recovery probe releases its compact lease (#590)", async () => {
-    const testDir = mkdtempSync(join(tmpdir(), "ocx-compact-probe-"));
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
+    const testDir = mkdtempSync(join(tmpdir(), "occx-compact-probe-"));
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
     const originalNow = Date.now;
     const now = 1_800_000_000_000;
@@ -492,7 +492,7 @@ describe("native Codex pool compaction", () => {
     const readStarted = new Promise<void>(resolve => { markReadStarted = resolve; });
     const bodyReleased = new Promise<void>(resolve => { releaseBody = resolve; });
     try {
-      process.env.OPENCODEX_HOME = testDir;
+      process.env.OPENCCX_HOME = testDir;
       process.env.CODEX_HOME = testDir;
       Date.now = () => now;
       clearCodexUpstreamHealth();
@@ -541,16 +541,16 @@ describe("native Codex pool compaction", () => {
       globalThis.fetch = originalFetch;
       clearCodexUpstreamHealth();
       removeTreeWithRetry(testDir);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
     }
   });
 
   test("a Spark recovery probe releases its compact lease when connect is cancelled (#590)", async () => {
-    const testDir = mkdtempSync(join(tmpdir(), "ocx-compact-connect-probe-"));
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
+    const testDir = mkdtempSync(join(tmpdir(), "occx-compact-connect-probe-"));
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
     const originalNow = Date.now;
     const now = 1_800_000_000_000;
@@ -560,7 +560,7 @@ describe("native Codex pool compaction", () => {
     let markFetchStarted!: () => void;
     const fetchStarted = new Promise<void>(resolve => { markFetchStarted = resolve; });
     try {
-      process.env.OPENCODEX_HOME = testDir;
+      process.env.OPENCCX_HOME = testDir;
       process.env.CODEX_HOME = testDir;
       Date.now = () => now;
       clearCodexUpstreamHealth();
@@ -606,8 +606,8 @@ describe("native Codex pool compaction", () => {
       globalThis.fetch = originalFetch;
       clearCodexUpstreamHealth();
       removeTreeWithRetry(testDir);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
     }
@@ -736,7 +736,7 @@ describe("routed compaction for key-mode openai-responses (#422)", () => {
 
 describe("bare native compaction model without canonical openai (#2901)", () => {
   /** A GitHub-Copilot-style operator: one third-party provider, no `openai` row at all. */
-  function copilotOnlyConfig(): OcxConfig {
+  function copilotOnlyConfig(): OccxConfig {
     return {
       defaultProvider: "gw",
       providers: {
@@ -748,7 +748,7 @@ describe("bare native compaction model without canonical openai (#2901)", () => 
           models: ["gpt-5.6-sol"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   function chatCompletionPayload(text: string): Record<string, unknown> {
@@ -923,11 +923,11 @@ describe("compaction terminal handling (#422)", () => {
  * fired, three means it recursed.
  */
 describe("compact alternate-account attempt (#913)", () => {
-  function withPoolEnv<T>(name: string, run: (config: OcxConfig) => Promise<T>): Promise<T> {
+  function withPoolEnv<T>(name: string, run: (config: OccxConfig) => Promise<T>): Promise<T> {
     const testDir = mkdtempSync(join(tmpdir(), name));
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
-    process.env.OPENCODEX_HOME = testDir;
+    process.env.OPENCCX_HOME = testDir;
     process.env.CODEX_HOME = testDir;
     clearCodexUpstreamHealth();
     clearUpstreamHostHealth();
@@ -947,8 +947,8 @@ describe("compact alternate-account attempt (#913)", () => {
       clearUpstreamHostHealth();
       clearAccountQuota();
       removeTreeWithRetry(testDir);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
     });
@@ -956,7 +956,7 @@ describe("compact alternate-account attempt (#913)", () => {
 
   for (const version of ["v1", "v2"] as const) {
     test(`${version} recalled native combo reselects the current account and respects admission refusal`, async () => {
-      await withPoolEnv("ocx-combo-recall-account-", async config => {
+      await withPoolEnv("occx-combo-recall-account-", async config => {
         clearComboRecallForTests();
         clearComboSelectionState();
         clearComboTargetCooldowns();
@@ -1040,7 +1040,7 @@ describe("compact alternate-account attempt (#913)", () => {
 
   for (const [model, account] of [["gpt-5.5", "pool-a"], ["side/gpt-5.5", "pool-b"]] as const) {
     test(`native 404 falls back to canonical SSE with ${model} account and session identity`, async () => {
-      await withPoolEnv("ocx-compact-404-canonical-", async config => {
+      await withPoolEnv("occx-compact-404-canonical-", async config => {
         config.codexAccountNamespaces = { side: "pool-b" };
         const item = { type: "compaction", id: "cmp_native_3769", encrypted_content: "native-opaque-3769" };
         const calls: Array<{ url: string; headers: Headers; body: Record<string, unknown> }> = [];
@@ -1078,7 +1078,7 @@ describe("compact alternate-account attempt (#913)", () => {
   test("official key-auth native 404 decodes synthetic fallback into replacement user history", async () => {
     const config = { providers: { "openai-apikey": {
       adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", authMode: "key", apiKey: "test-key",
-    } } } as OcxConfig;
+    } } } as OccxConfig;
     const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       const request = new Request(input, init);
@@ -1104,7 +1104,7 @@ describe("compact alternate-account attempt (#913)", () => {
 
   for (const status of [200, 400]) {
     test(`native compact ${status} retains its body without the 404 fallback`, async () => {
-      await withPoolEnv("ocx-compact-404-control-", async config => {
+      await withPoolEnv("occx-compact-404-control-", async config => {
         const payload = status === 200 ? { output: [{ type: "compaction", encrypted_content: "native-control" }] } : { error: { message: "invalid compact" } };
         const urls: string[] = [];
         globalThis.fetch = (async (input: string | URL | Request) => {
@@ -1121,7 +1121,7 @@ describe("compact alternate-account attempt (#913)", () => {
 
   for (const status of ["failed", "incomplete"] as const) {
     test(`native 404 followed by ${status} SSE does not install replacement history`, async () => {
-      await withPoolEnv("ocx-compact-404-terminal-", async config => {
+      await withPoolEnv("occx-compact-404-terminal-", async config => {
         let calls = 0;
         globalThis.fetch = (async () => {
           calls++;
@@ -1141,7 +1141,7 @@ describe("compact alternate-account attempt (#913)", () => {
   }
 
   test("404 fallback records the compaction serving account for subsequent opaque replay", async () => {
-    await withPoolEnv("ocx-compact-404-replay-", async config => {
+    await withPoolEnv("occx-compact-404-replay-", async config => {
       config.codexAccountNamespaces = { side: "pool-b", first: "pool-a" };
       const headers = { "thread-id": `compact-replay-${crypto.randomUUID()}` };
       const item = { type: "compaction", encrypted_content: "native-account-b-3769" };
@@ -1179,7 +1179,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("native compact headers followed by a stalled body return 504 without retry and release account cleanup", async () => {
-    await withPoolEnv("ocx-compact-body-deadline-", async config => {
+    await withPoolEnv("occx-compact-body-deadline-", async config => {
       config.stallTimeoutSec = 2;
       const readStarted = Promise.withResolvers<void>();
       let sends = 0;
@@ -1230,7 +1230,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("canonical trailing slashes are pinned before native compact sends pool credentials", async () => {
-    await withPoolEnv("ocx-compact-canonical-url-", async config => {
+    await withPoolEnv("occx-compact-canonical-url-", async config => {
       config.providers.openai!.baseUrl = "https://chatgpt.com/backend-api/codex///";
       let observedUrl = "";
       let observedHeaders = new Headers();
@@ -1255,7 +1255,7 @@ describe("compact alternate-account attempt (#913)", () => {
 
   for (const rejection of [429, 402] as const) {
     test(`a pre-body ${rejection} tries exactly one alternate account`, async () => {
-      await withPoolEnv(`ocx-compact-alt-${rejection}-`, async config => {
+      await withPoolEnv(`occx-compact-alt-${rejection}-`, async config => {
         const bearers: string[] = [];
         globalThis.fetch = (async (_url: string, init?: RequestInit) => {
           const auth = new Headers(init?.headers).get("authorization") ?? "";
@@ -1288,7 +1288,7 @@ describe("compact alternate-account attempt (#913)", () => {
       // fetchWithTransientRetry (up to three status attempts); the alternate must run
       // as a single direct send. Without `recovery: "single"` the 503 below would be
       // retried and the alternate's share of the send count would be three.
-      await withPoolEnv(`ocx-compact-alt-${rejection}-5xx-`, async config => {
+      await withPoolEnv(`occx-compact-alt-${rejection}-5xx-`, async config => {
         const bearers: string[] = [];
         globalThis.fetch = (async (_url: string, init?: RequestInit) => {
           const auth = new Headers(init?.headers).get("authorization") ?? "";
@@ -1312,7 +1312,7 @@ describe("compact alternate-account attempt (#913)", () => {
     });
 
     test(`an exact account selector preserves the original ${rejection} without an alternate send`, async () => {
-      await withPoolEnv(`ocx-compact-exact-${rejection}-`, async config => {
+      await withPoolEnv(`occx-compact-exact-${rejection}-`, async config => {
         config.codexAccountNamespaces = { side: "pool-a" };
         const bearers: string[] = [];
         const accountIds: string[] = [];
@@ -1350,7 +1350,7 @@ describe("compact alternate-account attempt (#913)", () => {
   }
 
   test("a native-main drain starting between attempts preserves the first rejection", async () => {
-    await withPoolEnv("ocx-compact-alt-main-drain-", async config => {
+    await withPoolEnv("occx-compact-alt-main-drain-", async config => {
       // Keep native main as A's only alternate. This makes the fixture fail closed
       // only when the second auth selection receives the same admitted-turn lease.
       config.codexAccounts = [config.codexAccounts![0]!];
@@ -1403,7 +1403,7 @@ describe("compact alternate-account attempt (#913)", () => {
     // never on a local quota reading: a cached 100% is what the affined account looked
     // like last time, not a rejection. If the gate ever widened to consult quota, this
     // request would resolve an alternate and send twice.
-    await withPoolEnv("ocx-compact-quota-100-", async config => {
+    await withPoolEnv("occx-compact-quota-100-", async config => {
       const affined = resolveCodexAccountForThread("compact-quota-thread", config);
       updateAccountQuota(affined, 100);
       const bearers: string[] = [];
@@ -1427,7 +1427,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("a quota-blocked previous-model compact retries the same thread's successful routed handoff target (#2723)", async () => {
-    await withPoolEnv("ocx-compact-routed-handoff-", async config => {
+    await withPoolEnv("occx-compact-routed-handoff-", async config => {
       config.providers.deepseek = {
         adapter: "openai-chat",
         baseUrl: "https://api.deepseek.com",
@@ -1512,7 +1512,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("with no eligible alternate the first rejection is returned with its backoff headers", async () => {
-    await withPoolEnv("ocx-compact-alt-none-", async config => {
+    await withPoolEnv("occx-compact-alt-none-", async config => {
       // Single-account pool: nothing to fail over to.
       config.codexAccounts = [config.codexAccounts![0]];
       let sends = 0;
@@ -1540,7 +1540,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("when the alternate also rejects, both sends happen and its rejection is returned", async () => {
-    await withPoolEnv("ocx-compact-alt-both-", async config => {
+    await withPoolEnv("occx-compact-alt-both-", async config => {
       let sends = 0;
       globalThis.fetch = (async () => {
         sends += 1;
@@ -1564,7 +1564,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("a non-quota rejection does not trigger an alternate", async () => {
-    await withPoolEnv("ocx-compact-alt-400-", async config => {
+    await withPoolEnv("occx-compact-alt-400-", async config => {
       let sends = 0;
       globalThis.fetch = (async () => {
         sends += 1;
@@ -1584,7 +1584,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("an abort between attempts prevents the alternate send", async () => {
-    await withPoolEnv("ocx-compact-alt-abort-", async config => {
+    await withPoolEnv("occx-compact-alt-abort-", async config => {
       const abort = new AbortController();
       let sends = 0;
       globalThis.fetch = (async () => {
@@ -1608,7 +1608,7 @@ describe("compact alternate-account attempt (#913)", () => {
     // retries a 5xx up to three times. The alternate must NOT inherit that ladder:
     // it is a last bounded try, not a second retry stack. Without the mode split this
     // reads four sends (one from A, three from B's ladder).
-    await withPoolEnv("ocx-compact-alt-single-", async config => {
+    await withPoolEnv("occx-compact-alt-single-", async config => {
       let sends = 0;
       globalThis.fetch = (async () => {
         sends += 1;
@@ -1632,7 +1632,7 @@ describe("compact alternate-account attempt (#913)", () => {
   test("the first account keeps its transient-retry ladder", async () => {
     // The control for the test above: A's recovery is unchanged, so a transient 5xx
     // on A is still retried in place rather than treated as a reason to fail over.
-    await withPoolEnv("ocx-compact-alt-ladder-", async config => {
+    await withPoolEnv("occx-compact-alt-ladder-", async config => {
       let sends = 0;
       globalThis.fetch = (async () => {
         sends += 1;
@@ -1655,7 +1655,7 @@ describe("compact alternate-account attempt (#913)", () => {
   test("each account's health records its own outcome", async () => {
     // Attribution: A's rejection belongs to A and B's belongs to B. Recording B's
     // outcome against A would soft-avoid the wrong account and defeat the failover.
-    await withPoolEnv("ocx-compact-alt-attrib-", async config => {
+    await withPoolEnv("occx-compact-alt-attrib-", async config => {
       let sends = 0;
       globalThis.fetch = (async () => {
         sends += 1;
@@ -1678,7 +1678,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("a pre-send build failure releases the Codex probe lease with host circuit disabled", async () => {
-    await withPoolEnv("ocx-regular-build-probe-release-", async config => {
+    await withPoolEnv("occx-regular-build-probe-release-", async config => {
       config.upstreamHostCircuitThreshold = 0;
       const probeAuth = {
         kind: "pool" as const,
@@ -1715,7 +1715,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("an opt-in regular circuit blocks before selecting another pool account", async () => {
-    await withPoolEnv("ocx-regular-host-circuit-", async config => {
+    await withPoolEnv("occx-regular-host-circuit-", async config => {
       config.upstreamHostCircuitThreshold = 1;
       let sends = 0;
       globalThis.fetch = (async () => {
@@ -1747,7 +1747,7 @@ describe("compact alternate-account attempt (#913)", () => {
   });
 
   test("an opt-in compact circuit blocks before selecting another pool account", async () => {
-    await withPoolEnv("ocx-compact-host-circuit-", async config => {
+    await withPoolEnv("occx-compact-host-circuit-", async config => {
       config.upstreamHostCircuitThreshold = 1;
       let sends = 0;
       globalThis.fetch = (async () => {
@@ -1785,7 +1785,7 @@ describe("compact alternate-account attempt (#913)", () => {
 describe("compaction combo recall after combo switch (#3891)", () => {
   afterEach(() => clearComboRecallForTests());
 
-  function comboTestConfig(): OcxConfig {
+  function comboTestConfig(): OccxConfig {
     return {
       defaultProvider: "gw",
       providers: {
@@ -1807,7 +1807,7 @@ describe("compaction combo recall after combo switch (#3891)", () => {
       combos: {
         terra: { strategy: "failover", targets: [{ provider: "gw", model: "gpt-5.6-terra" }] },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   function chatCompletionPayload(text: string): Record<string, unknown> {
@@ -1960,7 +1960,7 @@ describe("compaction combo recall after combo switch (#3891)", () => {
       combos: {
         terra: { strategy: "failover", targets: [{ provider: "gw", model: "gpt-5.6-terra" }] },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const bodies: Array<Record<string, unknown>> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       const request = new Request(input, init);
@@ -2012,7 +2012,7 @@ describe("compaction combo recall after combo switch (#3891)", () => {
       combos: {
         terra: { strategy: "failover", targets: [{ provider: "openai-apikey", model: "gpt-5.6-terra" }] },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       const request = new Request(input, init);
@@ -2060,7 +2060,7 @@ describe("compaction combo recall after combo switch (#3891)", () => {
     }) as typeof fetch;
   }
 
-  async function seedRecall(config: OcxConfig, lane: string | undefined = "recall-lane"): Promise<void> {
+  async function seedRecall(config: OccxConfig, lane: string | undefined = "recall-lane"): Promise<void> {
     const response = await handleResponses(compactionRequest(
       { model: "combo/terra", stream: false, input: "hello" }, undefined,
       lane ? { session_id: lane } : {},
@@ -2071,7 +2071,7 @@ describe("compaction combo recall after combo switch (#3891)", () => {
 
   for (const version of ["v1", "v2"] as const) {
     const compact = version === "v1" ? handleResponsesCompact : handleResponses;
-    const dispatch = async (config: OcxConfig, model: string, lane: string | undefined = "recall-lane") => {
+    const dispatch = async (config: OccxConfig, model: string, lane: string | undefined = "recall-lane") => {
       const log: RequestLogContext = { model: "", provider: "" };
       const response = await compact(compactionRequest(baseCompactionBody({ model }), undefined,
         lane ? { session_id: lane } : {}), config, log);
@@ -2204,7 +2204,7 @@ test("a no-eligible policy compact request persists the evaluation trace", async
         require: { minContextWindow: 128000 },
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
   globalThis.fetch = (async () => {
     throw new Error("compact must not send upstream when policy evaluation has no eligible candidate");
   }) as typeof fetch;
@@ -2559,7 +2559,7 @@ describe("established-history external task input (#3807)", () => {
       if (version === "v2 trigger") {
         expect(json.output.filter(item => item.type === "compaction")).toEqual([{
           type: "compaction", id: expect.stringMatching(/^cmp_/),
-          encrypted_content: `ocx1:${Buffer.from(summary, "utf8").toString("base64")}`,
+          encrypted_content: `occx1:${Buffer.from(summary, "utf8").toString("base64")}`,
         }]);
       } else {
         expect(json.output).toEqual([
@@ -2593,7 +2593,7 @@ describe("unpaired tool result boundary (#3259)", () => {
         apiKey: "test-key",
       },
     },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
 
   test("a translating adapter rejects a call_id-less tool result with 400 and sends nothing upstream", async () => {
     let fetches = 0;

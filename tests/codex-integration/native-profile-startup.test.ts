@@ -27,7 +27,7 @@ import type {
   NativeProfileKeyProvider,
   NativeProfileSwitchJournalV1,
 } from "../../src/codex/native-profile-types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   bindNativeMainStartupLifecycle,
   blockNativeMainStartupForUnownedServiceHome,
@@ -57,7 +57,7 @@ import { helperPath, repoRoot } from "../helpers/repo-root";
 import { INTERNAL_DEADLINE_MS, SPAWN_BUDGET_MS } from "../helpers/test-budget";
 
 const roots: string[] = [];
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
 const OWNERSHIP_REPROBE_TEST_HOME = "ownership-reprobe-test-home";
 // One process boot, recovery observation, requests and bounded child teardown.
@@ -70,13 +70,13 @@ const childOutputs = new WeakMap<StartupChild, {
   ready: boolean;
 }>();
 
-function restoreEnv(name: "OPENCODEX_HOME" | "CODEX_HOME", value: string | undefined): void {
+function restoreEnv(name: "OPENCCX_HOME" | "CODEX_HOME", value: string | undefined): void {
   if (value === undefined) delete process.env[name];
   else process.env[name] = value;
 }
 
 afterEach(() => {
-  restoreEnv("OPENCODEX_HOME", previousOpencodexHome);
+  restoreEnv("OPENCCX_HOME", previousOpenccxHome);
   restoreEnv("CODEX_HOME", previousCodexHome);
   for (const root of roots.splice(0)) removeTreeWithRetry(root);
 });
@@ -129,10 +129,10 @@ async function fixture(
   activePool = false,
   codexAccountMode: "pool" | "direct" = "pool",
 ): Promise<Fixture> {
-  const root = mkdtempSync(join(tmpdir(), "ocx-native-startup-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-native-startup-"));
   roots.push(root);
   const codexHome = join(root, "codex");
-  const configDir = join(root, "opencodex");
+  const configDir = join(root, "openccx");
   mkdirSync(codexHome, { recursive: true });
   mkdirSync(configDir, { recursive: true });
   writeFileSync(join(codexHome, "config.toml"), 'cli_auth_credentials_store = "file"\n');
@@ -204,7 +204,7 @@ async function fixture(
             : "{}\n";
   writeFileSync(manager.context.authPath, observed);
 
-  process.env.OPENCODEX_HOME = configDir;
+  process.env.OPENCCX_HOME = configDir;
   process.env.CODEX_HOME = codexHome;
   const config = {
     port: 0,
@@ -221,7 +221,7 @@ async function fixture(
     codexAccounts: activePool ? [{ id: "pool-a", email: "pool@test", isMain: false }] : [],
     activeCodexAccountId: activePool ? "pool-a" : MAIN_CODEX_ACCOUNT_ID,
     autoSwitchThreshold: 0,
-  } as OcxConfig;
+  } as OccxConfig;
   saveConfig(config);
   if (activePool) {
     saveCodexAccountCredential("pool-a", {
@@ -231,7 +231,7 @@ async function fixture(
       chatgptAccountId: "pool-account",
     });
   }
-  restoreEnv("OPENCODEX_HOME", previousOpencodexHome);
+  restoreEnv("OPENCCX_HOME", previousOpenccxHome);
   restoreEnv("CODEX_HOME", previousCodexHome);
   return { root, codexHome, configDir, key, manager, target, sourceProfileId: sourceRecord.id, targetProfileId: targetRecord.id };
 }
@@ -290,9 +290,9 @@ function spawnChild(f: Fixture, paths: ReturnType<typeof childPaths>): StartupCh
     cwd: repoRoot(),
     env: {
       ...process.env,
-      OPENCODEX_HOME: f.configDir,
+      OPENCCX_HOME: f.configDir,
       CODEX_HOME: f.codexHome,
-      OPENCODEX_ADMIN_AUTH_TOKEN: "startup-test-admin",
+      OPENCCX_ADMIN_AUTH_TOKEN: "startup-test-admin",
       NATIVE_STARTUP_CODEX_HOME: f.codexHome,
       NATIVE_STARTUP_CONFIG_DIR: f.configDir,
       NATIVE_STARTUP_KEY: f.key.toString("base64"),
@@ -538,7 +538,7 @@ describe("native-main startup journal gate", () => {
       method: "POST",
       body: JSON.stringify({ target: f.targetProfileId, confirmedStopped: true }),
     });
-    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OcxConfig, {
+    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OccxConfig, {
       manager: faultingManager,
     });
 
@@ -568,7 +568,7 @@ describe("native-main startup journal gate", () => {
       method: "POST",
       body: JSON.stringify({ target: "missing-after-recovery", confirmedStopped: true }),
     });
-    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OcxConfig, {
+    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OccxConfig, {
       manager: f.manager,
     });
 
@@ -589,7 +589,7 @@ describe("native-main startup journal gate", () => {
       method: "POST",
       body: JSON.stringify({ target: "missing-after-recovery", confirmedStopped: true }),
     });
-    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OcxConfig, {
+    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OccxConfig, {
       manager: f.manager,
     });
 
@@ -611,7 +611,7 @@ describe("native-main startup journal gate", () => {
       homeId: f.manager.context.homeId,
     });
 
-    const otherConfigDir = join(f.root, "opencodex-other");
+    const otherConfigDir = join(f.root, "openccx-other");
     mkdirSync(otherConfigDir, { mode: 0o700 });
     const otherManager = new NativeProfileManager({
       codexHome: f.codexHome,
@@ -631,7 +631,7 @@ describe("native-main startup journal gate", () => {
       method: "POST",
       body: JSON.stringify({ rollback: false }),
     });
-    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OcxConfig, {
+    const response = await handleNativeProfileAPI(request, new URL(request.url), {} as OccxConfig, {
       manager: f.manager,
     });
 
@@ -680,7 +680,7 @@ describe("native-main startup journal gate", () => {
       writeFileSync(join(f.codexHome, "auth.json"), f.target);
       const recovered = await fetch(`http://127.0.0.1:${port}/api/native-main-profiles/recover`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "startup-test-admin" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "startup-test-admin" },
         body: JSON.stringify({ rollback: false }),
       });
       expect(recovered.status).toBe(200);
@@ -701,7 +701,7 @@ describe("native-main startup journal gate", () => {
 });
 
 /*
- * #2108: after a Windows reboot the fence never lifts until `ocx restart`.
+ * #2108: after a Windows reboot the fence never lifts until `occx restart`.
  *
  * `startServer` takes the ownership verdict ONCE and holds it for the process lifetime.
  * That is right for `foreign-ownership` — a foreign owner is a fact, and re-asking would
@@ -803,12 +803,12 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
   test("startServer promotes one pinned unknown scope through the owned lifecycle", async () => {
     const f = await fixture("prepared", "source-exact", false, "direct");
     process.env.CODEX_HOME = f.codexHome;
-    process.env.OPENCODEX_HOME = f.configDir;
+    process.env.OPENCCX_HOME = f.configDir;
     let answer: NativeCodexOwnership = "unknown";
     let finishRecovery!: () => void;
     const recoveryBarrier = new Promise<void>(resolve => { finishRecovery = resolve; });
     const scopes: Array<{
-      currentHomes?: { codexHome: string; opencodexHome: string };
+      currentHomes?: { codexHome: string; openccxHome: string };
       statePaths?: readonly string[];
     }> = [];
     const server = startServer(0, {
@@ -839,7 +839,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
       const firstScope = scopes[0]!;
       expect(firstScope.currentHomes).toEqual({
         codexHome: f.codexHome,
-        opencodexHome: f.configDir,
+        openccxHome: f.configDir,
       });
       expect(firstScope.statePaths?.[0]).toBe(join(f.configDir, "service-state.json"));
       for (const scope of scopes.slice(1)) expect(scope).toEqual(firstScope);
@@ -861,7 +861,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
   test("startServer rejects initially owned activation after the inspected homes drift", async () => {
     const inspected = await fixture("prepared", "source-exact", false, "direct");
     process.env.CODEX_HOME = inspected.codexHome;
-    process.env.OPENCODEX_HOME = inspected.configDir;
+    process.env.OPENCCX_HOME = inspected.configDir;
     let inspections = 0;
     let started: ReturnType<typeof startServer> | undefined;
     try {
@@ -871,7 +871,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
             inspections += 1;
             expect(scope.currentHomes).toEqual({
               codexHome: inspected.codexHome,
-              opencodexHome: inspected.configDir,
+              openccxHome: inspected.configDir,
             });
             expect(scope.statePaths?.[0]).toBe(join(inspected.configDir, "service-state.json"));
             return { ownership: "owned", reason: "initially owned pinned scope test" };
@@ -892,7 +892,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
   test("startServer keeps a retry when service homes are initially unavailable", async () => {
     const f = await fixture("prepared", "source-exact", false, "direct");
     process.env.CODEX_HOME = f.codexHome;
-    process.env.OPENCODEX_HOME = f.configDir;
+    process.env.OPENCCX_HOME = f.configDir;
     let homesReady = false;
     let statePathsReady = false;
     let homeResolutions = 0;
@@ -900,7 +900,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
     let finishRecovery!: () => void;
     const recoveryBarrier = new Promise<void>(resolve => { finishRecovery = resolve; });
     const scopes: Array<{
-      currentHomes?: { codexHome: string; opencodexHome: string };
+      currentHomes?: { codexHome: string; openccxHome: string };
       statePaths?: readonly string[];
     }> = [];
     const server = startServer(0, {
@@ -909,7 +909,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
         if (!homesReady) throw new Error("service homes are not mounted yet");
         return {
           codexHome: f.codexHome,
-          opencodexHome: statePathsReady ? f.configDir : (null as unknown as string),
+          openccxHome: statePathsReady ? f.configDir : (null as unknown as string),
         };
       },
       inspectNativeCodexOwnership: (scope = {}) => {
@@ -959,7 +959,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
       for (const scope of pinnedScopes) {
         expect(scope.currentHomes).toEqual({
           codexHome: f.codexHome,
-          opencodexHome: f.configDir,
+          openccxHome: f.configDir,
         });
         expect(scope.statePaths?.[0]).toBe(join(f.configDir, "service-state.json"));
       }
@@ -982,7 +982,7 @@ describe("an unknown service-ownership fence is retryable (#2108)", () => {
     const f = await fixture("prepared", "source-exact", false, "direct");
     const lateCodexHome = join(f.root, "late-codex-home");
     process.env.CODEX_HOME = lateCodexHome;
-    process.env.OPENCODEX_HOME = f.configDir;
+    process.env.OPENCCX_HOME = f.configDir;
     let answer: NativeCodexOwnership = "unknown";
     let finishRecovery!: () => void;
     const recoveryBarrier = new Promise<void>(resolve => { finishRecovery = resolve; });
@@ -1392,7 +1392,7 @@ describe("a spent reprobe leaves the refcount coherent (#2108)", () => {
     try {
       isNativeMainTrafficBlocked();
 
-      // A server started after an earlier probe must not be stuck needing `ocx restart`.
+      // A server started after an earlier probe must not be stuck needing `occx restart`.
       expect(asked).toBeGreaterThan(0);
       expect(firstStarts).toBe(1);
       expect(laterStarts).toBe(1);
@@ -1403,7 +1403,7 @@ describe("a spent reprobe leaves the refcount coherent (#2108)", () => {
   });
 
   // The wedge, by a third route. If a NON-owner fence's release dropped the entry, the
-  // owner's hook would be destroyed and the fence stuck until `ocx restart` — the #2108
+  // owner's hook would be destroyed and the fence stuck until `occx restart` — the #2108
   // symptom. This class of bug recurred across three audit rounds, so the guard that
   // prevents it is pinned rather than merely present.
   test("a non-owner release does not destroy the owner's hook", () => {

@@ -2,32 +2,32 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { createOpenAIChatAdapter as createOpenAIChatAdapterProduction } from "../../../src/adapters/openai-chat";
 import { getDebugLogEntries, resetDebugLogBufferForTests } from "../../../src/lib/debug-log-buffer";
 import { resetDebugSettingsForTests } from "../../../src/lib/debug-settings";
-import type { AdapterEvent, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createOpenAIChatAdapter = (...args: Parameters<typeof createOpenAIChatAdapterProduction>) =>
   withTestTranslatorBudget(createOpenAIChatAdapterProduction(...args));
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://example.test/v1",
   apiKey: "sk-test",
   authMode: "key",
 };
 
-const previousDebug = process.env.OCX_DEBUG;
+const previousDebug = process.env.OCCX_DEBUG;
 
 beforeEach(() => {
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
-  delete process.env.OCX_DEBUG;
+  delete process.env.OCCX_DEBUG;
 });
 
 afterEach(() => {
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
-  if (previousDebug === undefined) delete process.env.OCX_DEBUG;
-  else process.env.OCX_DEBUG = previousDebug;
+  if (previousDebug === undefined) delete process.env.OCCX_DEBUG;
+  else process.env.OCCX_DEBUG = previousDebug;
 });
 
 async function collect(stream: AsyncGenerator<AdapterEvent>): Promise<AdapterEvent[]> {
@@ -83,7 +83,7 @@ test("object-valued streamed function.name is a 502 with value-free compatibilit
 });
 
 test("provider debug fingerprints only allowlisted object structure for an invalid field", async () => {
-  process.env.OCX_DEBUG = "1";
+  process.env.OCCX_DEBUG = "1";
   const privateNestedValue = "must-not-reach-provider-debug";
   const privateUnknownKey = "must-not-reach-provider-debug-as-a-key";
   const privateUnknownValue = "must-not-reach-provider-debug-as-a-value";
@@ -97,7 +97,7 @@ test("provider debug fingerprints only allowlisted object structure for an inval
 
   expect(requireErrorEvent(events).message).not.toContain("fieldShape");
   const lines = getDebugLogEntries().map(entry => entry.line).join("\n");
-  expect(lines).toContain('[ocx:openai-chat:invalid-tool-calls]');
+  expect(lines).toContain('[occx:openai-chat:invalid-tool-calls]');
   expect(lines).toContain('"reason":"tool_call_function_name_invalid"');
   expect(lines).toContain('"fieldShape":{"kind":"object"');
   expect(lines).toContain('"knownKeys":["name"]');
@@ -111,7 +111,7 @@ test("provider debug fingerprints only allowlisted object structure for an inval
 });
 
 test("provider debug fingerprints invalid arrays by length without retaining elements", async () => {
-  process.env.OCX_DEBUG = "1";
+  process.env.OCCX_DEBUG = "1";
   const privateElement = "must-not-reach-array-fingerprint";
   const adapter = createOpenAIChatAdapter(provider);
 
@@ -124,7 +124,7 @@ test("provider debug fingerprints invalid arrays by length without retaining ele
 });
 
 test("provider debug fingerprints buffered invalid fields with the same privacy boundary", async () => {
-  process.env.OCX_DEBUG = "1";
+  process.env.OCCX_DEBUG = "1";
   const privateNestedValue = "must-not-reach-buffered-provider-debug";
   const privateUnknownKey = "must-not-reach-buffered-provider-debug-as-key";
   const privateUnknownValue = "must-not-reach-buffered-provider-debug-as-value";

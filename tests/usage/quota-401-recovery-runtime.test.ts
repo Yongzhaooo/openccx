@@ -21,9 +21,9 @@ let previousHome: string | undefined;
 let originalFetch: typeof globalThis.fetch;
 
 beforeEach(async () => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-quota-401-"));
-  process.env.OPENCODEX_HOME = home;
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-quota-401-"));
+  process.env.OPENCCX_HOME = home;
   originalFetch = globalThis.fetch;
   const { resetQuotaRecoveryForTests } = await import("../../src/codex/quota-401-recovery");
   resetQuotaRecoveryForTests();
@@ -31,8 +31,8 @@ beforeEach(async () => {
 
 afterEach(async () => {
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
   const { resetQuotaRecoveryForTests } = await import("../../src/codex/quota-401-recovery");
   resetQuotaRecoveryForTests();

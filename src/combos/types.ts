@@ -1,6 +1,6 @@
 import { isCodexReasoningEffort } from "../reasoning-effort";
 import { SUPPORTED_NATIVE_OPENAI_SLUGS } from "../codex/catalog/native-models";
-import type { OcxComboConfig, OcxComboDefaultEffort, OcxComboReasoningEffortMode, OcxComboStrategy, OcxComboTarget, OcxProviderConfig } from "../types";
+import type { OccxComboConfig, OccxComboDefaultEffort, OccxComboReasoningEffortMode, OccxComboStrategy, OccxComboTarget, OccxProviderConfig } from "../types";
 import { COMBO_NAMESPACE, isValidComboId, targetKey } from "./identifiers";
 
 export const COMBO_DEFAULT_WAIT_FOR_COOLDOWN_MS = 0;
@@ -21,13 +21,13 @@ export interface ComboValidationIssue {
 }
 
 export interface NormalizedComboConfig {
-  strategy: OcxComboStrategy;
+  strategy: OccxComboStrategy;
   stickyLimit: number;
   cooldownMs?: number;
   waitForCooldownMs: number;
-  defaultEffort: OcxComboDefaultEffort | null;
+  defaultEffort: OccxComboDefaultEffort | null;
   /** Picker-ladder derivation policy; `strict` preserves the legacy intersection rule. */
-  reasoningEffortMode: OcxComboReasoningEffortMode;
+  reasoningEffortMode: OccxComboReasoningEffortMode;
   /** Disable image input; `auto` preserves the intersection derived from all targets. */
   imageInput: "auto" | "disabled";
   /** Trimmed public alias, or null when the combo keeps the default `combo/<id>` slug. */
@@ -36,7 +36,7 @@ export interface NormalizedComboConfig {
   nativeAlias: boolean;
   /** Display-only label for the catalog row, or null when unset. */
   displayName: string | null;
-  targets: Array<Required<OcxComboTarget>>;
+  targets: Array<Required<OccxComboTarget>>;
 }
 
 /**
@@ -46,7 +46,7 @@ export interface NormalizedComboConfig {
 export function comboAliasIssues(
   id: string,
   alias: string,
-  combos: Record<string, OcxComboConfig> | undefined,
+  combos: Record<string, OccxComboConfig> | undefined,
   options: { excludeComboId?: string; allowNativeAlias?: boolean } = {},
 ): ComboValidationIssue[] {
   const issues: ComboValidationIssue[] = [];
@@ -87,7 +87,7 @@ export function comboAliasIssues(
 export interface ComboValidationOptions {
   requireEnabledTarget?: boolean;
   /** Full combos map for alias uniqueness checks; omitted during early config load. */
-  combos?: Record<string, OcxComboConfig>;
+  combos?: Record<string, OccxComboConfig>;
   /** Combo being renamed — its stored alias is excluded from uniqueness checks. */
   excludeComboId?: string;
 }
@@ -95,7 +95,7 @@ export interface ComboValidationOptions {
 export function comboConfigIssues(
   id: string,
   raw: unknown,
-  providers: Record<string, OcxProviderConfig>,
+  providers: Record<string, OccxProviderConfig>,
   options: ComboValidationOptions = {},
 ): ComboValidationIssue[] {
   const issues: ComboValidationIssue[] = [];
@@ -284,13 +284,13 @@ export function comboConfigIssues(
 export function comboConfigError(
   id: string,
   raw: unknown,
-  providers: Record<string, OcxProviderConfig>,
+  providers: Record<string, OccxProviderConfig>,
   options: ComboValidationOptions = {},
 ): string | null {
   return comboConfigIssues(id, raw, providers, options)[0]?.message ?? null;
 }
 
-export function normalizeComboConfig(raw: OcxComboConfig): NormalizedComboConfig {
+export function normalizeComboConfig(raw: OccxComboConfig): NormalizedComboConfig {
   const alias = typeof raw.alias === "string" ? raw.alias.trim() : "";
   const displayName = typeof raw.displayName === "string" ? raw.displayName.trim() : "";
   return {
@@ -313,23 +313,23 @@ export function normalizeComboConfig(raw: OcxComboConfig): NormalizedComboConfig
 }
 
 export function comboDefaultEffort(
-  config: { combos?: Record<string, OcxComboConfig> },
+  config: { combos?: Record<string, OccxComboConfig> },
   id: string,
-): OcxComboDefaultEffort | null {
+): OccxComboDefaultEffort | null {
   const combos = config.combos;
   if (!combos || !Object.hasOwn(combos, id)) return null;
   const value: unknown = combos[id]!.defaultEffort ?? null;
   return typeof value === "string" && isCodexReasoningEffort(value)
-    ? value as OcxComboDefaultEffort
+    ? value as OccxComboDefaultEffort
     : null;
 }
 
-export function listComboIds(config: { combos?: Record<string, OcxComboConfig> }): string[] {
+export function listComboIds(config: { combos?: Record<string, OccxComboConfig> }): string[] {
   return Object.keys(config.combos ?? {}).sort((a, b) => a.localeCompare(b));
 }
 
 export function listLiveComboTargetKeys(
-  config: { combos?: Record<string, OcxComboConfig> },
+  config: { combos?: Record<string, OccxComboConfig> },
 ): ReadonlySet<string> {
   const keys = new Set<string>();
   for (const id of listComboIds(config)) {
@@ -341,7 +341,7 @@ export function listLiveComboTargetKeys(
 }
 
 export function getCombo(
-  config: { combos?: Record<string, OcxComboConfig> },
+  config: { combos?: Record<string, OccxComboConfig> },
   id: string,
 ): NormalizedComboConfig | undefined {
   const combos = config.combos;

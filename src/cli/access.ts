@@ -10,15 +10,15 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx access key [list] [--json]
-  ocx access key create [name] [--json]
-  ocx access key rotate <id> [--json]
-  ocx access key rotate commit <id> <rotation-id> [--json]
-  ocx access key rotate abort <id> <rotation-id> [--json]
-  ocx access key remove <id> --yes [--json]
-  ocx access endpoints [--json]
-  ocx access models [--json]
-  ocx access test <model> [--protocol <chat|responses|messages>] [--json]`;
+  occx access key [list] [--json]
+  occx access key create [name] [--json]
+  occx access key rotate <id> [--json]
+  occx access key rotate commit <id> <rotation-id> [--json]
+  occx access key rotate abort <id> <rotation-id> [--json]
+  occx access key remove <id> --yes [--json]
+  occx access endpoints [--json]
+  occx access models [--json]
+  occx access test <model> [--protocol <chat|responses|messages>] [--json]`;
 
 /**
  * Render the key table with the usage fields the API already returns (#2705).

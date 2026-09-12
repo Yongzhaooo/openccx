@@ -1,23 +1,23 @@
 /**
  * Shared Grok Build config sync: gather the visible model catalog and (re)inject the
- * managed block into ~/.grok/config.toml. Used by `ocx start` (server process) and by
- * `ocx ensure` / `ocx restart` (parent process, after live discovery or child readiness)
+ * managed block into ~/.grok/config.toml. Used by `occx start` (server process) and by
+ * `occx ensure` / `occx restart` (parent process, after live discovery or child readiness)
  * so the fence exists deterministically once the proxy reports healthy.
  *
  * Deps are injectable (mirrors src/codex/sync.ts) so tests can run without a live proxy.
  */
 import type { CatalogModel } from "../codex/catalog";
 import { standaloneCodexRoutingTarget } from "../codex/inject";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { projectGrokCatalog } from "./catalog";
 import { injectGrokConfig, type GrokInjectResult } from "./inject";
 
 export interface GrokSyncDeps {
-  fetchAllModels: (config: OcxConfig) => Promise<CatalogModel[]>;
+  fetchAllModels: (config: OccxConfig) => Promise<CatalogModel[]>;
   injectGrokConfig: typeof injectGrokConfig;
 }
 
-async function defaultFetchAllModels(config: OcxConfig): Promise<CatalogModel[]> {
+async function defaultFetchAllModels(config: OccxConfig): Promise<CatalogModel[]> {
   const { fetchAllModels } = await import("../server/management-api");
   return fetchAllModels(config);
 }
@@ -30,7 +30,7 @@ async function defaultFetchAllModels(config: OcxConfig): Promise<CatalogModel[]>
  */
 export async function syncGrokConfig(
   port: number,
-  config: OcxConfig,
+  config: OccxConfig,
   opts: { hostname?: string; grokHome?: string } = {},
   deps: GrokSyncDeps = { fetchAllModels: defaultFetchAllModels, injectGrokConfig },
 ): Promise<GrokInjectResult> {

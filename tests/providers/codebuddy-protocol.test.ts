@@ -7,7 +7,7 @@ import {
   readJsonLines,
   usageFromResult,
 } from "../../src/adapters/coding-agent/protocol";
-import type { OcxParsedRequest } from "../../src/types";
+import type { OccxParsedRequest } from "../../src/types";
 
 // The stream-json protocol for coding-agent CLIs
 // (src/adapters/coding-agent/protocol.ts); these fixtures exercise it via CodeBuddy frames.
@@ -24,14 +24,14 @@ async function collect(gen: AsyncGenerator<Record<string, unknown>>): Promise<Re
   return out;
 }
 
-function parsedRequest(overrides: Partial<OcxParsedRequest> = {}): OcxParsedRequest {
+function parsedRequest(overrides: Partial<OccxParsedRequest> = {}): OccxParsedRequest {
   return {
     modelId: "glm-5.3",
     stream: true,
     options: {},
     context: { messages: [] },
     ...overrides,
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 describe("codebuddy stream-json line reader", () => {

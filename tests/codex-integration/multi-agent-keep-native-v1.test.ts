@@ -14,7 +14,7 @@ import { loadConfig, saveConfig } from "../../src/config";
 import { isMultiAgentV2Enabled } from "../../src/codex/features";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 describe("keepNativeChatGptOnV1", () => {
   test("v2 without the switch stamps every row v2", () => {
@@ -54,18 +54,18 @@ describe("keepNativeChatGptOnV1", () => {
   });
 
   test("native alias rows count as native; routed providers do not", () => {
-    const routedAlias: RawEntry = { slug: "sol", opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND };
+    const routedAlias: RawEntry = { slug: "sol", openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND };
     expect(catalogEntryIsNativeChatGpt(routedAlias)).toBe(false);
     expect(catalogEntryIsNativeChatGpt({
       slug: "sol",
-      opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
       use_responses_lite: true,
     })).toBe(true);
     expect(catalogEntryIsNativeChatGpt({ slug: "xai/grok-4.6" })).toBe(false);
     expect(catalogEntryIsNativeChatGpt({ slug: "gpt-5.6-sol" })).toBe(true);
 
     const stamped: RawEntry[] = [
-      { slug: "sol", opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND },
+      { slug: "sol", openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND },
       { slug: "gpt-5.6-sol" },
     ];
     applyMultiAgentMode(stamped, "v2", false, { keepNativeChatGptOnV1: true });
@@ -74,18 +74,18 @@ describe("keepNativeChatGptOnV1", () => {
   });
 });
 
-const savedOcxHome = process.env.OPENCODEX_HOME;
+const savedOccxHome = process.env.OPENCCX_HOME;
 const savedCodexHome = process.env.CODEX_HOME;
 
 afterEach(() => {
-  if (savedOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedOcxHome;
+  if (savedOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedOccxHome;
   if (savedCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = savedCodexHome;
 });
 
 function isolateHomes(): void {
-  process.env.OPENCODEX_HOME = mkdtempSync(join(tmpdir(), "ocx-keep-native-"));
+  process.env.OPENCCX_HOME = mkdtempSync(join(tmpdir(), "occx-keep-native-"));
   process.env.CODEX_HOME = mkdtempSync(join(tmpdir(), "codex-keep-native-"));
 }
 
@@ -228,7 +228,7 @@ describe("keep-native-v1 restamp path", () => {
   });
 });
 
-describe("ocx v2 keep-native-v1", () => {
+describe("occx v2 keep-native-v1", () => {
   test("featureActionOf parses both launcher shapes and rejects malformed argv", () => {
     // The exact strings commandInvocation emits, captured from a real run against
     // three target shapes: plain path, a path containing a space, and a
@@ -365,7 +365,7 @@ describe("/api/v2 keepNativeChatGptOnV1", () => {
     isolateHomes();
     const codexConfig = join(process.env.CODEX_HOME!, "config.toml");
     writeFileSync(codexConfig, "[features.multi_agent_v2]\nenabled = false\n");
-    const config: OcxConfig = { providers: {}, hostname: "127.0.0.1", port: 10100, defaultProvider: "openai" } as OcxConfig;
+    const config: OccxConfig = { providers: {}, hostname: "127.0.0.1", port: 10100, defaultProvider: "openai" } as OccxConfig;
     const seen: Array<{ keepNativeChatGptOnV1?: boolean; multiAgentMode?: string }> = [];
     let converges = 0;
     const factory = catalogConvergenceFactory(() => {

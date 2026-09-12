@@ -19,7 +19,7 @@ import {
   SUMMARY_PREFIX,
 } from "../../src/responses/compaction";
 import { createTranslatorBudget } from "../../src/lib/translator-budget";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 import { restoreRoutedNamespaceCalls } from "../../src/responses/namespace-tool-compat";
 import { restoreRoutedCustomCalls } from "../../src/responses/custom-tool-compat";
@@ -228,7 +228,7 @@ describe("external image wire matrix", () => {
             expect(body.messages).toEqual(isTool ? [
               { role: "assistant", content: "", tool_calls: [{ id: "call_image", type: "function", function: { name: "screenshot", arguments: "{}" } }] },
               { role: "tool", tool_call_id: "call_image", content: imageOnly ? "[image][image]" : "screenshot" },
-              { role: "user", content: [{ type: "text", text: "[ocx] image output from the preceding tool result(s):" }, ...ingress.chatImages] },
+              { role: "user", content: [{ type: "text", text: "[occx] image output from the preceding tool result(s):" }, ...ingress.chatImages] },
               { role: "user", content: "continue" },
             ] : [{ role: "user", content: [{ type: "text", text: "screenshot" }, ...ingress.chatImages] }]);
           } else {
@@ -557,7 +557,7 @@ describe("DeepSeek Responses endpoint contract", () => {
   });
 
   test("xAI multi-agent clamps synthetic max and ultra efforts to its real Responses ladder", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xai",
       providers: {
@@ -597,7 +597,7 @@ describe("DeepSeek Responses endpoint contract", () => {
 
   test.each([undefined, "max", "ultra"])("BigModel Turbo omits outbound effort %s and preserves summary requests", (effort) => {
     const id = "zhipu-bigmodel-responses";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: id,
       providers: { [id]: providerConfigSeed(getProviderRegistryEntry(id)!) },
@@ -684,7 +684,7 @@ describe("Responses custom-tool destination capability", () => {
       providers: {
         xai: { adapter: entry.adapter, baseUrl: entry.baseUrl, authMode: "oauth" },
       },
-    } as OcxConfig, "xai/grok-4.6");
+    } as OccxConfig, "xai/grok-4.6");
     expect(routed.provider.supportsResponsesCustomTools).toBe(false);
   });
 
@@ -866,7 +866,7 @@ describe("routed compaction lowering order", () => {
     {
       type: "function_call",
       call_id: "c2",
-      name: "opencodex_tool_search",
+      name: "openccx_tool_search",
       arguments: JSON.stringify({ query: "database" }),
     },
     {
@@ -921,7 +921,7 @@ describe("routed compaction lowering order", () => {
         properties: { query: { type: "string" } },
         required: ["query"],
       },
-      name: "opencodex_tool_search",
+      name: "openccx_tool_search",
     },
     {
       type: "function",
@@ -986,7 +986,7 @@ describe("routed compaction lowering order", () => {
     expect(body.input.find(item => item.call_id === "c3")).not.toHaveProperty("namespace");
 
     expect([...(built.convertedRoutedCustomToolNames ?? [])]).toEqual(["apply_patch"]);
-    expect([...(built.convertedRoutedToolSearchNames ?? [])]).toEqual(["opencodex_tool_search"]);
+    expect([...(built.convertedRoutedToolSearchNames ?? [])]).toEqual(["openccx_tool_search"]);
     expect([...(built.convertedRoutedNamespaceToolAliases ?? new Map()).entries()]).toEqual([
       ["collaboration__spawn_agent", { namespace: "collaboration", name: "spawn_agent", kind: "function" }],
       ["collaboration.spawn_agent", { namespace: "collaboration", name: "spawn_agent", kind: "function" }],
@@ -1608,7 +1608,7 @@ describe("OpenAI Responses passthrough sanitization", () => {
           modelAdapters: { "grok-4.6": "openai-responses" },
         },
       },
-    } as OcxConfig, "xai/grok-4.6");
+    } as OccxConfig, "xai/grok-4.6");
     return resolveWireProtocolOverride(route.providerName, route.modelId, route.provider);
   }
 
@@ -2866,7 +2866,7 @@ describe("OpenAI Responses passthrough sanitization", () => {
     }, meta).body) as { input: Record<string, unknown>[] };
 
     const repairedCallId = body.input[0].call_id as string;
-    expect(repairedCallId).toStartWith("call_ocx_");
+    expect(repairedCallId).toStartWith("call_occx_");
     expect(repairedCallId.length).toBeLessThanOrEqual(64);
     expect(body.input[1].call_id).toBe(repairedCallId);
     expect(body.input[2].call_id).toBe("call_short");
@@ -2952,7 +2952,7 @@ describe("OpenAI Responses passthrough sanitization", () => {
     }, meta).body) as { previous_response_id?: string; input: Array<{ call_id: string }> };
 
     expect(body.previous_response_id).toBeUndefined();
-    expect(body.input[0]?.call_id).toStartWith("call_ocx_");
+    expect(body.input[0]?.call_id).toStartWith("call_occx_");
     expect(body.input[0]?.call_id.length).toBe(64);
     expect(body.input[1]?.call_id).toBe(body.input[0]?.call_id);
   });
@@ -3907,7 +3907,7 @@ describe("routed namespace and custom-tool identity", () => {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   const frame = (event: string, payload: Record<string, unknown>): string =>
     `event: ${event}\ndata: ${JSON.stringify({ type: event, ...payload })}`;
@@ -4108,7 +4108,7 @@ describe("routed namespace and custom-tool identity", () => {
           authMode: "forward",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const savedFetch = globalThis.fetch;
     let outbound: { tools?: Array<Record<string, unknown>> } | undefined;
     globalThis.fetch = (async (_input, init) => {
@@ -4219,7 +4219,7 @@ describe("OpenAI Responses forward-mode unsupported param stripping", () => {
 describe("replayed compaction blobs", () => {
   type PassthroughProvider = Parameters<typeof createResponsesPassthroughAdapter>[0];
 
-  // Shaped like a blob minted by an OpenAI-operated backend: opaque, no `ocx1:` envelope.
+  // Shaped like a blob minted by an OpenAI-operated backend: opaque, no `occx1:` envelope.
   const NATIVE_BLOB = "gAAAAAB-openai-minted-compaction-blob";
   const routedProvider: PassthroughProvider = {
     adapter: "openai-responses",
@@ -4310,7 +4310,7 @@ describe("replayed compaction blobs", () => {
   });
 
   // The proxy's own envelope is transparent base64, so no upstream can read it anywhere.
-  test("lowers proxy-minted ocx1 envelopes on every destination", () => {
+  test("lowers proxy-minted occx1 envelopes on every destination", () => {
     const item = { type: "compaction", encrypted_content: encodeCompactionSummary("prior work") };
     for (const target of [provider, openaiKeyedProvider, routedProvider]) {
       for (const threadServingIdentityChanged of [false, true]) {
@@ -4461,7 +4461,7 @@ describe("raw usage passthrough on the forward path (#41980 parity, #37138 adjac
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
   const requestBody = (stream: boolean) => JSON.stringify({
     model: "fixture/model",
     stream,

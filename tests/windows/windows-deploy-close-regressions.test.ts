@@ -4,17 +4,17 @@ import { join } from "node:path";
 import { repoPath } from "../helpers/repo-root";
 
 // Source-contract regressions for the final fixes that let devlog
-// 260702_windows-deploy-stability close: the ocx.cmd shell-less restart (A), F9 systemd no-DBUS
+// 260702_windows-deploy-stability close: the occx.cmd shell-less restart (A), F9 systemd no-DBUS
 // SSH detection (E), and the F4 explicit-localhost bind symmetry (D). These files run top-level or
 // platform-gated logic, so guard the invariants at the source level (repo convention — see
-// ocx-launcher-source.test.ts / service.test.ts).
+// occx-launcher-source.test.ts / service.test.ts).
 const read = (rel: string) => readFileSync(repoPath(rel), "utf8");
 
 describe("update-job restart avoids the shell-less .cmd EINVAL (Windows, bun/source)", () => {
   const src = read("src/update/job.ts");
-  test("no ocx.cmd shim is spawned for restart", () => {
-    expect(src).not.toContain('"ocx.cmd"');
-    expect(src).not.toMatch(/function ocxBin/);
+  test("no occx.cmd shim is spawned for restart", () => {
+    expect(src).not.toContain('"occx.cmd"');
+    expect(src).not.toMatch(/function occxBin/);
   });
   test("bun/source restart uses the runtime executable + launcher (a real .exe, no shell)", () => {
     // restartCommand's non-npm branch resolves to process.execPath + the package launcher.
@@ -24,8 +24,8 @@ describe("update-job restart avoids the shell-less .cmd EINVAL (Windows, bun/sou
     expect(src).toContain('? [launcher, "start", "--port", String(Math.trunc(port))]');
     expect(src).toContain(': [launcher, "start"]');
   });
-  test("service update restart bakes OCX_BAKE_PORT so wrappers hard-pin the captured port", () => {
-    expect(src).toContain("OCX_BAKE_PORT");
+  test("service update restart bakes OCCX_BAKE_PORT so wrappers hard-pin the captured port", () => {
+    expect(src).toContain("OCCX_BAKE_PORT");
     // Service reinstall still runs (with bake) even when reclaim warns; direct start refuses to hop.
     expect(src).toContain("refusing to hop");
     expect(src).toContain("runtimeTrusted");
@@ -43,12 +43,12 @@ describe("update-job restart avoids the shell-less .cmd EINVAL (Windows, bun/sou
     expect(src).toContain("windowsHide: true");
     expect(src).not.toContain('["-NoProfile", "-NoLogo", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps]');
     expect(src).toContain("spawnWorkerFn: spawnGuiUpdateWorker");
-    // Foreign listeners must stay fail-closed; npm rename is covered by ocx identity.
+    // Foreign listeners must stay fail-closed; npm rename is covered by occx identity.
     expect(src).not.toContain("killAnyListenPidOnPort");
     // 260804 #970: this skip is now conditional on the refresh actually re-registering.
     // `service repair` needs no elevation, so skipping it would leave the dashboard
     // update — the common Windows path — with a stale service it could have refreshed.
-    expect(src).toContain('process.env.OCX_SERVICE === "1" && refreshRegisters');
+    expect(src).toContain('process.env.OCCX_SERVICE === "1" && refreshRegisters');
     expect(src).toContain('const refreshRegisters = (svcArgs ?? []).includes("install")');
     // Native WinSW installs must stop via stopWinswService, not Task Scheduler /end only.
     expect(src).toContain("readServiceBackend");

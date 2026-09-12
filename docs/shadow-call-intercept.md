@@ -32,7 +32,7 @@ Related GitHub issues: [#26288](https://github.com/openai/codex/issues/26288), [
 
 ### Via Dashboard UI
 
-1. Open the opencodex dashboard
+1. Open the openccx dashboard
 2. Find the "Shadow Call Intercept" panel
 3. Toggle the switch to enable
 4. Enter a replacement model (e.g., `gpt-5.5`)

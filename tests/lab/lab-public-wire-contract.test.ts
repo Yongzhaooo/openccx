@@ -82,7 +82,7 @@ function fixedBundle(config: string) {
 
 describe("CL-10 public wire contract", () => {
   test("freezes the RFC 8785/domain-separated bundle and Ed25519 signature vector", () => {
-    const bundle = fixedBundle(configDir("ocx-cl10-wire-publisher-"));
+    const bundle = fixedBundle(configDir("occx-cl10-wire-publisher-"));
 
     expect(bundle.publisher.publicKey).toBe(FIXED_PUBLIC_KEY);
     expect(bundle.publisher.keyId).toBe("4d5a347afcc7a1ac8d2dd4e573f0fbca2d2e90dd472c35df5c72bf2d2afca08f");
@@ -115,8 +115,8 @@ describe("CL-10 public wire contract", () => {
   });
 
   test("rejects duplicate JSON object keys before community parsing", () => {
-    const publisherDir = configDir("ocx-cl10-wire-publisher-");
-    const consumerDir = configDir("ocx-cl10-wire-consumer-");
+    const publisherDir = configDir("occx-cl10-wire-publisher-");
+    const consumerDir = configDir("occx-cl10-wire-consumer-");
     const bundle = fixedBundle(publisherDir);
     const raw = JSON.stringify(bundle).replace(
       '"schemaVersion":"public_evidence_bundle_v1"',

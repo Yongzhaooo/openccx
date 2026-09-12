@@ -4,14 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createAzureAdapter as createAzureAdapterProduction } from "../../src/adapters/azure";
 import { getConfigPath, loadConfig, readConfigDiagnostics } from "../../src/config";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const createAzureAdapter = (...args: Parameters<typeof createAzureAdapterProduction>) =>
   withTestTranslatorBudget(createAzureAdapterProduction(...args));
 
-const parsed: OcxParsedRequest = {
+const parsed: OccxParsedRequest = {
   modelId: "gpt-5.5",
   context: { messages: [] },
   stream: true,
@@ -19,7 +19,7 @@ const parsed: OcxParsedRequest = {
   _rawBody: { model: "gpt-5.5", input: [], stream: true },
 };
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "azure-openai",
     baseUrl: "https://myres.openai.azure.com/openai",
@@ -86,9 +86,9 @@ describe("Azure OpenAI adapter hardening", () => {
   });
 
   test("reports unresolved placeholders as non-fatal config diagnostics", () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const testDir = mkdtempSync(join(tmpdir(), "ocx-azure-diagnostics-"));
-    process.env.OPENCODEX_HOME = testDir;
+    const previousHome = process.env.OPENCCX_HOME;
+    const testDir = mkdtempSync(join(tmpdir(), "occx-azure-diagnostics-"));
+    process.env.OPENCCX_HOME = testDir;
 
     try {
       writeFileSync(getConfigPath(), JSON.stringify({
@@ -109,8 +109,8 @@ describe("Azure OpenAI adapter hardening", () => {
       expect(loadConfig().providers["azure-openai"].baseUrl).toBe("https://{resource}.openai.azure.com/openai");
       expect(readdirSync(testDir).filter(name => name.startsWith("config.json.invalid-"))).toHaveLength(0);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       if (existsSync(testDir)) removeTreeWithRetry(testDir);
     }
   });

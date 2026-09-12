@@ -24,15 +24,15 @@ import { hashAuthority } from "../../src/codex/admission";
 import { captureCatalogAdmissionSnapshot } from "../../src/codex/catalog-admission";
 import { JOURNAL_PATH } from "../../src/codex/journal";
 import type { AdmissionSnapshot } from "../../src/codex/convergence-types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
 let root = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 const cleanup: string[] = [];
 
-function config(port = 10100): OcxConfig {
+function config(port = 10100): OccxConfig {
   return {
     port,
     providers: {
@@ -41,21 +41,21 @@ function config(port = 10100): OcxConfig {
         baseUrl: "https://chatgpt.com/backend-api/codex",
         authMode: "forward",
       },
-    } as OcxConfig["providers"],
+    } as OccxConfig["providers"],
     defaultProvider: "openai",
   };
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-admission-primitives-"));
+  root = mkdtempSync(join(tmpdir(), "occx-admission-primitives-"));
   cleanup.push(root);
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = root;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = root;
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
 });
 
@@ -159,7 +159,7 @@ describe("absence is one state, and being unable to look is another", () => {
     mkdirSync(nested);
     writeFileSync(join(nested, "config-mutation.sqlite"), "");
     chmodSync(nested, 0o000);
-    process.env.OPENCODEX_HOME = nested;
+    process.env.OPENCCX_HOME = nested;
     try {
       const observed = observeConfigGeneration();
       // Either it could not stat (unavailable) or the platform let it through;
@@ -167,7 +167,7 @@ describe("absence is one state, and being unable to look is another", () => {
       expect(observed.kind).not.toBe("absent");
     } finally {
       chmodSync(nested, 0o700);
-      process.env.OPENCODEX_HOME = root;
+      process.env.OPENCCX_HOME = root;
     }
   });
 
@@ -307,13 +307,13 @@ describe("the journal has one owner", () => {
    * point of the test.
    */
   test("the exported constant is the file journal.ts actually uses", () => {
-    // The old hand-derived path was OPENCODEX_HOME/codex-journal.json — wrong
+    // The old hand-derived path was OPENCCX_HOME/codex-journal.json — wrong
     // directory AND wrong basename. Assert both halves. Paths are compared by
     // shape rather than string equality because macOS resolves the temp root
     // through /private, which is not the property under test.
-    expect(basename(JOURNAL_PATH)).toBe("opencodex-journal.json");
+    expect(basename(JOURNAL_PATH)).toBe("openccx-journal.json");
     expect(dirname(JOURNAL_PATH).endsWith(".codex")).toBeTrue();
-    expect(dirname(JOURNAL_PATH).endsWith(".opencodex")).toBeFalse();
+    expect(dirname(JOURNAL_PATH).endsWith(".openccx")).toBeFalse();
   });
 
   /**
@@ -344,7 +344,7 @@ function snapshotWith(overrides: Partial<AdmissionSnapshot>): AdmissionSnapshot 
     externalProvider: null,
     canonicalTargets: {
       codexHome: "/codex",
-      opencodexHome: "/opencodex",
+      openccxHome: "/opencodex",
       config: "/codex/config.toml",
       profile: "/codex/opencodex.config.toml",
       catalog: "/codex/opencodex-catalog.json",
@@ -353,7 +353,7 @@ function snapshotWith(overrides: Partial<AdmissionSnapshot>): AdmissionSnapshot 
       integrationRecord: "/opencodex/integrations/codex.json",
       catalogBackups: [],
       historyDb: "/codex/state_5.sqlite",
-      historyManifest: "/codex/state_5.sqlite.ocx-backup.json",
+      historyManifest: "/codex/state_5.sqlite.occx-backup.json",
       historyRollouts: [],
     },
     journalIdentity: "absent",

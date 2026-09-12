@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 test("CL-10 local signing rejects artifact bytes without reviewed public_export authority", () => {
-  const configDir = mkdtempSync(join(tmpdir(), "ocx-cl10-artifact-policy-"));
+  const configDir = mkdtempSync(join(tmpdir(), "occx-cl10-artifact-policy-"));
   roots.push(configDir);
   const contentBase64 = Buffer.from("credential-canary-1234567890", "utf8").toString("base64");
   const artifact = {

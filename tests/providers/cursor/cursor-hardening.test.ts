@@ -767,10 +767,10 @@ describe("Cursor live transport unexpected EOF", () => {
                   case: "mcpToolCall",
                   value: create(McpToolCallSchema, {
                     args: create(McpArgsSchema, {
-                      name: "ocx_client_get_time",
-                      toolName: "ocx_client_get_time",
+                      name: "occx_client_get_time",
+                      toolName: "occx_client_get_time",
                       toolCallId: "call_1",
-                      providerIdentifier: "opencodex-responses",
+                      providerIdentifier: "openccx-responses",
                     }),
                   }),
                 },

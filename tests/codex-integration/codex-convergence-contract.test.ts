@@ -38,18 +38,18 @@ import {
 } from "../../src/codex/user-identity";
 import { saveConfig } from "../../src/config";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
 let root = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function config(port = 10100): OcxConfig {
+function config(port = 10100): OccxConfig {
   return { port, providers: {}, defaultProvider: "openai" };
 }
 
@@ -96,18 +96,18 @@ async function candidate(): Promise<CodexCatalogCandidate> {
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  root = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-convergence-")));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  root = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-convergence-")));
   codexHome = join(root, "codex");
-  opencodexHome = join(root, "opencodex");
+  openccxHome = join(root, "openccx");
   mkdirSync(codexHome);
-  mkdirSync(opencodexHome);
+  mkdirSync(openccxHome);
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   resetCatalogRuntimeStateForTests();
   resetCodexRuntimeResolveCacheForTests();
   saveConfig(config());
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), sourceCatalog());
+  writeFileSync(join(codexHome, "openccx-catalog.json"), sourceCatalog());
 });
 
 afterEach(() => {
@@ -116,8 +116,8 @@ afterEach(() => {
   for (const suffix of ["", "-journal", "-wal", "-shm"]) rmSync(`${kPath}${suffix}`, { force: true });
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(root);
 });
 
@@ -166,7 +166,7 @@ test("home-selection drift rejects before every catalog target write", async () 
 
 test("same-inode source drift rejects before every catalog target write", async () => {
   const gathered = await candidate();
-  const path = join(codexHome, "opencodex-catalog.json");
+  const path = join(codexHome, "openccx-catalog.json");
   const inode = lstatSync(path).ino;
   writeFileSync(path, sourceCatalog("drifted"));
   expect(lstatSync(path).ino).toBe(inode);
@@ -178,7 +178,7 @@ test("same-inode source drift rejects before every catalog target write", async 
 
 test("target identity drift wins before source comparison and writes nothing", async () => {
   const gathered = await candidate();
-  const path = join(codexHome, "opencodex-catalog.json");
+  const path = join(codexHome, "openccx-catalog.json");
   const moved = join(codexHome, "moved.json");
   renameSync(path, moved);
   writeFileSync(path, readFileSync(moved));
@@ -233,24 +233,24 @@ test("management convergence restores omitted natives and retains a configured n
     slug: "gpt-5.5",
     display_name: "GPT-5.5",
   });
-  persistCodexRuntime(runtime, { configDir: opencodexHome, now: () => 0 });
+  persistCodexRuntime(runtime, { configDir: openccxHome, now: () => 0 });
   setCodexRuntimeResolveCacheForTests({ runtime, failures: [] }, { discoverAlternatives: false });
-  setBundledCatalogCacheForTests(runtime, bundled, { opencodexHome });
+  setBundledCatalogCacheForTests(runtime, bundled, { openccxHome });
 
   const nativeAlias = {
     ...bundled.models[0],
     display_name: "Nova1 - Sol",
-    description: "Routed via opencodex → combo (combo).",
+    description: "Routed via openccx → combo (combo).",
     owned_by: "combo",
-    opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     input_modalities: ["text", "image"],
   };
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), `${JSON.stringify({
+  writeFileSync(join(codexHome, "openccx-catalog.json"), `${JSON.stringify({
     marker: "active-native-alias",
     models: [nativeAlias],
   }, null, 2)}\n`);
 
-  const liveConfig: OcxConfig = {
+  const liveConfig: OccxConfig = {
     port: 10100,
     defaultProvider: "Nova1",
     providers: {
@@ -287,7 +287,7 @@ test("management convergence restores omitted natives and retains a configured n
   if (gathered.kind !== "candidate") throw new Error(JSON.stringify(gathered));
   expect(await commitCodexCatalogCandidate(gathered.candidate, 1_000)).toMatchObject({ kind: "committed" });
 
-  const written = JSON.parse(readFileSync(join(codexHome, "opencodex-catalog.json"), "utf8")) as {
+  const written = JSON.parse(readFileSync(join(codexHome, "openccx-catalog.json"), "utf8")) as {
     models: Array<Record<string, unknown>>;
   };
   expect(written.models.find(entry => entry.slug === "gpt-5.5")).toMatchObject({
@@ -297,7 +297,7 @@ test("management convergence restores omitted natives and retains a configured n
     expect.objectContaining({
       display_name: "Nova1 - Sol",
       owned_by: "combo",
-      opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     }),
   ]);
 });

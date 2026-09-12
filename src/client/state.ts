@@ -8,7 +8,7 @@ import {
   saveConfig,
   withConfigMutationLockSync,
 } from "../config";
-import type { OcxClientConnectionConfig } from "../types";
+import type { OccxClientConnectionConfig } from "../types";
 import { inspectRemoteDesktopStore, readDesktopDisconnectReceipt } from "../claude/desktop-remote-store";
 import { withClientLifecycleSync, type ClientLifecycleLockDeps } from "./lifecycle-lock";
 import {
@@ -19,7 +19,7 @@ import {
 
 export type ClientConnectionState =
   | { kind: "disconnected" }
-  | { kind: "connected"; value: OcxClientConnectionConfig }
+  | { kind: "connected"; value: OccxClientConnectionConfig }
   | { kind: "invalid"; reason: string }
   | { kind: "mismatched"; reason: string };
 
@@ -55,7 +55,7 @@ export function readClientConnectionState(): ClientConnectionState {
   }
   if (!hasClient && (role === undefined || role === "standalone")) return { kind: "disconnected" };
   // A hub is a server role, not a broken client: without client state it simply is not
-  // connected, and refusing here blocked `ocx start` on every hub (found on the first
+  // connected, and refusing here blocked `occx start` on every hub (found on the first
   // clisu-oracle dogfood boot). Hub role WITH client state remains mismatched below.
   if (!hasClient && role === "hub") return { kind: "disconnected" };
   if (!hasClient || role !== "client") {
@@ -75,8 +75,8 @@ export function readClientConnectionState(): ClientConnectionState {
 }
 
 export function sameClientConnectionOwner(
-  left: Pick<OcxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
-  right: Pick<OcxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
+  left: Pick<OccxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
+  right: Pick<OccxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
 ): boolean {
   return left.serverUrl === right.serverUrl && left.apiKeyId === right.apiKeyId && left.connectedAt === right.connectedAt;
 }
@@ -91,7 +91,7 @@ export function assertNoClientDisconnectPending(): void {
 }
 
 /** Full snapshot CAS for work returning from an await, including selection and rotation state. */
-export function assertClientConnectionUnchanged(expected: OcxClientConnectionConfig): void {
+export function assertClientConnectionUnchanged(expected: OccxClientConnectionConfig): void {
   assertNoClientDisconnectPending();
   const current = readClientConnectionState();
   if (current.kind !== "connected" || JSON.stringify(current.value) !== JSON.stringify(expected)) {
@@ -113,7 +113,7 @@ function observeClientRotationRecovery(): ClientRotationRecoveryGate | undefined
     if (current.kind !== "present" || backup.kind !== "present") {
       return { kind: "unsafe", reason: "pending rotation requires current and backup token files" };
     }
-    return { kind: "recovery-required", reason: "rerun ocx connect rotate with transient authority" };
+    return { kind: "recovery-required", reason: "rerun occx connect rotate with transient authority" };
   }
   if (backup.kind === "unsafe") return { kind: "unsafe", reason: "service token backup is unsafe" };
   if (backup.kind === "present" && current.kind === "present") {
@@ -126,7 +126,7 @@ function observeClientRotationRecovery(): ClientRotationRecoveryGate | undefined
       if (desktop.kind !== "absent" && desktop.kind !== "restored") {
         // The inspection DTO deliberately exposes no credential generation. Let
         // explicit rotation reconcile an active Desktop copy before discarding .prev.
-        return { kind: "recovery-required", reason: "Desktop credential reconciliation requires ocx connect rotate" };
+        return { kind: "recovery-required", reason: "Desktop credential reconciliation requires occx connect rotate" };
       }
     }
     return undefined;
@@ -158,7 +158,7 @@ export function inspectClientRotationRecoveryGate(
 
 export function commitClientConnection(
 
-  state: OcxClientConnectionConfig,
+  state: OccxClientConnectionConfig,
 ): "committed" | "unchanged" {
   const outcome = mutatePersistedConfig(config => {
     const unchanged = config.runtimeRole === "client"
@@ -171,7 +171,7 @@ export function commitClientConnection(
   });
   if (outcome.status === "committed" || outcome.status === "unchanged") return outcome.status;
   if (outcome.status === "unavailable" && outcome.reason === "missing") {
-    // First ocx run on a fresh machine: ocx connect is the expected first command in
+    // First occx run on a fresh machine: occx connect is the expected first command in
     // client mode, so there is no config.json yet. mutatePersistedConfig correctly
     // refuses to invent one (a lost config must fail closed), but a genuinely absent
     // file is the bootstrap case, not corruption — seed defaults plus the client
@@ -186,7 +186,7 @@ export function commitClientConnection(
 }
 
 export function clearClientConnection(
-  expected: string | Pick<OcxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
+  expected: string | Pick<OccxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">,
 ): "committed" | "absent" | "conflict" {
   const outcome = mutatePersistedConfig(config => {
     if (!config.client && config.runtimeRole !== "client") {

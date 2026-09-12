@@ -85,9 +85,9 @@ Sources: `needsReauth`, Codex `upstreamHealth` cooldowns, refresh-intent / CAS c
 
 ### 5. Diagnostics surfaces
 
-- **`ocx status`:** concise OAuth health block (provider, redacted account, status, reason/action or retry-after).
-- **`ocx doctor`:** checks for writable credential store, single-flight/lock readiness, reauth, cooldown, incomplete credentials, refresh conflicts; each WARN includes recovery action.
-- **Dashboard:** health badge on provider/account views with explanation + actions (reauthenticate, copy `ocx doctor`, retry after cooldown). Copy must say reliability/diagnostics — never “anti-ban”.
+- **`occx status`:** concise OAuth health block (provider, redacted account, status, reason/action or retry-after).
+- **`occx doctor`:** checks for writable credential store, single-flight/lock readiness, reauth, cooldown, incomplete credentials, refresh conflicts; each WARN includes recovery action.
+- **Dashboard:** health badge on provider/account views with explanation + actions (reauthenticate, copy `occx doctor`, retry after cooldown). Copy must say reliability/diagnostics — never “anti-ban”.
 
 ### 6. Client metadata integrity (Codex path)
 

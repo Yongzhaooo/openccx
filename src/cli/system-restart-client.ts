@@ -16,7 +16,7 @@ import {
 } from "../lib/system-restart-contract";
 import {
   findLiveProxy,
-  isOpencodexHealthz,
+  isOpenccxHealthz,
   probeHostname,
   type HealthzIdentity,
   type LiveProxy,
@@ -94,7 +94,7 @@ export async function requestBoundSystemRestart(
   const proof = proofResponse.headers.get(LOCAL_ATTESTATION_PROOF_HEADER);
   if (
     !proofResponse.ok
-    || !isOpencodexHealthz(body)
+    || !isOpenccxHealthz(body)
     || body?.pid !== target.pid
     || !verifyLocalAttestationProof(runtime.attestationSecret, challenge, target.pid, target.port, proof)
   ) {

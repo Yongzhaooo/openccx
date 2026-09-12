@@ -274,7 +274,7 @@ test("every client counts toward the summary, not just the file clients", () => 
     cursor: {
       privateInference: { installed: true, path: "/Applications/Cursor Private Inference.app", version: "3.18.25" },
       regularCursor: { installed: false, path: null },
-      gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "placeholder", placeholder: "opencodex-loopback" },
+      gateway: { baseUrl: "http://127.0.0.1:10100/v1", apiKeyMode: "placeholder", placeholder: "openccx-loopback" },
       lastSeen: { at: Date.now() - 60_000, userAgent: "Cursor/3.18.25" },
       models: [],
       guideUrl: "https://example.invalid/guide",

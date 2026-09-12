@@ -17,7 +17,7 @@ import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { DEVIN_CLI_MODELS, DEVIN_CLI_MODEL_CONTEXT_WINDOWS, DEVIN_CLI_DEFAULT_MODEL } from "../../src/adapters/devin-cli/models";
 import { DEVIN_MODEL_CONTEXT_WINDOWS } from "../../src/adapters/devin/live-models";
 import { formatProviderDisplayName, providerIconSrc } from "../../gui/src/provider-icons";
-import type { AdapterEvent, OcxParsedRequest } from "../../src/types";
+import type { AdapterEvent, OccxParsedRequest } from "../../src/types";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
@@ -77,7 +77,7 @@ describe("acp handshake frames", () => {
     expect(initializeFrame("1.2.3")).toMatchObject({
       jsonrpc: "2.0",
       method: "initialize",
-      params: { protocolVersion: 1, clientInfo: { name: "opencodex", version: "1.2.3" } },
+      params: { protocolVersion: 1, clientInfo: { name: "openccx", version: "1.2.3" } },
     });
     const withModel = sessionNewFrame("/repo", "swe-2") as { id: number; params: Record<string, unknown> };
     expect(withModel.id).toBe(ACP_SESSION_NEW_ID);
@@ -137,7 +137,7 @@ describe("acp prompt projection", () => {
         tools: [],
       },
       options: {},
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
     const prompt = buildAcpPrompt(parsed);
     expect(prompt).toContain("[System]\nbe brief");
     expect(prompt).toContain("[User]\nhi");
@@ -267,7 +267,7 @@ describe("devin-cli runTurn", () => {
     stream: true,
     context: { systemPrompt: [], messages: [{ role: "user", content: "hi", timestamp: 1 }], tools: [] },
     options: {},
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 
   async function run(script: (stdout: PassThrough, child: EventEmitter) => void) {
     const { child, stdout, stdinWrites } = fakeChild();

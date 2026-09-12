@@ -12,13 +12,13 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoRoot as resolveRepoRoot } from "../helpers/repo-root";
 
 const repoRoot = resolveRepoRoot();
-const runner = join(repoRoot, "scripts", "ocx-run");
+const runner = join(repoRoot, "scripts", "occx-run");
 
-describe("ocx-run", () => {
+describe("occx-run", () => {
   test.skipIf(process.platform !== "linux")(
     "runs the command from a requested workdir containing spaces",
     () => {
-      const root = mkdtempSync(join(tmpdir(), "ocx-run-"));
+      const root = mkdtempSync(join(tmpdir(), "occx-run-"));
       const workdirName = "requested workdir";
       const workdir = join(root, workdirName);
       const cdPath = join(root, "cdpath");
@@ -30,7 +30,7 @@ describe("ocx-run", () => {
         mkdirSync(join(cdPath, workdirName), { recursive: true });
         const result = Bun.spawnSync(["bash", runner, name, workdirName, "5s", "pwd", "-P"], {
           cwd: root,
-          env: { ...process.env, CDPATH: cdPath, OCX_RUN_DIR: stateDir },
+          env: { ...process.env, CDPATH: cdPath, OCCX_RUN_DIR: stateDir },
           stdout: "pipe",
           stderr: "pipe",
         });

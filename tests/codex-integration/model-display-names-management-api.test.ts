@@ -3,14 +3,14 @@ import { clearModelCache, getFreshCached, setCached } from "../../src/codex/mode
 import type { CatalogDisposition } from "../../src/codex/convergence-types";
 import { listManagementModelRows, toExportModel } from "../../src/server/management/model-rows";
 import { handleModelRoutes } from "../../src/server/management/model-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const DISPLAY_PROVIDER = "display-test";
 
 function config(
   modelDisplayNames?: Record<string, string>,
   models: string[] = ["model-a"],
-): OcxConfig {
+): OccxConfig {
   return {
     port: 10100,
     defaultProvider: DISPLAY_PROVIDER,
@@ -103,15 +103,15 @@ describe("provider model display name mutation route", () => {
   };
 
   async function call(
-    liveConfig: OcxConfig,
+    liveConfig: OccxConfig,
     body: unknown,
     options: {
       provider?: string;
       rawBody?: string;
-      persist?: (saved: OcxConfig) => void;
+      persist?: (saved: OccxConfig) => void;
       converge?: () => Promise<CatalogDisposition>;
     } = {},
-  ): Promise<{ response: Response | null; persisted: OcxConfig[]; convergeCalls: number }> {
+  ): Promise<{ response: Response | null; persisted: OccxConfig[]; convergeCalls: number }> {
     const provider = options.provider ?? DISPLAY_PROVIDER;
     const url = new URL(`http://127.0.0.1:10100/api/providers/${encodeURIComponent(provider)}/model-display-names`);
     const req = new Request(url, {
@@ -119,7 +119,7 @@ describe("provider model display name mutation route", () => {
       headers: { "Content-Type": "application/json" },
       body: options.rawBody ?? JSON.stringify(body),
     });
-    const persisted: OcxConfig[] = [];
+    const persisted: OccxConfig[] = [];
     let convergeCalls = 0;
     const response = await handleModelRoutes({
       req,
@@ -288,7 +288,7 @@ describe("provider model display name mutation route", () => {
 
   test("a convergence failure keeps the successfully persisted label", async () => {
     const liveConfig = config();
-    let persisted: OcxConfig | undefined;
+    let persisted: OccxConfig | undefined;
 
     await expect(call(liveConfig, { modelId: "model-a", displayName: "Alpha" }, {
       persist: saved => { persisted = structuredClone(saved); },

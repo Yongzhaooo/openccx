@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import {
   getProviderRegistryEntry,
   providerMatchesRegistryTransport,
@@ -20,7 +20,7 @@ function normalizedEndpoint(value: string): string {
 
 function exactRegistryTransportMatch(
   entry: ProviderRegistryEntry,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   options: { allowLegacyMimoLocal?: boolean } = {},
 ): boolean {
   if (entry.allowBaseUrlOverride || /\{[^}]*\}/.test(entry.baseUrl)) return false;
@@ -44,7 +44,7 @@ export function registryEntrySupportsLiveModelDiscovery(entry: ProviderRegistryE
  */
 export function staticModelCatalogEntryForProvider(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): ProviderRegistryEntry | undefined {
   const entry = getProviderRegistryEntry(name);
   if (!entry || !STATIC_MODEL_CATALOG_PROVIDER_IDS.has(entry.id)) return undefined;
@@ -53,7 +53,7 @@ export function staticModelCatalogEntryForProvider(
     : undefined;
 }
 
-export function providerSupportsLiveModelDiscovery(name: string, provider: OcxProviderConfig): boolean {
+export function providerSupportsLiveModelDiscovery(name: string, provider: OccxProviderConfig): boolean {
   return staticModelCatalogEntryForProvider(name, provider) === undefined;
 }
 
@@ -63,7 +63,7 @@ export function providerSupportsLiveModelDiscovery(name: string, provider: OcxPr
  */
 export function providerMatchesRegistryTransportWithStaticGuards(
   name: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
 ): boolean {
   if (name !== "mimo-free") return providerMatchesRegistryTransport(name, provider);
   const entry = getProviderRegistryEntry(name);
@@ -72,7 +72,7 @@ export function providerMatchesRegistryTransportWithStaticGuards(
 }
 
 /** Repair only registry-owned legacy state; operator-owned model lists stay untouched. */
-export function repairStaticModelCatalogProvider(name: string, provider: OcxProviderConfig): void {
+export function repairStaticModelCatalogProvider(name: string, provider: OccxProviderConfig): void {
   const entry = staticModelCatalogEntryForProvider(name, provider);
   if (!entry) return;
   provider.liveModels = false;

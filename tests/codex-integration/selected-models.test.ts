@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { filterCatalogVisibleModels, type CatalogModel } from "../../src/codex/catalog";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 function m(provider: string, id: string): CatalogModel {
   return { provider, id, owned_by: provider };
 }
 
-function cfg(providers: Record<string, Partial<OcxProviderConfig>>, disabledModels?: string[]): Pick<OcxConfig, "disabledModels" | "providers"> {
-  const full: Record<string, OcxProviderConfig> = {};
+function cfg(providers: Record<string, Partial<OccxProviderConfig>>, disabledModels?: string[]): Pick<OccxConfig, "disabledModels" | "providers"> {
+  const full: Record<string, OccxProviderConfig> = {};
   for (const [name, p] of Object.entries(providers)) full[name] = { adapter: "openai-chat", baseUrl: "https://x", ...p };
   return { providers: full, ...(disabledModels ? { disabledModels } : {}) };
 }
@@ -50,7 +50,7 @@ describe("filterCatalogVisibleModels — per-provider allowlist", () => {
 
 describe("filterCatalogVisibleModels — slash-bearing ids", () => {
   // The Codex picker displays a slash-bearing native id in its ENCODED form, and
-  // `ocx models remove` accepts that form too, so an allowlist is routinely written
+  // `occx models remove` accepts that form too, so an allowlist is routinely written
   // with slugs the provider never published. A bare `Set(selectedModels)` matched
   // only the native spelling and hid every model it was meant to keep.
   const native = "moonshotai/kimi-k3-free";

@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-opencodex is a local proxy for Codex. It does not patch Codex binaries. It changes local Codex
+openccx is a local proxy for Codex. It does not patch Codex binaries. It changes local Codex
 state by writing root routing keys and a model catalog — a provider table only in the
 API-auth-header form described in [`config.md`](config.md) —
 then serves the Responses data plane:
@@ -10,7 +10,7 @@ then serves the Responses data plane:
 ```text
 Codex CLI / TUI / App / SDK
   -> http://127.0.0.1:<port>/v1/responses
-  -> opencodex routing + adapter bridge
+  -> openccx routing + adapter bridge
   -> upstream provider
 ```
 
@@ -34,35 +34,35 @@ providers are routed by explicit `provider/model`, provider model lists, or the 
 
 ## Local state
 
-`~/.opencodex/` is the default state root and `OPENCODEX_HOME` overrides it; the GUI and the
+`~/.opencodex/` is the default state root and `OPENCCX_HOME` overrides it; the GUI and the
 installed service resolve it the same way (`src/config.ts`). Ownership inside that root is tracked
 by the uninstall manifest in `src/lib/config-ownership.ts`, which starts from a declared path list
-and grows as opencodex claims further paths at runtime — so the manifest, not this table, is what
+and grows as openccx claims further paths at runtime — so the manifest, not this table, is what
 bounds uninstall. This table groups the state by purpose; it is not an exhaustive file list, and
 derived files such as `auth.json.pre-multiauth` are covered by the group they belong to.
 
-`$CODEX_HOME` is a separate root with a separate owner, and opencodex writes there too: removing the
-opencodex state root does not undo those writes. Putting native Codex back is the job of
-`ocx restore`/`eject` and the injection journal, not of deleting a directory.
+`$CODEX_HOME` is a separate root with a separate owner, and openccx writes there too: removing the
+openccx state root does not undo those writes. Putting native Codex back is the job of
+`occx restore`/`eject` and the injection journal, not of deleting a directory.
 
 | Path | Owner | Notes |
 | --- | --- | --- |
-| `~/.opencodex/config.json` | opencodex | Init creates via private temp plus no-replace hard link; dashboard and explicit updates use atomic replacement. |
-| `~/.opencodex/auth.json` | opencodex | OAuth tokens; not committed. Multiauth shape: `provider -> { activeAccountId, accounts[] }` (legacy single-credential values normalize on load; a one-time `auth.json.pre-multiauth` backup guards downgrades). ChatGPT scratch OAuth stays separate from the Codex account store. For multi-slot providers, credentials without `accountId`/email replace the active slot on a normal login; an explicit add-account login preserves the prior slot and appends a distinct one. Single-slot providers such as ChatGPT remain replacement-only. |
-| `~/.opencodex/codex-accounts.json` | opencodex | Hardened main-plus-added credential store used by `openai` in Pool mode. |
-| `~/.opencodex/catalog-backup.json` | opencodex | One-time pristine Codex catalog backup for restore; per-catalog copies are hashed variants (see [`catalog.md`](catalog.md)). |
-| `~/.opencodex/usage.jsonl` | opencodex | Append-only request usage log (0o600); request metadata + token counts only, never prompts or auth. |
-| `~/.opencodex/ocx.pid`, `runtime-port.json`, `system-env-port` | opencodex runtime | Live process identity and the port a client should reach; rewritten on start. `runtime-port.json` also carries the protected per-process listener-attestation key used before CLI diagnostics attach a management bearer. |
-| `~/.opencodex/codex-runtime.json`, `codex-runtime-clamp.json` | opencodex Codex runtime | Selected Codex executable/version state and effort-clamp diagnostics. Not process identity: these persist a resolved choice and a diagnostic, so losing them changes behavior until re-resolved. |
-| `~/.opencodex/service-state.json`, `service.log`, `service-api-token`, `opencodex-service-launcher.vbs`, `opencodex-service-task.xml`, `opencodex-service.cmd`, `winsw`, `tray-state.json`, `tray-heartbeat.json`, `opencodex-tray.ps1`, `opencodex-tray-*.ico`, `update-job.json` | opencodex operators | Installed-service, Windows tray, and self-update artifacts and bookkeeping. The update record carries its worker PID so a dead worker recovers instead of blocking later runs. |
-| `~/.opencodex/responses-state.json`, `responses-state-spill/`, `usage-debug.jsonl`, `crash.log`, `artifacts/` | opencodex diagnostics and artifacts | Bounded caches, diagnostics, and generated image/video artifacts served locally. The spill directory holds continuation state demoted out of the in-memory cap and is bounded in aggregate, not only per file. |
-| `~/.opencodex/codex-shim.json`, `*.lock`, `kimi-device-id`, `mimo-client-id`, `.star-prompted` | opencodex bookkeeping | Shim restore obligations, cross-process locks, per-install client identifiers, one-shot UI flags. |
-| `~/.opencodex/.opencodex-owner.json`, `.opencodex-uninstall.json` | opencodex | Ownership marker and the manifest that bounds what uninstall may remove. Both live in the OpenCodex state root, not in `$CODEX_HOME`. |
-| `$CODEX_HOME/config.toml` | Codex, edited by opencodex | Active provider and provider table. |
-| `$CODEX_HOME/opencodex.config.toml` | opencodex | Optional profile for explicit Codex opt-in. |
-| `$CODEX_HOME/opencodex-catalog.json` | opencodex | Shared native+routed model catalog. |
-| `$CODEX_HOME/opencodex-journal.json` | opencodex | Injection journal used by restore to strip only marker-owned values while preserving later user edits. |
-| `$CODEX_HOME/models_cache.json` | Codex, invalidated by opencodex | Cache invalidated after model/catalog changes. |
+| `~/.opencodex/config.json` | openccx | Init creates via private temp plus no-replace hard link; dashboard and explicit updates use atomic replacement. |
+| `~/.opencodex/auth.json` | openccx | OAuth tokens; not committed. Multiauth shape: `provider -> { activeAccountId, accounts[] }` (legacy single-credential values normalize on load; a one-time `auth.json.pre-multiauth` backup guards downgrades). ChatGPT scratch OAuth stays separate from the Codex account store. For multi-slot providers, credentials without `accountId`/email replace the active slot on a normal login; an explicit add-account login preserves the prior slot and appends a distinct one. Single-slot providers such as ChatGPT remain replacement-only. |
+| `~/.opencodex/codex-accounts.json` | openccx | Hardened main-plus-added credential store used by `openai` in Pool mode. |
+| `~/.opencodex/catalog-backup.json` | openccx | One-time pristine Codex catalog backup for restore; per-catalog copies are hashed variants (see [`catalog.md`](catalog.md)). |
+| `~/.opencodex/usage.jsonl` | openccx | Append-only request usage log (0o600); request metadata + token counts only, never prompts or auth. |
+| `~/.opencodex/occx.pid`, `runtime-port.json`, `system-env-port` | openccx runtime | Live process identity and the port a client should reach; rewritten on start. `runtime-port.json` also carries the protected per-process listener-attestation key used before CLI diagnostics attach a management bearer. |
+| `~/.opencodex/codex-runtime.json`, `codex-runtime-clamp.json` | openccx Codex runtime | Selected Codex executable/version state and effort-clamp diagnostics. Not process identity: these persist a resolved choice and a diagnostic, so losing them changes behavior until re-resolved. |
+| `~/.opencodex/service-state.json`, `service.log`, `service-api-token`, `openccx-service-launcher.vbs`, `openccx-service-task.xml`, `openccx-service.cmd`, `winsw`, `tray-state.json`, `tray-heartbeat.json`, `openccx-tray.ps1`, `openccx-tray-*.ico`, `update-job.json` | openccx operators | Installed-service, Windows tray, and self-update artifacts and bookkeeping. The update record carries its worker PID so a dead worker recovers instead of blocking later runs. |
+| `~/.opencodex/responses-state.json`, `responses-state-spill/`, `usage-debug.jsonl`, `crash.log`, `artifacts/` | openccx diagnostics and artifacts | Bounded caches, diagnostics, and generated image/video artifacts served locally. The spill directory holds continuation state demoted out of the in-memory cap and is bounded in aggregate, not only per file. |
+| `~/.opencodex/codex-shim.json`, `*.lock`, `kimi-device-id`, `mimo-client-id`, `.star-prompted` | openccx bookkeeping | Shim restore obligations, cross-process locks, per-install client identifiers, one-shot UI flags. |
+| `~/.opencodex/.opencodex-owner.json`, `.openccx-uninstall.json` | openccx | Ownership marker and the manifest that bounds what uninstall may remove. Both live in the Openccx state root, not in `$CODEX_HOME`. |
+| `$CODEX_HOME/config.toml` | Codex, edited by openccx | Active provider and provider table. |
+| `$CODEX_HOME/opencodex.config.toml` | openccx | Optional profile for explicit Codex opt-in. |
+| `$CODEX_HOME/opencodex-catalog.json` | openccx | Shared native+routed model catalog. |
+| `$CODEX_HOME/opencodex-journal.json` | openccx | Injection journal used by restore to strip only marker-owned values while preserving later user edits. |
+| `$CODEX_HOME/models_cache.json` | Codex, invalidated by openccx | Cache invalidated after model/catalog changes. |
 | `dist/`, `gui/dist/`, `node_modules/` | generated | Build output/dependencies. |
 
 ## Non-negotiable invariants
@@ -86,7 +86,7 @@ still cover the rule, which is a judgement only review makes.
 - **INV-AUTH-01** — The management plane (`/api/*`) and the data plane (`/v1/*`) never share an
   admission credential.
   Enforced by `tests/server/server-management-auth.test.ts`.
-- **INV-RESTORE-01** — `ocx restore` returns the pristine Codex catalog, so a restored install is a
+- **INV-RESTORE-01** — `occx restore` returns the pristine Codex catalog, so a restored install is a
   usable native Codex. The service-stop and uninstall paths of the same promise are covered
   separately in `tests/cli/restore-completes-shared-teardown.test.ts` and are not bound to this id.
   Enforced by `tests/codex-integration/codex-catalog-restore.test.ts`.

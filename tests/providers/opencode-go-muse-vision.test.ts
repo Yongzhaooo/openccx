@@ -12,13 +12,13 @@ import { describe, expect, test } from "bun:test";
 import { applyProviderConfigHints } from "../../src/codex/catalog";
 import { getProviderRegistryEntry, PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { providerConfigSeed } from "../../src/providers/derive";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 const MUSE_MODEL = "muse-spark-1.2-contributor";
 const MUSE_13_MODEL = "muse-spark-1.3-contributor";
 
 /** Seeded OpenCode Go provider config for the Muse Spark vision assertions. */
-function opencodeGo(): OcxProviderConfig {
+function opencodeGo(): OccxProviderConfig {
   const entry = getProviderRegistryEntry("opencode-go");
   if (!entry) throw new Error("missing opencode-go registry fixture");
   return { ...providerConfigSeed(entry), apiKey: "test-key" };

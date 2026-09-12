@@ -36,7 +36,7 @@ import {
 } from "../../src/codex/user-identity";
 import { getConfigPath, saveConfig } from "../../src/config";
 import { CODEX_FORWARD_BASE_URL } from "../../src/providers/openai-tiers";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { setBundledCatalogCacheForTests } from "../../src/codex/catalog/bundled";
 import { catalogEntryEfforts } from "../../src/codex/catalog/effort";
 import {
@@ -59,10 +59,10 @@ setDefaultTimeout(30_000);
 
 let root = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let catalogPath = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexCliPath: string | undefined;
 let previousFetch: typeof fetch;
 let modelRostersByChatgptAccount: Map<string, readonly string[]>;
@@ -95,7 +95,7 @@ function accountEntry(selector: string): RawEntry {
     ...nativeEntry(),
     slug: `${selector}/gpt-5.6-sol`,
     display_name: `${selector} / 5.6 Sol`,
-    opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
   };
 }
 
@@ -133,7 +133,7 @@ function generatedRoutedEntry(slug: string, marker?: string): RawEntry {
     ...nativeEntry(),
     slug,
     display_name: slug,
-    description: `Routed via opencodex → ${provider} (${provider}).`,
+    description: `Routed via openccx → ${provider} (${provider}).`,
     owned_by: provider,
     ...(marker ? { test_marker: marker } : {}),
   };
@@ -155,7 +155,7 @@ function nativeMetadataEntry(
   };
 }
 
-function config(pickerEnabled: boolean, disabledModels: string[] = []): OcxConfig {
+function config(pickerEnabled: boolean, disabledModels: string[] = []): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -181,7 +181,7 @@ function config(pickerEnabled: boolean, disabledModels: string[] = []): OcxConfi
   };
 }
 
-function autoReviewConfig(models: string[]): OcxConfig {
+function autoReviewConfig(models: string[]): OccxConfig {
   const nextConfig = config(false);
   nextConfig.providers.static = {
     adapter: "openai-chat",
@@ -214,7 +214,7 @@ function writeCatalog(models: RawEntry[]): void {
 }
 
 function seedObservedRuntimeSupport(efforts = ["low", "medium", "high", "xhigh"]): void {
-  rmSync(join(opencodexHome, "codex-runtime.json"), { force: true });
+  rmSync(join(openccxHome, "codex-runtime.json"), { force: true });
   const runtime = {
     command: "/tmp/codex",
     version: "0.145.0",
@@ -270,7 +270,7 @@ function primeCodexRuntimeFixture(): void {
   expect(loadBundledCodexCatalog()?.models?.[0]?.slug).toBe("gpt-5.5");
 }
 
-async function convergeCatalog(nextConfig: OcxConfig): Promise<RawCatalog> {
+async function convergeCatalog(nextConfig: OccxConfig): Promise<RawCatalog> {
   saveConfig(nextConfig);
   const gathered = await gatherCodexCatalogCandidate(captureCatalogAdmissionSnapshot(nextConfig));
   expect(gathered.kind).toBe("candidate");
@@ -279,7 +279,7 @@ async function convergeCatalog(nextConfig: OcxConfig): Promise<RawCatalog> {
   return JSON.parse(readFileSync(catalogPath, "utf8")) as RawCatalog;
 }
 
-async function convergeCatalogDisposition(nextConfig: OcxConfig) {
+async function convergeCatalogDisposition(nextConfig: OccxConfig) {
   saveConfig(nextConfig);
   return (await convergeCodexCatalog(
     captureCatalogAdmissionSnapshot(nextConfig),
@@ -295,16 +295,16 @@ async function convergeCatalogDisposition(nextConfig: OcxConfig) {
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexCliPath = process.env.CODEX_CLI_PATH;
-  root = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-convergence-accounts-")));
+  root = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-convergence-accounts-")));
   codexHome = join(root, "codex");
-  opencodexHome = join(root, "opencodex");
-  catalogPath = join(codexHome, "opencodex-catalog.json");
+  openccxHome = join(root, "openccx");
+  catalogPath = join(codexHome, "openccx-catalog.json");
   mkdirSync(codexHome);
-  mkdirSync(opencodexHome);
+  mkdirSync(openccxHome);
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   previousFetch = globalThis.fetch;
   modelRostersByChatgptAccount = new Map();
   writeFileSync(join(codexHome, "auth.json"), JSON.stringify({
@@ -344,8 +344,8 @@ afterEach(() => {
   }
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexCliPath === undefined) delete process.env.CODEX_CLI_PATH;
   else process.env.CODEX_CLI_PATH = previousCodexCliPath;
   resetCodexRuntimeResolveCacheForTests();
@@ -361,7 +361,7 @@ test("convergence renders account-qualified rows and preserves only non-generate
     {
       ...foreignEntry(),
       slug: "removed-provider/ghost",
-      description: "Routed via opencodex → removed-provider (removed-provider).",
+      description: "Routed via openccx → removed-provider (removed-provider).",
     },
   ]);
 
@@ -372,12 +372,12 @@ test("convergence renders account-qualified rows and preserves only non-generate
   expect(models.find(entry => entry.slug === "desktop/gpt-5.6-sol")).toMatchObject({
     display_name: "desktop / 5.6 Sol",
     visibility: "list",
-    opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
   });
   expect(models.find(entry => entry.slug === "team/gpt-5.6-sol")).toMatchObject({
     display_name: "team / 5.6 Sol",
     visibility: "hide",
-    opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
   });
   expect(models.some(entry => entry.slug === "stale-selector/gpt-5.6-sol")).toBe(false);
   expect(models.some(entry => entry.slug === "external/vendor-model")).toBe(true);
@@ -421,7 +421,7 @@ test("disabling the picker removes generated rows, restores bare rows, and retai
   const models = catalog.models ?? [];
 
   expect(models.find(entry => entry.slug === "gpt-5.6-sol")?.visibility).toBe("list");
-  expect(models.some(entry => entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND)).toBe(false);
+  expect(models.some(entry => entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND)).toBe(false);
   expect(models.some(entry => entry.slug === "external/vendor-model")).toBe(true);
 });
 
@@ -438,7 +438,7 @@ test("convergence drops unsupported bare native rows and never qualifies them", 
   expect(models.some(entry => entry.slug === "desktop/gpt-legacy-unsupported")).toBe(false);
   expect(models.some(entry => entry.slug === "team/gpt-legacy-unsupported")).toBe(false);
   expect(models
-    .filter(entry => entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND)
+    .filter(entry => entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND)
     .every(entry => (
       typeof entry.slug === "string" && !entry.slug.endsWith("/gpt-legacy-unsupported")
     ))).toBe(true);
@@ -460,7 +460,7 @@ test("convergence projects the observed Daybreak row onto its selector and one b
       model_messages: { instructions_template: "You are Codex." },
       base_instructions: "You are Codex.",
       supported_reasoning_levels: [{ effort: "medium", description: "Medium" }],
-      opencodex_account_observed_native: true,
+      openccx_account_observed_native: true,
     }],
   }, null, 2) + "\n");
 
@@ -470,7 +470,7 @@ test("convergence projects the observed Daybreak row onto its selector and one b
   const daybreak = models.find(entry => entry.slug === "desktop/gpt-daybreak-blue-latest");
   expect(daybreak).toMatchObject({
     visibility: "list",
-    opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     context_window: 272_000,
     max_context_window: 272_000,
     auto_compact_token_limit: 244_800,
@@ -594,7 +594,7 @@ test.each([
   }];
   writeCatalog([nativeEntry(), {
     ...generatedRoutedEntry("openai/gpt-6-astra"),
-    opencodex_catalog_kind: "custom-model-v1",
+    openccx_catalog_kind: "custom-model-v1",
     supported_reasoning_levels: [{ effort: "minimal", description: "Stale" }, { effort: "max", description: "Stale max" }],
     default_reasoning_level: "minimal",
   }]);
@@ -607,7 +607,7 @@ test.each([
   }
 });
 
-function legacyCustomDeletionConfig(): OcxConfig {
+function legacyCustomDeletionConfig(): OccxConfig {
   const nextConfig = config(false);
   nextConfig.providers.offline = {
     adapter: "openai-chat",
@@ -671,7 +671,7 @@ test("retained and convergence writers resolve, clear, reject, and recover auto-
   primeCodexRuntimeFixture();
 
   for (const writer of ["retained", "convergence"] as const) {
-    const write = async (nextConfig: OcxConfig): Promise<RawCatalog> => {
+    const write = async (nextConfig: OccxConfig): Promise<RawCatalog> => {
       if (writer === "retained") {
         const result = await syncCatalogModels(nextConfig);
         expect(result.catalogWritten).toBe(true);
@@ -806,7 +806,7 @@ test("routed-only custom catalogs remain authoritative across convergence and re
     root_marker: "active-custom",
     models: [generatedRoutedEntry("static/old")],
   }, null, 2)}\n`);
-  const nextConfig: OcxConfig = {
+  const nextConfig: OccxConfig = {
     port: 10100,
     defaultProvider: "static",
     providers: {
@@ -982,7 +982,7 @@ test("generated account rows silently win freshly gathered provider collisions",
     expect(collisions).toHaveLength(1);
     expect(collisions[0]).toMatchObject({
       display_name: "team / 5.6 Sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     });
     expect(warn.mock.calls.some(args => (
       args.some(value => String(value).includes("account selector collision"))
@@ -1019,7 +1019,7 @@ test("a missing supported native is backfilled and restored when the picker is d
   const disabled = await convergeCatalog(config(false));
   expect(disabled.models?.find(entry => entry.slug === "gpt-5.5")?.visibility).toBe("list");
   expect(disabled.models?.some(entry => (
-    entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
+    entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
   ))).toBe(false);
 });
 
@@ -1047,7 +1047,7 @@ test("retained sync and convergence produce identical canonical bytes in either 
       else expect(slugs).toContain(slug);
     }
     for (const entry of models.filter(entry => (
-      entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
+      entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
     ))) {
       const baseSlug = entry.slug?.slice(entry.slug.indexOf("/") + 1);
       expect(ACCOUNT_GATED_NATIVE_OPENAI_MODELS.has(baseSlug ?? "")).toBe(false);
@@ -1057,16 +1057,16 @@ test("retained sync and convergence produce identical canonical bytes in either 
     expect(models.find(entry => entry.slug === "gpt-5.5")?.visibility)
       .toBe(pickerEnabled ? "hide" : "list");
     expect(models.some(entry => (
-      entry.opencodex_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
+      entry.openccx_catalog_kind === CODEX_ACCOUNT_BOUND_CATALOG_KIND
     ))).toBe(pickerEnabled);
     if (pickerEnabled) {
       expect(models.find(entry => entry.slug === "desktop/gpt-5.5")).toMatchObject({
         display_name: "desktop / 5.5",
-        opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       });
       expect(models.find(entry => entry.slug === "team/gpt-5.5")).toMatchObject({
         display_name: "team / 5.5",
-        opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       });
     }
   };

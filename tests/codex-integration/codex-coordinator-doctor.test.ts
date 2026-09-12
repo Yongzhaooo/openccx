@@ -14,7 +14,7 @@ import {
   STABLE_ZERO_BYTE_COORDINATOR_AGE_MS,
 } from "../../src/codex/inject-coordination";
 import {
-  openCodexCoordinatorTransaction,
+  openccxCoordinatorTransaction,
 } from "../../src/codex/transition-state";
 import {
   resolveCodexCoordinatorDatabasePath,
@@ -24,18 +24,18 @@ import { formatCoordinatorDoctorLines } from "../../src/cli/doctor";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let coordinatorPath = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-coordinator-doctor-codex-"));
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-coordinator-doctor-ocx-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  codexHome = mkdtempSync(join(tmpdir(), "occx-coordinator-doctor-codex-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-coordinator-doctor-occx-"));
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   coordinatorPath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
     realpathSync.native(codexHome),
@@ -45,13 +45,13 @@ beforeEach(() => {
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   for (const suffix of ["", "-journal", "-wal", "-shm"]) {
     rmSync(`${coordinatorPath}${suffix}`, { force: true });
   }
   removeTreeWithRetry(codexHome);
-  removeTreeWithRetry(opencodexHome);
+  removeTreeWithRetry(openccxHome);
 });
 
 function privateFile(path: string, bytes = ""): void {
@@ -65,7 +65,7 @@ test("doctor classifies and explicitly backs up a stable zero-byte coordinator",
   expect(diagnostic.kind).toBe("zero-byte");
   if (diagnostic.kind !== "zero-byte") return;
   expect(formatCoordinatorDoctorLines(diagnostic).join("\n")).toContain(
-    "ocx doctor --recover-zero-byte-coordinator --yes",
+    "occx doctor --recover-zero-byte-coordinator --yes",
   );
   expect(formatCoordinatorDoctorLines(diagnostic).join("\n")).toContain(
     "size: 0 bytes; user_version: 0",
@@ -109,7 +109,7 @@ test("doctor distinguishes unversioned, rowless, and authoritative coordinators"
   expect(formatCoordinatorDoctorLines(malformed).join("\n")).toContain("transition rows: 1");
 
   rmSync(coordinatorPath, { force: true });
-  const transaction = openCodexCoordinatorTransaction(coordinatorPath);
+  const transaction = openccxCoordinatorTransaction(coordinatorPath);
   transaction.commit();
   transaction.close();
   expect(inspectCodexCoordinator().kind).toBe("ready");

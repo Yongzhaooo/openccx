@@ -20,7 +20,7 @@ import { readIntegrationState } from "../../src/integrations/state";
 import { createIntegrationStateStore } from "../../src/integrations/store";
 import { defaultIntegrationIO } from "../../src/integrations/config-io";
 import { applyIntegration } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const CONFIG = {
@@ -28,7 +28,7 @@ const CONFIG = {
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 function context(): ExportContext {
   return {
@@ -52,7 +52,7 @@ function writeManifest(body: string, accountRoot = true): void {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-aside-"));
+  home = mkdtempSync(join(tmpdir(), "occx-aside-"));
 });
 
 afterEach(() => {
@@ -62,7 +62,7 @@ afterEach(() => {
 describe("Aside client config", () => {
   /*
    * The shape below is not invented: it was read off a real
-   * ~/.aside/u/0/models.json that a user had wired to opencodex BY HAND before
+   * ~/.aside/u/0/models.json that a user had wired to openccx BY HAND before
    * this client existed. Four provider keys, the openai-completions dialect,
    * the loopback placeholder, and per-model input/contextWindow/maxTokens with
    * a pi-style thinkingLevelMap.
@@ -142,7 +142,7 @@ describe("Aside client config", () => {
 
   test("native JSON round-trips and never carries a credential", () => {
     const sentinel = ["sk", "live", "aside", "sentinel"].join("-");
-    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OcxConfig;
+    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OccxConfig;
     const built = buildClientConfigText("aside", { ...context(), config: withKey });
     expect(built.format).toBe("json");
     expect(JSON.parse(built.text)).toEqual(built.document as never);
@@ -150,7 +150,7 @@ describe("Aside client config", () => {
     expect(built.text).toContain(LOOPBACK_API_KEY_PLACEHOLDER);
   });
 
-  test("the contribution owns providers.opencodex under Aside's own id", () => {
+  test("the contribution owns providers.openccx under Aside's own id", () => {
     const contribution = buildClientContribution("aside", context());
     // Reusing Pi's builder must not leak Pi's id into the ownership record, or a
     // disable would attribute one client's block to another.
@@ -162,7 +162,7 @@ describe("Aside client config", () => {
     writeManifest(JSON.stringify({ currentAccountId: 0 }));
     expect(asideConfigPath({}, home)).toBe(join(home, ".aside", "u", "0", "models.json"));
 
-    const other = mkdtempSync(join(tmpdir(), "ocx-aside-alt-"));
+    const other = mkdtempSync(join(tmpdir(), "occx-aside-alt-"));
     mkdirSync(join(other, ".aside"), { recursive: true });
     writeFileSync(join(other, ".aside", "accounts.json"), JSON.stringify({ currentAccountId: 1 }));
     expect(asideConfigPath({}, other)).toBe(join(other, ".aside", "u", "1", "models.json"));
@@ -236,7 +236,7 @@ describe("Aside client config", () => {
     writeFileSync(join(home, ".aside", "u", "0", "models.json"), "{}\n");
     mkdirSync(join(home, ".aside", "u", "1"), { recursive: true });
 
-    const store = createIntegrationStateStore(mkdtempSync(join(tmpdir(), "ocx-aside-store-")));
+    const store = createIntegrationStateStore(mkdtempSync(join(tmpdir(), "occx-aside-store-")));
     const io = defaultIntegrationIO(store);
     const statted: string[] = [];
     const switching = {
@@ -269,7 +269,7 @@ describe("Aside client config", () => {
       const catalog = join(home, ".aside", "u", String(account), "models.json");
       if (!existsSync(catalog)) return false;
       const parsed = JSON.parse(readFileSync(catalog, "utf8")) as { providers?: Record<string, unknown> };
-      return parsed.providers?.opencodex !== undefined;
+      return parsed.providers?.openccx !== undefined;
     });
     expect(owning).toHaveLength(1);
     expect(authorized.has(join(home, ".aside", "u", String(owning[0])))).toBe(true);

@@ -9,7 +9,7 @@
 
 /** Wire text used when a present-but-empty tool output must stay visible to the model. */
 export const EMPTY_TOOL_OUTPUT_ANNOTATION =
-  "[ocx] empty tool output: the tool ran but produced no stdout or return value; do not treat this as success, failure, or user-provided input.";
+  "[occx] empty tool output: the tool ran but produced no stdout or return value; do not treat this as success, failure, or user-provided input.";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

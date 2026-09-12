@@ -232,7 +232,7 @@ export function guessExtFromMagic(bytes: Uint8Array): string {
   return ext;
 }
 
-/** Prune `OPENCODEX_HOME/artifacts` after a full image batch has been written. */
+/** Prune `OPENCCX_HOME/artifacts` after a full image batch has been written. */
 export function pruneArtifacts(keepCount?: number): void {
   pruneOldArtifacts(getArtifactsDir(), keepCount ?? DEFAULT_ARTIFACT_KEEP_COUNT);
 }

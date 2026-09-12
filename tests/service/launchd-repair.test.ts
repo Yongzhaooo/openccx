@@ -1,13 +1,13 @@
 /**
  * macOS repair/status protocol — issue #4236, defects 1 and 2.
  *
- * The reported failure: one `ocx service repair` on a hub took the public proxy, the
+ * The reported failure: one `occx service repair` on a hub took the public proxy, the
  * management ingress and the loopback listener down at once, printed success, and left
- * `ocx status` recommending the same repair. On darwin `repair` IS `installLaunchd`, which
+ * `occx status` recommending the same repair. On darwin `repair` IS `installLaunchd`, which
  * evicted the live job with a domain-explicit `bootout`, re-registered with the
  * domain-IMPLICIT legacy `launchctl load -w`, and accepted exit-0-with-empty-stderr as
  * proof. Measured on macOS 27.0 (Darwin 27, arm64) with a throwaway
- * `com.opencodex.test-probe` label:
+ * `com.openccx.test-probe` label:
  *
  *   launchctl print gui/$uid/<label>      → 0 loaded | 113 no such service | 112 no such domain
  *   launchctl bootstrap gui/$uid <plist>  → 0 first time, 5 "Bootstrap failed: 5" when bootstrapped
@@ -20,7 +20,7 @@
  * `installLaunchd` is handed an explicit plist path because `os.homedir()` reads the
  * password database rather than `$HOME` — so the suite's HOME sandbox does NOT move
  * `~/Library/LaunchAgents`, and a case without that seam rewrites the developer's own live
- * `com.opencodex.proxy.plist`.
+ * `com.openccx.proxy.plist`.
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -49,8 +49,8 @@ import { protectedLaunchAgentsDirForTests } from "../../src/lib/test-home-guard"
 import { repoPath } from "../helpers/repo-root";
 
 /**
- * Pin OPENCODEX_HOME per case. `buildPlist` reads config through `getConfigDir()`, and when
- * OPENCODEX_HOME is absent that falls back to `join(homedir(), ".opencodex")` — the real
+ * Pin OPENCCX_HOME per case. `buildPlist` reads config through `getConfigDir()`, and when
+ * OPENCCX_HOME is absent that falls back to `join(homedir(), ".openccx")` — the real
  * one, because `os.homedir()` ignores `$HOME`. A sibling file in the same Bun worker that
  * clears or restores the variable would otherwise make these cases fail on the real-home
  * guard instead of on anything they assert.
@@ -59,15 +59,15 @@ import { repoPath } from "../helpers/repo-root";
  * worker a sandbox home, and a file that leaves its own temp directory in the variable makes
  * the next file in the same worker read a home this one deleted.
  */
-const previousOpenCodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 beforeEach(() => {
-  const home = mkdtempSync(join(tmpdir(), "ocx-launchd-home-"));
-  mkdirSync(join(home, ".opencodex"), { recursive: true });
-  process.env.OPENCODEX_HOME = join(home, ".opencodex");
+  const home = mkdtempSync(join(tmpdir(), "occx-launchd-home-"));
+  mkdirSync(join(home, ".openccx"), { recursive: true });
+  process.env.OPENCCX_HOME = join(home, ".openccx");
 });
 afterEach(() => {
-  if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
 });
 
 type LaunchctlResult = { ok: boolean; stdout: string; stderr: string; status: number | null };
@@ -137,7 +137,7 @@ const loadedCurrent = (): { seen: LaunchdLoadState[]; probe: typeof probeLaunchd
 
 /** A fixture LaunchAgents directory plus the plist path inside it. */
 function fixturePlist(): string {
-  return join(mkdtempSync(join(tmpdir(), "ocx-launchd-repair-")), "com.opencodex.proxy.plist");
+  return join(mkdtempSync(join(tmpdir(), "occx-launchd-repair-")), "com.openccx.proxy.plist");
 }
 
 /** The plist `installLaunchd` will render in this process, for the byte-identical case. */
@@ -176,7 +176,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
   /**
    * Review finding 2. `buildPlist` bakes `process.env.PATH`, so the byte comparison above
    * only holds for a repair run from the same shell that installed the service. From a tray
-   * helper, `ocx update`'s child or an ssh session the PATH line differs, every other byte
+   * helper, `occx update`'s child or an ssh session the PATH line differs, every other byte
    * is identical, and the healthy hub was evicted anyway — with its PATH rewritten to the
    * narrower one.
    */
@@ -187,13 +187,13 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
       // The login shell that installed the service. The extra entry is deliberately a
       // directory that cannot exist, so both PATHs resolve the SAME launcher (none) and the
       // exec line is identical on every host.
-      process.env.PATH = "/opt/ocx-login-shell-only/bin:/usr/bin:/bin";
+      process.env.PATH = "/opt/occx-login-shell-only/bin:/usr/bin:/bin";
       const installedPlist = renderedPlist();
       // The tray helper / cron context that runs the repair.
       process.env.PATH = "/usr/bin:/bin";
       const repairPlist = renderedPlist();
       // Precondition of the case: PATH is the ONLY difference (neither PATH resolves an
-      // `ocx`, so the exec line is identical).
+      // `occx`, so the exec line is identical).
       expect(repairPlist).not.toBe(installedPlist);
       expect(repairPlist.replace(/<key>PATH<\/key><string>[^\n]*<\/string>/, "P"))
         .toBe(installedPlist.replace(/<key>PATH<\/key><string>[^\n]*<\/string>/, "P"));
@@ -256,8 +256,8 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
     // bootstrapped a SECOND one into gui — two KeepAlive jobs for one port.
     const bootouts = argv.filter(args => args[0] === "bootout").map(args => args[1] ?? "");
     expect(bootouts).toEqual(launchdEvictionTargets());
-    expect(bootouts[0]).toMatch(/^gui\/\d+\/com\.opencodex\.proxy$/);
-    expect(bootouts[1]).toMatch(/^user\/\d+\/com\.opencodex\.proxy$/);
+    expect(bootouts[0]).toMatch(/^gui\/\d+\/com\.openccx\.proxy$/);
+    expect(bootouts[1]).toMatch(/^user\/\d+\/com\.openccx\.proxy$/);
     // bootout before bootstrap, with the settle probe in between.
     expect(verbs(argv).indexOf("bootout")).toBeLessThan(verbs(argv).indexOf("bootstrap"));
   });
@@ -340,7 +340,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
     expect(verbs(argv)).toContain("kickstart");
     const kickstart = argv.find(args => args[0] === "kickstart");
     expect(kickstart?.slice(1)).toEqual(["-k", kickstart?.[2] ?? ""]);
-    expect(kickstart?.[2]).toMatch(/^gui\/\d+\/com\.opencodex\.proxy$/);
+    expect(kickstart?.[2]).toMatch(/^gui\/\d+\/com\.openccx\.proxy$/);
     // One bootstrap only: kickstart recovered it without a second eviction window.
     expect(verbs(argv).filter(v => v === "bootstrap")).toHaveLength(1);
   });
@@ -355,7 +355,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
   test("new bytes never trust kickstart: an env-only change still takes the eviction", () => {
     const plistPath = fixturePlist();
     const rendered = renderedPlist();
-    const sandboxHome = process.env.OPENCODEX_HOME ?? "";
+    const sandboxHome = process.env.OPENCCX_HOME ?? "";
     expect(rendered).toContain(sandboxHome);
     // Differs from the rendered plist in ONE EnvironmentVariables value; the exec line and
     // every other byte are identical, which is exactly the case kickstart would paper over.
@@ -396,7 +396,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
     writeFileSync(plistPath, renderedPlist(), "utf8");
     const { argv, launchctl } = recordingLaunchctl({
       bootstrap: [fail(5, "Bootstrap failed: 5: Input/output error"), ok()],
-      kickstart: fail(113, 'Could not find service "com.opencodex.proxy" in domain for user gui: 501'),
+      kickstart: fail(113, 'Could not find service "com.openccx.proxy" in domain for user gui: 501'),
     });
 
     installLaunchd({
@@ -414,7 +414,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
       "bootout", "print", "bootout", "print", "bootstrap",
     ]);
     const enable = argv.find(args => args[0] === "enable");
-    expect(enable?.[1]).toMatch(/^gui\/\d+\/com\.opencodex\.proxy$/);
+    expect(enable?.[1]).toMatch(/^gui\/\d+\/com\.openccx\.proxy$/);
   });
 
   test("an ordinary repair never runs enable, so a deliberate disable is not undone", () => {
@@ -469,7 +469,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
     const message = thrown instanceof Error ? thrown.message : String(thrown);
     // The operator must be told the job is DOWN — the silent version of this is the outage.
     expect(message).toMatch(/evicted from gui\/\d+/);
-    // And given the one command that recovered the real host, which `ocx` never printed.
+    // And given the one command that recovered the real host, which `occx` never printed.
     expect(message).toMatch(/launchctl bootstrap gui\/\d+ /);
     expect(message).toContain(plistPath);
     // Exit 5 can also mean the label sits in the domain's disabled list, so point at it.
@@ -508,7 +508,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
       plistPath,
       probe: scriptedProbe("not-loaded").probe,
       sleepSync: () => {},
-    })).toThrow(/ocx service install/);
+    })).toThrow(/occx service install/);
 
     expect(existsSync(`${plistPath}.prev`)).toBe(false);
     expect(verbs(argv).filter(v => v === "bootstrap")).toHaveLength(2);
@@ -534,7 +534,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
         plistPath,
         probe: scriptedProbe({
           state: "unknown",
-          detail: "launchctl print gui/501/com.opencodex.proxy exited 1",
+          detail: "launchctl print gui/501/com.openccx.proxy exited 1",
         }).probe,
         sleepSync: () => {},
       });
@@ -548,8 +548,8 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
     // Never the claim that made the outage undiagnosable.
     expect(message).not.toContain("IS NOT RUNNING");
     // Named so the operator can ask the question themselves, in both domains.
-    expect(message).toMatch(/launchctl print gui\/\d+\/com\.opencodex\.proxy/);
-    expect(message).toMatch(/launchctl print user\/\d+\/com\.opencodex\.proxy/);
+    expect(message).toMatch(/launchctl print gui\/\d+\/com\.openccx\.proxy/);
+    expect(message).toMatch(/launchctl print user\/\d+\/com\.openccx\.proxy/);
     // No launchctl verb ran, and the plist on disk is untouched.
     expect(argv).toEqual([]);
     expect(readFileSync(plistPath, "utf8")).toBe(installedPlist);
@@ -605,7 +605,7 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
   test("the armed test guard refuses the developer's real LaunchAgents directory", () => {
     // Without the seam above, every case in this file rewrote the live plist.
     expect(() => installLaunchd({
-      plistPath: join(protectedLaunchAgentsDirForTests(), "com.opencodex.proxy.plist"),
+      plistPath: join(protectedLaunchAgentsDirForTests(), "com.openccx.proxy.plist"),
       launchctl: recordingLaunchctl({}).launchctl,
       probe: loadedCurrent().probe,
       sleepSync: () => {},
@@ -616,10 +616,10 @@ describe("installLaunchd: repair must not be an outage (#4236 defect 1)", () => 
 /**
  * The other half of the no-op (#4249).
  *
- * `ocx service restart` runs the repair path, so once `installLaunchd` learned to return
+ * `occx service restart` runs the repair path, so once `installLaunchd` learned to return
  * early on a healthy loaded-current job, `restart` of a healthy service restarted NOTHING —
  * and the operator documentation had to tell people to run
- * `launchctl kickstart -k gui/$(id -u)/com.opencodex.proxy` by hand. `repair` keeps the
+ * `launchctl kickstart -k gui/$(id -u)/com.openccx.proxy` by hand. `repair` keeps the
  * no-op (repairing a healthy service must not be an outage); only `restart` kicks.
  *
  * `restartLaunchd` is injected in every case here. Its default is the real
@@ -678,7 +678,7 @@ describe("restart restarts, repair stays a no-op (#4249)", () => {
     // already holds, so the listener never goes away.
     expect(verbs(argv)).toEqual(["kickstart"]);
     expect(argv[0]?.slice(1, 2)).toEqual(["-k"]);
-    expect(argv[0]?.[2]).toMatch(/^gui\/\d+\/com\.opencodex\.proxy$/);
+    expect(argv[0]?.[2]).toMatch(/^gui\/\d+\/com\.openccx\.proxy$/);
     expect(verbs(argv)).not.toContain("bootout");
     expect(verbs(argv)).not.toContain("bootstrap");
     // The definition was never rewritten, so there is nothing to roll back.
@@ -748,14 +748,14 @@ describe("restart restarts, repair stays a no-op (#4249)", () => {
     // One line, naming the exact command, so an operator reading the output can repeat it.
     expect(logged).toHaveLength(1);
     expect(logged[0]).toContain("service restarted (launchctl kickstart -k gui/");
-    expect(logged[0]).toContain("/com.opencodex.proxy)");
+    expect(logged[0]).toContain("/com.openccx.proxy)");
   });
 
   test("a kickstart whose job is gone afterwards throws instead of claiming a restart", () => {
     const { launchctl } = recordingLaunchctl({ kickstart: fail(113, "Could not find service") });
 
     expect(() => restartLaunchdJob({ launchctl, probe: scriptedProbe("not-loaded").probe }))
-      .toThrow(/could not restart com\.opencodex\.proxy[\s\S]*NOT loaded[\s\S]*kickstart -k gui\//);
+      .toThrow(/could not restart com\.openccx\.proxy[\s\S]*NOT loaded[\s\S]*kickstart -k gui\//);
   });
 
   test("an unverifiable state after the kick warns — a probe that cannot answer is not a failure", () => {
@@ -826,8 +826,8 @@ describe("reusePreviousPlistPathVariable: PATH is the one difference repair may 
 describe("launchdEvictionTargets: an eviction covers every domain the probe reports", () => {
   test("both user domains, in probe order", () => {
     expect(launchdEvictionTargets(501)).toEqual([
-      "gui/501/com.opencodex.proxy",
-      "user/501/com.opencodex.proxy",
+      "gui/501/com.openccx.proxy",
+      "user/501/com.openccx.proxy",
     ]);
   });
 });
@@ -835,7 +835,7 @@ describe("launchdEvictionTargets: an eviction covers every domain the probe repo
 describe("probeLaunchdLoadState: a tri-state, not one swallowed bit (#4236 defect 2)", () => {
   const printed = (command: string): LaunchctlResult => ok(`{\n\targuments = {\n\t\t${command}\n\t}\n}`);
 
-  function probeWith(answers: Array<LaunchctlResult>, expected = "exec 'ocx' start --port 10100") {
+  function probeWith(answers: Array<LaunchctlResult>, expected = "exec 'occx' start --port 10100") {
     const asked: string[] = [];
     let call = 0;
     const launchctl = ((args: string[]) => {
@@ -846,11 +846,11 @@ describe("probeLaunchdLoadState: a tri-state, not one swallowed bit (#4236 defec
   }
 
   test("exit 0 with the expected command is loaded-current", () => {
-    const { asked, probe } = probeWith([printed("exec 'ocx' start --port 10100")]);
+    const { asked, probe } = probeWith([printed("exec 'occx' start --port 10100")]);
     expect(probe.state).toBe("loaded-current");
     expect(probe.domain).toBe("gui/501");
     // The gui domain answered, so the user domain is not asked.
-    expect(asked).toEqual(["gui/501/com.opencodex.proxy"]);
+    expect(asked).toEqual(["gui/501/com.openccx.proxy"]);
   });
 
   test("exit 0 with a different command is loaded-stale", () => {
@@ -861,11 +861,11 @@ describe("probeLaunchdLoadState: a tri-state, not one swallowed bit (#4236 defec
   test("113 in gui is not absence — the user domain is asked too", () => {
     const { asked, probe } = probeWith([
       fail(113, "Could not find service"),
-      printed("exec 'ocx' start --port 10100"),
+      printed("exec 'occx' start --port 10100"),
     ]);
     // `gui/` and `user/` are independent and hold separate service sets; asking one left
     // the other free to hold a job the old `launchctl list | grep` called absent.
-    expect(asked).toEqual(["gui/501/com.opencodex.proxy", "user/501/com.opencodex.proxy"]);
+    expect(asked).toEqual(["gui/501/com.openccx.proxy", "user/501/com.openccx.proxy"]);
     expect(probe.state).toBe("loaded-current");
     expect(probe.domain).toBe("user/501");
   });
@@ -930,11 +930,11 @@ describe("deriveLaunchdServiceDiagnostic: what status is allowed to claim", () =
     const diag = deriveLaunchdServiceDiagnostic({
       installed: true,
       stale: false,
-      load: { state: "unknown", detail: "launchctl print gui/501/com.opencodex.proxy exited 1" },
+      load: { state: "unknown", detail: "launchctl print gui/501/com.openccx.proxy exited 1" },
       diagnostics,
     });
     // The reported symptom was `installed, not loaded` above a live proxy, with
-    // `re-run 'ocx service repair'` attached — the command that causes defect 1.
+    // `re-run 'occx service repair'` attached — the command that causes defect 1.
     expect(diag.summary).not.toContain("not loaded");
     expect(diag.summary).not.toContain("service repair");
     expect(diag.summary).toContain("could not be verified");
@@ -1057,14 +1057,14 @@ describe("the surfaces around the repair (#4236 defects 1f, 1h, 2)", () => {
   /**
    * Found while building the cases above: `installLaunchd` writes install state, and
    * `serviceStatePaths()` deliberately includes a legacy `~/.opencodex/service-state.json`
-   * entry for installs made before OPENCODEX_HOME existed. Under the test sandbox that
+   * entry for installs made before OPENCCX_HOME existed. Under the test sandbox that
    * entry is the developer's LIVE record — one case replaced its codexHome and
-   * opencodexHome with temp-directory paths before this filter existed.
+   * openccxHome with temp-directory paths before this filter existed.
    */
   test("stop and uninstall prefer bootout, in both domains, and keep unload only as a fallback (D)", () => {
     const stop = slice("function stopLaunchd(", "function statusLaunchd(");
     expect(stop).toContain('run(["bootout"');
-    // Review finding 4: gui-only, a `user/<uid>` job made `ocx service stop` a silent no-op
+    // Review finding 4: gui-only, a `user/<uid>` job made `occx service stop` a silent no-op
     // — `bootout gui/<uid>/<label>` exits 3 in a domain that never held it.
     expect(stop).toContain("for (const target of launchdEvictionTargets())");
     // The legacy verb survives for exactly one case: launchctl could not be spawned at

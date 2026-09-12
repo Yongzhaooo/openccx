@@ -75,7 +75,7 @@ export function cursorBidiAppendRequestSize(payloadBytes: number, requestId: str
 /**
  * Encode the compatibility request used by Cursor when HTTP/2 is disabled.
  * The public client defaults to field 1's hexadecimal data when its binary-append
- * feature gate is unavailable, so OpenCodex uses that backwards-compatible shape.
+ * feature gate is unavailable, so Openccx uses that backwards-compatible shape.
  */
 export function encodeCursorBidiAppendRequest(
   payload: Uint8Array,

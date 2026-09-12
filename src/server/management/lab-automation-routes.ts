@@ -131,18 +131,18 @@ export async function handleLabAutomationRoutes(ctx: ManagementContext): Promise
       if (typeof scenarioId !== "string" || scenarioId.length === 0) {
         return automationErrorResponse("invalid_scenario", "scenarioId is required", 400, ctx);
       }
-      let ocxConfig: import("../../types").OcxConfig | undefined;
+      let occxConfig: import("../../types").OccxConfig | undefined;
       try {
-        ocxConfig = readConfigDiagnostics().config;
+        occxConfig = readConfigDiagnostics().config;
       } catch {
-        ocxConfig = config;
+        occxConfig = config;
       }
       const planned = planManualLabRun({
         evidenceLayer: evidenceLayer as LabAutomationLayer,
         scenarioId,
         providerName: typeof body.providerName === "string" ? body.providerName : undefined,
         modelId: typeof body.modelId === "string" ? body.modelId : undefined,
-        config: ocxConfig,
+        config: occxConfig,
         configDir,
       });
       // This endpoint is intentionally synchronous: completion is the acknowledgement boundary.

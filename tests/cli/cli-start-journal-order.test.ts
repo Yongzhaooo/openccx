@@ -7,7 +7,7 @@ import { watchdogMs } from "../helpers/ci-watchdog";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
-// Every wait here is bounded by a real `ocx start` child coming up: spawning Bun,
+// Every wait here is bounded by a real `occx start` child coming up: spawning Bun,
 // binding a port, and writing its runtime record. That is intrinsic to the
 // assertion, so the bound stays -- but a fixed 10s is a latency assertion on the
 // Windows leg, where four Bun pools share one runner. "timed out waiting for
@@ -28,7 +28,7 @@ const children: Array<ReturnType<typeof Bun.spawn>> = [];
 type Fixture = {
   root: string;
   codexHome: string;
-  ocxHome: string;
+  occxHome: string;
   configPath: string;
   journalPath: string;
   pidPath: string;
@@ -36,17 +36,17 @@ type Fixture = {
 };
 
 function fixture(): Fixture {
-  const root = mkdtempSync(join(tmpdir(), "ocx-start-owner-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-start-owner-"));
   roots.push(root);
   const codexHome = join(root, "codex");
-  const ocxHome = join(root, "ocx");
+  const occxHome = join(root, "occx");
   const home = join(root, "home");
   const runtime = join(root, "runtime");
-  for (const path of [codexHome, ocxHome, home, runtime]) mkdirSync(path, { recursive: true });
+  for (const path of [codexHome, occxHome, home, runtime]) mkdirSync(path, { recursive: true });
   const configPath = join(codexHome, "config.toml");
-  const journalPath = join(codexHome, "opencodex-journal.json");
-  const pidPath = join(ocxHome, "ocx.pid");
-  writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+  const journalPath = join(codexHome, "openccx-journal.json");
+  const pidPath = join(occxHome, "occx.pid");
+  writeFileSync(join(occxHome, "config.json"), JSON.stringify({
     port: 0,
     hostname: "127.0.0.1",
     codexAutoStart: false,
@@ -59,7 +59,7 @@ function fixture(): Fixture {
   return {
     root,
     codexHome,
-    ocxHome,
+    occxHome,
     configPath,
     journalPath,
     pidPath,
@@ -67,7 +67,7 @@ function fixture(): Fixture {
       HOME: home,
       USERPROFILE: home,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: ocxHome,
+      OPENCCX_HOME: occxHome,
       XDG_RUNTIME_DIR: runtime,
       NO_PROXY: "127.0.0.1,localhost",
     },
@@ -76,7 +76,7 @@ function fixture(): Fixture {
 
 function arrangeRecoverableJournal(fx: Fixture): { original: string; injected: string } {
   const original = '# original\nmodel_provider = "openai"\n';
-  const injected = '# injected\nmodel_provider = "opencodex"\n';
+  const injected = '# injected\nmodel_provider = "openccx"\n';
   writeFileSync(fx.configPath, injected);
   writeFileSync(fx.journalPath, JSON.stringify({
     version: 1,
@@ -100,7 +100,7 @@ async function runCli(fx: Fixture, argv: string[]): Promise<{ exitCode: number; 
   children.push(child);
   const completed = await Promise.race([
     Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]),
-    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`CLI watchdog: ocx ${argv.join(" ")}`)), OWNER_WAIT_MS)),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`CLI watchdog: occx ${argv.join(" ")}`)), OWNER_WAIT_MS)),
   ]);
   return { exitCode: completed[0], stdout: completed[1], stderr: completed[2] };
 }
@@ -123,7 +123,7 @@ async function startOwner(fx: Fixture): Promise<ReturnType<typeof Bun.spawn>> {
     stderr: "pipe",
   });
   children.push(child);
-  const runtimePath = join(fx.ocxHome, "runtime-port.json");
+  const runtimePath = join(fx.occxHome, "runtime-port.json");
   const runtime = await waitFor(() => {
     if (!existsSync(runtimePath)) return null;
     try {
@@ -161,9 +161,9 @@ describe("start and ensure journal ownership (#1230)", () => {
     for (const matches of [true, false]) {
       const fx = fixture();
       const original = '# original client baseline\nmodel_provider = "openai"\n';
-      const injected = '# connected remote routing\nmodel_provider = "opencodex"\n';
+      const injected = '# connected remote routing\nmodel_provider = "openccx"\n';
       writeFileSync(fx.configPath, injected);
-      writeFileSync(join(fx.ocxHome, "config.json"), JSON.stringify({
+      writeFileSync(join(fx.occxHome, "config.json"), JSON.stringify({
         port: 0,
         providers: {},
         defaultProvider: "openai",
@@ -173,7 +173,7 @@ describe("start and ensure journal ownership (#1230)", () => {
           managementUrl: "https://hub.example.test",
           managementTransport: "direct",
           selectedClients: ["codex"],
-          tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+          tokenEnv: "OPENCCX_API_AUTH_TOKEN",
           apiKeyId: matches ? "client-key-1" : "different-key",
           tokenFingerprint: "a".repeat(64),
           protocolVersion: 1,
@@ -198,7 +198,7 @@ describe("start and ensure journal ownership (#1230)", () => {
         stderr: "pipe",
       });
       children.push(child);
-      const runtimePath = join(fx.ocxHome, "runtime-port.json");
+      const runtimePath = join(fx.occxHome, "runtime-port.json");
       const runtime = await waitFor(async () => {
         if (!existsSync(runtimePath)) {
           if (child.exitCode === null) return null;

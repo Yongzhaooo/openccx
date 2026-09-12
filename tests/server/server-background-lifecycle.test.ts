@@ -33,7 +33,7 @@ import {
   drainStorageWorkers,
   liveStorageWorkerCount,
 } from "../../src/storage/worker-lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { managementFetch } from "../helpers/management-auth";
 import {
@@ -48,13 +48,13 @@ type IntervalTimer = ReturnType<typeof setInterval>;
 type TimeoutTimer = ReturnType<typeof setTimeout>;
 type LoopKind = "memory-watchdog" | "state-store-sweeper" | "storage-policy-scheduler";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
 let testDir = "";
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 const servers = new Set<StartedServer>();
 
-function baseConfig(storageCleanupPolicy?: OcxConfig["storageCleanupPolicy"]): OcxConfig {
+function baseConfig(storageCleanupPolicy?: OccxConfig["storageCleanupPolicy"]): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -67,7 +67,7 @@ function baseConfig(storageCleanupPolicy?: OcxConfig["storageCleanupPolicy"]): O
       },
     },
     ...(storageCleanupPolicy ? { storageCleanupPolicy } : {}),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function trackedStart(port = 0, deps: StartServerDeps = {}): StartedServer {
@@ -214,7 +214,7 @@ async function expectLivePolicySink(server: StartedServer): Promise<void> {
 }
 
 async function expectLivePolicyJobSink(server: StartedServer): Promise<void> {
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-background-sink-");
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-background-sink-");
   const policy = normalizeStorageCleanupPolicy({
     enabled: true,
     trigger: { archivedBytesOver: 456 },
@@ -266,9 +266,9 @@ beforeEach(async () => {
   stopStorageCleanupScheduler();
   await resetStorageCleanupPolicyJobForTestsAsync();
   await drainStorageWorkers();
-  testDir = mkdtempSync(join(tmpdir(), "ocx-server-background-lifecycle-"));
-  process.env.OPENCODEX_HOME = testDir;
-  process.env.OPENCODEX_API_AUTH_TOKEN = "server-background-test-token";
+  testDir = mkdtempSync(join(tmpdir(), "occx-server-background-lifecycle-"));
+  process.env.OPENCCX_HOME = testDir;
+  process.env.OPENCCX_API_AUTH_TOKEN = "server-background-test-token";
 });
 
 afterEach(async () => {
@@ -282,10 +282,10 @@ afterEach(async () => {
   setStorageCleanupPolicyJobTestHooks(null);
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir && existsSync(testDir)) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -367,7 +367,7 @@ describe("server background lifecycle", () => {
   });
 
   test("last-server stop aborts and drains a startup policy Worker", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-server-background-worker-");
+    isolatedCodexHome = installIsolatedCodexHome("occx-server-background-worker-");
     seedArchived(isolatedCodexHome.path);
     setStorageCleanupPolicyJobTestHooks({ blockMs: 5_000 });
     saveConfig(baseConfig(normalizeStorageCleanupPolicy({

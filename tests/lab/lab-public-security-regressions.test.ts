@@ -59,7 +59,7 @@ test("public projection maps JCS-invalid public fields to not_exportable", () =>
     subject: {
       subjectKind: "protocol",
       effectiveAdapter: "openai-chat",
-      opencodexCompatibilityVersion: "2.13.0",
+      openccxCompatibilityVersion: "2.13.0",
       inboundProtocol: "openai-responses",
       upstreamProtocol: "openai-chat",
       surface: "responses-\uD800",
@@ -84,7 +84,7 @@ test("public projection drops invalid completion timestamps with a diagnostic co
     subject: {
       subjectKind: "protocol",
       effectiveAdapter: "openai-chat",
-      opencodexCompatibilityVersion: "2.13.0",
+      openccxCompatibilityVersion: "2.13.0",
       inboundProtocol: "openai-responses",
       upstreamProtocol: "openai-chat",
       surface: "responses-http",
@@ -125,7 +125,7 @@ test("public privacy rejects embedded POSIX absolute paths across common runtime
 });
 
 test("private publication prepares an empty stage before writing secret bytes", () => {
-  const root = configDir("ocx-cl10-private-stage-prepare-");
+  const root = configDir("occx-cl10-private-stage-prepare-");
   const finalPath = join(root, "secret.bin");
   const observedSizes: number[] = [];
 
@@ -136,7 +136,7 @@ test("private publication prepares an empty stage before writing secret bytes", 
 });
 
 test("publisher key creation applies required Windows secret ACL hardening to the final key path", () => {
-  const home = configDir("ocx-cl10-windows-publisher-acl-");
+  const home = configDir("occx-cl10-windows-publisher-acl-");
   const keyPath = labPublicPublisherKeyPath(home);
   const calls: string[][] = [];
 
@@ -154,7 +154,7 @@ test("publisher key creation applies required Windows secret ACL hardening to th
 });
 
 test("publisher key creation never publishes the final path when required Windows ACL hardening fails", () => {
-  const home = configDir("ocx-cl10-windows-publisher-acl-fail-");
+  const home = configDir("occx-cl10-windows-publisher-acl-fail-");
   const keyPath = labPublicPublisherKeyPath(home);
 
   resetHardenedStateForTests();
@@ -171,7 +171,7 @@ test("publisher key creation never publishes the final path when required Window
 });
 
 test("publisher key ACL failures preserve their underlying cause", () => {
-  const home = configDir("ocx-cl10-windows-publisher-acl-cause-");
+  const home = configDir("occx-cl10-windows-publisher-acl-cause-");
 
   resetHardenedStateForTests();
   setPlatformForTests("win32");
@@ -209,7 +209,7 @@ test("a required publisher key ACL timeout names ETIMEDOUT in its message", () =
   setPlatformForTests("win32");
   setIcaclsRunnerForTests(() => ({ success: false, exitCode: null, timedOut: true, stdout: "" }));
 
-  expect(publisherKeyAclFailureMessage("ocx-cl10-acl-code-timeout-")).toContain("ETIMEDOUT");
+  expect(publisherKeyAclFailureMessage("occx-cl10-acl-code-timeout-")).toContain("ETIMEDOUT");
 });
 
 test("a required publisher key icacls refusal names EICACLS in its message", () => {
@@ -217,7 +217,7 @@ test("a required publisher key icacls refusal names EICACLS in its message", () 
   setPlatformForTests("win32");
   setIcaclsRunnerForTests(() => ({ success: false, exitCode: 5, timedOut: false, stdout: "" }));
 
-  expect(publisherKeyAclFailureMessage("ocx-cl10-acl-code-icacls-")).toContain("EICACLS");
+  expect(publisherKeyAclFailureMessage("occx-cl10-acl-code-icacls-")).toContain("EICACLS");
 });
 
 // The identity code is raised by windows-user-principal, one module further out
@@ -233,7 +233,7 @@ test("a required publisher key SID lookup failure names EACLIDENTITY in its mess
     stdout: "",
   }));
 
-  expect(publisherKeyAclFailureMessage("ocx-cl10-acl-code-identity-")).toContain("EACLIDENTITY");
+  expect(publisherKeyAclFailureMessage("occx-cl10-acl-code-identity-")).toContain("EACLIDENTITY");
 });
 
 // A cause with no errno-shaped code must leave the message alone rather than
@@ -245,6 +245,6 @@ test("a publisher key ACL failure without a bounded code keeps the plain message
     throw new Error("synthetic icacls runner failure");
   });
 
-  const message = publisherKeyAclFailureMessage("ocx-cl10-acl-code-plain-");
+  const message = publisherKeyAclFailureMessage("occx-cl10-acl-code-plain-");
   expect(message).toBe("public publisher key ACL hardening did not complete");
 });

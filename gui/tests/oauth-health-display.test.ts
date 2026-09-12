@@ -85,7 +85,7 @@ describe("oauth health badge helpers", () => {
     const original = hadClipboard ? navigator.clipboard : undefined;
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
     try {
-      expect(await copyTextToClipboard("ocx doctor")).toBe(false);
+      expect(await copyTextToClipboard("occx doctor")).toBe(false);
     } finally {
       if (hadClipboard) {
         Object.defineProperty(navigator, "clipboard", { configurable: true, value: original });
@@ -105,8 +105,8 @@ describe("oauth health badge helpers", () => {
       value: { writeText },
     });
     try {
-      expect(await copyTextToClipboard("ocx doctor")).toBe(true);
-      expect(writeText).toHaveBeenCalledWith("ocx doctor");
+      expect(await copyTextToClipboard("occx doctor")).toBe(true);
+      expect(writeText).toHaveBeenCalledWith("occx doctor");
     } finally {
       if (hadClipboard) {
         Object.defineProperty(navigator, "clipboard", { configurable: true, value: original });

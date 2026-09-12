@@ -400,29 +400,29 @@ describe("Codex app-server process matching (#476)", () => {
 
   /**
    * Reported by a contributor in #2884 with `ps` output from an affected host: once the
-   * autostart shim renames the original launcher to `codex.opencodex-real`,
+   * autostart shim renames the original launcher to `codex.openccx-real`,
    * `--restart-codex` matched nothing and left app-servers alive on stale catalogs.
    */
-  test("matches the .opencodex-real launcher backups the shim creates", () => {
-    expect(isCodexAppServerCommandLine("/home/ubuntu/.local/bin/codex.opencodex-real app-server proxy")).toBe(true);
+  test("matches the .openccx-real launcher backups the shim creates", () => {
+    expect(isCodexAppServerCommandLine("/home/ubuntu/.local/bin/codex.openccx-real app-server proxy")).toBe(true);
     // The exact command line from the report.
     expect(isCodexAppServerCommandLine(
-      "/home/ubuntu/.local/bin/codex.opencodex-real -c features.code_mode_host=true app-server --listen unix://",
+      "/home/ubuntu/.local/bin/codex.openccx-real -c features.code_mode_host=true app-server --listen unix://",
     )).toBe(true);
-    expect(isCodexAppServerCommandLine("\"C:\\Program Files\\nodejs\\codex.opencodex-real.cmd\" app-server")).toBe(true);
+    expect(isCodexAppServerCommandLine("\"C:\\Program Files\\nodejs\\codex.openccx-real.cmd\" app-server")).toBe(true);
     // findWindowsCodexTargets shims codex.ps1 alongside codex.cmd, so its backup runs too.
-    expect(isCodexAppServerCommandLine("\"C:\\Program Files\\nodejs\\codex.opencodex-real.ps1\" app-server")).toBe(true);
-    expect(isCodexAppServerCommandLine("node /usr/local/bin/codex.opencodex-real app-server proxy")).toBe(true);
+    expect(isCodexAppServerCommandLine("\"C:\\Program Files\\nodejs\\codex.openccx-real.ps1\" app-server")).toBe(true);
+    expect(isCodexAppServerCommandLine("node /usr/local/bin/codex.openccx-real app-server proxy")).toBe(true);
 
     // Still narrow: the suffix does not turn a subcommand or an argument into a match.
-    expect(isCodexAppServerCommandLine("codex.opencodex-real exec 'hello'")).toBe(false);
-    expect(isCodexAppServerCommandLine("node worker.js codex.opencodex-real app-server")).toBe(false);
+    expect(isCodexAppServerCommandLine("codex.openccx-real exec 'hello'")).toBe(false);
+    expect(isCodexAppServerCommandLine("node worker.js codex.openccx-real app-server")).toBe(false);
     // A backup name must not be normalised into the target-triple pattern. Stripping the
     // suffix before that test would make this unrelated binary a kill target.
-    expect(isCodexAppServerCommandLine("/opt/tools/codex-report-generator-worker.opencodex-real app-server")).toBe(false);
+    expect(isCodexAppServerCommandLine("/opt/tools/codex-report-generator-worker.openccx-real app-server")).toBe(false);
     // No shim installation can produce a .exe backup: Windows refuses to rename a native
     // codex.exe. Matching a name nothing writes only widens what SIGTERM can reach.
-    expect(isCodexAppServerCommandLine("C:\\tools\\codex.opencodex-real.exe app-server")).toBe(false);
+    expect(isCodexAppServerCommandLine("C:\\tools\\codex.openccx-real.exe app-server")).toBe(false);
   });
 
   /**
@@ -434,7 +434,7 @@ describe("Codex app-server process matching (#476)", () => {
   test("a prompt after -- is not the app-server subcommand", () => {
     expect(isCodexAppServerCommandLine("codex -- app-server")).toBe(false);
     expect(isCodexAppServerCommandLine("/usr/local/bin/codex -- app-server --listen unix://")).toBe(false);
-    expect(isCodexAppServerCommandLine("codex.opencodex-real -- app-server")).toBe(false);
+    expect(isCodexAppServerCommandLine("codex.openccx-real -- app-server")).toBe(false);
     expect(isCodexAppServerCommandLine("codex -c features.x=true -- app-server")).toBe(false);
     expect(isCodexAppServerCommandLine("node /usr/local/bin/codex -- app-server")).toBe(false);
     // The real invocations still match: a global option before the subcommand is ordinary.
@@ -444,7 +444,7 @@ describe("Codex app-server process matching (#476)", () => {
 
 
   test("matches the npm wrapper that supervises the native app-server", () => {
-    // The shape that made `ocx sync --restart-codex` report a survivor on Linux. An
+    // The shape that made `occx sync --restart-codex` report a survivor on Linux. An
     // npm-installed Codex runs as a PAIR: `node /usr/local/bin/codex app-server` and
     // the vendored native binary it spawns. Only the child matched, so SIGTERM went to
     // the child while its supervisor kept the socket. Both halves have to match.
@@ -505,7 +505,7 @@ describe("Codex app-server process matching (#476)", () => {
     expect(isCodexAppServerCommandLine("hermes-codex-bridge-mcp --port 9")).toBe(false);
     expect(isCodexAppServerCommandLine("hermes-codex-x86_64-unknown-linux-gnu app-server")).toBe(false);
     expect(isCodexAppServerCommandLine("node ./opencodex/src/cli/index.ts start")).toBe(false);
-    expect(isCodexAppServerCommandLine("opencodex app-server")).toBe(false);
+    expect(isCodexAppServerCommandLine("openccx app-server")).toBe(false);
     expect(isCodexAppServerCommandLine("/usr/bin/opencodex app-server")).toBe(false);
     // Broad codex-* tools without a Rust target-triple shape must stay unmatched.
     expect(isCodexAppServerCommandLine("codex-bridge app-server")).toBe(false);
@@ -537,27 +537,27 @@ describe("Codex app-server process matching (#476)", () => {
     expect(isWindowsCodexCandidateCommandLine(
       "C:\\Users\\a\\.codex\\bin\\codex-aarch64-pc-windows-msvc.exe app-server",
     )).toBe(true);
-    // Stay narrow: incidental "opencodex" paths must not pay GetOwner.
+    // Stay narrow: incidental "openccx" paths must not pay GetOwner.
     expect(isWindowsCodexCandidateCommandLine(
-      "node C:\\Users\\a\\opencodex\\src\\cli\\index.ts start",
+      "node C:\\Users\\a\\openccx\\src\\cli\\index.ts start",
     )).toBe(false);
     // Shim backups reach GetOwner, in the shape backupPathFor actually writes: the
     // suffix goes after the stem and before the extension.
     expect(isWindowsCodexCandidateCommandLine(
-      "\"C:\\Program Files\\nodejs\\codex.opencodex-real.cmd\" app-server",
+      "\"C:\\Program Files\\nodejs\\codex.openccx-real.cmd\" app-server",
     )).toBe(true);
     expect(isWindowsCodexCandidateCommandLine(
-      "\"C:\\Program Files\\nodejs\\codex.opencodex-real.ps1\" app-server",
+      "\"C:\\Program Files\\nodejs\\codex.openccx-real.ps1\" app-server",
     )).toBe(true);
     expect(isWindowsCodexCandidateCommandLine(
-      "C:\\Users\\a\\.local\\bin\\codex.opencodex-real app-server",
+      "C:\\Users\\a\\.local\\bin\\codex.openccx-real app-server",
     )).toBe(true);
     // The reverse ordering is a name nothing produces. Admitting it would pay GetOwner
     // on a process that cannot be a shim backup.
     expect(isWindowsCodexCandidateCommandLine(
-      "C:\\x\\codex.opencodex-real-x86_64-pc-windows-msvc.exe app-server",
+      "C:\\x\\codex.openccx-real-x86_64-pc-windows-msvc.exe app-server",
     )).toBe(false);
-    expect(isWindowsCodexCandidateCommandLine("opencodex app-server")).toBe(false);
+    expect(isWindowsCodexCandidateCommandLine("openccx app-server")).toBe(false);
     expect(isWindowsCodexCandidateCommandLine("hermes-codex-bridge-mcp")).toBe(false);
     expect(isWindowsCodexCandidateCommandLine("hermes-codex-x86_64-pc-windows-msvc.exe")).toBe(false);
     expect(isWindowsCodexCandidateCommandLine("codex-bridge app-server")).toBe(false);
@@ -689,7 +689,7 @@ describe("Codex app-server process matching (#476)", () => {
     });
     expect(warned.warned).toBe(true);
     expect(errors[0]).toContain(formatStaleCodexAppServerWarning(warned.processes));
-    expect(errors[0]).toContain("ocx sync --restart-codex");
+    expect(errors[0]).toContain("occx sync --restart-codex");
 
     const restarted = afterCatalogWriteHandleAppServers({
       restart: true,
@@ -709,7 +709,7 @@ describe("CLI /api sync wiring for stale app-servers (#476)", () => {
     "utf8",
   );
 
-  test("ocx sync only handles app-servers after a catalog/cache write and forwards --restart-codex", () => {
+  test("occx sync only handles app-servers after a catalog/cache write and forwards --restart-codex", () => {
     const syncCase = dispatchSource.slice(dispatchSource.indexOf("sync: async"), dispatchSource.indexOf("v2: async"));
     expect(syncCase).toContain('includes("--restart-codex")');
     expect(syncCase).toContain("synced.catalogWritten || synced.cacheSynced");
@@ -738,7 +738,7 @@ describe("CLI /api sync wiring for stale app-servers (#476)", () => {
     }
   });
 
-  test("ocx sync-cache only handles app-servers after a successful models_cache write", () => {
+  test("occx sync-cache only handles app-servers after a successful models_cache write", () => {
     const syncCacheCase = dispatchSource.slice(
       dispatchSource.indexOf('"sync-cache": async'),
       dispatchSource.indexOf("gui: async"),
@@ -768,7 +768,7 @@ describe("CLI /api sync wiring for stale app-servers (#476)", () => {
     expect(syncHandler).toContain("attachStaleAppServerHint(result)");
     expect(syncHandler).not.toContain("listCodexAppServerProcesses");
     expect(syncHandler).not.toContain("afterCatalogWriteHandleAppServers");
-    expect(STALE_CODEX_APP_SERVER_HINT).toContain("ocx sync --restart-codex");
+    expect(STALE_CODEX_APP_SERVER_HINT).toContain("occx sync --restart-codex");
   });
 
   test("no-write sync responses omit staleAppServerHint", () => {
@@ -850,16 +850,16 @@ describe("Windows Win32_Process owner enumeration (#476)", () => {
     expect(() => listWindowsSnapshots((command) => {
       psCommand.value = command;
       // What PowerShell actually prints when the outer catch fires.
-      return "__OCX_ENUM_INCOMPLETE__\n";
+      return "__OCCX_ENUM_INCOMPLETE__\n";
     })).toThrow("windows_enum_incomplete");
 
     // The guard has to be on the top-level query itself, not only per-process.
     expect(psCommand.value).toContain("Get-CimInstance Win32_Process -ErrorAction Stop");
-    expect(psCommand.value).toContain("} catch { \"__OCX_ENUM_INCOMPLETE__\" }");
+    expect(psCommand.value).toContain("} catch { \"__OCCX_ENUM_INCOMPLETE__\" }");
 
     // And the collector must turn that throw into unknown, never not_running.
     const status = collectCodexAppServerCatalogState({
-      listSnapshots: () => listWindowsSnapshots(() => "__OCX_ENUM_INCOMPLETE__\n"),
+      listSnapshots: () => listWindowsSnapshots(() => "__OCCX_ENUM_INCOMPLETE__\n"),
       catalogMtimeMs: () => 1_000,
     });
     expect(status.state).toBe("unknown");

@@ -108,7 +108,7 @@ export interface IntegrationJournalRow {
 export interface IntegrationToggleBody {
   enabled: boolean;
   /**
-   * Opt in to replacing a conflicted block with the one opencodex would write.
+   * Opt in to replacing a conflicted block with the one openccx would write.
    *
    * Absent and `false` behave identically and are the only states a caller
    * reaches by accident, which is the point: the conflict refusal protects work

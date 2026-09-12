@@ -23,7 +23,7 @@
 import { resolveTrustedWindowsPowerShellExe, resolveTrustedWindowsTaskkillExe } from "../lib/windows-elevation";
 import { execFileSync } from "node:child_process";
 
-/** Bounded subprocess options. A hung Appx/CIM probe must never wedge `ocx sync`. */
+/** Bounded subprocess options. A hung Appx/CIM probe must never wedge `occx sync`. */
 export interface DesktopAppExecOptions {
   timeout?: number;
   windowsHide?: boolean;

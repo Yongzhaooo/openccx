@@ -465,7 +465,7 @@ export function patchOmpYamlSource(
 ): string | null {
   return patchYamlFragmentSource(
     text,
-    ["providers", "opencodex"],
+    ["providers", "openccx"],
     mutation.kind === "upsert"
       ? mutation
       : {

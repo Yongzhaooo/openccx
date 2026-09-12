@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxParsedRequest } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest } from "../../src/types";
 
 const CLINE_PASS_MODELS = [
   "cline-pass/glm-5.2",
@@ -30,7 +30,7 @@ function registryEntry() {
   return entry;
 }
 
-function parsed(modelId: string, reasoning: string): OcxParsedRequest {
+function parsed(modelId: string, reasoning: string): OccxParsedRequest {
   return {
     modelId,
     context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] },
@@ -39,7 +39,7 @@ function parsed(modelId: string, reasoning: string): OcxParsedRequest {
   };
 }
 
-const config: OcxConfig = {
+const config: OccxConfig = {
   port: 10100,
   defaultProvider: "cline-pass",
   providers: {
@@ -106,7 +106,7 @@ describe("ClinePass reasoning effort capabilities", () => {
   });
 
   test("canonical ClinePass repairs the historical generated low-only preset", () => {
-    const staleConfig: OcxConfig = {
+    const staleConfig: OccxConfig = {
       ...config,
       providers: {
         "cline-pass": {
@@ -130,7 +130,7 @@ describe("ClinePass reasoning effort capabilities", () => {
   });
 
   test("does not repair a low-only same-name provider on a custom destination", () => {
-    const customConfig: OcxConfig = {
+    const customConfig: OccxConfig = {
       ...config,
       providers: {
         "cline-pass": {

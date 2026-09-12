@@ -12,7 +12,7 @@ const READINESS_STATE_PATTERN =
  * are read only to migrate pre-consolidation PRs.
  */
 const GATE_STATE_PATTERN =
-  /<!-- opencodex-pr-gate-state:([\s\S]*?) -->/;
+  /<!-- openccx-pr-gate-state:([\s\S]*?) -->/;
 
 /**
  * v2 adds `completedAtHeadSha` so a completed checklist is bound to the exact
@@ -100,7 +100,7 @@ function parseGateState(body, warn = () => {}) {
 /** Serialize the consolidated gate state into its comment marker. */
 function gateStateMarker(state) {
   return (
-    "<!-- opencodex-pr-gate-state:" +
+    "<!-- openccx-pr-gate-state:" +
     JSON.stringify(state) +
     " -->"
   );

@@ -26,14 +26,14 @@ let home: string;
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-deferred-teardown-"));
-  process.env.OPENCODEX_HOME = home;
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-deferred-teardown-"));
+  process.env.OPENCCX_HOME = home;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
@@ -52,7 +52,7 @@ function restoreResult(success: boolean): CodexNativeRestoreResult {
 async function runParentStop(options: { receipt: boolean; response: unknown; restore: CodexNativeRestoreResult; status?: number }) {
   const child = spawnSync(process.execPath, [fixturePath("parent-stop-runner.ts")], {
     cwd: repoPath(),
-    env: { ...process.env, OPENCODEX_HOME: home },
+    env: { ...process.env, OPENCCX_HOME: home },
     input: JSON.stringify(options),
     encoding: "utf8",
     timeout: 20_000,
@@ -260,7 +260,7 @@ describe("performStopTeardown", () => {
       stripGrok: () => ({ ok: false, changed: false, message: "grok home is read-only" }),
     });
     expect(body.success).toBe(false);
-    expect(body.message).toContain("ocx restore");
+    expect(body.message).toContain("occx restore");
     expect(body.message).toContain("Grok config cleanup failed");
   });
 
@@ -276,7 +276,7 @@ describe("performStopTeardown", () => {
     expect(body.success).toBe(false);
     expect(body.sharedTeardown).toBe("performed");
     expect(body.message).toContain("Grok fence was not removed");
-    expect(body.message).toContain("ocx restore");
+    expect(body.message).toContain("occx restore");
   });
 
   test("both halves succeeding is the only success", async () => {
@@ -296,7 +296,7 @@ describe("receipt naming is shared by both update lanes", () => {
     const names = await import("../../src/config/pending-teardown-names.mjs");
     const claimed = mod.claimPendingTeardown(ENDPOINT, "exact", 1234);
 
-    // bin/ocx.mjs runs under plain Node and cannot import the TypeScript module, so the
+    // bin/occx.mjs runs under plain Node and cannot import the TypeScript module, so the
     // naming rule lives in one shared .mjs. Spelling it twice is exactly how the npm lane
     // ended up watching a filename that no longer existed.
     expect(names.hasPendingTeardownIn(readdirSync, home)).toBe(true);
@@ -339,11 +339,11 @@ describe("receipt naming is shared by both update lanes", () => {
 
   test("a home that cannot be scanned is its own state, not a fabricated receipt", async () => {
     const mod = await import("../../src/config/pending-teardown");
-    const previous = process.env.OPENCODEX_HOME;
+    const previous = process.env.OPENCCX_HOME;
     // A file where the home should be: readdir fails with ENOTDIR, which is not absence.
     const notADir = join(home, "not-a-directory");
     writeFileSync(notADir, "");
-    process.env.OPENCODEX_HOME = notADir;
+    process.env.OPENCCX_HOME = notADir;
     try {
       const listed = mod.listPendingTeardowns();
       // handleStop must see something blocking rather than an empty set it would restore over.
@@ -355,8 +355,8 @@ describe("receipt naming is shared by both update lanes", () => {
       expect(mod.isPendingTeardownAbandoned(listed[0]!, () => false, 1)).toBe(true);
       expect(mod.pendingTeardownOutstanding()).toBe(true);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
     }
   });
 });
@@ -544,7 +544,7 @@ describe("self-unloading manager refusal (#4023)", () => {
     // prevents exactly this returned early for every non-Windows platform.
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "darwin", {
-      env: { OCX_SERVICE: "1", OCX_SERVICE_MANAGED: "1" },
+      env: { OCCX_SERVICE: "1", OCCX_SERVICE_MANAGED: "1" },
       exists: () => true,
     })).toBe("self-unload");
   });
@@ -552,13 +552,13 @@ describe("self-unloading manager refusal (#4023)", () => {
   test("linux systemd is exempted identically and gets the same answer", async () => {
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "linux", {
-      env: { OCX_SERVICE: "1", OCX_SERVICE_MANAGED: "1" },
+      env: { OCCX_SERVICE: "1", OCCX_SERVICE_MANAGED: "1" },
       exists: () => true,
     })).toBe("self-unload");
   });
 
   test("a manually started proxy is unaffected, even with a service installed", async () => {
-    // Only the plist and unit write OCX_SERVICE_MANAGED. Without it this process is not
+    // Only the plist and unit write OCCX_SERVICE_MANAGED. Without it this process is not
     // the managed job, so no unload can reach it and the inline stop stays available.
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "darwin", {
@@ -570,7 +570,7 @@ describe("self-unloading manager refusal (#4023)", () => {
   test("the managed job with no service definition on disk is not at risk", async () => {
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "darwin", {
-      env: { OCX_SERVICE: "1", OCX_SERVICE_MANAGED: "1" },
+      env: { OCCX_SERVICE: "1", OCCX_SERVICE_MANAGED: "1" },
       exists: () => false,
     })).toBe("none");
   });
@@ -578,7 +578,7 @@ describe("self-unloading manager refusal (#4023)", () => {
   test("Windows classification is untouched by the new branch", async () => {
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "present" }) as never, "win32", {
-      env: { OCX_SERVICE: "1" },
+      env: { OCCX_SERVICE: "1" },
       exists: () => true,
     })).toBe("respawnable");
     expect(installedServiceRespawnRisk(() => ({ status: "unknown" }) as never, "win32")).toBe("unknown");
@@ -587,17 +587,17 @@ describe("self-unloading manager refusal (#4023)", () => {
 
   
   test("a proxy spawned by an ensure path is not the managed job", async () => {
-    // Both `ocx claude` and `ocx opencode` set OCX_SERVICE=1 on their detached child to
+    // Both `occx claude` and `occx opencode` set OCCX_SERVICE=1 on their detached child to
     // borrow its routing-preservation meaning (src/cli/claude.ts, src/cli/opencode.ts),
     // so that variable cannot identify the managed job. A user with the service installed
     // but stopped, running one of those commands, must keep a working dashboard Stop.
     const { installedServiceRespawnRisk } = await import("../../src/service");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "darwin", {
-      env: { OCX_SERVICE: "1" },
+      env: { OCCX_SERVICE: "1" },
       exists: () => true,
     })).toBe("none");
     expect(installedServiceRespawnRisk(() => ({ status: "absent" }) as never, "linux", {
-      env: { OCX_SERVICE: "1" },
+      env: { OCCX_SERVICE: "1" },
       exists: () => true,
     })).toBe("none");
   });
@@ -613,11 +613,11 @@ test("the route refuses a self-unload before the manager is touched", () => {
       .toBeLessThan(handler.indexOf("stopServiceIfInstalledDetailed()"));
     const branch = handler.slice(handler.indexOf('code: "self_unload_service"'), handler.indexOf('code: "self_unload_service"') + 600);
     expect(branch).toContain("Nothing was changed.");
-    expect(branch).toContain("ocx stop");
+    expect(branch).toContain("occx stop");
   });
 
-  test("a receipt-backed ocx stop keeps its deferral path", () => {
-    // `ocx stop` claims a receipt, defers the teardown, and performs it itself once the
+  test("a receipt-backed occx stop keeps its deferral path", () => {
+    // `occx stop` claims a receipt, defers the teardown, and performs it itself once the
     // proxy is proven down — so it must not be refused by the new branch.
     const source = readFileSync(repoPath("src", "server", "management-api.ts"), "utf8");
     expect(source).toContain('const respawnRisk = holdsReceipt ? "none" : installedServiceRespawnRisk();');

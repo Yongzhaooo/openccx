@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 function tempHome(): string {
-  const home = join(tmpdir(), `ocx-cl10-export-transaction-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const home = join(tmpdir(), `occx-cl10-export-transaction-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(home, { recursive: true, mode: 0o700 });
   homes.push(home);
   return home;

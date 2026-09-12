@@ -20,15 +20,15 @@ import {
 } from "../../src/web-search";
 import { parseAnthropicSidecarSSE, runAnthropicWebSearch } from "../../src/web-search/anthropic-executor";
 import { CLAUDE_CODE_SYSTEM_INSTRUCTION } from "../../src/oauth/anthropic";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const routedProvider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "routed-key" };
-const forwardProvider: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.test/v1", authMode: "forward" };
-const anthropicProvider: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
-const AUTH_ERROR_CANARY = "C:\\Users\\Alice\\.opencodex\\auth.json.ocx-tmp /home/alice/.opencodex/auth.json.ocx-tmp";
-const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
+const routedProvider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "routed-key" };
+const forwardProvider: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.test/v1", authMode: "forward" };
+const anthropicProvider: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
+const AUTH_ERROR_CANARY = "C:\\Users\\Alice\\.openccx\\auth.json.occx-tmp /home/alice/.opencodex/auth.json.occx-tmp";
+const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "routed", providers: { routed: routedProvider, chatgpt: forwardProvider }, ...overrides };
 }
 

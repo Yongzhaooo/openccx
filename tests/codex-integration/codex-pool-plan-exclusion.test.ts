@@ -14,17 +14,17 @@ import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { clearAccountNeedsReauth, clearAccountQuota, updateAccountQuota } from "../../src/codex/auth-api";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
 const ACCOUNT_IDS = ["paid", "downgraded"];
 
 let testDir = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     providers: {},
     codexAccounts: [
@@ -35,7 +35,7 @@ function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     autoSwitchThreshold: 80,
     upstreamFailoverThreshold: 3,
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveTestCredential(id: string): void {
@@ -58,12 +58,12 @@ function recordUsage(id: string, percent: number): void {
 
 describe("codex pool plan exclusion", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     previousCodexHome = process.env.CODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-plan-exclusion-"));
+    testDir = mkdtempSync(join(tmpdir(), "occx-plan-exclusion-"));
     setIcaclsRunnerForTests(() => ICACLS_OK);
     setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-    process.env.OPENCODEX_HOME = testDir;
+    process.env.OPENCCX_HOME = testDir;
     process.env.CODEX_HOME = testDir;
     clearThreadAccountMap();
     clearCodexUpstreamHealth();
@@ -86,8 +86,8 @@ describe("codex pool plan exclusion", () => {
     } finally {
       setIcaclsRunnerForTests(null);
       setAsyncIcaclsRunnerForTests(null);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       if (owned) removeTreeWithRetry(owned);
@@ -138,7 +138,7 @@ describe("codex pool plan exclusion", () => {
         { id: "paid", email: "paid@test", isMain: false, plan: "plus" },
       ],
       codexPool: { excludedPlans: ["FREE"] },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     recordUsage("downgraded", 10);
     recordUsage("paid", 20);
     expect(pickLowestUsageCodexAccount(config)).toBe("paid");
@@ -151,7 +151,7 @@ describe("codex pool plan exclusion", () => {
         { id: "paid", email: "paid@test", isMain: false, plan: "plus" },
       ],
       codexPool: { excludedPlans: ["free"] },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     recordUsage("downgraded", 10);
     recordUsage("paid", 20);
     expect(pickLowestUsageCodexAccount(config)).toBe("downgraded");
@@ -170,7 +170,7 @@ describe("codex pool plan exclusion", () => {
     const config = makeConfig({
       codexAccounts: [{ id: "downgraded", email: "downgraded@test", isMain: false, plan: "free" }],
       codexPool: { excludedPlans: ["free"] },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     recordUsage("downgraded", 10);
     expect(pickLowestUsageCodexAccount(config)).toBeNull();
     expect(resolveCodexAccountForThread("last-account", config)).toBe("downgraded");

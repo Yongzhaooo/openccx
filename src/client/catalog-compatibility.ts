@@ -34,7 +34,7 @@ export interface CatalogCompatibilityDeps {
   supportedEfforts?: () => ReadonlySet<string> | null;
 }
 
-/** State of the materialized client catalog file, as `ocx connect status` already reports it. */
+/** State of the materialized client catalog file, as `occx connect status` already reports it. */
 export type ClientCatalogFileState = "present" | "missing" | "unsafe";
 
 /**
@@ -117,7 +117,7 @@ export class ClientCatalogIncompatibleError extends Error {
       + `${efforts}, which the selected local Codex CLI rejects${models ? ` (${models})` : ""}. `
       + "The previous catalog was kept and nothing was changed. Upgrade the Codex CLI to a "
       + "version that supports those levels, or point CODEX_CLI_PATH at one that does and run "
-      + "`ocx sync`, then retry. `ocx doctor` reports which runtime is selected.",
+      + "`occx sync`, then retry. `occx doctor` reports which runtime is selected.",
     );
     this.name = "ClientCatalogIncompatibleError";
     this.unsupportedEfforts = unsupportedEfforts;
@@ -149,7 +149,7 @@ function installedCatalogRejectionReason(
     + `${unsupportedEfforts.join(", ")}, which the selected local Codex CLI rejects`
     + `${models ? ` (${models})` : ""}. Codex exits before its first request until the CLI is `
     + "upgraded to a version that supports those levels, or CODEX_CLI_PATH points at one that "
-    + "does and `ocx sync` is run. `ocx doctor` reports which runtime is selected.";
+    + "does and `occx sync` is run. `occx doctor` reports which runtime is selected.";
 }
 
 /**

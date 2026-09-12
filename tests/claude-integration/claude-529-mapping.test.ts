@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { getRequestLogEntries } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -14,28 +14,28 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-claude-529-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-claude-529-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-claude-529-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-claude-529-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function nativeConfig(baseUrl: string): OcxConfig {
+function nativeConfig(baseUrl: string): OccxConfig {
   return {
     port: 0,
     defaultProvider: "native",
     providers: {
       native: { adapter: "openai-responses", baseUrl, authMode: "forward", allowPrivateNetwork: true },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function messagesBody(): string {

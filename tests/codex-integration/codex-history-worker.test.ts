@@ -53,7 +53,7 @@ function makeFixture(prefix: string): Fixture {
   const rollout = join(codexHome, "rollout.jsonl");
   writeFileSync(rollout, `${JSON.stringify({
     type: "session_meta",
-    payload: { id: "thread-1", model_provider: "opencodex", source: "exec" },
+    payload: { id: "thread-1", model_provider: "openccx", source: "exec" },
   })}\n`);
 
   const db = new Database(stateDb, { create: true });
@@ -62,7 +62,7 @@ function makeFixture(prefix: string): Fixture {
     source TEXT, has_user_event INTEGER, first_user_message TEXT
   )`);
   db.run(
-    "INSERT INTO threads VALUES ('thread-1', ?, 'opencodex', 'exec', 1, 'hi')",
+    "INSERT INTO threads VALUES ('thread-1', ?, 'openccx', 'exec', 1, 'hi')",
     [rollout],
   );
   db.close();
@@ -105,7 +105,7 @@ function runMessage(fixture: Fixture, overrides: Partial<HistoryWorkerRunMessage
  * resolves differently in another process.
  */
 test("the run message is structured-clone safe and fully explicit", () => {
-  const fixture = makeFixture("ocx-history-worker-clone-");
+  const fixture = makeFixture("occx-history-worker-clone-");
   const message = runMessage(fixture);
 
   const cloned = structuredClone(message);
@@ -130,7 +130,7 @@ test("the run message is structured-clone safe and fully explicit", () => {
 });
 
 test("skip is a recorded outcome, not an absence, and writes nothing", () => {
-  const fixture = makeFixture("ocx-history-worker-skip-");
+  const fixture = makeFixture("occx-history-worker-skip-");
   const before = readFileSync(fixture.rollout, "utf8");
 
   const result = runHistoryUnitUnderLock(runMessage(fixture, { operation: "skip" }));
@@ -141,7 +141,7 @@ test("skip is a recorded outcome, not an absence, and writes nothing", () => {
 });
 
 test("the unit runs the real transition under H", () => {
-  const fixture = makeFixture("ocx-history-worker-run-");
+  const fixture = makeFixture("occx-history-worker-run-");
 
   const result = runHistoryUnitUnderLock(runMessage(fixture));
   expect(result).toMatchObject({ type: "done", outcome: "converged" });
@@ -155,7 +155,7 @@ test("the unit runs the real transition under H", () => {
 });
 
 test("migrate-openai returns a verified no-op only after entering H", () => {
-  const fixture = makeFixture("ocx-history-worker-noop-");
+  const fixture = makeFixture("occx-history-worker-noop-");
   const backup = historyBackupPathFor(fixture.stateDb);
   backupArtifacts.push(backup);
   const databaseBefore = readFileSync(fixture.stateDb);
@@ -187,7 +187,7 @@ test("migrate-openai returns a verified no-op only after entering H", () => {
 });
 
 test("restore-openai leaves bare routed history byte-identical", () => {
-  const fixture = makeFixture("ocx-history-worker-restore-noop-");
+  const fixture = makeFixture("occx-history-worker-restore-noop-");
   const databaseBefore = readFileSync(fixture.stateDb);
   const rolloutBefore = readFileSync(fixture.rollout);
 
@@ -200,7 +200,7 @@ test("restore-openai leaves bare routed history byte-identical", () => {
 });
 
 test("manifest-backed restore preserves routed provenance and the next migrate is a verified no-op", () => {
-  const fixture = makeFixture("ocx-history-worker-exact-");
+  const fixture = makeFixture("occx-history-worker-exact-");
   const backup = historyBackupPathFor(fixture.stateDb);
   backupArtifacts.push(backup);
   mkdirSync(dirname(backup), { recursive: true });
@@ -210,7 +210,7 @@ test("manifest-backed restore preserves routed provenance and the next migrate i
   appendFileSync(fixture.rollout, `${JSON.stringify({
     type: "session_meta",
     timestamp: "2026-08-05T00:00:00.000Z",
-    payload: { id: "thread-1", model_provider: "opencodex", source: "cli" },
+    payload: { id: "thread-1", model_provider: "openccx", source: "cli" },
   })}\n`);
   writeFileSync(backup, JSON.stringify({
     version: 1,
@@ -219,7 +219,7 @@ test("manifest-backed restore preserves routed provenance and the next migrate i
       "thread-1": {
         id: "thread-1",
         rolloutPath: fixture.rollout,
-        modelProvider: "opencodex",
+        modelProvider: "openccx",
         source: "exec",
         hasUserEvent: 0,
       },
@@ -233,10 +233,10 @@ test("manifest-backed restore preserves routed provenance and the next migrate i
   expect(restored).toMatchObject({ type: "done", outcome: "converged", rows: 1, files: 1 });
   const restoredDb = new Database(fixture.stateDb, { readonly: true });
   expect(restoredDb.query("SELECT model_provider, source, has_user_event FROM threads WHERE id = 'thread-1'").get())
-    .toEqual({ model_provider: "opencodex", source: "exec", has_user_event: 0 });
+    .toEqual({ model_provider: "openccx", source: "exec", has_user_event: 0 });
   restoredDb.close();
   expect(JSON.parse(readFileSync(fixture.rollout, "utf8").trim().split("\n").at(-1)!).payload)
-    .toMatchObject({ id: "thread-1", model_provider: "opencodex", source: "exec" });
+    .toMatchObject({ id: "thread-1", model_provider: "openccx", source: "exec" });
   expect(existsSync(backup)).toBe(false);
 
   const again = runHistoryUnitUnderLock(runMessage(fixture, {
@@ -253,7 +253,7 @@ test("manifest-backed restore preserves routed provenance and the next migrate i
 });
 
 test("a late permission failure reports already-applied row and file progress", () => {
-  const fixture = makeFixture("ocx-history-worker-partial-");
+  const fixture = makeFixture("occx-history-worker-partial-");
   const backup = historyBackupPathFor(fixture.stateDb);
   backupArtifacts.push(backup);
   mkdirSync(dirname(backup), { recursive: true });
@@ -263,7 +263,7 @@ test("a late permission failure reports already-applied row and file progress", 
   appendFileSync(fixture.rollout, `${JSON.stringify({
     type: "session_meta",
     timestamp: "2026-08-05T00:00:00.000Z",
-    payload: { id: "thread-1", model_provider: "opencodex", source: "cli" },
+    payload: { id: "thread-1", model_provider: "openccx", source: "cli" },
   })}\n`);
   writeFileSync(backup, JSON.stringify({
     version: 1,
@@ -272,7 +272,7 @@ test("a late permission failure reports already-applied row and file progress", 
       "thread-1": {
         id: "thread-1",
         rolloutPath: fixture.rollout,
-        modelProvider: "opencodex",
+        modelProvider: "openccx",
         source: "exec",
         hasUserEvent: 0,
       },
@@ -297,7 +297,7 @@ test("a late permission failure reports already-applied row and file progress", 
 });
 
 test("malformed manifest blocks restore without changing the database, rollout, or manifest", () => {
-  const fixture = makeFixture("ocx-history-worker-malformed-");
+  const fixture = makeFixture("occx-history-worker-malformed-");
   const backup = historyBackupPathFor(fixture.stateDb);
   backupArtifacts.push(backup);
   mkdirSync(dirname(backup), { recursive: true });
@@ -324,7 +324,7 @@ test("malformed manifest blocks restore without changing the database, rollout, 
  * this one reports a typed block instead of stalling its own thread.
  */
 test("a second holder of H makes the unit report blocked rather than wait", async () => {
-  const fixture = makeFixture("ocx-history-worker-busy-");
+  const fixture = makeFixture("occx-history-worker-busy-");
   const ready = join(fixture.codexHome, "..", "held");
   const release = join(fixture.codexHome, "..", "release");
 
@@ -363,7 +363,7 @@ test("a second holder of H makes the unit report blocked rather than wait", asyn
       "SELECT model_provider FROM threads WHERE id = 'thread-1'",
     ).get();
     db.close();
-    expect(row?.model_provider).toBe("opencodex");
+    expect(row?.model_provider).toBe("openccx");
   } finally {
     writeFileSync(release, "release");
     expect(await holder.exited).toBe(0);
@@ -376,7 +376,7 @@ test("a second holder of H makes the unit report blocked rather than wait", asyn
  * that reads as "locked" everywhere.
  */
 test("a failed transition reports the failure reason, not a fixed lock claim", () => {
-  const fixture = makeFixture("ocx-history-worker-error-");
+  const fixture = makeFixture("occx-history-worker-error-");
   const holder = new Database(fixture.stateDb);
   holder.exec("BEGIN IMMEDIATE");
   try {

@@ -67,7 +67,7 @@ export default function PromptLayerRow({
   // never claims to be unconditional.
   const conditionKey = LAYER_CONDITION_KEYS[descriptor.id];
   const checked = toggle?.defaultedUserValue ?? descriptor.default ?? true;
-  // `external` counts as NOT default: something outside opencodex replaced the base
+  // `external` counts as NOT default: something outside openccx replaced the base
   // prompt, and showing the switch as on would claim Codex's own prompt is in force.
   const baseUsesDefault = baseSelection?.kind === "default";
 

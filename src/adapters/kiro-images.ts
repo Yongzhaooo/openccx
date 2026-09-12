@@ -1,4 +1,4 @@
-import type { OcxContentPart } from "../types";
+import type { OccxContentPart } from "../types";
 import { normalizeImageTargets, type NormalizeOptions, type NormalizeTarget } from "./anthropic-image-normalize";
 
 // CodeWhisperer native image part (matches Kiro IDE wire format): the base64 bytes live directly in
@@ -24,7 +24,7 @@ function parseDataUrlImage(imageUrl: string): KiroImage | undefined {
   return { format, source: { bytes } };
 }
 
-export function extractKiroImages(content: string | OcxContentPart[]): KiroImage[] {
+export function extractKiroImages(content: string | OccxContentPart[]): KiroImage[] {
   if (typeof content === "string") return [];
   const out: KiroImage[] = [];
   for (const p of content) {

@@ -26,15 +26,15 @@ import {
   parseMuseSubscriptionUsage,
 } from "../../src/providers/muse-subscription-usage";
 import { captureConfigGeneration } from "../../src/lib/state-store-sweeper";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testDir = "";
 
 const ACCOUNT_ID = "muse-acct-1";
 
-function museConfig(): OcxConfig {
+function museConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -42,7 +42,7 @@ function museConfig(): OcxConfig {
     providers: {
       "meta-muse": { adapter: "openai-responses", baseUrl: "https://api.meta.ai/v1", authMode: "oauth" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function writeMuseAccount(): void {
@@ -69,8 +69,8 @@ function usageFrame(fiveHour: number, weekly: number): string {
 }
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-muse-observe-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-muse-observe-"));
+  process.env.OPENCCX_HOME = testDir;
   writeMuseAccount();
   clearAccountQuotaCache();
   // The provider-level report cache (5-minute TTL, module-wide) survives across tests in
@@ -82,8 +82,8 @@ beforeEach(() => {
 afterEach(() => {
   clearAccountQuotaCache();
   clearProviderQuotaCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 

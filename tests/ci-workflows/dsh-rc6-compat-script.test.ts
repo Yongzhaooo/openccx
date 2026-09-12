@@ -15,23 +15,23 @@ describe("optional DSH rc.6 compatibility E2E helpers", () => {
     expect(() => assertExpectedDshVersion("0.1.0-rc.7\n")).toThrow("expected DSH 0.1.0-rc.6");
   });
 
-  test("renders only a loopback OpenCodex endpoint into the checked-in template", () => {
+  test("renders only a loopback Openccx endpoint into the checked-in template", () => {
     const template = [
       "agent-default-model:",
       "  model: dsh-e2e-reasoner",
       "llm-pi-ai:",
       "  providers:",
-      "    opencodex:",
-      "      baseURL: __OCX_BASE_URL__",
+      "    openccx:",
+      "      baseURL: __OCCX_BASE_URL__",
     ].join("\n");
 
     const rendered = renderDshSettings(template, "http://127.0.0.1:18181/v1");
     expect(rendered).toContain("baseURL: http://127.0.0.1:18181/v1");
-    expect(rendered).not.toContain("__OCX_BASE_URL__");
+    expect(rendered).not.toContain("__OCCX_BASE_URL__");
     expect(() => renderDshSettings(template, "https://gateway.example/v1"))
-      .toThrow("loopback OpenCodex URL");
-    expect(() => renderDshSettings(template.replace("__OCX_BASE_URL__", "already-set"), "http://localhost:18181/v1"))
-      .toThrow("exactly one __OCX_BASE_URL__ placeholder");
+      .toThrow("loopback Openccx URL");
+    expect(() => renderDshSettings(template.replace("__OCCX_BASE_URL__", "already-set"), "http://localhost:18181/v1"))
+      .toThrow("exactly one __OCCX_BASE_URL__ placeholder");
   });
 
   test("isolates DSH state and strips proxy and provider credentials", () => {

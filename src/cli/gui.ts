@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { canonicalGuiBrowserOrigin } from "../lib/gui-pair-capability";
 import { findLiveProxy, type LiveProxy } from "../server/proxy-liveness";
 import {
@@ -8,12 +8,12 @@ import {
 } from "./gui-pair-client";
 import type { RuntimeApiDeps } from "./runtime-api";
 
-const GUI_USAGE = "ocx gui [pair --origin <browser-origin> [--json]]";
+const GUI_USAGE = "occx gui [pair --origin <browser-origin> [--json]]";
 const PAIRING_WARNING = "Pairing grants are secret, single-use, and expire quickly. Do not save them.";
 
 export interface GuiCommandDeps extends RuntimeApiDeps {
   openDefaultGui: () => Promise<number>;
-  loadConfig: () => OcxConfig;
+  loadConfig: () => OccxConfig;
   findLiveProxy?: () => Promise<LiveProxy | null>;
   requestPairingGrant?: (
     target: LiveProxy,
@@ -22,7 +22,7 @@ export interface GuiCommandDeps extends RuntimeApiDeps {
   ) => Promise<GuiPairRequestResult>;
 }
 
-function allowedPairingOrigin(origin: string, config: OcxConfig): boolean {
+function allowedPairingOrigin(origin: string, config: OccxConfig): boolean {
   if (config.runtimeRole !== "hub") return false;
   if (canonicalGuiBrowserOrigin(config.hub?.managementPublicOrigin) === origin) return true;
   return (config.corsAllowOrigins ?? []).some(value => canonicalGuiBrowserOrigin(value) === origin);
@@ -67,7 +67,7 @@ export async function runGuiCommand(args: string[], deps: GuiCommandDeps): Promi
   }
   const target = await (deps.findLiveProxy ?? findLiveProxy)();
   if (!target) {
-    console.error("No running attested OpenCodex proxy is available for GUI pairing.");
+    console.error("No running attested Openccx proxy is available for GUI pairing.");
     return 1;
   }
   const result = await (deps.requestPairingGrant ?? requestBoundGuiPairingGrant)(target, canonicalOrigin, {

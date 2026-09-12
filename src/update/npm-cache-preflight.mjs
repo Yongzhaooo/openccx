@@ -4,7 +4,7 @@ import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { npmInvocation } from "./npm-invocation.mjs";
 
-const WORKER_ARG = "--ocx-npm-cache-preflight-worker";
+const WORKER_ARG = "--occx-npm-cache-preflight-worker";
 const PROTOCOL_VERSION = 1;
 const WORKER_TIMEOUT_MS = 10_000;
 const NPM_CONFIG_TIMEOUT_MS = 5_000;

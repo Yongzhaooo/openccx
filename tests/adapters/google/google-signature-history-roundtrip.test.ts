@@ -22,7 +22,7 @@ import {
 } from "../../../src/responses/thought-signature-replay";
 import { durableReplayDestinationIdentity } from "../../../src/responses/reasoning-replay-cache";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../../src/lib/windows-secret-acl";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig, OcxReasoningReplayScopeRef } from "../../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig, OccxReasoningReplayScopeRef } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -38,14 +38,14 @@ const provider = {
   googleMode: "vertex",
   baseUrl: "https://aiplatform.googleapis.com",
   apiKey: "vertex-test-key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 const aiStudioProvider = {
   adapter: "google",
   googleMode: "ai-studio",
   baseUrl: "https://generativelanguage.googleapis.com",
   apiKey: "ai-studio-test-key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 /**
  * A replay scope is now REQUIRED for the store to remember or return anything: a
@@ -57,7 +57,7 @@ function scopeFor(
   modelId = MODEL,
   providerName = "google",
   destination = "https://generativelanguage.googleapis.com",
-): OcxReasoningReplayScopeRef {
+): OccxReasoningReplayScopeRef {
   return {
     clientThreadId: threadId,
     current: {
@@ -74,13 +74,13 @@ function scopeFor(
 }
 
 /** parseRequest with the replay scope bound, as the server does after route selection. */
-function parseRequestScoped(body: unknown, scope = scopeFor()): OcxParsedRequest {
+function parseRequestScoped(body: unknown, scope = scopeFor()): OccxParsedRequest {
   const req = parseRequest(body, { replayCacheScope: scope });
   req._reasoningReplayScope = scope;
   return req;
 }
 
-function firstTurn(): OcxParsedRequest {
+function firstTurn(): OccxParsedRequest {
   return {
     modelId: MODEL,
     stream: false,
@@ -90,7 +90,7 @@ function firstTurn(): OcxParsedRequest {
       tools: [{ name: "shell_command", description: "run a command", parameters: { type: "object" } }],
     },
     options: {},
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
 function googleBody(parts: Record<string, unknown>[]): Record<string, unknown> {
@@ -132,16 +132,16 @@ describe("#1735 thought signature survives history replay", () => {
     setAsyncIcaclsRunnerForTests(async () => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     __resetAntigravityReplayCache();
     resetThoughtSignatureReplayForTests();
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-thought-sig-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-thought-sig-"));
+    process.env.OPENCCX_HOME = testDir;
   });
 
   afterEach(async () => {
     await flushThoughtSignatureReplayForTests();
     resetThoughtSignatureReplayForTests();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(testDir);
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
@@ -728,7 +728,7 @@ describe("Durable Thought-Signature Replay Store Single-Call Invalidation (Mecha
   let previousHome: string | undefined;
   let testDir: string;
 
-  const scope: OcxReasoningReplayScopeRef = {
+  const scope: OccxReasoningReplayScopeRef = {
     clientThreadId: "thread-123",
     current: {
       providerName: "antigravity",
@@ -743,16 +743,16 @@ describe("Durable Thought-Signature Replay Store Single-Call Invalidation (Mecha
     setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     setAsyncIcaclsRunnerForTests(async () => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     resetThoughtSignatureReplayForTests();
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-tsig-inval-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-tsig-inval-"));
+    process.env.OPENCCX_HOME = testDir;
   });
 
   afterEach(async () => {
     await flushThoughtSignatureReplayForTests();
     resetThoughtSignatureReplayForTests();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(testDir);
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
@@ -793,16 +793,16 @@ describe("#2513 rejected signatures are evicted on every Google mode", () => {
     setAsyncIcaclsRunnerForTests(async () => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     __resetAntigravityReplayCache();
     resetThoughtSignatureReplayForTests();
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-tsig-mode-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-tsig-mode-"));
+    process.env.OPENCCX_HOME = testDir;
   });
 
   afterEach(async () => {
     await flushThoughtSignatureReplayForTests();
     resetThoughtSignatureReplayForTests();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(testDir);
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
@@ -820,7 +820,7 @@ describe("#2513 rejected signatures are evicted on every Google mode", () => {
   ] as const) {
     test(`${label}: a rejected signature does not survive in the durable store`, async () => {
       const scope = scopeFor("thread-evict", MODEL, "google");
-      const parsed = { ...firstTurn(), _reasoningReplayScope: scope } as unknown as OcxParsedRequest;
+      const parsed = { ...firstTurn(), _reasoningReplayScope: scope } as unknown as OccxParsedRequest;
 
       const adapter = createGoogleAdapter(modeProvider);
       // Warm the store the way a real turn does, then replay it so the adapter records the

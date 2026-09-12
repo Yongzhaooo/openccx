@@ -3,7 +3,7 @@ import { createResponsesPassthroughAdapter as createResponsesPassthroughAdapterP
 import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { resolveWireProtocolOverride } from "../../src/server/adapter-resolve";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 import { normalizeOpenCodeGoAdditionalTools } from "../../src/adapters/opencode-go-additional-tools";
 
@@ -13,13 +13,13 @@ const createResponsesPassthroughAdapter = (...args: Parameters<typeof createResp
 const registryEntry = getProviderRegistryEntry("opencode-go");
 if (!registryEntry) throw new Error("missing opencode-go registry fixture");
 
-function provider(baseUrl = "https://opencode.ai/zen/go/v1"): OcxProviderConfig {
+function provider(baseUrl = "https://opencode.ai/zen/go/v1"): OccxProviderConfig {
   return {
     ...providerConfigSeed(registryEntry),
     adapter: "openai-responses",
     baseUrl,
     apiKey: "test-key",
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
 function buildRequest(

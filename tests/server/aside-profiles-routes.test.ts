@@ -9,7 +9,7 @@ import { setIntegrationMutationFlightTestHooks, setIntegrationPathTestHooks } fr
 import { createIntegrationStateStore, type IntegrationStateStore } from "../../src/integrations/store";
 import { applyIntegration } from "../../src/integrations/writer";
 import { refreshOwnedCatalogIntegrations } from "../../src/integrations/catalog-refresh";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -17,18 +17,18 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 let root: string;
 let home: string;
 let store: IntegrationStateStore;
-let config: OcxConfig;
+let config: OccxConfig;
 let isolation: IsolatedCodexHome;
-let priorOcxHome: string | undefined;
-let saved: OcxConfig | undefined;
+let priorOccxHome: string | undefined;
+let saved: OccxConfig | undefined;
 const env: NodeJS.ProcessEnv = {};
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-aside-profile-routes-"));
+  root = mkdtempSync(join(tmpdir(), "occx-aside-profile-routes-"));
   home = join(root, "home");
-  priorOcxHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = join(root, "config");
-  isolation = installIsolatedCodexHome("ocx-aside-profile-codex-");
+  priorOccxHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = join(root, "config");
+  isolation = installIsolatedCodexHome("occx-aside-profile-codex-");
   store = createIntegrationStateStore(join(root, "store"));
   mkdirSync(join(home, ".aside"), { recursive: true });
   writeFileSync(join(home, ".aside", "accounts.json"), JSON.stringify({
@@ -41,7 +41,7 @@ beforeEach(() => {
   }
   config = { port: 10100, hostname: "127.0.0.1", defaultProvider: "fixture", fastRows: false, providers: {
     fixture: { adapter: "openai-chat", baseUrl: "https://fixture.invalid/v1", liveModels: false, models: ["one","two"] },
-  } } as OcxConfig;
+  } } as OccxConfig;
   saved = undefined;
   setIntegrationPathTestHooks({ home, env });
   setIntegrationMutationFlightTestHooks({ store });
@@ -51,8 +51,8 @@ afterEach(() => {
   setIntegrationPathTestHooks(null);
   setIntegrationMutationFlightTestHooks(null);
   isolation.restore();
-  if (priorOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = priorOcxHome;
+  if (priorOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = priorOccxHome;
   removeTreeWithRetry(root);
 });
 
@@ -86,7 +86,7 @@ async function prepareAsideSync(): Promise<void> {
 }
 
 function fixtureModelIds(id: number): string[] {
-  return document(id).providers.opencodex.models
+  return document(id).providers.openccx.models
     .filter((model: { id: string }) => model.id.startsWith("fixture/"))
     .map((model: { id: string }) => model.id);
 }
@@ -109,7 +109,7 @@ test.each([undefined, "{}"])("Aside sync accepts body %j and refreshes every ena
 test("bodyless Aside sync returns HTTP 207 for one conflict while refreshing its siblings", async () => {
   await prepareAsideSync();
   const edited = document(1);
-  edited.providers.opencodex.baseUrl = "https://user-edit.example.test/v1";
+  edited.providers.openccx.baseUrl = "https://user-edit.example.test/v1";
   const editedBytes = JSON.stringify(edited);
   writeFileSync(path(1), editedBytes);
   const response = await api("/api/client-integrations/aside/sync", "POST");
@@ -171,15 +171,15 @@ test("legacy connection refreshes all profiles, and an individual off survives s
   expect(JSON.stringify(initial)).not.toContain("do-not-project");
   expect((await api("/api/selected-models", "PUT", { provider: "fixture", models: ["one"] })).status).toBe(200);
   for (const id of [0,1,2]) {
-    expect(document(id).providers.opencodex.models.filter((m: { id: string }) => m.id.startsWith("fixture/")).map((m: { id: string }) => m.id)).toEqual(["fixture/one"]);
+    expect(document(id).providers.openccx.models.filter((m: { id: string }) => m.id.startsWith("fixture/")).map((m: { id: string }) => m.id)).toEqual(["fixture/one"]);
     expect(document(id).theme).toBe("keep");
     expect(document(id).providers.personal).toEqual({ models: [] });
   }
   expect((await api("/api/client-integrations/aside?profile=1", "PUT", { enabled: false })).status).toBe(200);
   config = structuredClone(saved!);
   expect((await api("/api/selected-models", "PUT", { provider: "fixture", models: ["two"] })).status).toBe(200);
-  expect(document(1).providers.opencodex).toBeUndefined();
-  for (const id of [0,2]) expect(document(id).providers.opencodex.models.some((m: { id: string }) => m.id === "fixture/two")).toBe(true);
+  expect(document(1).providers.openccx).toBeUndefined();
+  for (const id of [0,2]) expect(document(id).providers.openccx.models.some((m: { id: string }) => m.id === "fixture/two")).toBe(true);
   const state = await (await api("/api/client-integrations/aside?profile=1")).json();
   expect(state).toMatchObject({ profileId: 1, enabled: false, state: "absent" });
 });
@@ -192,8 +192,8 @@ test("profile history and Undo cannot recreate an undone enable on the next sync
   expect((await api("/api/client-integrations/restore?client=aside&profile=2", "POST", { opId: enabled.opId })).status).toBe(200);
   config = structuredClone(saved!);
   await api("/api/selected-models", "PUT", { provider: "fixture", models: ["one"] });
-  expect(document(2).providers.opencodex).toBeUndefined();
-  expect(document(0).providers.opencodex).toBeUndefined();
+  expect(document(2).providers.openccx).toBeUndefined();
+  expect(document(0).providers.openccx).toBeUndefined();
 });
 
 test.each(["../0", "01", "-1", "9007199254740992"])("rejects invalid profile %s before file mutation", async id => {
@@ -211,7 +211,7 @@ test("a non-Aside client cannot silently consume a profile selector", async () =
 
 
 test("invalid persisted profile policy fails closed without resetting the surrounding config", () => {
-  const configRoot = process.env.OPENCODEX_HOME!;
+  const configRoot = process.env.OPENCCX_HOME!;
   mkdirSync(configRoot, { recursive: true });
   writeFileSync(join(configRoot, "config.json"), JSON.stringify({ ...config, asideProfileSync: { allProfiles: true, profiles: { "1": "off" } } }));
   const loaded = loadConfig();
@@ -247,6 +247,6 @@ test("dedicated nested paths retain profile scope for status, history and restor
   expect(await (await api("/api/client-integrations/aside/profiles/2")).json()).toMatchObject({ profileId: 2, enabled: true });
   expect((await api("/api/client-integrations/aside/profiles/2?profile=1", "PUT", { enabled: false })).status).toBe(400);
   expect((await api("/api/client-integrations/aside/profiles/2/restore", "POST", { opId: on.opId })).status).toBe(200);
-  expect(document(2).providers.opencodex).toBeUndefined();
-  expect(document(0).providers.opencodex).toBeUndefined();
+  expect(document(2).providers.openccx).toBeUndefined();
+  expect(document(0).providers.openccx).toBeUndefined();
 });

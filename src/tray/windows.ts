@@ -16,9 +16,9 @@ const RUN_PARENT_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion";
 const TRAY_STATE_VERSION = 1;
 const FOREIGN_RUN_VALUE = "<foreign-or-unreadable-registry-value>";
 const TRAY_ICON_FILES = [
-  "opencodex-tray-online.ico",
-  "opencodex-tray-warning.ico",
-  "opencodex-tray-offline.ico",
+  "openccx-tray-online.ico",
+  "openccx-tray-warning.ico",
+  "openccx-tray-offline.ico",
 ] as const;
 
 export interface WindowsTrayEntry {
@@ -28,7 +28,7 @@ export interface WindowsTrayEntry {
   cli: string;
   script: string;
   codexHome: string;
-  opencodexHome: string;
+  openccxHome: string;
 }
 
 interface WindowsTrayState extends WindowsTrayEntry {
@@ -61,7 +61,7 @@ function trayHeartbeatPath(): string {
 }
 
 function installedTrayScriptPath(): string {
-  return join(getConfigDir(), "opencodex-tray.ps1");
+  return join(getConfigDir(), "openccx-tray.ps1");
 }
 
 function installedTrayIconPaths(): string[] {
@@ -69,13 +69,13 @@ function installedTrayIconPaths(): string[] {
 }
 
 export function windowsTrayStatePathsOwned(
-  state: Pick<WindowsTrayEntry, "script" | "opencodexHome"> & { launcherPath?: string },
+  state: Pick<WindowsTrayEntry, "script" | "openccxHome"> & { launcherPath?: string },
   configDir = getConfigDir(),
 ): boolean {
-  if (resolve(state.opencodexHome) !== resolve(configDir)) return false;
-  if (resolve(state.script) !== resolve(join(configDir, "opencodex-tray.ps1"))) return false;
+  if (resolve(state.openccxHome) !== resolve(configDir)) return false;
+  if (resolve(state.script) !== resolve(join(configDir, "openccx-tray.ps1"))) return false;
   return state.launcherPath === undefined
-    || resolve(state.launcherPath) === resolve(join(configDir, "opencodex-tray.vbs"));
+    || resolve(state.launcherPath) === resolve(join(configDir, "openccx-tray.vbs"));
 }
 
 function sourceTrayScriptPath(): string {
@@ -99,13 +99,13 @@ function currentEntry(): WindowsTrayEntry {
     cli: join(import.meta.dir, "..", "cli", "index.ts"),
     script: installedTrayScriptPath(),
     codexHome: currentCodexHome(),
-    opencodexHome: getConfigDir(),
+    openccxHome: getConfigDir(),
   };
 }
 
-export function windowsTrayRunValue(opencodexHome: string): string {
-  const normalized = resolve(opencodexHome).replace(/[\\/](?:\.)?[\\/]*$/, "").toLowerCase();
-  return `OpenCodexTray-${createHash("sha256").update(normalized).digest("hex").slice(0, 12)}`;
+export function windowsTrayRunValue(openccxHome: string): string {
+  const normalized = resolve(openccxHome).replace(/[\\/](?:\.)?[\\/]*$/, "").toLowerCase();
+  return `OpenccxTray-${createHash("sha256").update(normalized).digest("hex").slice(0, 12)}`;
 }
 
 export function windowsPowerShellPath(systemRoot = process.env.SystemRoot): string {
@@ -170,7 +170,7 @@ export function windowsTrayProcessArgs(entry: WindowsTrayEntry, mode: "Run" | "S
     "-BunRuntimeSource", entry.bunRuntimeSource,
     "-CliPath", safePath(entry.cli),
     "-CodexHome", safePath(entry.codexHome),
-    "-OpenCodexHome", safePath(entry.opencodexHome),
+    "-OpenccxHome", safePath(entry.openccxHome),
     "-Mode", mode,
   ];
   if (Number.isSafeInteger(hostPid) && (hostPid ?? 0) > 0) args.push("-HostPid", String(hostPid));
@@ -183,7 +183,7 @@ function quoteRunValue(value: string): string {
 }
 
 function installedTrayLauncherPath(): string {
-  return join(getConfigDir(), "opencodex-tray.vbs");
+  return join(getConfigDir(), "openccx-tray.vbs");
 }
 
 function quoteVbsPath(value: string): string {
@@ -204,7 +204,7 @@ export function buildWindowsTrayPowerShellCommand(entry: WindowsTrayEntry, power
     "-BunRuntimeSource", entry.bunRuntimeSource,
     "-CliPath", quoteRunValue(entry.cli),
     "-CodexHome", quoteRunValue(entry.codexHome),
-    "-OpenCodexHome", quoteRunValue(entry.opencodexHome),
+    "-OpenccxHome", quoteRunValue(entry.openccxHome),
     "-Mode", "Run",
   ].join(" ");
 }
@@ -219,7 +219,7 @@ export function buildWindowsTrayLauncherScript(entry: WindowsTrayEntry, powershe
   const command = buildWindowsTrayPowerShellCommand(entry, powershell);
   // VBS CreateObject("WScript.Shell").Run command, 0, False — hidden, non-blocking.
   return [
-    "' OpenCodex owned tray launcher — do not edit by hand.",
+    "' Openccx owned tray launcher — do not edit by hand.",
     `CreateObject("WScript.Shell").Run "${quoteVbsPath(command)}", 0, False`,
     "",
   ].join("\r\n");
@@ -234,16 +234,16 @@ function readState(): WindowsTrayState | null {
   try {
     const state = JSON.parse(readFileSync(trayStatePath(), "utf8")) as Partial<WindowsTrayState>;
     if (state.version !== TRAY_STATE_VERSION) return null;
-    for (const key of ["bun", "cli", "script", "codexHome", "opencodexHome", "runValue", "runCommand"] as const) {
+    for (const key of ["bun", "cli", "script", "codexHome", "openccxHome", "runValue", "runCommand"] as const) {
       if (typeof state[key] !== "string" || state[key].length === 0) return null;
     }
     if (state.launcherPath !== undefined && typeof state.launcherPath !== "string") return null;
     const valid = state as WindowsTrayState;
-    for (const value of [valid.bun, valid.cli, valid.script, valid.codexHome, valid.opencodexHome]) safePath(value);
+    for (const value of [valid.bun, valid.cli, valid.script, valid.codexHome, valid.openccxHome]) safePath(value);
     // State is advisory, not an authority for executable or deletion paths. In
     // particular, never let a forged state file redirect PowerShell -File.
     if (!windowsTrayStatePathsOwned(valid)) return null;
-    if (valid.runValue !== windowsTrayRunValue(valid.opencodexHome)) return null;
+    if (valid.runValue !== windowsTrayRunValue(valid.openccxHome)) return null;
     return valid;
   } catch {
     return null;
@@ -505,17 +505,17 @@ export async function getWindowsTrayStatusAsync(): Promise<WindowsTrayStatus> {
 }
 
 function assertWindows(): void {
-  if (process.platform !== "win32") throw new Error(`The opencodex tray is Windows-only (current platform: ${process.platform}).`);
+  if (process.platform !== "win32") throw new Error(`The openccx tray is Windows-only (current platform: ${process.platform}).`);
 }
 
 const DETACHED_TRAY_HOST_LAUNCHER = [
   "$startInfo = New-Object System.Diagnostics.ProcessStartInfo",
-  "$startInfo.FileName = $env:OCX_TRAY_HOST_BUN",
-  "$startInfo.Arguments = $env:OCX_TRAY_HOST_ARGS",
+  "$startInfo.FileName = $env:OCCX_TRAY_HOST_BUN",
+  "$startInfo.Arguments = $env:OCCX_TRAY_HOST_ARGS",
   "$startInfo.UseShellExecute = $false",
   "$startInfo.CreateNoWindow = $true",
   "$startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden",
-  "$startInfo.EnvironmentVariables['OCX_TRAY_ENTRY_B64'] = $env:OCX_TRAY_ENTRY_B64",
+  "$startInfo.EnvironmentVariables['OCCX_TRAY_ENTRY_B64'] = $env:OCCX_TRAY_ENTRY_B64",
   "$child = [System.Diagnostics.Process]::Start($startInfo)",
   "if ($null -eq $child) { throw 'Windows tray host did not start.' }",
   "$child.Dispose()",
@@ -538,9 +538,9 @@ export function launchWindowsTrayHost(state: WindowsTrayEntry): void {
     timeout: 15_000,
     env: {
       ...process.env,
-      OCX_TRAY_HOST_BUN: bun,
-      OCX_TRAY_HOST_ARGS: `${quoteRunValue(cli)} __tray-host`,
-      OCX_TRAY_ENTRY_B64: Buffer.from(JSON.stringify(state), "utf8").toString("base64"),
+      OCCX_TRAY_HOST_BUN: bun,
+      OCCX_TRAY_HOST_ARGS: `${quoteRunValue(cli)} __tray-host`,
+      OCCX_TRAY_ENTRY_B64: Buffer.from(JSON.stringify(state), "utf8").toString("base64"),
     },
   });
 }
@@ -570,10 +570,10 @@ function spawnTray(state: WindowsTrayEntry): void {
 }
 
 function parseTrayHostEntry(): WindowsTrayEntry {
-  const encoded = process.env.OCX_TRAY_ENTRY_B64;
+  const encoded = process.env.OCCX_TRAY_ENTRY_B64;
   if (!encoded) throw new Error("Missing tray host entry.");
   const value = JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as Partial<WindowsTrayEntry>;
-  for (const key of ["bun", "cli", "script", "codexHome", "opencodexHome"] as const) {
+  for (const key of ["bun", "cli", "script", "codexHome", "openccxHome"] as const) {
     if (typeof value[key] !== "string") throw new Error(`Invalid tray host field: ${key}`);
     safePath(value[key]);
   }
@@ -584,9 +584,9 @@ function parseTrayHostEntry(): WindowsTrayEntry {
 export async function runWindowsTrayHost(): Promise<void> {
   assertWindows();
   const entry = parseTrayHostEntry();
-  delete process.env.OCX_TRAY_ENTRY_B64;
-  delete process.env.OCX_TRAY_HOST_BUN;
-  delete process.env.OCX_TRAY_HOST_ARGS;
+  delete process.env.OCCX_TRAY_ENTRY_B64;
+  delete process.env.OCCX_TRAY_HOST_BUN;
+  delete process.env.OCCX_TRAY_HOST_ARGS;
   const child = spawn(windowsPowerShellPath(), windowsTrayProcessArgs(entry, "Run", process.pid), {
     stdio: "ignore",
     windowsHide: true,
@@ -629,7 +629,7 @@ export function installWindowsTray(startNow = true): WindowsTrayStatus {
   if (runCommand.length > 260) {
     throw new Error(`Tray Run command exceeds the Windows 260-character limit (${runCommand.length} chars).`);
   }
-  const runValue = windowsTrayRunValue(entry.opencodexHome);
+  const runValue = windowsTrayRunValue(entry.openccxHome);
   const existing = readOwnedRunValue(runValue);
   const state = readState();
   if (existing && (!state || existing !== state.runCommand)) {
@@ -766,7 +766,7 @@ export async function windowsTrayCommand(args: string[]): Promise<void> {
   const values = args.filter(value => value !== "--json" && value !== "--no-start");
   const sub = values[0] ?? "status";
   if (args.includes("--no-start") && sub !== "install" || values.length > 1 || !["install", "start", "stop", "status", "uninstall", "remove"].includes(sub)) {
-    console.error("Usage: ocx tray <install|start|stop|status|uninstall|remove> [--json] [--no-start]");
+    console.error("Usage: occx tray <install|start|stop|status|uninstall|remove> [--json] [--no-start]");
     process.exitCode = 1;
     return;
   }

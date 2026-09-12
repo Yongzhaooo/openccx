@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { saveConfig, readConfigDiagnostics } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
@@ -15,36 +15,36 @@ import {
 let previousHome: string | undefined;
 let fixtureHome: string;
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  fixtureHome = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-home-"));
-  process.env.OPENCODEX_HOME = fixtureHome;
-  saveConfig({ port: 10100, defaultProvider: "test", providers: { test: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", allowPrivateNetwork: true, liveModels: false, models: ["fixture-model"] } }, clientIntegrations: { "claude-desktop": false } } as OcxConfig);
+  previousHome = process.env.OPENCCX_HOME;
+  fixtureHome = mkdtempSync(join(tmpdir(), "occx-desktop-remove-home-"));
+  process.env.OPENCCX_HOME = fixtureHome;
+  saveConfig({ port: 10100, defaultProvider: "test", providers: { test: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", allowPrivateNetwork: true, liveModels: false, models: ["fixture-model"] } }, clientIntegrations: { "claude-desktop": false } } as OccxConfig);
   expect(readConfigDiagnostics().source).toBe("file");
   expect(readConfigDiagnostics().config.clientIntegrations?.["claude-desktop"]).toBe(false);
 });
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(fixtureHome);
 });
 
 function removeDesktop3pStandardPivot(options: NonNullable<Parameters<typeof removeDesktop3pStandardPivotProduction>[0]> = {}) {
-  const library = options.env?.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
+  const library = options.env?.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
   if (!library) throw new Error("Desktop removal fixture must supply its library path");
-  const previousLibrary = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = library;
+  const previousLibrary = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = library;
   try {
     return removeDesktop3pStandardPivotProduction({
       ...options, lifecycleLockDeps: { lockPath: join(fixtureHome, "locks", "desktop.sqlite") },
     });
   } finally {
-    if (previousLibrary === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
+    if (previousLibrary === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
   }
 }
 
 function envFor(path: string): NodeJS.ProcessEnv {
-  return { ...process.env, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: path };
+  return { ...process.env, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: path };
 }
 
 function appliedFingerprint(path: string): string {
@@ -52,7 +52,7 @@ function appliedFingerprint(path: string): string {
 }
 
 test("an absent Desktop library is read-only and OFF is an idempotent no-op", () => {
-  const library = join(mkdtempSync(join(tmpdir(), "ocx-desktop-remove-")), "missing");
+  const library = join(mkdtempSync(join(tmpdir(), "occx-desktop-remove-")), "missing");
   const options = { env: envFor(library) };
   expect(inspectDesktop3pConfigLibrary(options).kind).toBe("not_installed");
   expect(removeDesktop3pStandardPivot(options)).toMatchObject({ ok: true, changed: false, kind: "noop" });
@@ -60,10 +60,10 @@ test("an absent Desktop library is read-only and OFF is an idempotent no-op", ()
 });
 
 test("OFF selects a credential-free standard profile before deleting the owned profile and backup", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const id = "owned-profile";
   mkdirSync(library, { recursive: true });
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway",
     inferenceCredentialKind: "static",
@@ -84,7 +84,7 @@ test("OFF selects a credential-free standard profile before deleting the owned p
 });
 
 test("a selected path traversal id is refused without following it", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: "../outside", entries: [] }));
   const result = inspectDesktop3pConfigLibrary({ env: envFor(library) });
   expect(result).toMatchObject({ kind: "unsafe", reason: "unsafe_applied_id" });
@@ -92,12 +92,12 @@ test("a selected path traversal id is refused without following it", () => {
 });
 
 test("a selected foreign standard profile is never mutated, but owned residue can be cleaned", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const foreign = "foreign-standard";
   const owned = "owned-residue";
   writeFileSync(join(library, "_meta.json"), JSON.stringify({
     appliedId: foreign,
-    entries: [{ id: foreign, name: "someone-else" }, { id: owned, name: "opencodex" }],
+    entries: [{ id: foreign, name: "someone-else" }, { id: owned, name: "openccx" }],
   }));
   writeFileSync(join(library, `${foreign}.json`), "{}\n");
   writeFileSync(join(library, `${owned}.json`), JSON.stringify({
@@ -113,9 +113,9 @@ test("a selected foreign standard profile is never mutated, but owned residue ca
 });
 
 test("an owned but drifted gateway profile can still be disabled", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const id = "drifted-owned";
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway", inferenceCredentialKind: "static",
     inferenceGatewayBaseUrl: "http://127.0.0.1:10100", inferenceGatewayApiKey: "not-a-secret",
@@ -131,14 +131,14 @@ test("an owned but drifted gateway profile can still be disabled", () => {
   expect(existsSync(join(library, `${id}.json.bak`))).toBe(false);
   const metadata = JSON.parse(readFileSync(join(library, "_meta.json"), "utf8")) as { appliedId: string; entries: Array<{ id: string; name: string }> };
   expect(metadata.entries.map(entry => entry.id)).not.toContain(id);
-  expect(metadata.entries.some(entry => entry.name === "opencodex-standard")).toBe(true);
+  expect(metadata.entries.some(entry => entry.name === "openccx-standard")).toBe(true);
   expect(JSON.parse(readFileSync(join(library, `${metadata.appliedId}.json`), "utf8"))).toEqual({});
 });
 
 test("an owned gateway with no saved fingerprint is treated as drifted and can be disabled", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const id = "fingerprint-missing";
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway", inferenceCredentialKind: "static",
     inferenceGatewayBaseUrl: "http://127.0.0.1:10100", inferenceGatewayApiKey: "not-a-secret",
@@ -152,9 +152,9 @@ test("an owned gateway with no saved fingerprint is treated as drifted and can b
 });
 
 test("a delete interruption leaves the standard pivot selected and reports only residual paths", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const id = "owned-profile";
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway", inferenceCredentialKind: "static",
     inferenceGatewayBaseUrl: "http://127.0.0.1:10100", inferenceGatewayApiKey: "not-a-secret",
@@ -175,13 +175,13 @@ test("a delete interruption leaves the standard pivot selected and reports only 
   expect(JSON.parse(readFileSync(join(library, `${metadata.appliedId}.json`), "utf8"))).toEqual({});
 });
 
-test("interrupted cleanup prefers the selected opencodex row and reports another owned row as residue", () => {
-  const library = mkdtempSync(join(tmpdir(), "ocx-desktop-remove-"));
+test("interrupted cleanup prefers the selected openccx row and reports another owned row as residue", () => {
+  const library = mkdtempSync(join(tmpdir(), "occx-desktop-remove-"));
   const selected = "selected-owned";
   const residual = "residual-owned";
   writeFileSync(join(library, "_meta.json"), JSON.stringify({
     appliedId: selected,
-    entries: [{ id: selected, name: "opencodex" }, { id: residual, name: "opencodex" }],
+    entries: [{ id: selected, name: "openccx" }, { id: residual, name: "openccx" }],
   }));
   for (const id of [selected, residual]) {
     writeFileSync(join(library, `${id}.json`), JSON.stringify({

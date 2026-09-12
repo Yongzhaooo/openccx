@@ -47,7 +47,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxClaudeDesktopProfile, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../types";
+import type { OccxClaudeCodeConfig, OccxClaudeDesktopProfile, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../types";
 import type { DesktopProfileModel } from "../claude/desktop-profile";
 import { drainAndShutdown } from "./lifecycle";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "./request-log";
@@ -93,7 +93,7 @@ export const VERSION = (() => {
 })();
 
 const managementConvergenceBindings = new WeakMap<object, Readonly<{
-  factory: (config: Readonly<OcxConfig>) => ConvergeCodex;
+  factory: (config: Readonly<OccxConfig>) => ConvergeCodex;
   converge: ConvergeCodex;
 }>>();
 
@@ -152,7 +152,7 @@ async function handleGrokCouponRoutesOnDemand(ctx: ManagementContext): Promise<R
 export async function handleManagementAPI(
   req: Request,
   url: URL,
-  config: OcxConfig,
+  config: OccxConfig,
   deps: ManagementApiDeps = {},
   principal?: ManagementPrincipal,
   sessionControl?: ManagementSessionControl,
@@ -281,7 +281,7 @@ export async function handleManagementAPI(
 
   if (url.pathname === "/api/stop" && req.method === "POST") {
     const { installedServiceRespawnRisk, stopServiceIfInstalledDetailed, isServiceOwnershipError } = await import("../service");
-    // `ocx stop` performs its own shared teardown AFTER verifying the scheduler did not
+    // `occx stop` performs its own shared teardown AFTER verifying the scheduler did not
     // respawn the proxy (#3008). Without this the child restores native Codex and strips
     // the Grok fence here, so a survivor found moments later has already had the shared
     // config pulled out from under it — and the parent's `ownershipBlocked` guard can
@@ -295,7 +295,7 @@ export async function handleManagementAPI(
     // Decide BEFORE touching the manager. Stopping the Task Scheduler task and then
     // refusing left the proxy running with its manager stopped — worse than either
     // outcome. This process cannot verify its own post-exit respawn window; only the
-    // receipt-backed parent `ocx stop` can, which is what the deferral exists for.
+    // receipt-backed parent `occx stop` can, which is what the deferral exists for.
     const { deferralMatchesReceipt } = await import("../config/pending-teardown");
     const { deferralHonored, performStopTeardown } = await import("./stop-teardown");
     const holdsReceipt = deferralHonored(url, deferralMatchesReceipt);
@@ -304,7 +304,7 @@ export async function handleManagementAPI(
       return jsonResponse({
         success: false,
         code: "respawnable_service",
-        message: "This proxy is managed by a Task Scheduler wrapper that can respawn it, so the stop must be run by `ocx stop`, which verifies the respawn window. Nothing was changed.",
+        message: "This proxy is managed by a Task Scheduler wrapper that can respawn it, so the stop must be run by `occx stop`, which verifies the respawn window. Nothing was changed.",
       }, 409, req, config);
     }
     if (respawnRisk === "self-unload") {
@@ -313,22 +313,22 @@ export async function handleManagementAPI(
       // the native Codex keys — the dashboard Stop button left `openai_base_url`,
       // `experimental_realtime_ws_base_url` and `model_catalog_json` pointed at a dead
       // proxy (#4023). Refuse before touching anything, like the Windows branch above.
-      // `ocx stop` is safe because it runs outside this process and owns the teardown
+      // `occx stop` is safe because it runs outside this process and owns the teardown
       // through its receipt, which is why the receipt-backed caller never reaches here.
       return jsonResponse({
         success: false,
         code: "self_unload_service",
-        message: "This proxy is running as the installed service, so stopping the manager from inside it would end this process before native Codex is restored. Run `ocx stop`, which stops the service from outside and completes the restore. Nothing was changed.",
+        message: "This proxy is running as the installed service, so stopping the manager from inside it would end this process before native Codex is restored. Run `occx stop`, which stops the service from outside and completes the restore. Nothing was changed.",
       }, 409, req, config);
     }
     if (respawnRisk === "unknown") {
-      // Do NOT send them to `ocx stop`: it maps the same unanswerable probe to a stop
+      // Do NOT send them to `occx stop`: it maps the same unanswerable probe to a stop
       // failure, so that advice would be a loop. The scheduler query itself is what needs
       // fixing (#3008).
       return jsonResponse({
         success: false,
         code: "service_state_unknown",
-        message: "The Windows Task Scheduler state could not be read, so this proxy cannot tell whether a wrapper would respawn it. Nothing was changed. Run `ocx service status` to see the query error, repair Task Scheduler access, then retry.",
+        message: "The Windows Task Scheduler state could not be read, so this proxy cannot tell whether a wrapper would respawn it. Nothing was changed. Run `occx service status` to see the query error, repair Task Scheduler access, then retry.",
       }, 409, req, config);
     }
     let serviceStop: import("../service").ServiceStopOutcome;
@@ -336,7 +336,7 @@ export async function handleManagementAPI(
       serviceStop = stopServiceIfInstalledDetailed();
     } catch (err) {
       if (isServiceOwnershipError(err)) {
-        // The installed service belongs to another CODEX_HOME/OPENCODEX_HOME: it would respawn
+        // The installed service belongs to another CODEX_HOME/OPENCCX_HOME: it would respawn
         // this proxy immediately, and its shared config is not ours to tear down. Refuse the
         // stop instead of half-performing it. 409, not 500 — the request is well-formed.
         return jsonResponse({ success: false, message: err.message }, 409, req, config);
@@ -349,7 +349,7 @@ export async function handleManagementAPI(
     if (serviceStop === "failed") {
       return jsonResponse({
         success: false,
-        message: "The installed service manager did not stop; it may respawn the proxy. Shared client config was left alone. Run `ocx stop` from the home that owns the service.",
+        message: "The installed service manager did not stop; it may respawn the proxy. Shared client config was left alone. Run `occx stop` from the home that owns the service.",
       }, 409, req, config);
     }
     if (serviceStop === "state-unknown") {
@@ -357,22 +357,22 @@ export async function handleManagementAPI(
       return jsonResponse({
         success: false,
         code: "service_state_unknown",
-        message: "The Windows Task Scheduler state could not be read, so this proxy cannot tell whether a wrapper would respawn it. Shared client config was left alone. Run `ocx service status` to see the query error, repair Task Scheduler access, then retry.",
+        message: "The Windows Task Scheduler state could not be read, so this proxy cannot tell whether a wrapper would respawn it. Shared client config was left alone. Run `occx service status` to see the query error, repair Task Scheduler access, then retry.",
       }, 409, req, config);
     }
     // The pre-check above already refused the respawnable case without a receipt, so
     // reaching here with one means the parent owns the verification.
     // Both managed configs come down together on an explicit teardown. The daemon's own
-    // syncCleanup skips this when OCX_SERVICE is set (so a crash/respawn keeps the fence),
+    // syncCleanup skips this when OCCX_SERVICE is set (so a crash/respawn keeps the fence),
     // which is exactly why an intentional stop has to do it here — unless the caller is
-    // `ocx stop`, which does it itself once the proxy is proven down.
+    // `occx stop`, which does it itself once the proxy is proven down.
     const teardown = await performStopTeardown(url, { ownsReceipt: deferralMatchesReceipt });
     setTimeout(async () => {
       let shutdownSucceeded = false;
       try {
         shutdownSucceeded = await drainAndShutdown(undefined, config.shutdownTimeoutMs ?? 5000);
       } catch {
-        console.warn("[opencodex] shutdown drain failed");
+        console.warn("[openccx] shutdown drain failed");
       }
       // A drained proxy whose shared teardown failed did not finish the job. Exiting 0
       // told a supervisor the stop was clean while native Codex or the Grok fence was

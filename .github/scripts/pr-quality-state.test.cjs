@@ -509,7 +509,7 @@ describe("gate state", () => {
     assert.equal(parseGateState(null), null);
     const warnings = [];
     assert.equal(
-      parseGateState("<!-- opencodex-pr-gate-state:{bad -->", m =>
+      parseGateState("<!-- openccx-pr-gate-state:{bad -->", m =>
         warnings.push(m),
       ),
       null,

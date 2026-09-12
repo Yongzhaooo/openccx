@@ -118,7 +118,7 @@ import { observeMainReserveRevocation } from "./reserve-availability";
 import { emailMaskingEnabled, projectEmail } from "../lib/privacy";
 import { codexWarmupFailureReason, isCodexWarmupProvisioningFailure, warmCodexAccount } from "./warmup";
 export { maskEmail } from "../lib/privacy";
-import type { CodexAccount, CodexAccountCredentials, OcxConfig } from "../types";
+import type { CodexAccount, CodexAccountCredentials, OccxConfig } from "../types";
 import type { CatalogDisposition } from "./convergence-types";
 import { isCanonicalOpenAiForwardProvider, OPENAI_CODEX_PROVIDER_ID } from "../providers/openai-tiers";
 import { providerCodexAccountMode } from "../providers/registry";
@@ -218,14 +218,14 @@ function pruneCodexLoginState(now = Date.now()): void {
   }
 }
 
-function configuredPoolAccount(config: OcxConfig, accountId: string): CodexAccount | null {
+function configuredPoolAccount(config: OccxConfig, accountId: string): CodexAccount | null {
   if (!isValidCodexAccountId(accountId)) return null;
   return (config.codexAccounts ?? [])
     .find(account => account.id === accountId && isSelectableCodexPoolAccount(account)) ?? null;
 }
 
 function codexAccountPersistenceConflict(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   mode: "create" | "reauth",
 ): string | undefined {
@@ -430,7 +430,7 @@ interface ResetCreditAuth {
 }
 
 async function withResetCreditAuth<T>(
-  runtimeConfig: OcxConfig,
+  runtimeConfig: OccxConfig,
   accountId: string,
   operation: (auth: ResetCreditAuth) => Promise<T>,
 ): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
@@ -520,7 +520,7 @@ function safeResetCreditConsumeDto(input: unknown): { code: string } {
  * `redeem_request_id` so a journaled id can be replayed idempotently after a crash.
  * Throws on any auth or upstream failure; the caller treats a throw on consume as ambiguous.
  */
-export function createResetCreditWhamClient(config: OcxConfig, accountId: string): {
+export function createResetCreditWhamClient(config: OccxConfig, accountId: string): {
   inspect: () => Promise<{ credits: { granted_at: string; expires_at: string }[] }>;
   consume: (redeemRequestId: string) => Promise<{ code: string }>;
 } {
@@ -652,18 +652,18 @@ function nonEmptyPlan(value: unknown): string | null {
   return codexPlanValue(value) ?? null;
 }
 
-function isRuntimeConfig(config: OcxConfig): boolean {
+function isRuntimeConfig(config: OccxConfig): boolean {
   return !!config && typeof config === "object" && !!config.providers;
 }
 
-function getRuntimeConfig(config: OcxConfig): OcxConfig {
+function getRuntimeConfig(config: OccxConfig): OccxConfig {
   return isRuntimeConfig(config) ? config : loadConfig();
 }
 
-function saveRuntimeConfig(sourceConfig: OcxConfig, nextConfig: OcxConfig): void {
+function saveRuntimeConfig(sourceConfig: OccxConfig, nextConfig: OccxConfig): void {
   saveConfigPreservingClaudeCode(nextConfig);
   if (sourceConfig === nextConfig || !isRuntimeConfig(sourceConfig)) return;
-  for (const key of Object.keys(sourceConfig) as Array<keyof OcxConfig>) {
+  for (const key of Object.keys(sourceConfig) as Array<keyof OccxConfig>) {
     delete sourceConfig[key];
   }
   Object.assign(sourceConfig, nextConfig);
@@ -690,8 +690,8 @@ function codexCredentialPersistenceFailure(accountId: string, catalogRefreshPend
 
 /** Persist config before publishing secret or runtime state under the shared mutation coordinator. */
 function persistNewCodexAccount(
-  sourceConfig: OcxConfig,
-  runtimeConfig: OcxConfig,
+  sourceConfig: OccxConfig,
+  runtimeConfig: OccxConfig,
   addedAccount: CodexAccount,
   staged: StagedNewCodexAccountState,
 ): PersistNewCodexAccountOutcome {
@@ -716,7 +716,7 @@ function persistNewCodexAccount(
       pickerVisibilityChanged = namespaceAdded || retainedPickerBindingRestored;
       saveRuntimeConfig(sourceConfig, runtimeConfig);
     } catch (error) {
-      for (const key of Object.keys(runtimeConfig) as Array<keyof OcxConfig>) {
+      for (const key of Object.keys(runtimeConfig) as Array<keyof OccxConfig>) {
         delete runtimeConfig[key];
       }
       Object.assign(runtimeConfig, previousConfig);
@@ -747,7 +747,7 @@ interface AccountNamespaceCatalogRefresh {
 
 /** Collapse post-persistence convergence into the one public recovery bit. */
 async function convergeAccountNamespaceCatalog(
-  config: OcxConfig,
+  config: OccxConfig,
   changed: boolean,
   convergeCodexCatalog?: CodexAuthCatalogConvergence,
 ): Promise<AccountNamespaceCatalogRefresh> {
@@ -1214,7 +1214,7 @@ interface FreshPoolPlanUpdate {
  * WHAM requests were in flight. Missing or malformed files fail closed: a read path must not
  * recreate a deleted config from the server's older in-memory snapshot.
  */
-function reconcileFreshPoolAccountPlans(runtimeConfig: OcxConfig, updates: FreshPoolPlanUpdate[]): void {
+function reconcileFreshPoolAccountPlans(runtimeConfig: OccxConfig, updates: FreshPoolPlanUpdate[]): void {
   if (updates.length === 0) return;
   let outcome: ReturnType<typeof mutatePersistedConfig<FreshPoolPlanUpdate[]>>;
   try {
@@ -1643,7 +1643,7 @@ function manualResetAuthStillLive(accountId: string, auth: ResetCreditAuth): boo
 
 /** A confirmed spend remains successful even when its optional usage observation fails. */
 async function refreshAfterManualReset(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   auth: ResetCreditAuth,
   claims: ManualResetCooldownClaim[],
@@ -1709,7 +1709,7 @@ let primeInFlight: Promise<void> | null = null;
 const poolQuotaPrimeAttemptedAt = new Map<string, { generation: number; at: number }>();
 let cooldownRecoveryInFlight: Promise<void> | null = null;
 
-export async function runCodexCooldownRecoveryProbes(config: OcxConfig, now = Date.now()): Promise<void> {
+export async function runCodexCooldownRecoveryProbes(config: OccxConfig, now = Date.now()): Promise<void> {
   const openai = config.providers[OPENAI_CODEX_PROVIDER_ID];
   if (!openai
     || openai.disabled === true
@@ -1746,7 +1746,7 @@ export async function runCodexCooldownRecoveryProbes(config: OcxConfig, now = Da
 let mainHardLockRecoveryInFlight: Promise<void> | null = null;
 
 /** Metadata-only recovery on the existing sweep; failures retain the observed policy block. */
-export async function runMainAccountHardLockRecovery(config: OcxConfig): Promise<void> {
+export async function runMainAccountHardLockRecovery(config: OccxConfig): Promise<void> {
   if (mainHardLockRecoveryInFlight) return mainHardLockRecoveryInFlight;
   if (getMainAccountHardLockStatus(config).state !== "blocked"
     || isAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID)) return;
@@ -1780,7 +1780,7 @@ export async function runMainAccountHardLockRecovery(config: OcxConfig): Promise
   return mainHardLockRecoveryInFlight;
 }
 
-export function registerCodexCooldownRecoveryProbeWorker(config: OcxConfig): void {
+export function registerCodexCooldownRecoveryProbeWorker(config: OccxConfig): void {
   registerStateSweepAfterTick({
     name: "codex-cooldown-recovery",
     afterTick: () => {
@@ -1830,7 +1830,7 @@ function tryAcquireNativeMainPrimeLease(): AdmissionLease | null {
  * are swallowed: a blocked WSL network must never crash startup or a request.
  */
 export async function primeCodexPoolQuotas(
-  config: OcxConfig,
+  config: OccxConfig,
   reason: string,
   options: PrimeCodexPoolQuotasOptions = {},
 ): Promise<void> {
@@ -1922,7 +1922,7 @@ export async function primeCodexPoolQuotas(
     } catch {
       // Priming is best-effort; never propagate.
     }
-    if (process.env.OPENCODEX_DEBUG_QUOTA === "1") {
+    if (process.env.OPENCCX_DEBUG_QUOTA === "1") {
       console.warn(`[codex-quota] prime done (reason=${reason}, pool=${pool.length}, refreshed=${stale.length})`);
     }
   })().finally(() => { primeInFlight = null; });
@@ -1949,7 +1949,7 @@ export function clearCodexCooldownRecoveryProbeState(): void {
   cooldownRecoveryInFlight = null;
 }
 
-export function effectiveCodexAuthAccountId(config: OcxConfig): string {
+export function effectiveCodexAuthAccountId(config: OccxConfig): string {
   return getEffectiveActiveCodexAccountId(config) ?? MAIN_CODEX_ACCOUNT_ID;
 }
 
@@ -1959,7 +1959,7 @@ export interface CodexAuthAccountsSnapshot {
 }
 
 export async function listCodexAuthAccountsSnapshot(
-  config: OcxConfig,
+  config: OccxConfig,
   forceRefresh = false,
   options: { validatePending?: boolean } = {},
 ): Promise<CodexAuthAccountsSnapshot> {
@@ -2083,7 +2083,7 @@ export async function listCodexAuthAccountsSnapshot(
 }
 
 /** One opted-in account's metadata; reuse the bounded WHAM 401 recovery and generation fence. */
-export async function refreshCodexQuotaForActivation(config: OcxConfig, accountId: string): Promise<void> {
+export async function refreshCodexQuotaForActivation(config: OccxConfig, accountId: string): Promise<void> {
   if (accountId === MAIN_CODEX_ACCOUNT_ID) {
     const lease = tryAcquireNativeMainProfileClaim();
     if (!lease) return;
@@ -2119,7 +2119,7 @@ export async function refreshCodexQuotaForActivation(config: OcxConfig, accountI
 }
 
 export async function listCodexAuthAccounts(
-  config: OcxConfig,
+  config: OccxConfig,
   forceRefresh = false,
   options: { validatePending?: boolean } = {},
 ): Promise<CodexAuthAccountDto[]> {
@@ -2132,12 +2132,12 @@ interface PauseExhaustedResult {
   failedAccountCount: number;
 }
 
-function selectFallbackAfterPause(config: OcxConfig, pausedActiveId: string): void {
+function selectFallbackAfterPause(config: OccxConfig, pausedActiveId: string): void {
   reconcileCodexActiveAfterExclusion(config, pausedActiveId);
 }
 
 async function pauseExhaustedCodexAccounts(
-  config: OcxConfig,
+  config: OccxConfig,
   persistPausedAccounts: () => void,
 ): Promise<PauseExhaustedResult> {
   const poolAccounts = (config.codexAccounts ?? []).filter(account => !account.isMain);
@@ -2230,7 +2230,7 @@ async function pauseExhaustedCodexAccounts(
 export async function handleCodexAuthAPI(
   req: Request,
   url: URL,
-  config: OcxConfig,
+  config: OccxConfig,
   convergeCodexCatalog?: CodexAuthCatalogConvergence,
   principal?: import("../server/management-auth").ManagementPrincipal,
 ): Promise<Response | null> {

@@ -56,12 +56,12 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function isOwnedDesktopEntry(entry: Desktop3pMetadataEntry | undefined): boolean {
-  return entry?.name === "opencodex" || entry?.name === "opencodex-standard";
+  return entry?.name === "openccx" || entry?.name === "openccx-standard";
 }
 
 /** A gateway row is removable; the selected standard row must always remain. */
 export function isOwnedDesktopGatewayEntry(entry: Desktop3pMetadataEntry | undefined): boolean {
-  return entry?.name === "opencodex";
+  return entry?.name === "openccx";
 }
 
 export function profilePath(libraryPath: string, id: string): string {
@@ -69,7 +69,7 @@ export function profilePath(libraryPath: string, id: string): string {
   return join(libraryPath, `${id}.json`);
 }
 
-export const OPENCODEX_DESKTOP_PROFILE_KEYS = new Set([
+export const OPENCCX_DESKTOP_PROFILE_KEYS = new Set([
   "inferenceProvider",
   "inferenceCredentialKind",
   "inferenceGatewayBaseUrl",
@@ -83,7 +83,7 @@ export function readDesktopProfileForeignKeys(path: string): Record<string, unkn
   const parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
   if (!isRecord(parsed)) throw new Error("Claude Desktop 3P profile is not a JSON object");
   return Object.fromEntries(
-    Object.entries(parsed).filter(([key]) => !OPENCODEX_DESKTOP_PROFILE_KEYS.has(key)),
+    Object.entries(parsed).filter(([key]) => !OPENCCX_DESKTOP_PROFILE_KEYS.has(key)),
   );
 }
 

@@ -26,7 +26,7 @@ import {
   type CodexWriteEvidence,
 } from "./write-coordination";
 
-/** Bounded so a stuck holder cannot wedge `ocx start` indefinitely. */
+/** Bounded so a stuck holder cannot wedge `occx start` indefinitely. */
 export const DEFAULT_INJECT_LOCK_TIMEOUT_MS = 5_000;
 
 /**

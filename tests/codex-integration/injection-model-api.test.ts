@@ -11,28 +11,28 @@ import { getConfigPath, loadConfig } from "../../src/config";
 import { refreshCodexModelCatalog } from "../../src/codex/refresh";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { CODEX_REASONING_LEVELS } from "../../src/reasoning-effort";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const savedHome = process.env.OPENCODEX_HOME;
+const savedHome = process.env.OPENCCX_HOME;
 let tempHome: string | null = null;
 
 afterEach(() => {
-  if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedHome;
+  if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedHome;
   if (tempHome) { removeTreeWithRetry(tempHome); tempHome = null; }
 });
 
 function isolatedHome(): void {
-  tempHome = mkdtempSync(join(tmpdir(), "ocx-injection-"));
-  process.env.OPENCODEX_HOME = tempHome;
+  tempHome = mkdtempSync(join(tmpdir(), "occx-injection-"));
+  process.env.OPENCCX_HOME = tempHome;
 }
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OcxConfig;
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OccxConfig;
 }
 
-async function put(config: OcxConfig, body: unknown): Promise<Response> {
+async function put(config: OccxConfig, body: unknown): Promise<Response> {
   const req = new Request("http://localhost/api/injection-model", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -175,7 +175,7 @@ describe("/api/injection-model guidance kill switch + partial update", () => {
       injectionEffort: "max",
       injectionPrompt: "RULES {{model}} {{roster}}",
     });
-    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted).toMatchObject({
       multiAgentGuidanceEnabled: false,
       injectionModel: "gpt-5.6-terra",

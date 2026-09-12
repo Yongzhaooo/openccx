@@ -4,11 +4,11 @@ import { isLocalAttestationSecret } from "./local-management-attestation";
 export const GUI_PAIR_METHOD = "POST";
 export const GUI_PAIR_PATH = "/api/gui/pairing-grants";
 export const GUI_PAIR_CAPABILITY_VERSION = "v1";
-export const GUI_PAIR_EXPECTED_PID_HEADER = "x-opencodex-gui-pair-expected-pid";
-export const GUI_PAIR_NONCE_HEADER = "x-opencodex-gui-pair-nonce";
-export const GUI_PAIR_EXPIRES_AT_HEADER = "x-opencodex-gui-pair-expires-at";
-export const GUI_PAIR_BROWSER_ORIGIN_HEADER = "x-opencodex-gui-pair-origin";
-export const GUI_PAIR_CAPABILITY_HEADER = "x-opencodex-gui-pair-capability";
+export const GUI_PAIR_EXPECTED_PID_HEADER = "x-openccx-gui-pair-expected-pid";
+export const GUI_PAIR_NONCE_HEADER = "x-openccx-gui-pair-nonce";
+export const GUI_PAIR_EXPIRES_AT_HEADER = "x-openccx-gui-pair-expires-at";
+export const GUI_PAIR_BROWSER_ORIGIN_HEADER = "x-openccx-gui-pair-origin";
+export const GUI_PAIR_CAPABILITY_HEADER = "x-openccx-gui-pair-capability";
 export const GUI_PAIR_CAPABILITY_TTL_MS = 10_000;
 
 const BASE64URL_256 = /^[A-Za-z0-9_-]{43}$/;
@@ -81,7 +81,7 @@ function capabilityPayload(
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
   if (!Number.isSafeInteger(expiresAt) || expiresAt <= 0) return null;
-  return `opencodex-gui-pair-v1\n${nonce}\n${method}\n${path}\n${browserOrigin}\n${pid}\n${port}\n${expiresAt}`;
+  return `openccx-gui-pair-v1\n${nonce}\n${method}\n${path}\n${browserOrigin}\n${pid}\n${port}\n${expiresAt}`;
 }
 
 export function createGuiPairCapability(

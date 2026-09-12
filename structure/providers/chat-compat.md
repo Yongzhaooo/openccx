@@ -29,7 +29,7 @@ It also repairs the opposite direction (260718): an assistant `tool_calls` round
 by an intervening user/developer barrier or an interrupted turn — is closed by deferring barrier
 messages until the round completes, reattaching real results to their original call occurrence,
 and synthesizing explicit "no tool result was recorded" answers only when no real result exists
-(Kimi/Moonshot 400 `ocx-mrqaiw05-269`; unit `devlog/_fin/260718_dangling_toolcall_hardening`).
+(Kimi/Moonshot 400 `occx-mrqaiw05-269`; unit `devlog/_fin/260718_dangling_toolcall_hardening`).
 
 Forward-mode OpenAI passthrough also repairs replayed `call_id` values longer than the Responses
 API's 64-character limit. Sidechat/fork replay can namespace routed-provider ids beyond that limit,
@@ -106,7 +106,7 @@ and duplicate, missing, or backwards call/result pairs are left for the upstream
 ## OpenRouter provider routing
 
 The canonical OpenRouter `openai-chat` transport may carry optional provider-routing preferences
-from `OcxProviderConfig.openRouterRouting`, with exact model-id replacements in
+from `OccxProviderConfig.openRouterRouting`, with exact model-id replacements in
 `modelOpenRouterRouting`. The adapter maps camel-case config to OpenRouter's request wire
 (`order`, `only`, `allow_fallbacks`) after the Codex-facing routed slug has been decoded to the
 native model id.
@@ -131,7 +131,7 @@ rotation keeps it — along with every other registry backfill — because the r
 fresh committed provider row and routes it again (`rotateProviderTransportOn429` in
 src/providers/key-failover.ts). Stale request-time config fields are deliberately discarded so a
 concurrent deletion stays authoritative; only runtime `fetch` state and generated OpenCode session
-affinity survive the rebuild. If an opted-in upstream rejects the field, OpenCodex does not strip it and retry or mutate the
+affinity survive the rebuild. If an opted-in upstream rejects the field, Openccx does not strip it and retry or mutate the
 saved configuration. Other OpenAI-compatible providers remain deny-by-default because strict
 backends may reject the OpenAI-specific field.
 
@@ -144,7 +144,7 @@ deltas, id-only-first-chunk continuations, and whole-chunk multi-call frames all
 
 Parallel tool calls are DEFAULT-ON for openai-chat providers: the adapter follows Codex's
 request-level `parallel_tool_calls` bit (default true) and routed catalog entries advertise
-`supports_parallel_tool_calls`. `OcxProviderConfig.parallelToolCalls: false` is the per-provider
+`supports_parallel_tool_calls`. `OccxProviderConfig.parallelToolCalls: false` is the per-provider
 opt-out (registry-seeded, router-backfilled; an explicit user value always wins). Non-chat
 adapters advertise the catalog bit only on explicit `true`; cursor keeps its own special-casing.
 Providers with flaky parallel streaming can be opted out individually. Evidence and provider
@@ -212,7 +212,7 @@ measurement rather than allocating a serialized copy just to measure it.
 `hideThinkingSummary` (request reasoning summary absent/"none" — the routed catalog default) is
 honored by BOTH reasoning paths: anthropic `thinking_delta` AND raw `reasoning_raw_delta`
 (openai-chat `reasoning_content`, kiro tags). Hidden reasoning emits an envelope-only reasoning
-item (`summary: []`, txt-only `ocxr1:` `encrypted_content`, no text deltas) — invisible in the
+item (`summary: []`, txt-only `occxr1:` `encrypted_content`, no text deltas) — invisible in the
 Codex app, so tool cells group like native models — while the text still round-trips for
 `preserveReasoningContentModels` replay. Visible mode (summary "auto") keeps the raw
 `content[reasoning_text]` shape. Diagnosis and codex-rs grouping evidence:

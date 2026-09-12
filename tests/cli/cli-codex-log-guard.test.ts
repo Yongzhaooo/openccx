@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { handleObserveCommand } from "../../src/cli/observe";
 
 describe("Codex Log Guard CLI", () => {
-  test("ocx storage codex-logs status uses the dedicated diagnostics endpoint", async () => {
+  test("occx storage codex-logs status uses the dedicated diagnostics endpoint", async () => {
     const seen: string[] = [];
     const fetchImpl: typeof fetch = async input => {
       seen.push(String(input));
@@ -26,7 +26,7 @@ describe("Codex Log Guard CLI", () => {
     }
   });
 
-  test("ocx storage remains an alias for the existing storage report", async () => {
+  test("occx storage remains an alias for the existing storage report", async () => {
     const seen: string[] = [];
     const fetchImpl: typeof fetch = async input => {
       seen.push(String(input));

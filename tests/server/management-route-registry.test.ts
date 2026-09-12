@@ -124,7 +124,7 @@ describe("management route registry reconciliation", () => {
     // Drives the fail-loud path red on purpose: without this, a scanner that silently
     // defaulted to GET would satisfy every other test in this file while producing a
     // route table nobody could trust.
-    const tempDir = mkdtempSync(join(tmpdir(), "ocx-route-scanner-"));
+    const tempDir = mkdtempSync(join(tmpdir(), "occx-route-scanner-"));
     const tmp = join(tempDir, "scanner-probe.ts");
     const source = [
       "export async function handleProbe(ctx: any): Promise<Response | null> {",

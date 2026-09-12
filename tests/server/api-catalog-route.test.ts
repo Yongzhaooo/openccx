@@ -5,17 +5,17 @@ import { handleManagementAPI } from "../../src/server/management-api";
 import { loadConfig, saveConfig } from "../../src/config";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { ManagementRequest, managementHeaders } from "../helpers/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, `.tmp-api-catalog-route-${process.pid}`);
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 const CATALOG_FIXTURE_BYTES = '{"models":[{"slug":"mock/test-model","display_name":"Mock Test","description":"fixture","priority":1,"visibility":"list","base_instructions":"You are a helpful coding assistant.","input_modalities":["text"]}]}';
 
 beforeEach(() => {
-  if (previousOpencodexHome === undefined) mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  if (previousOpenccxHome === undefined) mkdirSync(TEST_DIR, { recursive: true });
+  process.env.OPENCCX_HOME = TEST_DIR;
   isolatedCodexHome = null;
   saveConfig({
     port: 10100,
@@ -24,24 +24,24 @@ beforeEach(() => {
     providers: {
       mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, models: ["test-model"] },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 });
 
 afterEach(() => {
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
-  if (previousOpencodexHome === undefined) {
-    delete process.env.OPENCODEX_HOME;
+  if (previousOpenccxHome === undefined) {
+    delete process.env.OPENCCX_HOME;
     removeTreeWithRetry(TEST_DIR);
   } else {
-    process.env.OPENCODEX_HOME = previousOpencodexHome;
+    process.env.OPENCCX_HOME = previousOpenccxHome;
   }
 });
 
 describe("GET /api/catalog route (#709)", () => {
   test("returns the on-disk catalog and omits sync runtime probes for version hint", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-api-catalog-");
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), CATALOG_FIXTURE_BYTES);
+    isolatedCodexHome = installIsolatedCodexHome("occx-api-catalog-");
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), CATALOG_FIXTURE_BYTES);
 
     const url = new URL("http://localhost/api/catalog");
     const response = await handleManagementAPI(
@@ -51,12 +51,12 @@ describe("GET /api/catalog route (#709)", () => {
     );
     expect(response?.status).toBe(200);
     expect(await response!.text()).toBe(CATALOG_FIXTURE_BYTES);
-    expect(response!.headers.get("x-opencodex-codex-version")).toBeNull();
+    expect(response!.headers.get("x-openccx-codex-version")).toBeNull();
   });
 
   test("preserves the persisted Codex version header after serializer extraction", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-api-catalog-version-");
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), CATALOG_FIXTURE_BYTES);
+    isolatedCodexHome = installIsolatedCodexHome("occx-api-catalog-version-");
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), CATALOG_FIXTURE_BYTES);
     writeFileSync(join(TEST_DIR, "codex-runtime.json"), JSON.stringify({
       version: 1,
       command: "/fixture/codex",
@@ -72,12 +72,12 @@ describe("GET /api/catalog route (#709)", () => {
       loadConfig(),
     );
     expect(response?.status).toBe(200);
-    expect(response!.headers.get("x-opencodex-codex-version")).toBe("0.150.0");
+    expect(response!.headers.get("x-openccx-codex-version")).toBe("0.150.0");
     expect(await response!.text()).toBe(CATALOG_FIXTURE_BYTES);
   });
 
   test("returns 404 when the catalog file is missing", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-api-catalog-missing-");
+    isolatedCodexHome = installIsolatedCodexHome("occx-api-catalog-missing-");
     const url = new URL("http://localhost/api/catalog");
     const response = await handleManagementAPI(
       new ManagementRequest(url, { headers: managementHeaders() }),
@@ -95,8 +95,8 @@ describe("GET /api/catalog route (#709)", () => {
     // "you have no catalog" to any caller that can reach the route. The shared
     // serializer returns `{ body: null }` for all three so no route can accidentally
     // reintroduce that distinction.
-    isolatedCodexHome = installIsolatedCodexHome("ocx-api-catalog-malformed-");
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), '{"models":');
+    isolatedCodexHome = installIsolatedCodexHome("occx-api-catalog-malformed-");
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), '{"models":');
     const url = new URL("http://localhost/api/catalog");
     const response = await handleManagementAPI(
       new ManagementRequest(url, { headers: managementHeaders() }),
@@ -109,14 +109,14 @@ describe("GET /api/catalog route (#709)", () => {
 });
 
 describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
-  const DATA_KEY = "ocx_data_catalogreadonly";
+  const DATA_KEY = "occx_data_catalogreadonly";
 
   /**
    * Binds 0.0.0.0 deliberately. `isApiAuthRequired` returns false for a loopback bind, so a
    * 127.0.0.1 server admits every data-plane request as `kind: "loopback"` and an auth test
    * against it would pass while asserting nothing.
    */
-  function dataPlaneConfig(): OcxConfig {
+  function dataPlaneConfig(): OccxConfig {
     return {
       port: 0,
       hostname: "0.0.0.0",
@@ -125,7 +125,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
         mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, models: ["test-model"] },
       },
       apiKeys: [{ id: "catalog-reader", name: "catalog reader", key: DATA_KEY, createdAt: "2026-08-30T00:00:00.000Z" }],
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   const catalogFixture = {
@@ -141,15 +141,15 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
   };
 
   test("serves the catalog to a data credential and byte-matches the management route", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-v1-catalog-");
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), JSON.stringify(catalogFixture));
+    isolatedCodexHome = installIsolatedCodexHome("occx-v1-catalog-");
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), JSON.stringify(catalogFixture));
     saveConfig(dataPlaneConfig());
 
     const { startServer } = await import("../../src/server");
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(200);
       const body = await res.text();
@@ -177,7 +177,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
       const mgmtEtag = mgmt!.headers.get("etag");
       expect(mgmtEtag).toBeTruthy();
       const revalidated = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY, "if-none-match": mgmtEtag! },
+        headers: { "x-openccx-api-key": DATA_KEY, "if-none-match": mgmtEtag! },
       });
       expect(revalidated.status).toBe(200);
       expect(await revalidated.text()).toBe(body);
@@ -185,7 +185,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
       // HEAD is the same status and headers with no body.
       const head = await fetch(new URL("/v1/catalog", server.url), {
         method: "HEAD",
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(head.status).toBe(200);
       expect(head.headers.get("etag")).toBeNull();
@@ -197,8 +197,8 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
   });
 
   test("rejects a missing credential and never widens /api/* for a data credential", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-v1-catalog-auth-");
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), JSON.stringify(catalogFixture));
+    isolatedCodexHome = installIsolatedCodexHome("occx-v1-catalog-auth-");
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), JSON.stringify(catalogFixture));
     saveConfig(dataPlaneConfig());
 
     const { startServer } = await import("../../src/server");
@@ -208,7 +208,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
       expect(anonymous.status).toBe(401);
 
       const wrong = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": "ocx_data_not_a_real_key" },
+        headers: { "x-openccx-api-key": "occx_data_not_a_real_key" },
       });
       expect(wrong.status).toBe(401);
 
@@ -216,7 +216,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
       // management plane. If this ever passes, the fix became the vulnerability.
       for (const path of ["/api/catalog", "/api/config", "/api/providers"]) {
         const escalation = await fetch(new URL(path, server.url), {
-          headers: { "x-opencodex-api-key": DATA_KEY },
+          headers: { "x-openccx-api-key": DATA_KEY },
         });
         expect(escalation.status).toBe(401);
       }
@@ -224,7 +224,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
       // Mutations stay out of /v1 entirely.
       const post = await fetch(new URL("/v1/catalog", server.url), {
         method: "POST",
-        headers: { "x-opencodex-api-key": DATA_KEY, "content-type": "application/json" },
+        headers: { "x-openccx-api-key": DATA_KEY, "content-type": "application/json" },
         body: "{}",
       });
       expect(post.status).not.toBe(200);
@@ -239,7 +239,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
     // catalog — and, because both routes shared it, turned the pre-existing /api/catalog
     // response into a 507 for those operators. The ceiling now belongs to the remote route
     // alone and clears the supported bound.
-    isolatedCodexHome = installIsolatedCodexHome("ocx-v1-catalog-large-");
+    isolatedCodexHome = installIsolatedCodexHome("occx-v1-catalog-large-");
     const template = catalogFixture.models[0]!;
     const big = {
       models: Array.from({ length: 2000 }, (_, i) => ({
@@ -251,7 +251,7 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
         base_instructions: template.base_instructions + " ".repeat(20000),
       })),
     };
-    writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), JSON.stringify(big));
+    writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), JSON.stringify(big));
     saveConfig(dataPlaneConfig());
 
     const { serializePersistedCatalog, MAX_REMOTE_CATALOG_BYTES } = await import("../../src/server/catalog-download");
@@ -271,14 +271,14 @@ describe("GET|HEAD /v1/catalog least-privilege data-plane route (#809)", () => {
   });
 
   test("reports a distinguishable code when no catalog is materialized", async () => {
-    isolatedCodexHome = installIsolatedCodexHome("ocx-v1-catalog-missing-");
+    isolatedCodexHome = installIsolatedCodexHome("occx-v1-catalog-missing-");
     saveConfig(dataPlaneConfig());
 
     const { startServer } = await import("../../src/server");
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(404);
       // catalog_not_found rather than the generic not_found: this is what distinguishes

@@ -24,7 +24,7 @@ import {
 import { encodeMessage } from "../../../src/lib/eventstream-decoder";
 import { estimateTokens } from "../../../src/lib/token-estimate";
 import { createTranslatorBudget } from "../../../src/lib/translator-budget";
-import type { OcxParsedRequest, OcxProviderConfig, OcxUsage } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig, OccxUsage } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -46,8 +46,8 @@ const realFetch = globalThis.fetch;
 let tmp: string;
 
 beforeEach(() => {
-  origDebug = process.env.OCX_DEBUG;
-  origDebugFrames = process.env.OCX_DEBUG_FRAMES;
+  origDebug = process.env.OCCX_DEBUG;
+  origDebugFrames = process.env.OCCX_DEBUG_FRAMES;
   origDebugOverride = getDebugSettings().runtimeOverride.debug;
   tmp = mkdtempSync(join(tmpdir(), "kiro-stream-"));
   process.env.HOME = tmp;
@@ -56,8 +56,8 @@ beforeEach(() => {
   delete process.env.KIRO_PROFILE_ARN;
   delete process.env.KIRO_CREDS_FILE;
   delete process.env.KIRO_CREDENTIALS_FILE;
-  delete process.env.OCX_DEBUG;
-  delete process.env.OCX_DEBUG_FRAMES;
+  delete process.env.OCCX_DEBUG;
+  delete process.env.OCCX_DEBUG_FRAMES;
   clearDebugSetting("debug");
 });
 afterEach(() => {
@@ -69,18 +69,18 @@ afterEach(() => {
   if (origArn === undefined) delete process.env.KIRO_PROFILE_ARN; else process.env.KIRO_PROFILE_ARN = origArn;
   if (origCredsFile === undefined) delete process.env.KIRO_CREDS_FILE; else process.env.KIRO_CREDS_FILE = origCredsFile;
   if (origCredentialsFile === undefined) delete process.env.KIRO_CREDENTIALS_FILE; else process.env.KIRO_CREDENTIALS_FILE = origCredentialsFile;
-  if (origDebug === undefined) delete process.env.OCX_DEBUG; else process.env.OCX_DEBUG = origDebug;
-  if (origDebugFrames === undefined) delete process.env.OCX_DEBUG_FRAMES; else process.env.OCX_DEBUG_FRAMES = origDebugFrames;
+  if (origDebug === undefined) delete process.env.OCCX_DEBUG; else process.env.OCCX_DEBUG = origDebug;
+  if (origDebugFrames === undefined) delete process.env.OCCX_DEBUG_FRAMES; else process.env.OCCX_DEBUG_FRAMES = origDebugFrames;
   if (origDebugOverride === undefined) clearDebugSetting("debug");
   else setDebugSettings({ debug: origDebugOverride });
   removeTreeWithRetry(tmp);
 });
 
-const provider = { adapter: "kiro", baseUrl: "https://runtime.us-east-1.kiro.dev", authMode: "oauth", apiKey: "tok-123" } as unknown as OcxProviderConfig;
+const provider = { adapter: "kiro", baseUrl: "https://runtime.us-east-1.kiro.dev", authMode: "oauth", apiKey: "tok-123" } as unknown as OccxProviderConfig;
 const bashTool = { name: "bash", description: "Run a shell command", parameters: { type: "object" } };
 
-function parsedWith(messages: unknown[], tools?: unknown[], modelId = "claude-sonnet-4.5"): OcxParsedRequest {
-  return { modelId, stream: true, options: {}, context: { messages, tools } } as unknown as OcxParsedRequest;
+function parsedWith(messages: unknown[], tools?: unknown[], modelId = "claude-sonnet-4.5"): OccxParsedRequest {
+  return { modelId, stream: true, options: {}, context: { messages, tools } } as unknown as OccxParsedRequest;
 }
 
 function inferredEventType(obj: unknown): string {
@@ -120,8 +120,8 @@ function completionFrames(answer: string, id = "complete-1"): Uint8Array[] {
   ];
 }
 
-async function doneUsage(adapter: ReturnType<typeof createKiroAdapter>, ...frames: Uint8Array[]): Promise<OcxUsage> {
-  let done: OcxUsage | undefined;
+async function doneUsage(adapter: ReturnType<typeof createKiroAdapter>, ...frames: Uint8Array[]): Promise<OccxUsage> {
+  let done: OccxUsage | undefined;
   for await (const e of adapter.parseStream(new Response(streamOf(...frames)))) {
     if (e.type === "done") done = e.usage;
   }
@@ -1200,7 +1200,7 @@ describe("kiro adapter — parseStream", () => {
     }
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("kiro_profile_required");
-    expect(errors[0]).toContain("ocx account login kiro --reauth");
+    expect(errors[0]).toContain("occx account login kiro --reauth");
   });
 
   test("auth and model exceptions become actionable Kiro errors", async () => {
@@ -2059,14 +2059,14 @@ describe("kiro adapter — parseStream", () => {
   });
 
   test("buildRequest emits only redacted Kiro diagnostic breadcrumbs when enabled", async () => {
-    process.env.OCX_DEBUG_FRAMES = "1";
+    process.env.OCCX_DEBUG_FRAMES = "1";
     process.env.KIRO_PROFILE_ARN = "arn:aws:codewhisperer:us-east-1:123456789012:profile/demo";
     const error = spyOn(console, "error").mockImplementation(() => {});
     try {
       await createKiroAdapter(provider).buildRequest(parsedWith([{ role: "user", content: "secret prompt body" }], [bashTool]));
       expect(error).toHaveBeenCalledTimes(1);
       const line = String(error.mock.calls[0]?.[0] ?? "");
-      expect(line).toContain("[ocx:kiro:request]");
+      expect(line).toContain("[occx:kiro:request]");
       expect(line).toContain("\"region\":\"us-east-1\"");
       expect(line).toContain("\"hasProfileArn\":true");
       expect(line).not.toContain("secret prompt body");

@@ -11,7 +11,7 @@ import { bridgeToResponsesSSE } from "../../src/bridge";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { parseRequest } from "../../src/responses/parser";
 import { buildToolBridgeMaps } from "../../src/server/responses";
-import { MODEL_ADAPTER_OVERRIDE_ALLOWED, type OcxParsedRequest, type OcxProviderConfig } from "../../src/types";
+import { MODEL_ADAPTER_OVERRIDE_ALLOWED, type OccxParsedRequest, type OccxProviderConfig } from "../../src/types";
 import { TOOL_WIRE_DRIVERS } from "../helpers/adapter-conformance/wire-drivers";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
@@ -37,7 +37,7 @@ const WIRE_MODELS: Record<AdapterWire, string> = {
   codebuddy: "glm-5.3",
 };
 
-function providerFixture(adapterId: string, wire: AdapterWire): OcxProviderConfig {
+function providerFixture(adapterId: string, wire: AdapterWire): OccxProviderConfig {
   const baseUrls: Record<AdapterWire, string> = {
     "openai-chat": "https://api.x.ai/v1",
     "ollama-native": "https://ollama.com/v1",
@@ -63,15 +63,15 @@ function providerFixture(adapterId: string, wire: AdapterWire): OcxProviderConfi
     defaultMaxOutputTokens: 64_000,
     googleMode: "ai-studio",
     ...(wire === "openai-responses" ? { responsesPath: "/responses" } : {}),
-  } satisfies OcxProviderConfig;
+  } satisfies OccxProviderConfig;
 }
 
-function prepareForWire(parsed: OcxParsedRequest, wire: AdapterWire): OcxParsedRequest {
+function prepareForWire(parsed: OccxParsedRequest, wire: AdapterWire): OccxParsedRequest {
   if (wire !== "kiro") return parsed;
   return { ...parsed, _kiroAuthContext: { apiRegion: "us-east-1" } };
 }
 
-function codeModeParsed(wire: AdapterWire): OcxParsedRequest {
+function codeModeParsed(wire: AdapterWire): OccxParsedRequest {
   const model = WIRE_MODELS[wire];
   return prepareForWire(parseRequest({
     model,
@@ -95,7 +95,7 @@ function codeModeParsed(wire: AdapterWire): OcxParsedRequest {
   }), wire);
 }
 
-function freeformParsed(wire: AdapterWire): OcxParsedRequest {
+function freeformParsed(wire: AdapterWire): OccxParsedRequest {
   return prepareForWire(parseRequest({
     model: WIRE_MODELS[wire],
     input: "Apply the exact patch.",
@@ -104,7 +104,7 @@ function freeformParsed(wire: AdapterWire): OcxParsedRequest {
   }), wire);
 }
 
-function namespacedCollisionParsed(wire: AdapterWire): OcxParsedRequest {
+function namespacedCollisionParsed(wire: AdapterWire): OccxParsedRequest {
   return prepareForWire(parseRequest({
     model: WIRE_MODELS[wire],
     input: "Run the requested tool.",
@@ -124,7 +124,7 @@ function namespacedCollisionParsed(wire: AdapterWire): OcxParsedRequest {
   }), wire);
 }
 
-function toolChoiceParsed(wire: AdapterWire, toolChoice?: "none"): OcxParsedRequest {
+function toolChoiceParsed(wire: AdapterWire, toolChoice?: "none"): OccxParsedRequest {
   return prepareForWire(parseRequest({
     model: WIRE_MODELS[wire],
     input: "Do not call a tool.",
@@ -142,7 +142,7 @@ function toolChoiceParsed(wire: AdapterWire, toolChoice?: "none"): OcxParsedRequ
   }), wire);
 }
 
-function continuationParsed(wire: AdapterWire): OcxParsedRequest {
+function continuationParsed(wire: AdapterWire): OccxParsedRequest {
   return prepareForWire(parseRequest({
     model: WIRE_MODELS[wire],
     input: [
@@ -208,7 +208,7 @@ async function withMimoBootstrap<T>(adapterId: string, run: () => Promise<T>): P
   }
 }
 
-async function outbound(adapterId: string, parsed: OcxParsedRequest): Promise<string> {
+async function outbound(adapterId: string, parsed: OccxParsedRequest): Promise<string> {
   const contract = effectiveAdapterContract(adapterId);
   const adapter = createRegisteredAdapter(providerFixture(adapterId, contract.wire));
   return await withMimoBootstrap(adapterId, () => TOOL_WIRE_DRIVERS[contract.wire].observeOutbound(adapter, parsed));

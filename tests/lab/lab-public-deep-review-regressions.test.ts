@@ -106,7 +106,7 @@ function publicArtifact(content: string): PublicArtifactV1 {
 
 describe("CL-10 deep-review trust regressions", () => {
   test("verification rejects a signed bundle whose canonical record order was changed", () => {
-    const publisher = configDir("ocx-cl10-order-");
+    const publisher = configDir("occx-cl10-order-");
     const first = fixedRecord();
     const second = fixedRecord({ observedDayUtc: "2026-08-13" });
     const bundle = signArbitraryBundle({ configDir: publisher, records: [first, second] });
@@ -118,8 +118,8 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("community import rejects artifact bytes until reviewed public_export authority exists", () => {
-    const publisher = configDir("ocx-cl10-artifact-publisher-");
-    const consumer = configDir("ocx-cl10-artifact-consumer-");
+    const publisher = configDir("occx-cl10-artifact-publisher-");
+    const consumer = configDir("occx-cl10-artifact-consumer-");
     const bundle = signArbitraryBundle({
       configDir: publisher,
       records: [fixedRecord()],
@@ -130,8 +130,8 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("record revocation remains effective when the same publisher later imports another bundle containing that record", () => {
-    const publisher = configDir("ocx-cl10-revoke-publisher-");
-    const consumer = configDir("ocx-cl10-revoke-consumer-");
+    const publisher = configDir("occx-cl10-revoke-publisher-");
+    const consumer = configDir("occx-cl10-revoke-consumer-");
     const record = fixedRecord();
     const first = signPublicEvidenceBundle({ records: [record], artifacts: [], createdDayUtc: "2026-08-12", configDir: publisher });
     const second = signPublicEvidenceBundle({ records: [record], artifacts: [], createdDayUtc: "2026-08-13", configDir: publisher });
@@ -157,7 +157,7 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("invalid signing input fails before publisher identity is created", () => {
-    const home = configDir("ocx-cl10-invalid-sign-");
+    const home = configDir("occx-cl10-invalid-sign-");
     expect(() => signPublicEvidenceBundle({
       records: [fixedRecord()],
       artifacts: [],
@@ -168,8 +168,8 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("foreign revocation attempt does not create a new publisher identity", () => {
-    const publisher = configDir("ocx-cl10-foreign-target-");
-    const attacker = configDir("ocx-cl10-foreign-revoker-");
+    const publisher = configDir("occx-cl10-foreign-target-");
+    const attacker = configDir("occx-cl10-foreign-revoker-");
     const target = signPublicEvidenceBundle({
       records: [fixedRecord()], artifacts: [], createdDayUtc: "2026-08-12", configDir: publisher,
     });
@@ -189,8 +189,8 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("reviewed assertion authority requires exact unique assertion coverage", () => {
-    const missingHome = configDir("ocx-cl10-assert-missing-");
-    const duplicateHome = configDir("ocx-cl10-assert-duplicate-");
+    const missingHome = configDir("occx-cl10-assert-missing-");
+    const duplicateHome = configDir("occx-cl10-assert-duplicate-");
     const base = fixedRecord();
     const missing = rebuildRecord(base, { assertions: [] });
     const duplicate = rebuildRecord(base, { assertions: [
@@ -212,8 +212,8 @@ describe("CL-10 deep-review trust regressions", () => {
   });
 
   test("community import enforces the cache file quota before creating another object", () => {
-    const publisher = configDir("ocx-cl10-cache-publisher-");
-    const consumer = configDir("ocx-cl10-cache-consumer-");
+    const publisher = configDir("occx-cl10-cache-publisher-");
+    const consumer = configDir("occx-cl10-cache-consumer-");
     const community = labCommunityDir(consumer);
     mkdirSync(community, { recursive: true, mode: 0o700 });
     for (let index = 0; index < 512; index += 1) {

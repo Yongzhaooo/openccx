@@ -1,7 +1,7 @@
 /**
  * CLI-versus-proxy version skew (#2701, #3464).
  *
- * The reported failure: `ocx` on PATH is an older install than the running proxy, so its
+ * The reported failure: `occx` on PATH is an older install than the running proxy, so its
  * help describes commands the proxy does not have and its output describes a different
  * build. Nothing surfaced that, because the CLI never compared the two.
  *
@@ -69,9 +69,9 @@ export function computeVersionSkew(cliVersion: string, proxyVersion: string | un
       // `restart`, not `repair`: a version skew leaves the service DEFINITION unchanged, and
       // repair reloads only when something changed, so it would no-op and keep the old
       // process serving (#4249).
-      + "For a background service, run ocx service restart (repair reloads only a changed definition)."
+      + "For a background service, run occx service restart (repair reloads only a changed definition)."
     : order < 0
-      ? "this ocx on PATH is older than the running proxy. Upgrade the CLI or resolve PATH to the intended installation."
+      ? "this occx on PATH is older than the running proxy. Upgrade the CLI or resolve PATH to the intended installation."
       : "the versions differ, but neither can be identified as older. Check which installations the CLI and proxy use.";
   return {
     cliVersion,

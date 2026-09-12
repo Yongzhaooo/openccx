@@ -30,7 +30,7 @@ import {
   getOrAllocateRequestSessionLane,
   linkRequestSessionLane,
 } from "./request-log-conversation";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { readJsonRequestBody, resolveInboundBodyLimitBytes } from "./request-decompress";
 import {
   addFinalRequestLog,
@@ -76,7 +76,7 @@ async function readChatBody(req: Request, budget: TranslatorBudget, maxBytes: nu
 
 export async function handleChatCompletions(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   logIds?: { requestId: string; start: number; turnAdmissionLease?: AdmissionLease; admission?: DataPlaneAdmission },
 ): Promise<Response> {
@@ -102,7 +102,7 @@ export async function handleChatCompletions(
 
 async function handleChatCompletionsWithBudget(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   translatorBudget: TranslatorBudget,
   logIds?: { requestId: string; start: number; turnAdmissionLease?: AdmissionLease; admission?: DataPlaneAdmission },
@@ -138,7 +138,7 @@ async function handleChatCompletionsWithBudget(
   // Best-effort Grok attribution: the managed fence stamps this header on every model
   // it registers (extra_headers, sent verbatim by upstream Grok). Dashboard usage
   // bucketing only — never an auth or billing signal.
-  if (req.headers.get("x-opencodex-grok") === "1") logCtx.surface = "grok";
+  if (req.headers.get("x-openccx-grok") === "1") logCtx.surface = "grok";
   let callerAuthorizationRoute = false;
   let routeMayChangeCredentialDomain = false;
   let settledRoute: ReturnType<typeof routeModel> | null = null;
@@ -239,7 +239,7 @@ async function handleChatCompletionsWithBudget(
     else internalBody.reasoning = next;
   }
 
-  const visionDescribeTerminal = req.headers.get("x-opencodex-vision-describe") === "1";
+  const visionDescribeTerminal = req.headers.get("x-openccx-vision-describe") === "1";
   // Concrete helper targets must fail before optional stored-main credential enrichment.
   // Unresolved combos are checked after their concrete child route is selected in Responses.
   if (settledRoute && !settledRoute.combo && isCanonicalOpenAiForwardProvider(settledRoute.provider)

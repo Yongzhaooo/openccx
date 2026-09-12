@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { refreshUserCostOverlays, resetPreservedDiskOnlyProvidersForTests, userCostOverlayVersion } from "../../src/usage/user-cost-overlays";
 import { stopUserCostOverlayReconciler } from "../../src/usage/user-cost-overlay-reconciler";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
@@ -20,7 +20,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -32,13 +32,13 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function writeFixture(now: number): void {
   const lines = [
     JSON.stringify({
-      requestId: "ocx-old",
+      requestId: "occx-old",
       timestamp: now - 10 * 86_400_000,
       provider: "openai",
       model: "gpt-5.5",
@@ -49,7 +49,7 @@ function writeFixture(now: number): void {
       totalTokens: 150,
     }),
     JSON.stringify({
-      requestId: "ocx-recent",
+      requestId: "occx-recent",
       timestamp: now - 1 * 86_400_000,
       provider: "openai",
       model: "gpt-5.5",
@@ -60,7 +60,7 @@ function writeFixture(now: number): void {
       totalTokens: 15,
     }),
     JSON.stringify({
-      requestId: "ocx-missing",
+      requestId: "occx-missing",
       timestamp: now - 1 * 86_400_000,
       provider: "anthropic",
       model: "claude-x",
@@ -74,10 +74,10 @@ function writeFixture(now: number): void {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-api-usage-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-api-usage-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-api-usage-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-api-usage-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageSummaryCacheForTests();
   usageAggregateCacheModule.resetUsageAggregateCacheForTests();
   // The overlay registry is MODULE-level state that outlives a test file, and
@@ -101,8 +101,8 @@ afterEach(() => {
   usageAggregateCacheModule.resetUsageAggregateCacheForTests();
   // Leave no overlay state for the next file, for the same reason.
   resetPreservedDiskOnlyProvidersForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -335,7 +335,7 @@ describe("GET /api/usage", () => {
       const oldest = now - 200 * 86_400_000;
       const rows = [
         ...Array.from({ length: 40 }, (_, i) => ({
-          requestId: `ocx-prefix-${i}`,
+          requestId: `occx-prefix-${i}`,
           timestamp: oldest,
           provider: "openai",
           model: "gpt-5.5",
@@ -347,7 +347,7 @@ describe("GET /api/usage", () => {
         })),
         // Outside a 30d window, so only the range filter discards it.
         {
-          requestId: "ocx-window-old",
+          requestId: "occx-window-old",
           timestamp: now - 90 * 86_400_000,
           provider: "openai",
           model: "gpt-5.5",
@@ -359,7 +359,7 @@ describe("GET /api/usage", () => {
         },
         // Inside 30d, but a Codex surface so the claude filter discards it.
         {
-          requestId: "ocx-window-codex",
+          requestId: "occx-window-codex",
           timestamp: now - 2 * 86_400_000,
           provider: "openai",
           model: "gpt-5.5",
@@ -371,7 +371,7 @@ describe("GET /api/usage", () => {
         },
         // Inside 30d and on the Claude surface.
         {
-          requestId: "ocx-window-claude",
+          requestId: "occx-window-claude",
           timestamp: now - 1 * 86_400_000,
           provider: "anthropic",
           model: "claude-x",
@@ -472,7 +472,7 @@ describe("GET /api/usage", () => {
       expect(getUsageSummaryCacheEntry("30d:all")?.summary.summary).toEqual(first.summary);
 
       appendFileSync(join(testDir, "usage.jsonl"), `${JSON.stringify({
-        requestId: "ocx-appended",
+        requestId: "occx-appended",
         timestamp: Date.now(),
         provider: "openai",
         model: "gpt-5.5",
@@ -508,7 +508,7 @@ describe("GET /api/usage", () => {
     // test cannot satisfy the first request. This must run BEFORE startServer:
     // the server boot loads the config and refreshes the overlay registry, and
     // the version has to be settled by the time the first request caches.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
     const server = startServer(0);
     try {
       const first = await fetch(new URL("/api/usage?range=30d", server.url)).then(res => res.json());
@@ -525,7 +525,7 @@ describe("GET /api/usage", () => {
             },
           },
         },
-      } as unknown as OcxConfig);
+      } as unknown as OccxConfig);
       const changed = await fetch(new URL("/api/usage?range=30d", server.url)).then(res => res.json());
       expect(changed.summary.requests).toBe(first.summary.requests);
       expect(getUsageSummaryCacheEntry("30d:all")?.overlayVersion).toBeGreaterThan(cachedOverlayVersion);
@@ -533,7 +533,7 @@ describe("GET /api/usage", () => {
       // This test installs a module-level blsc overlay; clear it even when an
       // assertion or shutdown fails so later tests cannot resolve
       // user-configured prices unexpectedly.
-      refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+      refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
       await server.stop(true);
     }
   });
@@ -559,7 +559,7 @@ describe("GET /api/usage", () => {
 
   test("usage route retries an overlay change and caches only the settled rebuild", async () => {
     writeFixture(Date.now());
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
     resetUsageSummaryCacheForTests();
     const versionBefore = userCostOverlayVersion();
     // Deterministically bump the overlay version DURING the ledger scan, so
@@ -586,7 +586,7 @@ describe("GET /api/usage", () => {
               },
             },
           },
-        } as unknown as OcxConfig);
+        } as unknown as OccxConfig);
       }
       return snapshot;
     });
@@ -617,7 +617,7 @@ describe("GET /api/usage", () => {
       spy.mockRestore();
       // Clear the module-level overlay and summary cache even when an
       // assertion or shutdown fails so later tests start clean.
-      refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+      refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
       resetUsageSummaryCacheForTests();
       await server.stop(true);
     }
@@ -871,7 +871,7 @@ describe("GET /api/usage", () => {
   test("an oversized row fails closed instead of caching a partial aggregate", async () => {
     const now = Date.now();
     const oversized = {
-      requestId: "ocx-oversized",
+      requestId: "occx-oversized",
       timestamp: now,
       provider: "openai",
       model: "gpt-5.5",
@@ -883,7 +883,7 @@ describe("GET /api/usage", () => {
       padding: "x".repeat(usageLedgerScannerModule.USAGE_LEDGER_MAX_LINE_BYTES),
     };
     const valid = {
-      requestId: "ocx-valid-after-oversized",
+      requestId: "occx-valid-after-oversized",
       timestamp: now,
       provider: "openai",
       model: "gpt-5.5",
@@ -948,7 +948,7 @@ describe("GET /api/usage", () => {
     const now = Date.now();
     const perDayTokens = 4_000_000_000;
     const rows = Array.from({ length: 30 }, (_, index) => ({
-      requestId: `ocx-large-${index}`,
+      requestId: `occx-large-${index}`,
       timestamp: now - index * 86_400_000,
       provider: "openai",
       model: "gpt-5.5",

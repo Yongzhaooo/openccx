@@ -18,15 +18,15 @@ import {
 } from "../../src/responses/state";
 import { responseSpillDirectory } from "../../src/responses/spill-store";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { INTERNAL_DEADLINE_MS, SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
 const EXPIRED_AGE_MS = 2 * 60 * 60 * 1_000;
 const REPLAY_TTL_MS = 60 * 60 * 1_000;
 const FIRST_RESPONSE_ID = "resp_issue_702_first";
@@ -52,7 +52,7 @@ interface ForwardScenario {
 
 type ForwardScenarioMode = "expired" | "fresh" | "ordinary";
 
-function forwardConfig(): OcxConfig {
+function forwardConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -66,7 +66,7 @@ function forwardConfig(): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function inputMessage(text: string): Record<string, unknown> {
@@ -263,12 +263,12 @@ async function runForwardScenario(
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-issue-702-"));
-  process.env.OPENCODEX_HOME = testHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  testHome = mkdtempSync(join(tmpdir(), "occx-issue-702-"));
+  process.env.OPENCCX_HOME = testHome;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
   clearResponseStateMemoryForTests();
   resetSubagentModelFallbackStateForTests();
-  isolatedCodexHome = installIsolatedCodexHome("ocx-issue-702-codex-");
+  isolatedCodexHome = installIsolatedCodexHome("occx-issue-702-codex-");
 });
 
 afterEach(() => {
@@ -280,10 +280,10 @@ afterEach(() => {
   isolatedCodexHome = null;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
 });
 
 describe("routed replay recovery", () => {
@@ -349,7 +349,7 @@ describe("routed replay recovery", () => {
             statelessResponses: stateless, preserveResponsesReasoningContent: true,
           },
         },
-      } as OcxConfig);
+      } as OccxConfig);
       server = startServer(0);
       const deltaRequest = {
         model: "routed-test/test-model", previous_response_id: FIRST_RESPONSE_ID,
@@ -429,7 +429,7 @@ describe("Issue #702 expired forward replay state", () => {
       upstreamCalls += 1;
       throw new Error("upstream must not be called");
     }) as typeof fetch;
-    const routeClasses: Array<{ config: OcxConfig; model: string }> = [
+    const routeClasses: Array<{ config: OccxConfig; model: string }> = [
       { config: forwardConfig(), model: "gpt-5.5" },
       {
         config: {
@@ -446,7 +446,7 @@ describe("Issue #702 expired forward replay state", () => {
               models: ["gpt-5.5"],
             },
           },
-        } as OcxConfig,
+        } as OccxConfig,
         model: "kiro-test/gpt-5.5",
       },
       {
@@ -464,7 +464,7 @@ describe("Issue #702 expired forward replay state", () => {
               models: ["gpt-5.5"],
             },
           },
-        } as OcxConfig,
+        } as OccxConfig,
         model: "test-openai/gpt-5.5",
       },
     ];
@@ -662,7 +662,7 @@ describe("Issue #702 expired forward replay state", () => {
             statelessResponses: false,
           },
         },
-      } as OcxConfig);
+      } as OccxConfig);
       server = startServer(0);
 
       const response = await originalFetch(new URL("/v1/responses", server.url), {

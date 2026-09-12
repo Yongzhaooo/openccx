@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest } from "../helpers/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { defaultLabAutomationPolicyV1 } from "../../src/lab/automation/policy";
 import {
   loadLabAutomationPolicy,
@@ -46,7 +46,7 @@ const COMPAT_VERSION = "f".repeat(64);
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-cl08-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-cl08-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -65,12 +65,12 @@ afterEach(() => {
       /* ignore */
     }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function withHome<T>(fn: (home: string) => T): T {
   const home = tempHome();
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   return fn(home);
 }
 
@@ -85,7 +85,7 @@ function fixtureDnsResolve() {
 
 function liveAutomationDeps(
   home: string,
-  config: OcxConfig,
+  config: OccxConfig,
   routeExecutor?: ReturnType<typeof createHostIssuedLabRouteExecutor>,
 ) {
   return {
@@ -356,7 +356,7 @@ describe("CL-08 lab automation", () => {
 
   test("GET lab automation API does not start scheduler", async () => {
     await withHome(async (home) => {
-      const config = { providers: {} } as OcxConfig;
+      const config = { providers: {} } as OccxConfig;
       const req = new ManagementRequest("http://127.0.0.1/api/lab/automation");
       const res = await handleManagementAPI(req, new URL(req.url), config);
       expect(res).not.toBeNull();
@@ -393,7 +393,7 @@ describe("CL-08 lab automation", () => {
 
   test("production factory yields host-issued trusted executor", () => {
     const executor = createProductionLabRouteExecutor({
-      loadConfig: () => ({ providers: {} } as OcxConfig),
+      loadConfig: () => ({ providers: {} } as OccxConfig),
     });
     expect(isTrustedLabRouteExecutor(executor)).toBe(true);
   });
@@ -653,7 +653,7 @@ function writeBadState(path: string): void {
   writeFileSync(path, JSON.stringify({ schemaVersion: 1, runs: [{ bad: true }] }), "utf8");
 }
 
-function fixtureProviderConfig(): OcxConfig {
+function fixtureProviderConfig(): OccxConfig {
   return {
     providers: {
       "fixture-provider": {
@@ -664,7 +664,7 @@ function fixtureProviderConfig(): OcxConfig {
         defaultModel: "fixture-model",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function passObservation(): NormalizedObservation {

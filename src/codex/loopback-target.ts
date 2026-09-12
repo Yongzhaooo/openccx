@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { DataPlaneAdmission } from "../server/auth-cors";
 import { NATIVE_RESERVE_MODEL } from "./catalog/native-models";
 
@@ -7,7 +7,7 @@ export const CODEX_RESERVE_HELPER_UNSUPPORTED_MESSAGE =
 
 /** Callers classify the concrete destination as canonical forward before using this predicate. */
 export function isCodexReserveHelperUnsupported(
-  config: Pick<OcxConfig, "codexDesktopAuthless" | "runtimeRole">,
+  config: Pick<OccxConfig, "codexDesktopAuthless" | "runtimeRole">,
   modelId: string,
   admission: Pick<DataPlaneAdmission, "source"> | undefined,
   terminalHelper: boolean,
@@ -17,7 +17,7 @@ export function isCodexReserveHelperUnsupported(
 
 /** Runtime authority comes from the receiving listener, not the catalog's injection target. */
 export function isCodexReserveRequestEligible(
-  config: Pick<OcxConfig, "codexDesktopAuthless" | "runtimeRole">,
+  config: Pick<OccxConfig, "codexDesktopAuthless" | "runtimeRole">,
   admission: Pick<DataPlaneAdmission, "source"> | undefined,
 ): boolean {
   return config.codexDesktopAuthless === true && config.runtimeRole !== "client"
@@ -73,7 +73,7 @@ export function loopbackCompanionAllowed(hostname: string | undefined): boolean 
  * changes, a forgotten site points a client config at a closed socket.
  */
 export function effectiveLoopbackListenerPort(
-  config: Pick<OcxConfig, "unauthenticatedLoopbackListener"> | undefined,
+  config: Pick<OccxConfig, "unauthenticatedLoopbackListener"> | undefined,
   publicPort: number,
 ): number | null {
   const listener = config?.unauthenticatedLoopbackListener;
@@ -82,7 +82,7 @@ export function effectiveLoopbackListenerPort(
 }
 
 export function shouldInjectApiAuthHeader(
-  config: Pick<OcxConfig, "hostname" | "unauthenticatedLoopbackListener"> | undefined,
+  config: Pick<OccxConfig, "hostname" | "unauthenticatedLoopbackListener"> | undefined,
 ): boolean {
   // The dedicated listener binds loopback and does not require an admission credential.
   if (config?.unauthenticatedLoopbackListener?.enabled) return false;
@@ -91,7 +91,7 @@ export function shouldInjectApiAuthHeader(
 
 /** Match standalone injection, never a remote client's independently supplied routing target. */
 export function isEffectiveCodexDesktopAuthless(
-  config: Pick<OcxConfig, "runtimeRole" | "hostname" | "unauthenticatedLoopbackListener" | "codexDesktopAuthless"> | undefined,
+  config: Pick<OccxConfig, "runtimeRole" | "hostname" | "unauthenticatedLoopbackListener" | "codexDesktopAuthless"> | undefined,
 ): boolean {
   return config?.codexDesktopAuthless === true
     && config.runtimeRole !== "client"

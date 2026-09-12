@@ -36,7 +36,7 @@ export async function buildMcpToolDefinitions(manager: CursorMcpManager): Promis
   return handles.map(handle => create(McpToolDefinitionSchema, {
     name: handle.advertisedName,
     toolName: handle.advertisedName,
-    providerIdentifier: "opencodex",
+    providerIdentifier: "openccx",
     description: handle.description,
     inputSchema: encodeCursorInputSchema(handle.inputSchema ?? {}),
   }));

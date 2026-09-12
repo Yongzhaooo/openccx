@@ -10,7 +10,7 @@
 import { mock } from "bun:test";
 import childProcess from "node:child_process";
 
-const ENABLED = process.platform === "win32" && process.env.OCX_TEST_SERVICE_HOME_PROBE === "1";
+const ENABLED = process.platform === "win32" && process.env.OCCX_TEST_SERVICE_HOME_PROBE === "1";
 
 if (ENABLED) {
   const realSpawnSync = childProcess.spawnSync;
@@ -29,12 +29,12 @@ if (ENABLED) {
       && args.length === 4
       && args[0] === "/query"
       && args[1] === "/tn"
-      && args[2] === "opencodex-proxy"
+      && args[2] === "openccx-proxy"
       && args[3] === "/xml";
     const isNativeServiceQuery = name === "sc.exe"
       && args.length === 2
       && args[0] === "query"
-      && args[1] === "opencodex-proxy-native";
+      && args[1] === "openccx-proxy-native";
 
     if (!isSchedulerQuery && !isNativeServiceQuery) return realSpawnSync(...input);
 
@@ -43,8 +43,8 @@ if (ENABLED) {
       && "encoding" in options
       && options.encoding === "buffer";
     const message = isNativeServiceQuery
-      ? "[OCX_TEST_SERVICE_HOME] [SC] OpenService FAILED 1060: The specified service does not exist."
-      : "[OCX_TEST_SERVICE_HOME] ERROR: The system cannot find the file specified.";
+      ? "[OCCX_TEST_SERVICE_HOME] [SC] OpenService FAILED 1060: The specified service does not exist."
+      : "[OCCX_TEST_SERVICE_HOME] ERROR: The system cannot find the file specified.";
     const stdout = raw ? Buffer.alloc(0) : "";
     const stderr = raw ? Buffer.from(message, "utf8") : message;
     return {

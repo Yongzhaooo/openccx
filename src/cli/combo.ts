@@ -11,14 +11,14 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx combo [list] [--json]
-  ocx combo show <id> [--json]
-  ocx combo set <id> --targets <provider/model[:weight],...>
+  occx combo [list] [--json]
+  occx combo show <id> [--json]
+  occx combo set <id> --targets <provider/model[:weight],...>
       [--strategy <failover|round-robin|random|least-used|reset-window>] [--sticky <1-100>]
       [--effort <low|medium|high|xhigh|max|ultra|->] [--alias <name|->]
       [--native-alias] [--display-name <label|->]
       [--rename-from <id>] [--json]
-  ocx combo remove <id> --yes [--json]`;
+  occx combo remove <id> --yes [--json]`;
 
 type ComboRow = Record<string, unknown> & { id?: string; model?: string };
 

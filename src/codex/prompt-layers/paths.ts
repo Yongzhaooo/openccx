@@ -29,7 +29,7 @@ export function activeConfigPath(opts?: Paths): string {
 }
 
 export function activeStorePath(opts?: Paths): string {
-  return opts?.storePath ?? join(activeCodexHome(), "opencodex-prompt.json");
+  return opts?.storePath ?? join(activeCodexHome(), "openccx-prompt.json");
 }
 
 /**
@@ -37,11 +37,11 @@ export function activeStorePath(opts?: Paths): string {
  *
  * A directory of real files rather than another JSON store, because
  * `model_instructions_file` points Codex at a path it reads directly. Embedding the
- * bodies in `opencodex-prompt.json` would mean materialising a temp file at selection
+ * bodies in `openccx-prompt.json` would mean materialising a temp file at selection
  * time, which is a second write path for no gain.
  */
 export function activeBaseVariantDir(opts?: Paths): string {
-  return opts?.baseVariantDir ?? join(activeCodexHome(), "opencodex-prompt-base");
+  return opts?.baseVariantDir ?? join(activeCodexHome(), "openccx-prompt-base");
 }
 
 

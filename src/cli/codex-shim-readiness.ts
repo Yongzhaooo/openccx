@@ -36,16 +36,16 @@ export function codexShimReadinessWarnings(
   if (inputs.routingKind === "unknown") {
     warnings.push(
       inputs.externalProvider
-        ? `Codex still selects ${provider}. The shim can start OpenCodex, but it does not redirect that provider; point it at the live OpenCodex /v1 endpoint with wire_api = "responses", or switch to the built-in openai provider and run 'ocx sync'.`
-        : "Codex routing could not be verified. The shim can start OpenCodex, but it may not redirect Codex; run 'ocx doctor' before relying on autostart.",
+        ? `Codex still selects ${provider}. The shim can start Openccx, but it does not redirect that provider; point it at the live Openccx /v1 endpoint with wire_api = "responses", or switch to the built-in openai provider and run 'occx sync'.`
+        : "Codex routing could not be verified. The shim can start Openccx, but it may not redirect Codex; run 'occx doctor' before relying on autostart.",
     );
   } else if (inputs.routingKind === "custom-local") {
     warnings.push(
-      `Codex uses ${provider} through a user-owned local gateway. The shim can start OpenCodex, but OpenCodex does not own that route; run 'ocx doctor' to verify its lifecycle.`,
+      `Codex uses ${provider} through a user-owned local gateway. The shim can start Openccx, but Openccx does not own that route; run 'occx doctor' to verify its lifecycle.`,
     );
   } else if (inputs.routingKind === "custom-remote") {
     warnings.push(
-      `Codex uses ${provider} through a remote gateway. The shim only starts a local OpenCodex proxy and will not affect those requests.`,
+      `Codex uses ${provider} through a remote gateway. The shim only starts a local Openccx proxy and will not affect those requests.`,
     );
   }
 

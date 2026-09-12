@@ -1,12 +1,12 @@
 import { spawnSync } from "node:child_process";
 
 /**
- * Is something still answering `/healthz` as an opencodex proxy on this endpoint?
+ * Is something still answering `/healthz` as an openccx proxy on this endpoint?
  *
  * Absent PID and runtime-port files are weak evidence that the proxy is gone: a crashed
  * but still-listening process, or one supervised outside our records, leaves no files and
  * keeps the port. Replacing package files under it leaves a server running a mix of old
- * and new modules, which is the hazard `ocx update` stops the proxy to avoid (#3008).
+ * and new modules, which is the hazard `occx update` stops the proxy to avoid (#3008).
  *
  * Synchronous and dependency-free because it runs inside the plain-Node launcher's
  * `runNpmSelfUpdate`, which is not async and cannot import the TypeScript liveness module.
@@ -16,7 +16,7 @@ import { spawnSync } from "node:child_process";
  * stop. Fail-open was wrong here: a listener that accepts connections but withholds
  * `/healthz`, or a probe that times out, is exactly the state where replacing package
  * files is most dangerous, and "we could not tell" is not evidence the proxy is gone.
- * Only a refused connection or a definitive non-OpenCodex answer earns `"dead"`.
+ * Only a refused connection or a definitive non-Openccx answer earns `"dead"`.
  */
 export function probeProxyLiveness(port, hostname = "127.0.0.1", timeoutMs = 1500) {
   // An unusable port is not an ambiguous probe: there is nothing to ask.
@@ -45,11 +45,11 @@ export function probeProxyLiveness(port, hostname = "127.0.0.1", timeoutMs = 150
     "  res.on('end', () => {",
     "    try {",
     "      const parsed = JSON.parse(body);",
-    "      // Mirrors isOpencodexHealthz in src/server/proxy-liveness.ts. A foreign server",
+    "      // Mirrors isOpenccxHealthz in src/server/proxy-liveness.ts. A foreign server",
     "      // that happens to expose /healthz must not be read as our proxy, and a",
     "      // pre-identity build of ours must not be read as foreign.",
-    "      const isOpencodex = parsed && typeof parsed === 'object'",
-    "        && (parsed.service === 'opencodex'",
+    "      const isOpenccx = parsed && typeof parsed === 'object'",
+    "        && (parsed.service === 'openccx'",
     "          || (parsed.service === undefined",
     "            && parsed.status === 'ok'",
     "            && typeof parsed.version === 'string'",
@@ -57,7 +57,7 @@ export function probeProxyLiveness(port, hostname = "127.0.0.1", timeoutMs = 150
     "      // Only a clean 200 decides anything. Any other status means the endpoint is",
     "      // answering but not telling us what it is, which is not evidence of absence.",
     "      if (res.statusCode !== 200) process.stdout.write('UNKNOWN');",
-    "      else process.stdout.write(isOpencodex ? 'LIVE' : 'DEAD');",
+    "      else process.stdout.write(isOpenccx ? 'LIVE' : 'DEAD');",
     "    } catch { process.stdout.write('UNKNOWN'); }",
     "  });",
     "});",

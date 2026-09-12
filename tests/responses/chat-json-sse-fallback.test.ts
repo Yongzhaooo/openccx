@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
 import { handleChatCompletions } from "../../src/server/chat-completions";
 import { createTranslatorBudget, isTranslatorBudgetExceededError, translatorObservedBufferSnapshot } from "../../src/lib/translator-budget";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { responsesJsonToChatCompletion, isChatCompletionsStreamError } from "../../src/chat/outbound";
 import { jsonCompletionSse } from "../../src/server/chat-native-sse";
 import { getRequestLogEntries } from "../../src/server/request-log";
@@ -30,7 +30,7 @@ async function streamFixture(output: unknown[], status = "completed", cancel = f
       ...(status === "incomplete" ? { incomplete_details: { reason } } : {}),
       usage: { input_tokens: 11, output_tokens: 7 } });
   } });
-  const config: OcxConfig = { port: 0, defaultProvider: "fixture", providers: { fixture: {
+  const config: OccxConfig = { port: 0, defaultProvider: "fixture", providers: { fixture: {
     adapter: "openai-responses", baseUrl: `http://127.0.0.1:${upstream.port}/v1`,
     authMode: "key", apiKey: "fixture-key", allowPrivateNetwork: true, models: ["model"],
   } } };

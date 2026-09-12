@@ -1,5 +1,5 @@
 /**
- * #4207: `ocx connect status` reported connected, catalog present and freshly synced, while
+ * #4207: `occx connect status` reported connected, catalog present and freshly synced, while
  * the installed Codex CLI exited before its first request because the downloaded catalog used
  * a reasoning level it does not know. Connection state proved the hub and the credential; it
  * never proved the selected local runtime could consume what was written.

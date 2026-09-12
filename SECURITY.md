@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-opencodex accepts security fixes on a best-effort basis for these lines:
+openccx accepts security fixes on a best-effort basis for these lines:
 
 | Version | Supported |
 | --- | --- |
@@ -33,7 +33,7 @@ safe coordination path. Do not include exploit details, secrets, or live targets
 
 ### Public or private
 
-Being findable in the source is not disclosure. opencodex is source-available, so nearly every
+Being findable in the source is not disclosure. openccx is source-available, so nearly every
 defect here is in principle "visible in the code" — that is not the test, and it is not a reason
 to open a public issue.
 

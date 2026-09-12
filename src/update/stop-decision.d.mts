@@ -1,4 +1,4 @@
-/** Declaration for the plain-ESM post-stop decision shared with `bin/ocx.mjs`. */
+/** Declaration for the plain-ESM post-stop decision shared with `bin/occx.mjs`. */
 export declare function decidePostStopUpdate(input: {
   status: number | null;
   hasRuntimeState: boolean;

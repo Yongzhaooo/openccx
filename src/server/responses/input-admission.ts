@@ -14,7 +14,7 @@ import { nativeOpenAiContextWindow, nativeOpenAiMaxInputTokens, type NativeConte
 import { estimateTokens } from "../../lib/token-estimate";
 import { isCanonicalOpenAiForwardProvider, OPENAI_CODEX_PROVIDER_ID } from "../../providers/openai-tiers";
 import { modelRecordValue } from "../../reasoning-effort";
-import type { OcxContentPart, OcxParsedRequest, OcxProviderConfig } from "../../types";
+import type { OccxContentPart, OccxParsedRequest, OccxProviderConfig } from "../../types";
 
 /**
  * Multiplier applied to the ceiling before refusing.
@@ -74,13 +74,13 @@ function imageTokens(imageUrl: string): number {
   return Math.max(1, Math.ceil(decoded / IMAGE_BYTES_PER_TOKEN));
 }
 
-function contentPartTokens(part: OcxContentPart, modelId: string): number {
+function contentPartTokens(part: OccxContentPart, modelId: string): number {
   if (part.type === "image") return imageTokens(part.imageUrl);
   if (part.type === "video") return imageTokens(part.videoUrl);
   return estimateTokens(part.text, modelId);
 }
 
-function contentTokens(content: string | readonly OcxContentPart[], modelId: string): number {
+function contentTokens(content: string | readonly OccxContentPart[], modelId: string): number {
   if (typeof content === "string") return estimateTokens(content, modelId);
   let total = 0;
   for (const part of content) total += contentPartTokens(part, modelId);
@@ -90,13 +90,13 @@ function contentTokens(content: string | readonly OcxContentPart[], modelId: str
 /**
  * Estimate the input tokens of a parsed request.
  *
- * Walks the whole `OcxMessage` union rather than user text alone. Assistant turns carry
- * their content as `OcxAssistantContentPart[]` — text, thinking blocks, and tool calls whose
+ * Walks the whole `OccxMessage` union rather than user text alone. Assistant turns carry
+ * their content as `OccxAssistantContentPart[]` — text, thinking blocks, and tool calls whose
  * JSON arguments are frequently the largest single item in an agent conversation. A walk
  * that counted only `{type:"text"}` would undercount exactly the turns that trigger this
  * gate.
  */
-export function estimateInputTokens(parsed: OcxParsedRequest, modelId: string): number {
+export function estimateInputTokens(parsed: OccxParsedRequest, modelId: string): number {
   const { context } = parsed;
   let total = 0;
 
@@ -136,7 +136,7 @@ export function estimateInputTokens(parsed: OcxParsedRequest, modelId: string): 
  * belong to a different service.
  */
 export function resolveInputCeiling(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   providerName: string,
   modelId: string,
   // Operator cap for the canonical native provider. Passed in rather than read from a
@@ -181,8 +181,8 @@ export function resolveInputCeiling(
  * The caller is responsible for skipping compaction turns — see the call site in core.ts.
  */
 export function checkInputAdmission(
-  parsed: OcxParsedRequest,
-  provider: OcxProviderConfig,
+  parsed: OccxParsedRequest,
+  provider: OccxProviderConfig,
   providerName: string,
   modelId: string,
   nativeContextCap?: NativeContextLimitsInput,

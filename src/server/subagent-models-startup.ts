@@ -1,9 +1,9 @@
 import { mutatePersistedConfig } from "../config";
 import { migrateSubagentModels } from "../config/subagent-models";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /** Rebase the upgrade on disk so another startup cannot shift the roster twice. */
-export function migrateStartupSubagentModels(config: OcxConfig): OcxConfig {
+export function migrateStartupSubagentModels(config: OccxConfig): OccxConfig {
   const projection = { ...config };
   if (!migrateSubagentModels(projection)) return config;
   try {

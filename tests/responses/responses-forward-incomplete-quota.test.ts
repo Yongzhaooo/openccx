@@ -12,7 +12,7 @@ import {
   inspectResponseLogSsePayload,
   type RequestLogContext,
 } from "../../src/server/request-log";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { clearAccountQuota, updateAccountQuota } from "../../src/codex/quota";
 import {
@@ -28,7 +28,7 @@ import { installIsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { INTERNAL_DEADLINE_MS, SERVER_BUDGET_MS } from "../helpers/test-budget";
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.com/backend-api/codex",
   authMode: "forward",
@@ -112,13 +112,13 @@ type ReporterPath = "parent-recorder" | "guarded-ws" | "native-sse";
 async function exerciseSpawnReporter(path: ReporterPath): Promise<void> {
   const realFetch = globalThis.fetch;
   const RealWebSocket = globalThis.WebSocket;
-  const previousHome = process.env.OPENCODEX_HOME;
-  const home = mkdtempSync(join(tmpdir(), "ocx-incomplete-quota-"));
-  const codexHome = installIsolatedCodexHome("ocx-incomplete-quota-codex-");
-  process.env.OPENCODEX_HOME = home;
+  const previousHome = process.env.OPENCCX_HOME;
+  const home = mkdtempSync(join(tmpdir(), "occx-incomplete-quota-"));
+  const codexHome = installIsolatedCodexHome("occx-incomplete-quota-codex-");
+  process.env.OPENCCX_HOME = home;
   const accountId = "incomplete-quota-endpoint";
   const model = "gpt-test";
-  const config: OcxConfig = {
+  const config: OccxConfig = {
     ...getDefaultConfig(),
     port: 0,
     defaultProvider: "openai",
@@ -313,8 +313,8 @@ async function exerciseSpawnReporter(path: ReporterPath): Promise<void> {
     clearAccountQuota();
     resetSubagentModelFallbackStateForTests();
     codexHome.restore();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(home);
   }
 }

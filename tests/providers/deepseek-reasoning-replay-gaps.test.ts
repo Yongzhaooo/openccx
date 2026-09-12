@@ -10,13 +10,13 @@ import {
 import { routeModel } from "../../src/router";
 import type {
   AdapterEvent,
-  OcxConfig,
-  OcxParsedRequest,
-  OcxReasoningReplayScopeRef,
+  OccxConfig,
+  OccxParsedRequest,
+  OccxReasoningReplayScopeRef,
 } from "../../src/types";
 
 /**
- * Regression coverage for opencodex issue #950: OpenCode Go DeepSeek V4 Flash
+ * Regression coverage for openccx issue #950: OpenCode Go DeepSeek V4 Flash
  * intermittently drops `reasoning_content` on tool-call continuations and the
  * upstream rejects the request with HTTP 400 ("The `reasoning_content` in the
  * thinking mode must be passed back to the API").
@@ -33,8 +33,8 @@ const MODEL = "opencode-go/deepseek-v4-flash";
 const REASONING = "I need to inspect files before answering.";
 function replayScope(
   clientThreadId = "test-thread",
-  overrides: Partial<NonNullable<OcxReasoningReplayScopeRef["current"]>> = {},
-): OcxReasoningReplayScopeRef {
+  overrides: Partial<NonNullable<OccxReasoningReplayScopeRef["current"]>> = {},
+): OccxReasoningReplayScopeRef {
   return {
     clientThreadId,
     current: {
@@ -53,7 +53,7 @@ const rememberReasoningForCall = (callId: string, text: string, scope = REPLAY_S
 const peekReasoningForCall = (callId: string, scope = REPLAY_SCOPE): string | undefined =>
   peekReasoningForCallRaw(callId, scope);
 
-function configFor(): OcxConfig {
+function configFor(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "opencode-go",
@@ -70,7 +70,7 @@ function configFor(): OcxConfig {
 
 function wireFor(
   input: unknown[],
-  scope: OcxReasoningReplayScopeRef | null = REPLAY_SCOPE,
+  scope: OccxReasoningReplayScopeRef | null = REPLAY_SCOPE,
 ): { messages: Array<Record<string, unknown>> } {
   const parsed = parseRequest({ model: MODEL, input, stream: true });
   if (scope !== null) {
@@ -79,7 +79,7 @@ function wireFor(
   }
   const route = routeModel(configFor(), parsed.modelId);
   parsed.modelId = route.modelId;
-  const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OcxParsedRequest);
+  const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OccxParsedRequest);
   return JSON.parse(req.body as string) as { messages: Array<Record<string, unknown>> };
 }
 
@@ -146,7 +146,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     rememberReasoningForCall("call_1", REASONING);
     const { messages } = wireFor([
       userMessage(),
-      { type: "compaction", encrypted_content: "ocx1:c3VtbWFyeQ==" },
+      { type: "compaction", encrypted_content: "occx1:c3VtbWFyeQ==" },
       functionCallItem(),
       functionCallOutputItem(),
     ]);
@@ -184,7 +184,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     buildResponseJSON(unscopedProducer, "routed/model", {});
     const input = [
       userMessage(),
-      { type: "compaction", encrypted_content: "ocx1:c3VtbWFyeQ==" },
+      { type: "compaction", encrypted_content: "occx1:c3VtbWFyeQ==" },
       functionCallItem(),
       functionCallOutputItem(),
     ];
@@ -203,7 +203,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     // must degrade to a minimal placeholder instead of a bare continuation.
     const { messages } = wireFor([
       userMessage(),
-      { type: "compaction", encrypted_content: "ocx1:c3VtbWFyeQ==" },
+      { type: "compaction", encrypted_content: "occx1:c3VtbWFyeQ==" },
       functionCallItem(),
       functionCallOutputItem(),
     ]);
@@ -227,7 +227,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     // models keep the previous bare-continuation behavior. Use a custom
     // provider so no registry preset seeds a preserve list.
     const parsed = parseRequest({ model: "custom-chat/plain-model", input: [userMessage(), functionCallOutputItem()], stream: true });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-chat",
       providers: {
@@ -241,7 +241,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     };
     const route = routeModel(config, parsed.modelId);
     parsed.modelId = route.modelId;
-    const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OcxParsedRequest);
+    const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OccxParsedRequest);
     const { messages } = JSON.parse(req.body as string) as { messages: Array<Record<string, unknown>> };
     const assistant = toolCallAssistant(messages);
     expect(assistant).toBeDefined();
@@ -263,7 +263,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
       });
       parsed._clientThreadId = minimaxReplayScope.clientThreadId;
       parsed._reasoningReplayScope = minimaxReplayScope;
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "minimax",
         providers: {
@@ -276,7 +276,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
       };
       const route = routeModel(config, parsed.modelId);
       parsed.modelId = route.modelId;
-      const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OcxParsedRequest);
+      const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OccxParsedRequest);
       return {
         wire: JSON.parse(req.body as string) as { messages: Array<Record<string, unknown>> },
         replayScope: minimaxReplayScope,
@@ -311,7 +311,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     // non-preserve models: the synthesized orphan tool_call stays bare
     // (chatgpt-codex-connector P2 on #1205).
     const parsed = parseRequest({ model: "custom-chat/plain-model", input: [userMessage(), functionCallOutputItem()], stream: true });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-chat",
       providers: {
@@ -326,7 +326,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
     };
     const route = routeModel(config, parsed.modelId);
     parsed.modelId = route.modelId;
-    const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OcxParsedRequest);
+    const req = createOpenAIChatAdapter(route.provider).buildRequest(parsed as OccxParsedRequest);
     const { messages } = JSON.parse(req.body as string) as { messages: Array<Record<string, unknown>> };
     const assistant = toolCallAssistant(messages);
     expect(assistant).toBeDefined();
@@ -334,7 +334,7 @@ describe("issue #950 — tool-call reasoning replay invariant (openai-chat wire)
   });
 
   test("documented non-bug: opaque encrypted-only reasoning degrades to the placeholder, not invented plaintext", () => {
-    // Native (non-ocxr1) encrypted reasoning has no readable text; the parser
+    // Native (non-occxr1) encrypted reasoning has no readable text; the parser
     // deliberately degrades instead of inventing replayable plaintext. On a
     // thinking-mode provider the fallback now attaches the minimal placeholder
     // (issue #1193) rather than replaying anything, so the continuation stays
@@ -383,7 +383,7 @@ describe("issue #950 — reasoning replay cache bounds", () => {
     expect(peekReasoningForCallRaw("call_collision")).toBeUndefined();
     expect(peekReasoningForCallRaw(
       "call_collision",
-      "global" as unknown as OcxReasoningReplayScopeRef,
+      "global" as unknown as OccxReasoningReplayScopeRef,
     )).toBeUndefined();
   });
 

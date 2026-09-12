@@ -10,8 +10,8 @@ import {
   createOpenAIChatAdapter as createOpenAIChatAdapterProduction,
 } from "../../../src/adapters/openai-chat";
 import type {
-  OcxParsedRequest,
-  OcxTool,
+  OccxParsedRequest,
+  OccxTool,
 } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
@@ -23,8 +23,8 @@ const createOpenAIChatAdapter = (
   );
 
 function parsedRequest(
-  tool: OcxTool,
-): OcxParsedRequest {
+  tool: OccxTool,
+): OccxParsedRequest {
   return {
     modelId: "grok-4.6",
     context: {
@@ -52,7 +52,7 @@ function xaiAdapter() {
 
 describe("xAI Grok CLI tool schema normalization", () => {
   test("keeps Claude Code tools with a root $schema", async () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "Bash",
       description: "Execute a shell command",
       parameters: {
@@ -100,7 +100,7 @@ describe("xAI Grok CLI tool schema normalization", () => {
   });
 
   test("does not reintroduce $schema when flattening a root union", async () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "Bash",
       description: "Execute a shell command",
       parameters: {

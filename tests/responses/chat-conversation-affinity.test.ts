@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { handleChatCompletions } from "../../src/server/chat-completions";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -16,16 +16,16 @@ let home: string;
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  isolated = installIsolatedCodexHome("ocx-chat-identity-");
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-chat-identity-config-"));
-  process.env.OPENCODEX_HOME = home;
+  isolated = installIsolatedCodexHome("occx-chat-identity-");
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-chat-identity-config-"));
+  process.env.OPENCCX_HOME = home;
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
   isolated.restore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
@@ -47,7 +47,7 @@ async function chat(headers: Record<string, string>, cacheKey: string | undefine
   const config = { defaultProvider: "openai", openaiProviderTierVersion: 2, providers: {
     openai: { adapter: "openai-responses", authMode: "forward", codexAccountMode: "direct",
       baseUrl: "https://chatgpt.com/backend-api/codex", models: ["gpt-5.6-luna"] },
-  } } as OcxConfig;
+  } } as OccxConfig;
   const messages = [{ role: "system", content: "A shared prefix is not a conversation identity." },
     { role: "user", content: "first turn" },
     ...(continued ? [{ role: "assistant", content: "first answer" }, { role: "user", content: "next turn" }] : [])];

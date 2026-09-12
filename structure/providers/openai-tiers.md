@@ -305,7 +305,7 @@ deduplicated in stable order; unrelated providers, API-key ids, and unknown pass
 not rewritten. Conflicting provider context caps keep the lower positive value with path-only
 warnings.
 
-Before the first v2 projection, opencodex creates a mode-0600, no-replace byte snapshot:
+Before the first v2 projection, openccx creates a mode-0600, no-replace byte snapshot:
 
 ```sh
 cp ~/.opencodex/config.json.pre-openai-tiers-v2.bak ~/.opencodex/config.json
@@ -338,7 +338,7 @@ preserving a stale one would block every later migration.
   account in Pool mode but only main-account evidence in Direct mode; a Direct turn independently
   checks the forwarded caller credential, or stored main when an admission bearer is substituted.
   Discovery failures fail closed. If an
-  entitled account still receives the exact pre-stream unsupported-model 400, opencodex invalidates
+  entitled account still receives the exact pre-stream unsupported-model 400, openccx invalidates
   that account's roster and permits at most seven additional same-account sends, re-confirming the
   exact rejection and fresh grant before each later send; otherwise ordinary eligible-account
   failover applies.
@@ -347,7 +347,7 @@ preserving a stale one would block every later migration.
   ChatGPT wire uses `gpt-5.6-sol`, the serving id reported by successful Daybreak responses.
   Daybreak compaction uses the existing synthetic `/responses` compaction path instead of the
   native `/responses/compact` endpoint, whose model support is selector-specific. The internal
-  turn stays streaming as required by the canonical ChatGPT backend, and OCX returns the opaque
+  turn stays streaming as required by the canonical ChatGPT backend, and OCCX returns the opaque
   encrypted compaction item without attempting to decrypt or re-encode it.
   The optional `prompt_cache_retention` hint is removed on this route because Daybreak's
   authenticated catalog does not advertise it and upstream rejects it before execution.
@@ -374,7 +374,7 @@ preserving a stale one would block every later migration.
 
 ## Process-local affinity diagnostics
 
-Provider debug capture includes one `[ocx:codex:affinity]` record for each canonical ChatGPT
+Provider debug capture includes one `[occx:codex:affinity]` record for each canonical ChatGPT
 forward response before account-model retry selection. The record compares only an explicit safe
 header-name allowlist. Values are represented by size buckets and 12-character HMAC equality tags
 under a random process-local key; raw credentials, account ids, attestation values, thread/session
@@ -426,10 +426,10 @@ successful main usage refresh clears the runtime mark.
 `src/codex/context-owner.ts` records which account actually served a root session, taken from the
 final materialized outbound headers of an accepted model attempt, after refresh and failover.
 Entries are bounded, process-local and expiring, and are keyed by the admission principal that
-`src/server/auth-cors.ts` mints for the matched opencodex API key, plus the destination and the
+`src/server/auth-cors.ts` mints for the matched openccx API key, plus the destination and the
 root session. Two keys therefore cannot observe or overwrite each other's ownership even when both
 resolve to one ChatGPT workspace, and rotating a key mints a new principal instead of inheriting
-the previous holder's sessions. `resolveContextPrincipal` resolves that principal from the opencodex API key the request
+the previous holder's sessions. `resolveContextPrincipal` resolves that principal from the openccx API key the request
 presents, on both the recording and the relay path so the two agree. A remote bind supplies it
 through admission. A loopback bind admits without reading a token, so the key is resolved from the
 request only for a loopback admission; this adds identity where the caller volunteered it rather

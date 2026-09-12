@@ -125,7 +125,7 @@ export function isSourceBuildVersion(v: string): boolean {
 /** The interactive/TTY + install-method gate shared with the star prompt. */
 export function interactiveGuardOk(): boolean {
   try {
-    return !(process.env.OCX_SERVICE || !isatty(0) || !isatty(1));
+    return !(process.env.OCCX_SERVICE || !isatty(0) || !isatty(1));
   } catch {
     /* best-effort */
     return false;
@@ -180,7 +180,7 @@ export function triggerBackgroundRefreshIfStale(channel: Channel, cache: Version
       detached: true,
       stdio: "ignore",
       windowsHide: true,
-      env: { ...process.env, OCX_SERVICE: "1" }, // never let the helper prompt
+      env: { ...process.env, OCCX_SERVICE: "1" }, // never let the helper prompt
     });
     child.unref();
   } catch {
@@ -229,7 +229,7 @@ function renderPrompt(current: string, latest: string, channel: Channel): string
 }
 
 /**
- * Interactive-only update prompt for `ocx start`. Must be called BEFORE the
+ * Interactive-only update prompt for `occx start`. Must be called BEFORE the
  * server binds a port / writes a PID, because "Update now" installs globally
  * and exits. No-op for service/daemon/non-TTY runs and source checkouts.
  * Never throws.
@@ -257,7 +257,7 @@ export async function maybeShowUpdatePrompt(): Promise<void> {
     const choice = answer === "" ? "1" : answer;
     if (choice === "1") {
       await runUpdate();
-      console.log("\nRestart the proxy:  ocx start");
+      console.log("\nRestart the proxy:  occx start");
       process.exit(0);
     } else if (choice === "3") {
       dismissVersion(channel, latest);

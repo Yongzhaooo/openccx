@@ -11,7 +11,7 @@ import { atomicWriteFile } from "./atomic-write";
 import { getConfigDir, hardenConfigDir } from "./paths";
 
 export function getPidPath(): string {
-  return join(getConfigDir(), "ocx.pid");
+  return join(getConfigDir(), "occx.pid");
 }
 
 export function getRuntimePortPath(): string {
@@ -94,7 +94,7 @@ export function removeRuntimePort(expectedPid?: number): void {
 }
 
 /**
- * Snapshot-guarded stale-state purge. A replacement `ocx start` can publish a
+ * Snapshot-guarded stale-state purge. A replacement `occx start` can publish a
  * fresh record while a liveness probe is in flight, so deletion is authorized
  * only by the exact value observed before that probe.
  */
@@ -110,70 +110,70 @@ export function removeRuntimePortIfPidIs(snapshotPid: number | null): void {
   try { unlinkSync(getRuntimePortPath()); } catch { /* ignore */ }
 }
 
-export function isOcxStartCommandLine(commandLine: string): boolean {
+export function isOccxStartCommandLine(commandLine: string): boolean {
   const normalized = commandLine.toLowerCase().replace(/\\/g, "/");
   // Keep legacy source launches and npm's in-place Windows rename recognizable:
-  // a service wrapper may respawn from `.opencodex-*` during a global update.
-  const hasOcxEntrypoint = normalized.includes("src/cli.ts")
+  // a service wrapper may respawn from `.openccx-*` during a global update.
+  const hasOccxEntrypoint = normalized.includes("src/cli.ts")
     || normalized.includes("src/cli/index.ts")
     || normalized.includes("@bitkyc08/opencodex")
-    || /@bitkyc08\/\.opencodex-/.test(normalized)
-    || /(?:^|[\s/"'])(?:ocx|opencodex)(?:\.cmd)?(?:$|[\s"'])/.test(normalized);
-  return hasOcxEntrypoint && /(?:^|[\s"'])start(?:$|[\s"'])/.test(normalized);
+    || /@bitkyc08\/\.openccx-/.test(normalized)
+    || /(?:^|[\s/"'])(?:occx|openccx)(?:\.cmd)?(?:$|[\s"'])/.test(normalized);
+  return hasOccxEntrypoint && /(?:^|[\s"'])start(?:$|[\s"'])/.test(normalized);
 }
 
 /** Avoid spawning WMIC/PowerShell on every short liveness poll. */
-const ocxStartProcessCache = new Map<number, boolean>();
-let ocxStartProcessSweepCursor = 0;
-let ocxStartProcessProbe: (pid: number) => void = pid => { process.kill(pid, 0); };
+const occxStartProcessCache = new Map<number, boolean>();
+let occxStartProcessSweepCursor = 0;
+let occxStartProcessProbe: (pid: number) => void = pid => { process.kill(pid, 0); };
 
-export function setOcxStartProcessProbeForTests(probe: ((pid: number) => void) | null): void {
-  ocxStartProcessProbe = probe ?? (pid => { process.kill(pid, 0); });
+export function setOccxStartProcessProbeForTests(probe: ((pid: number) => void) | null): void {
+  occxStartProcessProbe = probe ?? (pid => { process.kill(pid, 0); });
 }
 
-export function setOcxStartProcessCacheForTests(entries: Iterable<readonly [number, boolean]>): void {
-  ocxStartProcessCache.clear();
-  for (const [pid, value] of entries) ocxStartProcessCache.set(pid, value);
-  ocxStartProcessSweepCursor = 0;
+export function setOccxStartProcessCacheForTests(entries: Iterable<readonly [number, boolean]>): void {
+  occxStartProcessCache.clear();
+  for (const [pid, value] of entries) occxStartProcessCache.set(pid, value);
+  occxStartProcessSweepCursor = 0;
 }
 
-export function sweepDeadOcxStartProcessCache(maxProbes = 64): number {
+export function sweepDeadOccxStartProcessCache(maxProbes = 64): number {
   const pids: number[] = [];
   let removed = 0;
-  for (const pid of ocxStartProcessCache.keys()) {
+  for (const pid of occxStartProcessCache.keys()) {
     if (Number.isSafeInteger(pid) && pid > 0) pids.push(pid);
-    else if (ocxStartProcessCache.delete(pid)) removed += 1;
+    else if (occxStartProcessCache.delete(pid)) removed += 1;
   }
   if (pids.length === 0 || maxProbes <= 0) {
-    ocxStartProcessSweepCursor = 0;
+    occxStartProcessSweepCursor = 0;
     return removed;
   }
   const probeCount = Math.min(Math.floor(maxProbes), pids.length);
-  const start = ocxStartProcessSweepCursor % pids.length;
+  const start = occxStartProcessSweepCursor % pids.length;
   for (let offset = 0; offset < probeCount; offset += 1) {
     const pid = pids[(start + offset) % pids.length]!;
     try {
-      ocxStartProcessProbe(pid);
+      occxStartProcessProbe(pid);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ESRCH") continue;
-      if (ocxStartProcessCache.delete(pid)) removed += 1;
+      if (occxStartProcessCache.delete(pid)) removed += 1;
     }
   }
-  ocxStartProcessSweepCursor = (start + probeCount) % pids.length;
+  occxStartProcessSweepCursor = (start + probeCount) % pids.length;
   return removed;
 }
 
-export function ocxStartProcessCacheSizeForTests(): number {
-  return ocxStartProcessCache.size;
+export function occxStartProcessCacheSizeForTests(): number {
+  return occxStartProcessCache.size;
 }
 
-function isLikelyOcxStartProcess(pid: number): boolean {
-  const cached = ocxStartProcessCache.get(pid);
+function isLikelyOccxStartProcess(pid: number): boolean {
+  const cached = occxStartProcessCache.get(pid);
   if (cached !== undefined) return cached;
   const commandLine = readProcessCommandLine(pid);
   if (commandLine === undefined) return false;
-  const ok = isOcxStartCommandLine(commandLine);
-  ocxStartProcessCache.set(pid, ok);
+  const ok = isOccxStartCommandLine(commandLine);
+  occxStartProcessCache.set(pid, ok);
   return ok;
 }
 
@@ -186,10 +186,10 @@ export function readPid(): number | null {
     if (pid === null) return null;
     try {
       process.kill(pid, 0);
-      return isLikelyOcxStartProcess(pid) ? pid : null;
+      return isLikelyOccxStartProcess(pid) ? pid : null;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "EPERM") {
-        return isLikelyOcxStartProcess(pid) ? pid : null;
+        return isLikelyOccxStartProcess(pid) ? pid : null;
       }
       return null;
     }
@@ -224,7 +224,7 @@ export function verifyPidIdentity(candidatePid: number): number | null {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "EPERM") return null;
   }
-  return isLikelyOcxStartProcess(candidatePid) ? candidatePid : null;
+  return isLikelyOccxStartProcess(candidatePid) ? candidatePid : null;
 }
 
 type ProcessCommandLineExec = (

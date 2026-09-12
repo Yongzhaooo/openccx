@@ -1,6 +1,6 @@
 import http2 from "node:http2";
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
-import { namespacedToolName, type OcxProviderConfig, type OcxUsage } from "../../types";
+import { namespacedToolName, type OccxProviderConfig, type OccxUsage } from "../../types";
 import { CONNECT_FLAG_END_STREAM, ConnectFrameError, consumeConnectFrames, encodeConnectFrame } from "./framing";
 import {
   CURSOR_MAX_EFFECTIVE_CONNECT_PAYLOAD_BYTES,
@@ -54,7 +54,7 @@ import {
 import { debugProviderDiagnostic } from "../../lib/debug";
 import { classifyCursorError, CursorUnexpectedCancelError, isCursorAbortError, isCursorBenignCancelError, safeCursorErrorMessage } from "./cursor-errors";
 import { mcpArgsFromToolCall } from "./protobuf-events";
-import { OCX_RESPONSES_TOOL_PROVIDER } from "./tool-definitions";
+import { OCCX_RESPONSES_TOOL_PROVIDER } from "./tool-definitions";
 import {
   handleCursorNativeExec,
   handleCursorNativeKv,
@@ -182,19 +182,19 @@ export class CursorMissingCredentialError extends Error {
   readonly code = "cursor_missing_credential";
 
   constructor() {
-    super("Cursor live transport requires a Cursor access token in provider.apiKey, Authorization, or OPENCODEX_CURSOR_TEST_TOKEN.");
+    super("Cursor live transport requires a Cursor access token in provider.apiKey, Authorization, or OPENCCX_CURSOR_TEST_TOKEN.");
     this.name = "CursorMissingCredentialError";
   }
 }
 
-export function resolveCursorToken(provider: OcxProviderConfig, headers?: Headers): string {
+export function resolveCursorToken(provider: OccxProviderConfig, headers?: Headers): string {
   const providerKey = provider.apiKey?.trim();
   if (providerKey) return providerKey;
 
   const forwarded = headers?.get("authorization") ?? headers?.get("Authorization");
   if (forwarded?.toLowerCase().startsWith("bearer ")) return forwarded.slice("bearer ".length).trim();
 
-  const envToken = process.env.OPENCODEX_CURSOR_TEST_TOKEN?.trim();
+  const envToken = process.env.OPENCCX_CURSOR_TEST_TOKEN?.trim();
   if (envToken) return envToken;
   throw new CursorMissingCredentialError();
 }
@@ -258,7 +258,7 @@ export function planMcpArgsHandling(
     return { handledByResponsesBridge: false, events: [], cancelCursorRun: false, finalizeWhenDrained: false };
   }
   const args = execMsg.message.value;
-  if (args.providerIdentifier !== OCX_RESPONSES_TOOL_PROVIDER) {
+  if (args.providerIdentifier !== OCCX_RESPONSES_TOOL_PROVIDER) {
     // A real MCP server tool: native exec handles it (executed locally, real mcpResult written).
     return { handledByResponsesBridge: false, events: [], cancelCursorRun: false, finalizeWhenDrained: false };
   }
@@ -293,7 +293,7 @@ export function planMcpArgsHandling(
  * Build the `interactionResponse` reply for a server `interactionQuery`. Cursor's server-side agent
  * BLOCKS on these queries until the client answers (matching `id`); an unanswered query is the
  * proven cause of the heartbeat-only stall → watchdog `upstream_stall_timeout` → upstream 502 loop
- * (devlog 260702_cursor-live-stability-rca). ocx is a headless non-interactive client, so:
+ * (devlog 260702_cursor-live-stability-rca). occx is a headless non-interactive client, so:
  *   - createPlan: acknowledge success (the agent proceeds to execute); the plan text is surfaced to
  *     Codex as visible output so the user still sees it.
  *   - askQuestion: reject with a reason — the agent must proceed autonomously; there is no human to
@@ -313,7 +313,7 @@ export function planMcpArgsHandling(
  * Pure (no I/O) for unit testing; `handleServerMessage` writes the frame and emits liveness.
  */
 export function planInteractionQueryReply(query: InteractionQuery): { response: InteractionResponse; replyCase: string; planText?: string } {
-  const NON_INTERACTIVE_REASON = "opencodex bridge is non-interactive; proceed without this interaction.";
+  const NON_INTERACTIVE_REASON = "openccx bridge is non-interactive; proceed without this interaction.";
   const q = query.query;
   const respond = (result: InteractionResponse["result"]): InteractionResponse =>
     create(InteractionResponseSchema, { id: query.id, result });
@@ -516,7 +516,7 @@ class LiveCursorTransport implements CursorTransport {
   private releaseMcpObservation?: () => void;
   private blobRequestScope?: CursorBlobRequestScopeToken;
   private shellCleanup?: Promise<BackgroundShellTerminationReport>;
-  // Per-turn diagnostic counters/timestamps when provider debug is on (`ocx debug provider on`). Stamped in open(), cleared on
+  // Per-turn diagnostic counters/timestamps when provider debug is on (`occx debug provider on`). Stamped in open(), cleared on
   // close; safe to read after a stream failure because open() owns the only writer before run().
   private turnStartedAt = 0;
   private framesReceived = 0;
@@ -601,7 +601,7 @@ class LiveCursorTransport implements CursorTransport {
     let failureLogged = false;
     // One per-turn summary of the failure path (end-stream error, socket reset, abort) so the
     // operator can see how far the turn got and how it was classified without re-scanning every
-    // frame. Gated behind provider debug (`ocx debug provider on`).
+    // frame. Gated behind provider debug (`occx debug provider on`).
     const summarizeFailure = (err: Error): Error => {
       if (!failureLogged && !(this.expectedClose && isCursorBenignCancelError(err))) {
         failureLogged = true;
@@ -1442,7 +1442,7 @@ class LiveCursorTransport implements CursorTransport {
 
     if (useHttp1) {
       const providerFetch = this.input.fetch
-        ?? (this.input.provider as OcxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch;
+        ?? (this.input.provider as OccxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch;
       this.http1Connection = new CursorHttp1BidiConnection({
         baseUrl,
         token: this.token,
@@ -1619,7 +1619,7 @@ class LiveCursorTransport implements CursorTransport {
  * Returns undefined when the stream died before ANY token signal (nothing meaningful to report).
  * Exported for unit testing.
  */
-export function partialUsageFromEventState(state: ReturnType<typeof createCursorProtobufEventState>): OcxUsage | undefined {
+export function partialUsageFromEventState(state: ReturnType<typeof createCursorProtobufEventState>): OccxUsage | undefined {
   const out = state.usage.outputTokens;
   const hasCurrentCheckpoint = Number.isFinite(state.contextTokens) && (state.contextTokens ?? 0) > 0;
   const hasCurrentOutput = Number.isFinite(out) && out > 0;
@@ -1638,12 +1638,12 @@ export function partialUsageFromEventState(state: ReturnType<typeof createCursor
  */
 function attachPartialUsage(failure: Error, state: ReturnType<typeof createCursorProtobufEventState>): Error {
   const usage = partialUsageFromEventState(state);
-  if (usage) (failure as Error & { partialUsage?: OcxUsage }).partialUsage = usage;
+  if (usage) (failure as Error & { partialUsage?: OccxUsage }).partialUsage = usage;
   return failure;
 }
 
 /**
- * Compact frame descriptor for provider debug (`ocx debug provider on`): outer case plus the inner
+ * Compact frame descriptor for provider debug (`occx debug provider on`): outer case plus the inner
  * interactionUpdate/exec case and tool-call union case when present. No payload content is logged.
  */
 function describeCursorServerFrame(message: AgentServerMessage): Record<string, unknown> {
@@ -1690,7 +1690,7 @@ function isCursorProgressFrame(message: AgentServerMessage): boolean {
 /**
  * A tool-call lifecycle frame that can change the CLIENT tool call set (announce a new sibling or
  * commit one). Used to revoke a pending finalize so a late-announced parallel call is never dropped.
- * Only frames whose inner ToolCall is an ocx-bridged Responses tool (`mcpToolCall` with our provider)
+ * Only frames whose inner ToolCall is an occx-bridged Responses tool (`mcpToolCall` with our provider)
  * count: Cursor-native tool frames (readToolCall/editToolCall/...) are display-plane and must not
  * revoke a pending client-tool finalize. Exported for unit testing.
  */
@@ -1724,7 +1724,7 @@ function redactCursorForLog(message: string): string {
 }
 
 /** Extract the Connect end-stream `error.code` from the raw trailer frame payload without
- * surfacing the (potentially secret-bearing) message — used for `[ocx:cursor:connect-end-stream]`
+ * surfacing the (potentially secret-bearing) message — used for `[occx:cursor:connect-end-stream]`
  * diagnostics. Returns undefined when the payload is not the expected Connect error shape. */
 function cursorConnectErrorCode(payload: Uint8Array): string | undefined {
   try {

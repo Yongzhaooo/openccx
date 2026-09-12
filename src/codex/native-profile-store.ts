@@ -34,11 +34,11 @@ import {
   type NativeProfileSwitchJournalV1,
 } from "./native-profile-types";
 
-const DOMAIN_HOME = "opencodex-native-profile-home-v1\0";
-const DOMAIN_INSTANCE = "opencodex-native-profile-instance-v1\0";
-const DOMAIN_IDENTITY = "opencodex-native-profile-identity-v1\0";
-const KEYRING_SERVICE = "opencodex.native-main-profile.v1";
-const SHARED_METADATA_DIR = ".opencodex-native-main-profiles";
+const DOMAIN_HOME = "openccx-native-profile-home-v1\0";
+const DOMAIN_INSTANCE = "openccx-native-profile-instance-v1\0";
+const DOMAIN_IDENTITY = "openccx-native-profile-identity-v1\0";
+const KEYRING_SERVICE = "openccx.native-main-profile.v1";
+const SHARED_METADATA_DIR = ".openccx-native-main-profiles";
 const INSTANCE_STAGING_DIR = "native-main-profile-staging";
 const LEGACY_METADATA_DIR = "native-main-profiles";
 export const MAX_AUTH_BYTES = 4 * 1024 * 1024;
@@ -47,7 +47,7 @@ export const MAX_NATIVE_PROFILE_JOURNAL_BYTES = 17 * 1024 * 1024;
 export const MAX_NATIVE_PROFILES = 32;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HASH_RE = /^[0-9a-f]{64}$/;
-const BOUNDED_READ_TEST_SEAM = Symbol.for("opencodex.native-profile-store.bounded-read-test-seam");
+const BOUNDED_READ_TEST_SEAM = Symbol.for("openccx.native-profile-store.bounded-read-test-seam");
 
 export interface NativeProfileContext {
   codexHome: string;
@@ -212,11 +212,11 @@ function canonicalizeDirectoryPath(path: string): string {
       return join(realpathSync.native(cursor), ...unresolved.reverse());
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The OpenCodex configuration root is not safely accessible.", 409);
+        throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The Openccx configuration root is not safely accessible.", 409);
       }
       const parent = dirname(cursor);
       if (parent === cursor) {
-        throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The OpenCodex configuration root is not safely accessible.", 409);
+        throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The Openccx configuration root is not safely accessible.", 409);
       }
       unresolved.push(basename(cursor));
       cursor = parent;
@@ -316,7 +316,7 @@ export function assertNoLegacyNativeProfileState(context: NativeProfileContext):
   if (!hasLegacyNativeProfileState(context)) return;
   throw new NativeProfileError(
     "LEGACY_PROFILE_STATE",
-    "Legacy native-profile state exists under OPENCODEX_HOME. Stop every OpenCodex proxy sharing this CODEX_HOME, then migrate or reset the preview state as documented.",
+    "Legacy native-profile state exists under OPENCCX_HOME. Stop every Openccx proxy sharing this CODEX_HOME, then migrate or reset the preview state as documented.",
     409,
   );
 }
@@ -346,7 +346,7 @@ export function assertNativeProfileMetadataLayout(context: NativeProfileContext)
 
 export function assertNativeProfileLockPath(context: NativeProfileContext): void {
   const canonicalHome = assertCanonicalDirectory(context.codexHome, "The effective CODEX_HOME");
-  const expected = join(canonicalHome, ".opencodex-native-profile.lock.sqlite");
+  const expected = join(canonicalHome, ".openccx-native-profile.lock.sqlite");
   if (!samePath(context.lockPath, expected)) storageUnsafe("The native-profile transaction lock is outside CODEX_HOME.");
   if (pathExists(context.lockPath)) assertCanonicalFile(context.lockPath, canonicalHome, "The native-profile transaction lock");
 }
@@ -372,7 +372,7 @@ export function resolveNativeProfileContext(options: { codexHome?: string; confi
     journalPath: join(rootDir, `${homeId}.journal.json`),
     recoveryBlockPath: join(rootDir, `${homeId}.recovery-block.json`),
     stageRegistryPath: join(rootDir, `${homeId}.stages.json`),
-    lockPath: join(codexHome, ".opencodex-native-profile.lock.sqlite"),
+    lockPath: join(codexHome, ".openccx-native-profile.lock.sqlite"),
   };
 }
 

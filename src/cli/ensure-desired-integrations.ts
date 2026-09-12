@@ -1,5 +1,5 @@
 /**
- * Align Grok and Claude Desktop files with the durable switches during `ocx ensure`.
+ * Align Grok and Claude Desktop files with the durable switches during `occx ensure`.
  *
  * handleEnsure used to load config once, then health-probe / model-sync / spawn,
  * and only afterwards mutate ~/.grok/config.toml and the Desktop library from
@@ -17,21 +17,21 @@ import {
   HUB_GATED_SKIP_MESSAGE,
   shouldSyncGrokOnStart,
 } from "../codex/desired-state";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export function grokSyncFailureMessage(err: unknown): string {
   const detail = err instanceof Error ? err.message : String(err);
   return `Grok Build config sync failed: ${detail}. `
     + "~/.grok/config.toml may still point at a previous proxy port — "
-    + "run 'ocx ensure' (or apply from the dashboard's Grok page) to repoint it.";
+    + "run 'occx ensure' (or apply from the dashboard's Grok page) to repoint it.";
 }
 
 export interface EnsureDesiredIntegrationsDeps {
-  loadConfig: () => OcxConfig;
+  loadConfig: () => OccxConfig;
   stripGrokConfig: typeof stripGrokConfig;
   syncGrokConfig: (
     port: number,
-    config: OcxConfig,
+    config: OccxConfig,
     opts?: { hostname?: string },
   ) => Promise<GrokInjectResult>;
   removeDesktop3pStandardPivot: typeof removeDesktop3pStandardPivot;
@@ -41,7 +41,7 @@ export interface EnsureDesiredIntegrationsDeps {
 
 async function defaultSyncGrokConfig(
   port: number,
-  config: OcxConfig,
+  config: OccxConfig,
   opts: { hostname?: string } = {},
 ): Promise<GrokInjectResult> {
   const { syncGrokConfig } = await import("../grok/sync");
@@ -68,7 +68,7 @@ function io(deps: EnsureDesiredIntegrationsDeps): {
 /**
  * Keep ~/.grok/config.toml aligned with the durable Grok switch.
  *
- * `handleStart` already gates inject on `shouldSyncGrokOnStart`. `ocx ensure`
+ * `handleStart` already gates inject on `shouldSyncGrokOnStart`. `occx ensure`
  * used to call `syncGrokConfig` unconditionally, so a dashboard/update/restart
  * path that lands in ensure rewrote the fence while the switch stayed OFF.
  * When the switch is OFF, strip any leftover managed block instead of injecting.
@@ -81,7 +81,7 @@ export async function ensureGrokFenceMatchesDesired(
   const config = deps.loadConfig();
   const { log, error } = io(deps);
   // A hub-gated skip is NOT "the user turned Grok off" (#4236). Stripping the managed block
-  // there deleted a fence the operator still wants — and `ocx ensure` reported it as the
+  // there deleted a fence the operator still wants — and `occx ensure` reported it as the
   // Grok toggle doing its job. Only an explicit OFF authorizes the strip; the gate just
   // declines to write, and says which key would let it.
   if (!shouldSyncGrokOnStart(config) && grokIntegrationEnabled(config)) {

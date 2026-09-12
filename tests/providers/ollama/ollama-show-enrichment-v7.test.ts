@@ -14,7 +14,7 @@ afterEach(() => {
 const originalFetch = globalThis.fetch;
 import { fetchOllamaShowEnrichment, ollamaShowMetadataFromPayload, showHeadersFromCaptured } from "../../../src/providers/ollama-show";
 import { withStubbedProviderFetch } from "../../helpers/catalog-provider-fetch";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 
 /**
  * V7: auth/outbound-policy integration, aggregate fan-out bounds, and models-API precedence.
@@ -63,7 +63,7 @@ function stubFetch(
 
 const showCalls = (calls: Array<Call>) => calls.filter(c => c.url.endsWith("/api/show"));
 
-function providerConfig(headers?: Record<string, string>): OcxConfig {
+function providerConfig(headers?: Record<string, string>): OccxConfig {
   return {
     port: 10114,
     defaultProvider: "ollama-cloud",
@@ -78,7 +78,7 @@ function providerConfig(headers?: Record<string, string>): OcxConfig {
         ...(headers ? { headers } : {}),
       },
     },
-  } as never as OcxConfig;
+  } as never as OccxConfig;
 }
 
 describe("ollama /api/show — auth and outbound-policy integration", () => {
@@ -369,10 +369,10 @@ describe("ollama /api/show — payload extraction contract (input not mutated)",
 // The adapter-level third surface is exercised directly below via the real adapter factory,
 // which is what the native /api/chat route uses.
 import { createOllamaNativeAdapter } from "../../../src/adapters/ollama-native";
-import type { OcxParsedRequest } from "../../../src/types";
+import type { OccxParsedRequest } from "../../../src/types";
 
-function nativeParsed(modelId = "glm-5.3-flash"): OcxParsedRequest {
-  return { modelId, stream: true, options: {}, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OcxParsedRequest;
+function nativeParsed(modelId = "glm-5.3-flash"): OccxParsedRequest {
+  return { modelId, stream: true, options: {}, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OccxParsedRequest;
 }
 
 /** Observe the effective Authorization on all three Ollama request surfaces for one config. */

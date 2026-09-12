@@ -14,7 +14,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function saltFixture(value: number): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-lab-salt-cache-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-lab-salt-cache-"));
   roots.push(root);
   const path = labInstallationSaltPath(root);
   mkdirSync(join(root, "lab"), { recursive: true });

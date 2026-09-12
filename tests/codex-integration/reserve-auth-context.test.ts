@@ -23,7 +23,7 @@ import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import type { DataPlaneAdmission } from "../../src/server/auth-cors";
 import type { WhamUsageResponse } from "../../src/codex/quota-types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const MAIN = mainAccount.MAIN_CODEX_ACCOUNT_ID;
@@ -43,7 +43,7 @@ function token(user = "reserve-user-a"): string {
   return `header.${payload}.signature`;
 }
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0, defaultProvider: "openai", codexDesktopAuthless: true, codexMainAccountHardLock: true,
     autoSwitchThreshold: 0, activeCodexAccountId: "unused-pool", codexAccounts: [],
@@ -89,10 +89,10 @@ function prohibitPhysicalReads(): void {
 }
 
 beforeEach(() => {
-  oldHome = process.env.OPENCODEX_HOME;
+  oldHome = process.env.OPENCCX_HOME;
   oldCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-reserve-auth-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-reserve-auth-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
@@ -149,8 +149,8 @@ afterEach(async () => {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = oldHome;
+    if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = oldHome;
     if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = oldCodexHome;
     removeTreeWithRetry(home);

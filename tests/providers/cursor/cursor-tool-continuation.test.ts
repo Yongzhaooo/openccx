@@ -7,7 +7,7 @@ import {
   GetBlobArgsSchema,
   KvServerMessageSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { OcxMessage } from "../../../src/types";
+import type { OccxMessage } from "../../../src/types";
 
 function blobData(blobId: Uint8Array): Uint8Array {
   const reply = fromBinary(AgentClientMessageSchema, handleCursorNativeKv(create(KvServerMessageSchema, {
@@ -28,7 +28,7 @@ function decodeRoots(bytes: Uint8Array): unknown[] {
 }
 
 describe("363-B: tool result reaches the model via rootPromptMessagesJson", () => {
-  const rawMessages: OcxMessage[] = [
+  const rawMessages: OccxMessage[] = [
     { role: "user", content: "read a file", timestamp: 1 },
     {
       role: "assistant",
@@ -133,7 +133,7 @@ function execMcpArgs(opts: { provider?: string; toolName?: string; toolCallId?: 
         name: opts.toolName ?? "mcp__fs__read_file",
         toolName: opts.toolName ?? "mcp__fs__read_file",
         toolCallId: opts.toolCallId ?? "call_1",
-        providerIdentifier: opts.provider ?? "opencodex-responses",
+        providerIdentifier: opts.provider ?? "openccx-responses",
         ...(opts.args ? { args: opts.args } : {}),
       }),
     },

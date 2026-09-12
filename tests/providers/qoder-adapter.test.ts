@@ -4,18 +4,18 @@ import { Readable, Writable } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import { buildQoderArgs, buildQoderChildEnv, createQoderAdapter } from "../../src/adapters/qoder/adapter";
 import { clearQoderBinaryCache, QODER_CN_PROFILE, QODER_GLOBAL_PROFILE, resolveQoderProfile } from "../../src/adapters/qoder/profiles";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 const enc = new TextEncoder();
 beforeEach(() => clearQoderBinaryCache());
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
-  return { adapter: "qoder", baseUrl: "https://qoder.com", apiKey: "qoder-pat", reasoningEfforts: ["low", "medium", "high", "xhigh", "max"], ...overrides } as OcxProviderConfig;
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
+  return { adapter: "qoder", baseUrl: "https://qoder.com", apiKey: "qoder-pat", reasoningEfforts: ["low", "medium", "high", "xhigh", "max"], ...overrides } as OccxProviderConfig;
 }
 
-function parsed(overrides: Partial<OcxParsedRequest> = {}): OcxParsedRequest {
-  return { modelId: "Qwen3.8-Max", stream: true, options: {}, context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] }, ...overrides } as OcxParsedRequest;
+function parsed(overrides: Partial<OccxParsedRequest> = {}): OccxParsedRequest {
+  return { modelId: "Qwen3.8-Max", stream: true, options: {}, context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] }, ...overrides } as OccxParsedRequest;
 }
 
 function fakeChild(frames: string[]): ChildProcess {
@@ -57,7 +57,7 @@ describe("qoder adapter", () => {
     expect(cnEnv.QODER_PERSONAL_ACCESS_TOKEN).toBeUndefined();
 
     const spawned: Array<{ executable: string; env: NodeJS.ProcessEnv }> = [];
-    const runRegion = async (configured: OcxProviderConfig, executable: string) => {
+    const runRegion = async (configured: OccxProviderConfig, executable: string) => {
       const adapter = createQoderAdapter(configured, {
         which: candidate => candidate === executable ? `/bin/${candidate}` : undefined,
         spawn: (command, _args, options) => {

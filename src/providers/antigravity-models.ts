@@ -326,7 +326,7 @@ export const ANTIGRAVITY_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
 
 export const ANTIGRAVITY_MODEL_INPUT_MODALITIES: Record<string, string[]> = {
   // Google documents 3.7 Flash as also accepting video, audio and PDF, but this proxy
-  // carries only text and image parts (`OcxImageContent`, src/types.ts) and the Codex
+  // carries only text and image parts (`OccxImageContent`, src/types.ts) and the Codex
   // catalog normalizes `input_modalities` against a closed enum. Advertising a modality
   // the wire cannot carry would be a promise we break at request time.
   "gemini-3.8-flash": ["text", "image"],

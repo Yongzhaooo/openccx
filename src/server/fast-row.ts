@@ -8,7 +8,7 @@ import { comboModelId, comboPublicModelId } from "../combos/types";
 import { policyModelId, policyPublicModelId } from "../routing/profile";
 import type { InboundWire } from "../providers/registry";
 import { fastPolicyForModel } from "../providers/service-tier";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import {
   isKnownId,
   knownEffortRowIds,
@@ -63,7 +63,7 @@ export function fastRowEligible(
 
 /** Shared discovery/export policy; native rows additionally need upstream tier evidence. */
 export function catalogFastRowEligible(
-  config: OcxConfig,
+  config: OccxConfig,
   model: { provider: string; id: string; native?: boolean; supportsServiceTier?: boolean },
 ): boolean {
   if (config.fastRows === false) return false;
@@ -118,7 +118,7 @@ export function catalogFastRowEligible(
  * A base is RECOGNIZED here and then judged by routing, which is the component that actually
  * knows whether it can serve it.
  */
-export function fastRowBases(config: OcxConfig): (id: string) => boolean {
+export function fastRowBases(config: OccxConfig): (id: string) => boolean {
   const bases = new Set<string>();
   // Configured providers: any model the router would accept for this provider, plus the
   // namespaced and alias-namespaced spellings a listing can publish. Deliberately NOT
@@ -198,7 +198,7 @@ export function fastRowBases(config: OcxConfig): (id: string) => boolean {
 
 export function parseFastRowId(
   id: string,
-  config: Pick<OcxConfig, "fastRows">,
+  config: Pick<OccxConfig, "fastRows">,
   knownIds?: EffortRowKnownIds,
   routableBases?: EffortRowKnownIds,
 ): ParsedFastRowId | null {
@@ -233,7 +233,7 @@ export function effortBaseCarriesFastMarker(
  */
 export function parseSyntheticRowId(
   id: string,
-  config: OcxConfig,
+  config: OccxConfig,
   // Claude surfaces decode the alias before the marker is unambiguous, so they pass the
   // decoded form for Fast while effort parsing keeps seeing the id the client sent. A THUNK,
   // not a string: arguments are evaluated before the call, so an eager decode would run its
@@ -247,7 +247,7 @@ export function parseSyntheticRowId(
   const selector = fastSelector?.() ?? id;
   const wantsFast = selector.endsWith(FAST_ROW_SUFFIX);
   // Bail before building any inventory when neither grammar can match. A readable Claude
-  // alias is `claude-ocx-<provider>--<model>`, so it ALWAYS contains `--`: testing only for
+  // alias is `claude-occx-<provider>--<model>`, so it ALWAYS contains `--`: testing only for
   // the separator would rebuild the whole model inventory on every Claude turn for a
   // selector that cannot be a fast row. With effort parsing off, the terminal suffix is the
   // only thing that can match.
@@ -270,7 +270,7 @@ export function parseSyntheticRowId(
 
 /** Fast-only resolution for surfaces that never parsed an effort row. */
 export function parseFastOnlyRowId(
-  config: OcxConfig,
+  config: OccxConfig,
   selector: () => string,
 ): ParsedFastRowId | null {
   if (config.fastRows === false) return null;
@@ -286,7 +286,7 @@ export function parseFastOnlyRowId(
 export function expandFastRow<T extends { id: string }>(
   row: T,
   eligible: boolean,
-  config: Pick<OcxConfig, "fastRows">,
+  config: Pick<OccxConfig, "fastRows">,
   knownIds?: EffortRowKnownIds,
 ): T[] {
   if (config.fastRows === false || !eligible) return [row];

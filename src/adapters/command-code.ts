@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import { opendir } from "node:fs/promises";
-import type { AdapterEvent, OcxContentPart, OcxMessage, OcxParsedRequest, OcxProviderConfig, OcxTool, OcxUsage } from "../types";
+import type { AdapterEvent, OccxContentPart, OccxMessage, OccxParsedRequest, OccxProviderConfig, OccxTool, OccxUsage } from "../types";
 import { isAllowedToolChoice, namespacedToolName, resolveToolChoiceWireName, toolChoiceToolPredicate } from "../types";
 import type { AdapterFetchContext, AdapterRequest, ProviderAdapter } from "./base";
 import type { TranslatorBudget } from "../lib/translator-budget";
@@ -28,7 +28,7 @@ function canonicalCommandCodeModelId(modelId: string): string {
 }
 
 /** Flatten tool-result content for the text-only wire output, keeping an `[image]` marker per image part in content order. */
-function toolResultText(content: string | OcxContentPart[]): string {
+function toolResultText(content: string | OccxContentPart[]): string {
   if (typeof content === "string") return content;
   return content.map(part => (part.type === "text" ? part.text : "[image]")).join("");
 }
@@ -64,7 +64,7 @@ function wireImagePart(imageUrl: string): Record<string, unknown> {
  * - every declared assistant call that never received a result gets an explicit error
  *   `tool-result`, so the upstream never sees an unpaired call.
  */
-function wireMessages(messages: OcxMessage[]): Array<Record<string, unknown>> {
+function wireMessages(messages: OccxMessage[]): Array<Record<string, unknown>> {
   const out: Array<Record<string, unknown>> = [];
   const pendingCalls: Array<{ id: string; name: string }> = [];
   // Image parts returned by a tool cannot live inside the text-only `tool-result` wire
@@ -82,7 +82,7 @@ function wireMessages(messages: OcxMessage[]): Array<Record<string, unknown>> {
         type: "tool-result",
         toolCallId: call.id,
         toolName: call.name,
-        output: { type: "error-text", value: "[ocx] no tool result was recorded for this tool call; execution status unknown." },
+        output: { type: "error-text", value: "[occx] no tool result was recorded for this tool call; execution status unknown." },
       }] });
     }
     pendingCalls.length = 0;
@@ -155,7 +155,7 @@ function wireMessages(messages: OcxMessage[]): Array<Record<string, unknown>> {
   return out;
 }
 
-function visibleTools(parsed: OcxParsedRequest): OcxTool[] {
+function visibleTools(parsed: OccxParsedRequest): OccxTool[] {
   const choice = parsed.options.toolChoice;
   if (choice === "none") return [];
   const tools = parsed.context.tools ?? [];
@@ -169,7 +169,7 @@ function visibleTools(parsed: OcxParsedRequest): OcxTool[] {
   return tools;
 }
 
-function toolChoiceInstruction(parsed: OcxParsedRequest): string | undefined {
+function toolChoiceInstruction(parsed: OccxParsedRequest): string | undefined {
   const choice = parsed.options.toolChoice;
   if (choice === "required" || (isAllowedToolChoice(choice) && choice.mode === "required")) {
     return "Tool choice is required for this turn. Make at least one call from the advertised tool catalog before answering.";
@@ -183,7 +183,7 @@ function toolChoiceInstruction(parsed: OcxParsedRequest): string | undefined {
   return undefined;
 }
 
-function wireTools(tools: OcxTool[]): Array<Record<string, unknown>> {
+function wireTools(tools: OccxTool[]): Array<Record<string, unknown>> {
   return tools.map(tool => ({
     name: namespacedToolName(tool.namespace, tool.name),
     description: tool.description,
@@ -213,7 +213,7 @@ function projectSlug(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 64) || "workspace";
 }
 
-export function commandCodeSessionId(parsed: OcxParsedRequest): string {
+export function commandCodeSessionId(parsed: OccxParsedRequest): string {
   // Shared prompt-cache cohorts identify a cache population, not one conversation. Using one
   // for session affinity would pin unrelated conversations to the same upstream worker.
   const threadId = parsed._clientThreadId?.trim();
@@ -333,7 +333,7 @@ async function commandCodeConfig(cwd: string | undefined): Promise<Record<string
   };
 }
 
-function usage(value: unknown): OcxUsage | undefined {
+function usage(value: unknown): OccxUsage | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const row = value as Record<string, unknown>;
   const inputTokens = typeof row.inputTokens === "number" ? row.inputTokens : 0;
@@ -481,7 +481,7 @@ async function fetchCommandCode(request: AdapterRequest, ctx: AdapterFetchContex
   }
 }
 
-function supportedCommandCodeEffort(provider: OcxProviderConfig, modelId: string, requested: string | undefined): string | undefined {
+function supportedCommandCodeEffort(provider: OccxProviderConfig, modelId: string, requested: string | undefined): string | undefined {
   if (!requested || requested === "none") return undefined;
   // Compatibility ids (deepseek-v4-flash / glm-5.2) must resolve to their canonical
   // Command Code id before the effort lookup, or legacy requests silently lose the
@@ -505,12 +505,12 @@ function supportedCommandCodeEffort(provider: OcxProviderConfig, modelId: string
   return (supported as readonly string[]).includes(wire) ? wire : undefined;
 }
 
-export function createCommandCodeAdapter(provider: OcxProviderConfig): ProviderAdapter {
-  const executor = (provider as OcxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? globalThis.fetch;
+export function createCommandCodeAdapter(provider: OccxProviderConfig): ProviderAdapter {
+  const executor = (provider as OccxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? globalThis.fetch;
   return {
     name: "command-code",
-    async buildRequest(parsed: OcxParsedRequest): Promise<AdapterRequest> {
-      if (!provider.apiKey) throw new Error("Command Code credential missing — run ocx login command-code");
+    async buildRequest(parsed: OccxParsedRequest): Promise<AdapterRequest> {
+      if (!provider.apiKey) throw new Error("Command Code credential missing — run occx login command-code");
       const cwd = currentWorkingDirectory();
       const tools = visibleTools(parsed);
       const toolNudge = buildNonOpenAIToolCatalogNudgeForTools(tools, parsed.options.toolChoice);

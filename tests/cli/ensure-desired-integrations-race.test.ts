@@ -3,7 +3,7 @@ import {
   reconcileEnsureDesiredIntegrations,
   type EnsureDesiredIntegrationsDeps,
 } from "../../src/cli/ensure-desired-integrations";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { GrokInjectResult } from "../../src/grok/inject";
 import type { Desktop3pRemovalResult } from "../../src/claude/desktop-3p";
 
@@ -12,8 +12,8 @@ function config(overrides: {
   desktop?: boolean;
   hostname?: string;
   fingerprint?: string;
-} = {}): OcxConfig {
-  const clientIntegrations: NonNullable<OcxConfig["clientIntegrations"]> = {};
+} = {}): OccxConfig {
+  const clientIntegrations: NonNullable<OccxConfig["clientIntegrations"]> = {};
   if (overrides.grok === false) clientIntegrations.grok = false;
   if (overrides.desktop === false) clientIntegrations["claude-desktop"] = false;
   return {
@@ -41,9 +41,9 @@ function removedDesktop(): Desktop3pRemovalResult {
   return { ok: true, changed: true, kind: "removed", libraryPath: "/tmp/desktop" };
 }
 
-function harness(initial: OcxConfig) {
+function harness(initial: OccxConfig) {
   let current = initial;
-  const grokActions: Array<{ action: "strip" | "sync"; config: OcxConfig; hostname?: string }> = [];
+  const grokActions: Array<{ action: "strip" | "sync"; config: OccxConfig; hostname?: string }> = [];
   const desktopActions: Array<{ action: "remove" | "skip"; fingerprint: string | null }> = [];
   const deps: EnsureDesiredIntegrationsDeps = {
     loadConfig: () => current,
@@ -69,7 +69,7 @@ function harness(initial: OcxConfig) {
     grokActions,
     desktopActions,
     deps,
-    flip(next: OcxConfig) {
+    flip(next: OccxConfig) {
       current = next;
     },
   };
@@ -81,7 +81,7 @@ function harness(initial: OcxConfig) {
  */
 async function runLiveBranch(
   h: ReturnType<typeof harness>,
-  next: OcxConfig,
+  next: OccxConfig,
   liveHostname = "127.0.0.1",
 ): Promise<void> {
   const stale = h.deps.loadConfig();
@@ -94,7 +94,7 @@ async function runLiveBranch(
   );
 }
 
-async function runSpawnedBranch(h: ReturnType<typeof harness>, next: OcxConfig): Promise<void> {
+async function runSpawnedBranch(h: ReturnType<typeof harness>, next: OccxConfig): Promise<void> {
   const stale = h.deps.loadConfig();
   void stale;
   h.flip(next);

@@ -262,10 +262,10 @@ export async function exchangeConnectPairingGrant(
   if (!response.ok) throw new HubClientError("pairing_refused", "Hub pairing grant was refused", response.status);
   const html = await boundedText(response, MANAGEMENT_BODY_LIMIT);
   const session: ConnectGuiSession = {
-    token: htmlMeta(html, "opencodex-session-token") ?? "",
-    csrfToken: htmlMeta(html, "opencodex-session-csrf") ?? "",
-    browserOrigin: htmlMeta(html, "opencodex-session-origin") ?? "",
-    serverOrigin: htmlMeta(html, "opencodex-session-server-origin") ?? "",
+    token: htmlMeta(html, "openccx-session-token") ?? "",
+    csrfToken: htmlMeta(html, "openccx-session-csrf") ?? "",
+    browserOrigin: htmlMeta(html, "openccx-session-origin") ?? "",
+    serverOrigin: htmlMeta(html, "openccx-session-server-origin") ?? "",
   };
   if (!session.token || !session.csrfToken || session.browserOrigin !== browser || session.serverOrigin !== origin) {
     throw new HubClientError("pairing_invalid", "Hub pairing session response was invalid", response.status);
@@ -279,7 +279,7 @@ function parseIssuedClientKey(value: unknown): IssuedClientKey | null {
   if (
     typeof raw.id !== "string" || !raw.id || raw.id.length > 256
     || typeof raw.name !== "string" || !raw.name || raw.name.length > 80
-    || typeof raw.key !== "string" || !/^ocx_data_[0-9a-f]{40}$/.test(raw.key)
+    || typeof raw.key !== "string" || !/^occx_data_[0-9a-f]{40}$/.test(raw.key)
     || typeof raw.createdAt !== "string" || Number.isNaN(Date.parse(raw.createdAt))
   ) return null;
   return { id: raw.id, name: raw.name, key: raw.key, createdAt: raw.createdAt };
@@ -302,12 +302,12 @@ export async function issueClientKey(
   }
   const headers = new Headers({ "Content-Type": "application/json", Accept: "application/json" });
   if (credential.kind === "admin") {
-    headers.set("x-opencodex-api-key", credentialString(credential.value));
+    headers.set("x-openccx-api-key", credentialString(credential.value));
   } else {
-    headers.set("x-opencodex-api-key", credential.value.token);
+    headers.set("x-openccx-api-key", credential.value.token);
     headers.set("Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-GUI-Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-CSRF-Token", credential.value.csrfToken);
+    headers.set("X-Openccx-GUI-Origin", credential.value.browserOrigin);
+    headers.set("X-Openccx-CSRF-Token", credential.value.csrfToken);
   }
   const response = await fetchBounded(options.fetchImpl ?? fetch, `${origin}/api/keys`, {
     method: "POST",
@@ -337,12 +337,12 @@ export async function revokeClientKey(
     throw new HubClientError("admin_http_refused", "Admin credentials may be sent only over HTTPS");
   }
   const headers = new Headers({ "Content-Type": "application/json", Accept: "application/json" });
-  if (credential.kind === "admin") headers.set("x-opencodex-api-key", credentialString(credential.value));
+  if (credential.kind === "admin") headers.set("x-openccx-api-key", credentialString(credential.value));
   else {
-    headers.set("x-opencodex-api-key", credential.value.token);
+    headers.set("x-openccx-api-key", credential.value.token);
     headers.set("Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-GUI-Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-CSRF-Token", credential.value.csrfToken);
+    headers.set("X-Openccx-GUI-Origin", credential.value.browserOrigin);
+    headers.set("X-Openccx-CSRF-Token", credential.value.csrfToken);
   }
   const response = await fetchBounded(options.fetchImpl ?? fetch, `${origin}/api/keys`, {
     method: "DELETE",
@@ -356,12 +356,12 @@ function rotationManagementHeaders(
   credential: { kind: "admin"; value: Uint8Array } | { kind: "gui-session"; value: ConnectGuiSession },
 ): Headers {
   const headers = new Headers({ "Content-Type": "application/json", Accept: "application/json" });
-  if (credential.kind === "admin") headers.set("x-opencodex-api-key", credentialString(credential.value));
+  if (credential.kind === "admin") headers.set("x-openccx-api-key", credentialString(credential.value));
   else {
-    headers.set("x-opencodex-api-key", credential.value.token);
+    headers.set("x-openccx-api-key", credential.value.token);
     headers.set("Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-GUI-Origin", credential.value.browserOrigin);
-    headers.set("X-OpenCodex-CSRF-Token", credential.value.csrfToken);
+    headers.set("X-Openccx-GUI-Origin", credential.value.browserOrigin);
+    headers.set("X-Openccx-CSRF-Token", credential.value.csrfToken);
   }
   return headers;
 }
@@ -436,7 +436,7 @@ export async function downloadClientCatalog(
   options: { timeoutMs?: number; maxBytes?: number; fetchImpl?: typeof fetch } = {},
 ): Promise<{ kind: "fresh"; body: string; keyId?: string }> {
   const origin = normalizeHubOrigin(serverUrl);
-  const headers = new Headers({ Accept: "application/json", "x-opencodex-api-key": admissionToken });
+  const headers = new Headers({ Accept: "application/json", "x-openccx-api-key": admissionToken });
   // Unconditional by contract: /v1/catalog emits no validator (Phase 1, D2) because its
   // body varies by key identity, so there is nothing to revalidate against and a 304 could
   // only come from a hub that is misconfigured or being impersonated.
@@ -468,7 +468,7 @@ export async function downloadClientCatalog(
   }
   const parsed = parseJson(body, "catalog_invalid");
   validateRemoteCatalog(parsed);
-  const keyId = response.headers.get("x-opencodex-key-id")?.trim() || undefined;
+  const keyId = response.headers.get("x-openccx-key-id")?.trim() || undefined;
   return { kind: "fresh", body, ...(keyId ? { keyId } : {}) };
 }
 
@@ -492,7 +492,7 @@ export async function fetchHubState(
   const origin = normalizeHubOrigin(serverUrl);
   const response = await fetchBounded(options.fetchImpl ?? fetch, `${origin}/v1/hub-state`, {
     method: "GET",
-    headers: new Headers({ Accept: "application/json", "x-opencodex-api-key": admissionToken }),
+    headers: new Headers({ Accept: "application/json", "x-openccx-api-key": admissionToken }),
   }, options.timeoutMs, "headers");
   if (response.status === 404) {
     try { await response.body?.cancel(); } catch { /* best effort */ }
@@ -570,7 +570,7 @@ export async function downloadDesktop3pModels(
       headers: new Headers({
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
-        "x-opencodex-api-key": admissionToken,
+        "x-openccx-api-key": admissionToken,
       }),
     }, options.timeoutMs);
     if (!response.ok || response.status === 304) {

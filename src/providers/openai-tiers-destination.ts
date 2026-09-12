@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { openaiResponsesUrl } from "../adapters/openai-responses-url";
 
 export const OPENAI_CODEX_PROVIDER_ID = "openai";
@@ -19,7 +19,7 @@ function normalizedBaseUrl(value: string): string | undefined {
   }
 }
 
-export function isCanonicalOpenAiForwardProvider(provider: OcxProviderConfig): boolean {
+export function isCanonicalOpenAiForwardProvider(provider: OccxProviderConfig): boolean {
   return provider.adapter === "openai-responses"
     && provider.authMode === "forward"
     && normalizedBaseUrl(provider.baseUrl) === CODEX_FORWARD_BASE_URL;
@@ -38,7 +38,7 @@ const OPENAI_API_RESPONSES_URL = `${OPENAI_API_BASE_URL}/responses`;
  * `baseUrl: "https://api.openai.com"` with `responsesPath: "/other"` official even though that
  * request never reaches the official Responses endpoint.
  */
-function resolvedResponsesEndpoint(provider: OcxProviderConfig): string | undefined {
+function resolvedResponsesEndpoint(provider: OccxProviderConfig): string | undefined {
   try {
     const raw = provider.responsesPath === undefined
       ? openaiResponsesUrl(provider.baseUrl)
@@ -49,7 +49,7 @@ function resolvedResponsesEndpoint(provider: OcxProviderConfig): string | undefi
   }
 }
 
-function isOfficialOpenAiResponsesDestination(provider: OcxProviderConfig): boolean {
+function isOfficialOpenAiResponsesDestination(provider: OccxProviderConfig): boolean {
   // Exact normalized URL keeps lookalike/suffix hosts out of this set: `api.openai.com.evil.test`
   // resolves to its own origin, never to the official one.
   return resolvedResponsesEndpoint(provider) === OPENAI_API_RESPONSES_URL;
@@ -63,7 +63,7 @@ function isOfficialOpenAiResponsesDestination(provider: OcxProviderConfig): bool
  */
 export function supportsNativeResponsesCompactEndpoint(
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): boolean {
   if (isCanonicalOpenAiForwardProvider(provider)) return true;
   return providerName === OPENAI_API_PROVIDER_ID
@@ -79,14 +79,14 @@ export function supportsNativeResponsesCompactEndpoint(
  * receive the caller's credentials (see the forward-header gate in the Responses adapter), so
  * forward auth says nothing about which backend is on the other end.
  */
-export function isOpenAiOperatedResponsesDestination(provider: OcxProviderConfig): boolean {
+export function isOpenAiOperatedResponsesDestination(provider: OccxProviderConfig): boolean {
   if (isCanonicalOpenAiForwardProvider(provider)) return true;
   return provider.adapter === "openai-responses"
     && isOfficialOpenAiResponsesDestination(provider);
 }
 
 /**
- * Whether this destination can decode a native (non-`ocx1:`) compaction blob.
+ * Whether this destination can decode a native (non-`occx1:`) compaction blob.
  *
  * Only the backend that minted a blob can decode it. `authMode: "forward"` alone is not a signal:
  * the adapter forwards caller credentials only to the canonical ChatGPT Codex surface, while a
@@ -96,7 +96,7 @@ export function isOpenAiOperatedResponsesDestination(provider: OcxProviderConfig
  * Keyed by destination rather than provider id: a blob's issuer is the URL that produced it, not the
  * local config key a replay travels under.
  */
-export function destinationDecodesNativeCompactionBlob(provider: OcxProviderConfig): boolean {
+export function destinationDecodesNativeCompactionBlob(provider: OccxProviderConfig): boolean {
   return isOpenAiOperatedResponsesDestination(provider)
     || provider.decodesNativeCompactionBlobs === true;
 }

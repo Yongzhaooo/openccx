@@ -4,7 +4,7 @@ Guidance for AI agents (and humans) working on or reviewing this repository.
 
 ## What this project is
 
-opencodex (`ocx`) is a universal provider proxy for OpenAI Codex and Claude Code:
+openccx (`occx`) is a universal provider proxy for OpenAI Codex and Claude Code:
 one local proxy that lets Codex CLI/App/SDK and Claude Code use many LLM
 providers (Claude, Gemini, Grok, DeepSeek, Ollama, and more). The runtime is
 Bun-native TypeScript with no separate server compile step.
@@ -159,7 +159,7 @@ say where it is; do not add it to `devlog/`, `structure/`, or `docs-site/`.
 Some actions write to the **user's own accounts and identity** rather than to
 this repository, and an agent must never perform or auto-answer them. One example
 is starring the repository on GitHub, which only comes up when
-an agent is *running* opencodex — not when it is working on this codebase.
+an agent is *running* openccx — not when it is working on this codebase.
 
 The rule lives in [`AGENTS_INSTALL.md`](./AGENTS_INSTALL.md), which is the file
 an installing or operating agent reads. It was moved out of here because a
@@ -199,7 +199,7 @@ bun run structure:index # regenerate structure/INDEX.md from structure/manifest.
 bun run build:gui      # Vite GUI build
 ```
 
-`skills/ocx/` is the operating reference for the CLI — what an agent reads to *drive* a running
+`skills/occx/` is the operating reference for the CLI — what an agent reads to *drive* a running
 proxy, as opposed to [`AGENTS_INSTALL.md`](./AGENTS_INSTALL.md) (installing and operating consent)
 or this file (changing the codebase). Its surface map is generated:
 
@@ -208,9 +208,9 @@ bun run skill:surface        # regenerate after adding a capability
 bun run skill:surface:check  # what CI asserts
 ```
 
-`tests/ci-workflows/skill-ocx.test.ts` fails if the committed map drifts from `src/cli/capabilities.ts`, and
+`tests/ci-workflows/skill-occx.test.ts` fails if the committed map drifts from `src/cli/capabilities.ts`, and
 also if the hand-written pages name a command the registry does not have. That second check is not
-hypothetical: it caught a documented `ocx request-history` that never existed.
+hypothetical: it caught a documented `occx request-history` that never existed.
 
 During implementation, use the smallest focused checks that directly cover the
 changed subsystem. Prefer `bun test tests/<domain>/<name>.test.ts` for a known
@@ -245,7 +245,7 @@ bun install && (cd gui && bun install)
 
 Run the proxy with `bun run src/cli/index.ts start --port <port>`. `/healthz`
 reports status, `/` serves the dashboard, and the management API requires the
-admin token the server writes to `$OPENCODEX_HOME/admin-api-token` at startup.
+admin token the server writes to `$OPENCCX_HOME/admin-api-token` at startup.
 
 `bun run test` has five known environment-only failures in such containers.
 They are not regressions; do not re-investigate them:

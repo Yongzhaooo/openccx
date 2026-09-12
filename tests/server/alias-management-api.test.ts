@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 10100, defaultProvider: "alpha", apiKeys: [{ id: "test", name: "test", key: "test-key", createdAt: new Date(0).toISOString() }], providers: {
     alpha: { adapter: "openai-chat", baseUrl: "https://alpha.test/v1", models: ["m1", "m2"] },
     beta: { adapter: "openai-chat", baseUrl: "https://beta.test/v1", models: ["b1"] },
   } };
 }
 
-async function request(c: OcxConfig, path: string, body?: unknown) {
+async function request(c: OccxConfig, path: string, body?: unknown) {
   const req = new Request(`http://localhost${path}`, {
     method: body === undefined ? "GET" : "PUT",
     headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), host: "localhost" },

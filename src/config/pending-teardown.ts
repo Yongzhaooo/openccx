@@ -8,14 +8,14 @@ import { getConfigDir } from "./paths";
 /**
  * Ownership receipt for a deferred shared teardown (#3008).
  *
- * `ocx stop` asks the proxy NOT to restore native Codex and the Grok fence, because a
+ * `occx stop` asks the proxy NOT to restore native Codex and the Grok fence, because a
  * stopped Task Scheduler can respawn the proxy and a survivor must keep its client
  * config. That hands one obligation to the parent — and a bare query flag cannot express
  * an obligation: if the parent dies between the child's exit and its own restore, the
  * shared config keeps pointing at a proxy that is gone, with nothing on disk saying so.
  *
  * The receipt is that missing state. The parent writes it BEFORE asking for a deferred
- * stop and removes it only after its own restore, so a later `ocx stop`/`ocx update` can
+ * stop and removes it only after its own restore, so a later `occx stop`/`occx update` can
  * see the abandoned obligation and finish it once that proxy is proven down.
  *
  * ## Why the nonce is the FILENAME
@@ -171,7 +171,7 @@ export function listPendingTeardowns(): OutstandingTeardown[] {
     // Not an invalid RECEIPT: there is no file here and no nonce to name. Synthesizing one
     // would hand a fabricated identity to the quarantine and clear paths, which could then
     // rename or delete a real receipt that happened to carry it.
-    return [{ state: "unscannable", detail: `the opencodex home could not be listed (${(error as NodeJS.ErrnoException).code ?? "unknown"})` }];
+    return [{ state: "unscannable", detail: `the openccx home could not be listed (${(error as NodeJS.ErrnoException).code ?? "unknown"})` }];
   }
   const out: OutstandingTeardown[] = [];
   for (const name of names) {

@@ -161,13 +161,13 @@ export function admitCodexWrite(deps: AdmissionDeps = {}): CodexAdmission {
   }
 
   const config = diagnostics.config;
-  const opencodexHome = getConfigDir();
-  const integrationRecord = join(opencodexHome, "integrations", "codex.json");
+  const openccxHome = getConfigDir();
+  const integrationRecord = join(openccxHome, "integrations", "codex.json");
   const historyDb = resolveCodexStateDbPath({ codexHome });
 
   const canonicalTargets = {
     codexHome,
-    opencodexHome,
+    openccxHome,
     config: codexConfigPath,
     profile: CODEX_PROFILE_PATH,
     catalog: DEFAULT_CATALOG_PATH,
@@ -179,7 +179,7 @@ export function admitCodexWrite(deps: AdmissionDeps = {}): CodexAdmission {
     // Backups and rollouts are enumerated by their owners, not guessed here.
     catalogBackups: [] as readonly string[],
     historyDb,
-    historyManifest: `${historyDb}.ocx-backup.json`,
+    historyManifest: `${historyDb}.occx-backup.json`,
     historyRollouts: [] as readonly string[],
   } as const;
 

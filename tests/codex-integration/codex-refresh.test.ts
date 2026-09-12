@@ -4,36 +4,36 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { invalidateCodexModelsCache, syncCatalogModels } from "../../src/codex/catalog";
 import { refreshCodexModelCatalog } from "../../src/codex/refresh";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const config = {
   port: 10100,
   defaultProvider: "openai",
   providers: {},
-} as OcxConfig;
+} as OccxConfig;
 
 const tempHomes: string[] = [];
 
-function installTempHomes(): { codexHome: string; opencodexHome: string; restore(): void } {
+function installTempHomes(): { codexHome: string; openccxHome: string; restore(): void } {
   const previousCodexHome = process.env.CODEX_HOME;
-  const previousOpenCodexHome = process.env.OPENCODEX_HOME;
-  const codexHome = mkdtempSync(join(tmpdir(), "ocx-refresh-codex-"));
-  const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-refresh-ocx-"));
-  tempHomes.push(codexHome, opencodexHome);
+  const previousOpenccxHome = process.env.OPENCCX_HOME;
+  const codexHome = mkdtempSync(join(tmpdir(), "occx-refresh-codex-"));
+  const openccxHome = mkdtempSync(join(tmpdir(), "occx-refresh-occx-"));
+  tempHomes.push(codexHome, openccxHome);
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
 
   return {
     codexHome,
-    opencodexHome,
+    openccxHome,
     restore() {
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
-      if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
       removeTreeWithRetry(codexHome);
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     },
   };
 }
@@ -174,8 +174,8 @@ describe("Codex catalog refresh", () => {
   test("invalidateCodexModelsCache reports real cache write success and failure cases", () => {
     const success = installTempHomes();
     try {
-      writeFileSync(join(success.codexHome, "config.toml"), 'model_catalog_json = "opencodex-catalog.json"\n', "utf8");
-      writeFileSync(join(success.codexHome, "opencodex-catalog.json"), nativeCatalogFixture("gpt-5.6-sol"), "utf8");
+      writeFileSync(join(success.codexHome, "config.toml"), 'model_catalog_json = "openccx-catalog.json"\n', "utf8");
+      writeFileSync(join(success.codexHome, "openccx-catalog.json"), nativeCatalogFixture("gpt-5.6-sol"), "utf8");
 
       expect(invalidateCodexModelsCache()).toBe(true);
       const cache = JSON.parse(readFileSync(join(success.codexHome, "models_cache.json"), "utf8"));
@@ -198,8 +198,8 @@ describe("Codex catalog refresh", () => {
 
     const malformedCatalog = installTempHomes();
     try {
-      writeFileSync(join(malformedCatalog.codexHome, "config.toml"), 'model_catalog_json = "opencodex-catalog.json"\n', "utf8");
-      writeFileSync(join(malformedCatalog.codexHome, "opencodex-catalog.json"), "{not-json", "utf8");
+      writeFileSync(join(malformedCatalog.codexHome, "config.toml"), 'model_catalog_json = "openccx-catalog.json"\n', "utf8");
+      writeFileSync(join(malformedCatalog.codexHome, "openccx-catalog.json"), "{not-json", "utf8");
 
       expect(invalidateCodexModelsCache()).toBe(false);
       expect(existsSync(join(malformedCatalog.codexHome, "models_cache.json"))).toBe(false);
@@ -209,8 +209,8 @@ describe("Codex catalog refresh", () => {
 
     const unwritableCache = installTempHomes();
     try {
-      writeFileSync(join(unwritableCache.codexHome, "config.toml"), 'model_catalog_json = "opencodex-catalog.json"\n', "utf8");
-      writeFileSync(join(unwritableCache.codexHome, "opencodex-catalog.json"), nativeCatalogFixture(), "utf8");
+      writeFileSync(join(unwritableCache.codexHome, "config.toml"), 'model_catalog_json = "openccx-catalog.json"\n', "utf8");
+      writeFileSync(join(unwritableCache.codexHome, "openccx-catalog.json"), nativeCatalogFixture(), "utf8");
       mkdirSync(join(unwritableCache.codexHome, "models_cache.json"));
 
       expect(invalidateCodexModelsCache()).toBe(false);

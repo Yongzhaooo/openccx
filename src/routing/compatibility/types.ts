@@ -1,5 +1,5 @@
 import type { CompatibilityVerdict, EvidenceLayer } from "../../lab/constants";
-import type { OcxRoutingUnknownEvidenceMode } from "../../types";
+import type { OccxRoutingUnknownEvidenceMode } from "../../types";
 
 export type RoutingCompatibilityEvidenceLayer = Extract<
   EvidenceLayer,
@@ -15,8 +15,8 @@ export interface NormalizedCompatibilityPolicy {
   requiredSuites: CompatibilitySuiteRequirement[];
   minStatus?: "PROBED" | "VERIFIED";
   maxEvidenceAgeMs?: number;
-  unknownEvidence: OcxRoutingUnknownEvidenceMode;
-  degradedEvidence: OcxRoutingUnknownEvidenceMode;
+  unknownEvidence: OccxRoutingUnknownEvidenceMode;
+  degradedEvidence: OccxRoutingUnknownEvidenceMode;
 }
 
 export interface ObservedSuiteVerdict {
@@ -49,8 +49,8 @@ export interface CompatibilityEvaluationOutcome {
     verdict?: CompatibilityVerdict;
     minStatus?: "PROBED" | "VERIFIED";
     fresh?: boolean;
-    unknownPolicy?: OcxRoutingUnknownEvidenceMode;
-    degradedPolicy?: OcxRoutingUnknownEvidenceMode;
+    unknownPolicy?: OccxRoutingUnknownEvidenceMode;
+    degradedPolicy?: OccxRoutingUnknownEvidenceMode;
     outcome: "satisfied" | "penalized" | "excluded" | "unknown";
     reason?: string;
   }>;

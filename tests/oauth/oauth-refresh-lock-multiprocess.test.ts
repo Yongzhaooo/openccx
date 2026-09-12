@@ -19,7 +19,7 @@ import { INTERNAL_DEADLINE_MS, SPAWN_BUDGET_MS } from "../helpers/test-budget";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 const origHome = process.env.HOME;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 const origKimiRefresh = OAUTH_PROVIDERS.kimi!.refresh;
 let tmp: string;
 
@@ -30,15 +30,15 @@ beforeEach(() => {
   tmp = join(tmpdir(), `oauth-lock-mp-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(tmp, { recursive: true });
   process.env.HOME = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
 });
 
 afterEach(() => {
   OAUTH_PROVIDERS.kimi!.refresh = origKimiRefresh;
   if (origHome === undefined) delete process.env.HOME;
   else process.env.HOME = origHome;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = origOccxHome;
   removeTreeWithRetry(tmp);
 });
 
@@ -84,7 +84,7 @@ describe("slow multi-process OAuth refresh lock", () => {
       env: {
         ...process.env,
         HOME: tmp,
-        OPENCODEX_HOME: join(tmp, "ocx"),
+        OPENCCX_HOME: join(tmp, "occx"),
         ACCOUNT_ID: accountId,
         READY_PATH: readyPath,
         HOLD_MS: String(holdMs),

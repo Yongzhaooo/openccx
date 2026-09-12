@@ -11,7 +11,7 @@
  * same discipline src/adapters/coding-agent/protocol.ts follows for the
  * stream-json CLIs.
  */
-import type { AdapterEvent, OcxParsedRequest, OcxToolCall, OcxUsage } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxToolCall, OccxUsage } from "../../types";
 
 /** Hard ceiling on a single buffered stdout line. */
 export const MAX_ACP_LINE_BYTES = 8 * 1024 * 1024;
@@ -36,7 +36,7 @@ export function initializeFrame(clientVersion: string): Record<string, unknown> 
     jsonrpc: "2.0",
     id: ACP_INITIALIZE_ID,
     method: "initialize",
-    params: { protocolVersion: 1, clientInfo: { name: "opencodex", version: clientVersion }, capabilities: {} },
+    params: { protocolVersion: 1, clientInfo: { name: "openccx", version: clientVersion }, capabilities: {} },
   };
 }
 
@@ -90,13 +90,13 @@ export function permissionResponseFrame(
 }
 
 /**
- * Flatten an OcxContext into the single prompt string one ACP session takes.
+ * Flatten an OccxContext into the single prompt string one ACP session takes.
  *
  * ACP has no multi-message history on session/prompt, so the conversation is
  * projected into labelled blocks. Tool calls and results are rendered rather
  * than dropped, because a turn that omits them loses the thread of a tool loop.
  */
-export function buildAcpPrompt(parsed: OcxParsedRequest): string {
+export function buildAcpPrompt(parsed: OccxParsedRequest): string {
   const blocks: string[] = [];
   const system = parsed.context.systemPrompt?.filter((line) => line.trim().length > 0).join("\n");
   if (system) blocks.push(fence("System", system));
@@ -112,7 +112,7 @@ export function buildAcpPrompt(parsed: OcxParsedRequest): string {
       : parts.map((p) => (p.type === "text" ? p.text : "")).filter(Boolean).join("\n");
     if (message.role === "assistant" && Array.isArray(parts)) {
       const calls = parts
-        .filter((p): p is OcxToolCall => p.type === "toolCall")
+        .filter((p): p is OccxToolCall => p.type === "toolCall")
         .map((c) => `[call ${c.name} id=${c.id}]\n${JSON.stringify(c.arguments ?? {})}`)
         .join("\n\n");
       if (calls) text = text ? `${text}\n\n${calls}` : calls;
@@ -130,7 +130,7 @@ export function buildAcpPrompt(parsed: OcxParsedRequest): string {
     : joined;
 }
 
-export type AcpTurnOutcome = { stopReason?: string; usage?: OcxUsage };
+export type AcpTurnOutcome = { stopReason?: string; usage?: OccxUsage };
 
 /** ACP stop reasons that mean the turn ended normally. */
 const NATURAL_STOP = new Set(["end_turn", "stop", "completed"]);
@@ -141,7 +141,7 @@ export function mapAcpStopReason(reason: unknown): string | undefined {
   return reason;
 }
 
-export function mapAcpUsage(raw: unknown): OcxUsage | undefined {
+export function mapAcpUsage(raw: unknown): OccxUsage | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const u = raw as Record<string, unknown>;
   const input = typeof u.inputTokens === "number" ? u.inputTokens : 0;

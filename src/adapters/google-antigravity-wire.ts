@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { OcxContentPart, OcxParsedRequest } from "../types";
+import type { OccxContentPart, OccxParsedRequest } from "../types";
 import { antigravityUserAgent } from "./client-fingerprint";
 
 /**
@@ -12,7 +12,7 @@ import { antigravityUserAgent } from "./client-fingerprint";
 export const ANTIGRAVITY_REQUEST_UA = antigravityUserAgent();
 
 /**
- * Whether a stored `OcxToolCall.thoughtSignature` is a REAL upstream Gemini signature versus a
+ * Whether a stored `OccxToolCall.thoughtSignature` is a REAL upstream Gemini signature versus a
  * foreign id that must not be forwarded to Gemini/Antigravity.
  *
  * Foreign ids that have 400'd Antigravity (`TYPE_BYTES` / Base64 decoding failed) include:
@@ -41,11 +41,11 @@ export function isLikelyRealThoughtSignature(sig: string | undefined): boolean {
   return /^[A-Za-z0-9+/_=-]+$/.test(sig);
 }
 
-function firstUserText(parsed: OcxParsedRequest): string | undefined {
+function firstUserText(parsed: OccxParsedRequest): string | undefined {
   for (const msg of parsed.context.messages) {
     if (msg.role !== "user") continue;
     if (typeof msg.content === "string") return msg.content;
-    const first = (msg.content as OcxContentPart[]).find(p => p.type === "text" && typeof p.text === "string");
+    const first = (msg.content as OccxContentPart[]).find(p => p.type === "text" && typeof p.text === "string");
     if (first && first.type === "text") return first.text;
   }
   return undefined;
@@ -56,7 +56,7 @@ function firstUserText(parsed: OcxParsedRequest): string | undefined {
  * CLIProxyAPI `generateStableSessionID`: sha256(firstUserText) → BigEndian uint64 masked with
  * 0x7FFFFFFFFFFFFFFF, prefixed with "-". Falls back to a random "-<digits>" id when there is no text.
  */
-export function antigravitySessionId(parsed: OcxParsedRequest): string {
+export function antigravitySessionId(parsed: OccxParsedRequest): string {
   // The id must be IDENTICAL on turn N and turn N+1: the replay cache observes thought signatures
   // on turn N's response and re-injects them on turn N+1's request, so a changing id loses the
   // association entirely. (A *shared* id does not — signatures are keyed on functionCall identity,
@@ -96,7 +96,7 @@ export function antigravitySessionId(parsed: OcxParsedRequest): string {
  * functionCall identity (name+args), so a shared id does not misattribute them. Instability, not
  * collision, is the failure mode this function exists to prevent.
  */
-function clientThreadAnchor(parsed: OcxParsedRequest): string | undefined {
+function clientThreadAnchor(parsed: OccxParsedRequest): string | undefined {
   const threadId = parsed._clientThreadId?.trim();
   return threadId ? `codex-thread:${threadId}` : undefined;
 }

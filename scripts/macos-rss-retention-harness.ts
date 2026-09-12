@@ -49,7 +49,7 @@ const MiB = 1024 ** 2;
  * mistaken for, or compared against, a real measurement. The pre-registered
  * measurement constants below are untouched in a real run.
  */
-const SMOKE = process.env.OCX_RSS_HARNESS_SMOKE === "1";
+const SMOKE = process.env.OCCX_RSS_HARNESS_SMOKE === "1";
 
 const WARM = SMOKE ? 2_000 : 60_000;
 const OBSERVE = SMOKE ? 6_000 : 600_000;
@@ -466,7 +466,7 @@ async function oneTurn(
     headers: {
       "content-type": "application/json",
       // Responses admission intentionally does not accept a caller Bearer token.
-      "x-opencodex-api-key": "fixture-admission",
+      "x-openccx-api-key": "fixture-admission",
     },
     body: JSON.stringify({
       model: "fixture/fixture-model",
@@ -609,7 +609,7 @@ async function startChild(
   const real = condition === "real-proxy-legacy-tee";
   const args = real
     ? [
-      create(dir, join(dir, "opencodex"), true),
+      create(dir, join(dir, "openccx"), true),
       create(dir, join(dir, "codex"), true),
       url,
       join(dir, "child.jsonl"),

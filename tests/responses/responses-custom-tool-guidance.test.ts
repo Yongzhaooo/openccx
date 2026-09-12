@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { parseRequest } from "../../src/responses/parser";
-import type { OcxTool } from "../../src/types";
+import type { OccxTool } from "../../src/types";
 
-function inputDescription(tool: OcxTool | undefined): string | undefined {
+function inputDescription(tool: OccxTool | undefined): string | undefined {
   const properties = tool?.parameters.properties;
   if (properties === null || typeof properties !== "object" || Array.isArray(properties)) return undefined;
   const input = (properties as Record<string, unknown>).input;

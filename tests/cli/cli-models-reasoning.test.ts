@@ -8,11 +8,11 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
  * The API validates reasoning ladders (9 tests in catalog-input-modality-enum.test.ts),
- * but the CLI paths carry their own parsing and validation copies: `ocx models add`
- * validates offline before writing config.json, and `ocx models edit` maps flags onto
+ * but the CLI paths carry their own parsing and validation copies: `occx models add`
+ * validates offline before writing config.json, and `occx models edit` maps flags onto
  * the PUT body ("-" -> null). These tests pin that mapping so CLI and API cannot drift.
  */
-describe("ocx models add --reasoning-efforts parsing", () => {
+describe("occx models add --reasoning-efforts parsing", () => {
   test("a valid ladder is canonicalized into Codex order and deduped", () => {
     expect(parseReasoningArgs("max,low,high,low", undefined)).toEqual({
       reasoningEfforts: ["low", "high", "max"],
@@ -64,7 +64,7 @@ describe("ocx models add --reasoning-efforts parsing", () => {
   });
 });
 
-describe("ocx models edit reasoning flag mapping onto the PUT body", () => {
+describe("occx models edit reasoning flag mapping onto the PUT body", () => {
   async function editWith(patchArgs: string[]): Promise<Record<string, unknown>> {
     let capturedBody: Record<string, unknown> | null = null;
     const fetchImpl = async (url: string, init?: RequestInit) => {
@@ -121,12 +121,12 @@ describe("ocx models edit reasoning flag mapping onto the PUT body", () => {
   });
 });
 
-describe("ocx models add persists reasoning metadata into config.json", () => {
-  const home = mkdtempSync(join(tmpdir(), "ocx-cli-test-"));
-  const previousHome = process.env.OPENCODEX_HOME;
+describe("occx models add persists reasoning metadata into config.json", () => {
+  const home = mkdtempSync(join(tmpdir(), "occx-cli-test-"));
+  const previousHome = process.env.OPENCCX_HOME;
 
   beforeAll(() => {
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     writeFileSync(join(home, "config.json"), JSON.stringify({
       providers: {
         deepseek: { adapter: "openai-chat", baseUrl: "https://example.invalid/v1", authMode: "key" },
@@ -135,8 +135,8 @@ describe("ocx models add persists reasoning metadata into config.json", () => {
   });
 
   afterAll(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(home);
   });
 

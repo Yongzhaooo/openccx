@@ -74,7 +74,7 @@ function isProcessAlive(pid: number): boolean {
 }
 
 function root(): string {
-  const path = mkdtempSync(join(tmpdir(), "ocx-prompt-probe-"));
+  const path = mkdtempSync(join(tmpdir(), "occx-prompt-probe-"));
   lifecycleRoots.push(path);
   return path;
 }

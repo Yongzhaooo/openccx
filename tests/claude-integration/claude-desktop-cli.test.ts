@@ -13,7 +13,7 @@ import { readClientConnectionState, clearClientConnection } from "../../src/clie
 import { HubClientError } from "../../src/client/hub-client";
 import { claudeDesktopIntegrationEnabledNow, setIntegrationEnabled } from "../../src/codex/desired-state";
 import { serviceApiTokenBackupPath, serviceApiTokenFilePath, writeServiceApiTokenFile } from "../../src/lib/service-secrets";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let dir = "";
@@ -28,27 +28,27 @@ const handleClaudeDesktopCommand = (args: string[], deps: ApplyProfileDeps = {})
   handleClaudeDesktopCommandProduction(args, { lifecycleLockDeps: fixtureLock(), ...deps });
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  previousDesktopDir = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  dir = mkdtempSync(join(tmpdir(), "ocx-desktop-cli-"));
-  process.env.OPENCODEX_HOME = join(dir, "ocx");
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(dir, "desktop");
+  previousHome = process.env.OPENCCX_HOME;
+  previousDesktopDir = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  dir = mkdtempSync(join(tmpdir(), "occx-desktop-cli-"));
+  process.env.OPENCCX_HOME = join(dir, "occx");
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(dir, "desktop");
   saveConfig({
     port: 10100,
     defaultProvider: "mock",
     providers: {
       mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, models: ["test-model"] },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 });
 
 afterEach(() => {
   restoreLocalBuild?.();
   restoreLocalBuild = undefined;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDesktopDir === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopDir;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDesktopDir === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopDir;
   removeTreeWithRetry(dir);
 });
 
@@ -58,12 +58,12 @@ const remoteModels = [{
 }];
 
 function connectDesktopFixture(blockLocalBuild = true): void {
-  const { fingerprint } = writeServiceApiTokenFile("ocx_desktop_fixture_token");
+  const { fingerprint } = writeServiceApiTokenFile("occx_desktop_fixture_token");
   const config = loadConfig();
   config.runtimeRole = "client";
   config.client = {
     serverUrl: "https://hub.example.test", managementUrl: "https://hub.example.test", managementTransport: "direct",
-    selectedClients: ["codex"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN", apiKeyId: "desktop-key",
+    selectedClients: ["codex"], tokenEnv: "OPENCCX_API_AUTH_TOKEN", apiKeyId: "desktop-key",
     tokenFingerprint: fingerprint, protocolVersion: 1, connectedAt: "2026-09-06T00:00:00.000Z",
   };
   saveConfig(config);
@@ -76,7 +76,7 @@ function connectDesktopFixture(blockLocalBuild = true): void {
   }
 }
 
-function pendingRotation(): NonNullable<NonNullable<OcxConfig["client"]>["pendingOperation"]> {
+function pendingRotation(): NonNullable<NonNullable<OccxConfig["client"]>["pendingOperation"]> {
   return { kind: "rotate", rotationId: "rotation-fixture", newKeyIssuedAt: "2026-09-06T01:00:00.000Z", oldKeyBackupPath: serviceApiTokenBackupPath() };
 }
 
@@ -102,12 +102,12 @@ test.each([
       downloadDesktop3pModelsImpl: async (url, token) => {
         downloads++;
         expect(url).toBe("https://hub.example.test");
-        expect(token).toBe("ocx_desktop_fixture_token");
+        expect(token).toBe("occx_desktop_fixture_token");
         expect(claudeDesktopIntegrationEnabledNow()).toBe(true);
         return { version: 1, models: remoteModels };
       },
       applyRemoteDesktopStoreImpl: (held, options) => {
-        expect(options).toEqual({ baseUrl: "https://hub.example.test", apiKey: "ocx_desktop_fixture_token", mode, models: remoteModels,
+        expect(options).toEqual({ baseUrl: "https://hub.example.test", apiKey: "occx_desktop_fixture_token", mode, models: remoteModels,
           owner: { serverUrl: "https://hub.example.test", apiKeyId: "desktop-key", connectedAt: "2026-09-06T00:00:00.000Z" },
           expectedTokenFingerprint: loadConfig().client!.tokenFingerprint });
         const result = applyRemoteDesktopStore(held, options);
@@ -121,7 +121,7 @@ test.each([
     expect(downloads).toBe(1);
     const written = JSON.parse(readFileSync(writtenPath, "utf8"));
     expect(written.inferenceGatewayBaseUrl).toBe("https://hub.example.test");
-    expect(written.inferenceGatewayApiKey).toBe("ocx_desktop_fixture_token");
+    expect(written.inferenceGatewayApiKey).toBe("occx_desktop_fixture_token");
     expect(written.inferenceModels).toEqual(mode === "discovery" ? undefined : remoteModels);
     expect(loadConfig().claudeCode?.desktopProfile).toBeUndefined();
     expect(warn).toHaveBeenCalled();
@@ -189,7 +189,7 @@ test.each(["empty", "failed"])("connected CLI handles %s snapshot without claimi
     expect(output).toContain(outcome === "empty" ? "desktop_unavailable" : "desktop_snapshot_unsupported");
     expect(output).not.toContain("프로필은 저장");
     expect(output).not.toContain("remote-marker");
-    expect(output).not.toContain("ocx_desktop_fixture_token");
+    expect(output).not.toContain("occx_desktop_fixture_token");
   } finally { error.mockRestore(); }
 });
 
@@ -316,7 +316,7 @@ test.each([
       saveConfig(current);
     } else {
       // Construct an interrupted disconnect after its own token/state cleanup using
-      // only this fixture's OCX files. The awaited local edit must not resurrect client.
+      // only this fixture's OCCX files. The awaited local edit must not resurrect client.
       const current = loadConfig().client!;
       const owner = { serverUrl: current.serverUrl, apiKeyId: current.apiKeyId, connectedAt: current.connectedAt };
       lifecycleLock.withClientLifecycleSync(held => {
@@ -449,7 +449,7 @@ test("desktopNativeModels:false omits native/* from show and exported profile", 
       mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, models: ["test-model"] },
     },
     claudeCode: { desktopNativeModels: false },
-  } as OcxConfig);
+  } as OccxConfig);
   const log = spyOn(console, "log").mockImplementation(() => {});
   try {
     expect(await handleClaudeDesktopCommand(["show", "--json"])).toBe(0);
@@ -515,7 +515,7 @@ test("no-arg and legacy mode flags apply Desktop config", async () => {
     const noProxy = { findLiveProxyImpl: async () => null };
     expect(await handleClaudeDesktopCommand([], noProxy)).toBe(0);
     expect(await handleClaudeDesktopCommand(["--static"], noProxy)).toBe(0);
-    expect(readFileSync(join(process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR!, "_meta.json"), "utf8")).toContain("opencodex");
+    expect(readFileSync(join(process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR!, "_meta.json"), "utf8")).toContain("openccx");
     expect(error).not.toHaveBeenCalled();
   } finally {
     log.mockRestore();

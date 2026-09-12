@@ -7,7 +7,7 @@ import {
   collectProjectCodexConfigWarnings,
   discoverProjectCodexConfigPaths,
   explainProjectConfigBypass,
-  isGlobalOpencodexRoutingActive,
+  isGlobalOpenccxRoutingActive,
   invalidateProjectConfigDiagnosticsCache,
   parseTomlDocument,
   parseTrustedProjectPathsFromCodexConfig,
@@ -72,11 +72,11 @@ let previousHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  testDir = join(tmpdir(), `ocx-proj-warn-${Date.now()}`);
+  testDir = join(tmpdir(), `occx-proj-warn-${Date.now()}`);
   mkdirSync(testDir, { recursive: true });
-  process.env.OPENCODEX_HOME = testDir;
+  process.env.OPENCCX_HOME = testDir;
   // Isolate from the real user config — resolveCodexConfigPath reads CODEX_HOME.
   process.env.CODEX_HOME = join(testDir, "codex-home");
   mkdirSync(process.env.CODEX_HOME, { recursive: true });
@@ -84,8 +84,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   invalidateProjectConfigDiagnosticsCache();
@@ -96,28 +96,28 @@ function writeGlobalRoutingConfig(extra = ""): void {
   const codexHome = process.env.CODEX_HOME!;
   mkdirSync(codexHome, { recursive: true });
   writeFileSync(join(codexHome, "config.toml"), `
-model_provider = "opencodex"
+model_provider = "openccx"
 ${extra}
 `);
 }
 
-describe("isGlobalOpencodexRoutingActive", () => {
+describe("isGlobalOpenccxRoutingActive", () => {
   test("detects injected openai_base_url marker", () => {
     const text = `
-# Auto-injected by opencodex
+# Auto-injected by openccx
 openai_base_url = "http://127.0.0.1:10100/v1"
-model_provider = "opencodex"
+model_provider = "openccx"
 `;
-    expect(isGlobalOpencodexRoutingActive("unused", text)).toBe(true);
+    expect(isGlobalOpenccxRoutingActive("unused", text)).toBe(true);
   });
 
-  test("does not treat dormant model_providers.opencodex table as active routing", () => {
+  test("does not treat dormant model_providers.openccx table as active routing", () => {
     const text = `
-[model_providers.opencodex]
-name = "opencodex"
+[model_providers.openccx]
+name = "openccx"
 base_url = "http://127.0.0.1:10100/v1"
 `;
-    expect(isGlobalOpencodexRoutingActive("unused", text)).toBe(false);
+    expect(isGlobalOpenccxRoutingActive("unused", text)).toBe(false);
   });
 });
 
@@ -276,7 +276,7 @@ describe("collectProjectCodexConfigWarnings", () => {
     mkdirSync(join(userHome, ".codex"), { recursive: true });
     mkdirSync(join(projectDir, ".codex"), { recursive: true });
     mkdirSync(nestedCwd, { recursive: true });
-    writeFileSync(codexConfigPath, `model_provider = "opencodex-retry"`);
+    writeFileSync(codexConfigPath, `model_provider = "openccx-retry"`);
     writeFileSync(projectConfigPath, `model_provider = "anthropic"`);
 
     // Bound the walk to the fixture. On Windows the OS temp directory lives under
@@ -297,7 +297,7 @@ describe("collectProjectCodexConfigWarnings", () => {
     const projectDir = join(userHome, "work", "project");
     mkdirSync(join(userHome, ".codex"), { recursive: true });
     mkdirSync(projectDir, { recursive: true });
-    writeFileSync(candidatePath, `model_provider = "opencodex-retry"`);
+    writeFileSync(candidatePath, `model_provider = "openccx-retry"`);
     symlinkSync(candidatePath, globalAlias);
 
     expect(discoverProjectCodexConfigPaths({ cwd: projectDir, codexConfigPath: globalAlias }))
@@ -362,10 +362,10 @@ describe("explainProjectConfigBypass", () => {
     expect(explainProjectConfigBypass(warningFor("opencode_go"))).toContain("uses OpenCode Go ");
   });
 
-  test("does not mislabel OpenCodex-prefixed provider ids as OpenCode", () => {
-    expect(explainProjectConfigBypass(warningFor("opencodex"))).toContain("uses OpenCodex ");
-    expect(explainProjectConfigBypass(warningFor("opencodex-retry")))
-      .toContain("uses opencodex-retry ");
+  test("does not mislabel Openccx-prefixed provider ids as OpenCode", () => {
+    expect(explainProjectConfigBypass(warningFor("openccx"))).toContain("uses Openccx ");
+    expect(explainProjectConfigBypass(warningFor("openccx-retry")))
+      .toContain("uses openccx-retry ");
     expect(explainProjectConfigBypass(warningFor("opencodeish"))).toContain("uses opencodeish ");
   });
 });

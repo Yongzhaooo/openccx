@@ -16,7 +16,7 @@ const roots: string[] = [];
  * once and take a visible skip rather than failing in the fixture.
  */
 const canSymlink = (() => {
-  const probeDir = mkdtempSync(join(tmpdir(), "ocx-cache-preflight-symlink-probe-"));
+  const probeDir = mkdtempSync(join(tmpdir(), "occx-cache-preflight-symlink-probe-"));
   try {
     symlinkSync(join(probeDir, "probe-target"), join(probeDir, "probe-link"));
     return true;
@@ -43,7 +43,7 @@ const canSymlink = (() => {
 const WINDOWS = process.platform === "win32";
 
 function tempRoot(name: string): string {
-  const root = join(tmpdir(), `ocx-cache-preflight-${name}-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const root = join(tmpdir(), `occx-cache-preflight-${name}-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(root, { recursive: true });
   roots.push(root);
   return root;

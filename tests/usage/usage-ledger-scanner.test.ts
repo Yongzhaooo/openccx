@@ -34,14 +34,14 @@ function line(requestId: string, overrides: Partial<PersistedUsageEntry> = {}): 
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-usage-ledger-scan-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-usage-ledger-scan-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) rmSync(testDir, { recursive: true, force: true });
 });
 

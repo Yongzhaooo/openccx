@@ -12,7 +12,7 @@ import { suiteManifestDigestForCase } from "../conformance/suite-manifest";
 import { isScenarioApplicable } from "../projection/verification";
 import { queryLatestLabObservation } from "../query/latest-observation";
 import { LabProjectionUnavailableError } from "../query/errors";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { resolvePolicyCompatibilitySubjects } from "../../routing/compatibility/subject";
 import type {
   LabAutomationLayer,
@@ -38,7 +38,7 @@ export interface PlannerInput {
   routes: LabAutomationRoutesV1;
   state: LabAutomationStateV1;
   now: number;
-  config?: OcxConfig;
+  config?: OccxConfig;
   configDir?: string;
 }
 
@@ -270,7 +270,7 @@ export interface ManualLabRunInput {
   scenarioId: string;
   providerName?: string;
   modelId?: string;
-  config?: OcxConfig;
+  config?: OccxConfig;
   configDir?: string;
 }
 

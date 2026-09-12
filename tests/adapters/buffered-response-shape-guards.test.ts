@@ -5,7 +5,7 @@ import { createGoogleAdapter } from "../../src/adapters/google";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 import { createTranslatorBudget, translatorObservedBufferSnapshot } from "../../src/lib/translator-budget";
-import type { AdapterEvent, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../src/types";
 
 /**
  * `JSON.parse("null")` returns `null` without throwing, so a `try/catch` around a body parse
@@ -32,10 +32,10 @@ const NON_RECORD_BODIES = ["null", "42", '"text"', "true", "[]", "[null]"] as co
 // The syntactically-invalid control, correct before this change on every adapter here.
 const INVALID_JSON_BODY = "{not json}";
 
-const googleProvider = { adapter: "google", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OcxProviderConfig;
-const anthropicProvider = { adapter: "anthropic", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OcxProviderConfig;
-const commandCodeProvider: OcxProviderConfig = { adapter: "command-code", baseUrl: "https://api.command.example", apiKey: "k" };
-const openAIChatProvider = { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OcxProviderConfig;
+const googleProvider = { adapter: "google", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OccxProviderConfig;
+const anthropicProvider = { adapter: "anthropic", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OccxProviderConfig;
+const commandCodeProvider: OccxProviderConfig = { adapter: "command-code", baseUrl: "https://api.command.example", apiKey: "k" };
+const openAIChatProvider = { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "k", authMode: "key" } as OccxProviderConfig;
 
 function jsonResponse(body: string): Response {
   return new Response(body, { status: 200, headers: { "content-type": "application/json" } });
@@ -314,7 +314,7 @@ describe("a guard that fails closed still releases the response-body reservation
   // retained on the way out.
   const PADDING = "x".repeat(50_000);
 
-  const cases: [string, OcxProviderConfig, (p: OcxProviderConfig) => { parseResponse?: unknown }, string][] = [
+  const cases: [string, OccxProviderConfig, (p: OccxProviderConfig) => { parseResponse?: unknown }, string][] = [
     ["anthropic content non-array", anthropicProvider, createAnthropicAdapter as never,
       `{"content":"${PADDING}","stop_reason":"end_turn"}`],
     ["anthropic block non-record", anthropicProvider, createAnthropicAdapter as never,
@@ -326,7 +326,7 @@ describe("a guard that fails closed still releases the response-body reservation
   test.each(cases)("%s does not strand the body", async (_label, provider, make, body) => {
     const budget = createTranslatorBudget();
     const before = translatorObservedBufferSnapshot().currentBytes;
-    const adapter = (make as (p: OcxProviderConfig) => {
+    const adapter = (make as (p: OccxProviderConfig) => {
       parseResponse: (r: Response, b: unknown) => Promise<AdapterEvent[]>;
     })(provider);
     const events = await adapter.parseResponse(jsonResponse(body), budget);

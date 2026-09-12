@@ -4,33 +4,33 @@ import { join } from "node:path";
 import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { checkAccountIdCollision } from "../../src/codex/auth-api";
 import { saveConfig } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-auth-collision-test");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_CODEX_HOME, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   process.env.CODEX_HOME = TEST_CODEX_HOME;
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
 });
 
-function seedAccount(id: string, email: string, chatgptAccountId: string, plan?: string): OcxConfig {
-  const config: OcxConfig = {
+function seedAccount(id: string, email: string, chatgptAccountId: string, plan?: string): OccxConfig {
+  const config: OccxConfig = {
     port: 10100,
     providers: {},
     defaultProvider: "openai",
@@ -53,7 +53,7 @@ describe("codex auth account collision", () => {
       providers: {},
       defaultProvider: "openai",
       codexAccounts: [],
-    } as OcxConfig);
+    } as OccxConfig);
 
     expect(checkAccountIdCollision(
       "malformed-plan-account",
@@ -110,7 +110,7 @@ describe("codex auth account collision", () => {
       providers: {},
       defaultProvider: "openai",
       codexAccounts: [],
-    } as OcxConfig);
+    } as OccxConfig);
 
     const result = checkAccountIdCollision("main-chatgpt-account", "main@example.test", "business");
     expect(result).toEqual({ collision: false });

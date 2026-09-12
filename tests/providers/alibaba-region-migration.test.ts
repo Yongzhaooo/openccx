@@ -5,23 +5,23 @@ import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../src/config";
 import { projectAlibabaRegionMigration } from "../../src/providers/alibaba-region-migration";
 import { routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const INTL_URL = "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1";
 
 /** A config exhibiting the #457 mismatch: Beijing id, international endpoint. */
-function migratableConfig(): OcxConfig {
+function migratableConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "alibaba-token-plan",
     providers: {
       "alibaba-token-plan": { adapter: "openai-chat", apiKey: "sk-intl-key", baseUrl: INTL_URL },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-function namespaceCollidingConfig(): OcxConfig {
+function namespaceCollidingConfig(): OccxConfig {
   return {
     ...migratableConfig(),
     codexAccountNamespaces: { "alibaba-token-plan-intl": "pool-a" },
@@ -30,7 +30,7 @@ function namespaceCollidingConfig(): OcxConfig {
 
 test("moves a Beijing entry holding an international endpoint", () => {
   const config = migratableConfig();
-  // Beijing catalog fields, as `ocx provider add` would have persisted them.
+  // Beijing catalog fields, as `occx provider add` would have persisted them.
   Object.assign(config.providers["alibaba-token-plan"]!, {
     models: ["qwen3.8-max", "qwen3.7-max"],
     defaultModel: "qwen3.8-max",
@@ -60,17 +60,17 @@ test("the migrated config survives a reload", () => {
   const projection = projectAlibabaRegionMigration(config);
   expect(projection.changed).toBe(true);
 
-  const home = mkdtempSync(join(tmpdir(), "ocx-alibaba-"));
-  const prev = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  const home = mkdtempSync(join(tmpdir(), "occx-alibaba-"));
+  const prev = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = home;
   try {
     saveConfig(projection.config);
     const reloaded = loadConfig();
     expect(reloaded.providers["alibaba-token-plan-intl"]?.apiKey).toBe("sk-intl-key");
     expect(reloaded.combos?.fast?.targets[0]?.provider).toBe("alibaba-token-plan-intl");
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prev;
+    if (prev === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prev;
     removeTreeWithRetry(home);
   }
 });
@@ -81,7 +81,7 @@ test("a genuine Beijing config is untouched", () => {
       port: 10100,
       defaultProvider: "alibaba-token-plan",
       providers: { "alibaba-token-plan": { adapter: "openai-chat", apiKey: "sk-cn", ...(baseUrl ? { baseUrl } : {}) } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const before = structuredClone(config);
     const projection = projectAlibabaRegionMigration(config);
     expect(projection.changed).toBe(false);
@@ -131,9 +131,9 @@ test("a namespace-blocked migration remains valid across reload", () => {
   const projection = projectAlibabaRegionMigration(namespaceCollidingConfig());
   expect(projection.changed).toBe(false);
 
-  const home = mkdtempSync(join(tmpdir(), "ocx-alibaba-namespace-"));
-  const prev = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  const home = mkdtempSync(join(tmpdir(), "occx-alibaba-namespace-"));
+  const prev = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = home;
   try {
     saveConfig(projection.config);
     const reloaded = loadConfig();
@@ -141,8 +141,8 @@ test("a namespace-blocked migration remains valid across reload", () => {
     expect(reloaded.providers["alibaba-token-plan-intl"]).toBeUndefined();
     expect(reloaded.codexAccountNamespaces).toEqual({ "alibaba-token-plan-intl": "pool-a" });
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prev;
+    if (prev === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prev;
     removeTreeWithRetry(home);
   }
 });

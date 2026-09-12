@@ -83,7 +83,7 @@ describe("parseTcpQuadsForLocalPort / IPv6", () => {
 });
 
 describe("reclaimListenPort", () => {
-  test("does not kill any ocx listener by default (healthy proxy / stale pid files)", async () => {
+  test("does not kill any occx listener by default (healthy proxy / stale pid files)", async () => {
     const killed: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
       timeoutMs: 80,
@@ -93,7 +93,7 @@ describe("reclaimListenPort", () => {
       isAvailableFn: async () => false,
       listListenPidsFn: () => [4242],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -102,19 +102,19 @@ describe("reclaimListenPort", () => {
     expect(killed).toEqual([]);
   });
 
-  test("does not kill when killOcxHolders is true but allowlist is empty", async () => {
+  test("does not kill when killOccxHolders is true but allowlist is empty", async () => {
     const killed: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
       timeoutMs: 80,
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [4242],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -123,18 +123,18 @@ describe("reclaimListenPort", () => {
     expect(killed).toEqual([]);
   });
 
-  test("concurrent pinned-start shape: second start never kills the first ocx listener", async () => {
+  test("concurrent pinned-start shape: second start never kills the first occx listener", async () => {
     const killed: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
       timeoutMs: 80,
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: false,
+      killOccxHolders: false,
       isAvailableFn: async () => false,
       listListenPidsFn: () => [1111],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -143,7 +143,7 @@ describe("reclaimListenPort", () => {
     expect(killed).toEqual([]);
   });
 
-  test("kills only the allowlisted ocx pid after revalidation", async () => {
+  test("kills only the allowlisted occx pid after revalidation", async () => {
     const killed: number[] = [];
     const verified: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
@@ -151,12 +151,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [100, 200],
       isAliveFn: () => true,
-      verifyOcxFn: pid => {
+      verifyOccxFn: pid => {
         verified.push(pid);
         return pid;
       },
@@ -169,19 +169,19 @@ describe("reclaimListenPort", () => {
     expect(verified.filter(pid => pid === 100).length).toBeGreaterThanOrEqual(2);
   });
 
-  test("unknown old PID: update-style reclaim kills no ocx listener", async () => {
+  test("unknown old PID: update-style reclaim kills no occx listener", async () => {
     const killed: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
       timeoutMs: 80,
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: false,
+      killOccxHolders: false,
       onlyKillPids: [],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [777],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -190,7 +190,7 @@ describe("reclaimListenPort", () => {
     expect(killed).toEqual([]);
   });
 
-  test("does not kill foreign (non-ocx) listeners and does not drop their TCP rows", async () => {
+  test("does not kill foreign (non-occx) listeners and does not drop their TCP rows", async () => {
     const killed: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
@@ -198,12 +198,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [999],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [555],
       isAliveFn: () => true,
-      verifyOcxFn: () => null,
+      verifyOccxFn: () => null,
       killFn: pid => {
         killed.push(pid);
       },
@@ -225,12 +225,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => false,
       listListenPidsFn: () => ({ ok: false, error: "lsof/netstat unavailable" }),
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -252,7 +252,7 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [18268],
       isAvailableFn: async () => {
         ticks += 1;
@@ -260,7 +260,7 @@ describe("reclaimListenPort", () => {
       },
       listListenPidsFn: () => [18268],
       isAliveFn: () => false,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -297,12 +297,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [4242],
       isAvailableFn: async () => available,
       listListenPidsFn: () => (available ? [] : [4242]),
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
         available = true;
@@ -319,12 +319,12 @@ describe("reclaimListenPort", () => {
     let checks = 0;
     await expect(reclaimWithMockClock({
       dropTcpRows: false,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => available,
       listListenPidsFn: () => (available ? [] : [100]),
       isAliveFn: () => !available,
-      verifyOcxFn: pid => {
+      verifyOccxFn: pid => {
         checks += 1;
         // Scan identity succeeds, then pre-kill revalidation and later scans reject it.
         return checks === 1 ? pid : null;
@@ -346,12 +346,12 @@ describe("reclaimListenPort", () => {
     let checks = 0;
     await expect(reclaimWithMockClock({
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => available,
       listListenPidsFn: () => (alive ? [100] : []),
       isAliveFn: () => alive,
-      verifyOcxFn: pid => {
+      verifyOccxFn: pid => {
         checks += 1;
         return checks === 1 ? pid : null;
       },
@@ -370,17 +370,17 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([]);
   });
 
-  test("does not kill or drop TCP rows for an allowlisted non-ocx listener", async () => {
+  test("does not kill or drop TCP rows for an allowlisted non-occx listener", async () => {
     const killed: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimWithMockClock({
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [100],
       isAliveFn: () => true,
-      verifyOcxFn: () => null,
+      verifyOccxFn: () => null,
       killFn: pid => {
         killed.push(pid);
       },
@@ -400,12 +400,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [100],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: () => {
         throw new Error("kill failed");
       },
@@ -418,7 +418,7 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([]);
   });
 
-  test("does not drop TCP rows while allowlisted ocx survives kill", async () => {
+  test("does not drop TCP rows while allowlisted occx survives kill", async () => {
     const killed: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
@@ -426,12 +426,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [100],
       isAvailableFn: async () => false,
       listListenPidsFn: () => [100],
       isAliveFn: () => true,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
       },
@@ -445,7 +445,7 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([]);
   });
 
-  test("drops TCP rows only after allowlisted ocx is confirmed dead", async () => {
+  test("drops TCP rows only after allowlisted occx is confirmed dead", async () => {
     let alive = true;
     let available = false;
     const dropped: number[] = [];
@@ -454,12 +454,12 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [4242],
       isAvailableFn: async () => available,
       listListenPidsFn: () => (alive ? [4242] : []),
       isAliveFn: () => alive,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: () => {
         alive = false;
       },
@@ -473,7 +473,7 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([10100]);
   });
 
-  test("killAllOcxOnPort kills ocx listeners absent from the allowlist snapshot", async () => {
+  test("killAllOccxOnPort kills occx listeners absent from the allowlist snapshot", async () => {
     const killed: number[] = [];
     let holder = 9001;
     let available = false;
@@ -482,13 +482,13 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
-      killAllOcxOnPort: true,
+      killOccxHolders: true,
+      killAllOccxOnPort: true,
       onlyKillPids: [100], // pre-update PID — respawned child is 9001
       isAvailableFn: async () => available,
       listListenPidsFn: () => (holder > 0 ? [holder] : []),
       isAliveFn: pid => pid === holder,
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
         if (pid === holder) holder = 0;
@@ -500,7 +500,7 @@ describe("reclaimListenPort", () => {
     expect(killed).toEqual([9001]);
   });
 
-  test("foreign non-ocx claimant survives reclaim without allowlist or ocx identity", async () => {
+  test("foreign non-occx claimant survives reclaim without allowlist or occx identity", async () => {
     const killed: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimListenPort(10100, "127.0.0.1", {
@@ -508,13 +508,13 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: true,
-      killOcxHolders: true,
-      killAllOcxOnPort: true,
+      killOccxHolders: true,
+      killAllOccxOnPort: true,
       onlyKillPids: [4242], // trusted old PID — different from the foreign holder
       isAvailableFn: async () => false,
       listListenPidsFn: () => [777],
       isAliveFn: () => true,
-      verifyOcxFn: () => null,
+      verifyOccxFn: () => null,
       killFn: pid => {
         killed.push(pid);
       },
@@ -528,20 +528,20 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([]);
   });
 
-  test("allowlisted PID that fails ocx verify stays protected until the deadline", async () => {
+  test("allowlisted PID that fails occx verify stays protected until the deadline", async () => {
     const killed: number[] = [];
     const dropped: number[] = [];
     let alive = true;
     let available = false;
     await expect(reclaimWithMockClock({
       dropTcpRows: true,
-      killOcxHolders: true,
+      killOccxHolders: true,
       onlyKillPids: [14772],
       isAvailableFn: async () => available,
       // This holder is still alive; a historical PID does not override verifier rejection.
       listListenPidsFn: () => (alive ? [14772] : []),
       isAliveFn: () => alive,
-      verifyOcxFn: () => null,
+      verifyOccxFn: () => null,
       killFn: pid => {
         killed.push(pid);
         alive = false;
@@ -556,13 +556,13 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([]);
   });
 
-  test.each([false, true])("a different verifier PID is rejected with killAllOcxOnPort=%s", async killAllOcxOnPort => {
+  test.each([false, true])("a different verifier PID is rejected with killAllOccxOnPort=%s", async killAllOccxOnPort => {
     const killed: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimWithMockClock({
-      dropTcpRows: true, killOcxHolders: true, killAllOcxOnPort, onlyKillPids: [100],
+      dropTcpRows: true, killOccxHolders: true, killAllOccxOnPort, onlyKillPids: [100],
       isAvailableFn: async () => false, listListenPidsFn: () => [100], isAliveFn: () => true,
-      verifyOcxFn: () => 200,
+      verifyOccxFn: () => 200,
       killFn: pid => { killed.push(pid); },
       dropTcpFn: port => { dropped.push(port); return 1; },
     })).resolves.toBe(false);
@@ -577,10 +577,10 @@ describe("reclaimListenPort", () => {
     const checksAtKill: number[] = [];
     const dropped: number[] = [];
     await expect(reclaimWithMockClock({
-      dropTcpRows: true, killOcxHolders: true, onlyKillPids: [100],
+      dropTcpRows: true, killOccxHolders: true, onlyKillPids: [100],
       isAvailableFn: async () => available, listListenPidsFn: () => alive ? [100] : [],
       isAliveFn: () => alive,
-      verifyOcxFn: pid => ++checks === 1 ? null : pid,
+      verifyOccxFn: pid => ++checks === 1 ? null : pid,
       killFn: () => { checksAtKill.push(checks); alive = false; },
       dropTcpFn: port => { dropped.push(port); available = true; return 1; },
     })).resolves.toBe(true);
@@ -588,7 +588,7 @@ describe("reclaimListenPort", () => {
     expect(dropped).toEqual([10100]);
   });
 
-  test("dead ghost then same PID reused is killed again under killAllOcxOnPort", async () => {
+  test("dead ghost then same PID reused is killed again under killAllOccxOnPort", async () => {
     const killed: number[] = [];
     let phase: "first-live" | "ghost" | "reuse" = "first-live";
     let available = false;
@@ -597,13 +597,13 @@ describe("reclaimListenPort", () => {
       intervalMs: 20,
       scanIntervalMs: 20,
       dropTcpRows: false,
-      killOcxHolders: true,
-      killAllOcxOnPort: true,
+      killOccxHolders: true,
+      killAllOccxOnPort: true,
       onlyKillPids: [],
       isAvailableFn: async () => available,
       listListenPidsFn: () => [4242],
       isAliveFn: () => phase !== "ghost",
-      verifyOcxFn: pid => pid,
+      verifyOccxFn: pid => pid,
       killFn: pid => {
         killed.push(pid);
         if (phase === "first-live") phase = "ghost";

@@ -11,9 +11,9 @@
 import { commitProviderApiKeySelection } from "./api-key-selection";
 import type { ProviderApiKeySelection } from "../types/provider";
 import { routedProviderConfig } from "../router";
-import type { OcxConfig, OcxProviderConfig, RateLimitRetryPolicy, TransientRetryPolicy } from "../types";
+import type { OccxConfig, OccxProviderConfig, RateLimitRetryPolicy, TransientRetryPolicy } from "../types";
 import { OPENCODE_GO_SESSION_HEADER } from "./opencode-go-transport";
-import { resolveProviderTransport, type OcxProviderTransport } from "./xai-transport";
+import { resolveProviderTransport, type OccxProviderTransport } from "./xai-transport";
 import { sweepExpiredOnWrite } from "../lib/state-store-sweeper";
 // quota-key-accounts imports only node:crypto, the key store and the quota types -- NOT
 // providers/quota.ts -- so the cached reader reaches the dispatch path without dragging the
@@ -99,7 +99,7 @@ function isKeyInCooldown(providerName: string, keyId: string, now = Date.now()):
  * Check whether a provider has multiple keys available for failover.
  * Returns true only for key-auth providers with 2+ pool entries.
  */
-export function hasKeyPoolFailover(provider: OcxProviderConfig): boolean {
+export function hasKeyPoolFailover(provider: OccxProviderConfig): boolean {
   if (provider.authMode === "oauth" || provider.authMode === "forward") return false;
   return (provider.apiKeyPool?.length ?? 0) >= 2;
 }
@@ -127,8 +127,8 @@ export function forgetApiKeyRotationCursor(providerName?: string): void {
   keyRotationCursor.delete(providerName);
 }
 
-/** The pool entry shape is inline on OcxProviderConfig; name it once rather than re-spelling it. */
-type ApiKeyPoolEntry = NonNullable<OcxProviderConfig["apiKeyPool"]>[number];
+/** The pool entry shape is inline on OccxProviderConfig; name it once rather than re-spelling it. */
+type ApiKeyPoolEntry = NonNullable<OccxProviderConfig["apiKeyPool"]>[number];
 
 /**
  * Remaining headroom for one key, or null when nothing current measures it.
@@ -137,7 +137,7 @@ type ApiKeyPoolEntry = NonNullable<OcxProviderConfig["apiKeyPool"]>[number];
  * what "more room" means. `creditsUsd` is deliberately excluded: it is a currency amount, not
  * a percentage, and ranking one against the other produces an order that means nothing.
  */
-function keyHeadroom(providerName: string, provider: OcxProviderConfig, entry: ApiKeyPoolEntry): number | null {
+function keyHeadroom(providerName: string, provider: OccxProviderConfig, entry: ApiKeyPoolEntry): number | null {
   const quota = cachedApiKeyQuota(providerName, provider, entry.id, entry.key);
   if (!quota) return null;
   const percents = [
@@ -161,7 +161,7 @@ function keyHeadroom(providerName: string, provider: OcxProviderConfig, entry: A
  */
 function rankKeysByHeadroom(
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   eligible: readonly ApiKeyPoolEntry[],
 ): ApiKeyPoolEntry[] {
   return eligible
@@ -198,10 +198,10 @@ function rankKeysByHeadroom(
  * `selectProactiveApiKeyTransport`, the pre-dispatch twin of `rotateProviderTransportOn429`.
  */
 export function selectProactiveApiKey(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   now = Date.now(),
-): OcxProviderConfig | null {
+): OccxProviderConfig | null {
   const provider = config.providers?.[providerName];
   if (!provider) return null;
   const strategy = provider.apiKeyPoolStrategy;
@@ -264,12 +264,12 @@ export function selectProactiveApiKey(
  * `selectProactiveApiKey`, which answers with a persisted snapshot.
  */
 export function selectProactiveApiKeyTransport(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
-  routedProvider: OcxProviderTransport,
+  routedProvider: OccxProviderTransport,
   promptCacheKey?: string,
   now = Date.now(),
-): OcxProviderTransport | null {
+): OccxProviderTransport | null {
   const committed = selectProactiveApiKey(config, providerName, now);
   if (!committed) return null;
   return applyRotatedTransport(providerName, routedProvider, committed, promptCacheKey);
@@ -283,7 +283,7 @@ export function selectProactiveApiKeyTransport(
  * callers never re-check fields.
  */
 export function rateLimitRetryPolicyFor(
-  provider: Pick<OcxProviderConfig, "retryOn429" | "authMode">,
+  provider: Pick<OccxProviderConfig, "retryOn429" | "authMode">,
 ): Required<RateLimitRetryPolicy> | null {
   const policy = provider.retryOn429;
   if (!policy || policy.enabled === false) return null;
@@ -312,7 +312,7 @@ export function rateLimitRetryPolicyFor(
  * unknown value.
  */
 export function transientRetryPolicyFor(
-  provider: Pick<OcxProviderConfig, "transientRetryOn5xx" | "authMode" | "adapter">,
+  provider: Pick<OccxProviderConfig, "transientRetryOn5xx" | "authMode" | "adapter">,
 ): Required<TransientRetryPolicy> | null {
   const policy = provider.transientRetryOn5xx;
   if (!policy || policy.enabled === false) return null;
@@ -346,7 +346,7 @@ export function rateLimitRetryDelayMs(
 /**
  * Record a 429 for the current key and attempt to switch to the next available one.
  *
- * @returns A new OcxProviderConfig with the swapped key (and mutated config on disk),
+ * @returns A new OccxProviderConfig with the swapped key (and mutated config on disk),
  *          or `null` when no alternative key is available (all in cooldown or pool < 2).
  *
  * The returned object is a snapshot of the PERSISTED config — it carries none of the
@@ -356,14 +356,14 @@ export function rateLimitRetryDelayMs(
  * runtime transport state (`fetch` and generated OpenCode session affinity).
  */
 function rotateKeyAfterFailure(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   failureStatus: 401 | 429,
   retryAfterHeader: string | null | undefined,
   now = Date.now(),
   attemptedKey?: string,
   attemptedSelection?: ProviderApiKeySelection,
-): OcxProviderConfig | null {
+): OccxProviderConfig | null {
   const provider = config.providers[providerName];
   if (!provider) return null;
   if (provider.authMode === "oauth" || provider.authMode === "forward") return null;
@@ -442,13 +442,13 @@ function rotateKeyAfterFailure(
 }
 
 export function rotateKeyOn429(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   retryAfterHeader: string | null | undefined,
   now = Date.now(),
   attemptedKey?: string,
   attemptedSelection?: ProviderApiKeySelection,
-): OcxProviderConfig | null {
+): OccxProviderConfig | null {
   return rotateKeyAfterFailure(config, providerName, 429, retryAfterHeader, now, attemptedKey, attemptedSelection);
 }
 
@@ -461,12 +461,12 @@ export function rotateKeyOn429(
  * `rotateKeyAfterFailure` rejects both auth modes outright.
  */
 export function rotateKeyOn401(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   now = Date.now(),
   attemptedKey?: string,
   attemptedSelection?: ProviderApiKeySelection,
-): OcxProviderConfig | null {
+): OccxProviderConfig | null {
   return rotateKeyAfterFailure(config, providerName, 401, null, now, attemptedKey, attemptedSelection);
 }
 
@@ -495,11 +495,11 @@ interface RotateProviderTransportOptions {
  * restore only transport-only state that can never come from persisted configuration.
  */
 export function rotateProviderTransportOn429(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
-  routedProvider: OcxProviderTransport,
+  routedProvider: OccxProviderTransport,
   options: RotateProviderTransportOptions = {},
-): OcxProviderTransport | null {
+): OccxProviderTransport | null {
   const rotated = rotateKeyOn429(
     config,
     providerName,
@@ -514,11 +514,11 @@ export function rotateProviderTransportOn429(
 
 /** 401 counterpart of `rotateProviderTransportOn429`; shares its transport-rebuild rules. */
 export function rotateProviderTransportOn401(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
-  routedProvider: OcxProviderTransport,
+  routedProvider: OccxProviderTransport,
   options: Omit<RotateProviderTransportOptions, "retryAfter"> = {},
-): OcxProviderTransport | null {
+): OccxProviderTransport | null {
   const rotated = rotateKeyOn401(config, providerName, options.now, options.attemptedKey,
     options.attemptedSelection ?? routedProvider._apiKeyAttempt);
   if (!rotated) return null;
@@ -527,13 +527,13 @@ export function rotateProviderTransportOn401(
 
 function applyRotatedTransport(
   providerName: string,
-  routedProvider: OcxProviderTransport,
-  rotated: OcxProviderConfig,
+  routedProvider: OccxProviderTransport,
+  rotated: OccxProviderConfig,
   promptCacheKey?: string,
-): OcxProviderTransport {
+): OccxProviderTransport {
   const committedRoute = routedProviderConfig(providerName, rotated);
   const routedSession = routedProvider.headers?.[OPENCODE_GO_SESSION_HEADER];
-  const retryProvider: OcxProviderTransport = {
+  const retryProvider: OccxProviderTransport = {
     ...committedRoute,
     ...(routedProvider.fetch !== undefined ? { fetch: routedProvider.fetch } : {}),
     ...(routedSession !== undefined

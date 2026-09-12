@@ -14,7 +14,7 @@ import {
  * chips; the Codex TUI prints them literally, so the user saw
  * "citeturn1view0turn1view1" in the answer and in the saved transcript.
  *
- * OpenCodex neither emits nor understands the grammar - it is upstream text passing
+ * Openccx neither emits nor understands the grammar - it is upstream text passing
  * through - so the proxy strips it before a client that cannot render it.
  */
 

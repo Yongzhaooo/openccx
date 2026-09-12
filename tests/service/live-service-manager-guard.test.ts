@@ -7,13 +7,13 @@ import { assertLiveServiceManagerAllowed } from "../../src/service";
  *
  * HOME isolation, which the test preload already does, covers everything addressed by
  * path. It does not cover a service manager addressed by job name: `systemctl --user stop
- * opencodex-proxy.service` talks to the user manager that is already running, and
- * `launchctl bootout gui/<uid>/com.opencodex.proxy` talks to launchd, and neither of them
+ * openccx-proxy.service` talks to the user manager that is already running, and
+ * `launchctl bootout gui/<uid>/com.openccx.proxy` talks to launchd, and neither of them
  * consults HOME. Windows has refused this since a partially-faked test replaced a real
- * scheduled task; macOS and Linux did not, so the person running opencodex on the machine
+ * scheduled task; macOS and Linux did not, so the person running openccx on the machine
  * they develop it on was the one exposed.
  */
-const GUARD_ENV = "OCX_TEST_HOME_GUARD";
+const GUARD_ENV = "OCCX_TEST_HOME_GUARD";
 const original = process.env[GUARD_ENV];
 
 afterEach(() => {
@@ -25,14 +25,14 @@ describe("live service-manager guard", () => {
   test("refuses every mutating launchctl and systemctl call while armed", () => {
     process.env[GUARD_ENV] = "1";
     const mutations = [
-      "launchctl unload /tmp/LaunchAgents/com.opencodex.proxy.plist",
-      "launchctl load -w /tmp/LaunchAgents/com.opencodex.proxy.plist",
-      "launchctl bootout gui/501/com.opencodex.proxy",
-      "launchctl kickstart -k gui/501/com.opencodex.proxy",
-      "systemctl --user stop opencodex-proxy.service",
-      "systemctl --user restart opencodex-proxy.service",
-      "systemctl --user disable opencodex-proxy.service",
-      "systemctl --user enable opencodex-proxy.service",
+      "launchctl unload /tmp/LaunchAgents/com.openccx.proxy.plist",
+      "launchctl load -w /tmp/LaunchAgents/com.openccx.proxy.plist",
+      "launchctl bootout gui/501/com.openccx.proxy",
+      "launchctl kickstart -k gui/501/com.openccx.proxy",
+      "systemctl --user stop openccx-proxy.service",
+      "systemctl --user restart openccx-proxy.service",
+      "systemctl --user disable openccx-proxy.service",
+      "systemctl --user enable openccx-proxy.service",
       "systemctl --user daemon-reload",
     ];
     for (const command of mutations) {
@@ -44,13 +44,13 @@ describe("live service-manager guard", () => {
     process.env[GUARD_ENV] = "1";
     const observations = [
       "launchctl list",
-      "launchctl list | grep com.opencodex.proxy || true",
-      "launchctl print gui/501/com.opencodex.proxy",
+      "launchctl list | grep com.openccx.proxy || true",
+      "launchctl print gui/501/com.openccx.proxy",
       "systemctl --version",
-      "systemctl --user show -p NeedDaemonReload opencodex-proxy.service",
-      "systemctl --user is-active opencodex-proxy.service",
-      "systemctl --user is-enabled opencodex-proxy.service",
-      "systemctl --user status opencodex-proxy.service",
+      "systemctl --user show -p NeedDaemonReload openccx-proxy.service",
+      "systemctl --user is-active openccx-proxy.service",
+      "systemctl --user is-enabled openccx-proxy.service",
+      "systemctl --user status openccx-proxy.service",
       "systemctl --user show-environment",
     ];
     for (const command of observations) {
@@ -67,7 +67,7 @@ describe("live service-manager guard", () => {
   test("is inert in production, where the guard is not armed", () => {
     delete process.env[GUARD_ENV];
     expect(() =>
-      assertLiveServiceManagerAllowed("systemctl --user stop opencodex-proxy.service"),
+      assertLiveServiceManagerAllowed("systemctl --user stop openccx-proxy.service"),
     ).not.toThrow();
   });
 });

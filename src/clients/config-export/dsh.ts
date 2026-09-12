@@ -1,6 +1,6 @@
 // DSH config export.
 import type { ExportModel, ExportContext, ManagedContribution } from "./contracts";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { providerCodexAccountMode } from "../../providers/registry";
 import { normalizeExportModels, authoritativeContextWindow, exportModelLabel, singleFragment } from "./model-metadata";
 import { OPENCODE_PROVIDER_ID } from "./constants";
@@ -30,10 +30,10 @@ export interface DshModelEntry {
 }
 
 export interface DshProviderBlock {
-  displayName: "OpenCodex";
+  displayName: "Openccx";
   api: "openai-responses";
   baseURL: string;
-  headers: { Authorization: "Bearer ocx_data_dsh" };
+  headers: { Authorization: "Bearer occx_data_dsh" };
   models: DshModelEntry[];
 }
 
@@ -59,7 +59,7 @@ function dshReasoningEfforts(model: ExportModel): DshModelEntry["reasoningEffort
       continue;
     }
     // DSH's key is the selectable level; the value is what it sends on the
-    // wire. Preserve OpenCodex's `ultra` spelling when that is the only
+    // wire. Preserve Openccx's `ultra` spelling when that is the only
     // highest effort, exactly like the rc.6 `max: ultra` contract.
     if (offered.has("max")) entries.push(["max", "max"]);
     else if (offered.has("ultra")) entries.push(["max", "ultra"]);
@@ -67,7 +67,7 @@ function dshReasoningEfforts(model: ExportModel): DshModelEntry["reasoningEffort
   return Object.fromEntries(entries);
 }
 
-function isKnownSafeDshCombo(model: ExportModel, config: OcxConfig): boolean {
+function isKnownSafeDshCombo(model: ExportModel, config: OccxConfig): boolean {
   const combos = (config as { combos?: unknown }).combos;
   if (typeof combos !== "object" || combos === null || Array.isArray(combos)) return false;
   const combo = (combos as Record<string, unknown>)[model.id];
@@ -110,10 +110,10 @@ export function buildDshClientConfig(ctx: ExportContext): DshGeneratedConfig {
     "llm-pi-ai": {
       providers: {
         [OPENCODE_PROVIDER_ID]: {
-          displayName: "OpenCodex",
+          displayName: "Openccx",
           api: "openai-responses",
           baseURL: ctx.baseUrl,
-          headers: { Authorization: "Bearer ocx_data_dsh" },
+          headers: { Authorization: "Bearer occx_data_dsh" },
           models,
         },
       },

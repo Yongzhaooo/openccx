@@ -1,7 +1,7 @@
 /**
  * Naming rules for pending-teardown receipts, shared by both update lanes (#3008).
  *
- * Plain ESM because `bin/ocx.mjs` runs under Node before Bun exists and cannot import the
+ * Plain ESM because `bin/occx.mjs` runs under Node before Bun exists and cannot import the
  * TypeScript module. It lives here rather than being spelled out twice because that is
  * exactly how this broke: the launcher kept checking the retired singleton filename after
  * the receipts moved to one file per claim, so the npm lane silently stopped seeing every
@@ -53,7 +53,7 @@ export function pendingTeardownNonceFromFileName(name) {
  * Does the given config directory hold any outstanding obligation?
  *
  * Quarantined receipts count. Filing one away to unblock an update would let the very
- * next `ocx update` install over a teardown that never ran — the enforcement has to
+ * next `occx update` install over a teardown that never ran — the enforcement has to
  * survive until a human removes the file.
  */
 export function hasPendingTeardownIn(readdir, dir) {

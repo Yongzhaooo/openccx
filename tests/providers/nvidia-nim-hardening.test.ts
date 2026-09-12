@@ -10,23 +10,23 @@ import { applyProviderConfigHints, normalizeRoutedCatalogEntry } from "../../src
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { parseRequest } from "../../src/responses/parser";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxParsedRequest, OcxTool } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxTool } from "../../src/types";
 import { planVisionSidecar } from "../../src/vision";
 
-const tools: OcxTool[] = [{ name: "shell", description: "run", parameters: { type: "object" } }];
+const tools: OccxTool[] = [{ name: "shell", description: "run", parameters: { type: "object" } }];
 
-function nvidiaConfig(): OcxConfig {
+function nvidiaConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "nvidia",
     providers: {
-      // Bare persisted config, like `ocx init` writes: registry seeds must backfill the flags.
+      // Bare persisted config, like `occx init` writes: registry seeds must backfill the flags.
       nvidia: { adapter: "openai-chat", baseUrl: "https://integrate.api.nvidia.com/v1", apiKey: "k" },
     },
   };
 }
 
-function parsedFor(modelId: string, options: Partial<OcxParsedRequest["options"]> = {}): Parameters<ReturnType<typeof createOpenAIChatAdapter>["buildRequest"]>[0] {
+function parsedFor(modelId: string, options: Partial<OccxParsedRequest["options"]> = {}): Parameters<ReturnType<typeof createOpenAIChatAdapter>["buildRequest"]>[0] {
   return {
     modelId,
     context: {

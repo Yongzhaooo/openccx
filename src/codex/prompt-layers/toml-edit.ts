@@ -1,4 +1,4 @@
-import { OCX_SECTION_MARKER } from "../injected-marker";
+import { OCCX_SECTION_MARKER } from "../injected-marker";
 import { encodeBasicString } from "./encoding";
 import { TABLE_HEADER, ANY_DEV_INSTRUCTIONS, DEV_INSTRUCTIONS_KEY } from "./toml-read";
 
@@ -130,7 +130,7 @@ export function setProjection(content: string | null, projection: string | null)
 
   let markerAt = -1;
   for (let i = 0; i < limit; i += 1) {
-    if (i > 0 && lines[i - 1]!.includes(OCX_SECTION_MARKER) && ANY_DEV_INSTRUCTIONS.test(lines[i]!)) {
+    if (i > 0 && lines[i - 1]!.includes(OCCX_SECTION_MARKER) && ANY_DEV_INSTRUCTIONS.test(lines[i]!)) {
       markerAt = i - 1;
       break;
     }
@@ -143,7 +143,7 @@ export function setProjection(content: string | null, projection: string | null)
   }
 
   if (projection === null) return bom + joinLines(lines, eol);
-  lines.splice(0, 0, OCX_SECTION_MARKER, `${DEV_INSTRUCTIONS_KEY} = ${encodeBasicString(projection)}`);
+  lines.splice(0, 0, OCCX_SECTION_MARKER, `${DEV_INSTRUCTIONS_KEY} = ${encodeBasicString(projection)}`);
   return bom + joinLines(lines, eol);
 }
 
@@ -155,7 +155,7 @@ export function removeUnownedProjection(content: string): string {
   const limit = firstTableIndex(lines);
   for (let i = 0; i < limit; i += 1) {
     if (!ANY_DEV_INSTRUCTIONS.test(lines[i]!)) continue;
-    const marked = i > 0 && lines[i - 1]!.includes(OCX_SECTION_MARKER);
+    const marked = i > 0 && lines[i - 1]!.includes(OCCX_SECTION_MARKER);
     lines.splice(marked ? i - 1 : i, marked ? 2 : 1);
     return joinLines(lines, eol);
   }

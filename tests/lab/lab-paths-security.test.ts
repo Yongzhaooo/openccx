@@ -8,7 +8,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const ROOTS: string[] = [];
 
 function tempRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-lab-paths-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-lab-paths-"));
   ROOTS.push(root);
   return root;
 }
@@ -31,9 +31,9 @@ test("restricted Lab paths allow a symlinked infrastructure ancestor above the L
     return;
   }
 
-  const lab = join(infrastructureAlias, "opencodex", "lab");
+  const lab = join(infrastructureAlias, "openccx", "lab");
   expect(() => ensureRestrictedDir(lab, lab)).not.toThrow();
-  expect(realpathSync.native(lab)).toBe(realpathSync.native(join(actualInfrastructure, "opencodex", "lab")));
+  expect(realpathSync.native(lab)).toBe(realpathSync.native(join(actualInfrastructure, "openccx", "lab")));
 });
 
 test("restricted Lab paths still reject a symlink at the Lab boundary itself", () => {

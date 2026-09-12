@@ -6,11 +6,11 @@ import { join } from "node:path";
 import { handleCodexAuthAPI } from "../../src/codex/auth-api";
 import { loadConfig, saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-function makeCodexConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeCodexConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {},
@@ -22,16 +22,16 @@ function makeCodexConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
 
 describe("Codex account pool strategy management API", () => {
   const TEST_DIR = join(import.meta.dir, ".tmp-account-pool-mgmt-codex");
-  let previousOpencodexHome: string | undefined;
+  let previousOpenccxHome: string | undefined;
 
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     removeTreeWithRetry(TEST_DIR);
   });
 
@@ -144,7 +144,7 @@ describe("Anthropic account pool strategy management API", () => {
   let previousHome: string | undefined;
   let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-  function baseConfig(): OcxConfig {
+  function baseConfig(): OccxConfig {
     return {
       port: 0,
       hostname: "127.0.0.1",
@@ -152,14 +152,14 @@ describe("Anthropic account pool strategy management API", () => {
       providers: {
         anthropic: { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    isolatedCodexHome = installIsolatedCodexHome("ocx-pool-mgmt-codex-");
-    testDir = mkdtempSync(join(tmpdir(), "ocx-pool-mgmt-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    isolatedCodexHome = installIsolatedCodexHome("occx-pool-mgmt-codex-");
+    testDir = mkdtempSync(join(tmpdir(), "occx-pool-mgmt-"));
+    process.env.OPENCCX_HOME = testDir;
     saveConfig(baseConfig());
     writeFileSync(join(testDir, "auth.json"), JSON.stringify({
       anthropic: {
@@ -172,8 +172,8 @@ describe("Anthropic account pool strategy management API", () => {
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     isolatedCodexHome?.restore();
     isolatedCodexHome = null;
     if (testDir) removeTreeWithRetry(testDir);
@@ -456,9 +456,9 @@ describe("generic OAuth pool-settings contract (#695)", () => {
   let previousHome: string | undefined;
   let testDir = "";
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-pool-generic-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-pool-generic-"));
+    process.env.OPENCCX_HOME = testDir;
     saveConfig({
       port: 0,
       hostname: "127.0.0.1",
@@ -467,11 +467,11 @@ describe("generic OAuth pool-settings contract (#695)", () => {
         "google-antigravity": { adapter: "google", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" },
         deepseek: { adapter: "openai-chat", baseUrl: "https://api.deepseek.com/v1", apiKey: "deepseek-key-fixture" },
       },
-    } as OcxConfig);
+    } as OccxConfig);
   });
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (testDir) removeTreeWithRetry(testDir);
   });
 
@@ -648,9 +648,9 @@ describe("unified pool-settings contract (#695 wp5c)", () => {
   let previousHome2: string | undefined;
   let dir = "";
   beforeEach(() => {
-    previousHome2 = process.env.OPENCODEX_HOME;
-    dir = mkdtempSync(join(tmpdir(), "ocx-pool-unified-"));
-    process.env.OPENCODEX_HOME = dir;
+    previousHome2 = process.env.OPENCCX_HOME;
+    dir = mkdtempSync(join(tmpdir(), "occx-pool-unified-"));
+    process.env.OPENCCX_HOME = dir;
     saveConfig({
       port: 0,
       hostname: "127.0.0.1",
@@ -659,11 +659,11 @@ describe("unified pool-settings contract (#695 wp5c)", () => {
         "google-antigravity": { adapter: "google", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" },
         deepseek: { adapter: "openai-chat", baseUrl: "https://api.deepseek.com/v1", apiKey: "deepseek-key-fixture" },
       },
-    } as OcxConfig);
+    } as OccxConfig);
   });
   afterEach(() => {
-    if (previousHome2 === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome2;
+    if (previousHome2 === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome2;
     if (dir) removeTreeWithRetry(dir);
   });
 

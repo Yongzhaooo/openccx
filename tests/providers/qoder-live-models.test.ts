@@ -3,7 +3,7 @@ import { fetchQoderModels, parseQoderModelList, setFetchQoderModelsForTests } fr
 import { clearQoderBinaryCache, QODER_CN_PROFILE, QODER_GLOBAL_PROFILE } from "../../src/adapters/qoder/profiles";
 import { fetchProviderModels } from "../../src/codex/catalog/provider-fetch";
 import { clearModelCache, providerCacheGenerations } from "../../src/codex/model-cache";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 beforeEach(() => clearQoderBinaryCache());
 afterEach(() => {
@@ -48,7 +48,7 @@ describe("qoder live model discovery", () => {
 
   test("live account roster is authoritative and static models are only fallback", async () => {
     setFetchQoderModelsForTests((_profile, token) => token === "pat" ? { ok: true, models: ["Account-Model"] } : { ok: false, error: "auth" });
-    const provider = { adapter: "qoder", baseUrl: "https://qoder.com", apiKey: "pat", authMode: "key", liveModels: true, models: ["Static-Model"] } as OcxProviderConfig;
+    const provider = { adapter: "qoder", baseUrl: "https://qoder.com", apiKey: "pat", authMode: "key", liveModels: true, models: ["Static-Model"] } as OccxProviderConfig;
     const models = await fetchProviderModels("qoder-test", provider, 60_000);
     expect(models.map(model => model.id)).toEqual(["Account-Model"]);
   });
@@ -59,7 +59,7 @@ describe("qoder live model discovery", () => {
       calls.push(token);
       return { ok: true, models: [`${token}-model`] };
     });
-    const base = { adapter: "qoder", baseUrl: "https://qoder.com", authMode: "key", liveModels: true } as OcxProviderConfig;
+    const base = { adapter: "qoder", baseUrl: "https://qoder.com", authMode: "key", liveModels: true } as OccxProviderConfig;
     const accountA = await fetchProviderModels("qoder-test", { ...base, apiKey: "account-a" }, 60_000);
     const accountB = await fetchProviderModels("qoder-test", { ...base, apiKey: "account-b" }, 60_000);
     expect(accountA.map(model => model.id)).toEqual(["account-a-model"]);

@@ -1,6 +1,6 @@
 name: Release
 
-# Publish opencodex to npm — jawcode-style: triggered from the Actions tab with an explicit
+# Publish openccx to npm — jawcode-style: triggered from the Actions tab with an explicit
 # version, dist-tag, and a dry-run-first default. Bump package.json on main BEFORE dispatching
 # (or use `bun run release <version>`, which does the bump+commit+push+dispatch for you); the
 # workflow verifies the version matches before publishing.
@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
 
-      # opencodex is bun-native (the prepublishOnly audit, GUI build, and typecheck run under bun).
+      # openccx is bun-native (the prepublishOnly audit, GUI build, and typecheck run under bun).
       - name: Setup project Bun
         uses: ./.github/actions/setup-project-bun
 

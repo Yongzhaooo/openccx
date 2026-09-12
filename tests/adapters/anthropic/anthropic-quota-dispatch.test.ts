@@ -9,7 +9,7 @@ import { getAccountSet, saveAccountCredential, saveCredential, setActiveAccount 
 import { clearAccountQuotaCache, getCachedProviderAccountQuota, resetProviderQuotaReconcileStateForTests } from "../../../src/providers/quota";
 import { clearResponseStateForTests } from "../../../src/responses/state";
 import { handleResponses } from "../../../src/server/responses";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const actualResolver = await import("../../../src/server/adapter-resolve");
@@ -33,7 +33,7 @@ mock.module("../../../src/server/adapter-resolve", () => ({
   },
 }));
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let originalFetch: typeof globalThis.fetch;
 let unexpectedGlobalFetches = 0;
 let home: string;
@@ -48,8 +48,8 @@ beforeEach(() => {
     unexpectedGlobalFetches += 1;
     throw new Error("Unexpected global fetch in Anthropic quota dispatch test");
   }) as typeof fetch;
-  home = mkdtempSync(join(tmpdir(), "ocx-anthropic-quota-dispatch-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-anthropic-quota-dispatch-"));
+  process.env.OPENCCX_HOME = home;
   sent = [];
   clearAnthropicAccountPoolState();
   forgetAnthropicFailoverQuorum();
@@ -75,8 +75,8 @@ afterEach(() => {
       clearResponseStateForTests();
     } finally {
       globalThis.fetch = originalFetch;
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       if (home) removeTreeWithRetry(home);
     }
   }
@@ -131,14 +131,14 @@ function answer(stream: boolean, fiveHour = "0.23", weekly = "0.47", text = "The
   });
 }
 
-function configFor(reply: (body: Record<string, unknown>) => Response | Promise<Response>, headers?: Record<string, string>): OcxConfig {
+function configFor(reply: (body: Record<string, unknown>) => Response | Promise<Response>, headers?: Record<string, string>): OccxConfig {
   const transport = (async (_input, init) => {
     const wireHeaders = new Headers(init?.headers);
     const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
     sent.push({ authorization: wireHeaders.get("authorization"), apiKey: wireHeaders.get("x-api-key"), body });
     return reply(body);
   }) as typeof fetch;
-  const provider: OcxProviderConfig & { fetch: typeof fetch } = {
+  const provider: OccxProviderConfig & { fetch: typeof fetch } = {
     adapter: "anthropic", baseUrl: "https://anthropic-quota.test", authMode: "oauth",
     models: ["claude-sonnet-4-5"], fetch: transport, ...(headers ? { headers } : {}),
   };
@@ -149,7 +149,7 @@ function configFor(reply: (body: Record<string, unknown>) => Response | Promise<
   };
 }
 
-function post(config: OcxConfig, body: Record<string, unknown> = {}) {
+function post(config: OccxConfig, body: Record<string, unknown> = {}) {
   return handleResponses(new Request("http://localhost/v1/responses", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ model: "anthropic/claude-sonnet-4-5", input: "Answer briefly", stream: false, ...body }),
@@ -182,7 +182,7 @@ test.each([307, 308])("OAuth provider override pins manual dispatch after adapte
     return new Response("redirect", { status, headers: { location: `http://127.0.0.1:${target.port}/target` } });
   } });
   const config = configFor(() => { throw new Error("unused canned transport"); });
-  (config.providers.anthropic as OcxProviderConfig & { fetch: typeof fetch }).fetch = (async (input, init) => {
+  (config.providers.anthropic as OccxProviderConfig & { fetch: typeof fetch }).fetch = (async (input, init) => {
     expect(new URL(String(input)).hostname).toBe("anthropic-quota.test");
     redirects.push(init?.redirect);
     // Remap only the URL; the production callback must supply the safe request options.

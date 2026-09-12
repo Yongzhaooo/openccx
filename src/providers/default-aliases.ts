@@ -3,8 +3,8 @@ import { PROVIDER_REGISTRY } from "./registry";
 
 export function effectiveProviderAlias(
   providerName: string,
-  provider?: Pick<OcxProviderConfig, "alias">,
-  config?: Pick<OcxConfig, "providers">,
+  provider?: Pick<OccxProviderConfig, "alias">,
+  config?: Pick<OccxConfig, "providers">,
 ): string | undefined {
   if (provider && provider.alias !== undefined) {
     const trimmed = provider.alias.trim();
@@ -27,8 +27,8 @@ export function effectiveProviderAlias(
 
 export function effectiveProviderAliasDecision(
   providerName: string,
-  provider?: Pick<OcxProviderConfig, "alias">,
-  config?: Pick<OcxConfig, "providers">,
+  provider?: Pick<OccxProviderConfig, "alias">,
+  config?: Pick<OccxConfig, "providers">,
 ): string | null | undefined {
   const active = effectiveProviderAlias(providerName, provider, config);
   if (active !== undefined) return active;
@@ -40,7 +40,7 @@ export function effectiveProviderAliasDecision(
   return undefined;
 }
 
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 export const MODEL_ALIAS_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
@@ -66,13 +66,13 @@ function builtinRule(id: string): { match: RegExp; alias: string } | undefined {
   return DEFAULT_MODEL_ALIASES.find(rule => rule.match.test(id) || rule.match.test(tail));
 }
 
-export function defaultAliasesEnabled(config: Pick<OcxConfig, "defaultModelAliases">, provider: OcxProviderConfig): boolean {
+export function defaultAliasesEnabled(config: Pick<OccxConfig, "defaultModelAliases">, provider: OccxProviderConfig): boolean {
   return provider.defaultAliases ?? config.defaultModelAliases ?? false;
 }
 
 export function effectiveModelAliases(
-  config: Pick<OcxConfig, "defaultModelAliases">,
-  provider: OcxProviderConfig,
+  config: Pick<OccxConfig, "defaultModelAliases">,
+  provider: OccxProviderConfig,
   knownIds: Iterable<string>,
 ): Map<string, EffectiveModelAlias> {
   const result = new Map<string, EffectiveModelAlias>();
@@ -100,8 +100,8 @@ export function effectiveModelAliases(
 }
 
 export function resolveModelAlias(
-  config: Pick<OcxConfig, "defaultModelAliases">,
-  provider: OcxProviderConfig,
+  config: Pick<OccxConfig, "defaultModelAliases">,
+  provider: OccxProviderConfig,
   knownIds: Iterable<string>,
   requested: string,
 ): string | undefined {

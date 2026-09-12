@@ -6,35 +6,35 @@ import { dispatchCommand, type CliDispatchDeps } from "../../src/cli/dispatch";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
- * `ocx restore` must finish the WHOLE shared teardown, including when Codex is already
+ * `occx restore` must finish the WHOLE shared teardown, including when Codex is already
  * off (#3008).
  *
- * The deferred-teardown recovery path prints "run 'ocx restore', then delete the receipt".
+ * The deferred-teardown recovery path prints "run 'occx restore', then delete the receipt".
  * If restore returns success on the Codex no-op path before touching the Grok fence, an
  * operator following those instructions signs off an incomplete teardown and deletes the
  * obligation that would have caught it — leaving Grok pointed at a proxy that is gone.
  */
 
-const BEGIN = "# >>> opencodex managed block — do not edit (removed by `ocx stop`) >>>";
-const END = "# <<< opencodex managed block <<<";
+const BEGIN = "# >>> openccx managed block — do not edit (removed by `occx stop`) >>>";
+const END = "# <<< openccx managed block <<<";
 const depsFor = (args: string[]) => ({ args } as unknown as CliDispatchDeps);
 
 let grokHome: string;
-let opencodexHome: string;
+let openccxHome: string;
 let codexHome: string;
 let previous: Record<string, string | undefined> = {};
 
 beforeEach(() => {
   previous = {
     GROK_HOME: process.env.GROK_HOME,
-    OPENCODEX_HOME: process.env.OPENCODEX_HOME,
+    OPENCCX_HOME: process.env.OPENCCX_HOME,
     CODEX_HOME: process.env.CODEX_HOME,
   };
-  grokHome = mkdtempSync(join(tmpdir(), "ocx-restore-grok-"));
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-restore-home-"));
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-restore-codex-"));
+  grokHome = mkdtempSync(join(tmpdir(), "occx-restore-grok-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-restore-home-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-restore-codex-"));
   process.env.GROK_HOME = grokHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   process.env.CODEX_HOME = codexHome;
 });
 
@@ -43,7 +43,7 @@ afterEach(() => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  for (const dir of [grokHome, opencodexHome, codexHome]) removeTreeWithRetry(dir);
+  for (const dir of [grokHome, openccxHome, codexHome]) removeTreeWithRetry(dir);
 });
 
 async function seedOffConfig(): Promise<void> {

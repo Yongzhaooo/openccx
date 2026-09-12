@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { ownedServiceHomeInspection } from "../helpers/owned-service-home-inspection";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { chatCompletionsToResponsesBody, ChatCompletionsRequestError } from "../../src/chat/inbound";
@@ -62,17 +62,17 @@ let isolatedCodexHome: IsolatedCodexHome | null = null;
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-chat-completions-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-chat-completions-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-chat-completions-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-chat-completions-"));
+  process.env.OPENCCX_HOME = testDir;
   globalThis.fetch = originalFetch;
 });
 
 afterEach(() => {
   resetProviderRequestPacingForTest();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   globalThis.fetch = originalFetch;
@@ -147,7 +147,7 @@ function mockDualWireUpstream() {
   return { server, captured };
 }
 
-function mockConfig(baseUrl: string, providerOverrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function mockConfig(baseUrl: string, providerOverrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   return {
     port: 0,
     defaultProvider: "mock",
@@ -160,7 +160,7 @@ function mockConfig(baseUrl: string, providerOverrides: Partial<OcxProviderConfi
         ...providerOverrides,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 type StreamedToolCall = {
@@ -334,7 +334,7 @@ describe("chatCompletionsToResponsesBody service_tier", () => {
 });
 
 async function driveChatFallbackServiceTier(
-  providerOverrides: Partial<OcxProviderConfig>,
+  providerOverrides: Partial<OccxProviderConfig>,
 ): Promise<Record<string, unknown>> {
   const { handleChatCompletions } = await import("../../src/server/chat-completions");
   const captured: Record<string, unknown>[] = [];
@@ -362,7 +362,7 @@ async function driveChatFallbackServiceTier(
         ...providerOverrides,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
   const response = await handleChatCompletions(
     new Request("http://localhost/v1/chat/completions", {
       method: "POST",
@@ -957,7 +957,7 @@ test("chat-native consumes pacing before the response-header timeout starts", as
   const config = mockConfig("https://provider.example/v1", {
     requestPacing: { enabled: true, minIntervalMs: 100 },
     fetch: providerExecutor,
-  } as Partial<OcxProviderConfig> & { fetch: typeof globalThis.fetch });
+  } as Partial<OccxProviderConfig> & { fetch: typeof globalThis.fetch });
   config.connectTimeoutMs = 1;
   const request = () => new Request("http://localhost/v1/chat/completions", {
     method: "POST",
@@ -997,7 +997,7 @@ test("chat-native stays outside the Responses empty-completion retry guard", asy
   }, { preconnect() {} }) as typeof globalThis.fetch;
   const config = mockConfig("https://provider.example/v1", {
     fetch: providerExecutor,
-  } as Partial<OcxProviderConfig> & { fetch: typeof globalThis.fetch });
+  } as Partial<OccxProviderConfig> & { fetch: typeof globalThis.fetch });
   config.emptyCompletionRetry = true;
 
   const response = await handleChatCompletions(
@@ -1863,7 +1863,7 @@ test("POST /v1/chat/completions direct mode forwards caller Authorization", asyn
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -1984,7 +1984,7 @@ test("chat-native skips optional main enrichment while routed work survives drai
       codexAccounts: [],
       activeCodexAccountId: "__main__",
       autoSwitchThreshold: 0,
-    } as OcxConfig);
+    } as OccxConfig);
     server = startServer(0, { inspectNativeCodexOwnership });
     await waitForNativeMainStartupGate();
     recoveryHomeId = nativeMainStartupGateSnapshot().homeId ?? "chat-main-recovery-home";
@@ -2044,7 +2044,7 @@ test("POST /v1/chat/completions finalizes native passthrough request logs", asyn
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -2117,7 +2117,7 @@ test("POST /v1/chat/completions logs native cyber terminals as 400 cyber_policy"
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -2424,7 +2424,7 @@ test("non-streaming /v1/chat/completions returns error status on upstream failur
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -2482,7 +2482,7 @@ test("streaming /v1/chat/completions does not clean-DONE after response.failed",
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -2837,7 +2837,7 @@ test("collectChatCompletion throws ChatCompletionsStreamError on a stall incompl
 // --- #404: one gateway, two wires. Without a per-model override the provider-wide
 // adapter wins and Grok's hosted web_search is dropped before it ever goes out. ----
 
-function dualWireConfig(baseUrl: string): OcxConfig {
+function dualWireConfig(baseUrl: string): OccxConfig {
   return {
     port: 0,
     defaultProvider: "mock",
@@ -2850,7 +2850,7 @@ function dualWireConfig(baseUrl: string): OcxConfig {
         modelAdapters: { "grok-4.5": "openai-responses" },
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 test("an overridden model reaches the responses wire with its hosted tool intact (#404)", async () => {
@@ -3008,7 +3008,7 @@ test.each([
         role: "tool", tool_call_id: "call_screenshot", content: "Before screenshot.After screenshot.",
       });
       expect(conversation[3]).toEqual({ role: "user", content: [
-        { type: "text", text: "[ocx] image output from the preceding tool result(s):" },
+        { type: "text", text: "[occx] image output from the preceding tool result(s):" },
         { type: "image_url", image_url: { url: screenshot, detail: "low" } },
         { type: "image_url", image_url: { url: png, detail: "auto" } },
       ] });
@@ -3055,7 +3055,7 @@ test("/v1/chat/completions non-OK upstream preserves top-level structured cyber_
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -3116,7 +3116,7 @@ test("/v1/chat/completions non-OK upstream preserves structured model_not_found"
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -3181,7 +3181,7 @@ test("/v1/chat/completions status:failed replay normalizes translation_buffer_li
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -3245,7 +3245,7 @@ test("/v1/chat/completions status:failed replay preserves structured cyber_polic
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {
@@ -3307,7 +3307,7 @@ test("/v1/chat/completions status:failed replay preserves structured model_not_f
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/chat/completions", server.url), {

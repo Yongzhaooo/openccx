@@ -2,7 +2,7 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { bridgeToResponsesSSE, buildResponseJSON } from "../../src/bridge";
 import type { AdapterEvent } from "../../src/types";
 import { anthropicToResponsesBody, anthropicToResponsesTranslation } from "../../src/claude/inbound";
-import { decodeReasoningEnvelope, encodeReasoningEnvelope, OCX_REASONING_PREFIX, type ReasoningEnvelope } from "../../src/responses/reasoning-envelope";
+import { decodeReasoningEnvelope, encodeReasoningEnvelope, OCCX_REASONING_PREFIX, type ReasoningEnvelope } from "../../src/responses/reasoning-envelope";
 import { responsesJsonToAnthropicMessage, responsesSseToAnthropicSse } from "../../src/claude/outbound";
 import { createTranslatorBudget, TranslatorBudgetExceededError, translatorObservedBufferSnapshot } from "../../src/lib/translator-budget";
 import { jsonUtf8Bytes } from "../../src/lib/json-byte-size";
@@ -22,9 +22,9 @@ describe("reasoning and tool/result envelopes", () => {
     expect(body.input[2].encrypted_content).toBe(encodeReasoningEnvelope({ sig: "sig-second" }));
   });
 
-  test("rejects malformed or nested OpenCodex signatures", () => {
+  test("rejects malformed or nested Openccx signatures", () => {
     for (const signature of [
-      "ocxr1:not-base64!!!",
+      "occxr1:not-base64!!!",
       encodeReasoningEnvelope({ sig: "nested" }),
       encodeReasoningEnvelope({ sig: "", txt: "nested-empty-signature" }),
     ]) {
@@ -51,7 +51,7 @@ describe("reasoning and tool/result envelopes", () => {
       output: [{ type: "reasoning", summary: [{ type: "summary_text", text: "think" }] }],
     }, "m") as any;
     const signature = message.content[0].signature as string;
-    expect(signature.startsWith("ocxr1:")).toBe(true);
+    expect(signature.startsWith("occxr1:")).toBe(true);
     expect(decodeReasoningEnvelope(signature)).toEqual({ txt: "think" });
   });
 
@@ -101,7 +101,7 @@ describe("reasoning allocation admission", () => {
       const json = JSON.stringify(envelope);
       const size = Buffer.byteLength(json);
       const base64Bytes = 4 * Math.ceil(size / 3);
-      const limit = Math.max(3 * size + 4 * base64Bytes + 2 * OCX_REASONING_PREFIX.length, 8 * (OCX_REASONING_PREFIX.length + base64Bytes));
+      const limit = Math.max(3 * size + 4 * base64Bytes + 2 * OCCX_REASONING_PREFIX.length, 8 * (OCCX_REASONING_PREFIX.length + base64Bytes));
       const budget = createTranslatorBudget({ maxTurnBytes: limit - 1 });
       const stringify = spyOn(JSON, "stringify");
       const from = spyOn(Buffer, "from");
@@ -122,7 +122,7 @@ describe("reasoning allocation admission", () => {
       const exact = createTranslatorBudget({ maxTurnBytes: limit });
       try {
         const encoded = encodeReasoningEnvelope(envelope, exact);
-        expect(encoded).toBe(OCX_REASONING_PREFIX + Buffer.from(json).toString("base64"));
+        expect(encoded).toBe(OCCX_REASONING_PREFIX + Buffer.from(json).toString("base64"));
         expect(decodeReasoningEnvelope(encoded, exact)).toEqual(envelope);
         expect(exact.snapshot().currentBytes).toBe(0);
       } finally { exact.dispose(); }

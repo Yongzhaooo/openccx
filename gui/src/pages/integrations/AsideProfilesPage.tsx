@@ -23,7 +23,7 @@ export default function AsideProfilesPage({ apiBase, active = true }: { apiBase:
   const resource = useDataSurface(`aside-profiles:${apiBase}`, [apiBase], fetchProfiles, {
     enabled: active,
     isEmpty: value => !value.error && value.profiles.length === 0,
-    sessionCacheKey: `ocx.integrations.aside-profiles.v1:${apiBase}`,
+    sessionCacheKey: `occx.integrations.aside-profiles.v1:${apiBase}`,
   });
   const data = resource.state.data;
   const profiles = data?.profiles ?? [];

@@ -13,17 +13,17 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-oauth-account-id-collision-test");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 const COLLIDING_ACCOUNT_A = "account-collision-16138";
 const COLLIDING_ACCOUNT_B = "account-collision-28806";
 
 describe("OAuth account id collision hardening", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     resetHardenedStateForTests();
     setIcaclsRunnerForTests(() => ({
       success: true,
@@ -36,8 +36,8 @@ describe("OAuth account id collision hardening", () => {
   afterEach(() => {
     setIcaclsRunnerForTests(null);
     resetHardenedStateForTests();
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 

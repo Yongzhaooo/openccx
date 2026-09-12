@@ -3,7 +3,7 @@ import { codexAutoStartEnabled, getConfigPath, readConfigDiagnostics } from "../
 import { getPidPath, readPid, readRuntimePort, type RuntimePortState } from "../config/process-state";
 import { diagnoseCodexBundledPlugins, type CodexPluginsDiagnostic } from "../codex/plugins-doctor";
 import { findLiveProxy, probeHostname } from "../server/proxy-liveness";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { diagnoseService, serviceLogPath } from "../service";
 import { collectStartupHealth, type StartupHealth } from "../codex/autostart-health";
 import { getCodexRoutingKind } from "../codex/inject";
@@ -30,7 +30,7 @@ import { checkProxyHealth, probeUncleanExitState, type ListenTarget } from "./st
  * The state of the data-plane admission secret the SERVICE will use. State only -- never the value.
  *
  * Always about the file, because the file is what the service reads: the launchd plist and the
- * systemd unit `cat` it into `OPENCODEX_API_AUTH_TOKEN` before exec, so a token in the CLI's own
+ * systemd unit `cat` it into `OPENCCX_API_AUTH_TOKEN` before exec, so a token in the CLI's own
  * shell says nothing about the running hub. `present (env)` used to be reported here and was
  * simply wrong about whose environment it meant (see `dataTokenEnvInShell`).
  *
@@ -60,9 +60,9 @@ export type HubStatus = {
   dataToken: HubDataTokenState;
   dataTokenPath: string;
   /**
-   * `OPENCODEX_API_AUTH_TOKEN` is set in the shell that ran `ocx status` — which is NOT the
+   * `OPENCCX_API_AUTH_TOKEN` is set in the shell that ran `occx status` — which is NOT the
    * environment the installed service runs in. Reported separately, and honestly, because it
-   * does decide what a FOREGROUND `ocx start` in this same shell would admit.
+   * does decide what a FOREGROUND `occx start` in this same shell would admit.
    */
   dataTokenEnvInShell: boolean;
 };
@@ -214,7 +214,7 @@ export type CliStatusView = {
 };
 
 
-type StatusListenConfig = Pick<OcxConfig, "port" | "hostname" | "runtimeRole" | "hub">;
+type StatusListenConfig = Pick<OccxConfig, "port" | "hostname" | "runtimeRole" | "hub">;
 
 function statusDashboardUrl(config: StatusListenConfig, hostname: string | undefined, port: number): string {
   const managementOrigin = config.runtimeRole === "hub" ? config.hub?.managementPublicOrigin : undefined;
@@ -232,8 +232,8 @@ function statusDashboardUrl(config: StatusListenConfig, hostname: string | undef
 /**
  * The hub block, or null when this machine is not a hub.
  *
- * The token line is about the FILE, not this shell. `ocx status` used to print `present (env)`
- * whenever the calling shell happened to export `OPENCODEX_API_AUTH_TOKEN`, but the service
+ * The token line is about the FILE, not this shell. `occx status` used to print `present (env)`
+ * whenever the calling shell happened to export `OPENCCX_API_AUTH_TOKEN`, but the service
  * wrapper overwrites that variable from the token file before exec — so the label described the
  * operator's terminal and not the hub. The shell's variable is reported as its own flag instead.
  *
@@ -242,7 +242,7 @@ function statusDashboardUrl(config: StatusListenConfig, hostname: string | undef
  * bytes of the secret.
  */
 export function collectHubStatus(
-  config: Pick<OcxConfig, "runtimeRole" | "hostname" | "port" | "hub" | "unauthenticatedLoopbackListener">,
+  config: Pick<OccxConfig, "runtimeRole" | "hostname" | "port" | "hub" | "unauthenticatedLoopbackListener">,
   listen: { port: number; hostname?: string | null },
   env: NodeJS.ProcessEnv = process.env,
 ): HubStatus | null {
@@ -272,12 +272,12 @@ export function collectHubStatus(
     managementPublicOrigin: config.hub?.managementPublicOrigin ?? null,
     dataToken: tokenState,
     dataTokenPath: serviceApiTokenFilePath(),
-    dataTokenEnvInShell: Boolean(env.OPENCODEX_API_AUTH_TOKEN?.trim()),
+    dataTokenEnvInShell: Boolean(env.OPENCCX_API_AUTH_TOKEN?.trim()),
   };
 }
 
 /**
- * The human rendering of the hub block, owned here rather than in the `ocx status` printer so
+ * The human rendering of the hub block, owned here rather than in the `occx status` printer so
  * the sentences are testable without spawning the CLI. Indentation is the caller's.
  */
 export function hubStatusLines(hub: HubStatus): string[] {
@@ -289,14 +289,14 @@ export function hubStatusLines(hub: HubStatus): string[] {
   const tokenLines = [`  Data token: ${hub.dataToken}${hub.dataToken === "missing" ? "" : ` at ${hub.dataTokenPath}`}`];
   if (hub.dataToken === "admin-collision (file)") {
     // Naming the consequence matters more than naming the state: this is what a crash-looping
-    // hub looks like from `ocx status`, and nothing else in the report says so (#4236).
+    // hub looks like from `occx status`, and nothing else in the report says so (#4236).
     tokenLines.push(
       "    that file holds the MANAGEMENT token, so the hub fences its management API closed at boot —",
-      "    delete it and run 'ocx service repair' to generate a data-plane token",
+      "    delete it and run 'occx service repair' to generate a data-plane token",
     );
   }
   if (hub.dataTokenEnvInShell) {
-    tokenLines.push("    OPENCODEX_API_AUTH_TOKEN is also set in this shell; the installed service reads the file, not this");
+    tokenLines.push("    OPENCCX_API_AUTH_TOKEN is also set in this shell; the installed service reads the file, not this");
   }
   return [
     "Hub:",
@@ -305,7 +305,7 @@ export function hubStatusLines(hub: HubStatus): string[] {
     `  Management ingress: ${hub.managementIngress.enabled ? `http://127.0.0.1:${hub.managementIngress.port}` : "disabled"}`,
     `  Management origin: ${hub.managementPublicOrigin ?? "unset — remote pairing and the remote dashboard need hub.managementPublicOrigin"}`,
     ...tokenLines,
-    "  Invite a machine: ocx hub invite",
+    "  Invite a machine: occx hub invite",
   ];
 }
 
@@ -327,7 +327,7 @@ export function disconnectedRemoteHubStatus(): CliRemoteHubStatus {
 /**
  * Ask the hub what it can serve, with a bounded read and a cache fallback.
  *
- * `ocx status` must answer while the hub is offline, so the fetch is bounded and a failure is
+ * `occx status` must answer while the hub is offline, so the fetch is bounded and a failure is
  * reported rather than thrown. It must also never answer from local provider/login state — see
  * `src/client/hub-state.ts` for why that substitution is the defect rather than a graceful
  * degradation.
@@ -448,7 +448,7 @@ export function resolveStatusPid(
 }
 
 /**
- * `ocx status` greens on process liveness alone, so a proxy that answers
+ * `occx status` greens on process liveness alone, so a proxy that answers
  * /healthz reads healthy even when Codex is not pointed at it and every routed
  * request goes to OpenAI instead (#2411). The proxy line is not wrong — the
  * listener really is up — so it keeps its check, and this supplies the signal
@@ -466,7 +466,7 @@ export function unusedProxyWarningLines(input: {
   if (!input.proxyUp || input.routingKind !== "native") return [];
   return [
     "⚠️  Codex routing is native — the running proxy is unused.",
-    "   Codex requests go to OpenAI, not this proxy. Re-point with: ocx start",
+    "   Codex requests go to OpenAI, not this proxy. Re-point with: occx start",
   ];
 }
 
@@ -480,9 +480,9 @@ export async function collectStatus(): Promise<CliStatusView> {
   const clientConnection = collectClientConnectionStatus();
   // Asked before the local probes below so a connected client's report is hub-sourced from its
   // first line. Bounded and failure-tolerant: an offline hub degrades the remoteHub block, it
-  // does not fail `ocx status`.
+  // does not fail `occx status`.
   const remoteHub = await collectRemoteHubStatus(clientConnection);
-  // Prefer identity-verified liveness (runtime-port + /healthz) over ocx.pid alone (#618).
+  // Prefer identity-verified liveness (runtime-port + /healthz) over occx.pid alone (#618).
   // Pass the already-resolved diagnostics config so findLiveProxy does not re-load and
   // warn on malformed config.json (status --json must stay stderr-clean).
   const live = await findLiveProxy({
@@ -512,7 +512,7 @@ export async function collectStatus(): Promise<CliStatusView> {
       label: `${listen.healthUrl} ok (live)`,
     }
     : await checkProxyHealth(listen);
-  // Same gatherer `ocx doctor` uses, so the two commands cannot reach different verdicts
+  // Same gatherer `occx doctor` uses, so the two commands cannot reach different verdicts
   // about the same on-disk state (review found them diverging on fallback ports).
   const staleProcessState = await probeUncleanExitState({
     live: Boolean(live),
@@ -525,7 +525,7 @@ export async function collectStatus(): Promise<CliStatusView> {
   // either way. `live` was already identity-probed a few lines above, so cross-check
   // rather than print registration as if it were service.
   const serviceSummary = service.installed && !live
-    ? `${service.summary} — registered but NOT serving; see ${serviceLogPath()} and re-run 'ocx service repair'`
+    ? `${service.summary} — registered but NOT serving; see ${serviceLogPath()} and re-run 'occx service repair'`
     : service.summary;
   const codexShim = diagnoseCodexShim();
   const codexShimSummary = codexShim.summary;
@@ -562,7 +562,7 @@ export async function collectStatus(): Promise<CliStatusView> {
     && resolvedRuntime.replacedConfigured.from.command !== resolvedRuntime.runtime.command
   ) {
     warningParts.push(
-      `Preferred Codex runtime is unavailable; using ${displayCodexRuntimePath(resolvedRuntime.runtime.command)} instead. Run ocx doctor for diagnosis and recovery.`,
+      `Preferred Codex runtime is unavailable; using ${displayCodexRuntimePath(resolvedRuntime.runtime.command)} instead. Run occx doctor for diagnosis and recovery.`,
     );
   } else if (
     resolvedRuntime.runtime.source === "fallback"
@@ -572,16 +572,16 @@ export async function collectStatus(): Promise<CliStatusView> {
     const detail = resolvedRuntime.failures[0]?.reason;
     warningParts.push(
       detail
-        ? `No validated Codex runtime found (${detail}); falling back to \`codex\`. Run ocx doctor for diagnosis and recovery.`
-        : "No validated Codex runtime found; falling back to `codex`. Run ocx doctor for diagnosis and recovery.",
+        ? `No validated Codex runtime found (${detail}); falling back to \`codex\`. Run occx doctor for diagnosis and recovery.`
+        : "No validated Codex runtime found; falling back to `codex`. Run occx doctor for diagnosis and recovery.",
     );
   }
   if (resolvedRuntime.newerAvailable) {
-    warningParts.push("OpenCodex is using an older Codex binary. Run ocx doctor for diagnosis and recovery.");
+    warningParts.push("Openccx is using an older Codex binary. Run occx doctor for diagnosis and recovery.");
   }
   if (clampActive) {
     warningParts.push(
-      `Catalog clamp removed: ${liveRemovedEfforts(lastClamp).join(", ")}. Run ocx doctor for diagnosis and recovery.`,
+      `Catalog clamp removed: ${liveRemovedEfforts(lastClamp).join(", ")}. Run occx doctor for diagnosis and recovery.`,
     );
   }
   // A Grok fence naming a port we are not listening on is invisible everywhere else:
@@ -597,13 +597,13 @@ export async function collectStatus(): Promise<CliStatusView> {
         health.ok ? effectiveLoopbackListenerPort(config, listen.port) : null,
       );
     } catch {
-      return null; // reading grok's config must never break `ocx status`
+      return null; // reading grok's config must never break `occx status`
     }
   })();
   if (grokDrift) {
     warningParts.push(
       `Grok Build config points at port ${grokDrift.fencePort}, but the proxy is on `
-      + `${grokDrift.livePort}; grok turns will retry against a closed port. Run 'ocx ensure' to repoint it.`,
+      + `${grokDrift.livePort}; grok turns will retry against a closed port. Run 'occx ensure' to repoint it.`,
     );
   }
   const codexRuntime = {
@@ -695,7 +695,7 @@ export async function collectStatus(): Promise<CliStatusView> {
       codexRuntime,
       codexHome,
       claudeDesktop,
-      // Own field rather than a line in `codexRuntime.warning`: a stale ocx on PATH is a
+      // Own field rather than a line in `codexRuntime.warning`: a stale occx on PATH is a
       // fact about this install, not about the Codex runtime, and filing it there would
       // print it under the wrong heading (#2701).
       versionSkew,

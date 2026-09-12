@@ -3,7 +3,7 @@ import { computeVersionSkew, isConfirmedVersionMatch } from "../../src/cli/versi
 import { packageVersion } from "../../src/cli/help";
 
 /**
- * #2701: an older `ocx` earlier on PATH than the running proxy described a different
+ * #2701: an older `occx` earlier on PATH than the running proxy described a different
  * build, and nothing surfaced it because the CLI never compared the two versions.
  */
 describe("version skew detection", () => {
@@ -14,9 +14,9 @@ describe("version skew detection", () => {
     expect(skew.proxyVersion).toBe("2.36.1");
     expect(skew.warning).toContain("2.35.0");
     expect(skew.warning).toContain("2.36.1");
-    expect(skew.warning).toContain("this ocx on PATH is older");
+    expect(skew.warning).toContain("this occx on PATH is older");
     expect(skew.warning).toContain("Upgrade the CLI or resolve PATH");
-    expect(skew.warning).not.toContain("ocx service repair");
+    expect(skew.warning).not.toContain("occx service repair");
   });
 
   test("#3464 directs a newer CLI to restart the older proxy", () => {
@@ -27,9 +27,9 @@ describe("version skew detection", () => {
       skewed: true,
       warning: "CLI 2.42.0 does not match the running proxy 2.10.1-preview.20260805 — "
         + "the running proxy is older than this CLI. Restart the proxy using the intended current installation. "
-        + "For a background service, run ocx service restart (repair reloads only a changed definition).",
+        + "For a background service, run occx service restart (repair reloads only a changed definition).",
     });
-    expect(skew.warning).not.toContain("this ocx on PATH is older");
+    expect(skew.warning).not.toContain("this occx on PATH is older");
   });
 
   test.each([
@@ -44,7 +44,7 @@ describe("version skew detection", () => {
     ["2.43.0-preview.9007199254740993", "2.43.0-preview.9007199254740992"],
   ])("orders %s above %s in both directions", (newer, older) => {
     expect(computeVersionSkew(newer, older).warning).toContain("the running proxy is older");
-    expect(computeVersionSkew(older, newer).warning).toContain("this ocx on PATH is older");
+    expect(computeVersionSkew(older, newer).warning).toContain("this occx on PATH is older");
   });
 
   test.each([
@@ -65,7 +65,7 @@ describe("version skew detection", () => {
       expect(skew.proxyVersion).toBe(proxy);
       expect(skew.skewed).toBe(true);
       expect(skew.warning).toContain("neither can be identified as older");
-      expect(skew.warning).not.toContain("ocx service repair");
+      expect(skew.warning).not.toContain("occx service repair");
       expect(isConfirmedVersionMatch(skew)).toBe(false);
     }
   });

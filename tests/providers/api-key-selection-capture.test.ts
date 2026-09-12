@@ -2,30 +2,30 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { captureProviderApiKeySelection } from "../../src/providers/api-key-selection-capture";
 import { captureProviderApiKeySelection as legacyCapture } from "../../src/providers/api-key-selection";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { repoPath } from "../helpers/repo-root";
 
 describe("API-key selection snapshot", () => {
-  const base: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
+  const base: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
 
   test("captures the selected entry and revision without resolving its reference", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       ...base,
-      apiKey: "${OCX_CAPTURE_FIXTURE}",
+      apiKey: "${OCCX_CAPTURE_FIXTURE}",
       apiKeySelectionRevision: "revision-before",
       apiKeyPool: [
         { id: "other", key: "keychain:other" },
-        { id: "selected", key: "${OCX_CAPTURE_FIXTURE}" },
+        { id: "selected", key: "${OCCX_CAPTURE_FIXTURE}" },
       ],
     };
     const before = structuredClone(provider);
     const snapshot = captureProviderApiKeySelection(provider);
-    expect(snapshot).toEqual({ entryId: "selected", reference: "${OCX_CAPTURE_FIXTURE}", revision: "revision-before" });
+    expect(snapshot).toEqual({ entryId: "selected", reference: "${OCCX_CAPTURE_FIXTURE}", revision: "revision-before" });
     expect(provider).toEqual(before);
     provider.apiKey = "keychain:other";
     provider.apiKeySelectionRevision = "revision-after";
     provider.apiKeyPool![1]!.id = "changed";
-    expect(snapshot).toEqual({ entryId: "selected", reference: "${OCX_CAPTURE_FIXTURE}", revision: "revision-before" });
+    expect(snapshot).toEqual({ entryId: "selected", reference: "${OCCX_CAPTURE_FIXTURE}", revision: "revision-before" });
   });
 
   test("retains an unmatched reference and absent optional fields", () => {

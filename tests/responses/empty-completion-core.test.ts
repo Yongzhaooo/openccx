@@ -7,7 +7,7 @@ import {
   setProviderRequestPacingRuntimeForTest,
 } from "../../src/providers/request-pacing";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { AdapterEvent, OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 const actualResolver = await import("../../src/server/adapter-resolve");
 const actualResolveAdapter = actualResolver.resolveAdapter;
@@ -15,7 +15,7 @@ const actualResolveAdapter = actualResolver.resolveAdapter;
 let attemptEvents: AdapterEvent[][] = [];
 let runTurnCalls = 0;
 let httpCalls = 0;
-let parsedAttempts: OcxParsedRequest[] = [];
+let parsedAttempts: OccxParsedRequest[] = [];
 let builtBodies: string[] = [];
 let customRunTurn: ProviderAdapter["runTurn"] | undefined;
 let passthroughFetchCalls = 0;
@@ -25,7 +25,7 @@ function attemptAt(index: number): AdapterEvent[] {
   return attemptEvents[index] ?? [{ type: "error", message: `missing fixture attempt ${index}` }];
 }
 
-function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter & { passthrough?: true } {
+function fixtureAdapter(provider: OccxProviderConfig): ProviderAdapter & { passthrough?: true } {
   const runTurn = provider.adapter === "test-run-turn";
   const passthrough = provider.adapter === "test-passthrough";
   return {
@@ -74,7 +74,7 @@ function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter & { passth
       return attemptAt(index);
     },
     ...(runTurn ? {
-      async runTurn(parsed: OcxParsedRequest, _incoming: unknown, emit: (event: AdapterEvent) => void) {
+      async runTurn(parsed: OccxParsedRequest, _incoming: unknown, emit: (event: AdapterEvent) => void) {
         if (customRunTurn) {
           await customRunTurn(parsed, _incoming as never, emit);
           return;
@@ -90,7 +90,7 @@ function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter & { passth
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     if (
       provider.adapter === "test-run-turn"
       || provider.adapter === "test-http"
@@ -106,8 +106,8 @@ const { handleResponses } = await import("../../src/server/responses");
 
 function config(
   adapter: "test-run-turn" | "test-http" | "test-passthrough",
-  extra: Partial<OcxConfig> = {},
-): OcxConfig {
+  extra: Partial<OccxConfig> = {},
+): OccxConfig {
   const result = {
     port: 0,
     defaultProvider: "fixture",
@@ -122,9 +122,9 @@ function config(
       },
     },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
   if (adapter === "test-passthrough") {
-    (result.providers.fixture as OcxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch = async () => {
+    (result.providers.fixture as OccxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch = async () => {
       passthroughFetchCalls += 1;
       return Response.json({
         id: "resp_fixture",
@@ -162,7 +162,7 @@ beforeEach(() => {
 
 afterEach(() => {
   resetProviderRequestPacingForTest();
-  delete process.env.OCX_EMPTY_COMPLETION_RETRY;
+  delete process.env.OCCX_EMPTY_COMPLETION_RETRY;
 });
 
 describe("empty-completion core integration", () => {

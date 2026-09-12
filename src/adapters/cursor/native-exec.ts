@@ -52,7 +52,7 @@ import {
 } from "./native-exec-tools";
 import { clientBytes, execBytes, execStreamCloseBytes, execThrowBytes } from "./native-exec-common";
 import type { McpToolDefinition } from "./gen/agent_pb";
-import { OCX_RESPONSES_TOOL_PROVIDER } from "./tool-definitions";
+import { OCCX_RESPONSES_TOOL_PROVIDER } from "./tool-definitions";
 
 export type CursorNativeExecDeps = CursorNativeNetworkDeps & CursorNativeToolDeps;
 
@@ -655,7 +655,7 @@ export async function handleCursorNativeExec(execMsg: ExecServerMessage, deps: C
   if (execCase === "backgroundShellSpawnArgs") return [backgroundShellSpawnExec(execMsg, deps.sessionId ?? "")];
   if (execCase === "writeShellStdinArgs") return [writeShellStdinExec(execMsg, deps.sessionId ?? "")];
   if (execCase === "fetchArgs") return [await fetchExec(execMsg, deps)];
-  if (execCase === "mcpArgs" && execMsg.message.value.providerIdentifier === OCX_RESPONSES_TOOL_PROVIDER) {
+  if (execCase === "mcpArgs" && execMsg.message.value.providerIdentifier === OCCX_RESPONSES_TOOL_PROVIDER) {
     return [execBytes(execMsg, "mcpResult", create(McpResultSchema, {
       result: {
         case: "error",
@@ -675,7 +675,7 @@ export async function handleCursorNativeExec(execMsg: ExecServerMessage, deps: C
         case: "error",
         value: create(DiagnosticsErrorSchema, {
           path,
-          error: "Diagnostics are not supported by the opencodex Cursor transport.",
+          error: "Diagnostics are not supported by the openccx Cursor transport.",
         }),
       },
     }))];

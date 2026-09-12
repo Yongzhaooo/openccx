@@ -4,9 +4,9 @@ import { providerConfigSeed, deriveKeyLoginMap, deriveFeaturedProviderIds } from
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
 import { routedProviderConfig } from "../../src/router";
 import { buildModelsRequest } from "../../src/oauth";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
-function minimalRequest(model = "kimi-k2.7-code"): OcxParsedRequest {
+function minimalRequest(model = "kimi-k2.7-code"): OccxParsedRequest {
   return {
     modelId: model,
     stream: false,
@@ -54,7 +54,7 @@ describe("opencode-free provider", () => {
   });
 
   test("adapter sends no auth header with no apiKey configured", () => {
-    const provider: OcxProviderConfig = providerConfigSeed(entry!);
+    const provider: OccxProviderConfig = providerConfigSeed(entry!);
     const adapter = createOpenAIChatAdapter(provider);
     const req = adapter.buildRequest(minimalRequest());
     const headers = req.headers as Record<string, string>;
@@ -65,7 +65,7 @@ describe("opencode-free provider", () => {
   });
 
   test("user-supplied apiKey is sent when configured", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       ...providerConfigSeed(entry!),
       apiKey: "user-secret-key",
     };
@@ -77,7 +77,7 @@ describe("opencode-free provider", () => {
   });
 
   test("the provider client marker still applies when a user apiKey is present", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       ...providerConfigSeed(entry!),
       apiKey: "user-secret-key",
     };
@@ -95,7 +95,7 @@ describe("opencode-free provider", () => {
   // rewrites it. If the header only arrives at seed time, every existing install stays on the
   // old fingerprint forever — which is what the original #2067 patch would have shipped.
   describe("existing installs receive newly added static headers", () => {
-    const persisted = (headers?: Record<string, string>): OcxProviderConfig => ({
+    const persisted = (headers?: Record<string, string>): OccxProviderConfig => ({
       adapter: "openai-chat",
       baseUrl: "https://opencode.ai/zen/v1",
       keyOptional: true,
@@ -156,7 +156,7 @@ describe("opencode-free provider", () => {
   });
 
   test("DeepSeek Free preserves reasoning content for tool-call history", () => {
-    const provider: OcxProviderConfig = providerConfigSeed(entry!);
+    const provider: OccxProviderConfig = providerConfigSeed(entry!);
     const request = adapterRequest("deepseek-v4-flash-free");
     const body = JSON.parse(createOpenAIChatAdapter(provider).buildRequest(request).body as string) as {
       messages: Array<Record<string, unknown> & { reasoning_content?: string }>;
@@ -166,8 +166,8 @@ describe("opencode-free provider", () => {
   });
 
   test("Zen-bound tool schemas are normalized to an object root", () => {
-    const provider: OcxProviderConfig = providerConfigSeed(entry!);
-    const request: OcxParsedRequest = {
+    const provider: OccxProviderConfig = providerConfigSeed(entry!);
+    const request: OccxParsedRequest = {
       modelId: "deepseek-v4-flash-free",
       stream: false,
       context: {

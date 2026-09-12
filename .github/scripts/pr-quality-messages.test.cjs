@@ -71,7 +71,7 @@ describe("buildGateCommentBody", () => {
       notices: ["extra line"]
     }).join("\n");
     assert.ok(body.startsWith(GATE_MARKER));
-    assert.ok(body.includes('<!-- opencodex-pr-gate-state:{"version":1'));
+    assert.ok(body.includes('<!-- openccx-pr-gate-state:{"version":1'));
     assert.ok(body.includes("## ⏳ DRAFT"));
     assert.ok(body.includes("## What to do"));
     assert.ok(body.includes("Tick all four boxes"));
@@ -261,7 +261,7 @@ describe("buildFindingsClaimNotice", () => {
 describe("hygiene section round-trip", () => {
   const GATE = [
     GATE_MARKER,
-    '<!-- opencodex-pr-gate-state:{"version":1,"active":false} -->',
+    '<!-- openccx-pr-gate-state:{"version":1,"active":false} -->',
     "",
     "## ✅ READY",
     "- all PR quality gates passed.",
@@ -317,7 +317,7 @@ describe("hygiene section round-trip", () => {
     // ends the block early nor corrupts the next rewrite.
     const malicious = [
       GATE_MARKER,
-      '<!-- opencodex-pr-gate-state:{"version":1,"active":false} -->',
+      '<!-- openccx-pr-gate-state:{"version":1,"active":false} -->',
       "",
       "## ✅ READY",
       "- all PR quality gates passed.",
@@ -358,7 +358,7 @@ describe("hygiene section round-trip", () => {
     // and assert both the gate status and the hygiene status survive.
     const withBlock = [
       GATE_MARKER,
-      '<!-- opencodex-pr-gate-state:{"version":1,"active":false} -->',
+      '<!-- openccx-pr-gate-state:{"version":1,"active":false} -->',
       "",
       "## ✅ READY",
       "- all PR quality gates passed.",

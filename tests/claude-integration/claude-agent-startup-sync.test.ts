@@ -8,13 +8,13 @@ import {
 } from "../../src/cli/claude-agent-startup-sync";
 import { injectClaudeAgentDefs } from "../../src/claude/agents-inject";
 import { createReadinessGate } from "../../src/server/readiness";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const config = (claudeCode: OcxConfig["claudeCode"] = {}): OcxConfig => ({
+const config = (claudeCode: OccxConfig["claudeCode"] = {}): OccxConfig => ({
   providers: [],
   claudeCode,
-} as OcxConfig);
+} as OccxConfig);
 
 describe("Claude agent roster proxy-start synchronization (#2200)", () => {
   test("keeps readiness pending until the fourth registry callback settles", async () => {
@@ -107,11 +107,11 @@ describe("Claude agent roster proxy-start synchronization (#2200)", () => {
       },
       injectAgentDefs: (_cfg, windows) => {
         calls.push({ port: 0, windows });
-        return ["ocx-google-gemini-3-7-flash.md"];
+        return ["occx-google-gemini-3-7-flash.md"];
       },
     });
 
-    expect(result).toEqual(["ocx-google-gemini-3-7-flash.md"]);
+    expect(result).toEqual(["occx-google-gemini-3-7-flash.md"]);
     expect(calls).toEqual([
       { port: 10100 },
       { port: 0, windows: { "google/gemini-3.7-flash": 1_000_000 } },
@@ -138,23 +138,23 @@ describe("Claude agent roster proxy-start synchronization (#2200)", () => {
   });
 
   test("catalog failure still runs the real injector with an unmarked roster", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-startup-roster-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-startup-roster-"));
     try {
       const configured = {
         providers: [],
         subagentModels: ["gpt-5.6-sol"],
         claudeCode: { model: "gpt-5.6-sol" },
-      } as OcxConfig;
+      } as OccxConfig;
       const result = await syncClaudeAgentDefsAtProxyStartup(configured, 10100, {
         fetchContextWindows: async () => { throw new Error("catalog unavailable"); },
         injectAgentDefs: (cfg, windows) => injectClaudeAgentDefs(cfg, windows, dir),
       });
 
-      expect(result?.sort()).toEqual(["ocx-gpt-5-6-sol.md", "ocx-self.md"]);
+      expect(result?.sort()).toEqual(["occx-gpt-5-6-sol.md", "occx-self.md"]);
       expect(readdirSync(join(dir, "agents")).sort()).toEqual(result?.sort());
       for (const file of result ?? []) {
         const body = readFileSync(join(dir, "agents", file), "utf8");
-        expect(body).toContain("generated-by: opencodex");
+        expect(body).toContain("generated-by: openccx");
         expect(body).not.toContain("[1m]");
       }
     } finally {

@@ -199,7 +199,7 @@ export function reconcileLabAutomationQueue(configDir?: string): void {
   }));
 }
 
-function loadPlannerConfig(configDir?: string): import("../../types").OcxConfig | undefined {
+function loadPlannerConfig(configDir?: string): import("../../types").OccxConfig | undefined {
   const runtimeDeps = dispatchDepsFor(configDir);
   try {
     return runtimeDeps.loadConfig?.() ?? readConfigDiagnostics().config;

@@ -7,7 +7,7 @@
  * (Anthropic blocks, Antigravity inlineData, xai Responses input_image, plain
  * openai-chat), so provider coverage is the router's job, not this file's.
  *
- * Recursion fence: the request carries `x-opencodex-vision-describe: 1`.
+ * Recursion fence: the request carries `x-openccx-vision-describe: 1`.
  * The Chat surface detects the raw header before its bridge rebuilds headers
  * and carries it into handleResponses as `visionDescribeTerminal`; a marked
  * request STRIPS images instead of planning another describe (depth cap 1,
@@ -15,7 +15,7 @@
  *
  * Admission ladder (audit round 3): configuredApiAuthToken() (env token) ||
  * service token file || first config.apiKeys entry, sent as
- * `x-opencodex-api-key` — never Authorization (gateway-cache.ts rule: an
+ * `x-openccx-api-key` — never Authorization (gateway-cache.ts rule: an
  * admission secret in a forwardable header is a forwarding hazard). Loopback
  * binds require no token at all (resolveApiAuth admits loopback).
  *
@@ -25,7 +25,7 @@
  * loopback") is closed by resolving through `localInferenceDestination`
  * rather than composing 127.0.0.1 by hand.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { localAdmissionToken, localInferenceDestination } from "../lib/local-destinations";
 import { signalWithTimeout, cancelBodyOnAbort } from "../lib/abort";
 import { redactSecretString } from "../lib/redact";
@@ -33,7 +33,7 @@ import { sidecarEnter } from "../lib/sidecar-tracker";
 import { configuredPort } from "../server/auth-cors";
 import type { DescribeOutcome, VisionSettings } from "./describe";
 
-export const VISION_DESCRIBE_TERMINAL_HEADER = "x-opencodex-vision-describe";
+export const VISION_DESCRIBE_TERMINAL_HEADER = "x-openccx-vision-describe";
 
 const ALLOWED_IMAGE_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]);
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
@@ -69,13 +69,13 @@ function validateImageUrl(url: string): string | null {
  * self-fetch presents cannot drift from the one the Codex provider table and the Claude launch
  * env carry. Never the admin token.
  */
-export function routedDescribeAdmissionToken(config: Pick<OcxConfig, "apiKeys">): string | undefined {
+export function routedDescribeAdmissionToken(config: Pick<OccxConfig, "apiKeys">): string | undefined {
   return localAdmissionToken(config);
 }
 
 /** Base URL seam for tests; production always self-fetches the resolved local destination. */
 export function routedDescribeBaseUrl(
-  config: Pick<OcxConfig, "port" | "hostname" | "unauthenticatedLoopbackListener">,
+  config: Pick<OccxConfig, "port" | "hostname" | "unauthenticatedLoopbackListener">,
 ): string {
   return routedDescribeDestination(config).origin;
 }
@@ -88,7 +88,7 @@ export function routedDescribeBaseUrl(
  * all (#4236). The helper sends the OpenAI chat wire, which that listener now admits.
  */
 function routedDescribeDestination(
-  config: Pick<OcxConfig, "port" | "hostname" | "unauthenticatedLoopbackListener">,
+  config: Pick<OccxConfig, "port" | "hostname" | "unauthenticatedLoopbackListener">,
 ) {
   // config.port can be 0 (ephemeral bind, tests) or stale after a live port override; the
   // server records its ACTUAL bound port via setCorsOrigin at startup, so prefer that when
@@ -106,7 +106,7 @@ export async function describeImageRouted(
   _detail: string | undefined,
   contextText: string,
   routedModel: string,
-  config: Pick<OcxConfig, "port" | "hostname" | "apiKeys" | "unauthenticatedLoopbackListener">,
+  config: Pick<OccxConfig, "port" | "hostname" | "apiKeys" | "unauthenticatedLoopbackListener">,
   settings: VisionSettings,
   abortSignal?: AbortSignal,
   baseUrlOverride?: string,
@@ -119,13 +119,13 @@ export async function describeImageRouted(
     [VISION_DESCRIBE_TERMINAL_HEADER]: "1",
   };
   const admission = routedDescribeAdmissionToken(config);
-  if (admission) headers["x-opencodex-api-key"] = admission;
+  if (admission) headers["x-openccx-api-key"] = admission;
   // A bind that demands admission with no resolvable credential would return 401 with a body
   // the caller reports as a describe failure; naming the cause once is the difference between
   // "vision is broken" and a fixable configuration note.
   if (!admission && !baseUrlOverride && routedDescribeDestination(config).requiresAdmissionToken) {
     console.warn(
-      "[vision] routed describe has no opencodex data-plane credential for "
+      "[vision] routed describe has no openccx data-plane credential for "
       + `${routedDescribeBaseUrl(config)} — the self-fetch will be refused.`,
     );
   }

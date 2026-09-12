@@ -11,7 +11,7 @@ import { setTrustedWindowsSystemDirectoryResolverForTests } from "../../src/lib/
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 async function withTrustedWindowsPowerShell<T>(run: (powershell: string) => Promise<T>): Promise<T> {
-  const systemDirectory = mkdtempSync(join(tmpdir(), "ocx-system32-"));
+  const systemDirectory = mkdtempSync(join(tmpdir(), "occx-system32-"));
   const powershell = join(systemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe");
   mkdirSync(dirname(powershell), { recursive: true });
   writeFileSync(powershell, "");

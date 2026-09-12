@@ -1,5 +1,5 @@
 /**
- * #4207: "ocx connect status" answered a different question from the one the operator asked.
+ * #4207: "occx connect status" answered a different question from the one the operator asked.
  * It proved the hub answered and the credential worked, then printed "connected" over a catalog
  * the installed Codex CLI could not parse, so "codex exec" died on an unknown-variant error for
  * the reasoning level "max" before its first request.
@@ -42,7 +42,7 @@ type ProbeResult = {
 };
 
 /**
- * Runs the real "ocx connect status" surface against a throwaway client home. The ladder is
+ * Runs the real "occx connect status" surface against a throwaway client home. The ladder is
  * injected rather than observed: a spawned "codex debug models" would make the assertion depend
  * on whichever Codex CLI the test machine happens to have.
  */
@@ -51,13 +51,13 @@ function runStatusProbe(options: {
   ladder: string[] | null | "forbidden";
   catalog?: string;
 }): ProbeResult {
-  const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-readiness-home-"));
-  const codexHome = mkdtempSync(join(tmpdir(), "ocx-readiness-codex-"));
+  const openccxHome = mkdtempSync(join(tmpdir(), "occx-readiness-home-"));
+  const codexHome = mkdtempSync(join(tmpdir(), "occx-readiness-codex-"));
   try {
-    const token = `ocx_data_${"f".repeat(40)}`;
+    const token = `occx_data_${"f".repeat(40)}`;
     const fingerprint = createHash("sha256").update(token).digest("hex");
     const catalog = options.catalog ?? CATALOG_WITH_MAX;
-    writeFileSync(join(opencodexHome, "config.json"), JSON.stringify(options.connected
+    writeFileSync(join(openccxHome, "config.json"), JSON.stringify(options.connected
       ? {
         port: 10100,
         providers: {},
@@ -68,7 +68,7 @@ function runStatusProbe(options: {
           managementUrl: "https://hub.example.test",
           managementTransport: "direct",
           selectedClients: ["codex"],
-          tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+          tokenEnv: "OPENCCX_API_AUTH_TOKEN",
           apiKeyId: "client-key-1",
           tokenFingerprint: fingerprint,
           protocolVersion: 1,
@@ -78,8 +78,8 @@ function runStatusProbe(options: {
         },
       }
       : { port: 10100, providers: {}, defaultProvider: "openai" }), "utf8");
-    writeFileSync(join(opencodexHome, "service-api-token"), `${token}\n`, { mode: 0o600 });
-    writeFileSync(join(codexHome, "opencodex-catalog.json"), catalog, "utf8");
+    writeFileSync(join(openccxHome, "service-api-token"), `${token}\n`, { mode: 0o600 });
+    writeFileSync(join(codexHome, "openccx-catalog.json"), catalog, "utf8");
 
     const script = `
       const { collectClientConnectionStatus, handleConnectCommand } = require("./src/cli/connect");
@@ -87,7 +87,7 @@ function runStatusProbe(options: {
       const supportedEfforts = ladder === "forbidden"
         ? () => { throw new Error("the runtime was probed on a path that must not probe it"); }
         : ladder === null ? () => null : () => new Set(ladder);
-      const lifecycleLockDeps = { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" };
+      const lifecycleLockDeps = { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" };
       const captured = [];
       const real = console.log;
       (async () => {
@@ -116,18 +116,18 @@ function runStatusProbe(options: {
       killSignal: "SIGKILL",
       env: {
         ...process.env,
-        OPENCODEX_HOME: opencodexHome,
+        OPENCCX_HOME: openccxHome,
         CODEX_HOME: codexHome,
         // Matches the existing client fixtures: no probe may reach the operator's real Claude
         // Desktop configuration, even transitively.
-        OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(opencodexHome, "desktop"),
+        OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(openccxHome, "desktop"),
         FIXTURE_LADDER: JSON.stringify(options.ladder),
       },
     });
     expect(result.status).toBe(0);
     return JSON.parse(result.stdout.trim().split("\n").at(-1)!) as ProbeResult;
   } finally {
-    removeTreeWithRetry(opencodexHome);
+    removeTreeWithRetry(openccxHome);
     removeTreeWithRetry(codexHome);
   }
 }
@@ -200,7 +200,7 @@ describe("#4207 connected-client readiness", () => {
   });
 });
 
-describe("#4207 what ocx connect reports when the local CLI cannot use the catalog", () => {
+describe("#4207 what occx connect reports when the local CLI cannot use the catalog", () => {
   const incompatible: ClientCatalogReadiness = {
     kind: "incompatible",
     reason: "the installed catalog uses reasoning level max, which the selected local Codex CLI rejects",

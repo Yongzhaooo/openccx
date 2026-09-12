@@ -95,7 +95,7 @@ function sameColumns(columns: ColumnRow[]): boolean {
  * weaker than what the inspector reports, so a schema change landing between
  * the outer inspection and the locked write let Protect install a row-dropping
  * trigger and let Reclaim vacuum pages on a database the inspector classifies
- * as monitor-only. The lock serializes OpenCodex against itself; it does not
+ * as monitor-only. The lock serializes Openccx against itself; it does not
  * stop Codex or another SQLite writer, so that TOCTOU window is real.
  */
 export function hasCurrentLogsSchema(db: Database): boolean {
@@ -131,7 +131,7 @@ export function hasCurrentLogsTable(db: Database, columns: ColumnRow[]): boolean
   }
 
   // Extra indexes and triggers do not redefine the table contract. In particular,
-  // Protect intentionally installs OpenCodex-owned triggers and unrelated user triggers
+  // Protect intentionally installs Openccx-owned triggers and unrelated user triggers
   // are supported, so compatibility is based on the canonical table plus required indexes.
   return true;
 }

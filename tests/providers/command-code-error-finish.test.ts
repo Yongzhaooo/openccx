@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { createCommandCodeAdapter } from "../../src/adapters/command-code";
 import { buildResponseJSON } from "../../src/bridge";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
-import type { AdapterEvent, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../src/types";
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "command-code",
   baseUrl: "https://api.command.example",
   apiKey: "test-key",

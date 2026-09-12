@@ -6,7 +6,7 @@
 
 **Architecture:** Add a dedicated `src/lab/public/` boundary with independently versioned public types and strict validators. Public bundles are derived from valid local Lab evidence only after an exact exportability gate, signed with a local Ed25519 publisher key, and stored separately from the canonical ledger. Imported bundles are bounded, signature-checked, and stored only in a non-authoritative community domain that never feeds local verdicts, routing, or CL-08.
 
-**Tech Stack:** TypeScript, Bun tests, Node `crypto` Ed25519, existing Lab JSONL/SQLite/query/digest/path infrastructure, existing `ocx lab` CLI and authenticated management API, existing Compatibility Matrix UI/i18n.
+**Tech Stack:** TypeScript, Bun tests, Node `crypto` Ed25519, existing Lab JSONL/SQLite/query/digest/path infrastructure, existing `occx lab` CLI and authenticated management API, existing Compatibility Matrix UI/i18n.
 
 ## Global Constraints
 

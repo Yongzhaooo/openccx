@@ -47,7 +47,7 @@ import {
 } from "../../src/codex/catalog/bundled";
 
 function tempConfigDir(): string {
-  return mkdtempSync(join(tmpdir(), "ocx-runtime-"));
+  return mkdtempSync(join(tmpdir(), "occx-runtime-"));
 }
 
 function persistedRuntimeBytes(
@@ -110,10 +110,10 @@ describe("observe-only Codex catalog gather caches", () => {
       chmodSync(launcher, 0o755);
     }
 
-    const previousHome = process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
     const previousCli = process.env.CODEX_CLI_PATH;
     const previousPath = process.env.PATH;
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     process.env.CODEX_CLI_PATH = launcher;
     process.env.PATH = NO_CODEX_PATH;
     resetCodexRuntimeResolveCacheForTests();
@@ -134,8 +134,8 @@ describe("observe-only Codex catalog gather caches", () => {
       });
       expect(existsSync(spawnLog) ? readFileSync(spawnLog, "utf8").trim().split("\n").length : 0).toBe(0);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       if (previousCli === undefined) delete process.env.CODEX_CLI_PATH;
       else process.env.CODEX_CLI_PATH = previousCli;
       if (previousPath === undefined) delete process.env.PATH;
@@ -688,7 +688,7 @@ describe("resolveCodexRuntime", () => {
 
   test("creates missing config directory on first runtime/clamp persist", () => {
     const parent = tempConfigDir();
-    const configDir = join(parent, "nested", "opencodex-home");
+    const configDir = join(parent, "nested", "openccx-home");
     expect(existsSync(configDir)).toBe(false);
     persistCodexRuntime({
       command: "C:\\keep\\codex.exe",
@@ -777,10 +777,10 @@ describe("resolveCodexRuntime", () => {
       return readFileSync(probeLog, "utf8").split("\n").filter(line => line.trim().length > 0).length;
     };
 
-    const previousHome = process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
     const previousCli = process.env.CODEX_CLI_PATH;
     const previousPath = process.env.PATH;
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     process.env.CODEX_CLI_PATH = bin;
     process.env.PATH = NO_CODEX_PATH;
     resetCodexRuntimeResolveCacheForTests();
@@ -801,14 +801,14 @@ describe("resolveCodexRuntime", () => {
       // execFileSync, which opts resolveCacheKey() out of memoizing, and (2) an unconditional
       // persist whose `updatedAt` both clears the memo and rekeys it. Either one made every
       // catalog read spawn `codex --version` (~1s), pushing /api/claude-code past the 3s
-      // budget ocx claude allows and silently skipping the gateway-model cache refresh.
+      // budget occx claude allows and silently skipping the gateway-model cache refresh.
       for (let i = 0; i < 4; i++) {
         expect(loadBundledCodexCatalog()?.models?.[0]?.slug).toBe("gpt-5.5");
       }
       expect(countProbes()).toBe(warm);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       if (previousCli === undefined) delete process.env.CODEX_CLI_PATH;
       else process.env.CODEX_CLI_PATH = previousCli;
       if (previousPath === undefined) delete process.env.PATH;
@@ -853,8 +853,8 @@ describe("resolveCodexRuntime", () => {
       updatedAt: "2026-01-01T00:00:00.000Z",
     }));
 
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = configDir;
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = configDir;
     resetCodexRuntimeResolveCacheForTests();
     const deps = { env: { PATH: "" }, discoverAlternatives: false };
 
@@ -871,15 +871,15 @@ describe("resolveCodexRuntime", () => {
 
       expect(readFileSync(statePath, "utf8")).toBe(before);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       resetCodexRuntimeResolveCacheForTests();
     }
   });
 
   test("catalog clamp clears diagnostics inside deps.configDir when probe fails", async () => {
     const { clampCatalogModelsToCodexSupport } = await import("../../src/codex/catalog/effort");
-    const nested = join(tempConfigDir(), "nested", "opencodex-home");
+    const nested = join(tempConfigDir(), "nested", "openccx-home");
     const configured = join(nested, "codex.exe");
     persistEffortClamp({
       runtimePath: configured,
@@ -956,10 +956,10 @@ describe("resolveCodexRuntime", () => {
     writeLauncher(oldBin, "0.133.0", ["low", "medium", "high"]);
     writeLauncher(newBin, "0.145.0-alpha.30", ["low", "medium", "high", "max", "ultra"]);
 
-    const previousHome = process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
     const previousCli = process.env.CODEX_CLI_PATH;
     const previousPath = process.env.PATH;
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     process.env.PATH = NO_CODEX_PATH;
     resetCodexRuntimeResolveCacheForTests();
     resetBundledCatalogCacheForTests();
@@ -991,8 +991,8 @@ describe("resolveCodexRuntime", () => {
         level => (level as { effort?: string }).effort === "max",
       )).toBe(true);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       if (previousCli === undefined) delete process.env.CODEX_CLI_PATH;
       else process.env.CODEX_CLI_PATH = previousCli;
       if (previousPath === undefined) delete process.env.PATH;

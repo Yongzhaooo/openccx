@@ -12,17 +12,17 @@ import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../src/config";
 import { handleManagementAPI, type ManagementApiDeps } from "../../src/server/management-api";
 import { invalidateStartupHealthCache } from "../../src/server/startup-health-cache";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { startupHealthFixture } from "../helpers/startup-health";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let TEST_DIR = "";
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 const readTestStartupHealth: NonNullable<ManagementApiDeps["getCachedStartupHealth"]> = async () => (
   startupHealthFixture()
 );
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -32,7 +32,7 @@ function baseConfig(): OcxConfig {
   };
 }
 
-function settingsRequest(config: OcxConfig, body?: unknown): Promise<Response | null> {
+function settingsRequest(config: OccxConfig, body?: unknown): Promise<Response | null> {
   const req = body === undefined
     ? new Request("http://127.0.0.1:10100/api/settings", { headers: { host: "127.0.0.1:10100" } })
     : new Request("http://127.0.0.1:10100/api/settings", {
@@ -45,14 +45,14 @@ function settingsRequest(config: OcxConfig, body?: unknown): Promise<Response | 
 
 beforeEach(() => {
   invalidateStartupHealthCache();
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-settings-openbrowser-"));
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-settings-openbrowser-"));
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(() => {
   invalidateStartupHealthCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (TEST_DIR && existsSync(TEST_DIR)) {
     try { removeTreeWithRetry(TEST_DIR); } catch { /* Windows handle retention */ }
   }

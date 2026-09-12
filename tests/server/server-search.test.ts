@@ -19,13 +19,13 @@ import { loadConfig, saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { clearRequestLogsForTests, getRequestLogEntries } from "../../src/server/request-log";
 import { handleSearch, SEARCH_RESPONSE_MAX_BYTES } from "../../src/server/search";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const originalFetch = globalThis.fetch;
 const TEST_DIR = join(import.meta.dir, ".tmp-server-search-test");
 let isolatedCodexHome: IsolatedCodexHome | null = null;
@@ -34,9 +34,9 @@ const DIRECT_CHATGPT_TOKEN = fakeChatGptJwt({ chatgpt_account_id: "acct-123" });
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-search-codex-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-search-codex-");
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
   clearAccountNeedsReauth("pool-a");
@@ -48,10 +48,10 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   clearCodexUpstreamHealth();
@@ -97,7 +97,7 @@ function fakeSearchUpstream(captured: CapturedRequest[], status = 200, payload?:
   return upstream;
 }
 
-function forwardConfig(_baseUrl = ""): OcxConfig {
+function forwardConfig(_baseUrl = ""): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -110,10 +110,10 @@ function forwardConfig(_baseUrl = ""): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function exactSearchConfig(): OcxConfig {
+function exactSearchConfig(): OccxConfig {
   return {
     ...forwardConfig(),
     providers: {
@@ -132,7 +132,7 @@ function exactSearchConfig(): OcxConfig {
     ],
     activeCodexAccountId: "pool-b",
     codexAccountNamespaces: { side: "pool-a" },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveExactSearchCredentials(): void {
@@ -198,7 +198,7 @@ test("a routed pool account's token overrides the caller bearer on the search re
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   saveCodexAccountCredential("pool-a", {
     accessToken: "pool-access-token",
     refreshToken: "pool-refresh-token",
@@ -408,7 +408,7 @@ test("returns an honest 400 when no ChatGPT forward provider is configured", asy
     providers: {
       groq: { adapter: "openai-chat", baseUrl: "https://api.groq.example/v1", apiKey: "gsk-x" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -541,7 +541,7 @@ test("a search body that stalls after headers retains the total 504 deadline", a
     }
     return originalFetch(input, init);
   }) as typeof fetch;
-  saveConfig({ ...forwardConfig(), search: { timeoutMs: 50 } } as OcxConfig);
+  saveConfig({ ...forwardConfig(), search: { timeoutMs: 50 } } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -648,7 +648,7 @@ test("a hung search upstream times out with 504 after config.search.timeoutMs", 
   saveConfig({
     ...forwardConfig(upstream.url.toString().replace(/\/$/, "")),
     search: { timeoutMs: 100 },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -692,7 +692,7 @@ test("a short connectTimeoutMs does NOT cut a slow search (total deadline is sea
   saveConfig({
     ...forwardConfig(upstream.url.toString().replace(/\/$/, "")),
     connectTimeoutMs: 50,
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -727,7 +727,7 @@ test("GET /v1/alpha/search still falls through to the JSON 404 guard", async () 
 });
 
 test("search routes require API auth and local Origin on non-loopback bindings", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
   saveConfig({
     ...forwardConfig("https://chatgpt.example/backend-api/codex"),
     hostname: "0.0.0.0",
@@ -747,7 +747,7 @@ test("search routes require API auth and local Origin on non-loopback bindings",
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-opencodex-api-key": "local-secret",
+        "x-openccx-api-key": "local-secret",
         origin: "https://attacker.test",
       },
       body: JSON.stringify({ id: "search-session" }),
@@ -759,7 +759,7 @@ test("search routes require API auth and local Origin on non-loopback bindings",
 });
 
 test("the proxy admission secret is never relayed to the search upstream", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
   const captured: CapturedRequest[] = [];
   const upstream = fakeSearchUpstream(captured);
   saveConfig({ ...forwardConfig(), hostname: "0.0.0.0" });

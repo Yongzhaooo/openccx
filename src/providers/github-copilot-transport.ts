@@ -1,11 +1,11 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import {
   GITHUB_COPILOT_DEFAULT_API_BASE,
   GITHUB_COPILOT_EDITOR_HEADERS,
   validateCopilotApiBaseUrl,
 } from "../oauth/github-copilot";
 
-export type OcxProviderTransport = OcxProviderConfig & {
+export type OccxProviderTransport = OccxProviderConfig & {
   fetch?: typeof globalThis.fetch;
 };
 
@@ -27,14 +27,14 @@ function withoutUserOverridden(
 }
 
 /**
- * Copilot chat requires editor fingerprint headers. Defaults are honest OpenCodex values
+ * Copilot chat requires editor fingerprint headers. Defaults are honest Openccx values
  * with Copilot-Integration-Id set to the vscode-chat integration id the public client uses.
  * User-configured headers always win.
  */
 export function resolveGithubCopilotTransport(
-  provider: OcxProviderTransport,
+  provider: OccxProviderTransport,
   apiBaseUrl?: string,
-): OcxProviderTransport {
+): OccxProviderTransport {
   const stableDefaults = withoutUserOverridden(GITHUB_COPILOT_EDITOR_HEADERS, provider.headers);
   const headers = {
     ...stableDefaults,

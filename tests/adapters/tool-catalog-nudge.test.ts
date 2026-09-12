@@ -5,7 +5,7 @@ import {
   shouldInjectNonOpenAIToolCatalogNudge,
 } from "../../src/adapters/tool-catalog-nudge";
 import { CODE_MODE_HOST_CONTRACT_SENTENCE, CODE_MODE_RESULT_ECHO_SENTENCE, EMPTY_EXEC_OUTPUT_MESSAGE } from "../../src/adapters/exec-tool-result-normalize";
-import type { OcxTool } from "../../src/types";
+import type { OccxTool } from "../../src/types";
 
 describe("non-OpenAI tool catalog nudge", () => {
   test("builds a compact catalog-grounding note from wire names", () => {
@@ -39,7 +39,7 @@ describe("non-OpenAI tool catalog nudge", () => {
   });
 
   test("never forbids apply_patch through the tool-object entry point either", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       {
         name: "exec",
         description: "Run JavaScript. declare const tools: { apply_patch(input: string): Promise<unknown>; };",
@@ -50,18 +50,18 @@ describe("non-OpenAI tool catalog nudge", () => {
     expect(buildNonOpenAIToolCatalogNudgeForTools(tools)).not.toContain("apply_patch");
   });
 
-  const codeModeExec = (): OcxTool => ({
+  const codeModeExec = (): OccxTool => ({
     name: "exec",
     freeform: true,
     description: "Run JavaScript in a V8 isolate.",
     parameters: {},
-  } as OcxTool);
+  } as OccxTool);
 
   test("defines nested helper names as non-callable unless separately listed", () => {
     const note = buildNonOpenAIToolCatalogNudgeForTools([
       codeModeExec(),
-      { name: "wait", parameters: {} } as OcxTool,
-      { name: "request_user_input", parameters: {} } as OcxTool,
+      { name: "wait", parameters: {} } as OccxTool,
+      { name: "request_user_input", parameters: {} } as OccxTool,
     ]);
 
     expect(note).toContain("Valid tool names for this turn are exactly `exec`, `wait`, `request_user_input`");
@@ -77,7 +77,7 @@ describe("non-OpenAI tool catalog nudge", () => {
     // The injected text must never display the decorated form as a copyable literal.
     expect(note).toContain("no further asterisks");
     expect(note).not.toContain("*** Begin Patch ***");
-    expect(note).toContain("OpenCodex does not rewrite JavaScript inside exec");
+    expect(note).toContain("Openccx does not rewrite JavaScript inside exec");
     expect(note).toContain("Nested `tools.apply_patch(input)` is host-executed");
     expect(note).not.toContain("call the listed parent tool and use those helpers only inside that tool's input");
     // The host contract rides the same code-mode branch as the echo rule (Grok 2026-09-07).
@@ -97,7 +97,7 @@ describe("non-OpenAI tool catalog nudge", () => {
 
   test("detects a wire-renamed exec as code mode", () => {
     const note = buildNonOpenAIToolCatalogNudgeForTools(
-      [codeModeExec(), { name: "wait", parameters: {} } as OcxTool],
+      [codeModeExec(), { name: "wait", parameters: {} } as OccxTool],
       undefined,
       tool => `cx_${tool.name}`,
     );
@@ -114,8 +114,8 @@ describe("non-OpenAI tool catalog nudge", () => {
   // avoids a legitimate top-level execution tool.
   test("a structured tool named exec is NOT code mode", () => {
     const note = buildNonOpenAIToolCatalogNudgeForTools([
-      { name: "exec", freeform: false, parameters: {} } as OcxTool,
-      { name: "mcp__fs__read_file", parameters: {} } as OcxTool,
+      { name: "exec", freeform: false, parameters: {} } as OccxTool,
+      { name: "mcp__fs__read_file", parameters: {} } as OccxTool,
     ]);
 
     expect(note).not.toContain("is Codex code mode");
@@ -127,7 +127,7 @@ describe("non-OpenAI tool catalog nudge", () => {
     for (const bridge of ["exec_command", "shell_command"]) {
       const note = buildNonOpenAIToolCatalogNudgeForTools([
         codeModeExec(),
-        { name: bridge, parameters: {} } as OcxTool,
+        { name: bridge, parameters: {} } as OccxTool,
       ]);
 
       expect(note).not.toContain("is Codex code mode");
@@ -153,7 +153,7 @@ describe("non-OpenAI tool catalog nudge", () => {
     for (const name of ["exec_command", "shell_command"]) {
       const note = buildNonOpenAIToolCatalogNudgeForTools([
         codeModeExec(),
-        { namespace: "mcp__docker", name, parameters: {} } as OcxTool,
+        { namespace: "mcp__docker", name, parameters: {} } as OccxTool,
       ]);
 
       expect(note).toContain("is Codex code mode");
@@ -162,7 +162,7 @@ describe("non-OpenAI tool catalog nudge", () => {
 
   test("a namespaced freeform exec is not Codex's own code-mode tool", () => {
     const note = buildNonOpenAIToolCatalogNudgeForTools([
-      { namespace: "mcp__sandbox", name: "exec", freeform: true, parameters: {} } as OcxTool,
+      { namespace: "mcp__sandbox", name: "exec", freeform: true, parameters: {} } as OccxTool,
     ]);
 
     expect(note).not.toContain("is Codex code mode");
@@ -184,7 +184,7 @@ describe("non-OpenAI tool catalog nudge", () => {
   });
 
   test("threads the wire transform from the tool-object entry point", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "Read", description: "read", parameters: {} },
       { name: "shell", description: "run", parameters: {} },
     ];
@@ -197,7 +197,7 @@ describe("non-OpenAI tool catalog nudge", () => {
   });
 
   test("applies tool_choice before listing valid names", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
     ];
@@ -209,7 +209,7 @@ describe("non-OpenAI tool catalog nudge", () => {
   });
 
   test("keeps a uniquely named namespace tool visible when allowed_tools uses its bare name", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec", namespace: "functions", description: "Run", parameters: {} },
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
     ];

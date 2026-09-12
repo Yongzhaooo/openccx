@@ -32,17 +32,17 @@ import {
   getNativeMainProfileRequestCount,
   resetLifecycleDrainStateForTests,
 } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 // Phase 20 (260630_wsl-account-autoswitch): startup/lazy quota priming.
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-quota-prime-test");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -56,10 +56,10 @@ function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     defaultProvider: "openai",
     codexAccounts: [],
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function seedPoolAccount(config: OcxConfig, id: string, plan?: string): void {
+function seedPoolAccount(config: OccxConfig, id: string, plan?: string): void {
   config.codexAccounts = [
     ...(config.codexAccounts ?? []),
     { id, email: `${id}@example.test`, plan, isMain: false },
@@ -95,11 +95,11 @@ function switchRequest(): Request {
 
 describe("primeCodexPoolQuotas", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     previousCodexHome = process.env.CODEX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_CODEX_HOME, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     // Isolate the main-account source: TEST_CODEX_HOME has no auth.json, so the
     // main account is deterministically absent and priming only touches the pool.
     process.env.CODEX_HOME = TEST_CODEX_HOME;
@@ -118,8 +118,8 @@ describe("primeCodexPoolQuotas", () => {
     clearMainAccountInfoCache();
     resetMainCodexAccountIdentityTrackingForTests();
     resetLifecycleDrainStateForTests();
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);

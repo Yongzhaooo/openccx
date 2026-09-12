@@ -83,7 +83,7 @@ describe("install scripts", () => {
   test("Node can import the package main without executing the CLI", () => {
     const result = spawnSync("node", [
       "-e",
-      "import('./bin/package-main.mjs').then(m => { if (m.cliCommand !== 'ocx') process.exit(2); })",
+      "import('./bin/package-main.mjs').then(m => { if (m.cliCommand !== 'occx') process.exit(2); })",
     ], {
       cwd: repoRoot,
       encoding: "utf8",
@@ -99,7 +99,7 @@ describe("install scripts", () => {
 
     expect(npmignore).toContain("gui/README.md");
     expect(guiNpmignore).toContain("README.md");
-    expect(guiReadme).toContain("opencodex dashboard");
+    expect(guiReadme).toContain("openccx dashboard");
     expect(guiReadme).toContain("bun run dev:proxy");
     expect(guiReadme).toContain("bun run dev:gui");
     expect(guiReadme).not.toContain("This template provides a minimal setup");
@@ -110,8 +110,8 @@ describe("install scripts", () => {
 
     expect(script).toContain("Node.js 18+ is required");
     expect(script).toContain("npm install -g @bitkyc08/opencodex");
-    expect(script).toContain("command -v ocx");
-    expect(script).toContain("ocx help");
+    expect(script).toContain("command -v occx");
+    expect(script).toContain("occx help");
     expect(script).not.toContain("bun install -g @bitkyc08/opencodex");
     expect(script).not.toContain("bun.sh/install");
   });
@@ -122,9 +122,9 @@ describe("install scripts", () => {
     expect(script).toContain("Node.js 18+ is required");
     expect(script).toContain("& $npm.Source install -g @bitkyc08/opencodex");
     expect(script).toContain("$LASTEXITCODE");
-    expect(script).toContain("Get-Command ocx.cmd");
-    expect(script).toContain("Get-Command ocx");
-    expect(script).toContain("& $ocx.Source help");
+    expect(script).toContain("Get-Command occx.cmd");
+    expect(script).toContain("Get-Command occx");
+    expect(script).toContain("& $occx.Source help");
     expect(script).not.toContain("bun install -g @bitkyc08/opencodex");
     expect(script).not.toContain("bun.sh/install.ps1");
   });
@@ -132,14 +132,14 @@ describe("install scripts", () => {
   test.skipIf(process.platform === "win32")(
     "restart helper launches without setsid in PATH",
     async () => {
-      const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-restart-no-setsid-"));
+      const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-restart-no-setsid-"));
       const home = join(fixtureRoot, "home");
       const binDir = join(fixtureRoot, "bin");
       const callsPath = join(fixtureRoot, "bun-calls.log");
       const restartLog = join(fixtureRoot, "restart.log");
 
       try {
-        mkdirSync(join(home, ".opencodex"), { recursive: true });
+        mkdirSync(join(home, ".openccx"), { recursive: true });
         mkdirSync(binDir, { recursive: true });
         for (const command of ["cat", "dirname", "nohup", "rm", "seq", "tail"]) {
           symlinkSync(systemCommandPath(command), join(binDir, command));
@@ -148,29 +148,29 @@ describe("install scripts", () => {
         writeExecutable(join(binDir, "node"), "#!/bin/sh\nprintf '10100'\n");
         writeExecutable(join(binDir, "curl"), "#!/bin/sh\nexit 0\n");
         writeExecutable(join(binDir, "bun"), `#!/bin/sh
-printf '%s\\n' "$*" >> "$OCX_TEST_CALLS"
+printf '%s\\n' "$*" >> "$OCCX_TEST_CALLS"
 if [ "$3" = "start" ]; then
   /bin/mkdir -p "$HOME/.opencodex"
   printf '{"port":10100}\\n' > "$HOME/.opencodex/runtime-port.json"
-  printf '%s\\n' "$$" > "$HOME/.opencodex/ocx.pid"
+  printf '%s\\n' "$$" > "$HOME/.opencodex/occx.pid"
 fi
 exit 0
 `);
 
-        const result = spawnSync("/bin/bash", [join(repoRoot, "scripts/ocx-restart.sh")], {
+        const result = spawnSync("/bin/bash", [join(repoRoot, "scripts/occx-restart.sh")], {
           cwd: repoRoot,
           encoding: "utf8",
           env: {
             HOME: home,
             PATH: binDir,
-            OCX_RESTART_LOG: restartLog,
-            OCX_TEST_CALLS: callsPath,
+            OCCX_RESTART_LOG: restartLog,
+            OCCX_TEST_CALLS: callsPath,
           },
           timeout: 10_000,
         });
 
         expect(result.status).toBe(0);
-        expect(result.stdout).toContain("[ocx-restart] healthy on port 10100");
+        expect(result.stdout).toContain("[occx-restart] healthy on port 10100");
         expect((await Bun.file(callsPath).text()).trim().split("\n")).toEqual([
           "run src/cli/index.ts stop",
           "run src/cli/index.ts start",
@@ -182,7 +182,7 @@ exit 0
   );
 
   test("Node launcher handles package-manager self-update before starting Bun", async () => {
-    const launcher = await readText("bin/ocx.mjs");
+    const launcher = await readText("bin/occx.mjs");
 
     expect(launcher).toContain('process.argv[2] === "update"');
     expect(launcher).toContain('["install", "-g", `${PKG}@${tag}`]');
@@ -211,7 +211,7 @@ exit 0
   test.skipIf(process.platform === "win32")(
     "package mode normalization skips direct and nested filesystem links",
     () => {
-      const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-package-modes-"));
+      const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-package-modes-"));
       const packageRoot = join(fixtureRoot, "package");
       const externalRoot = join(fixtureRoot, "external");
       const externalLauncher = join(externalRoot, "package-main.mjs");
@@ -223,13 +223,13 @@ exit 0
         mkdirSync(join(packageRoot, "gui", "dist", "nested"), { recursive: true });
         mkdirSync(externalDirectory, { recursive: true });
 
-        writeFileSync(join(packageRoot, "bin", "ocx.mjs"), "launcher");
+        writeFileSync(join(packageRoot, "bin", "occx.mjs"), "launcher");
         writeFileSync(join(packageRoot, "gui", "dist", "asset.js"), "asset");
         writeFileSync(join(packageRoot, "gui", "dist", "nested", "chunk.js"), "chunk");
         writeFileSync(externalLauncher, "external launcher");
         writeFileSync(externalAsset, "external asset");
 
-        chmodSync(join(packageRoot, "bin", "ocx.mjs"), 0o600);
+        chmodSync(join(packageRoot, "bin", "occx.mjs"), 0o600);
         chmodSync(join(packageRoot, "gui", "dist"), 0o700);
         chmodSync(join(packageRoot, "gui", "dist", "asset.js"), 0o600);
         chmodSync(join(packageRoot, "gui", "dist", "nested"), 0o700);
@@ -250,7 +250,7 @@ exit 0
         expect(mode(externalLauncher)).toBe(0o600);
         expect(mode(externalDirectory)).toBe(0o700);
         expect(mode(externalAsset)).toBe(0o600);
-        expect(mode(join(packageRoot, "bin", "ocx.mjs"))).toBe(0o755);
+        expect(mode(join(packageRoot, "bin", "occx.mjs"))).toBe(0o755);
         expect(mode(join(packageRoot, "gui", "dist"))).toBe(0o755);
         expect(mode(join(packageRoot, "gui", "dist", "asset.js"))).toBe(0o644);
         expect(mode(join(packageRoot, "gui", "dist", "nested"))).toBe(0o755);
@@ -265,7 +265,7 @@ exit 0
   );
 
   test("package mode normalization does not traverse a linked output root", () => {
-    const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-package-root-link-"));
+    const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-package-root-link-"));
     const packageRoot = join(fixtureRoot, "package");
     const externalOutput = join(fixtureRoot, "external-output");
     const externalAsset = join(externalOutput, "asset.js");

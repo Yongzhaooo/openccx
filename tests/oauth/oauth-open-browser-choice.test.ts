@@ -1,7 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { shouldOpenBrowserForLogin } from "../../src/oauth/open-browser-choice";
 import { handleOauthAccountRoutes } from "../../src/server/management/oauth-account-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * The operator can stop the proxy from opening a browser on its own machine —
@@ -13,8 +13,8 @@ import type { OcxConfig } from "../../src/types";
  * the new capability; that one is the promise not to break anyone.
  */
 
-function config(oauthOpenBrowser?: boolean): OcxConfig {
-  return { port: 0, hostname: "127.0.0.1", defaultProvider: "xai", providers: {}, ...(oauthOpenBrowser === undefined ? {} : { oauthOpenBrowser }) } as OcxConfig;
+function config(oauthOpenBrowser?: boolean): OccxConfig {
+  return { port: 0, hostname: "127.0.0.1", defaultProvider: "xai", providers: {}, ...(oauthOpenBrowser === undefined ? {} : { oauthOpenBrowser }) } as OccxConfig;
 }
 
 describe("shouldOpenBrowserForLogin", () => {
@@ -43,7 +43,7 @@ describe("shouldOpenBrowserForLogin", () => {
 
 async function startLogin(
   body: Record<string, unknown>,
-  cfg: OcxConfig,
+  cfg: OccxConfig,
 ): Promise<{ opened: string[]; url?: string }> {
   const oauth = await import("../../src/oauth");
   const openUrlMod = await import("../../src/lib/open-url");
@@ -100,7 +100,7 @@ describe("POST /api/oauth/login honors the choice", () => {
 describe("the rollback path keeps the setting honest", () => {
   test("a failed save restores the previous value instead of leaving it half-applied", async () => {
     const { handleManagementAPI } = await import("../../src/server/management-api");
-    const cfg = { port: 10100, defaultProvider: "openai", providers: {} } as OcxConfig;
+    const cfg = { port: 10100, defaultProvider: "openai", providers: {} } as OccxConfig;
     const req = new Request("http://127.0.0.1:10100/api/settings", {
       method: "PUT",
       headers: { "content-type": "application/json", host: "127.0.0.1:10100" },

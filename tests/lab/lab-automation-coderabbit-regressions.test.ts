@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { defaultLabAutomationPolicyV1, normalizeLabAutomationPolicyV1 } from "../../src/lab/automation/policy";
 import {
   defaultLabAutomationStateV1,
@@ -35,15 +35,15 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-coderabbit-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-coderabbit-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
-  process.env.OPENCODEX_HOME = dir;
+  process.env.OPENCCX_HOME = dir;
   return dir;
 }
 
-function emptyConfig(): OcxConfig {
-  return { providers: {} } as OcxConfig;
+function emptyConfig(): OccxConfig {
+  return { providers: {} } as OccxConfig;
 }
 
 function queuedRun(overrides: Partial<LabAutomationRunRecordV1> = {}): LabAutomationRunRecordV1 {
@@ -93,7 +93,7 @@ afterEach(() => {
   stopLabAutomationScheduler();
   resetLabAutomationSchedulerStateForTests();
   for (const dir of HOMES.splice(0)) removeTreeWithRetry(dir);
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 describe("CL-08 CodeRabbit regressions", () => {
@@ -289,7 +289,7 @@ describe("CL-08 CodeRabbit regressions", () => {
           models: ["grok"],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const executor = createProductionLabRouteExecutor({ loadConfig: () => config });
     await expect(executor.execute({
       routeContext: {
@@ -302,7 +302,7 @@ describe("CL-08 CodeRabbit regressions", () => {
         upstreamProtocol: "responses",
         surface: "responses",
         baseUrl: "http://example.com/v1",
-        opencodexCompatibilityVersion: "f".repeat(64),
+        openccxCompatibilityVersion: "f".repeat(64),
         behaviorValues: {},
       },
       destination: {

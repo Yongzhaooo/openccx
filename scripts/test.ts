@@ -19,10 +19,10 @@ export interface IsolatedTestEnvironment {
 export function createIsolatedTestEnvironment(
   baseEnv: Record<string, string | undefined> = process.env,
 ): IsolatedTestEnvironment {
-  const root = mkdtempSync(join(tmpdir(), "opencodex-test-"));
-  const opencodexHome = join(root, ".opencodex");
+  const root = mkdtempSync(join(tmpdir(), "openccx-test-"));
+  const openccxHome = join(root, ".openccx");
   const codexHome = join(root, ".codex");
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   mkdirSync(codexHome, { recursive: true });
   if (process.platform === "win32") {
     // A Windows sandbox has to look like a real profile, because the known-folder APIs
@@ -44,7 +44,7 @@ export function createIsolatedTestEnvironment(
       // HOME, `homedir()` returns the sandbox, so this hand-off is the only way the
       // real-home write guard can still know which path to protect.
       // (devlog 260730_codex_rs_upstream_v2_live_handoff/070.)
-      OCX_REAL_HOME: baseEnv.OCX_REAL_HOME ?? homedir(),
+      OCCX_REAL_HOME: baseEnv.OCCX_REAL_HOME ?? homedir(),
       // Pin git's global config to the developer's real one before HOME moves.
       //
       // git resolves ~/.gitconfig from HOME, so a sandboxed HOME makes it invisible.
@@ -58,7 +58,7 @@ export function createIsolatedTestEnvironment(
       GIT_CONFIG_GLOBAL: baseEnv.GIT_CONFIG_GLOBAL ?? join(homedir(), ".gitconfig"),
       HOME: root,
       USERPROFILE: root,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
       CODEX_HOME: codexHome,
     },
     cleanup() {
@@ -475,7 +475,7 @@ export async function runTestLane(
     // Lanes run many files in parallel, so a test that shortened a PRODUCT timing budget
     // (not its own test timeout) needs headroom for process startup on a busy machine.
     // See tests/helpers/ci-watchdog.ts `isolationBudgetMs`.
-    OCX_TEST_FULL_SUITE: "1",
+    OCCX_TEST_FULL_SUITE: "1",
   });
   const startedAt = Date.now();
   let interrupted: NodeJS.Signals | null = null;
@@ -606,7 +606,7 @@ if (import.meta.main) {
       validatedRuntimePath: lockPath !== undefined,
       onWait: owner => console.warn(
         `[test] another Bun test run${owner ? ` (pid ${owner.pid})` : ""} holds the user lock; waiting. `
-        + "Set OCX_TEST_NO_QUEUE=1 only for intentional overlap.",
+        + "Set OCCX_TEST_NO_QUEUE=1 only for intentional overlap.",
       ),
       onAcquiredAfterWait: elapsedMs => console.warn(`[test] acquired the user lock after ${Math.round(elapsedMs / 1000)}s.`),
     });

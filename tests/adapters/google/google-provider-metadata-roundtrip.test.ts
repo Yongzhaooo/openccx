@@ -4,14 +4,14 @@ import {
   providerMetadataFromResponsesFunctionCall,
   responsesExtraContentFromProviderMetadata,
 } from "../../../src/responses/provider-opaque-metadata";
-import type { OcxProviderOpaqueToolCallMetadata } from "../../../src/types";
+import type { OccxProviderOpaqueToolCallMetadata } from "../../../src/types";
 
 const SIG_A = "sig-alpha-opaque-value";
 const SIG_B = "sig-beta-opaque-value";
 
 describe("provider-opaque tool-call metadata (#1735)", () => {
   test("round-trips a signature through the Responses wire shape unchanged", () => {
-    const metadata: OcxProviderOpaqueToolCallMetadata = { google: { thoughtSignature: SIG_A } };
+    const metadata: OccxProviderOpaqueToolCallMetadata = { google: { thoughtSignature: SIG_A } };
     const wire = responsesExtraContentFromProviderMetadata(metadata);
     expect(wire).toEqual({ extra_content: { google: { thought_signature: SIG_A } } });
     // The value is opaque: what comes back out must be byte-identical to what went in.

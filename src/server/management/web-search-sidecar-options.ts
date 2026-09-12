@@ -6,14 +6,14 @@
  * and the `webSearchSidecar` override in `PUT /api/claude-code`. They share
  * this module for the same reason the vision routes share
  * vision-sidecar-options.ts: a gate on one route and a stale copy on the
- * other is the same as no gate at all. `ocx config set` raw JSON writes
+ * other is the same as no gate at all. `occx config set` raw JSON writes
  * bypass management gates by design (operator escape hatch, same as vision).
  *
  * Unlike vision's provably-blind gate (reject only on positive proof), the
  * web-search gate is MEMBERSHIP: the executor set is closed and known, so an
  * id outside (candidates ∪ auth slots) can never run and is refused.
  */
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { AUTH_SLOT_MODELS, resolveSidecarAuth } from "../../sidecar/auth";
 import { pickerVisibleSidecarCandidates, type SidecarCandidate } from "../../sidecar/candidates";
 import { WEB_SEARCH_BACKENDS, webSearchSidecarCandidates } from "../../web-search/backends";
@@ -40,7 +40,7 @@ export interface WebSearchModelOption {
 }
 
 /** The candidate rows the web-search executors can actually run right now. */
-export async function webSearchCandidateRows(config: OcxConfig): Promise<WebSearchCandidateRow[]> {
+export async function webSearchCandidateRows(config: OccxConfig): Promise<WebSearchCandidateRow[]> {
   const auth = resolveSidecarAuth(config);
   const all = await pickerVisibleSidecarCandidates(config, auth);
   return webSearchSidecarCandidates(config, auth, all).flatMap(candidate => {
@@ -56,7 +56,7 @@ export async function webSearchCandidateRows(config: OcxConfig): Promise<WebSear
  * GET); new writes of such an id are still rejected by the gate below.
  */
 export function webSearchModelOptionsFrom(
-  config: Pick<OcxConfig, "webSearchSidecar">,
+  config: Pick<OccxConfig, "webSearchSidecar">,
   candidates: readonly WebSearchCandidateRow[],
 ): WebSearchModelOption[] {
   const byValue = new Map<string, WebSearchModelOption>();

@@ -1,5 +1,5 @@
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { describe, expect, test } from "bun:test";
 import {
   collectFunctionCallRepairSchemas,
@@ -366,7 +366,7 @@ test("native Responses JSON/SSE and replay share the original function schema re
   const config = {
     port: 0, defaultProvider: "fixture",
     providers: { fixture: { adapter: "openai-responses", baseUrl: "https://function-parity.invalid/v1", authMode: "key", apiKey: "fixture-key" } },
-  } as OcxConfig;
+  } as OccxConfig;
   let activeId = "";
   let captured: { input?: Array<Record<string, unknown>> } | undefined;
   const sse = (type: string, payload: object) => `event: ${type}\ndata: ${JSON.stringify({ type, ...payload })}\n\n`;

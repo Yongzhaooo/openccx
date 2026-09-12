@@ -11,7 +11,7 @@ const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
 
 /**
- * Every subprocess in this file runs against a private temp OPENCODEX_HOME so no
+ * Every subprocess in this file runs against a private temp OPENCCX_HOME so no
  * check can ever discover/inspect/mutate the operator's real proxy state. The
  * ready describe keeps ONLY the help-routing subprocess checks: the
  * network/no-proxy/argument-validation ready tests live as injected tests in
@@ -64,7 +64,7 @@ async function waitForCliExit(exited: Promise<void>, milliseconds: number): Prom
 async function runCli(args: string[], env: Record<string, string> = {}, control?: {
   spawn: CliSpawn; budget: typeof CLI_BUDGET;
 }): Promise<{ status: number; stdout: string; stderr: string }> {
-  const state = cliHomes.get(env.OPENCODEX_HOME);
+  const state = cliHomes.get(env.OPENCCX_HOME);
   if (!state) throw new Error("CLI probe requires an owned isolated home");
   const budget = control?.budget ?? CLI_BUDGET;
   const spawn: CliSpawn = control?.spawn ?? ((argv, options) => Bun.spawn(argv, options));
@@ -192,7 +192,7 @@ describe("CLI subprocess lifecycle", () => {
   ];
 
   for (const scenario of scenarios) test(scenario.name, async () => {
-    const dir = isolatedHome(`ocx-cli-control-${scenario.name.replace(/[^a-z0-9]+/gi, "-")}-`);
+    const dir = isolatedHome(`occx-cli-control-${scenario.name.replace(/[^a-z0-9]+/gi, "-")}-`);
     const state = cliHomes.get(dir)!;
     let resolveExit!: (status: number) => void;
     let rejectExit!: (error: Error) => void;
@@ -219,14 +219,14 @@ describe("CLI subprocess lifecycle", () => {
     const spawn: CliSpawn = (argv, options) => {
       expect(argv).toEqual([process.execPath, cliPath, "health"]);
       expect(options.cwd).toBe(repoRoot);
-      expect(options.env.OPENCODEX_HOME).toBe(dir);
+      expect(options.env.OPENCCX_HOME).toBe(dir);
       if (scenario.mode === "spawn-error") throw Object.assign(new Error("fixture"), { code: "ENOENT" });
       if (scenario.mode === "exit-error") rejectExit(Object.assign(new Error("fixture"), { code: "EPIPE" }));
       if (scenario.mode === "exit") resolveExit(scenario.status!);
       return child;
     };
     try {
-      const result: unknown = await runCli(["health"], { OPENCODEX_HOME: dir }, { spawn, budget })
+      const result: unknown = await runCli(["health"], { OPENCCX_HOME: dir }, { spawn, budget })
         .then(value => value, error => error);
       if (scenario.failures.length) {
         expect(result).toBeInstanceOf(CliHarnessError);
@@ -254,14 +254,14 @@ describe("CLI subprocess lifecycle", () => {
   });
 });
 
-describe("ocx restart", () => {
+describe("occx restart", () => {
   test("restart --help prints usage", async () => {
-    const dir = isolatedHome("ocx-restart-help-");
+    const dir = isolatedHome("occx-restart-help-");
     let failed = false;
     try {
-      const result = await runCli(["restart", "--help"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["restart", "--help"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("ocx restart");
+      expect(result.stdout).toContain("occx restart");
     } catch (error) {
       failed = true;
       throw error;
@@ -271,10 +271,10 @@ describe("ocx restart", () => {
   }, CLI_TEST_TIMEOUT);
 
   test("help restart shows restart help entry", async () => {
-    const dir = isolatedHome("ocx-restart-help-entry-");
+    const dir = isolatedHome("occx-restart-help-entry-");
     let failed = false;
     try {
-      const result = await runCli(["help", "restart"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["help", "restart"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("Stop the proxy and restart");
     } catch (error) {
@@ -286,14 +286,14 @@ describe("ocx restart", () => {
   }, CLI_TEST_TIMEOUT);
 });
 
-describe("ocx health", () => {
+describe("occx health", () => {
   test("health --help prints usage", async () => {
-    const dir = isolatedHome("ocx-health-help-");
+    const dir = isolatedHome("occx-health-help-");
     let failed = false;
     try {
-      const result = await runCli(["health", "--help"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["health", "--help"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("ocx health");
+      expect(result.stdout).toContain("occx health");
     } catch (error) {
       failed = true;
       throw error;
@@ -303,10 +303,10 @@ describe("ocx health", () => {
   }, CLI_TEST_TIMEOUT);
 
   test("help health shows health help entry", async () => {
-    const dir = isolatedHome("ocx-health-help-entry-");
+    const dir = isolatedHome("occx-health-help-entry-");
     let failed = false;
     try {
-      const result = await runCli(["help", "health"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["help", "health"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("Check proxy health");
     } catch (error) {
@@ -318,11 +318,11 @@ describe("ocx health", () => {
   }, CLI_TEST_TIMEOUT);
 
   test("health exits 1 with no proxy running (isolated home)", async () => {
-    const dir = isolatedHome("ocx-health-");
+    const dir = isolatedHome("occx-health-");
     let failed = false;
     try {
       writeIsolatedConfig(dir);
-      const result = await runCli(["health"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["health"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stdout).toContain("not healthy");
     } catch (error) {
@@ -334,11 +334,11 @@ describe("ocx health", () => {
   }, CLI_TEST_TIMEOUT);
 
   test("health --json exits 1 with valid JSON when no proxy", async () => {
-    const dir = isolatedHome("ocx-health-json-");
+    const dir = isolatedHome("occx-health-json-");
     let failed = false;
     try {
       writeIsolatedConfig(dir);
-      const result = await runCli(["health", "--json"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["health", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       const parsed = JSON.parse(result.stdout);
       expect(parsed.ok).toBe(false);
@@ -352,17 +352,17 @@ describe("ocx health", () => {
   }, CLI_TEST_TIMEOUT);
 });
 
-describe("ocx ready", () => {
+describe("occx ready", () => {
   // Only the help-routing subprocess checks live here. The default-probe,
   // --json, --wait, --timeout, and argument-validation cases are injected tests
   // in tests/cli/cli-ready.test.ts (no real loopback/home).
   test("ready --help prints usage (exit 0)", async () => {
-    const dir = isolatedHome("ocx-ready-help-");
+    const dir = isolatedHome("occx-ready-help-");
     let failed = false;
     try {
-      const result = await runCli(["ready", "--help"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["ready", "--help"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("ocx ready");
+      expect(result.stdout).toContain("occx ready");
       expect(result.stdout).toContain("--wait");
     } catch (error) {
       failed = true;
@@ -373,10 +373,10 @@ describe("ocx ready", () => {
   }, CLI_TEST_TIMEOUT);
 
   test("help ready shows the ready help entry", async () => {
-    const dir = isolatedHome("ocx-ready-help-entry-");
+    const dir = isolatedHome("occx-ready-help-entry-");
     let failed = false;
     try {
-      const result = await runCli(["help", "ready"], { OPENCODEX_HOME: dir });
+      const result = await runCli(["help", "ready"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("post-sync readiness");
     } catch (error) {

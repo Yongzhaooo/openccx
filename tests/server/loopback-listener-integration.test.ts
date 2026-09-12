@@ -21,16 +21,16 @@ import {
   PortUnavailableError,
   setEphemeralPortAllocatorForTests,
 } from "../../src/server/ports";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-const previousHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
 let testDir = "";
 
-function baseConfig(loopbackPort: number | null): OcxConfig {
+function baseConfig(loopbackPort: number | null): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -45,10 +45,10 @@ function baseConfig(loopbackPort: number | null): OcxConfig {
     ...(loopbackPort === null
       ? {}
       : { unauthenticatedLoopbackListener: { enabled: true, port: loopbackPort } }),
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-function hubIngressConfig(managementPort: number, loopbackPort: number | null = null): OcxConfig {
+function hubIngressConfig(managementPort: number, loopbackPort: number | null = null): OccxConfig {
   return {
     ...baseConfig(loopbackPort),
     runtimeRole: "hub",
@@ -101,19 +101,19 @@ function handshake(url: string): Promise<boolean> {
 }
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-loopback-listener-"));
-  process.env.OPENCODEX_HOME = testDir;
-  process.env.OPENCODEX_API_AUTH_TOKEN = "public-secret";
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "admin-secret";
+  testDir = mkdtempSync(join(tmpdir(), "occx-loopback-listener-"));
+  process.env.OPENCCX_HOME = testDir;
+  process.env.OPENCCX_API_AUTH_TOKEN = "public-secret";
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = "admin-secret";
 });
 
 afterEach(() => {
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir && existsSync(testDir)) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -134,7 +134,7 @@ describe("hub management ingress", () => {
         headers: {
           Host: "hub.example.test",
           Origin: "https://hub.example.test",
-          "x-opencodex-api-key": "admin-secret",
+          "x-openccx-api-key": "admin-secret",
         },
       });
       expect(management.status).toBe(200);
@@ -329,7 +329,7 @@ describe("unauthenticated loopback listener", () => {
     // logged in, and the unauthenticated listener exists for the inference wires a directly
     // spawned `codex app-server` speaks — not for discovery. A hub reads its own config.
     const loopbackPort = await freePort();
-    saveConfig({ ...baseConfig(loopbackPort), runtimeRole: "hub" } as OcxConfig);
+    saveConfig({ ...baseConfig(loopbackPort), runtimeRole: "hub" } as OccxConfig);
     const server = await startLoopbackTestServer(loopbackPort);
     try {
       const viaLoopback = await fetch(`http://127.0.0.1:${loopbackPort}/v1/hub-state`);
@@ -341,7 +341,7 @@ describe("unauthenticated loopback listener", () => {
       // And the route genuinely exists on this build and on this host, so the 404 above is the
       // allowlist rather than a missing route passing vacuously.
       const viaPublic = await fetch(`http://127.0.0.1:${server.port}/v1/hub-state`, {
-        headers: { "x-opencodex-api-key": "public-secret" },
+        headers: { "x-openccx-api-key": "public-secret" },
       });
       expect(viaPublic.status).toBe(200);
       expect(await viaPublic.json()).toMatchObject({ runtimeRole: "hub" });
@@ -362,7 +362,7 @@ describe("unauthenticated loopback listener", () => {
       // proves the gate is open is that the answer comes from BEHIND it: the admitted-turn
       // path (503 while native-main maintenance holds, otherwise the relay's own 401 for a
       // missing ChatGPT credential), never the listener's 404 and never the public
-      // listener's "opencodex API key required".
+      // listener's "openccx API key required".
       const viaLoopback = await fetch(`http://127.0.0.1:${loopbackPort}/v1/alpha/search`, {
         method: "POST", body, headers,
       });
@@ -370,7 +370,7 @@ describe("unauthenticated loopback listener", () => {
       expect(viaLoopback.status).not.toBe(404);
       expect([401, 503]).toContain(viaLoopback.status);
       expect(loopbackBody.error?.message).toBeDefined();
-      expect(loopbackBody.error?.message).not.toBe("opencodex API key required");
+      expect(loopbackBody.error?.message).not.toBe("openccx API key required");
 
       // The public listener is unchanged: the same request without a key is still refused
       // at admission, so widening the loopback allowlist did not widen the public surface.
@@ -379,7 +379,7 @@ describe("unauthenticated loopback listener", () => {
       });
       expect(viaPublic.status).toBe(401);
       const publicBody = await viaPublic.json() as { error?: { message?: string } };
-      expect(publicBody.error?.message).toBe("opencodex API key required");
+      expect(publicBody.error?.message).toBe("openccx API key required");
     } finally {
       await server.stop(true);
     }
@@ -407,7 +407,7 @@ describe("unauthenticated loopback listener", () => {
         // test assert the environment rather than the allowlist.
         expect([400, 401, 503]).toContain(viaLoopback.status);
         expect(loopbackBody.error?.message).toBeDefined();
-        expect(loopbackBody.error?.message).not.toBe("opencodex API key required");
+        expect(loopbackBody.error?.message).not.toBe("openccx API key required");
 
         // The public listener remains credential-gated. Only the separately bound loopback
         // listener gets the narrow route exception.
@@ -418,7 +418,7 @@ describe("unauthenticated loopback listener", () => {
         });
         expect(viaPublic.status).toBe(401);
         const publicBody = await viaPublic.json() as { error?: { message?: string } };
-        expect(publicBody.error?.message).toBe("opencodex API key required");
+        expect(publicBody.error?.message).toBe("openccx API key required");
       }
     } finally {
       await server.stop(true);
@@ -494,7 +494,7 @@ describe("unauthenticated loopback listener", () => {
   });
 
   test("admits the local client inference wires, and still refuses /api/* (#4236)", async () => {
-    // The hub's own local clients do not speak Responses: `ocx claude`, the system-env
+    // The hub's own local clients do not speak Responses: `occx claude`, the system-env
     // injection and Claude Desktop speak the Anthropic wire, Cursor / the vision helper /
     // aside speak OpenAI chat. On a tailnet-bound hub this listener is their only local
     // socket, so a 404 here is the whole "Codex works but nothing else does" defect.
@@ -533,7 +533,7 @@ describe("unauthenticated loopback listener", () => {
       // CLI resolves `/api/*` through the authenticated surface with a management credential.
       for (const path of ["/api/claude-code", "/api/config"]) {
         const response = await fetch(`${base}${path}`, {
-          headers: { "x-opencodex-api-key": "admin-secret" },
+          headers: { "x-openccx-api-key": "admin-secret" },
         });
         expect({ path, status: response.status }).toEqual({ path, status: 404 });
       }
@@ -581,7 +581,7 @@ describe("unauthenticated loopback listener", () => {
 
   test("upgrades a Responses WebSocket on the listener that received it", async () => {
     const loopbackPort = await freePort();
-    saveConfig({ ...baseConfig(loopbackPort), websockets: true } as unknown as OcxConfig);
+    saveConfig({ ...baseConfig(loopbackPort), websockets: true } as unknown as OccxConfig);
     const server = await startLoopbackTestServer(loopbackPort);
     try {
       // What this proves: the loopback listener completes a Responses WebSocket handshake
@@ -908,15 +908,15 @@ describe("Codex injection targets the loopback listener", () => {
     // The child passes the PUBLIC port to injectCodexConfig, which is what every real caller
     // does. The loopback substitution happens inside the injector, so handing the loopback
     // port straight to the block builder would keep passing with that wiring deleted.
-    const root = mkdtempSync(join(tmpdir(), "ocx-loopback-inject-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-loopback-inject-"));
     const codexHome = join(root, ".codex");
-    const ocxHome = join(root, ".opencodex");
+    const occxHome = join(root, ".openccx");
     mkdirSync(codexHome, { recursive: true });
-    mkdirSync(ocxHome, { recursive: true });
+    mkdirSync(occxHome, { recursive: true });
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5"\n', "utf-8");
     const config = baseConfig(10_200) as Record<string, unknown>;
     config.port = 10_100;
-    writeFileSync(join(ocxHome, "config.json"), JSON.stringify(config), "utf-8");
+    writeFileSync(join(occxHome, "config.json"), JSON.stringify(config), "utf-8");
     try {
       const child = spawnSync(process.execPath, [
         join(process.cwd(), "tests", "helpers", "codex-inject-race-child.ts"),
@@ -926,8 +926,8 @@ describe("Codex injection targets the loopback listener", () => {
         env: {
           ...process.env,
           CODEX_HOME: codexHome,
-          OPENCODEX_HOME: ocxHome,
-          OCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port: 10_100 }),
+          OPENCCX_HOME: occxHome,
+          OCCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port: 10_100 }),
         },
       });
       const line = (child.stdout ?? "").trim().split("\n").filter(Boolean).pop() ?? "{}";
@@ -950,11 +950,11 @@ describe("Codex injection targets the loopback listener", () => {
  * credential, local processes reach `127.0.0.1:port` without one.
  */
 describe("loopback companion listener", () => {
-  function companionConfig(hostname: string): OcxConfig {
+  function companionConfig(hostname: string): OccxConfig {
     const config = baseConfig(null) as Record<string, unknown>;
     config.hostname = hostname;
     config.unauthenticatedLoopbackListener = { enabled: true };
-    return config as unknown as OcxConfig;
+    return config as unknown as OccxConfig;
   }
 
   test("binds 127.0.0.1 on the public port, and only loopback is credential-free", async () => {

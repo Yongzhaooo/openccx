@@ -8,12 +8,12 @@
  * behaviour for configs that already had a claudeCode block, and leaves genuinely
  * untouched configs on auto.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /**
  * @returns true when the config changed and the caller should persist it.
  */
-export function runClaudeAuthModeMigration(config: OcxConfig, now = new Date()): boolean {
+export function runClaudeAuthModeMigration(config: OccxConfig, now = new Date()): boolean {
   const claudeCode = config.claudeCode;
   // No block at all = a fresh or Claude-untouched install: auto is the right default,
   // and writing a sentinel here would create the block for no reason.

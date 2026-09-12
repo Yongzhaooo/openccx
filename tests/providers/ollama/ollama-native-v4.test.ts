@@ -3,9 +3,9 @@ import { createOllamaNativeAdapter } from "../../../src/adapters/ollama-native";
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 import { REASONING_EFFORT_OMIT_SENTINEL } from "../../../src/reasoning-effort";
 import type { AdapterEvent } from "../../../src/types";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "ollama-native",
     baseUrl: "https://ollama.com/v1",
@@ -14,11 +14,11 @@ function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig
     liveModels: false,
     models: ["glm-5.3-flash"],
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function parsedWith(options: Record<string, unknown> = {}, modelId = "glm-5.3-flash"): OcxParsedRequest {
-  return { modelId, stream: true, options, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OcxParsedRequest;
+function parsedWith(options: Record<string, unknown> = {}, modelId = "glm-5.3-flash"): OccxParsedRequest {
+  return { modelId, stream: true, options, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OccxParsedRequest;
 }
 
 /**

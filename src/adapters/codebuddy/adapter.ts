@@ -1,4 +1,4 @@
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../types";
 import type { AdapterRequest, ProviderAdapter } from "../base";
 import { mapReasoningEffort } from "../../reasoning-effort";
 import { buildSystemPrompt } from "../coding-agent/protocol";
@@ -34,7 +34,7 @@ export function buildChildEnv(profile: CodeBuddyProfile, apiKey: string): Record
  * would require authorization is blocked. The turn is a single text/reasoning pass over stream-json;
  * Codex's tool catalog is not advertised in v1 (the control-protocol tool bridge is a fast-follow).
  */
-export function buildArgs(profile: CodeBuddyProfile, parsed: OcxParsedRequest, provider: OcxProviderConfig): string[] {
+export function buildArgs(profile: CodeBuddyProfile, parsed: OccxParsedRequest, provider: OccxProviderConfig): string[] {
   const args: string[] = [
     "-p",
     "--output-format", "stream-json",
@@ -57,7 +57,7 @@ export function buildArgs(profile: CodeBuddyProfile, parsed: OcxParsedRequest, p
 }
 
 /** Create the shared CodeBuddy adapter: region profile selects Global vs CN, one turn runs tools-disabled. */
-export function createCodeBuddyAdapter(provider: OcxProviderConfig, deps: CodeBuddyAdapterDeps = {}): ProviderAdapter {
+export function createCodeBuddyAdapter(provider: OccxProviderConfig, deps: CodeBuddyAdapterDeps = {}): ProviderAdapter {
   return {
     name: "codebuddy",
 

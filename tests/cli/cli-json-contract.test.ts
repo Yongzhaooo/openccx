@@ -10,8 +10,8 @@ import { repoRoot as resolveRepoRoot } from "../helpers/repo-root";
  *
  * Today's inconsistency exists because nothing ever checked. Two commands parsed the flag
  * positionally and both were wrong for scripting: `status` honoured `--json` only as the
- * LONE argument, so `ocx status --json --anything` printed human output to a caller that
- * asked for JSON; and `restore` matched `args[1]`, so `ocx restore back --json` ignored the
+ * LONE argument, so `occx status --json --anything` printed human output to a caller that
+ * asked for JSON; and `restore` matched `args[1]`, so `occx restore back --json` ignored the
  * flag entirely because position 1 held `back`.
  *
  * These assertions read source rather than spawning the CLI for every command: spawning 50

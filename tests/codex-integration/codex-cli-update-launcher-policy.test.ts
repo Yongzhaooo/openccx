@@ -6,19 +6,19 @@ import { repoPath } from "../helpers/repo-root";
 
 describe("Codex CLI updater launcher policy", () => {
   test("covers the whole exact namespace including malformed actions", () => {
-    expect(isCodexCliUpdateInspectionArgv(["node", "ocx", "system", "codex-cli-update", "check"])).toBe(true);
-    expect(isCodexCliUpdateInspectionArgv(["node", "ocx", "system", "codex-cli-update", "bad"])).toBe(true);
+    expect(isCodexCliUpdateInspectionArgv(["node", "occx", "system", "codex-cli-update", "check"])).toBe(true);
+    expect(isCodexCliUpdateInspectionArgv(["node", "occx", "system", "codex-cli-update", "bad"])).toBe(true);
     expect(isCodexCliUpdateInspectionArgv([
-      "node", "ocx", "--ocx-internal-launch-proof=bad", "system", "codex-cli-update", "check",
+      "node", "occx", "--occx-internal-launch-proof=bad", "system", "codex-cli-update", "check",
     ])).toBe(true);
     expect(isCodexCliUpdateInspectionArgv([
-      "node", "ocx", "--ocx-internal-launch-proof=bad", "system", "codex-cli-update", "bad",
+      "node", "occx", "--occx-internal-launch-proof=bad", "system", "codex-cli-update", "bad",
     ])).toBe(true);
-    expect(isCodexCliUpdateInspectionArgv(["node", "ocx", "system", "update"])).toBe(false);
+    expect(isCodexCliUpdateInspectionArgv(["node", "occx", "system", "update"])).toBe(false);
   });
 
   test("launcher skips boot repair and lazy Bun installation for this namespace", () => {
-    const source = readFileSync(repoPath("bin", "ocx.mjs"), "utf8");
+    const source = readFileSync(repoPath("bin", "occx.mjs"), "utf8");
     // Read the guard that actually wraps the probe rather than a fixed pair of adjacent
     // clauses. The boot probe is npm's transactional layout (stage/swap/backup) and pnpm
     // rolls back through its own global path, so the condition list grows; what must not

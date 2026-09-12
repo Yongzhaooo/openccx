@@ -247,7 +247,7 @@ export function DashboardMaintenancePanel({ d }: { d: Dash }) {
             {t("dash.syncOk", { count: syncResult.added })}
             {syncResult.warning ? ` ${syncResult.warning}` : ""}
             {syncResult.nativeSubagentDefaultsWarning ? ` ${syncResult.nativeSubagentDefaultsWarning}` : ""}
-            {syncResult.staleAppServerHint ? <>{" "}<Trans k="dash.syncStaleHint" cmd="ocx sync --restart-codex" /></> : null}
+            {syncResult.staleAppServerHint ? <>{" "}<Trans k="dash.syncStaleHint" cmd="occx sync --restart-codex" /></> : null}
           </span>
           <button type="button" className="action-toast-dismiss" onClick={dismissSyncToast} aria-label={t("api.dismiss")}>
             <IconX width={13} height={13} aria-hidden="true" />

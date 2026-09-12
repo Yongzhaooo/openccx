@@ -29,12 +29,12 @@ import { pickerVisibleSidecarCandidates, visionSidecarCandidates } from "../../s
 import { resolveSidecarAuth } from "../../src/sidecar/auth";
 import { visionCandidateRows, visionDescriberIsProvablyBlind } from "../../src/server/management/vision-sidecar-options";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/account-id";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
-const anthropicOAuth: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
+const anthropicOAuth: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "openai", providers: { openai: forward }, ...overrides };
 }
 
@@ -110,7 +110,7 @@ describe("visionSidecarCandidates (rule 2: − provably text-only)", () => {
 
   test("noVisionModels consumer listing beats the slot's advertised modalities", async () => {
     loginBoth();
-    const blindLuna: OcxProviderConfig = { ...forward, noVisionModels: ["gpt-5.6-luna"] };
+    const blindLuna: OccxProviderConfig = { ...forward, noVisionModels: ["gpt-5.6-luna"] };
     const cfg = config({ providers: { openai: blindLuna, claude: anthropicOAuth } });
     const all = await pickerVisibleSidecarCandidates(cfg, resolveSidecarAuth(cfg));
     const vision = visionSidecarCandidates(cfg, all);

@@ -14,14 +14,14 @@
  *
  * See devlog/_fin/260814_lab_core_decoupling/020_request_path_gate.md
  */
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import type { InboundWire } from "../providers/registry";
 
 export type PassiveRouteLinker = (
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   inboundWire: InboundWire,
 ) => string | null;
 
@@ -41,10 +41,10 @@ export function setPassiveRouteLinker(next: PassiveRouteLinker): () => void {
  * Never throws: linkage is best-effort metadata and must not affect the request.
  */
 export function resolvePassiveRouteSubjectId(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   inboundWire: InboundWire,
 ): string | null {
   if (!linker) return null;

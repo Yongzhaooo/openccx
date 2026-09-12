@@ -14,7 +14,7 @@ import {
   getModelMetadata,
   resolveMetadataProvider,
 } from "../generated/model-metadata";
-import type { AttemptTierOutcome, OcxUsage } from "../types";
+import type { AttemptTierOutcome, OccxUsage } from "../types";
 import { canonicalFastTierMarker } from "../providers/fastwire";
 import { baseProviderLabel } from "../providers/label";
 import type { PersistedUsageAttempt, UsageStatus } from "./log";
@@ -129,7 +129,7 @@ function hasNonZeroCost(cost: Cost4): boolean {
 }
 
 /**
- * Normalize inclusive OcxUsage (types.ts: inputTokens INCLUDES cache read/write)
+ * Normalize inclusive OccxUsage (types.ts: inputTokens INCLUDES cache read/write)
  * into jawcode CostTokens (input = uncached prompt only) without double-charging.
  *
  * Canonical-first with a single legacy retry: the canonical contract says
@@ -139,7 +139,7 @@ function hasNonZeroCost(cost: Cost4): boolean {
  * produces an impossible R+W>I do we retry the legacy recovery
  * (cached - creation). If both readings are contradictory, fail closed (null).
  */
-export function normalizeCostTokens(usage: OcxUsage): CostTokens | null {
+export function normalizeCostTokens(usage: OccxUsage): CostTokens | null {
   const input = usage.inputTokens;
   const output = usage.outputTokens;
   const cacheWrite = usage.cacheCreationInputTokens ?? 0;
@@ -369,7 +369,7 @@ function vendorPrefixedCost(modelId: string): ReturnType<typeof findVendorCostBy
   return normalize(found.provider) === normalize(claimedVendor) ? found : undefined;
 }
 
-function isEstimated(usage: OcxUsage, usageStatus: UsageStatus, priceStatus: ExpectedPriceStatus | "verified"): boolean {
+function isEstimated(usage: OccxUsage, usageStatus: UsageStatus, priceStatus: ExpectedPriceStatus | "verified"): boolean {
   return usage.estimated === true || usageStatus === "estimated" || priceStatus === "verified-derived";
 }
 
@@ -617,7 +617,7 @@ export function estimateRequestCost(
   input: {
     provider: string;
     model: string;
-    usage?: OcxUsage;
+    usage?: OccxUsage;
     usageStatus: UsageStatus;
     serviceTier?: ServiceTierInput;
     allowModelLevelFallback?: boolean;

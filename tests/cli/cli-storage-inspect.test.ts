@@ -39,7 +39,7 @@ function capture(): { out: string[]; err: string[]; restore: () => void } {
 
 const PREVIEW = { percent: 25, count: 3, bytes: 3 * 1024 * 1024, digest: "digest-abc", candidates: [{ relPath: "archived_sessions/a.jsonl", bytes: 1024 * 1024 }] };
 
-describe("ocx storage cleanup", () => {
+describe("occx storage cleanup", () => {
   test("without --yes it previews and issues NO mutating request", async () => {
     const { calls, deps } = harness(() => ({ json: PREVIEW }));
     const cap = capture();
@@ -104,7 +104,7 @@ describe("ocx storage cleanup", () => {
   });
 });
 
-describe("ocx storage trash and policy", () => {
+describe("occx storage trash and policy", () => {
   test("trash list reads, and restore without --yes sends nothing", async () => {
     const list = harness(() => ({ json: { entries: [] } }));
     const cap = capture();
@@ -179,9 +179,9 @@ describe("ocx storage trash and policy", () => {
   });
 });
 
-describe("ocx storage keeps its old meaning", () => {
+describe("occx storage keeps its old meaning", () => {
   test("a bare invocation and a leading flag both read the report", async () => {
-    // `ocx storage` and `ocx storage --json` were an alias of `observe storage` before this
+    // `occx storage` and `occx storage --json` were an alias of `observe storage` before this
     // module existed. A leading flag must not be parsed as a subcommand name.
     for (const argv of [[], ["--json"]]) {
       const { calls, deps } = harness(() => ({ json: { codexHome: "/tmp", total: { bytes: 1 } } }));
@@ -195,7 +195,7 @@ describe("ocx storage keeps its old meaning", () => {
 
   test("codex-logs still reaches the log-guard route", async () => {
     // Doctor and the published Log Guard guides still tell the operator to run
-    // `ocx storage codex-logs repair`. Treating that as an unknown subcommand
+    // `occx storage codex-logs repair`. Treating that as an unknown subcommand
     // would make the documented recovery path exit 2.
     const { calls, deps } = harness(() => ({ json: { ok: true } }));
     const cap = capture();
@@ -206,7 +206,7 @@ describe("ocx storage keeps its old meaning", () => {
   });
 });
 
-describe("ocx inspect", () => {
+describe("occx inspect", () => {
   test("star reads only, and says the CLI cannot star", async () => {
     const { calls, deps } = harness(() => ({ json: { state: "not-starred", repo: "o/r" } }));
     const cap = capture();
@@ -248,7 +248,7 @@ describe("ocx inspect", () => {
   });
 });
 
-describe("ocx integration native", () => {
+describe("occx integration native", () => {
   const CLIENTS = { clients: [
     { clientId: "claude", state: "current", installed: true, desiredEnabled: true, configPath: "/c.json", disableBlocked: null },
     { clientId: "grok", state: "stale", installed: false, desiredEnabled: false, configPath: "/g.toml", disableBlocked: "in use" },

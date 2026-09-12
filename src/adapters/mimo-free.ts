@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getConfigDir } from "../config";
 import { recordOwnedConfigPath } from "../lib/config-ownership";
-import type { OcxProviderConfig, OcxParsedRequest } from "../types";
+import type { OccxProviderConfig, OccxParsedRequest } from "../types";
 import { createOpenAIChatAdapter } from "./openai-chat";
 import type { ProviderAdapter, AdapterRequest, IncomingMeta } from "./base";
 
@@ -54,7 +54,7 @@ function isCanonicalMimoFreeEndpoint(baseUrl: string): boolean {
 
 /**
  * Anonymous per-install client id for the bootstrap `client` field. A random UUID
- * persisted under the config dir (OPENCODEX_HOME-aware) — deliberately NOT derived
+ * persisted under the config dir (OPENCCX_HOME-aware) — deliberately NOT derived
  * from machine attributes (hostname/username/CPU), which would be a stable
  * pseudonymous device fingerprint. Delete the file to rotate the id.
  */
@@ -206,7 +206,7 @@ export function injectMimoSystemMarker(body: unknown): unknown {
  *   3. Required headers (User-Agent, X-Mimo-Source, x-session-affinity).
  * On 401/403, flushes the JWT cache and retries once via fetchResponse.
  */
-export function createMimoFreeAdapter(provider: OcxProviderConfig): ProviderAdapter {
+export function createMimoFreeAdapter(provider: OccxProviderConfig): ProviderAdapter {
   if (!isCanonicalMimoFreeEndpoint(provider.baseUrl)) {
     throw new Error(
       "The mimo-free adapter only supports the canonical Xiaomi MiMo Free endpoint. Use openai-chat for a custom endpoint.",
@@ -220,7 +220,7 @@ export function createMimoFreeAdapter(provider: OcxProviderConfig): ProviderAdap
     ...base,
     name: "mimo-free",
 
-    async buildRequest(parsed: OcxParsedRequest, incoming: IncomingMeta): Promise<AdapterRequest> {
+    async buildRequest(parsed: OccxParsedRequest, incoming: IncomingMeta): Promise<AdapterRequest> {
       const jwt = await getMimoJwt();
 
       // Let the base adapter build the wire body (handles reasoning, tools, etc.)

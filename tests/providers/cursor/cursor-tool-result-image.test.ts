@@ -9,7 +9,7 @@ import {
   GetBlobArgsSchema,
   KvServerMessageSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { OcxMessage } from "../../../src/types";
+import type { OccxMessage } from "../../../src/types";
 
 const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x01, 0x02, 0x03, 0x04]);
 const PNG_B64 = Buffer.from(PNG_BYTES).toString("base64");
@@ -55,8 +55,8 @@ function toolResultItems(bytes: Uint8Array) {
   return undefined;
 }
 
-function request(resultContent: OcxMessage extends never ? never : any) {
-  const rawMessages: OcxMessage[] = [
+function request(resultContent: OccxMessage extends never ? never : any) {
+  const rawMessages: OccxMessage[] = [
     { role: "user", content: "take a screenshot", timestamp: 1 },
     {
       role: "assistant",
@@ -174,7 +174,7 @@ describe("Cursor tool-result image admission safety", () => {
     try {
       const bigArg = "x".repeat(448);
       const imageBytes = new Uint8Array(460).fill(9);
-      const rawMessages: OcxMessage[] = [
+      const rawMessages: OccxMessage[] = [
         { role: "user", content: "go", timestamp: 1 },
         {
           role: "assistant",

@@ -9,7 +9,7 @@ import {
   saveConfig,
   saveConfigPreservingClaudeCode,
 } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { resolveMatchedPrice } from "../../src/usage/cost";
 import {
   activeUserCostOverlays,
@@ -28,7 +28,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const OVERLAY = { input: 1, output: 2, cacheRead: 0.1, cacheWrite: 0 };
 
-const DISK_CONFIG: OcxConfig = {
+const DISK_CONFIG: OccxConfig = {
   port: 0,
   hostname: "127.0.0.1",
   defaultProvider: "acme",
@@ -40,25 +40,25 @@ const DISK_CONFIG: OcxConfig = {
       models: ["model-x"],
     },
   },
-} as OcxConfig;
+} as OccxConfig;
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-overlay-delete-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-overlay-delete-"));
+  process.env.OPENCCX_HOME = testDir;
   writeFileSync(getConfigPath(), `${JSON.stringify(DISK_CONFIG, null, 2)}\n`, "utf8");
 });
 
 afterEach(() => {
   stopUserCostOverlayReconciler();
   resetUserCostOverlayReconcilerForTests();
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   resetPreservedDiskOnlyProvidersForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -69,7 +69,7 @@ describe("provider deletion with disk-only preservation", () => {
     const liveConfigA = loadConfig();
     const ownerA = startUserCostOverlayReconciler({ intervalMs: 20, liveConfig: liveConfigA });
 
-    const externallyEdited = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const externallyEdited = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     externallyEdited.providers.beta = {
       adapter: "openai-chat",
       baseUrl: "https://beta.example.invalid",
@@ -93,7 +93,7 @@ describe("provider deletion with disk-only preservation", () => {
     // The old-owner protection still works: A's unrelated save must keep beta.
     liveConfigA.providers.acme!.models = ["model-x", "model-extra"];
     saveConfig(liveConfigA);
-    let persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    let persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta?.modelCosts).toEqual({ "beta-model": OVERLAY });
     expect(resolveMatchedPrice("beta", "beta-model")?.source).toBe("user");
 
@@ -105,7 +105,7 @@ describe("provider deletion with disk-only preservation", () => {
     delete liveConfigB.providers.beta;
     expect(reconcileUserCostOverlaysFromDisk()).toBe(true);
     saveConfigPreservingClaudeCode(liveConfigB);
-    persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
     expect(activeUserCostOverlays().some(row => row.provider === "beta")).toBe(false);
     expect(resolveMatchedPrice("beta", "beta-model")?.source).not.toBe("user");
@@ -116,7 +116,7 @@ describe("provider deletion with disk-only preservation", () => {
     expect(liveConfigC.providers.beta).toBeUndefined();
     liveConfigC.providers.acme!.models = ["model-x", "model-c"];
     saveConfig(liveConfigC);
-    persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     expect(persisted.providers.beta).toBeUndefined();
 
     ownerC.stop();

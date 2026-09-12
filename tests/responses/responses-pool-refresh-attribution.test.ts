@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { poolCredentialRefreshIncompleteResponse } from "../../src/server/responses/core";
 import type { CodexAuthContext } from "../../src/codex/auth-context";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * #4212: a pool credential whose forced refresh does not complete used to refuse with
  * "Codex credential refresh did not complete; retry this request" and nothing else. That reads
- * as a fault in the proxy, so the reporter went looking for a bug in OpenCodex while one of
+ * as a fault in the proxy, so the reporter went looking for a bug in Openccx while one of
  * their own accounts was the thing that needed them.
  *
  * These cases pin the two halves of the fix that can regress independently: the refusal names
@@ -29,7 +29,7 @@ function poolAuthCtx(): CodexAuthContext {
   };
 }
 
-function configWithAccount(): Pick<OcxConfig, "codexAccounts"> {
+function configWithAccount(): Pick<OccxConfig, "codexAccounts"> {
   return {
     codexAccounts: [{ id: ACCOUNT_ID, email: ACCOUNT_EMAIL, logLabel: LOG_LABEL, isMain: false }],
   };

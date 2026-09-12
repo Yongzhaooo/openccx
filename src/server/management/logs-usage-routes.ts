@@ -64,7 +64,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import { drainAndShutdown } from "../lifecycle";
 import { filterRequestLogs, filteredRequestLogCount, getRequestLogEntries, type RequestLogEntry } from "../request-log";
 import { decodeRequestLogCursor, selectRequestLogPoll } from "../request-log-cursor";
@@ -375,7 +375,7 @@ export async function handleLogsUsageRoutes(ctx: ManagementContext): Promise<Res
     }
     const digest = typeof body?.digest === "string" ? body.digest : "";
     const testHooks =
-      process.env.OPENCODEX_CLEANUP_TEST_HOOKS === "1" &&
+      process.env.OPENCCX_CLEANUP_TEST_HOOKS === "1" &&
       body &&
       typeof body === "object" &&
       "_test" in body
@@ -458,7 +458,7 @@ export async function handleLogsUsageRoutes(ctx: ManagementContext): Promise<Res
   }
 
   if (url.pathname === "/api/storage/trash/restore/test-stream" && req.method === "GET") {
-    if (process.env.OPENCODEX_CLEANUP_TEST_HOOKS === "1") {
+    if (process.env.OPENCCX_CLEANUP_TEST_HOOKS === "1") {
       const stream = getRestoreTrashTestStreamResponse();
       if (stream) return stream;
     }

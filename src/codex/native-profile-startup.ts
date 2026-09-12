@@ -456,7 +456,7 @@ export function __resetNativeMainOwnershipRetries(): void {
  * lifetime. For `foreign-ownership` that is correct — a foreign owner is a fact, and
  * re-asking would only hand a determined caller a second chance. For `ownership-unknown`
  * it is wrong: that verdict means the probe could not answer, so waiting cannot help,
- * which is precisely why the #2108 reporter had to run `ocx restart` after every reboot.
+ * which is precisely why the #2108 reporter had to run `occx restart` after every reboot.
  *
  * The re-probe is demand-driven rather than timed: it runs when something asks whether
  * native-main is fenced, which is usually a request but is also the background token
@@ -579,7 +579,7 @@ export function blockNativeMainStartupForUnownedServiceHome(
   // fences in a loop would otherwise be handed a fresh allowance each time and could spin
   // the probe forever. But once the holder is gone its entry is removed above, so a LATER
   // fence installs its own hook — a server started after an earlier probe must not be left
-  // needing `ocx restart`, which is the very symptom this exists to remove.
+  // needing `occx restart`, which is the very symptom this exists to remove.
   if (options && reason === "ownership-unknown" && !serviceOwnershipReprobes.has(reason)) {
     const expectedHomeId = options.expectedHomeId;
     serviceOwnershipReprobes.set(reason, {

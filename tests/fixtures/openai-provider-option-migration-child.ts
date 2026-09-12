@@ -8,13 +8,13 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-const [opencodexHome, codexHome] = Bun.argv.slice(2);
-if (!opencodexHome || !codexHome) {
+const [openccxHome, codexHome] = Bun.argv.slice(2);
+if (!openccxHome || !codexHome) {
   throw new Error("provider-option migration child requires two home paths");
 }
-mkdirSync(opencodexHome, { recursive: true, mode: 0o700 });
+mkdirSync(openccxHome, { recursive: true, mode: 0o700 });
 mkdirSync(codexHome, { recursive: true, mode: 0o700 });
-process.env.OPENCODEX_HOME = opencodexHome;
+process.env.OPENCCX_HOME = openccxHome;
 process.env.CODEX_HOME = codexHome;
 
 const ACL_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
@@ -22,7 +22,7 @@ const PRINCIPAL_OK = {
   success: true,
   exitCode: 0,
   timedOut: false,
-  stdout: "S-1-5-21-1-2-3-1001\nocx-provider-option-migration\n",
+  stdout: "S-1-5-21-1-2-3-1001\noccx-provider-option-migration\n",
 };
 let aclSeamCalls = 0;
 let principalSeamCalls = 0;
@@ -81,7 +81,7 @@ const originalConfig = {
   },
 };
 const original = JSON.stringify(originalConfig, null, 2) + "\n";
-const configPath = join(opencodexHome, "config.json");
+const configPath = join(openccxHome, "config.json");
 const v1BackupPath = `${configPath}.pre-openai-tiers-v1.bak`;
 const v2BackupPath = `${configPath}.pre-openai-tiers-v2.bak`;
 const v1Sentinel = "historical-v1-sentinel\n";

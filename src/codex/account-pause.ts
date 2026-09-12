@@ -1,13 +1,13 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { deleteConfigTopLevelKey } from "../config/rebase-provenance";
 
 /** Whether an account is administratively excluded from future pool selection. */
-export function isCodexAccountPaused(config: OcxConfig, accountId: string): boolean {
+export function isCodexAccountPaused(config: OccxConfig, accountId: string): boolean {
   return config.pausedCodexAccountIds?.includes(accountId) ?? false;
 }
 
 /** Persist the account's pool eligibility without changing credentials or runtime health. */
-export function setCodexAccountPaused(config: OcxConfig, accountId: string, paused: boolean): void {
+export function setCodexAccountPaused(config: OccxConfig, accountId: string, paused: boolean): void {
   const pausedIds = new Set(config.pausedCodexAccountIds ?? []);
   if (paused) pausedIds.add(accountId);
   else pausedIds.delete(accountId);
@@ -16,6 +16,6 @@ export function setCodexAccountPaused(config: OcxConfig, accountId: string, paus
   else deleteConfigTopLevelKey(config, "pausedCodexAccountIds");
 }
 
-export function forgetCodexAccountPause(config: OcxConfig, accountId: string): void {
+export function forgetCodexAccountPause(config: OccxConfig, accountId: string): void {
   setCodexAccountPaused(config, accountId, false);
 }

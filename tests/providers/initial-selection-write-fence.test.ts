@@ -7,7 +7,7 @@ import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { initializeProviderModelSelection, reconcileInitialModelSelections } from "../../src/providers/initial-model-selection";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { ManagementRequest } from "../helpers/management-auth";
@@ -25,34 +25,34 @@ let home: string;
 let previousHome: string | undefined;
 let codex: IsolatedCodexHome;
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-selection-writes-"));
-  process.env.OPENCODEX_HOME = home;
-  codex = installIsolatedCodexHome("ocx-selection-writes-codex-");
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-selection-writes-"));
+  process.env.OPENCCX_HOME = home;
+  codex = installIsolatedCodexHome("occx-selection-writes-codex-");
 });
 afterEach(async () => {
   clearModelCache();
   await flushConfigDirHardeningForTests();
   codex.restore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
-function fixture(state: "pending" | "ready" | "legacy", name = "openrouter"): OcxConfig {
-  const provider: OcxProviderConfig = {
+function fixture(state: "pending" | "ready" | "legacy", name = "openrouter"): OccxConfig {
+  const provider: OccxProviderConfig = {
     adapter: "openai-chat", baseUrl: "https://models.example.test/v1", authMode: "key",
     apiKey: "fixture-key", liveModels: false, models: [...ids],
     selectedModels: [ids[0]], modelPreset: { mode: name === "openrouter" ? "preset" : "custom", appliedVersion: 1 },
   };
-  const config: OcxConfig = { port: 0, defaultProvider: name, providers: { [name]: provider }, clientIntegrations: { codex: false } };
+  const config: OccxConfig = { port: 0, defaultProvider: name, providers: { [name]: provider }, clientIntegrations: { codex: false } };
   if (state !== "legacy") initializeProviderModelSelection(name, provider);
   if (state === "ready") reconcileInitialModelSelections(config, ids.map(id => ({ provider: name, id })), [name]);
   saveConfig(config);
   return config;
 }
 
-async function request(config: OcxConfig, path: string, body: string): Promise<Response> {
+async function request(config: OccxConfig, path: string, body: string): Promise<Response> {
   const url = new URL(`http://localhost${path}`);
   const request = new ManagementRequest(url, {
     method: "PUT", headers: { "Content-Type": "application/json" },
@@ -63,7 +63,7 @@ async function request(config: OcxConfig, path: string, body: string): Promise<R
   return response;
 }
 
-function put(config: OcxConfig, operation: typeof operations[number]): Promise<Response> {
+function put(config: OccxConfig, operation: typeof operations[number]): Promise<Response> {
   return request(config, operation.path, JSON.stringify({ provider: config.defaultProvider, ...operation.input }));
 }
 

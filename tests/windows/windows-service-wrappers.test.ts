@@ -4,7 +4,7 @@
  *
  * Two copies of this logic existed. src/service.ts matched canonical full paths
  * as complete command-line tokens; src/update/job.ts matched the bare filenames
- * with -like '*name*'. On a machine with two OpenCodex homes under one account,
+ * with -like '*name*'. On a machine with two Openccx homes under one account,
  * a dashboard update for home A could force-terminate home B's wrapper, and any
  * unrelated process whose command line contained either filename matched too.
  *
@@ -24,10 +24,10 @@ import { repoPath } from "../helpers/repo-root";
 
 const read = (rel: string) => readFileSync(repoPath(rel), "utf8");
 
-const HOME_A = "C:\\Users\\ocx\\.opencodex";
-const HOME_B = "C:\\Users\\ocx\\other-home\\.opencodex";
-const script = (home: string) => join(home, "opencodex-service.cmd");
-const launcher = (home: string) => join(home, "opencodex-service-launcher.vbs");
+const HOME_A = "C:\\Users\\occx\\.openccx";
+const HOME_B = "C:\\Users\\occx\\other-home\\.openccx";
+const script = (home: string) => join(home, "openccx-service.cmd");
+const launcher = (home: string) => join(home, "openccx-service-launcher.vbs");
 
 /**
  * The shipped rule, in JS: find the pattern case-insensitively, then require the
@@ -58,8 +58,8 @@ describe("which command lines the wrapper killer stops", () => {
     expect(killsCommandLine(`cmd.exe /c ${script(HOME_A)}`, patterns)).toBe(true);
   });
 
-  test("another OpenCodex home under the same account survives", () => {
-    // The defect this replaces: -like '*opencodex-service.cmd*' matched here.
+  test("another Openccx home under the same account survives", () => {
+    // The defect this replaces: -like '*openccx-service.cmd*' matched here.
     expect(killsCommandLine(`cmd.exe /c "${script(HOME_B)}"`, patterns)).toBe(false);
     expect(killsCommandLine(`wscript.exe "${launcher(HOME_B)}" //B`, patterns)).toBe(false);
   });
@@ -73,8 +73,8 @@ describe("which command lines the wrapper killer stops", () => {
   });
 
   test("an unrelated process merely naming the file is not killed", () => {
-    expect(killsCommandLine("notepad.exe opencodex-service.cmd", patterns)).toBe(false);
-    expect(killsCommandLine('findstr /c:"opencodex-service-launcher.vbs" log.txt', patterns)).toBe(false);
+    expect(killsCommandLine("notepad.exe openccx-service.cmd", patterns)).toBe(false);
+    expect(killsCommandLine('findstr /c:"openccx-service-launcher.vbs" log.txt', patterns)).toBe(false);
   });
 
   test("matching is case-insensitive, as Windows paths are", () => {
@@ -101,7 +101,7 @@ describe("the generated script still implements that rule", () => {
     expect(ps).toContain(script(HOME_A));
     expect(ps).toContain(launcher(HOME_A));
     expect(ps).not.toContain(script(HOME_B));
-    expect(ps).not.toContain("@('opencodex-service.cmd'");
+    expect(ps).not.toContain("@('openccx-service.cmd'");
   });
 
   test("the caller's own process is always excluded", () => {
@@ -109,8 +109,8 @@ describe("the generated script still implements that rule", () => {
   });
 
   test("a path containing a quote is escaped, not injected", () => {
-    const odd = "C:\\Users\\o'brien\\.opencodex\\opencodex-service.cmd";
-    expect(windowsWrapperKillScript([odd])).toContain("C:\\Users\\o''brien\\.opencodex\\opencodex-service.cmd");
+    const odd = "C:\\Users\\o'brien\\.openccx\\openccx-service.cmd";
+    expect(windowsWrapperKillScript([odd])).toContain("C:\\Users\\o''brien\\.openccx\\openccx-service.cmd");
   });
 });
 
@@ -120,7 +120,7 @@ describe("both teardown paths use the shared killer", () => {
       const src = read(rel);
       expect(src).toContain("killWindowsSchedulerWrappers");
       expect(src).not.toContain("-like ('*' + $p + '*')");
-      expect(src).not.toContain("$pats = @('opencodex-service.cmd'");
+      expect(src).not.toContain("$pats = @('openccx-service.cmd'");
     }
   });
 });

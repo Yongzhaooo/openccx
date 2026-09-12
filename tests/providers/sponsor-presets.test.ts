@@ -5,7 +5,7 @@ import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 /**
  * The registry `sponsor` field is the only thing that marks a paid sponsor, and SPONSORS.md
  * promises it changes nothing but picker placement and a label. These pin the wire shape the
- * dashboard and `ocx provider presets` read, and that every sponsor entry carries a landing URL.
+ * dashboard and `occx provider presets` read, and that every sponsor entry carries a landing URL.
  */
 describe("sponsor presets", () => {
   test("registry sponsor entries surface tier and URL on the derived preset", () => {

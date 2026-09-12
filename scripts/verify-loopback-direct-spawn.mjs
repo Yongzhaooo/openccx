@@ -27,7 +27,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
-const UNIQUE_MODEL = `ocx-direct-spawn-${randomUUID()}`;
+const UNIQUE_MODEL = `occx-direct-spawn-${randomUUID()}`;
 const steps = [];
 function record(name, ok, detail) {
   steps.push({ name, ok, detail });
@@ -74,7 +74,7 @@ function startFakeProxy(port, seen) {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({
           object: "list",
-          data: [{ id: UNIQUE_MODEL, object: "model", created: 0, owned_by: "opencodex" }],
+          data: [{ id: UNIQUE_MODEL, object: "model", created: 0, owned_by: "openccx" }],
         }));
         return;
       }
@@ -92,14 +92,14 @@ async function main() {
   const version = spawnSync(process.execPath, [entrypoint, "--version"], { encoding: "utf8" });
   record("entrypoint runs", version.status === 0, version.stdout.trim() || version.stderr.trim());
 
-  const home = mkdtempSync(join(tmpdir(), "ocx-direct-spawn-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-direct-spawn-"));
   const codexHome = join(home, ".codex");
   const port = await freePort();
   const seen = [];
   const proxy = await startFakeProxy(port, seen);
 
   try {
-    // The provider block `ocx sync` writes when the loopback listener is enabled: loopback host,
+    // The provider block `occx sync` writes when the loopback listener is enabled: loopback host,
     // the listener's port, and NO env_http_headers — the app-server has no token to put in one.
     //
     // The catalog file matters and is easy to get wrong. `model/list` reads `model_catalog_json`;
@@ -111,12 +111,12 @@ async function main() {
     // Build the catalog with OUR OWN serializer rather than a hand-written object. Codex rejects
     // the whole file on any schema mismatch and silently falls back to its bundled list, so a
     // hand-rolled fixture drifts into a false negative the moment the schema moves. Using
-    // `buildCatalogEntries` also means this script exercises the same bytes `ocx sync` writes.
-    const catalogPath = join(codexHome, "opencodex-models.json");
+    // `buildCatalogEntries` also means this script exercises the same bytes `occx sync` writes.
+    const catalogPath = join(codexHome, "openccx-models.json");
     const build = spawnSync("bun", ["-e", `
       const { buildCatalogEntries } = await import("./src/codex/catalog/sync.ts");
       const entries = buildCatalogEntries(null, [], [{
-        provider: "opencodex",
+        provider: "openccx",
         id: ${JSON.stringify(UNIQUE_MODEL)},
         contextWindow: 128000,
       }]);
@@ -130,11 +130,11 @@ async function main() {
     record("built the catalog with our own serializer", true, `${JSON.parse(build.stdout).models.length} entries`);
     writeFileSync(join(codexHome, "config.toml"), [
       `model = "${UNIQUE_MODEL}"`,
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       `model_catalog_json = ${JSON.stringify(catalogPath)}`,
       "",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       `base_url = "http://127.0.0.1:${port}/v1"`,
       'wire_api = "responses"',
       "requires_openai_auth = true",
@@ -144,8 +144,8 @@ async function main() {
 
     const env = { ...process.env, CODEX_HOME: codexHome };
     // The credential must be absent, or this would prove nothing about the shim-less path.
-    delete env.OPENCODEX_API_AUTH_TOKEN;
-    record("stripped OPENCODEX_API_AUTH_TOKEN from the child environment", true);
+    delete env.OPENCCX_API_AUTH_TOKEN;
+    record("stripped OPENCCX_API_AUTH_TOKEN from the child environment", true);
 
     const child = spawn(process.execPath, [entrypoint, "app-server"], {
       env,
@@ -180,7 +180,7 @@ async function main() {
       return null;
     };
 
-    send({ id: 1, method: "initialize", params: { clientInfo: { name: "ocx-verify", version: "1", title: "OpenCodex verification" } } });
+    send({ id: 1, method: "initialize", params: { clientInfo: { name: "occx-verify", version: "1", title: "Openccx verification" } } });
     const init = await await_(1);
     record("app-server initialized", !!init && !init.error, init?.error ? JSON.stringify(init.error) : "ok");
 
@@ -204,7 +204,7 @@ async function main() {
     send({
       id: 3,
       method: "thread/start",
-      params: { cwd: home, model: UNIQUE_MODEL, provider: "opencodex" },
+      params: { cwd: home, model: UNIQUE_MODEL, provider: "openccx" },
     });
     const started = await await_(3, 30_000);
     const threadId = started?.result?.threadId ?? started?.result?.thread?.id;

@@ -11,7 +11,7 @@ const repoRoot = resolveRepoRoot();
 const read = (rel: string): string => readFileSync(join(repoRoot, rel), "utf8");
 
 /**
- * #3008: `ocx update` aborted after a stop that had already succeeded.
+ * #3008: `occx update` aborted after a stop that had already succeeded.
  *
  * `handleStop` sets a failure code AFTER history restoration — that is, after the proxy
  * and service are already down — so a failed Codex-history cleanup was indistinguishable
@@ -25,7 +25,7 @@ const read = (rel: string): string => readFileSync(join(repoRoot, rel), "utf8");
 describe("stop failure classification (#3008)", () => {
   test("the history-only code is outside every code this CLI already uses", () => {
     // Picking an occupied code would make a history-only stop indistinguishable from
-    // whatever else emits it, and `bin/ocx.mjs` mirrors the child's status faithfully
+    // whatever else emits it, and `bin/occx.mjs` mirrors the child's status faithfully
     // enough to propagate the confusion.
     expect(STOP_HISTORY_INCOMPLETE_EXIT_CODE).toBe(79);
     // sysexits.h occupies 64-78; 128+signal starts at 129.
@@ -41,11 +41,11 @@ describe("stop failure classification (#3008)", () => {
   });
 
   test("the shared contract is plain ESM so the Node launcher can import it", () => {
-    // A .ts module would be unusable from bin/ocx.mjs, and inlining the number in two
+    // A .ts module would be unusable from bin/occx.mjs, and inlining the number in two
     // places is how the two ends drift.
     const contract = read("src/update/stop-contract.mjs");
     expect(contract).toContain("export const STOP_HISTORY_INCOMPLETE_EXIT_CODE");
-    expect(read("bin/ocx.mjs")).toContain("stop-contract.mjs");
+    expect(read("bin/occx.mjs")).toContain("stop-contract.mjs");
     expect(read("src/update/index.ts")).toContain("stop-contract.mjs");
   });
 
@@ -59,7 +59,7 @@ describe("stop failure classification (#3008)", () => {
       "const server = http.createServer((req, res) => {",
       "  if (req.url !== '/healthz') { res.writeHead(404); res.end(); return; }",
       "  res.writeHead(200, { 'content-type': 'application/json' });",
-      "  res.end(JSON.stringify({ service: 'opencodex', pid: process.pid, version: 'test' }));",
+      "  res.end(JSON.stringify({ service: 'openccx', pid: process.pid, version: 'test' }));",
       "});",
       "server.listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port)));",
     ].join("\n")], { stdio: ["ignore", "pipe", "ignore"] });
@@ -85,11 +85,11 @@ describe("stop failure classification (#3008)", () => {
   });
 
   test("identity decides live, and an unexpected status is unknown", async () => {
-    // Mirrors isOpencodexHealthz: a foreign server exposing /healthz is not our proxy, a
+    // Mirrors isOpenccxHealthz: a foreign server exposing /healthz is not our proxy, a
     // pre-identity build of ours is, and any status other than 200 says the endpoint is
     // answering without telling us what it is - which is not evidence of absence.
     const cases: Array<[string, string, "live" | "dead" | "unknown"]> = [
-      ["canonical", "{ service: 'opencodex', pid: 1 }", "live"],
+      ["canonical", "{ service: 'openccx', pid: 1 }", "live"],
       ["legacy pre-identity", "{ status: 'ok', version: '2.0.0', uptime: 12 }", "live"],
       ["foreign", "{ service: 'other', status: 'ok' }", "dead"],
       ["foreign lookalike", "{ status: 'ok' }", "dead"],
@@ -122,7 +122,7 @@ describe("stop failure classification (#3008)", () => {
       "const http = require('node:http');",
       "const server = http.createServer((req, res) => {",
       "  res.writeHead(500, { 'content-type': 'application/json' });",
-      "  res.end(JSON.stringify({ service: 'opencodex' }));",
+      "  res.end(JSON.stringify({ service: 'openccx' }));",
       "});",
       "server.listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port)));",
     ].join("\n")], { stdio: ["ignore", "pipe", "ignore"] });
@@ -148,7 +148,7 @@ describe("stop failure classification (#3008)", () => {
       "const http = require('node:http');",
       "const server = http.createServer((req, res) => {",
       "  res.writeHead(200, { 'content-type': 'application/json' });",
-      "  res.end(JSON.stringify({ service: 'opencodex', pid: process.pid }));",
+      "  res.end(JSON.stringify({ service: 'openccx', pid: process.pid }));",
       "});",
       "server.listen(0, () => process.stdout.write(String(server.address().port)));",
     ].join("\n")], { stdio: ["ignore", "pipe", "ignore"] });
@@ -199,7 +199,7 @@ describe("stop failure classification (#3008)", () => {
 
   test("the shared decision covers the whole post-stop matrix", () => {
     // This is THE predicate both updaters call, not a copy of it: src/update/index.ts and
-    // bin/ocx.mjs each import decidePostStopUpdate. Testing a local reimplementation would
+    // bin/occx.mjs each import decidePostStopUpdate. Testing a local reimplementation would
     // stay green while either lane drifted, which is how #3008 shipped fixed on one side.
     const dead = { hasRuntimeState: false, liveness: "dead" } as const;
 
@@ -233,7 +233,7 @@ describe("stop failure classification (#3008)", () => {
     // The reported path is a dashboard npm update through the plain-Node launcher. Fixing
     // only the Bun updater would leave that lane broken while every focused test went
     // green, which is exactly how #3008 reached a release.
-    for (const lane of ["src/update/index.ts", "bin/ocx.mjs"]) {
+    for (const lane of ["src/update/index.ts", "bin/occx.mjs"]) {
       const source = read(lane);
       expect(source).toContain("decidePostStopUpdate({");
       // And neither lane keeps a private copy of the rule it was supposed to delegate.

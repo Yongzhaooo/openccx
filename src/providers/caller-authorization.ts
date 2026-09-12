@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { inspectChatGptDomainClaim } from "../oauth/chatgpt";
 import { isProxyAdmissionSecret } from "../server/auth-cors";
 import { isCanonicalOpenAiForwardProvider } from "./openai-tiers";
@@ -7,7 +7,7 @@ import { isCanonicalOpenAiForwardProvider } from "./openai-tiers";
 export type CallerDirectAuth = Readonly<{ authorization: string; chatgptAccountId?: string }>;
 
 /** Whether this transport can consume the request's Authorization as its upstream credential. */
-export function providerConsumesCallerAuthorization(provider: OcxProviderConfig): boolean {
+export function providerConsumesCallerAuthorization(provider: OccxProviderConfig): boolean {
   return isCanonicalOpenAiForwardProvider(provider)
     || (provider.adapter === "cursor" && provider.authMode !== "oauth" && !provider.apiKey?.trim());
 }
@@ -24,7 +24,7 @@ export function providerConsumesCallerAuthorization(provider: OcxProviderConfig)
  * fail-closed. Claims are decoded locally as routing markers, not authenticity proof, and
  * unchanged-route Direct forwarding is governed by its own legacy rules.
  */
-export function captureCallerDirectAuth(incomingHeaders: Headers, config: OcxConfig): CallerDirectAuth | null {
+export function captureCallerDirectAuth(incomingHeaders: Headers, config: OccxConfig): CallerDirectAuth | null {
   const raw = incomingHeaders.get("authorization")?.trim();
   const bearer = /^Bearer[\t ]+([^\s,]+)$/i.exec(raw ?? "")?.[1];
   if (!bearer || isProxyAdmissionSecret(bearer, config)) return null;

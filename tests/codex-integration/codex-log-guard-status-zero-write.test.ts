@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 function fixture(): { codexHome: string; databasePath: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-status-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-status-"));
   roots.push(root);
   const codexHome = join(root, "codex-home");
   mkdirSync(codexHome);

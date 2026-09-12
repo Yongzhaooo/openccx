@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { isLoopbackHostname as isServerLoopbackHostname } from "../../src/server/auth-cors";
 import {
   isEffectiveCodexDesktopAuthless,
@@ -30,7 +30,7 @@ import {
 import { findSupportedNativeTemplate, type RawEntry } from "../../src/codex/catalog/parsing";
 import { clampCatalogModelsToObservedCodexSupport } from "../../src/codex/catalog/effort";
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {},
@@ -40,7 +40,7 @@ function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
     codexAccountNamespaces: { personal: "@main", second: "pool-account" },
     codexAccounts: [{ id: "pool-account", alias: "Second", addedAt: 0 }],
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function luna(): RawEntry {
@@ -65,7 +65,7 @@ function actualReserve(overrides: RawEntry = {}): RawEntry {
 }
 
 function build(
-  state: OcxConfig = config(),
+  state: OccxConfig = config(),
   observations: RawEntry[] = [],
   overrides: Partial<ObservedCatalogEntryBuildInput> = {},
 ): RawEntry[] {

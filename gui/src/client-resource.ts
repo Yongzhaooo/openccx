@@ -65,7 +65,7 @@ const stores = new Map<string, Store<unknown>>();
  */
 const DEFAULT_REQUEST_DEADLINE_MS = 30_000;
 /** Abort-reason sentinel distinguishing the deadline from owner aborts (replace/unmount). */
-const RESOURCE_TIMEOUT = "ocx-resource-deadline";
+const RESOURCE_TIMEOUT = "occx-resource-deadline";
 
 const EMPTY_SNAPSHOT: ResourceSnapshot<never> = {
   data: undefined,

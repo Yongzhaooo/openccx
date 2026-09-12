@@ -15,7 +15,7 @@ import { getConfigPath, loadConfig, saveConfig } from "../../src/config";
 import { handleManagementAPI, type ManagementApiDeps } from "../../src/server/management-api";
 import { invalidateStartupHealthCache } from "../../src/server/startup-health-cache";
 import { USAGE_RANGES, USAGE_SURFACES } from "../../src/usage/summary";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   appOwnedBytesSnapshot,
   configureAppOwnedMemoryBudget,
@@ -35,12 +35,12 @@ import { startupHealthFixture } from "../helpers/startup-health";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let TEST_DIR = "";
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 const readTestStartupHealth: NonNullable<ManagementApiDeps["getCachedStartupHealth"]> = async () => (
   startupHealthFixture()
 );
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -56,7 +56,7 @@ function baseConfig(): OcxConfig {
 }
 
 function putSettings(
-  config: OcxConfig,
+  config: OccxConfig,
   body: unknown,
   deps: ManagementApiDeps = {},
 ): Promise<Response | null> {
@@ -71,7 +71,7 @@ function putSettings(
   });
 }
 
-function getSettings(config: OcxConfig): Promise<Response | null> {
+function getSettings(config: OccxConfig): Promise<Response | null> {
   const req = new Request("http://127.0.0.1:10100/api/settings");
   return handleManagementAPI(req, new URL(req.url), config, {
     getCachedStartupHealth: readTestStartupHealth,
@@ -83,8 +83,8 @@ beforeEach(() => {
   resetUsageSummaryCacheForTests();
   resetUsageAggregateCacheForTests();
   invalidateStartupHealthCache();
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-settings-stream-"));
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-settings-stream-"));
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(() => {
@@ -92,8 +92,8 @@ afterEach(() => {
   resetUsageSummaryCacheForTests();
   resetUsageAggregateCacheForTests();
   invalidateStartupHealthCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (TEST_DIR && existsSync(TEST_DIR)) {
     try {
       removeTreeWithRetry(TEST_DIR);
@@ -183,7 +183,7 @@ describe("GET /api/settings", () => {
         };
       };
       expect(typeof body.codexRuntime?.path).toBe("string");
-      // OPENCODEX_HOME lives under the OS user profile; username must stay redacted on all OS.
+      // OPENCCX_HOME lives under the OS user profile; username must stay redacted on all OS.
       expect(body.codexRuntime?.path?.toLowerCase()).not.toMatch(/[/\\]users[/\\][^/\\[\]]+[/\\]/i);
       expect(body.codexRuntime?.path?.toLowerCase()).not.toContain("alice");
       expect(body.codexRuntime?.version).toBe("0.133.0");
@@ -349,7 +349,7 @@ describe("PUT /api/settings", () => {
     expect(absent.codexDesktopAuthless).toBe(false);
 
     let convergences = 0;
-    let saved: OcxConfig | undefined;
+    let saved: OccxConfig | undefined;
     const on = await putSettings(config, { codexDesktopAuthless: true }, {
       saveConfigPreservingClaudeCode: next => { saved = next; },
       createManagementConvergeCodex: catalogConvergenceFactory(() => { convergences += 1; }),
@@ -385,7 +385,7 @@ describe("PUT /api/settings", () => {
     expect(absent.codexClientCompaction).toBe(false);
 
     let convergences = 0;
-    let saved: OcxConfig | undefined;
+    let saved: OccxConfig | undefined;
     const on = await putSettings(config, { codexClientCompaction: true }, {
       saveConfigPreservingClaudeCode: next => { saved = next; },
       createManagementConvergeCodex: catalogConvergenceFactory(() => { convergences += 1; }),

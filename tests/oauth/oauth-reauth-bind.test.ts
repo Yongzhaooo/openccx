@@ -5,15 +5,15 @@ import { OAUTH_PROVIDERS, runLogin } from "../../src/oauth";
 import { getAccountCredential, getAccountSet, saveCredential } from "../../src/oauth/store";
 import type { OAuthController, OAuthCredentials } from "../../src/oauth/types";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-oauth-reauth-bind");
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -44,15 +44,15 @@ beforeEach(() => {
   setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
   removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(async () => {
   await flushConfigDirHardeningForTests();
   setIcaclsRunnerForTests(null);
   setAsyncIcaclsRunnerForTests(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(TEST_DIR);
 });
 

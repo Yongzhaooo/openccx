@@ -44,7 +44,7 @@ export function fabricMockRoute(overrides: Partial<LabRouteContext> = {}): LabRo
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
     baseUrl: "https://api.example.com/v1",
-    opencodexCompatibilityVersion: "a".repeat(64),
+    openccxCompatibilityVersion: "a".repeat(64),
     labRunApproval: true,
     allowPrivateNetwork: false,
     requiredClaims: [],

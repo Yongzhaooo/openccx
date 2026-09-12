@@ -4,7 +4,7 @@ import { ADAPTER_REGISTRY } from "../../src/adapters/registry";
 import { parseRequest } from "../../src/responses/parser";
 import { bindTurnTerminationScope, rememberDeliveredFinalAnswer } from "../../src/responses/turn-termination";
 import { conversationIdFromResponsesRequest } from "../../src/server/request-log-conversation";
-import type { OcxParsedRequest } from "../../src/types";
+import type { OccxParsedRequest } from "../../src/types";
 import { recoverEncryptedAgentTask, resetAgentTaskRecoveryState, restoreCachedEncryptedAgentTasks } from "../../src/server/responses/agent-task-recovery";
 import { codexHeaders, encryptedInput, fakeChatGptJwt, FERNET_TASK, SECOND_FERNET_TASK, originalFetch, recoverySse, routedConfig } from "../helpers/agent-task-recovery";
 afterEach(() => { globalThis.fetch = originalFetch; resetAgentTaskRecoveryState(); });
@@ -128,7 +128,7 @@ test.each([true, false, undefined])("fresh recovery and cache-only reparse prese
   const observations: Array<{
     cohort: boolean | undefined;
     thread: string | undefined;
-    replay: OcxParsedRequest["_reasoningReplayScope"];
+    replay: OccxParsedRequest["_reasoningReplayScope"];
     raw: string;
   }> = [];
   const createChat = ADAPTER_REGISTRY["openai-chat"].create;
@@ -381,7 +381,7 @@ test("cached-history reparse preserves recorded final-answer scope without suppr
   const inspectedBodies: string[] = [];
   const factory = spyOn(ADAPTER_REGISTRY["openai-chat"], "create").mockImplementation((provider, context) => ({
     ...createChat(provider, context),
-    localTerminal(parsed: OcxParsedRequest) {
+    localTerminal(parsed: OccxParsedRequest) {
       inspectedBodies.push(JSON.stringify(parsed._rawBody));
       return kiro.localTerminal?.(parsed);
     },

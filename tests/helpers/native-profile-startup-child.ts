@@ -57,7 +57,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit): Promis
   return realFetch(input, init);
 }) as typeof fetch;
 
-if (process.env.OCX_TEST_NATIVE_STARTUP_FAIL_BEFORE_LISTEN === "1") {
+if (process.env.OCCX_TEST_NATIVE_STARTUP_FAIL_BEFORE_LISTEN === "1") {
   throw new Error("injected native startup failure before listen");
 }
 
@@ -79,7 +79,7 @@ const server = startServer(0, {
 // through a rename so it can never observe the file between create and write.
 // Test-only causal probe, normally disabled: a healthy process can publish later
 // than the old generic deadline without changing recovery/admission behavior.
-const portDelayMs = Number(process.env.OCX_TEST_NATIVE_STARTUP_DELAY_PORT_MS ?? 0);
+const portDelayMs = Number(process.env.OCCX_TEST_NATIVE_STARTUP_DELAY_PORT_MS ?? 0);
 if (!Number.isFinite(portDelayMs) || portDelayMs < 0 || portDelayMs > 60_000) {
   throw new Error("invalid native startup port delay fault");
 }
@@ -104,5 +104,5 @@ void waitForNativeMainStartupGate().then(() => {
 while (!existsSync(stopPath)) await Bun.sleep(10);
 // Test-only stall, opt-in. It exists so the parent's bounded teardown can be shown
 // firing (#1061) — without it the timeout branch is present but never exercised.
-if (process.env.OCX_TEST_STALL_ON_STOP === "1") await new Promise(() => {});
+if (process.env.OCCX_TEST_STALL_ON_STOP === "1") await new Promise(() => {});
 await server.stop(true);

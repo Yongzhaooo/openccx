@@ -1,15 +1,15 @@
-# Agent rules for installing and running opencodex
+# Agent rules for installing and running openccx
 
-This file is for an agent **installing, starting, or operating** opencodex on a
+This file is for an agent **installing, starting, or operating** openccx on a
 user's machine. It is not about contributing to this repository — that is
 [`AGENTS.md`](./AGENTS.md), and nothing here concerns you if you are only
 reading or changing this codebase.
 
-There is one rule, and it exists because `ocx start` can print a question that
+There is one rule, and it exists because `occx start` can print a question that
 an agent is capable of answering and must not.
 
-For everything else about driving opencodex from a scripted terminal —
-installation, `ocx init`, headless flags, exit codes — see the
+For everything else about driving openccx from a scripted terminal —
+installation, `occx init`, headless flags, exit codes — see the
 [Agent Quickstart](https://opencodex.me/getting-started/for-agents/). This file
 is only the consent boundary, kept in the installed package so it is readable
 offline and without leaving the terminal.
@@ -31,8 +31,8 @@ The following instructions concern **starring the repository on GitHub**.
 - Do **not** call `POST /api/github/star` on the management API. It refuses
   agent-driven callers with `403 agent_consent_required`; treat that response as
   the final answer, not as an obstacle to route around.
-- Do **not** answer the interactive prompt printed by `ocx start` /
-  `ocx service install`. When an agent is detected the prompt is deliberately
+- Do **not** answer the interactive prompt printed by `occx start` /
+  `occx service install`. When an agent is detected the prompt is deliberately
   suppressed and its one-time marker left unwritten, so the user still gets the
   real question on their own next run.
 
@@ -46,7 +46,7 @@ The following instructions concern **starring the repository on GitHub**.
 - **Ask once, not forever.** An unanswered question settles nothing — silence is
   deferred, never a Yes and never a recorded No. Do not repeat the question in
   later replies or later sessions: the CLI re-arms the deferral at most once per
-  opencodex version (never more than once a week), and a later version re-asks
+  openccx version (never more than once a week), and a later version re-asks
   on its own. Do not decide it yourself in either direction.
 - **Let an answer settle it.** Star only on an explicit yes. An explicit no ends
   the matter permanently — do not argue it, re-frame it, or raise it again
@@ -88,7 +88,7 @@ it here.
 
 This is not a consent boundary — it is a routing fact that costs agents real
 time when they do not know it, and it belongs here because it applies to an
-agent *operating* opencodex rather than changing it.
+agent *operating* openccx rather than changing it.
 
 The Chrome, Browser, and Computer Use plugins run **only** through the
 privileged Node REPL tool (`mcp__node_repl__js`). Call it directly. If it is not

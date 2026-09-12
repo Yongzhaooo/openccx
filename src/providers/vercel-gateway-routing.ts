@@ -1,4 +1,4 @@
-import type { OcxProviderConfig, VercelGatewayRouting } from "../types";
+import type { OccxProviderConfig, VercelGatewayRouting } from "../types";
 import { sanitizeLogMetadataString } from "../lib/redact";
 
 const ROUTING_KEYS = new Set(["order", "only", "sort"]);
@@ -57,7 +57,7 @@ function routingPreferenceError(value: unknown, field: string): string | null {
   return null;
 }
 
-export function vercelGatewayRoutingConfigError(provider: OcxProviderConfig): string | null {
+export function vercelGatewayRoutingConfigError(provider: OccxProviderConfig): string | null {
   const hasDefault = provider.vercelGatewayRouting !== undefined;
   const hasModels = provider.modelVercelGatewayRouting !== undefined;
   if (!hasDefault && !hasModels) return null;
@@ -87,7 +87,7 @@ export function vercelGatewayRoutingConfigError(provider: OcxProviderConfig): st
 }
 
 export function resolveVercelGatewayRouting(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): VercelGatewayRouting | undefined {
   if (!isCanonicalVercelGatewayTarget(provider.baseUrl)) return undefined;

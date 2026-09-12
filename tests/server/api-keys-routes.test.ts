@@ -7,7 +7,7 @@ import { startServer } from "../../src/server";
 import { isDataPlaneAdmissionSecret } from "../../src/server/auth-cors";
 import { ownAdmissionTokens } from "../../src/claude/auth-detect";
 import { commitClientKeyRotation, startClientKeyRotation } from "../../src/client/hub-client";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 // The /api/keys handlers had no direct test before this file: GET masking, POST
@@ -15,12 +15,12 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 // that stubbed the runtime.
 
 const ADMIN_TOKEN = "admin-secret-for-key-routes";
-const previousHome = process.env.OPENCODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 let testHome = "";
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "test",
@@ -68,7 +68,7 @@ async function managementRequest(
 ): Promise<{ status: number; json: Record<string, unknown> }> {
   const res = await fetch(new URL(path, server.url), {
     method,
-    headers: { "Content-Type": "application/json", "x-opencodex-api-key": ADMIN_TOKEN },
+    headers: { "Content-Type": "application/json", "x-openccx-api-key": ADMIN_TOKEN },
     ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }),
   });
   let json: Record<string, unknown> = {};
@@ -77,19 +77,19 @@ async function managementRequest(
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-api-keys-routes-"));
-  process.env.OPENCODEX_HOME = testHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = ADMIN_TOKEN;
+  testHome = mkdtempSync(join(tmpdir(), "occx-api-keys-routes-"));
+  process.env.OPENCCX_HOME = testHome;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = ADMIN_TOKEN;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -145,7 +145,7 @@ describe("API key rotation", () => {
       expect(started.status).toBe(201);
       const newKey = started.json.key as string;
       const rotationId = started.json.rotationId as string;
-      expect(newKey).toMatch(/^ocx_data_[0-9a-f]{40}$/);
+      expect(newKey).toMatch(/^occx_data_[0-9a-f]{40}$/);
       expect(newKey).not.toBe(oldKey);
       expect(isDataPlaneAdmissionSecret(oldKey, loadConfig())).toBe(true);
       expect(isDataPlaneAdmissionSecret(newKey, loadConfig())).toBe(true);
@@ -199,7 +199,7 @@ describe("POST /api/keys", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-opencodex-api-key": `ocx_pair_${"a".repeat(43)}`,
+          "x-openccx-api-key": `occx_pair_${"a".repeat(43)}`,
         },
         body: JSON.stringify({ name: "forbidden" }),
       });
@@ -217,7 +217,7 @@ describe("POST /api/keys", () => {
       const created = await keysRequest(server, "POST", { name: "deploy" });
       expect(created.status).toBe(201);
       expect(created.json.name).toBe("deploy");
-      expect(created.json.key).toMatch(/^ocx_data_[0-9a-f]{40}$/);
+      expect(created.json.key).toMatch(/^occx_data_[0-9a-f]{40}$/);
 
       const stored = loadConfig().apiKeys ?? [];
       expect(stored).toHaveLength(1);
@@ -237,7 +237,7 @@ describe("POST /api/keys", () => {
       const b = second.json.key as string;
       expect(a).not.toBe(b);
       // The displayed prefix must discriminate; masking 8 characters showed the
-      // fixed `ocx_data` literal for every key ever generated.
+      // fixed `occx_data` literal for every key ever generated.
       expect(a.slice(0, 17)).not.toBe(b.slice(0, 17));
     } finally {
       await server.stop(true);
@@ -252,7 +252,7 @@ describe("POST /api/keys", () => {
     try {
       const created = await keysRequest(server, "POST", { name: "no-providers" });
       expect(created.status).toBe(201);
-      expect(created.json.key).toMatch(/^ocx_data_[0-9a-f]{40}$/);
+      expect(created.json.key).toMatch(/^occx_data_[0-9a-f]{40}$/);
     } finally {
       await server.stop(true);
     }
@@ -409,15 +409,15 @@ describe("apiKeys config compatibility", () => {
     raw.apiKeys = [{
       id: "stable-id",
       name: "client",
-      key: "ocx_data_current",
+      key: "occx_data_current",
       createdAt: "2026-08-28T00:00:00.000Z",
       pendingRotation: { id: 7, key: "leaked-junk", expiresAt: "never" },
     }];
     writeRawConfig(raw);
     const loaded = loadConfig();
-    expect(loaded.apiKeys?.[0]).toMatchObject({ id: "stable-id", key: "ocx_data_current" });
+    expect(loaded.apiKeys?.[0]).toMatchObject({ id: "stable-id", key: "occx_data_current" });
     expect(loaded.apiKeys?.[0]?.pendingRotation).toBeUndefined();
-    expect(isDataPlaneAdmissionSecret("ocx_data_current", loaded)).toBe(true);
+    expect(isDataPlaneAdmissionSecret("occx_data_current", loaded)).toBe(true);
   });
 
   test("a non-array apiKeys value does not reset the config", () => {
@@ -437,7 +437,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "good", name: "usable", key: "ocx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "good", name: "usable", key: "occx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
       { id: "", name: 7 },
     ];
     writeRawConfig(raw);
@@ -456,15 +456,15 @@ describe("apiKeys config compatibility", () => {
     // else. A hand-edited numeric `name` used to take the whole entry down with
     // it, which is a silent revocation of a key the user still has deployed.
     raw.apiKeys = [
-      { id: "still-live", name: 7, key: "ocx_data_stilllive", createdAt: 1234 },
+      { id: "still-live", name: 7, key: "occx_data_stilllive", createdAt: 1234 },
     ];
     writeRawConfig(raw);
 
     const loaded = loadConfig();
     const kept = loaded.apiKeys ?? [];
     expect(kept).toHaveLength(1);
-    expect(kept[0]!.key).toBe("ocx_data_stilllive");
-    expect(isDataPlaneAdmissionSecret("ocx_data_stilllive", loaded)).toBe(true);
+    expect(kept[0]!.key).toBe("occx_data_stilllive");
+    expect(isDataPlaneAdmissionSecret("occx_data_stilllive", loaded)).toBe(true);
   });
 
   test("a salvaged credential stays manageable: it gets a real id", async () => {
@@ -474,7 +474,7 @@ describe("apiKeys config compatibility", () => {
     // id before matching, so without a repair the user would hold a live key
     // they cannot rename or revoke.
     raw.apiKeys = [
-      { id: 7, name: "unmanageable", key: "ocx_data_needsid", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: 7, name: "unmanageable", key: "occx_data_needsid", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -491,7 +491,7 @@ describe("apiKeys config compatibility", () => {
 
       const removed = await keysRequest(server, "DELETE", { id });
       expect(removed.status).toBe(200);
-      expect(isDataPlaneAdmissionSecret("ocx_data_needsid", loadConfig())).toBe(false);
+      expect(isDataPlaneAdmissionSecret("occx_data_needsid", loadConfig())).toBe(false);
     } finally {
       await server.stop(true);
     }
@@ -505,15 +505,15 @@ describe("apiKeys config compatibility", () => {
     // that slot and mask the valid one behind it.
     raw.apiKeys = [
       { id: "junk", name: "whitespace", key: "   ", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "real", name: "usable", key: "ocx_data_realkey", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "real", name: "usable", key: "occx_data_realkey", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
     const loaded = loadConfig();
     const kept = loaded.apiKeys ?? [];
     expect(kept).toHaveLength(1);
-    expect(kept[0]!.key).toBe("ocx_data_realkey");
-    expect(ownAdmissionTokens(loaded)).toEqual(["ocx_data_realkey"]);
+    expect(kept[0]!.key).toBe("occx_data_realkey");
+    expect(ownAdmissionTokens(loaded)).toEqual(["occx_data_realkey"]);
   });
 
   test("a dropped key is never described as still working", () => {
@@ -545,8 +545,8 @@ describe("apiKeys config compatibility", () => {
       saveConfig(baseConfig());
       const raw = readRawConfig();
       raw.apiKeys = [
-        { id: "same", name: "one", key: "ocx_data_dupwarnone", createdAt: "2026-07-31T00:00:00.000Z" },
-        { id: "same", name: "two", key: "ocx_data_dupwarntwo", createdAt: "2026-07-31T00:00:00.000Z" },
+        { id: "same", name: "one", key: "occx_data_dupwarnone", createdAt: "2026-07-31T00:00:00.000Z" },
+        { id: "same", name: "two", key: "occx_data_dupwarntwo", createdAt: "2026-07-31T00:00:00.000Z" },
       ];
       writeRawConfig(raw);
       loadConfig();
@@ -565,7 +565,7 @@ describe("apiKeys config compatibility", () => {
       saveConfig(baseConfig());
       const raw = readRawConfig();
       raw.apiKeys = [
-        { id: "keeps-working", name: 7, key: "ocx_data_repaired", createdAt: "2026-07-31T00:00:00.000Z" },
+        { id: "keeps-working", name: 7, key: "occx_data_repaired", createdAt: "2026-07-31T00:00:00.000Z" },
       ];
       writeRawConfig(raw);
       loadConfig();
@@ -580,7 +580,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "still-live", name: 7, key: "ocx_data_stilllive", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "still-live", name: 7, key: "occx_data_stilllive", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -588,7 +588,7 @@ describe("apiKeys config compatibility", () => {
     try {
       await keysRequest(server, "POST", { name: "added-later" });
       const persisted = loadConfig().apiKeys ?? [];
-      expect(persisted.map(k => k.key)).toContain("ocx_data_stilllive");
+      expect(persisted.map(k => k.key)).toContain("occx_data_stilllive");
     } finally {
       await server.stop(true);
     }
@@ -602,7 +602,7 @@ describe("apiKeys config compatibility", () => {
       saveConfig(baseConfig());
       const raw = readRawConfig();
       raw.apiKeys = [
-        { id: "good", name: "usable", key: "ocx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
+        { id: "good", name: "usable", key: "occx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
         { id: "", name: 7 },
       ];
       writeRawConfig(raw);
@@ -644,7 +644,7 @@ describe("apiKeys config compatibility", () => {
       // is what actually routes this load through the retry branch.
       delete raw.defaultProvider;
       raw.apiKeys = [
-        { id: "good", name: "usable", key: "ocx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
+        { id: "good", name: "usable", key: "occx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
         { id: "", name: 7 },
       ];
       writeRawConfig(raw);
@@ -661,7 +661,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "good", name: "usable", key: "ocx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "good", name: "usable", key: "occx_data_usable", createdAt: "2026-07-31T00:00:00.000Z" },
       { id: "", name: 7 },
     ];
     writeRawConfig(raw);
@@ -681,7 +681,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "legacy", name: "n".repeat(200), key: "ocx_data_legacy", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "legacy", name: "n".repeat(200), key: "occx_data_legacy", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -697,7 +697,7 @@ describe("apiKeys config compatibility", () => {
       {
         id: "extra",
         name: "carries-extra",
-        key: "ocx_data_extra",
+        key: "occx_data_extra",
         createdAt: "2026-07-31T00:00:00.000Z",
         futureField: "keep me",
       },
@@ -718,7 +718,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: 7, name: "needs-an-id", key: "ocx_data_stableid", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: 7, name: "needs-an-id", key: "occx_data_stableid", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -738,7 +738,7 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: 7, name: "needs-an-id", key: "ocx_data_diagnostics", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: 7, name: "needs-an-id", key: "occx_data_diagnostics", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -757,14 +757,14 @@ describe("apiKeys config compatibility", () => {
     // legitimately owns from an earlier normalization. Taking an id the user
     // already has is exactly what this repair must not do.
     raw.apiKeys = [
-      { id: 7, name: "needs-an-id", key: "ocx_data_needsid", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "salvaged-1", name: "already-owns-it", key: "ocx_data_ownsit", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: 7, name: "needs-an-id", key: "occx_data_needsid", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "salvaged-1", name: "already-owns-it", key: "occx_data_ownsit", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
     const kept = loadConfig().apiKeys ?? [];
-    const ownsIt = kept.find(k => k.key === "ocx_data_ownsit")!;
-    const needsId = kept.find(k => k.key === "ocx_data_needsid")!;
+    const ownsIt = kept.find(k => k.key === "occx_data_ownsit")!;
+    const needsId = kept.find(k => k.key === "occx_data_needsid")!;
     expect(ownsIt.id).toBe("salvaged-1");
     expect(needsId.id).not.toBe("salvaged-1");
     expect(needsId.id).toBeTruthy();
@@ -774,22 +774,22 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "shared", name: "first", key: "ocx_data_firstdup", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "shared", name: "second", key: "ocx_data_seconddup", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "shared", name: "first", key: "occx_data_firstdup", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "shared", name: "second", key: "occx_data_seconddup", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
     const kept = loadConfig().apiKeys ?? [];
-    expect(kept.find(k => k.key === "ocx_data_firstdup")!.id).toBe("shared");
-    expect(kept.find(k => k.key === "ocx_data_seconddup")!.id).not.toBe("shared");
+    expect(kept.find(k => k.key === "occx_data_firstdup")!.id).toBe("shared");
+    expect(kept.find(k => k.key === "occx_data_seconddup")!.id).not.toBe("shared");
   });
 
   test("duplicate ids are separated so each key stays individually revocable", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     raw.apiKeys = [
-      { id: "same", name: "one", key: "ocx_data_dupone", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "same", name: "two", key: "ocx_data_duptwo", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "same", name: "one", key: "occx_data_dupone", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "same", name: "two", key: "occx_data_duptwo", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
@@ -802,15 +802,15 @@ describe("apiKeys config compatibility", () => {
     saveConfig(baseConfig());
     const raw = readRawConfig();
     // Admission trims the PRESENTED token but compares against the stored value
-    // verbatim, so " ocx_data_spaced " matches neither form of itself.
+    // verbatim, so " occx_data_spaced " matches neither form of itself.
     raw.apiKeys = [
-      { id: "spaced", name: "unusable", key: " ocx_data_spaced ", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "real", name: "usable", key: "ocx_data_realkey", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "spaced", name: "unusable", key: " occx_data_spaced ", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "real", name: "usable", key: "occx_data_realkey", createdAt: "2026-07-31T00:00:00.000Z" },
     ];
     writeRawConfig(raw);
 
     const loaded = loadConfig();
-    expect((loaded.apiKeys ?? []).map(k => k.key)).toEqual(["ocx_data_realkey"]);
-    expect(ownAdmissionTokens(loaded)).toEqual(["ocx_data_realkey"]);
+    expect((loaded.apiKeys ?? []).map(k => k.key)).toEqual(["occx_data_realkey"]);
+    expect(ownAdmissionTokens(loaded)).toEqual(["occx_data_realkey"]);
   });
 });

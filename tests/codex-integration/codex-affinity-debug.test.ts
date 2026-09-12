@@ -8,7 +8,7 @@ import { resetDebugSettingsForTests, setDebugSettings } from "../../src/lib/debu
 
 function diagnosticPayload(): Record<string, unknown> {
   const line = getDebugLogEntries().at(-1)?.line ?? "";
-  const prefix = "[ocx:codex:affinity] ";
+  const prefix = "[occx:codex:affinity] ";
   expect(line.startsWith(prefix)).toBe(true);
   return JSON.parse(line.slice(prefix.length)) as Record<string, unknown>;
 }

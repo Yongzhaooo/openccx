@@ -617,7 +617,7 @@ for (const putPending of [false, undefined, true]) {
       clearClientResourceStoresForTests();
       await render();
     };
-    const cachedSettings = () => readSessionListCache<{ settings: SettingsData }>(`ocx.dash.controls.v1:${apiBase}`)?.settings;
+    const cachedSettings = () => readSessionListCache<{ settings: SettingsData }>(`occx.dash.controls.v1:${apiBase}`)?.settings;
     try {
       await render();
       expect(latest?.settings?.catalogRefreshPending).toBeUndefined();
@@ -656,7 +656,7 @@ test.each([undefined, false])("Desktop GET pending %s preserves a cached pending
   const originalFetch = globalThis.fetch;
   const apiBase = `/authless-cache-${String(getPending)}`;
   let latest: Dash | undefined;
-  const cacheKey = `ocx.dash.controls.v1:${apiBase}`;
+  const cacheKey = `occx.dash.controls.v1:${apiBase}`;
   testWindow.sessionStorage.setItem(cacheKey, JSON.stringify({
     settings: { codexAutoStart: true, codexDesktopAuthless: true, catalogRefreshPending: true, port: 10100, hostname: "127.0.0.1" },
   }));
@@ -733,7 +733,7 @@ test.each([true, false])("Desktop settings retain an optimistic preference durin
     expect(latest?.settings?.codexDesktopAuthless).toBe(saveSucceeds ? true : undefined);
     expect(latest?.settings?.catalogRefreshPending).toBe(saveSucceeds ? true : undefined);
     expect(syncCalls).toBe(saveSucceeds ? 1 : 0);
-    expect(readSessionListCache<{ settings: SettingsData }>(`ocx.dash.controls.v1:${apiBase}`)?.settings).toEqual(latest!.settings!);
+    expect(readSessionListCache<{ settings: SettingsData }>(`occx.dash.controls.v1:${apiBase}`)?.settings).toEqual(latest!.settings!);
     // A later, settled poll still updates unrelated settings and preserves any receipt.
     await act(async () => {
       setClientResourceData(`dashboard-settings:${apiBase}`, {

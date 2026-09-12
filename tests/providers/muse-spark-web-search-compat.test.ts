@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createResponsesPassthroughAdapter as createResponsesPassthroughAdapterProduction } from "../../src/adapters/openai-responses";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createResponsesPassthroughAdapter = (...args: Parameters<typeof createResponsesPassthroughAdapterProduction>) =>
@@ -11,7 +11,7 @@ const ZEN_PROVIDER = {
   adapter: "openai-responses",
   baseUrl: "https://opencode.ai/zen/v1",
   apiKey: "test-key",
-} as unknown as OcxProviderConfig;
+} as unknown as OccxProviderConfig;
 
 const ZEN_GO_PROVIDER = {
   ...ZEN_PROVIDER,
@@ -53,7 +53,7 @@ function webSearchTool(): Record<string, unknown> {
 
 /** Build one passthrough request for an explicit Responses provider fixture. */
 function buildForProvider(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
   rawBody: Record<string, unknown>,
 ): Record<string, unknown> {

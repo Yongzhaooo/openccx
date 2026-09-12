@@ -181,7 +181,7 @@ function collectCheckpointBlobIds(checkpointBytes: Uint8Array): Uint8Array[] | u
 }
 
 export function cursorCheckpointRefHash(ref: string): string {
-  return createHash("sha256").update("ocx:cursor:ckpt-ref:").update(ref).digest("hex").slice(0, 16);
+  return createHash("sha256").update("occx:cursor:ckpt-ref:").update(ref).digest("hex").slice(0, 16);
 }
 
 /**
@@ -235,7 +235,7 @@ export function commitCursorCheckpoint(input: {
   prune();
   const createdAt = now();
   const ref = createHash("sha256")
-    .update("ocx:cursor:ckpt:")
+    .update("occx:cursor:ckpt:")
     .update(input.conversationId)
     .update("|")
     .update(input.identityScope?.trim() || "local")

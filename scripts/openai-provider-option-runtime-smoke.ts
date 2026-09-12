@@ -92,7 +92,7 @@ function listenerIdentity10100(): ListenerIdentity {
 }
 
 async function checkLiveKey(): Promise<void> {
-  const configHome = process.env.OPENCODEX_HOME?.trim() || join(homedir(), ".opencodex");
+  const configHome = process.env.OPENCCX_HOME?.trim() || join(homedir(), ".openccx");
   const configPath = join(configHome, "config.json");
   let key: string | null = null;
   if (existsSync(configPath)) {
@@ -100,12 +100,12 @@ async function checkLiveKey(): Promise<void> {
     try {
       raw = JSON.parse(readFileSync(configPath, "utf8")) as typeof raw;
     } catch {
-      throw new Error("OpenCodex config is malformed; live-key status cannot be determined safely");
+      throw new Error("Openccx config is malformed; live-key status cannot be determined safely");
     }
     key = resolveConfiguredKey(raw.providers?.["openai-apikey"]?.apiKey);
   }
 
-  const authorized = process.env.OCX_ALLOW_LIVE_OPENAI_SMOKE === "1";
+  const authorized = process.env.OCCX_ALLOW_LIVE_OPENAI_SMOKE === "1";
   const outcomes: LiveOutcome[] = [];
   if (key && authorized) {
     for (const [selectedId, resolvedId, reasoning] of [
@@ -155,31 +155,31 @@ if (Bun.argv.includes("--check-live-key")) {
   }
 
   const liveBefore = listenerIdentity10100();
-  const realOcxHome = process.env.OPENCODEX_HOME?.trim() || join(homedir(), ".opencodex");
+  const realOccxHome = process.env.OPENCCX_HOME?.trim() || join(homedir(), ".openccx");
   const realCodexHome = process.env.CODEX_HOME?.trim() || join(homedir(), ".codex");
   const realState = [
-    ["opencodex-config", join(realOcxHome, "config.json")],
-    ["opencodex-oauth", join(realOcxHome, "auth.json")],
-    ["opencodex-codex-accounts", join(realOcxHome, "codex-accounts.json")],
+    ["openccx-config", join(realOccxHome, "config.json")],
+    ["openccx-oauth", join(realOccxHome, "auth.json")],
+    ["openccx-codex-accounts", join(realOccxHome, "codex-accounts.json")],
     ["codex-config", join(realCodexHome, "config.toml")],
     ["codex-auth", join(realCodexHome, "auth.json")],
   ] as const;
   const hashesBefore = stateHashes(realState);
 
-  const root = mkdtempSync(join(tmpdir(), "ocx-provider-option-runtime-smoke-"));
-  const opencodexHome = join(root, "opencodex");
+  const root = mkdtempSync(join(tmpdir(), "occx-provider-option-runtime-smoke-"));
+  const openccxHome = join(root, "openccx");
   const codexHome = join(root, "codex");
   const workdir = join(root, "work");
   const capturePath = join(root, "capture.json");
   mkdirSync(workdir, { recursive: true, mode: 0o700 });
-  const env = buildSanitizedRuntimeEnv(process.env, opencodexHome, codexHome);
+  const env = buildSanitizedRuntimeEnv(process.env, openccxHome, codexHome);
   const children: Bun.Subprocess[] = [];
 
   async function startChild(): Promise<{ child: Bun.Subprocess; ready: ChildReady }> {
     const child = Bun.spawn([
       process.execPath,
       join(import.meta.dir, "openai-provider-option-runtime-child.ts"),
-      opencodexHome,
+      openccxHome,
       codexHome,
       capturePath,
     ], { cwd: workdir, env, stdout: "pipe", stderr: "pipe" });
@@ -236,7 +236,7 @@ if (Bun.argv.includes("--check-live-key")) {
       body: JSON.stringify({ model, input: "runtime fixture", stream: true }),
     });
     const text = await response.text();
-    if (!response.ok || !text.includes("OCX_PROBE_OK")) {
+    if (!response.ok || !text.includes("OCCX_PROBE_OK")) {
       throw new Error(`runtime ${model} probe failed with status ${response.status}`);
     }
   }
@@ -259,7 +259,7 @@ if (Bun.argv.includes("--check-live-key")) {
       .replaceAll(root, "<temp>")
       .replaceAll("fixture-api-key", "<redacted>")
       .replaceAll("fixture-codex-access", "<redacted>")
-      .replaceAll("Reply exactly OCX_PROBE_OK", "<probe-prompt>")
+      .replaceAll("Reply exactly OCCX_PROBE_OK", "<probe-prompt>")
       .replace(/Bearer\s+\S+/gi, "Bearer <redacted>")
       .slice(0, 500);
   }
@@ -275,7 +275,7 @@ if (Bun.argv.includes("--check-live-key")) {
       "-C", workdir,
       "--model", "openai-apikey/gpt-5.6-sol-pro",
       "--sandbox", "read-only", "--json",
-      "Reply exactly OCX_PROBE_OK",
+      "Reply exactly OCCX_PROBE_OK",
     ], { cwd: workdir, env, stdout: "pipe", stderr: "pipe" });
     let timedOut = false;
     const timeout = setTimeout(() => {
@@ -288,7 +288,7 @@ if (Bun.argv.includes("--check-live-key")) {
       codex.exited,
     ]);
     clearTimeout(timeout);
-    if (exitCode === 0 && stdout.includes("OCX_PROBE_OK")) return { ok: true, version: codexVersion };
+    if (exitCode === 0 && stdout.includes("OCCX_PROBE_OK")) return { ok: true, version: codexVersion };
     return {
       ok: false,
       version: codexVersion,

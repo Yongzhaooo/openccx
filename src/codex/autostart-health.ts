@@ -1,6 +1,6 @@
 import { codexAutoStartEnabled } from "../config";
 import { diagnoseService, type ServiceDiagnostic } from "../service";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { getCodexRoutingKind, type CodexRoutingKind } from "./inject";
 import { diagnoseCodexShim, type CodexShimDiagnostic } from "./shim";
 
@@ -54,16 +54,16 @@ export interface StartupHealth {
 }
 
 const COMMANDS = {
-  installService: "ocx service install",
-  repairService: "ocx service repair",
-  installShim: "ocx codex-shim install",
-  restoreNative: "ocx restore",
+  installService: "occx service install",
+  repairService: "occx service repair",
+  installShim: "occx codex-shim install",
+  restoreNative: "occx restore",
 } as const;
 
 export function deriveStartupHealth(inputs: StartupHealthInputs): StartupHealth {
   const shimEffective = inputs.autostartEnabled && inputs.shimHealthy;
-  const routingInjected = inputs.routingKind === "opencodex-local";
-  const localRoutingDependency = inputs.routingKind === "opencodex-local"
+  const routingInjected = inputs.routingKind === "openccx-local";
+  const localRoutingDependency = inputs.routingKind === "openccx-local"
     || inputs.routingKind === "custom-local"
     || inputs.routingKind === "unknown";
   // Script launchers never cover Codex Desktop/app-server surfaces. This is
@@ -71,9 +71,9 @@ export function deriveStartupHealth(inputs: StartupHealthInputs): StartupHealth 
   const shimCoverage: ShimCoverage = !shimEffective
     ? "none"
     : "cli-only";
-  // We can only credit an opencodex service/shim for routing that opencodex owns.
-  // An arbitrary localhost gateway has an independent lifecycle that OCX cannot repair.
-  const ownsLocalRouting = inputs.routingKind === "opencodex-local";
+  // We can only credit an openccx service/shim for routing that openccx owns.
+  // An arbitrary localhost gateway has an independent lifecycle that OCCX cannot repair.
+  const ownsLocalRouting = inputs.routingKind === "openccx-local";
   const protection: StartupProtection = ownsLocalRouting && inputs.serviceViable
     ? "service"
     : ownsLocalRouting && shimEffective
@@ -119,7 +119,7 @@ export interface StartupHealthDiagnostics {
 
 /** Collect current machine state without mutating config, services, or shims. */
 export function collectStartupHealth(
-  config: Pick<OcxConfig, "codexAutoStart">,
+  config: Pick<OccxConfig, "codexAutoStart">,
   diagnostics: StartupHealthDiagnostics = {},
 ): StartupHealth {
   const shim = diagnostics.shim ?? diagnoseCodexShim();
@@ -143,11 +143,11 @@ export function collectStartupHealth(
 export function startupHealthSummary(health: StartupHealth): string {
   if (health.status === "native") return health.routingKind === "custom-remote"
     ? "custom remote Codex routing (no local restart dependency)"
-    : "native Codex routing (no opencodex restart dependency)";
+    : "native Codex routing (no openccx restart dependency)";
   if (health.protection === "service") return "protected by background service";
   const command = health.recommendedCommand ?? health.commands.restoreNative;
   if (health.routingKind === "unknown") return `AT RISK after restart (Codex routing could not be verified; run '${command}')`;
-  if (health.routingKind === "custom-local") return `AT RISK after restart (custom local gateway lifecycle is not managed by opencodex; run '${command}')`;
+  if (health.routingKind === "custom-local") return `AT RISK after restart (custom local gateway lifecycle is not managed by openccx; run '${command}')`;
   if (health.shimCoverage === "cli-only") return `AT RISK for Codex Desktop after restart (launcher shim covers CLI scripts only; run '${command}')`;
   if (health.serviceConflict) return `AT RISK after restart (background service managers conflict; run '${command}')`;
   if (health.serviceStale) return `AT RISK after restart (background service files are stale; run '${command}')`;
@@ -156,8 +156,8 @@ export function startupHealthSummary(health: StartupHealth): string {
 }
 
 /**
- * The routing/service/shim token `ocx doctor` prints under restart safety.
- * Extracted so `ocx status` can show the same string rather than growing a
+ * The routing/service/shim token `occx doctor` prints under restart safety.
+ * Extracted so `occx status` can show the same string rather than growing a
  * second copy that drifts (#2411). Two management routes computing the same
  * thing separately is exactly how #2457 happened.
  */

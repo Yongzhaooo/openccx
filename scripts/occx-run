@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ocx-run — run a long job on this box so it can never wedge, never stack,
+# occx-run — run a long job on this box so it can never wedge, never stack,
 # and never leave a caller guessing whether it is alive.
 #
 # Why this exists. Two `bun test` runs sat on this machine for 3h12m with no
@@ -14,44 +14,44 @@
 #   silence   -> a status file written on EVERY exit path, including timeout
 #
 # Usage:
-#   ocx-run <name> <workdir> <timeout> <command...>
-#   ocx-run status [name]
-#   ocx-run tail <name> [lines]
-#   ocx-run stop <name>
+#   occx-run <name> <workdir> <timeout> <command...>
+#   occx-run status [name]
+#   occx-run tail <name> [lines]
+#   occx-run stop <name>
 #
 # Example:
-#   ocx-run suite ~/ocx-boundary/repo 40m bun run test
-#   ocx-run status
+#   occx-run suite ~/occx-boundary/repo 40m bun run test
+#   occx-run status
 set -uo pipefail
 
-OCX_RUN_DIR="${OCX_RUN_DIR:-$HOME/.ocx-run}"
-mkdir -p "$OCX_RUN_DIR"
+OCCX_RUN_DIR="${OCCX_RUN_DIR:-$HOME/.occx-run}"
+mkdir -p "$OCCX_RUN_DIR"
 
 # A non-interactive `ssh host cmd` does not read ~/.bashrc, so PATH is the bare
 # system default and `bun` is missing — the failure surfaces as a bewildering
 # rc=127 from inside the job rather than as "you forgot to set PATH". Every
 # previous caller worked around it by hardcoding ~/.bun/bin/bun at each call
 # site. Do it once, here, so a plain `bun run test` works over ssh.
-for ocx_run_extra in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/bin"; do
-  [ -d "$ocx_run_extra" ] && case ":$PATH:" in
-    *":$ocx_run_extra:"*) ;;
-    *) PATH="$ocx_run_extra:$PATH" ;;
+for occx_run_extra in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/bin"; do
+  [ -d "$occx_run_extra" ] && case ":$PATH:" in
+    *":$occx_run_extra:"*) ;;
+    *) PATH="$occx_run_extra:$PATH" ;;
   esac
 done
 export PATH
 
-die() { echo "ocx-run: $*" >&2; exit 2; }
+die() { echo "occx-run: $*" >&2; exit 2; }
 
 # A job is identified by name; every artifact derives from it.
-log_path()    { echo "$OCX_RUN_DIR/$1.log"; }
-status_path() { echo "$OCX_RUN_DIR/$1.status"; }
-lock_path()   { echo "$OCX_RUN_DIR/$1.lock"; }
-pid_path()    { echo "$OCX_RUN_DIR/$1.pid"; }
+log_path()    { echo "$OCCX_RUN_DIR/$1.log"; }
+status_path() { echo "$OCCX_RUN_DIR/$1.status"; }
+lock_path()   { echo "$OCCX_RUN_DIR/$1.lock"; }
+pid_path()    { echo "$OCCX_RUN_DIR/$1.pid"; }
 
 cmd_status() {
   local name="${1:-}"
   local files
-  if [ -n "$name" ]; then files="$(status_path "$name")"; else files="$OCX_RUN_DIR"/*.status; fi
+  if [ -n "$name" ]; then files="$(status_path "$name")"; else files="$OCCX_RUN_DIR"/*.status; fi
   local found=0
   for f in $files; do
     [ -e "$f" ] || continue
@@ -70,7 +70,7 @@ cmd_status() {
       echo "$n: $(cat "$f")"
     fi
   done
-  [ "$found" = 1 ] || echo "no jobs recorded in $OCX_RUN_DIR"
+  [ "$found" = 1 ] || echo "no jobs recorded in $OCCX_RUN_DIR"
 }
 
 cmd_tail() {
@@ -100,7 +100,7 @@ case "${1:-}" in
   stop)   shift; cmd_stop "$@";       exit 0 ;;
 esac
 
-[ $# -ge 4 ] || die "usage: ocx-run <name> <workdir> <timeout> <command...>"
+[ $# -ge 4 ] || die "usage: occx-run <name> <workdir> <timeout> <command...>"
 name="$1"; workdir="$2"; limit="$3"; shift 3
 [ -d "$workdir" ] || die "workdir not found: $workdir"
 
@@ -114,9 +114,9 @@ pidf="$(pid_path "$name")"
 # would otherwise stack a third run onto a box already fighting itself.
 exec 9>"$lock"
 if ! flock -n 9; then
-  echo "ocx-run: '$name' is already running (holder: $(cat "$pidf" 2>/dev/null || echo unknown))." >&2
-  echo "  ocx-run status $name    # check progress" >&2
-  echo "  ocx-run stop $name      # take it down" >&2
+  echo "occx-run: '$name' is already running (holder: $(cat "$pidf" 2>/dev/null || echo unknown))." >&2
+  echo "  occx-run status $name    # check progress" >&2
+  echo "  occx-run stop $name      # take it down" >&2
   exit 3
 fi
 

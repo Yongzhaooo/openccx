@@ -6,7 +6,7 @@ import { OPENCODE_PROVIDER_ID, LOOPBACK_API_KEY_PLACEHOLDER } from "./constants"
 
 
 export interface McodeProviderBlock {
-  name: "OpenCodex";
+  name: "Openccx";
   kind: "custom";
   enabled: true;
   api: "anthropic-messages";
@@ -57,7 +57,7 @@ export function buildMcodeClientConfig(ctx: ExportContext): McodeGeneratedConfig
   return {
     custom_provider: {
       [OPENCODE_PROVIDER_ID]: {
-        name: "OpenCodex",
+        name: "Openccx",
         kind: "custom",
         enabled: true,
         api: "anthropic-messages",

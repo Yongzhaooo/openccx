@@ -13,9 +13,9 @@ import {
   waitForReplacementReady,
 } from "../../src/server/management/system-restart";
 import { SYSTEM_RESTART_EXPECTED_PID_HEADER } from "../../src/lib/system-restart-contract";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -505,11 +505,11 @@ describe("acceptSystemRestart", () => {
     expect(calls).toEqual(["drain", "exit:1"]);
   });
 
-  test("OCX_SERVICE with non-viable Background Service uses detached start", async () => {
+  test("OCCX_SERVICE with non-viable Background Service uses detached start", async () => {
     const calls: string[] = [];
     let scheduled: (() => void | Promise<void>) | null = null;
-    const prev = process.env.OCX_SERVICE;
-    process.env.OCX_SERVICE = "1";
+    const prev = process.env.OCCX_SERVICE;
+    process.env.OCCX_SERVICE = "1";
 
     try {
       acceptSystemRestart({
@@ -529,16 +529,16 @@ describe("acceptSystemRestart", () => {
       await scheduled!();
       expect(calls).toEqual(["drain", "start:10123", "recycle", "exit:0"]);
     } finally {
-      if (prev === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prev;
+      if (prev === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prev;
     }
   });
 
-  test("OCX_SERVICE with viable Background Service exits 1 for supervisor respawn", async () => {
+  test("OCCX_SERVICE with viable Background Service exits 1 for supervisor respawn", async () => {
     const calls: string[] = [];
     let scheduled: (() => void | Promise<void>) | null = null;
-    const prev = process.env.OCX_SERVICE;
-    process.env.OCX_SERVICE = "1";
+    const prev = process.env.OCCX_SERVICE;
+    process.env.OCCX_SERVICE = "1";
 
     try {
       acceptSystemRestart({
@@ -555,8 +555,8 @@ describe("acceptSystemRestart", () => {
       await scheduled!();
       expect(calls).toEqual(["drain", "exit:1"]);
     } finally {
-      if (prev === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prev;
+      if (prev === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prev;
     }
   });
 
@@ -648,11 +648,11 @@ describe("acceptSystemRestart", () => {
     expect(calls).toEqual(["latched", "drain", "stop", "start:10123", "recycle", "exit:1"]);
   });
 
-  test("spawn failure clears OCX_SERVICE so exit cleanup can restore fences", async () => {
+  test("spawn failure clears OCCX_SERVICE so exit cleanup can restore fences", async () => {
     const calls: string[] = [];
     let scheduled: (() => void | Promise<void>) | null = null;
-    const prev = process.env.OCX_SERVICE;
-    process.env.OCX_SERVICE = "1";
+    const prev = process.env.OCCX_SERVICE;
+    process.env.OCCX_SERVICE = "1";
 
     try {
       acceptSystemRestart({
@@ -674,10 +674,10 @@ describe("acceptSystemRestart", () => {
 
       await scheduled!();
       expect(calls).toEqual(["drain", "start", "exit:1"]);
-      expect(process.env.OCX_SERVICE).toBeUndefined();
+      expect(process.env.OCCX_SERVICE).toBeUndefined();
     } finally {
-      if (prev === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prev;
+      if (prev === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prev;
     }
   });
 

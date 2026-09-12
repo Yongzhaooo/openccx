@@ -1,5 +1,5 @@
 /**
- * Data-access layer for `ocx account` (issue #180) — live-proxy HTTP client and
+ * Data-access layer for `occx account` (issue #180) — live-proxy HTTP client and
  * per-family account readers. Kept separate from account.ts (command handlers)
  * per the 400-line module budget.
  */
@@ -7,7 +7,7 @@ import { findLiveProxy, probeHostname } from "../server/proxy-liveness";
 import { runningProxyUpdateHeaders } from "../oauth/login-cli";
 import { isPublicOAuthProvider } from "../oauth/index";
 import { getProviderRegistryEntry, providerCodexAccountMode } from "../providers/registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { projectCodexQuotaRefreshOutcome, type CodexQuotaRefreshOutcome } from "../codex/quota-refresh-outcome";
 
 export type AccountType = "codex" | "oauth" | "api-key";
@@ -61,7 +61,7 @@ export interface AccountDeps {
   /** Test injection: skip findLiveProxy and call the API at this base URL. */
   baseUrl?: string;
   fetchImpl?: typeof fetch;
-  loadConfigImpl?: () => OcxConfig;
+  loadConfigImpl?: () => OccxConfig;
   stdinImpl?: AccountStdin;
   stdinTimeoutMs?: number;
   /** Internal test seam for the account-import POST; production is capped at ten minutes. */
@@ -76,7 +76,7 @@ export interface AccountDeps {
   stageLeaseClock?: StageLeaseClock;
 }
 
-export function classifyAccount(config: OcxConfig, name: string): ClassifyResult {
+export function classifyAccount(config: OccxConfig, name: string): ClassifyResult {
   const provider = config.providers?.[name];
   if (providerCodexAccountMode(name, provider)) return { type: "codex" };
   const entry = getProviderRegistryEntry(name);
@@ -144,7 +144,7 @@ export async function resolveBaseUrl(deps: AccountDeps): Promise<string | null> 
 }
 
 export function proxyUnreachable(transportError?: string): number {
-  console.error("Proxy not reachable. Start it with 'ocx start' or 'ocx ensure'.");
+  console.error("Proxy not reachable. Start it with 'occx start' or 'occx ensure'.");
   // Naming the transport cause distinguishes "nothing is listening" from a refused
   // or reset connection, which is what made #2696-class breakage undiagnosable.
   if (transportError) console.error(`reason: ${transportError}`);
@@ -177,7 +177,7 @@ export function apiError(json: Record<string, unknown>, fallback: string, status
   if (hint && hint !== primary) lines.push(`hint: ${hint}`);
   for (const line of lines) console.error(line);
   if (json.cleanupRequired === true) {
-    console.error("Warning: native-login staging cleanup is still required; run 'ocx account main doctor'.");
+    console.error("Warning: native-login staging cleanup is still required; run 'occx account main doctor'.");
   }
   return status === 404 ? 4 : status === 409 ? 5 : 1;
 }

@@ -5,7 +5,7 @@ import { isAbsolute, join } from "node:path";
 import { createImageBudget, guessExtFromMagic, materializeInlineImage } from "../../src/images/artifacts";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { createGoogleAdapter as createGoogleAdapterProduction } from "../../src/adapters/google";
-import type { AdapterEvent, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -17,15 +17,15 @@ let artifactsDir: string;
 let savedHome: string | undefined;
 
 beforeAll(() => {
-  savedHome = process.env.OPENCODEX_HOME;
-  tempHome = mkdtempSync(join(tmpdir(), "ocx-test-"));
-  process.env.OPENCODEX_HOME = tempHome;
+  savedHome = process.env.OPENCCX_HOME;
+  tempHome = mkdtempSync(join(tmpdir(), "occx-test-"));
+  process.env.OPENCCX_HOME = tempHome;
   artifactsDir = join(tempHome, "artifacts");
 });
 
 afterAll(() => {
-  if (savedHome !== undefined) process.env.OPENCODEX_HOME = savedHome;
-  else delete process.env.OPENCODEX_HOME;
+  if (savedHome !== undefined) process.env.OPENCCX_HOME = savedHome;
+  else delete process.env.OPENCCX_HOME;
   removeTreeWithRetry(tempHome);
 });
 
@@ -44,14 +44,14 @@ function jsonResponse(obj: unknown): Response {
   return new Response(JSON.stringify(obj), { status: 200, headers: { "content-type": "application/json" } });
 }
 
-async function collectStream(provider: OcxProviderConfig, chunks: unknown[]): Promise<AdapterEvent[]> {
+async function collectStream(provider: OccxProviderConfig, chunks: unknown[]): Promise<AdapterEvent[]> {
   const adapter = createGoogleAdapter(provider);
   const events: AdapterEvent[] = [];
   for await (const ev of adapter.parseStream(sseResponse(chunks))) events.push(ev);
   return events;
 }
 
-const aiStudioProvider = { adapter: "google", baseUrl: "https://generativelanguage.googleapis.com", apiKey: "key" } as OcxProviderConfig;
+const aiStudioProvider = { adapter: "google", baseUrl: "https://generativelanguage.googleapis.com", apiKey: "key" } as OccxProviderConfig;
 
 describe("guessExtFromMagic", () => {
   test("PNG magic bytes → png extension", () => {
@@ -313,19 +313,19 @@ describe("markdown emits authenticated opaque artifact URLs", () => {
   });
 });
 
-describe("artifact markdown never leaks OPENCODEX_HOME paths", () => {
+describe("artifact markdown never leaks OPENCCX_HOME paths", () => {
   let underHome: string;
   let savedHome: string | undefined;
 
   beforeAll(() => {
-    savedHome = process.env.OPENCODEX_HOME;
-    underHome = mkdtempSync(join(homedir(), ".ocx-test-leak-"));
-    process.env.OPENCODEX_HOME = underHome;
+    savedHome = process.env.OPENCCX_HOME;
+    underHome = mkdtempSync(join(homedir(), ".occx-test-leak-"));
+    process.env.OPENCCX_HOME = underHome;
   });
 
   afterAll(() => {
-    if (savedHome !== undefined) process.env.OPENCODEX_HOME = savedHome;
-    else delete process.env.OPENCODEX_HOME;
+    if (savedHome !== undefined) process.env.OPENCCX_HOME = savedHome;
+    else delete process.env.OPENCCX_HOME;
     removeTreeWithRetry(underHome);
   });
 

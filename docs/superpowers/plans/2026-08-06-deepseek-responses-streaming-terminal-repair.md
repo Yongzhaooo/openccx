@@ -118,7 +118,7 @@ Add the resolver beside `providerModelResponsesUpstreamStreaming`:
 ```ts
 export function providerModelResponsesTerminalRepair(
   id: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   modelId: string,
 ): ResponsesTerminalRepairPolicy | undefined {
   const entry = getProviderRegistryEntry(id);
@@ -581,7 +581,7 @@ fresh `prepush` output.
 
 - [ ] **Step 3: Run one minimal official-DeepSeek smoke through the new code**
 
-Start an isolated one-off opencodex server from this worktree on an unused
+Start an isolated one-off openccx server from this worktree on an unused
 loopback port, using the existing local config without printing its API key.
 Send a prompt containing no private data and a no-op function tool. Verify:
 

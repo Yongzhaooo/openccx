@@ -15,7 +15,7 @@
  * plain allowlist. Design: devlog/_plan/260824_model_ux_aliases_and_defaults/030_default_preset.md
  */
 
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 
 export interface ModelPresetRule {
   readonly pattern: RegExp;
@@ -111,7 +111,7 @@ export function materializeModelPreset(
  * "custom" is already terminal. The applied version is retained so the GUI can still offer
  * "a newer preset is available" without losing what the user chose.
  */
-export function markModelPresetDiverged(provider: OcxProviderConfig): void {
+export function markModelPresetDiverged(provider: OccxProviderConfig): void {
   const marker = provider.modelPreset;
   if (marker?.mode !== "preset") return;
   provider.modelPreset = { ...marker, mode: "custom" };

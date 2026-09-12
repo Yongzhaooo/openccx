@@ -1,9 +1,9 @@
 /**
  * Durable desired state for the native Codex integration.
  *
- * The switch was never the hard part — `ocx restore` already unroutes Codex
+ * The switch was never the hard part — `occx restore` already unroutes Codex
  * without stopping the proxy. What was missing is that the decision did not
- * survive a restart, because `ocx start` force-synced unconditionally. These
+ * survive a restart, because `occx start` force-synced unconditionally. These
  * tests pin the two halves of the fix: absence means ON, and only an explicit
  * `false` gates the startup sync.
  */
@@ -23,25 +23,25 @@ import {
   shouldSyncGrokOnStart,
   syncCodexOnStartIfEnabled,
 } from "../../src/codex/desired-state";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testRoot = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return { port: 10100, providers: {}, defaultProvider: "openai" };
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  testRoot = mkdtempSync(join(tmpdir(), "ocx-desired-state-"));
-  process.env.OPENCODEX_HOME = testRoot;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  testRoot = mkdtempSync(join(tmpdir(), "occx-desired-state-"));
+  process.env.OPENCCX_HOME = testRoot;
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testRoot);
 });
 
@@ -52,7 +52,7 @@ describe("absence means ON", () => {
    * are the same state — and none of them may read as "turned off". Only an
    * explicit `false` is OFF.
    */
-  const onCases: { name: string; config: OcxConfig }[] = [
+  const onCases: { name: string; config: OccxConfig }[] = [
     { name: "no clientIntegrations at all", config: baseConfig() },
     { name: "an empty clientIntegrations object", config: { ...baseConfig(), clientIntegrations: {} } },
     { name: "an explicit true", config: { ...baseConfig(), clientIntegrations: { codex: true } } },
@@ -138,7 +138,7 @@ describe("persisting the decision", () => {
           baseUrl: "https://chatgpt.com/backend-api/codex",
           authMode: "forward",
         },
-      } as OcxConfig["providers"],
+      } as OccxConfig["providers"],
     });
     setCodexIntegrationEnabled(false);
 
@@ -168,7 +168,7 @@ describe("persisting the decision", () => {
 
 describe("the startup gate", () => {
   /**
-   * This is the defect the whole phase exists for. `ocx start` called
+   * This is the defect the whole phase exists for. `occx start` called
    * `syncModelsToCodex(port).catch(() => {})` unconditionally, so an OFF lasted
    * exactly until the next start: restore unrouted Codex, and start put the
    * routing straight back.
@@ -274,7 +274,7 @@ describe("Grok has the same durability, because it shipped without it", () => {
   /**
    * Grok's toggle already existed and already worked — and lasted exactly one
    * restart. It strips the fence from `~/.grok/config.toml` and recorded
-   * nothing, so `ocx start` called `syncGrokConfig` unconditionally and wrote
+   * nothing, so `occx start` called `syncGrokConfig` unconditionally and wrote
    * the fence straight back. Identical defect to Codex, different file.
    */
   test("absence, empty, and explicit true all read as enabled; only false is off", () => {

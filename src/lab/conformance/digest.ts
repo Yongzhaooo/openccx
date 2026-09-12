@@ -10,13 +10,13 @@ function domainHash(domain: string, payload: Uint8Array | string): string {
 }
 
 export function fixtureDigest(bytes: Uint8Array): string {
-  return domainHash("ocx-lab:fixture:v1", bytes);
+  return domainHash("occx-lab:fixture:v1", bytes);
 }
 
 export function scenarioManifestDigest(expandedScenario: Record<string, unknown>): string {
-  return domainHash("ocx-lab:scenario-manifest:v1", jcsStringify(expandedScenario));
+  return domainHash("occx-lab:scenario-manifest:v1", jcsStringify(expandedScenario));
 }
 
 export function suiteManifestDigest(expandedSuite: Record<string, unknown>): string {
-  return domainHash("ocx-lab:suite-manifest:v1", jcsStringify(expandedSuite));
+  return domainHash("occx-lab:suite-manifest:v1", jcsStringify(expandedSuite));
 }

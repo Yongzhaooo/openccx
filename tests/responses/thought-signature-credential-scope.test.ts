@@ -44,16 +44,16 @@ describe("#1926 durable credential scope", () => {
     setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     setAsyncIcaclsRunnerForTests(async () => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
     resetThoughtSignatureReplayForTests();
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-tsig-scope-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-tsig-scope-"));
+    process.env.OPENCCX_HOME = testDir;
   });
 
   afterEach(async () => {
     await flushThoughtSignatureReplayForTests();
     resetThoughtSignatureReplayForTests();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(testDir);
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);

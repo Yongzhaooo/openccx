@@ -24,9 +24,9 @@ const AUTH_MATRIX = [
 
 const KEYS_OK = {
   keys: [
-    { id: "key-1", name: "alpha", prefix: "ocx_data_aaaaaaaa...", createdAt: "2026-01-15T12:00:00.000Z",
+    { id: "key-1", name: "alpha", prefix: "occx_data_aaaaaaaa...", createdAt: "2026-01-15T12:00:00.000Z",
       usage: { requests7d: 3, totalRequests: 8 } },
-    { id: "key-2", name: "beta", prefix: "ocx_data_bbbbbbbb...", createdAt: "2026-01-16T12:00:00.000Z",
+    { id: "key-2", name: "beta", prefix: "occx_data_bbbbbbbb...", createdAt: "2026-01-16T12:00:00.000Z",
       usage: { requests7d: 0, totalRequests: 0 } },
   ],
   attributionSince: "2026-07-20T00:00:00.000Z",

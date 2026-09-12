@@ -1,5 +1,5 @@
 /**
- * Injected tests for `ocx ready` (parseReadyArgs + runReady).
+ * Injected tests for `occx ready` (parseReadyArgs + runReady).
  *
  * These REPLACE the prior subprocess/network/no-proxy tests for the ready
  * command. Everything is driven over injected findLive / probe / sleep / now /
@@ -683,7 +683,7 @@ describe("handleStart readinessGate wiring (source-level)", () => {
 });
 
 // ── P1: ready pre-parse before maybeAutoRestoreCodexShim (source-level) ────────
-// `ocx ready` must reject invalid arguments with exit 64 BEFORE the global
+// `occx ready` must reject invalid arguments with exit 64 BEFORE the global
 // maybeAutoRestoreCodexShim preflight (or any discovery/probe/filesystem-capable
 // step) runs. These source-level guards pin that ordering and the single-parse
 // contract so a future edit cannot silently move parsing back into handleReady
@@ -843,15 +843,15 @@ describe("runReady production findLiveProxy deadline wiring (source-level)", () 
 });
 
 // ── handleStart service-wrapper exit guard (source-level) ─────────────────────
-// #764 follow-up: in OCX_SERVICE context a healthy proxy from ANY source must
-// end handleStart with exit 0, so the opencodex-service.cmd `:loop` wrapper
+// #764 follow-up: in OCCX_SERVICE context a healthy proxy from ANY source must
+// end handleStart with exit 0, so the openccx-service.cmd `:loop` wrapper
 // (retry on non-zero) does not respawn every 5s against a listener it can never
 // claim. Source-level pin so a future edit cannot drop the guard silently.
-describe("handleStart OCX_SERVICE exit guard (source-level)", () => {
+describe("handleStart OCCX_SERVICE exit guard (source-level)", () => {
   const cliSource = readFileSync(repoPath("src/cli/index.ts"), "utf8");
 
-  test("an already-live proxy exits 0 in OCX_SERVICE context", () => {
-    // The `OCX_SERVICE === "1"` comparison moved into `decideStartWithLiveOwner`
+  test("an already-live proxy exits 0 in OCCX_SERVICE context", () => {
+    // The `OCCX_SERVICE === "1"` comparison moved into `decideStartWithLiveOwner`
     // (src/cli/dispatch.ts), where the sentinel semantics are asserted at runtime
     // across the whole matrix (tests/cli/cli-dispatch.test.ts). This oracle pins the
     // exits that the decision routes to: stay-out exits 0, the conflict exits 1.
@@ -873,7 +873,7 @@ describe("handleStart OCX_SERVICE exit guard (source-level)", () => {
 
   test("wrapper kill matches the canonical paths of THIS installation, not bare filenames", () => {
     // Review follow-up: matching by bare filename would force-terminate a
-    // wrapper from another OpenCodex home (or any process whose command line
+    // wrapper from another Openccx home (or any process whose command line
     // merely contains the name). The kill must target the exact canonical
     // paths windowsServiceScriptPath()/windowsLauncherVbsPath() produce.
     const serviceSource = readFileSync(repoPath("src/service.ts"), "utf8");
@@ -884,7 +884,7 @@ describe("handleStart OCX_SERVICE exit guard (source-level)", () => {
     expect(killBody![0]).toContain("windowsServiceScriptPath()");
     expect(killBody![0]).toContain("windowsLauncherVbsPath()");
     // Bare wrapper filenames must NOT be the match target.
-    expect(killBody![0]).not.toMatch(/\$pats = @\('opencodex-service\.cmd'\)/);
+    expect(killBody![0]).not.toMatch(/\$pats = @\('openccx-service\.cmd'\)/);
   });
 
   test("wrapper kill requires the canonical path as a complete command-line token", () => {

@@ -25,7 +25,7 @@ import type { ExportModel } from "../../clients/config-export";
 import { providerContextCap } from "../../providers/context-cap";
 import { isVisionReasoningEffort } from "../../reasoning-effort";
 import { routedSlug, slugEquals } from "../../providers/slug-codec";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { ensureCodexEntitlementFreshness } from "../../codex/model-entitlements";
 import { fetchAllModels } from "./shared";
 import { initialModelSelectionPending } from "../../providers/initial-model-selection";
@@ -54,7 +54,7 @@ export type ManagementModelRow = Partial<CatalogModel> & {
 
 /** Resolve the exact text and source shown for one routed discovered model. */
 export function effectiveManagementDisplayName(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   model: CatalogModel,
 ): Pick<ManagementModelRow, "displayName" | "displayNameOverride" | "displayNameSource"> {
   const provider = config.providers[model.provider];
@@ -76,7 +76,7 @@ export function effectiveManagementDisplayName(
  * which the export core (src/clients/config-export.ts) deliberately does not perform.
  */
 export async function listManagementModelRows(
-  config: OcxConfig,
+  config: OccxConfig,
   options: { entitlementWaitMs?: number } = {},
 ): Promise<ManagementModelRow[]> {
   const [models] = await Promise.all([
@@ -236,7 +236,7 @@ export function toExportModel(row: ManagementModelRow): ExportModel {
  * tab is absent from `/v1/models` and exporting it would hand the client a
  * selector the proxy refuses to route.
  */
-export async function loadExportModels(config: OcxConfig): Promise<ExportModel[]> {
+export async function loadExportModels(config: OccxConfig): Promise<ExportModel[]> {
   const rows = await listManagementModelRows(config);
   // Management deliberately lists the full roster so hidden models can be enabled.
   // A client picker must also honor the provider selection, not just its blocklist.

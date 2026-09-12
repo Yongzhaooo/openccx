@@ -16,14 +16,14 @@ import {
 } from "../../src/codex/prompt-layers";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const MARKER = "# Auto-injected by opencodex";
+const MARKER = "# Auto-injected by openccx";
 const roots: string[] = [];
 
 function fixture(config: string | null, store?: string | null): { configPath: string; storePath: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-prompt-read-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-prompt-read-"));
   roots.push(root);
   const configPath = join(root, "config.toml");
-  const storePath = join(root, "opencodex-prompt.json");
+  const storePath = join(root, "openccx-prompt.json");
   if (config !== null) writeFileSync(configPath, config, "utf8");
   if (store !== undefined && store !== null) writeFileSync(storePath, store, "utf8");
   return { configPath, storePath };
@@ -206,12 +206,12 @@ describe("reads never write", () => {
   });
 
   test("reading a directory that does not exist creates nothing", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-prompt-read-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-prompt-read-"));
     roots.push(root);
     const nested = join(root, "missing");
     const snap = readPromptLayers({
       configPath: join(nested, "config.toml"),
-      storePath: join(nested, "opencodex-prompt.json"),
+      storePath: join(nested, "openccx-prompt.json"),
     });
     expect(snap.configExists).toBe(false);
     expect(await Bun.file(nested).exists()).toBe(false);
@@ -232,7 +232,7 @@ describe("model_instructions_file", () => {
 
 describe("unreadable config", () => {
   test("a directory where the config should be is not readable", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-prompt-read-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-prompt-read-"));
     roots.push(root);
     const configPath = join(root, "config.toml");
     mkdirSync(configPath);

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { buildDesktopDiscoveryInputs } from "../../src/claude/desktop-discovery-inputs";
@@ -19,7 +19,7 @@ const emptyEntitlements = (): CodexModelEntitlementSnapshot => ({
   confirmedAccountIds: new Set(), credentialIdentities: new Map(),
 });
 
-function projectionConfig(mode: "direct" | "pool" = "pool"): OcxConfig {
+function projectionConfig(mode: "direct" | "pool" = "pool"): OccxConfig {
   return {
     port: 0, defaultProvider: "test",
     providers: {
@@ -28,7 +28,7 @@ function projectionConfig(mode: "direct" | "pool" = "pool"): OcxConfig {
     },
     subagentModels: ["test/model-155"],
     providerContextCaps: { openai: 272_000 },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("shared Desktop discovery inputs", () => {
@@ -98,8 +98,8 @@ describe("shared Desktop discovery inputs", () => {
 });
 
 describe("Desktop snapshot through authenticated model discovery", () => {
-  const key = "ocx_data_desktopsnapshotfixture";
-  const envKeys = ["OPENCODEX_HOME", "OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR", "OPENCODEX_API_AUTH_TOKEN"] as const;
+  const key = "occx_data_desktopsnapshotfixture";
+  const envKeys = ["OPENCCX_HOME", "OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR", "OPENCCX_API_AUTH_TOKEN"] as const;
   let previous: Array<string | undefined>;
   let dir: string;
   let codexHome: IsolatedCodexHome;
@@ -108,11 +108,11 @@ describe("Desktop snapshot through authenticated model discovery", () => {
 
   beforeEach(() => {
     previous = envKeys.map(name => process.env[name]);
-    dir = mkdtempSync(join(tmpdir(), "ocx-desktop-discovery-"));
-    process.env.OPENCODEX_HOME = dir;
-    process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(dir, "desktop");
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
-    codexHome = installIsolatedCodexHome("ocx-desktop-discovery-codex-");
+    dir = mkdtempSync(join(tmpdir(), "occx-desktop-discovery-"));
+    process.env.OPENCCX_HOME = dir;
+    process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(dir, "desktop");
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
+    codexHome = installIsolatedCodexHome("occx-desktop-discovery-codex-");
     upstream = Bun.serve({
       hostname: "127.0.0.1", port: 0,
       fetch: () => Response.json({ data: [{ id: "model-123" }, { id: "model-155" }] }),
@@ -148,11 +148,11 @@ describe("Desktop snapshot through authenticated model discovery", () => {
         }),
       },
       apiKeys: [{ id: "snapshot", name: "Snapshot", key, createdAt: "2026-09-06T00:00:00.000Z" }],
-    } as OcxConfig);
+    } as OccxConfig);
     server = startServer(0);
   }
 
-  function request(query: string, headers: Record<string, string> = { "x-opencodex-api-key": key }): Promise<Response> {
+  function request(query: string, headers: Record<string, string> = { "x-openccx-api-key": key }): Promise<Response> {
     return fetch(`http://127.0.0.1:${server!.port}/v1/models${query}`, { headers });
   }
 
@@ -190,7 +190,7 @@ describe("Desktop snapshot through authenticated model discovery", () => {
     expect(resolveDesktop3pAlias("claude-opus-4-8-20260304")).toBe("test/model-155");
     const cli = await request("?flavor=anthropic&ids=cli");
     expect(cli.status).toBe(200);
-    expect((await cli.json() as { data: Array<{ id: string }> }).data.some(model => model.id.startsWith("claude-ocx-test--"))).toBe(true);
+    expect((await cli.json() as { data: Array<{ id: string }> }).data.some(model => model.id.startsWith("claude-occx-test--"))).toBe(true);
     const openai = await request("");
     expect(openai.status).toBe(200);
     const openaiBody = await openai.json() as { object: string; data: unknown[]; version?: number };
@@ -202,7 +202,7 @@ describe("Desktop snapshot through authenticated model discovery", () => {
   test("keeps data admission and origin checks ahead of snapshot format parsing", async () => {
     launch();
     expect((await request("?format=desktop-config&ids=cli", {})).status).toBe(401);
-    expect((await request("?format=desktop-config", { "x-opencodex-api-key": key, Origin: "https://untrusted.example.test" })).status).toBe(403);
+    expect((await request("?format=desktop-config", { "x-openccx-api-key": key, Origin: "https://untrusted.example.test" })).status).toBe(403);
     for (const query of ["?format=desktop-config&ids=cli", "?format=desktop-config&client_version=0.150.0"]) {
       expect((await request(query)).status).toBe(400);
     }

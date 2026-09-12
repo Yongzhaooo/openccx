@@ -21,11 +21,11 @@ import { usageLogPath } from "../../../src/usage/log";
 import { watchdogMs } from "../../helpers/ci-watchdog";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 const moduleOriginalFetch = globalThis.fetch;
-const moduleOriginalHome = process.env.OPENCODEX_HOME;
+const moduleOriginalHome = process.env.OPENCCX_HOME;
 afterEach(() => {
   globalThis.fetch = moduleOriginalFetch;
-  if (moduleOriginalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = moduleOriginalHome;
+  if (moduleOriginalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = moduleOriginalHome;
 });
 
 describe("OpenAI API virtual model resolution", () => {
@@ -180,8 +180,8 @@ describe("OpenAI API compact transport", () => {
 
   test("a cooled committed key is replaced before the first native compact send", async () => {
     const originalFetch = globalThis.fetch;
-    const home = mkdtempSync(join(tmpdir(), "ocx-openai-api-compact-pool-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-openai-api-compact-pool-"));
+    process.env.OPENCCX_HOME = home;
     clearKeyCooldowns();
     saveConfig({
       port: 0,
@@ -237,8 +237,8 @@ describe("OpenAI API compact transport", () => {
 
   test("maps every Pro id to base, strips reasoning, buffers failures, caps bodies, and logs exactly once", async () => {
     const originalFetch = globalThis.fetch;
-    const home = mkdtempSync(join(tmpdir(), "ocx-openai-api-compact-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-openai-api-compact-"));
+    process.env.OPENCCX_HOME = home;
     saveConfig({
       port: 0,
       defaultProvider: "openai-apikey",
@@ -421,7 +421,7 @@ describe("OpenAI API compact transport", () => {
     } finally {
       globalThis.fetch = originalFetch;
       await server.stop(true);
-      delete process.env.OPENCODEX_HOME;
+      delete process.env.OPENCCX_HOME;
       removeTreeWithRetry(home);
     }
   }, 20_000);
@@ -430,8 +430,8 @@ describe("OpenAI API compact transport", () => {
 describe("OpenAI API Pro transport identities", () => {
   test("HTTP JSON, HTTP SSE, and real WebSocket keep base wire/client identity and virtual logs", async () => {
     const originalFetch = globalThis.fetch;
-    const home = mkdtempSync(join(tmpdir(), "ocx-openai-api-pro-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-openai-api-pro-"));
+    process.env.OPENCCX_HOME = home;
     saveConfig({
       port: 0,
       websockets: true,
@@ -573,7 +573,7 @@ describe("OpenAI API Pro transport identities", () => {
     } finally {
       globalThis.fetch = originalFetch;
       await server.stop(true);
-      delete process.env.OPENCODEX_HOME;
+      delete process.env.OPENCCX_HOME;
       removeTreeWithRetry(home);
     }
   }, 20_000);

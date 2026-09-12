@@ -1,4 +1,4 @@
-import type { CodexAccountMode, OcxConfig, OcxProviderConfig } from "./types";
+import type { CodexAccountMode, OccxConfig, OccxProviderConfig } from "./types";
 import {
   getCombo,
   isComboTargetInCooldown,
@@ -67,7 +67,7 @@ export class NoEligiblePolicyCandidateError extends Error {
 
 export interface RouteResult {
   providerName: string;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   modelId: string;
   /** Which deterministic routing path produced this route (RI-01). */
   routeKind: RouteDecisionKind;
@@ -106,8 +106,8 @@ const MODEL_PROVIDER_PATTERNS: Array<{ providerNames: string[]; prefixes: string
  */
 export function knownModelIdsForProvider(
   provName: string,
-  prov: OcxProviderConfig,
-  config?: Pick<OcxConfig, "customModels">,
+  prov: OccxProviderConfig,
+  config?: Pick<OccxConfig, "customModels">,
 ): string[] {
   const ids = new Set<string>();
   for (const id of prov.models ?? []) ids.add(id);
@@ -297,7 +297,7 @@ function usableResolvedApiKey(apiKey: string | undefined): string | undefined {
   return typeof resolved === "string" && resolved.trim().length > 0 ? resolved : undefined;
 }
 
-export function routedProviderConfig(providerName: string, provider: OcxProviderConfig): OcxProviderConfig {
+export function routedProviderConfig(providerName: string, provider: OccxProviderConfig): OccxProviderConfig {
   provider = { ...provider, _apiKeyAttempt: provider._apiKeyAttempt ?? captureProviderApiKeySelection(provider) };
   const registryEntry = PROVIDER_REGISTRY.find(entry => entry.id === providerName);
   if (!registryEntry || !providerMatchesRegistryTransportWithStaticGuards(providerName, provider)) {
@@ -370,7 +370,7 @@ export function routedProviderConfig(providerName: string, provider: OcxProvider
   if (userBaseUrlIsResolved) warnIfBaseUrlDiscarded(providerName, userBaseUrl, baseUrl);
   assertProviderDestinationAllowed(providerName, { baseUrl, allowPrivateNetwork: provider.allowPrivateNetwork });
 
-  const resolved: OcxProviderConfig = {
+  const resolved: OccxProviderConfig = {
     ...provider,
     adapter: registryEntry.adapter,
     baseUrl,
@@ -490,7 +490,7 @@ export function routedProviderConfig(providerName: string, provider: OcxProvider
   return resolved;
 }
 
-function activeProviderEntries(config: OcxConfig): [string, OcxProviderConfig][] {
+function activeProviderEntries(config: OccxConfig): [string, OccxProviderConfig][] {
   return Object.entries(config.providers)
     .filter(([name, provider]) => name !== LEGACY_CHATGPT_PROVIDER_ID && provider.disabled !== true);
 }
@@ -499,7 +499,7 @@ export class NoEnabledOpenAiProviderError extends Error {
   constructor(modelId: string) {
     super(
       `Model ${modelId} requires the canonical openai provider. `
-      + `Run: ocx provider add openai && ocx sync && ocx restart`,
+      + `Run: occx provider add openai && occx sync && occx restart`,
     );
     this.name = "NoEnabledOpenAiProviderError";
   }
@@ -511,7 +511,7 @@ export class NoEnabledOpenAiProviderError extends Error {
  * usage entry's `attempts[]`; the trace never changes after selection.
  */
 export function comboRouteDecisionTrace(
-  config: OcxConfig,
+  config: OccxConfig,
   comboId: string,
   pick: ComboPick,
   requestedModel: string,
@@ -543,9 +543,9 @@ function isBareOpenAiFamilyModel(modelId: string): boolean {
 }
 
 function routeResult(
-  config: OcxConfig | undefined,
+  config: OccxConfig | undefined,
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
   routeKind: RouteDecisionKind,
   routeReason: string,
@@ -570,7 +570,7 @@ function routeResult(
  * pick already happened and this never re-selects.
  */
 function comboRouteCandidates(
-  config: OcxConfig,
+  config: OccxConfig,
   pick: NonNullable<RouteResult["combo"]>,
   combo: NormalizedComboConfig,
 ): TraceCandidateInput[] {
@@ -604,7 +604,7 @@ function comboRouteCandidates(
 }
 
 function routeModelInternal(
-  config: OcxConfig,
+  config: OccxConfig,
   modelId: string,
   bypassCombos: boolean,
   policyEvidence?: PolicyRequestEvidence,
@@ -842,7 +842,7 @@ function routeModelInternal(
   throw new Error(`No provider configured for model: ${modelId}`);
 }
 
-function routeWithDecisionTrace(config: OcxConfig, modelId: string, route: RouteResult): RouteResult {
+function routeWithDecisionTrace(config: OccxConfig, modelId: string, route: RouteResult): RouteResult {
   // Policy routes carry a full evaluation trace already; never rebuild it.
   if (route.routeDecision) return route;
   const accountRef = route.codexAccountNamespace;
@@ -868,7 +868,7 @@ function routeWithDecisionTrace(config: OcxConfig, modelId: string, route: Route
 }
 
 export function routeModel(
-  config: OcxConfig,
+  config: OccxConfig,
   modelId: string,
   policyEvidence?: PolicyRequestEvidence,
 ): RouteResult {
@@ -884,7 +884,7 @@ export function routeModel(
  * canonical OpenAI reservation and exact account selectors remain fail-closed.
  */
 export function routeCompactionModel(
-  config: OcxConfig,
+  config: OccxConfig,
   modelId: string,
   policyEvidence?: PolicyRequestEvidence,
 ): RouteResult {
@@ -893,11 +893,11 @@ export function routeCompactionModel(
 }
 
 /** Resolve a combo-selected provider/model target without consulting public combo aliases again. */
-export function routeConcreteModel(config: OcxConfig, modelId: string): RouteResult {
+export function routeConcreteModel(config: OccxConfig, modelId: string): RouteResult {
   return routeModelInternal(config, modelId, true, undefined);
 }
 
-function routeByKnownModelPattern(config: OcxConfig, modelId: string): RouteResult | undefined {
+function routeByKnownModelPattern(config: OccxConfig, modelId: string): RouteResult | undefined {
   for (const { providerNames, prefixes } of MODEL_PROVIDER_PATTERNS) {
     if (prefixes.some(prefix => modelId.startsWith(prefix))) {
       const matchingProvider = Object.entries(config.providers).find(

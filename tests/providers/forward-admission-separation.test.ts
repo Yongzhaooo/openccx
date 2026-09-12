@@ -5,17 +5,17 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { resolveFirstUsableOpenAiSidecar } from "../../src/providers/openai-sidecar";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const previousHome = process.env.OPENCODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 let testHome = "";
 let upstreamAttempts: string[] = [];
 
-function forwardConfig(): OcxConfig {
+function forwardConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -29,14 +29,14 @@ function forwardConfig(): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-forward-admission-"));
-  process.env.OPENCODEX_HOME = testHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "admin-secret";
+  testHome = mkdtempSync(join(tmpdir(), "occx-forward-admission-"));
+  process.env.OPENCCX_HOME = testHome;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = "admin-secret";
   upstreamAttempts = [];
   globalThis.fetch = (async (input, init) => {
     const raw = input instanceof Request ? input.url : String(input);
@@ -51,12 +51,12 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });

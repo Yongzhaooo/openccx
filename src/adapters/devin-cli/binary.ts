@@ -11,7 +11,7 @@ import { existsSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { homedir } from "node:os";
 
-export const DEVIN_CLI_BIN_ENV = "OPENCODEX_DEVIN_CLI_BIN";
+export const DEVIN_CLI_BIN_ENV = "OPENCCX_DEVIN_CLI_BIN";
 
 export const DEVIN_CLI_INSTALL_HINT =
   "Install the Devin CLI with `curl -fsSL https://cli.devin.ai/install.sh | bash` or `brew install --cask devin-cli`, then run `devin auth login`.";

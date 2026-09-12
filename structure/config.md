@@ -2,7 +2,7 @@
 
 ## Config surface
 
-### OpenCodex home and live process state
+### Openccx home and live process state
 
 `initializePersistedConfigIfMissing` in `src/config.ts` is the create-only path consumed by
 `src/cli/init.ts`. It rechecks absence under the existing config-mutation lock and publishes through
@@ -16,18 +16,18 @@ foreign winner's ownership under future uninstall; the existing ownership manife
 shim preflight keep their separate contracts.
 
 Initial publication diagnostics distinguish required permission-hardening failures from denied
-hard-link publication without exposing raw filesystem causes. Both identify `OPENCODEX_HOME`
+hard-link publication without exposing raw filesystem causes. Both identify `OPENCCX_HOME`
 as the supported-location recovery path; uncertain publication and cleanup warnings remain in
 the CLI. The quickstart documents inspection before retry, private-permission requirements,
 and fresh-location examples. Diagnostics do not introduce a fallback or alter file I/O ordering.
 
-`src/config/paths.ts` is the single owner of `OPENCODEX_HOME` expansion and resolution. It exposes
+`src/config/paths.ts` is the single owner of `OPENCCX_HOME` expansion and resolution. It exposes
 the config directory and `config.json` path and retains the existing cache rule: a relative home is
 resolved once for each distinct raw environment value, so a later working-directory change cannot
 silently move the active installation.
 
-`src/config/process-state.ts` derives `ocx.pid` and `runtime-port.json` from that resolved directory.
-It owns their byte-compatible writes, parsing, expected-PID filters, cheap liveness, full OCX command
+`src/config/process-state.ts` derives `occx.pid` and `runtime-port.json` from that resolved directory.
+It owns their byte-compatible writes, parsing, expected-PID filters, cheap liveness, full OCCX command
 identity, and snapshot-guarded removal. `RuntimePortState.attestationSecret` remains optional,
 owner-only state and is validated before a record is returned. `src/config.ts` re-exports the same
 symbols for compatibility, but new lifecycle-only callers import the process-state leaf directly.
@@ -70,7 +70,7 @@ openai_base_url = "http://127.0.0.1:10100/v1"
 Codex keeps the native `openai` provider id, so new threads stay under that identity instead of
 being re-tagged. History restore is manifest-authoritative: only rows whose original provider,
 source, and event marker were backed up for the same state database are restored exactly. A bare
-`opencodex` row is never assumed to have originated at OpenAI; it stays unchanged unless the user
+`openccx` row is never assumed to have originated at OpenAI; it stays unchanged unless the user
 explicitly runs legacy OpenAI recovery. A user-owned root `openai_base_url` is preserved instead of
 overwritten, and that case also blocks managed sub-agent defaults rather than fighting the user for
 ownership.
@@ -82,22 +82,22 @@ threads use the injected table, without inferring a foreign endpoint or prescrib
 This diagnostic distinction does not change URL ownership, journal entries, or session history.
 
 **API auth header (non-loopback).** The built-in `openai` provider cannot carry the
-`x-opencodex-api-key` env header, so this form re-tags the root provider and appends the table:
+`x-openccx-api-key` env header, so this form re-tags the root provider and appends the table:
 
 ```toml
-model_provider = "opencodex"
+model_provider = "openccx"
 model_catalog_json = "/absolute/path/to/opencodex-catalog.json"
 
-[model_providers.opencodex]
-name = "OpenCodex Proxy"
+[model_providers.openccx]
+name = "Openccx Proxy"
 base_url = "http://<host>:<port>/v1"
 wire_api = "responses"
 requires_openai_auth = true
-env_key = "OPENCODEX_API_AUTH_TOKEN"
+env_key = "OPENCCX_API_AUTH_TOKEN"
 ```
 
 Root TOML keys must be written before the first `[table]`. Re-injection strips the stale form of
-both shapes — opencodex blocks, injected root base-url overrides, stale root context-window
+both shapes — openccx blocks, injected root base-url overrides, stale root context-window
 overrides, and stale catalog paths — before rewriting, so switching between forms leaves no residue.
 
 Read-only doctor and project-routing diagnostics use a lightweight root/table TOML reader rather
@@ -129,13 +129,13 @@ result to clean, residue, or indeterminate before inspecting referenced rollout 
 
 > Decision record: [ADR-0018](decisions/ADR-0018-config-injection.md)
 
-If the root config selects a provider other than `openai` or `opencodex`, injection must leave the
+If the root config selects a provider other than `openai` or `openccx`, injection must leave the
 config byte-for-byte unchanged and skip profile creation/updates and history metadata restoration. External
 provider managers own that routing configuration, and replacing their provider id can hide
 otherwise intact Codex sessions. This ownership check must run before catalog/cache refresh,
 journal creation, and the background history restoration guardian.
 
-`ocx sync` and `ocx restore back` run the injector's non-writing preflight before provider
+`occx sync` and `occx restore back` run the injector's non-writing preflight before provider
 discovery or catalog/cache replacement. Deterministic config and ownership refusals therefore
 leave the existing catalog and cache untouched, and their concrete messages are emitted on stderr.
 The real injection still revalidates under its normal write boundary after catalog convergence;
@@ -148,13 +148,13 @@ returns true.
 
 ## Profile and fast tier
 
-When opencodex owns routing, it also writes `$CODEX_HOME/opencodex.config.toml` as an explicit profile
+When openccx owns routing, it also writes `$CODEX_HOME/opencodex.config.toml` as an explicit profile
 target. Codex config uses `service_tier = "fast"` and `[features].fast_mode = true`;
 catalog/request tier metadata may use `priority`. Do not collapse these spellings into one value.
 
 ## Provider output defaults
 
-`OcxProviderConfig.defaultMaxOutputTokens` and `modelMaxOutputTokens` are OpenAI Chat wire defaults,
+`OccxProviderConfig.defaultMaxOutputTokens` and `modelMaxOutputTokens` are OpenAI Chat wire defaults,
 not context-window metadata. They are applied only when a Responses request omits
 `max_output_tokens`; an explicit request value wins, then a model-specific configured value, then
 the provider default, then the adapter omits `max_tokens`.
@@ -175,10 +175,10 @@ hand-edited `config.json` must accept and reject the same provider shapes.
 
 ## Restore
 
-`ocx stop`, `ocx restore` / `ocx eject`, `ocx service stop`, and `ocx service uninstall` must strip
-opencodex config and routed catalog entries without damaging native Codex state.
+`occx stop`, `occx restore` / `occx eject`, `occx service stop`, and `occx service uninstall` must strip
+openccx config and routed catalog entries without damaging native Codex state.
 
-Full `ocx uninstall` config cleanup is ownership-manifest based. A fresh config directory receives a
+Full `occx uninstall` config cleanup is ownership-manifest based. A fresh config directory receives a
 root-bound owner marker and an uninstall manifest before its first atomic config write. Uninstall
 validates both bounded metadata files, rejects path traversal and a symlink/junction config root,
 and removes only normalized manifest entries. Manifest-owned directory links are unlinked without
@@ -191,7 +191,7 @@ the residual directory for manual review; there is no recursive-delete fallback.
 
 ## Remote client key files
 
-Client connection metadata stores a stable `apiKeyId` and a non-secret rotation `pendingOperation`. The current data secret remains only in `service-api-token`; a bounded rotation temporarily keeps the old secret in owner-only `service-api-token.prev`. Commit or recovery clears the marker before orphan cleanup. `ocx disconnect` is local-only and leaves remote revocation to the hub's **Integrations → API Keys** page. Hub and local usage stores are not mirrored.
+Client connection metadata stores a stable `apiKeyId` and a non-secret rotation `pendingOperation`. The current data secret remains only in `service-api-token`; a bounded rotation temporarily keeps the old secret in owner-only `service-api-token.prev`. Commit or recovery clears the marker before orphan cleanup. `occx disconnect` is local-only and leaves remote revocation to the hub's **Integrations → API Keys** page. Hub and local usage stores are not mirrored.
 
 Codex display-cache expiry, retained main-policy evidence, and reset history follow the
 [quota cache contract](providers/openai-tiers.md#quota-cache-and-short-window-history).

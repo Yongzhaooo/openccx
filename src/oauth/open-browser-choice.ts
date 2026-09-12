@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /**
  * Whether a login should open a browser on the machine running the proxy.
@@ -19,7 +19,7 @@ import type { OcxConfig } from "../types";
  */
 export function shouldOpenBrowserForLogin(
   requested: unknown,
-  config: Pick<OcxConfig, "oauthOpenBrowser">,
+  config: Pick<OccxConfig, "oauthOpenBrowser">,
 ): boolean {
   if (typeof requested === "boolean") return requested;
   return config.oauthOpenBrowser !== false;

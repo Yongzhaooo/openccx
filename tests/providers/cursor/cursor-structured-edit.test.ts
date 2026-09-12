@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { describe, expect, test } from "bun:test";
-import type { OcxTool } from "../../../src/types";
+import type { OccxTool } from "../../../src/types";
 import {
   AgentServerMessageSchema,
   ExecServerMessageSchema,
@@ -38,7 +38,7 @@ import {
 
 const encoder = new TextEncoder();
 
-function applyPatchTool(): OcxTool {
+function applyPatchTool(): OccxTool {
   return {
     name: "apply_patch",
     description: "Edit files with a freeform patch.",
@@ -51,7 +51,7 @@ function applyPatchTool(): OcxTool {
   };
 }
 
-function execCommandTool(): OcxTool {
+function execCommandTool(): OccxTool {
   return {
     name: "exec_command",
     description: "Run a shell command.",
@@ -83,7 +83,7 @@ function mcpToolCall(toolName: string, args: Record<string, unknown>) {
           name: toolName,
           toolName,
           toolCallId: "call_1",
-          providerIdentifier: "opencodex-responses",
+          providerIdentifier: "openccx-responses",
           args: encoded,
         }),
       }),
@@ -1421,7 +1421,7 @@ describe("cursor protobuf event translation", () => {
       name: CURSOR_EDIT_FILE_TOOL,
       toolName: CURSOR_EDIT_FILE_TOOL,
       toolCallId: "call_2",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: {
         file_path: encoder.encode(JSON.stringify("src/g.ts")),
         old_string: encoder.encode(JSON.stringify("x")),
@@ -1452,7 +1452,7 @@ describe("cursor protobuf event translation", () => {
       name: CURSOR_EDIT_FILE_TOOL,
       toolName: CURSOR_EDIT_FILE_TOOL,
       toolCallId: "call_collision",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: {
         file_path: encoder.encode(JSON.stringify("src/client-owned.ts")),
         old_string: encoder.encode(JSON.stringify("x")),
@@ -1484,7 +1484,7 @@ describe("cursor protobuf event translation", () => {
           name: CURSOR_EDIT_FILE_TOOL,
           toolName: CURSOR_EDIT_FILE_TOOL,
           toolCallId: "call_3",
-          providerIdentifier: "opencodex-responses",
+          providerIdentifier: "openccx-responses",
           args: {
             file_path: encoder.encode(JSON.stringify("src/h.ts")),
             old_string: encoder.encode(JSON.stringify("before")),
@@ -1516,7 +1516,7 @@ describe("cursor protobuf event translation", () => {
   });
 
   test("translates a non-identity wire-name mapping (Cursor display name -> Codex tool name) for multi_edit", () => {
-    // Cursor advertises the Responses tool as `mcp_opencodex-responses_multi_edit`; the adapter must
+    // Cursor advertises the Responses tool as `mcp_openccx-responses_multi_edit`; the adapter must
     // map that display name back to the advertised `multi_edit` before translating (#399 pattern).
     const state = createCursorProtobufEventState({
       clientToolNames: [CURSOR_MULTI_EDIT_TOOL, "apply_patch"],
@@ -1524,7 +1524,7 @@ describe("cursor protobuf event translation", () => {
       toolSchemas: new Map([[CURSOR_MULTI_EDIT_TOOL, CURSOR_MULTI_EDIT_INPUT_SCHEMA]]),
       cursorToolNameMap: new Map([[CURSOR_MULTI_EDIT_TOOL, CURSOR_MULTI_EDIT_TOOL]]),
     });
-    const toolCall = mcpToolCall(`mcp_opencodex-responses_${CURSOR_MULTI_EDIT_TOOL}`, {
+    const toolCall = mcpToolCall(`mcp_openccx-responses_${CURSOR_MULTI_EDIT_TOOL}`, {
       file_path: "src/multi.ts",
       edits: [
         { old_string: "a", new_string: "b" },

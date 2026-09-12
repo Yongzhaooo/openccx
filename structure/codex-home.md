@@ -31,15 +31,15 @@ unverified older original. Existing hash-backed edit preservation and external-p
 remain separate paths.
 
 The source-built Docker image explicitly keeps `CODEX_HOME=/home/bun/.codex` separate
-from `OPENCODEX_HOME=/home/bun/.opencodex`. Compose persists them in `codex-state` and
-`ocx-state` respectively, retaining a read-only root. The image creates owner-only
+from `OPENCCX_HOME=/home/bun/.opencodex`. Compose persists them in `codex-state` and
+`occx-state` respectively, retaining a read-only root. The image creates owner-only
 writable homes for `bun`; existing volume ownership and permissions are not repaired.
 The catalog resolver is unchanged; a writable empty home is not a materialized catalog.
 
 > Decision record: [ADR-0005](decisions/ADR-0005-codex-home.md)
 
 `docker compose down` retains both volumes. `docker compose down --volumes` deletes
-both `ocx-state` and `codex-state`, including their credentials and catalog/state;
+both `occx-state` and `codex-state`, including their credentials and catalog/state;
 treat it as destructive, not as an upgrade or restart command.
 
 Service install-state ownership uses this same resolver. In WSL, an unset `CODEX_HOME` may resolve
@@ -65,14 +65,14 @@ to SQLite ownership; the tolerant root-string helper used by injection and catal
 
 > Decision record: [ADR-0007](decisions/ADR-0007-codex-home.md)
 
-Native-main profile ownership is bound to the real `CODEX_HOME`, not to an OpenCodex instance.
+Native-main profile ownership is bound to the real `CODEX_HOME`, not to an Openccx instance.
 Its encrypted vault, transaction journal, recovery marker, and referenced quarantine files live in
-the owner-only `.opencodex-native-main-profiles` directory. The unchanged
-`.opencodex-native-profile.lock.sqlite` beside that directory serializes every process sharing the
+the owner-only `.openccx-native-main-profiles` directory. The unchanged
+`.openccx-native-profile.lock.sqlite` beside that directory serializes every process sharing the
 home. Only plaintext login staging is instance-local under
-`$OPENCODEX_HOME/native-main-profile-staging`; a stage from one instance is invalid in another.
+`$OPENCCX_HOME/native-main-profile-staging`; a stage from one instance is invalid in another.
 These paths and the OS keyring are owner-only: the operating-system account that owns them is the
-trust boundary and already has direct access to active native credentials. OpenCodex detects and
+trust boundary and already has direct access to active native credentials. Openccx detects and
 fails closed on file identities that change during an operation, but it does not claim isolation
 from a malicious process already running as that same trusted OS account.
 
@@ -89,7 +89,7 @@ namespace. A pathname alone is not authority: SQLite can expose a zero-byte file
 schema write, and a terminated process can leave that remnant behind. Eligibility treats the file
 as non-authoritative only after an immutable SQLite read proves version zero with no tables, the
 filesystem identity remains unchanged, and the file has been settled for at least one second; a
-fresh zero-byte creator stays on the coordinated path so its lock cannot be bypassed. `ocx doctor` inspects the
+fresh zero-byte creator stays on the coordinated path so its lock cannot be bypassed. `occx doctor` inspects the
 coordinator with immutable read-only SQLite flags so diagnosis never creates WAL/SHM sidecars. It
 distinguishes absent, zero-byte, unversioned, rowless, valid, unsupported, changed, unsafe, and
 unreadable states and prints the exact path. Explicit recovery is available only after the proxy is
@@ -99,11 +99,11 @@ backup; it never deletes or auto-adopts legacy routed residue.
 
 > Decision record: [ADR-0009](decisions/ADR-0009-codex-home.md)
 
-OpenCodex never overrides an explicit `CODEX_HOME`. On Windows, `ocx doctor` and `ocx status`
+Openccx never overrides an explicit `CODEX_HOME`. On Windows, `occx doctor` and `occx status`
 nevertheless diagnose the high-confidence Orca dual-home case: both `CODEX_HOME` and
 `ORCA_CODEX_HOME` select Orca's `orca/codex-runtime-home/home`, while the ChatGPT/Codex app uses the
 default `%USERPROFILE%\\.codex`. Sync and restore output always prints the exact target Codex home;
-display and JSON paths redact the OS username. The diagnostic tells users to invoke OpenCodex with
+display and JSON paths redact the OS username. The diagnostic tells users to invoke Openccx with
 the app home explicitly rather than silently claiming that an unrelated app was configured. If a
 service was installed under the Orca home, it must first be uninstalled from that original Orca
 environment and then reinstalled under the app home; changing only the current shell cannot migrate
@@ -111,8 +111,8 @@ the recorded service ownership.
 
 > Decision record: [ADR-0010](decisions/ADR-0010-codex-home.md)
 
-`atomicWriteFile` uses a temp file named `{path}.ocx.{pid}.{seq}.tmp` (process ID + incrementing
-sequence number) to avoid collisions when concurrent writers (e.g. `ocx stop` and the proxy's own
+`atomicWriteFile` uses a temp file named `{path}.occx.{pid}.{seq}.tmp` (process ID + incrementing
+sequence number) to avoid collisions when concurrent writers (e.g. `occx stop` and the proxy's own
 shutdown handler) both restore Codex config simultaneously. The temp is renamed atomically into place.
 Storage cleanup run metadata uses the field-scoped persisted-config mutation path, so a background
 Worker cannot restore unrelated API keys or provider settings from a snapshot read before the lock.
@@ -166,7 +166,7 @@ request rate rather than of anything the process controls.
 > Decision record: [ADR-0013](decisions/ADR-0013-codex-home.md)
 
 Response-state loading performs a bounded recovery pass for interrupted snapshot writes. It only
-matches regular files named `responses-state.json.ocx.<pid>.<sequence>.tmp`, waits at least 15
+matches regular files named `responses-state.json.occx.<pid>.<sequence>.tmp`, waits at least 15
 minutes, and skips the current or any live PID. Eligible files are truncated before unlinking so a
 matching stale path is unlinked without following it. Path-based truncation is intentionally avoided:
 a same-user replacement could otherwise turn cleanup into a write through a symlink. Unrelated
@@ -219,9 +219,9 @@ Some Codex-home conditions are reported rather than repaired, because repairing 
 a deliberate user choice:
 
 - Bundled-plugin marketplace state on Windows (`src/codex/plugins-doctor.ts`), surfaced by
-  `ocx status`.
+  `occx status`.
 - Project-level Codex config that bypasses managed routing
-  (`src/codex/project-config-warnings.ts`), surfaced by `ocx doctor` as a warning rather than an
+  (`src/codex/project-config-warnings.ts`), surfaced by `occx doctor` as a warning rather than an
   override.
 
 Codex display-cache expiry, retained main-policy evidence, and reset history follow the

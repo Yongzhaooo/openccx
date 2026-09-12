@@ -8,13 +8,13 @@ import { handleResponsesWithPolicyFallback, rankPolicyFallbackCandidates } from 
 import { getOrAllocateRequestSessionLane } from "../../src/server/request-log-conversation";
 import { handleChatCompletions } from "../../src/server/chat-completions";
 import { handleClaudeMessages } from "../../src/server/claude-messages";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 const MUSE_MODEL = "muse-spark-1.3-contributor";
 const CHAT_MODEL = "glm-5.2";
 const SESSION_HEADER = "x-opencode-session";
 
-function opencodeGo(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function opencodeGo(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   const entry = getProviderRegistryEntry("opencode-go");
   if (!entry) throw new Error("missing opencode-go registry fixture");
   return { ...providerConfigSeed(entry), apiKey: "test-key", ...overrides };
@@ -63,7 +63,7 @@ async function captureRequest(input: {
   providerName?: string;
   model?: string;
   child?: string;
-  provider?: OcxProviderConfig;
+  provider?: OccxProviderConfig;
   nativeChat?: boolean;
   claude?: boolean;
   metadataUserId?: string;
@@ -80,7 +80,7 @@ async function captureRequest(input: {
 
   const config = {
     providers: { [providerName]: input.provider ?? opencodeGo() },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
   const response = input.claude ? await handleClaudeMessages(
     new Request("http://localhost/v1/messages", {
       method: "POST",
@@ -127,11 +127,11 @@ describe("OpenCode Go session affinity (#3344)", () => {
     for (const preliminaryAdapter of ["openai-chat", "openai-responses"] as const) {
     for (const strategy of ["random", "failover"] as const) {
       for (const identity of [
-        { name: "metadata", headers: {}, metadata: "user_test_account__session_conversation-a", expected: "ocx_a89540229ef781fd5f7adf92a711b436" },
-        { name: "explicit Go header", headers: { [SESSION_HEADER]: "client-session-a" }, metadata: "other-session", expected: "ocx_516d593899f34b7baca2db37c7b0c8c5" },
-        { name: "explicit lane", headers: { session_id: "native-client-session", [SESSION_HEADER]: "client-session-a" }, metadata: "other-session", expected: "ocx_a197dbb87311c29a5fbe51140e3845ce" },
+        { name: "metadata", headers: {}, metadata: "user_test_account__session_conversation-a", expected: "occx_a89540229ef781fd5f7adf92a711b436" },
+        { name: "explicit Go header", headers: { [SESSION_HEADER]: "client-session-a" }, metadata: "other-session", expected: "occx_516d593899f34b7baca2db37c7b0c8c5" },
+        { name: "explicit lane", headers: { session_id: "native-client-session", [SESSION_HEADER]: "client-session-a" }, metadata: "other-session", expected: "occx_a197dbb87311c29a5fbe51140e3845ce" },
         { name: "operator override", headers: {}, metadata: "user_test_account__session_conversation-a", operator: true, expected: "operator-session" },
-        { name: "invalid explicit lane", headers: { session_id: "invalid\tidentity", [SESSION_HEADER]: "invalid\tidentity" }, metadata: "user_test_account__session_conversation-a", expected: "ocx_a89540229ef781fd5f7adf92a711b436" },
+        { name: "invalid explicit lane", headers: { session_id: "invalid\tidentity", [SESSION_HEADER]: "invalid\tidentity" }, metadata: "user_test_account__session_conversation-a", expected: "occx_a89540229ef781fd5f7adf92a711b436" },
         { name: "invalid metadata", headers: {}, metadata: "invalid\u0000identity", expected: "isolated" },
         { name: "shared system only", headers: {}, metadata: undefined, expected: "isolated" },
       ]) {
@@ -160,7 +160,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
           combos: { affinity: { strategy, targets: [
             { provider: "other", model: "other" }, { provider: "renamed-go", model },
           ] } },
-        } as unknown as OcxConfig;
+        } as unknown as OccxConfig;
         const entropy = spyOn(Math, "random").mockReturnValue(0.9);
         // Preliminary route checks the first target; dispatch independently picks Go.
         entropy.mockReturnValueOnce(0);
@@ -177,8 +177,8 @@ describe("OpenCode Go session affinity (#3344)", () => {
           expect(requests.at(-1)?.url).toStartWith("https://opencode.ai/zen/go/v1/");
           const lane = requests.at(-1)?.headers.get(SESSION_HEADER);
           if (identity.expected === "isolated") {
-            expect(lane).toMatch(/^ocx_[0-9a-f]{32}$/);
-            expect(lane).not.toBe("ocx_a89540229ef781fd5f7adf92a711b436");
+            expect(lane).toMatch(/^occx_[0-9a-f]{32}$/);
+            expect(lane).not.toBe("occx_a89540229ef781fd5f7adf92a711b436");
             observed.push(lane!);
           } else {
             expect(lane).toBe(identity.expected);
@@ -222,7 +222,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
         combos: { affinity: { strategy: "random", targets: [
           { provider: "renamed-go", model }, { provider: "other", model: "other" },
         ] } },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
       const entropy = spyOn(Math, "random").mockReturnValue(0.9).mockReturnValueOnce(0);
       try {
         const response = await handleClaudeMessages(new Request("http://localhost/v1/messages", {
@@ -251,9 +251,9 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const next = await captureRequest({ ...input, metadataUserId: "user_test_account__session_conversation-b" });
     expect(first.url).toBe("https://opencode.ai/zen/go/v1/chat/completions");
     // Fixed SHA-256 vectors calculated independently of the production helpers.
-    expect(first.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
-    expect(continued.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
-    expect(next.headers.get(SESSION_HEADER)).toBe("ocx_55fec02e7f2c7f9358958ab6d1589530");
+    expect(first.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
+    expect(continued.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
+    expect(next.headers.get(SESSION_HEADER)).toBe("occx_55fec02e7f2c7f9358958ab6d1589530");
     expect(first.headers.get(SESSION_HEADER)).not.toContain("conversation-a");
   });
 
@@ -262,10 +262,10 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const metadata = await captureRequest({ ...input, metadataUserId: "user_test_account__session_conversation-a" });
     const desktop = await captureRequest(input);
     const secondDesktop = await captureRequest(input);
-    expect(metadata.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
+    expect(metadata.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
     // A shared system prompt is not identity, so this request has none. It still has to carry the
     // header — Go rejects requests without one — but under a lane of its own rather than a shared value.
-    expect(desktop.headers.get(SESSION_HEADER)).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(desktop.headers.get(SESSION_HEADER)).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(desktop.headers.get(SESSION_HEADER)).not.toBe(metadata.headers.get(SESSION_HEADER));
     expect(secondDesktop.headers.get(SESSION_HEADER)).not.toBe(desktop.headers.get(SESSION_HEADER));
   });
@@ -274,8 +274,8 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const headers = { "content-type": "application/json", [SESSION_HEADER]: "client-session-a" };
     const claude = await captureRequest({ claude: true, model: CHAT_MODEL, headers, metadataUserId: "different-metadata-session" });
     const chat = await captureRequest({ nativeChat: true, model: CHAT_MODEL, headers });
-    expect(claude.headers.get(SESSION_HEADER)).toBe("ocx_516d593899f34b7baca2db37c7b0c8c5");
-    expect(chat.headers.get(SESSION_HEADER)).toBe("ocx_516d593899f34b7baca2db37c7b0c8c5");
+    expect(claude.headers.get(SESSION_HEADER)).toBe("occx_516d593899f34b7baca2db37c7b0c8c5");
+    expect(chat.headers.get(SESSION_HEADER)).toBe("occx_516d593899f34b7baca2db37c7b0c8c5");
   });
 
   test("Claude affinity survives per-model Responses wire selection", async () => {
@@ -283,13 +283,13 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const chat = await captureRequest({ ...input, model: CHAT_MODEL });
     const responses = await captureRequest({ ...input, model: MUSE_MODEL });
     expect(responses.url).toBe("https://opencode.ai/zen/go/v1/responses");
-    expect(chat.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
-    expect(responses.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
+    expect(chat.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
+    expect(responses.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
     const explicit = await captureRequest({
       ...input, model: MUSE_MODEL,
       headers: { "content-type": "application/json", [SESSION_HEADER]: "client-session-a" },
     });
-    expect(explicit.headers.get(SESSION_HEADER)).toBe("ocx_516d593899f34b7baca2db37c7b0c8c5");
+    expect(explicit.headers.get(SESSION_HEADER)).toBe("occx_516d593899f34b7baca2db37c7b0c8c5");
   });
 
   for (const [model, url] of [
@@ -304,13 +304,13 @@ describe("OpenCode Go session affinity (#3344)", () => {
           headers: { "content-type": "application/json", [SESSION_HEADER]: session },
         });
         expect(captured.url).toBe(url);
-        expect(captured.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
+        expect(captured.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
         const invalidLane = await captureRequest({
           claude: true, model, metadataUserId: "user_test_account__session_conversation-a",
           headers: { "content-type": "application/json", session_id: session },
         });
         expect(invalidLane.url).toBe(url);
-        expect(invalidLane.headers.get(SESSION_HEADER)).toBe("ocx_a89540229ef781fd5f7adf92a711b436");
+        expect(invalidLane.headers.get(SESSION_HEADER)).toBe("occx_a89540229ef781fd5f7adf92a711b436");
       }
     });
 
@@ -322,7 +322,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
         // Unusable identity is not the same as no header: the request still reaches Go, and it does
         // so under a lane nobody else shares.
         const lane = captured.headers.get(SESSION_HEADER);
-        expect(lane).toMatch(/^ocx_[0-9a-f]{32}$/);
+        expect(lane).toMatch(/^occx_[0-9a-f]{32}$/);
         expect(seen.has(lane!)).toBe(false);
         seen.add(lane!);
         expect(captured.headers.has("session_id")).toBe(false);
@@ -336,7 +336,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
       };
       const explicit = await captureRequest(input);
       expect(explicit.url).toBe(url);
-      expect(explicit.headers.get(SESSION_HEADER)).toBe("ocx_516d593899f34b7baca2db37c7b0c8c5");
+      expect(explicit.headers.get(SESSION_HEADER)).toBe("occx_516d593899f34b7baca2db37c7b0c8c5");
       const operator = await captureRequest({ ...input, provider: opencodeGo({ headers: { "X-OpenCode-Session": "operator-session" } }) });
       expect(operator.url).toBe(url);
       expect(operator.headers.get(SESSION_HEADER)).toBe("operator-session");
@@ -348,7 +348,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
         const input = { claude: true, model, headers, metadataUserId: "different-metadata-session" };
         const claude = await captureRequest(input);
         expect(claude.url).toBe(url);
-        expect(claude.headers.get(SESSION_HEADER)).toBe("ocx_a197dbb87311c29a5fbe51140e3845ce");
+        expect(claude.headers.get(SESSION_HEADER)).toBe("occx_a197dbb87311c29a5fbe51140e3845ce");
         const operator = await captureRequest({ ...input, provider: opencodeGo({ headers: { "X-OpenCode-Session": "operator-session" } }) });
         expect(operator.url).toBe(url);
         expect(operator.headers.get(SESSION_HEADER)).toBe("operator-session");
@@ -374,7 +374,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const continued = await captureRequest(input);
     const sibling = await captureRequest({ ...input, child: "child-thread-b" });
     expect(first.url).toBe("https://opencode.ai/zen/go/v1/chat/completions");
-    expect(first.headers.get(SESSION_HEADER)).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(first.headers.get(SESSION_HEADER)).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(continued.headers.get(SESSION_HEADER)).toBe(first.headers.get(SESSION_HEADER));
     expect(sibling.headers.get(SESSION_HEADER)).not.toBe(first.headers.get(SESSION_HEADER));
     expect(provider.headers?.[SESSION_HEADER]).toBeUndefined();
@@ -392,17 +392,17 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const headers = { "content-type": "application/json", "x-opencode-session": "pi-conversation-a" };
     const chat = await captureRequest({ nativeChat: true, model: "omen-alpha", headers });
     const bridged = await captureRequest({ nativeChat: true, model: MUSE_MODEL, headers });
-    expect(chat.headers.get(SESSION_HEADER)).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(chat.headers.get(SESSION_HEADER)).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(chat.headers.get(SESSION_HEADER)).not.toContain("pi-conversation-a");
     expect(bridged.headers.get(SESSION_HEADER)).toBe(chat.headers.get(SESSION_HEADER));
   });
 
   // Fixed vectors independently calculated with SHA-256, including the domain separator.
   for (const [session, expected] of [
-    ["client-session-a", "ocx_516d593899f34b7baca2db37c7b0c8c5"],
-    ["ocx_0123456789abcdef0123456789abcdef", "ocx_60bcbfb9a85d3dc23b9b2b1cef3b0882"],
+    ["client-session-a", "occx_516d593899f34b7baca2db37c7b0c8c5"],
+    ["occx_0123456789abcdef0123456789abcdef", "occx_60bcbfb9a85d3dc23b9b2b1cef3b0882"],
   ] as const) {
-    test(`treats inbound ${session.startsWith("ocx_") ? "ocx-prefixed" : "raw"} identity as client input on every ingress`, async () => {
+    test(`treats inbound ${session.startsWith("occx_") ? "occx-prefixed" : "raw"} identity as client input on every ingress`, async () => {
       const headers = { "content-type": "application/json", [SESSION_HEADER]: session };
       const native = await captureRequest({ nativeChat: true, model: "omen-alpha", headers });
       const bridged = await captureRequest({ nativeChat: true, model: MUSE_MODEL, headers });
@@ -429,7 +429,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
       { model: MUSE_MODEL },
     ]) {
       const codex = await captureRequest({ ...ingress, headers });
-      expect(codex.headers.get(SESSION_HEADER)).toBe("ocx_67b70584fb755130286eff5488a3be9d");
+      expect(codex.headers.get(SESSION_HEADER)).toBe("occx_67b70584fb755130286eff5488a3be9d");
       const operator = await captureRequest({
         ...ingress, headers,
         provider: opencodeGo({ headers: { "X-OpenCode-Session": "different-operator-override" } }),
@@ -454,7 +454,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
 
     expect(responses.url).toBe("https://opencode.ai/zen/go/v1/responses");
     expect(chat.url).toBe("https://opencode.ai/zen/go/v1/chat/completions");
-    expect(responsesSession).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(responsesSession).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(chatSession).toBe(responsesSession);
     expect([...responses.headers.keys()].filter(name => name === SESSION_HEADER)).toHaveLength(1);
   });
@@ -465,8 +465,8 @@ describe("OpenCode Go session affinity (#3344)", () => {
     const firstSession = first.headers.get(SESSION_HEADER);
     const secondSession = second.headers.get(SESSION_HEADER);
 
-    expect(firstSession).toMatch(/^ocx_[0-9a-f]{32}$/);
-    expect(secondSession).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(firstSession).toMatch(/^occx_[0-9a-f]{32}$/);
+    expect(secondSession).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(secondSession).not.toBe(firstSession);
     expect(firstSession).not.toContain("raw-parent-thread");
     expect(firstSession).not.toContain("child-thread-a");
@@ -475,7 +475,7 @@ describe("OpenCode Go session affinity (#3344)", () => {
 
   test("recognizes a renamed provider by its canonical OpenCode Go destination", async () => {
     const captured = await captureRequest({ providerName: "opencode-go-2" });
-    expect(captured.headers.get(SESSION_HEADER)).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(captured.headers.get(SESSION_HEADER)).toMatch(/^occx_[0-9a-f]{32}$/);
   });
 
   test("preserves an explicit operator session header case-insensitively", async () => {
@@ -548,7 +548,7 @@ describe("OpenCode Go affinity across the policy fallback retry (#4172)", () => 
       return Response.json({ id: "resp_policy_go", object: "response", status: "completed", output: [] });
     }) as unknown as NonNullable<Parameters<typeof handleResponsesWithPolicyFallback>[4]>["runCore"];
 
-    const config = { providers: { "opencode-go": opencodeGo() } } as unknown as OcxConfig;
+    const config = { providers: { "opencode-go": opencodeGo() } } as unknown as OccxConfig;
     const response = await handleResponsesWithPolicyFallback(
       req, config, { model: "", provider: "" } as never, {}, { runCore },
     );
@@ -564,7 +564,7 @@ describe("OpenCode Go affinity across the policy fallback retry (#4172)", () => 
     expect(seen).toHaveLength(2);
     expect(seen[1]).not.toBe(seen[0]);
     const first = laneHeaderFor(seen[0]!);
-    expect(first).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(first).toMatch(/^occx_[0-9a-f]{32}$/);
     expect(laneHeaderFor(seen[1]!)).toBe(first);
   });
 

@@ -60,7 +60,7 @@ export function ensureRestrictedDir(dir: string, labRootBoundary: string): void 
   }
 }
 
-/** Canonical Compatibility Lab state root under the OpenCodex config dir. */
+/** Canonical Compatibility Lab state root under the Openccx config dir. */
 export function labRoot(configDir = getConfigDir()): string {
   return join(configDir, "lab");
 }

@@ -1,6 +1,6 @@
 import { isGenericFailoverProvider } from "./generic-account-failover";
 import { parseAccountPoolStickyLimit, parseAccountPoolStrategy } from "./pool-kernel";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 /**
  * Which pool-settings contract a provider speaks (#695, slice 1).
@@ -21,7 +21,7 @@ export type PoolSettingsKind = "codex" | "anthropic" | "generic";
 export const GENERIC_POOL_STRATEGIES = ["quota", "round-robin", "fill-first"] as const;
 export type GenericPoolStrategy = typeof GENERIC_POOL_STRATEGIES[number];
 
-export function poolSettingsCapability(name: string, provider: OcxProviderConfig | undefined): PoolSettingsKind | null {
+export function poolSettingsCapability(name: string, provider: OccxProviderConfig | undefined): PoolSettingsKind | null {
   if (name === "openai") return "codex";
   if (name === "anthropic") return "anthropic";
   if (!provider) return null;
@@ -105,7 +105,7 @@ export interface GenericPoolSettingsDto {
 
 export function genericPoolSettingsDto(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   kernelEnabled = false,
 ): GenericPoolSettingsDto {
   const failover = provider.oauthAccountFailover ?? {};
@@ -135,7 +135,7 @@ const SUPPORTED_BY_KIND: Record<PoolSettingsKind, PoolSettingsField[]> = {
  * `null` rather than an absence a caller has to guess about.
  */
 export function unifiedPoolSettingsDto(
-  config: OcxConfig,
+  config: OccxConfig,
   provider: string,
   kind: PoolSettingsKind,
 ): PoolSettingsDto {

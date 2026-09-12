@@ -4,7 +4,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
  * Reversible single-line codec for Cursor composite tool-call ids.
  *
  * Cursor's wire delivers tool-call ids that can be two identifiers glued with a
- * literal newline ("call-<uuid>-<n>\nfc_<uuid>_<n>"). OpenCodex forwards ids
+ * literal newline ("call-<uuid>-<n>\nfc_<uuid>_<n>"). Openccx forwards ids
  * verbatim, so that newline leaked into Responses-visible `call_id` values,
  * where line-oriented clients (logging, splitting, validation) break. The codec
  * encodes ids containing CR/LF into a versioned single-line form. It also
@@ -20,10 +20,10 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
  * retaining an unbounded id map.
  */
 
-const CALL_ID_PREFIX = "ocxc1_";
+const CALL_ID_PREFIX = "occxc1_";
 /** Escape namespace for ids that already sit in a reserved namespace. */
-const CALL_ID_ESCAPE_PREFIX = "ocxc1e_";
-const CALL_ID_PROVENANCE_DOMAIN = "opencodex:cursor-call-id:v1\0";
+const CALL_ID_ESCAPE_PREFIX = "occxc1e_";
+const CALL_ID_PROVENANCE_DOMAIN = "openccx:cursor-call-id:v1\0";
 const CALL_ID_PROVENANCE_SEPARATOR = ".";
 const CALL_ID_PROVENANCE_TAG_BYTES = 16;
 let callIdProvenanceKey: Uint8Array = randomBytes(32);
@@ -96,7 +96,7 @@ export function decodeCursorCallId(id: string): string {
     const decoded = Buffer.from(payload, "base64url").toString("utf8");
     // Round-trip guard: only trust payloads our encoder could have produced.
     if (Buffer.from(decoded, "utf8").toString("base64url") !== payload) return id;
-    // Each namespace admits exactly what its encoder puts there. An `ocxc1_` payload
+    // Each namespace admits exactly what its encoder puts there. An `occxc1_` payload
     // that decodes to newline-free text is NOT our output — it is an opaque upstream
     // id that merely looks like ours, and unwrapping it would change the id.
     if (escaped ? !isReserved(decoded) : !needsEncoding(decoded)) return id;

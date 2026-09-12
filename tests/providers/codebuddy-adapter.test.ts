@@ -4,7 +4,7 @@ import { Readable, Writable } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import { buildArgs, buildChildEnv, createCodeBuddyAdapter, type SpawnFn } from "../../src/adapters/codebuddy/adapter";
 import { CODEBUDDY_CN_PROFILE, CODEBUDDY_GLOBAL_PROFILE, clearCodeBuddyBinaryCache } from "../../src/adapters/codebuddy/profiles";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 const enc = new TextEncoder();
@@ -38,31 +38,31 @@ function fakeChild(stdout: Uint8Array[], opts: { stderr?: string; exitCode?: num
   return child;
 }
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "codebuddy",
     baseUrl: CODEBUDDY_GLOBAL_PROFILE.canonicalBaseUrl,
     apiKey: "cb-global-key",
     reasoningEfforts: ["low", "medium", "high", "xhigh", "max"],
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function parsed(overrides: Partial<OcxParsedRequest> = {}): OcxParsedRequest {
+function parsed(overrides: Partial<OccxParsedRequest> = {}): OccxParsedRequest {
   return {
     modelId: "glm-5.3",
     stream: true,
     options: {},
     context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] },
     ...overrides,
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 function incoming(abortSignal?: AbortSignal) {
   return { headers: new Headers(), translatorBudget: createTestTranslatorBudget(), ...(abortSignal ? { abortSignal } : {}) };
 }
 
-async function run(adapter: ReturnType<typeof createCodeBuddyAdapter>, p: OcxParsedRequest, inc = incoming()): Promise<AdapterEvent[]> {
+async function run(adapter: ReturnType<typeof createCodeBuddyAdapter>, p: OccxParsedRequest, inc = incoming()): Promise<AdapterEvent[]> {
   const events: AdapterEvent[] = [];
   await adapter.runTurn!(p, inc, e => events.push(e));
   return events;

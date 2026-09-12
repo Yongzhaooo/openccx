@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createGoogleAdapter as createGoogleAdapterProduction } from "../../../src/adapters/google";
-import type { OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createGoogleAdapter = (...args: Parameters<typeof createGoogleAdapterProduction>) =>
@@ -12,18 +12,18 @@ const provider = {
   googleMode: "cloud-code-assist",
   project: "proj-123",
   apiKey: "ya29.token",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
-function parsed(messages: OcxMessage[], modelId = "claude-opus-4-6-thinking"): OcxParsedRequest {
+function parsed(messages: OccxMessage[], modelId = "claude-opus-4-6-thinking"): OccxParsedRequest {
   return {
     modelId,
     stream: false,
     options: {},
     context: { messages, systemPrompt: [], tools: [] },
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
-async function envelopeContents(p: OcxParsedRequest): Promise<{ role: string; parts: unknown[] }[]> {
+async function envelopeContents(p: OccxParsedRequest): Promise<{ role: string; parts: unknown[] }[]> {
   const { body } = await createGoogleAdapter(provider).buildRequest(p);
   const envelope = JSON.parse(body);
   return envelope.request.contents;
@@ -71,7 +71,7 @@ describe("google claude prefill guard", () => {
         isError: false,
         timestamp: 0,
       },
-    ] as OcxMessage[]));
+    ] as OccxMessage[]));
 
     // toolResult maps to role:"user" in Gemini format, so no nudge needed
     expect(contents.at(-1)!.role).toBe("user");
@@ -103,7 +103,7 @@ describe("google claude prefill guard", () => {
       adapter: "google",
       baseUrl: "https://generativelanguage.googleapis.com",
       apiKey: "key-123",
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
 
     const { body } = await createGoogleAdapter(aiStudioProvider).buildRequest(parsed([
       { role: "user", content: "hello", timestamp: 0 },

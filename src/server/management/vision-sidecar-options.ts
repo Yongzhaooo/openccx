@@ -7,7 +7,7 @@
  * the policy cannot drift: a gate on one route and a stale copy on the other is
  * the same as no gate at all.
  */
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { findAnthropicVisionProvider, type AnthropicVisionProvider } from "../../vision";
 import { VISION_BACKENDS } from "../../vision/backends";
 import {
@@ -35,7 +35,7 @@ import { resolveSidecarAuth } from "../../sidecar/auth";
  * job of the shared module, not this file.
  */
 export function enabledVisionBackends(
-  config: OcxConfig,
+  config: OccxConfig,
   anthropicSidecar: AnthropicVisionProvider | undefined,
 ): VisionSidecarBackend[] {
   const auth = resolveSidecarAuth(config);
@@ -66,7 +66,7 @@ export function enabledVisionBackends(
  * exactly what visionDescriberIsProvablyBlind needs to reject that id, so
  * pre-filtering here would deaden the gate (review F1: reject → allow flip).
  */
-export async function visionCandidateRows(config: OcxConfig): Promise<VisionCandidateModel[]> {
+export async function visionCandidateRows(config: OccxConfig): Promise<VisionCandidateModel[]> {
   const auth = resolveSidecarAuth(config);
   const all = await pickerVisibleSidecarCandidates(config, auth);
   return all.map(candidate => ({
@@ -78,7 +78,7 @@ export async function visionCandidateRows(config: OcxConfig): Promise<VisionCand
 }
 
 export function visionModelOptionsFrom(
-  config: OcxConfig,
+  config: OccxConfig,
   candidates: readonly VisionCandidateModel[],
   anthropicSidecar: AnthropicVisionProvider | undefined,
 ): VisionModelOption[] {
@@ -92,7 +92,7 @@ export function visionModelOptionsFrom(
 
 /** Convenience for read paths that have no candidate list in hand yet. */
 export async function visionModelOptionsFor(
-  config: OcxConfig,
+  config: OccxConfig,
   anthropicSidecar: AnthropicVisionProvider | undefined,
 ): Promise<VisionModelOption[]> {
   return visionModelOptionsFrom(config, await visionCandidateRows(config), anthropicSidecar);
@@ -120,7 +120,7 @@ export async function visionModelOptionsFor(
  * xai 32, google 43, zero overlaps), so they can never disagree about one.
  */
 export function visionDescriberIsProvablyBlind(
-  config: OcxConfig,
+  config: OccxConfig,
   requested: string,
   candidates: readonly VisionCandidateModel[],
   backendHint: VisionSidecarBackend | undefined,
@@ -155,7 +155,7 @@ export function visionDescriberIsProvablyBlind(
 export function visionDescriberRejection(
   field: "vision.model" | "visionSidecar.model",
   requested: string,
-  config: OcxConfig,
+  config: OccxConfig,
   candidates: readonly VisionCandidateModel[],
 ): { error: string; allowed: string[] } {
   return {

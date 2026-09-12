@@ -21,12 +21,12 @@ import { AUTH_SLOT_MODELS, resolveSidecarAuth, sidecarAuthSlots } from "../../sr
 import { findAnthropicSidecarProvider } from "../../src/web-search";
 import { findAnthropicVisionProvider } from "../../src/vision";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/account-id";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
-const anthropicOAuth: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
+const anthropicOAuth: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "openai", providers: { openai: forward }, ...overrides };
 }
 
@@ -53,7 +53,7 @@ describe("isCodexAuth is login-shaped, not provider-shaped", () => {
 
   test("credential without a canonical forward provider -> false", () => {
     usableCodexAccounts.add(MAIN_CODEX_ACCOUNT_ID);
-    const keyed: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://other.test/v1", authMode: "key", apiKey: "k" };
+    const keyed: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://other.test/v1", authMode: "key", apiKey: "k" };
     const cfg = config({ providers: { openai: keyed } });
     expect(resolveSidecarAuth(cfg).isCodexAuth).toBe(false);
   });
@@ -71,8 +71,8 @@ describe("isAnthropicAuth mirrors the stored-OAuth predicate", () => {
 
   test.each([
     ["disabled provider", { ...anthropicOAuth, disabled: true }, active],
-    ["wrong adapter", { ...anthropicOAuth, adapter: "openai-chat" } as OcxProviderConfig, active],
-    ["key auth", { ...anthropicOAuth, authMode: "key", apiKey: "k" } as OcxProviderConfig, active],
+    ["wrong adapter", { ...anthropicOAuth, adapter: "openai-chat" } as OccxProviderConfig, active],
+    ["key auth", { ...anthropicOAuth, authMode: "key", apiKey: "k" } as OccxProviderConfig, active],
     ["active account needs reauth", anthropicOAuth, { accounts: [{ id: "a1", needsReauth: true }], activeAccountId: "a1" }],
     ["no account set", anthropicOAuth, undefined],
   ])("%s -> false", (_name, provider, set) => {

@@ -16,19 +16,19 @@ import { parseUsageTimeWindow, type UsageTimeWindow } from "../usage/time-range"
 import { redactSecretString } from "../lib/redact";
 
 const USAGE = `Usage:
-  ocx observe logs [--provider <name>] [--model <id>] [--status <code>]
+  occx observe logs [--provider <name>] [--model <id>] [--status <code>]
       [--conversation <id>] [--account <label>] [--limit <n>] [--follow] [--json|--jsonl]
-  ocx logs explain <request-id> [--json]
-  ocx logs rebuild-index
-  ocx logs index-status
-  ocx observe usage [--range <today|1d|7d|30d|all>] [--surface <all|codex|claude|grok>]
+  occx logs explain <request-id> [--json]
+  occx logs rebuild-index
+  occx logs index-status
+  occx observe usage [--range <today|1d|7d|30d|all>] [--surface <all|codex|claude|grok>]
       [--since <epoch-ms|ISO-datetime>] [--until <epoch-ms|ISO-datetime>]
       [--provider <name>] [--model <id>] [--json]
-  ocx observe storage [codex-logs [status|protect|unprotect|repair|compact] [--mode <compat|quiet>]] [--json]
-  ocx observe memory [--json]
-  ocx observe debug [--json]
-  ocx observe claude-inbound [--limit <n>] [--json]
-  ocx observe injection [--limit <n>] [--json]`;
+  occx observe storage [codex-logs [status|protect|unprotect|repair|compact] [--mode <compat|quiet>]] [--json]
+  occx observe memory [--json]
+  occx observe debug [--json]
+  occx observe claude-inbound [--limit <n>] [--json]
+  occx observe injection [--limit <n>] [--json]`;
 
 type LogEntry = Record<string, unknown> & { id?: string | number; timestamp?: string; provider?: string; model?: string; status?: number };
 

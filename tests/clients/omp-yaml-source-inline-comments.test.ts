@@ -3,7 +3,7 @@ import { patchOmpYamlSource } from "../../src/integrations/omp-yaml-source";
 
 const SOURCE_WITH_NESTED_INLINE_COMMENT = [
   "providers:",
-  "  opencodex:",
+  "  openccx:",
   "    baseUrl: http://127.0.0.1:10100/v1 # user note",
   "    api: openai-completions",
   "",
@@ -24,7 +24,7 @@ describe("OMP managed YAML inline comments", () => {
     expect(patchOmpYamlSource(
       SOURCE_WITH_NESTED_INLINE_COMMENT,
       { kind: "upsert", value: nextValue },
-      { providers: { opencodex: nextValue } },
+      { providers: { openccx: nextValue } },
     )).toBeNull();
   });
 

@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { captureWireAdapterHardPins } from "../types";
 import { isCanonicalOpenAiForwardProvider } from "./openai-tiers";
 import {
@@ -25,7 +25,7 @@ export type CapturedServiceTierAdapterAuthority = FastPolicyAuthority;
 const capturedFastPolicyAuthorities = new WeakMap<object, FastPolicyAuthority>();
 
 type ServiceTierCapabilityProvider = Pick<
-  OcxProviderConfig,
+  OccxProviderConfig,
   | "adapter"
   | "supportsServiceTier"
   | "modelSupportsServiceTier"
@@ -96,7 +96,7 @@ function buildFastPolicyAuthority(
     ...(registry?.fastTierDescription !== undefined
       ? { fastTierDescription: registry.fastTierDescription }
       : {}),
-    modelWireOverrideAllowed: !isCanonicalOpenAiForwardProvider(provider as OcxProviderConfig),
+    modelWireOverrideAllowed: !isCanonicalOpenAiForwardProvider(provider as OccxProviderConfig),
     authTransport,
     capability: Object.freeze({
       ...(providerCapability !== undefined ? { provider: providerCapability } : {}),
@@ -198,7 +198,7 @@ export function fastPolicyForModel(
  * Kept as a public compatibility helper for callers that need the pure tri-state.
  */
 export function supportsServiceTierForModel(
-  provider: Pick<OcxProviderConfig, "supportsServiceTier" | "modelSupportsServiceTier">,
+  provider: Pick<OccxProviderConfig, "supportsServiceTier" | "modelSupportsServiceTier">,
   modelId: string,
 ): boolean | undefined {
   const authority: FastPolicyAuthority = {
@@ -219,7 +219,7 @@ export function supportsServiceTierForModel(
 
 /** Whether a Chat route may forward an arbitrary caller tier rather than canonical Fast. */
 export function canForwardForeignServiceTierForChatModel(
-  provider: Pick<OcxProviderConfig, "supportsServiceTier" | "modelSupportsServiceTier" | "chatServiceTier">,
+  provider: Pick<OccxProviderConfig, "supportsServiceTier" | "modelSupportsServiceTier" | "chatServiceTier">,
   modelId: string,
 ): boolean {
   const capability = supportsServiceTierForModel(provider, modelId);

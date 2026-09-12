@@ -12,7 +12,7 @@ import { getRoutingProfile } from "../../src/routing/profile";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { modelRecordValue } from "../../src/reasoning-effort";
 import { isModelTextOnly } from "../../src/vision";
-import type { OcxConfig, OcxProviderConfig, OcxRoutingProfileConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig, OccxRoutingProfileConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -28,7 +28,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  * module's own "unknown is not zero" contract is written to avoid.
  */
 
-function providerWithFamilyEntries(): OcxProviderConfig {
+function providerWithFamilyEntries(): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",
@@ -37,11 +37,11 @@ function providerWithFamilyEntries(): OcxProviderConfig {
     modelContextWindows: { "gpt-oss": 131_072 },
     modelInputModalities: { "gpt-oss": ["text"] },
     modelReasoningEfforts: { "gpt-oss": ["low", "high"] },
-  } as unknown as OcxProviderConfig;
+  } as unknown as OccxProviderConfig;
 }
 
-function configFor(provider: OcxProviderConfig): OcxConfig {
-  return { providers: { custom: provider } } as unknown as OcxConfig;
+function configFor(provider: OccxProviderConfig): OccxConfig {
+  return { providers: { custom: provider } } as unknown as OccxConfig;
 }
 
 describe("policy capability evidence uses the effective provider", () => {
@@ -49,24 +49,24 @@ describe("policy capability evidence uses the effective provider", () => {
   let previousHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    testDir = mkdtempSync(join(tmpdir(), "ocx-effective-capability-"));
-    process.env.OPENCODEX_HOME = testDir;
+    previousHome = process.env.OPENCCX_HOME;
+    testDir = mkdtempSync(join(tmpdir(), "occx-effective-capability-"));
+    process.env.OPENCCX_HOME = testDir;
   });
 
   afterEach(() => {
     closeRequestHistoryIndex();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(testDir);
   });
 
   function policyConfig(
     name: string,
-    provider: OcxProviderConfig,
+    provider: OccxProviderConfig,
     model: string,
-    require: OcxRoutingProfileConfig["require"],
-  ): OcxConfig {
+    require: OccxRoutingProfileConfig["require"],
+  ): OccxConfig {
     const result = validateConfigCandidate({
       port: 10100,
       defaultProvider: name,
@@ -347,7 +347,7 @@ describe("candidateCapabilityEvidence model matching", () => {
     const provider = {
       ...providerWithFamilyEntries(),
       modelContextWindows: { "gpt-oss": 131_072, "gpt-oss:20b": 32_000 },
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
     expect(candidateCapabilityEvidence(configFor(provider), "custom", "gpt-oss:20b").contextWindow)
       .toBe(32_000);
   });
@@ -371,7 +371,7 @@ describe("candidateCapabilityEvidence model matching", () => {
     const provider = {
       ...providerWithFamilyEntries(),
       noReasoningModels: ["gpt-oss:120b"],
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
 
     const evidence = candidateCapabilityEvidence(configFor(provider), "custom", "gpt-oss:120b");
     expect(evidence.reasoningEfforts).toEqual([]);
@@ -386,7 +386,7 @@ describe("candidateCapabilityEvidence model matching", () => {
     // its non-array branch and emitted `unknown-capability`, which an "allow" profile lets
     // through — so a model the operator explicitly disabled reasoning for could still
     // satisfy a reasoning-effort requirement.
-    function configWithProfile(noReasoning: boolean): OcxConfig {
+    function configWithProfile(noReasoning: boolean): OccxConfig {
       return {
         providers: {
           custom: {
@@ -404,7 +404,7 @@ describe("candidateCapabilityEvidence model matching", () => {
             unknownEvidence: { capability: "allow", health: "allow", quota: "allow", cost: "allow" },
           },
         },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
     }
 
     const disabled = configWithProfile(true);
@@ -445,7 +445,7 @@ describe("candidateCapabilityEvidence model matching", () => {
     expect(registryEntry.modelInputModalities?.[family]).toBeArray();
     expect(registryEntry.modelReasoningEfforts?.[family]).toBeArray();
 
-    const emptyConfig = { providers: {} } as unknown as OcxConfig;
+    const emptyConfig = { providers: {} } as unknown as OccxConfig;
     const evidence = candidateCapabilityEvidence(emptyConfig, "xai", `${family}:latest`);
 
     expect(evidence.contextWindow).toBe(registryEntry.modelContextWindows![family]);
@@ -463,7 +463,7 @@ describe("candidateCapabilityEvidence model matching", () => {
       ...providerWithFamilyEntries(),
       noVisionModels: ["gpt-oss"],
       modelInputModalities: { "gpt-oss:120b": ["text", "image"] },
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
 
     // Ground truth first: the resolver this evidence claims to describe says text-only.
     expect(isModelTextOnly(provider, "gpt-oss:120b")).toBe(true);
@@ -480,7 +480,7 @@ describe("candidateCapabilityEvidence model matching", () => {
       models: ["gpt-oss:120b", "llava:13b"],
       noVisionModels: ["gpt-oss"],
       modelInputModalities: { "llava:13b": ["text", "image"] },
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
 
     expect(isModelTextOnly(provider, "llava:13b")).toBe(false);
     expect(candidateCapabilityEvidence(configFor(provider), "custom", "llava:13b").image).toBe(true);

@@ -4,12 +4,12 @@ import { planWebSearch, resolveSidecarBackend, shouldResolveOpenAiWebSearchSidec
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { redactSecrets } from "../../src/lib/redact";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const routed: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "routed-key" };
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.test/v1", authMode: "forward" };
+const routed: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "routed-key" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.test/v1", authMode: "forward" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "routed", providers: { routed, openai: forward }, ...overrides };
 }
 
@@ -41,7 +41,7 @@ describe("widened backend union remains fail-closed without backend authority", 
   });
 });
 
-async function putSidecar(cfg: OcxConfig, webSearch: Record<string, unknown>): Promise<Response> {
+async function putSidecar(cfg: OccxConfig, webSearch: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(
     new Request(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ webSearch }) }),
@@ -81,7 +81,7 @@ describe("management routes admit the union, reject strangers, and guard the exa
   });
 });
 
-async function putClaudeCode(cfg: OcxConfig, body: Record<string, unknown>): Promise<Response> {
+async function putClaudeCode(cfg: OccxConfig, body: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/claude-code");
   const response = await handleManagementAPI(
     new Request(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),

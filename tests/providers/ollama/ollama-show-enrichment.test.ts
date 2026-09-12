@@ -14,7 +14,7 @@ afterEach(() => {
 const originalFetch = globalThis.fetch;
 import { ollamaShowMetadataFromPayload } from "../../../src/providers/ollama-show";
 import { withStubbedProviderFetch } from "../../helpers/catalog-provider-fetch";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 
 /**
  * Bounded /api/show metadata enrichment for Ollama Cloud live discovery.
@@ -65,7 +65,7 @@ function ollamaShow(id: string, contextLength: number, capabilities: string[]): 
   });
 }
 
-function config(overrides: Record<string, unknown> = {}): OcxConfig {
+function config(overrides: Record<string, unknown> = {}): OccxConfig {
   return {
     port: 10114,
     defaultProvider: "ollama-cloud",
@@ -80,7 +80,7 @@ function config(overrides: Record<string, unknown> = {}): OcxConfig {
       },
       ...overrides,
     },
-  } as never as OcxConfig;
+  } as never as OccxConfig;
 }
 
 function row(models: Array<{ provider: string; id: string; contextWindow?: number; inputModalities?: string[] }>, id: string) {

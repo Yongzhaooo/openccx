@@ -5,9 +5,9 @@ import { buildCatalogEntries } from "../../src/codex/catalog/sync";
 import { describe, expect, test } from "bun:test";
 import { effectiveModelAliases } from "../../src/providers/default-aliases";
 import { routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "alpha",
@@ -74,7 +74,7 @@ describe("provider and model aliases", () => {
           models: ["gemini-3.8-flash", "claude-sonnet-4-6"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     // Resolves with agy prefix
     expect(routeModel(c, "agy/gemini-3.8-flash")).toMatchObject({
@@ -109,7 +109,7 @@ describe("provider and model aliases", () => {
           models: ["gemini-3.8-flash"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     expect(routeModel(custom, "antigrav/gemini-3.8-flash")).toMatchObject({
       providerName: "google-antigravity",
@@ -137,7 +137,7 @@ describe("provider and model aliases", () => {
           models: ["gemini-3.8-flash"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const order2 = {
       port: 10100,
@@ -155,7 +155,7 @@ describe("provider and model aliases", () => {
           models: ["model-x"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     expect(routeModel(order1, "agy/model-x")).toMatchObject({
       providerName: "other",
@@ -184,7 +184,7 @@ describe("provider and model aliases", () => {
           models: ["gemini-3.8-flash"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     c.providers.other.liveModels = false;
     c.providers["google-antigravity"].liveModels = false;
@@ -236,7 +236,7 @@ describe("provider and model aliases", () => {
           liveModels: false,
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const models = await gatherRoutedModels(c);
     const googleModel = models.find(m => m.provider === "google-antigravity" && m.id === "gemini-3.8-flash")!;
@@ -281,7 +281,7 @@ describe("provider and model aliases", () => {
           liveModels: false,
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const models = await gatherRoutedModels(c);
     const googleModel = models.find(m => m.provider === "google-antigravity" && m.id === "gemini-3.8-flash")!;
@@ -319,7 +319,7 @@ describe("provider and model aliases", () => {
             fetch: stubFetch,
           },
         },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       // 1. Initial live gather primes the cache under default alias ownership
       const models1 = await gatherRoutedModels(cAlone);
@@ -350,7 +350,7 @@ describe("provider and model aliases", () => {
             fetch: stubFetch,
           },
         },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       const models2 = await gatherRoutedModels(cConflicting);
       expect(fetchCalls).toBe(1); // Cache hit, zero additional fetches
@@ -383,7 +383,7 @@ describe("provider and model aliases", () => {
           models: ["gemini-3.8-flash"],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     // Setting empty alias disables built-in agy fallback
     expect(() => routeModel(c, "agy/gemini-3.8-flash")).toThrow("No provider configured for model: agy/gemini-3.8-flash");
@@ -419,7 +419,7 @@ describe("provider and model aliases", () => {
           liveModels: false,
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const models = await gatherRoutedModels(c);
     const googleModel = models.find(m => m.provider === "google-antigravity" && m.id === "gemini-3.8-flash")!;

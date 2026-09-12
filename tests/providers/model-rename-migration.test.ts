@@ -10,7 +10,7 @@ import {
 import { runModelRenameStartupMigration } from "../../src/providers/model-rename-startup";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { getConfigPath, loadConfig, saveConfig, setPersistedConfigMutationBeforeCommitForTests } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const INTL_BASE_URL = "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1";
@@ -23,7 +23,7 @@ const RENAME: ModelRename = {
 };
 
 /** The exact shape a config saved before d40367c0c carries (issue #1610). */
-function staleConfig(): OcxConfig {
+function staleConfig(): OccxConfig {
   return {
     providers: {
       "alibaba-token-plan-intl": {
@@ -44,7 +44,7 @@ function staleConfig(): OcxConfig {
       },
     },
     disabledModels: ["alibaba-token-plan-intl/qwen3.8-max-preview", "other/model"],
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("registry model rename migration (#1610)", () => {
@@ -122,7 +122,7 @@ describe("registry model rename migration (#1610)", () => {
   });
 
   test("does nothing when the provider is not configured", () => {
-    const empty = { providers: {} } as unknown as OcxConfig;
+    const empty = { providers: {} } as unknown as OccxConfig;
     expect(projectModelRenames(empty, [RENAME]).changed).toBe(false);
   });
 
@@ -140,23 +140,23 @@ describe("registry model rename migration (#1610)", () => {
 
 describe("model rename startup persistence", () => {
   const homes: string[] = [];
-  const originalHome = process.env.OPENCODEX_HOME;
+  const originalHome = process.env.OPENCCX_HOME;
 
   function isolate(prefix: string): void {
     const home = mkdtempSync(join(tmpdir(), prefix));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
   }
 
   /** A saved config the renames actually rewrite, valid enough for loadConfig to accept. */
-  function persistableStale(): OcxConfig {
-    return { port: 10100, defaultProvider: "alibaba-token-plan-intl", ...staleConfig() } as OcxConfig;
+  function persistableStale(): OccxConfig {
+    return { port: 10100, defaultProvider: "alibaba-token-plan-intl", ...staleConfig() } as OccxConfig;
   }
 
   afterEach(() => {
     setPersistedConfigMutationBeforeCommitForTests(null);
-    if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = originalHome;
+    if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = originalHome;
     for (const home of homes.splice(0)) removeTreeWithRetry(home);
   });
 
@@ -189,7 +189,7 @@ describe("model rename startup persistence", () => {
   // RED on dev: dev hands `projectModelRenames` the live object and saves the projection
   // wholesale, so an operator edit written after loadConfig() is silently discarded.
   test("rebases the startup rename over a concurrent provider edit", () => {
-    isolate("ocx-model-rename-race-");
+    isolate("occx-model-rename-race-");
     const live = persistableStale();
     saveConfig(live);
     setPersistedConfigMutationBeforeCommitForTests(() => {
@@ -210,13 +210,13 @@ describe("model rename startup persistence", () => {
 
   // #3524 threw here, on the unguarded startServer() call site at src/server/index.ts:651.
   test("a config removed between load and migrate warns and degrades to an in-memory apply", () => {
-    isolate("ocx-model-rename-unavailable-");
+    isolate("occx-model-rename-unavailable-");
     const live = persistableStale();
     saveConfig(live);
     rmSync(getConfigPath());
     const warn = spyOn(console, "warn").mockImplementation(() => {});
     try {
-      let returned: OcxConfig | undefined;
+      let returned: OccxConfig | undefined;
       expect(() => { returned = runModelRenameStartupMigration(live); }).not.toThrow();
 
       expect(returned).toBe(live);
@@ -229,7 +229,7 @@ describe("model rename startup persistence", () => {
   });
 
   test("a malformed config degrades without throwing", () => {
-    isolate("ocx-model-rename-invalid-");
+    isolate("occx-model-rename-invalid-");
     const live = persistableStale();
     saveConfig(live);
     writeFileSync(getConfigPath(), "{ this is not json");
@@ -245,7 +245,7 @@ describe("model rename startup persistence", () => {
   });
 
   test("a fresh install with nothing to rename neither writes nor warns about persistence", () => {
-    isolate("ocx-model-rename-fresh-");
+    isolate("occx-model-rename-fresh-");
     const clean = projectModelRenames(persistableStale()).config;
     const warn = spyOn(console, "warn").mockImplementation(() => {});
     try {
@@ -258,7 +258,7 @@ describe("model rename startup persistence", () => {
   });
 
   test("an untouched top-level branch keeps its live object identity across the migration", () => {
-    isolate("ocx-model-rename-identity-");
+    isolate("occx-model-rename-identity-");
     const live = persistableStale();
     live.providers.untouched = {
       adapter: "openai",

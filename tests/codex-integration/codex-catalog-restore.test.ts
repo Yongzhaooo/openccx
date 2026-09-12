@@ -10,17 +10,17 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 
-function backupPathForTestCatalog(codexHome: string, opencodexHome: string, catalogName: string): string {
+function backupPathForTestCatalog(codexHome: string, openccxHome: string, catalogName: string): string {
   const catalogPath = join(realpathSync.native(codexHome), catalogName);
   const normalized = process.platform === "win32" ? resolve(catalogPath).toLowerCase() : resolve(catalogPath);
   const backupId = createHash("sha256").update(normalized).digest("hex").slice(0, 16);
-  return join(opencodexHome, `catalog-backup-${backupId}.json`);
+  return join(openccxHome, `catalog-backup-${backupId}.json`);
 }
 
-function runScript(codexHome: string, opencodexHome: string, script: string): { stdout: string; status: number } {
+function runScript(codexHome: string, openccxHome: string, script: string): { stdout: string; status: number } {
   const result = spawnSync(process.execPath, ["--eval", script], {
     cwd: repoRoot,
-    env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: opencodexHome },
+    env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: openccxHome },
     encoding: "utf8",
   });
   return { stdout: result.stdout?.trim() ?? "", status: result.status ?? 1 };
@@ -28,23 +28,23 @@ function runScript(codexHome: string, opencodexHome: string, script: string): { 
 
 describe("Codex catalog restore", () => {
   let codexHome: string;
-  let opencodexHome: string;
+  let openccxHome: string;
 
   beforeEach(() => {
-    codexHome = mkdtempSync(join(tmpdir(), "ocx-catalog-home-"));
-    opencodexHome = mkdtempSync(join(tmpdir(), "ocx-catalog-ocx-"));
+    codexHome = mkdtempSync(join(tmpdir(), "occx-catalog-home-"));
+    openccxHome = mkdtempSync(join(tmpdir(), "occx-catalog-occx-"));
   });
 
   afterEach(() => {
     if (existsSync(codexHome)) removeTreeWithRetry(codexHome);
-    if (existsSync(opencodexHome)) removeTreeWithRetry(opencodexHome);
+    if (existsSync(openccxHome)) removeTreeWithRetry(openccxHome);
   });
 
   test("version-1 process journals with injected hashes restore, while matching client ownership is durable", () => {
     const configPath = join(codexHome, "config.toml");
-    const journalPath = join(codexHome, "opencodex-journal.json");
+    const journalPath = join(codexHome, "openccx-journal.json");
     const original = '# original\nmodel_provider = "openai"\n';
-    const injected = '# injected\nmodel_provider = "opencodex"\n';
+    const injected = '# injected\nmodel_provider = "openccx"\n';
     writeFileSync(configPath, injected);
     writeFileSync(journalPath, JSON.stringify({
       version: 1,
@@ -55,7 +55,7 @@ describe("Codex catalog restore", () => {
       pid: 999_999,
       timestamp: new Date().toISOString(),
     }));
-    const legacy = runScript(codexHome, opencodexHome, `
+    const legacy = runScript(codexHome, openccxHome, `
       const { reconcileJournal } = require("./src/codex/journal");
       console.log(JSON.stringify({ restored: reconcileJournal() }));
     `);
@@ -74,7 +74,7 @@ describe("Codex catalog restore", () => {
       pid: 999_999,
       timestamp: new Date().toISOString(),
     }));
-    const client = runScript(codexHome, opencodexHome, `
+    const client = runScript(codexHome, openccxHome, `
       const { reconcileJournal } = require("./src/codex/journal");
       console.log(JSON.stringify({ restored: reconcileJournal({ activeClientApiKeyId: "client-key-1" }) }));
     `);
@@ -97,7 +97,7 @@ describe("Codex catalog restore", () => {
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       const result = restoreCodexCatalog();
       console.log(JSON.stringify(result));
@@ -112,7 +112,7 @@ describe("Codex catalog restore", () => {
   test("fallback restore repairs only enabled natives with unanimously visible account clones", () => {
     const catalogPath = join(codexHome, "catalog.json");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "catalog.json"\n', "utf8");
-    writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+    writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
       disabledModels: ["gpt-5.6-luna", "desktop/gpt-5.5"],
     }), "utf8");
     writeFileSync(catalogPath, JSON.stringify({
@@ -124,23 +124,23 @@ describe("Codex catalog restore", () => {
         {
           slug: "team/gpt-5.5",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         {
           slug: "desktop/gpt-5.5",
           visibility: "hide",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         {
           slug: "team/gpt-5.6-luna",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         { slug: "provider/gpt-5.3-codex-spark", visibility: "list" },
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       const first = restoreCodexCatalog();
       const second = restoreCodexCatalog();
@@ -166,7 +166,7 @@ describe("Codex catalog restore", () => {
 
   test("fallback restore leaves hidden natives untouched when current config is unreadable", () => {
     const catalogPath = join(codexHome, "catalog.json");
-    const configPath = join(opencodexHome, "config.json");
+    const configPath = join(openccxHome, "config.json");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "catalog.json"\n', "utf8");
     writeFileSync(configPath, "{", "utf8");
     writeFileSync(catalogPath, JSON.stringify({
@@ -175,12 +175,12 @@ describe("Codex catalog restore", () => {
         {
           slug: "team/gpt-5.5",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       console.log(JSON.stringify(restoreCodexCatalog()));
     `);
@@ -195,7 +195,7 @@ describe("Codex catalog restore", () => {
 
   test("backup restore repairs only later native additions with trusted visible clones", () => {
     const catalogPath = join(codexHome, "catalog.json");
-    const backupPath = backupPathForTestCatalog(codexHome, opencodexHome, "catalog.json");
+    const backupPath = backupPathForTestCatalog(codexHome, openccxHome, "catalog.json");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "catalog.json"\n', "utf8");
     writeFileSync(backupPath, JSON.stringify({
       models: [{ slug: "gpt-5.6-luna", visibility: "hide", priority: 50 }],
@@ -208,27 +208,27 @@ describe("Codex catalog restore", () => {
         {
           slug: "team/gpt-5.6-luna",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         {
           slug: "team/gpt-5.5",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         {
           slug: "team/gpt-5.3-codex-spark",
           visibility: "list",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
         {
           slug: "desktop/gpt-5.3-codex-spark",
           visibility: "hide",
-          opencodex_catalog_kind: "account-selector-v1",
+          openccx_catalog_kind: "account-selector-v1",
         },
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       console.log(JSON.stringify(restoreCodexCatalog()));
     `);
@@ -245,7 +245,7 @@ describe("Codex catalog restore", () => {
 
   test("uses pristine backup while preserving native entries added after sync", () => {
     const catalogPath = join(codexHome, "catalog.json");
-    const backupPath = backupPathForTestCatalog(codexHome, opencodexHome, "catalog.json");
+    const backupPath = backupPathForTestCatalog(codexHome, openccxHome, "catalog.json");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "catalog.json"\n', "utf8");
     writeFileSync(backupPath, JSON.stringify({
       models: [
@@ -262,7 +262,7 @@ describe("Codex catalog restore", () => {
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       const result = restoreCodexCatalog();
       console.log(JSON.stringify(result));
@@ -281,7 +281,7 @@ describe("Codex catalog restore", () => {
   test("does not apply generic legacy backup to a custom catalog path", () => {
     const catalogPath = join(codexHome, "custom-catalog.json");
     writeFileSync(join(codexHome, "config.toml"), 'model_catalog_json = "custom-catalog.json"\n', "utf8");
-    writeFileSync(join(opencodexHome, "catalog-backup.json"), JSON.stringify({
+    writeFileSync(join(openccxHome, "catalog-backup.json"), JSON.stringify({
       models: [{ slug: "wrong-legacy", priority: 1 }],
     }, null, 2) + "\n");
     writeFileSync(catalogPath, JSON.stringify({
@@ -292,7 +292,7 @@ describe("Codex catalog restore", () => {
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { restoreCodexCatalog } = require("./src/codex/catalog");
       const result = restoreCodexCatalog();
       console.log(JSON.stringify(result));
@@ -314,7 +314,7 @@ describe("Codex catalog restore", () => {
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { syncCatalogModels } = require("./src/codex/catalog");
       const { seedCodexModelEntitlementsForTests } = require("./src/codex/model-entitlements");
       seedCodexModelEntitlementsForTests("__main__", ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"]);
@@ -363,7 +363,7 @@ describe("Codex catalog restore", () => {
       ],
     }, null, 2) + "\n");
 
-    const r = runScript(codexHome, opencodexHome, `
+    const r = runScript(codexHome, openccxHome, `
       const { syncCatalogModels } = require("./src/codex/catalog");
       globalThis.fetch = async (input, init) => {
         const request = new Request(input, init);

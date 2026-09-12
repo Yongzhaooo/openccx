@@ -11,7 +11,7 @@
  * (devlog/_plan/260802_codex_set_prompt_composer/):
  *
  * 1. NO USER PROSE IS PARSED BACK OUT OF TOML. Custom layers live in
- *    `opencodex-prompt.json`, which we own outright; config.toml receives a
+ *    `openccx-prompt.json`, which we own outright; config.toml receives a
  *    write-only projection of the enabled subset. Layer identity never has to
  *    survive a round trip through a TOML parser.
  *
@@ -289,7 +289,7 @@ export interface ToggleState {
   /** null = the key is absent from the user file */
   userFileValue: boolean | null;
   /**
-   * userFileValue ?? default. NOT the resolved Codex value: opencodex reads one
+   * userFileValue ?? default. NOT the resolved Codex value: openccx reads one
    * of the eight config layers, so it reports this file's value under a name
    * that says as much.
    */
@@ -521,7 +521,7 @@ export function readPromptLayers(opts?: Paths): PromptLayerSnapshot {
  * path from the injected config would name a file the probe never reads, which is
  * a fingerprint that cannot fail rather than evidence.
  *
- * A BOUNDED invalidation key, not prompt identity. It covers opencodex-managed writes,
+ * A BOUNDED invalidation key, not prompt identity. It covers openccx-managed writes,
  * the selected base prompt, the project documents Codex would discover from this home,
  * and each skill's manifest. Plugin manifests, live MCP availability, and the clock
  * also move the rendered prompt and are not files this process can name.

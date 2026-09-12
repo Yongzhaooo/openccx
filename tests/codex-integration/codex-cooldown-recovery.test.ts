@@ -29,17 +29,17 @@ import {
   recordCodexUpstreamOutcome,
   resolveCodexAccountForThread,
 } from "../../src/codex/routing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-cooldown-recovery-test");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
 const START = 1_800_000_000_000;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 let previousFetch: typeof fetch;
 
-function makeConfig(ids = ["a", "b"]): OcxConfig {
+function makeConfig(ids = ["a", "b"]): OccxConfig {
   return {
     providers: {
       openai: {
@@ -53,7 +53,7 @@ function makeConfig(ids = ["a", "b"]): OcxConfig {
     activeCodexAccountId: ids[0],
     accountPoolStrategy: "fill-first",
     codexAccounts: ids.map(id => ({ id, email: `${id}@example.test`, plan: "team", isMain: false })),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveCredential(id: string, suffix = ""): void {
@@ -65,7 +65,7 @@ function saveCredential(id: string, suffix = ""): void {
   });
 }
 
-function cool(config: OcxConfig, id: string, scope: "shared" | "spark" = "shared", now = START): void {
+function cool(config: OccxConfig, id: string, scope: "shared" | "spark" = "shared", now = START): void {
   recordCodexUpstreamOutcome(config, id, 429, {
     now,
     resetAt: now + 60 * 60_000,
@@ -86,12 +86,12 @@ function due(at = START): number {
 
 describe("Codex cooldown recovery worker", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     previousCodexHome = process.env.CODEX_HOME;
     previousFetch = globalThis.fetch;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_CODEX_HOME, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     process.env.CODEX_HOME = TEST_CODEX_HOME;
     clearAccountQuota();
     clearCodexUpstreamHealth();
@@ -103,8 +103,8 @@ describe("Codex cooldown recovery worker", () => {
     clearAccountQuota();
     clearCodexUpstreamHealth();
     clearCodexCooldownRecoveryProbeState();
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);

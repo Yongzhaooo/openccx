@@ -42,7 +42,7 @@ export interface LabRouteContext {
   surface: string;
   baseUrl: string;
   /** Generated compatibility hash, not package marketing version. */
-  opencodexCompatibilityVersion: string;
+  openccxCompatibilityVersion: string;
   /** Closed, effective behavior inputs from the production resolver. */
   behaviorValues: LabBehaviorValues;
   allowPrivateNetwork?: boolean;

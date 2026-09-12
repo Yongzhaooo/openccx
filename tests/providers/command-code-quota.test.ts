@@ -4,14 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveCredential } from "../../src/oauth/store";
 import { clearProviderQuotaCache, fetchProviderQuotaReports } from "../../src/providers/quota";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-let opencodexHome: string;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+let openccxHome: string;
 
-function commandCodeConfig(baseUrl = "https://api.commandcode.ai/provider/v1"): OcxConfig {
+function commandCodeConfig(baseUrl = "https://api.commandcode.ai/provider/v1"): OccxConfig {
   return {
     defaultProvider: "commandcode",
     providers: {
@@ -22,10 +22,10 @@ function commandCodeConfig(baseUrl = "https://api.commandcode.ai/provider/v1"): 
         apiKey: "commandcode-secret",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function commandCodeOAuthConfig(baseUrl = "https://api.commandcode.ai"): OcxConfig {
+function commandCodeOAuthConfig(baseUrl = "https://api.commandcode.ai"): OccxConfig {
   return {
     defaultProvider: "command-code",
     providers: {
@@ -35,21 +35,21 @@ function commandCodeOAuthConfig(baseUrl = "https://api.commandcode.ai"): OcxConf
         baseUrl,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-command-code-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-command-code-quota-"));
+  process.env.OPENCCX_HOME = openccxHome;
   clearProviderQuotaCache();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearProviderQuotaCache();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
 });
 
 describe("Command Code provider quota", () => {
@@ -306,7 +306,7 @@ describe("Command Code provider quota", () => {
           apiKey: "commandcode-secret",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(fetchCalls).toBe(0);
     expect(result.reports).toEqual([]);
@@ -328,7 +328,7 @@ describe("Command Code provider quota", () => {
           baseUrl: "https://api.commandcode.ai",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(fetchCalls).toBe(0);
     expect(result.reports).toEqual([]);

@@ -34,7 +34,7 @@ export function buildClineClientConfig(ctx: ExportContext) {
         [OPENCODE_PROVIDER_ID]: {
           settings: { provider: OPENCODE_PROVIDER_ID, ...connection, apiKey: LOOPBACK_API_KEY_PLACEHOLDER },
           // Required by Cline's schema; a stable generation sentinel keeps export deterministic.
-          // The operation's actual time belongs to the OpenCodex journal.
+          // The operation's actual time belongs to the Openccx journal.
           updatedAt: "1970-01-01T00:00:00.000Z",
           tokenSource: "manual",
         },
@@ -44,7 +44,7 @@ export function buildClineClientConfig(ctx: ExportContext) {
       version: 1,
       providers: {
         [OPENCODE_PROVIDER_ID]: {
-          provider: { name: "OpenCodex", ...connection },
+          provider: { name: "Openccx", ...connection },
           models,
         },
       },

@@ -268,7 +268,7 @@ function findCallIndex(calls: LoggedCall[], name: string, matcher: (call: Logged
 }
 
 async function runRelease(releaseArgs: string | string[], scenario: ReleaseScenario = {}) {
-  const shimDir = mkdtempSync(join(tmpdir(), "ocx-release-helper-"));
+  const shimDir = mkdtempSync(join(tmpdir(), "occx-release-helper-"));
   const logPath = join(shimDir, "release-log.jsonl");
   writeFileSync(logPath, "", "utf8");
 
@@ -288,7 +288,7 @@ async function runRelease(releaseArgs: string | string[], scenario: ReleaseScena
       // child that inherits them — so an inherited value would make the "no key configured"
       // scenario run WITH a key and fail the release at its own preflight. Scrub them the same
       // way PATH is scrubbed, then let the scenario add back exactly what it asked for.
-      && key !== "OCX_RELEASE_SSH_KEY" && key !== "OCX_RELEASE_SSH_REPO"),
+      && key !== "OCCX_RELEASE_SSH_KEY" && key !== "OCCX_RELEASE_SSH_REPO"),
   );
   const pathKey = process.platform === "win32" ? "Path" : "PATH";
   const pathValue = `${shimDir}${process.platform === "win32" ? ";" : ":"}${process.env.PATH ?? process.env.Path ?? ""}`;
@@ -308,8 +308,8 @@ async function runRelease(releaseArgs: string | string[], scenario: ReleaseScena
     FAKE_BUN_PRIVACY_EXIT_CODE: String(scenario.privacyExitCode ?? 0),
     ...(scenario.npmLatest ? { FAKE_NPM_LATEST: scenario.npmLatest } : {}),
     ...(scenario.npmPreview ? { FAKE_NPM_PREVIEW: scenario.npmPreview } : {}),
-    ...(scenario.releaseSshKey ? { OCX_RELEASE_SSH_KEY: scenario.releaseSshKey } : {}),
-    ...(scenario.releaseSshRepo ? { OCX_RELEASE_SSH_REPO: scenario.releaseSshRepo } : {}),
+    ...(scenario.releaseSshKey ? { OCCX_RELEASE_SSH_KEY: scenario.releaseSshKey } : {}),
+    ...(scenario.releaseSshRepo ? { OCCX_RELEASE_SSH_REPO: scenario.releaseSshRepo } : {}),
     ...(scenario.pendingBump ? { FAKE_GIT_PENDING_BUMP: " M package.json" } : {}),
     ...(scenario.originUrl ? { FAKE_GIT_ORIGIN_URL: scenario.originUrl } : {}),
   };
@@ -336,7 +336,7 @@ async function runRelease(releaseArgs: string | string[], scenario: ReleaseScena
  * correct in text yet splits, substitutes, or reinterprets the private-key path before SSH sees it.
  */
 async function executeGitSshCommand(gitSshCommand: string): Promise<{ calls: SshInvocation[]; result: CapturedProcessResult }> {
-  const shimDir = mkdtempSync(join(tmpdir(), "ocx-release-ssh-"));
+  const shimDir = mkdtempSync(join(tmpdir(), "occx-release-ssh-"));
   const logPath = join(shimDir, "ssh-log.jsonl");
   const jsPath = join(shimDir, "ssh.js");
   writeFileSync(logPath, "", "utf8");
@@ -575,7 +575,7 @@ describe("release helper", () => {
    */
   test("the protected push uses the release deploy key only when one is configured", async () => {
     const { calls, result } = await runRelease("9.9.9", {
-      releaseSshKey: "/tmp/ocx-release-key",
+      releaseSshKey: "/tmp/occx-release-key",
       releaseSshRepo: sshTarget,
       pendingBump: true,
     });
@@ -584,7 +584,7 @@ describe("release helper", () => {
     const push = calls.find(call => call.name === "git" && call.args[0] === "push");
     expect(push).toBeDefined();
     expect(push?.args).toEqual(["push", sshTarget, "HEAD:main"]);
-    expect(push?.gitSshCommand).toBe('ssh -i "/tmp/ocx-release-key" -o IdentitiesOnly=yes');
+    expect(push?.gitSshCommand).toBe('ssh -i "/tmp/occx-release-key" -o IdentitiesOnly=yes');
   });
 
   /**
@@ -595,16 +595,16 @@ describe("release helper", () => {
    */
   test("a key path with spaces and backslashes stays a single ssh argument", async () => {
     const { calls } = await runRelease("9.9.9", {
-      releaseSshKey: "C:\\Users\\Jun Kim\\.ssh\\ocx release key",
+      releaseSshKey: "C:\\Users\\Jun Kim\\.ssh\\occx release key",
       pendingBump: true,
     });
 
     const push = calls.find(call => call.name === "git" && call.args[0] === "push");
-    expect(push?.gitSshCommand).toBe('ssh -i "C:\\\\Users\\\\Jun Kim\\\\.ssh\\\\ocx release key" -o IdentitiesOnly=yes');
+    expect(push?.gitSshCommand).toBe('ssh -i "C:\\\\Users\\\\Jun Kim\\\\.ssh\\\\occx release key" -o IdentitiesOnly=yes');
   });
 
   test("Git passes the emitted deploy-key path to SSH as one literal argument", async () => {
-    const keyPath = 'C:\\Users\\Jun Kim\\.ssh\\ocx "quoted" $HOME $(not-run) `not-run`; key';
+    const keyPath = 'C:\\Users\\Jun Kim\\.ssh\\occx "quoted" $HOME $(not-run) `not-run`; key';
     const { calls: releaseCalls } = await runRelease("9.9.9", {
       releaseSshKey: keyPath,
       releaseSshRepo: sshTarget,
@@ -655,7 +655,7 @@ describe("release helper", () => {
     expect(calls.find(call => call.name === "git" && call.args[0] === "push")).toBeUndefined();
   });
 
-  test("a malformed OCX_RELEASE_SSH_REPO override is refused instead of pushed to", async () => {
+  test("a malformed OCCX_RELEASE_SSH_REPO override is refused instead of pushed to", async () => {
     const { calls, result } = await runRelease("9.9.9", {
       releaseSshKey: "/tmp/k",
       releaseSshRepo: "not-a-remote",
@@ -663,7 +663,7 @@ describe("release helper", () => {
     });
 
     expect(result.status).not.toBe(0);
-    expect(result.stderr + result.stdout).toContain("OCX_RELEASE_SSH_REPO");
+    expect(result.stderr + result.stdout).toContain("OCCX_RELEASE_SSH_REPO");
     expect(calls.find(call => call.name === "git" && call.args[0] === "push")).toBeUndefined();
   });
 

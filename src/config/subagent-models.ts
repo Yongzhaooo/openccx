@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { NATIVE_GPT6_ASTRA_MODEL } from "../codex/catalog/native-models";
 
 export const SUBAGENT_MODELS_VERSION = 1;
@@ -9,7 +9,7 @@ export const DEFAULT_SUBAGENT_MODELS = [
 ];
 
 /** One-time upgrade; later user edits (including removing Astra) remain authoritative. */
-export function migrateSubagentModels(config: OcxConfig): boolean {
+export function migrateSubagentModels(config: OccxConfig): boolean {
   if ((config.subagentModelsVersion ?? 0) >= SUBAGENT_MODELS_VERSION) return false;
   if (config.subagentModels === undefined) {
     config.subagentModels = [...DEFAULT_SUBAGENT_MODELS];

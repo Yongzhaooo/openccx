@@ -27,7 +27,7 @@ import {
   resetSubagentModelFallbackStateForTests,
   setSubagentQuotaPrimeForTests,
 } from "../../src/codex/subagent-model-fallback";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 beforeEach(() => {
   clearUpstreamHostHealth();
@@ -202,7 +202,7 @@ describe("opt-in upstream host circuit", () => {
       },
       defaultProvider: "openai",
       upstreamHostCircuitThreshold: 1,
-    } as OcxConfig;
+    } as OccxConfig;
 
     await maybePrimeSubagentQuota(config, openedAt + 1);
     expect(primeCalls).toBe(0);

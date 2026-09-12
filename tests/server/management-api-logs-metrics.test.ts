@@ -11,7 +11,7 @@ import {
   getRequestLogEntries,
   type RequestLogEntry,
 } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { buildRouteDecisionTrace } from "../../src/routing/trace";
 import { summarizeUsage } from "../../src/usage/summary";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -40,24 +40,24 @@ async function readLogPoll(query = "", cursor?: string): Promise<LogPollEnvelope
   return body;
 }
 
-const config = { providers: [] } as unknown as OcxConfig;
+const config = { providers: [] } as unknown as OccxConfig;
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  // addRequestLog persists to usage.jsonl; without a scratch OPENCODEX_HOME a bare
+  // addRequestLog persists to usage.jsonl; without a scratch OPENCCX_HOME a bare
   // `bun test <file>` run from outside the repo (no bunfig preload) writes these
   // fixture rows into the real ~/.opencodex log and poisons the GUI Usage page.
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-logs-metrics-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-logs-metrics-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   clearRequestLogsForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
@@ -302,10 +302,10 @@ describe("GET /api/logs display metrics", () => {
     expect(resolvedTarget).toBe(join(testDir, "usage.jsonl"));
     expect(readFileSync(resolvedTarget, "utf-8")).toContain(requestId);
 
-    // The default location (what the resolver returns with no OPENCODEX_HOME
+    // The default location (what the resolver returns with no OPENCCX_HOME
     // override) must never be the write target for this suite.
-    const previousHome = process.env.OPENCODEX_HOME;
-    delete process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
+    delete process.env.OPENCCX_HOME;
     try {
       const defaultTarget = usageLogPath();
       expect(defaultTarget).not.toBe(resolvedTarget);
@@ -313,8 +313,8 @@ describe("GET /api/logs display metrics", () => {
         expect(readFileSync(defaultTarget, "utf-8")).not.toContain(requestId);
       }
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
     }
   });
 });
@@ -393,7 +393,7 @@ describe("GET /api/logs snapshot polling", () => {
   });
 
   test("display-time cost changes reset even when raw entries are unchanged", async () => {
-    const priceConfig: OcxConfig = { port: 0, defaultProvider: "fixture", providers: { fixture: {
+    const priceConfig: OccxConfig = { port: 0, defaultProvider: "fixture", providers: { fixture: {
       adapter: "openai-chat", baseUrl: "https://example.test/v1", models: ["fixture-model"],
       modelCosts: { "fixture-model": { input: 1, output: 2, cacheRead: 0, cacheWrite: 0 } },
     } } };

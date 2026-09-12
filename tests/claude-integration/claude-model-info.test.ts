@@ -54,7 +54,7 @@ describe("anthropic-flavor ModelInfo discovery entries (devlog 130 B4b)", () => 
 
     expect(infos.map(info => info.id)).toEqual([
       "claude-fable-5-1",
-      "claude-ocx-native--claude-fable-5-1[1m]",
+      "claude-occx-native--claude-fable-5-1[1m]",
     ]);
     expect(infos[1]!.display_name).toBe("claude-fable-5-1 (anthropic) · 1M");
     expect(infos[1]!.max_input_tokens).toBe(1_000_000);
@@ -166,7 +166,7 @@ describe("anthropic-flavor ModelInfo discovery entries (devlog 130 B4b)", () => 
     expect(variants[0]!.display_name.includes("claude-big-5")).toBe(true);
   });
 
-  test("readable id style serves claude-ocx ids with hash fallback + readable [1m] variants (devlog 050)", () => {
+  test("readable id style serves claude-occx ids with hash fallback + readable [1m] variants (devlog 050)", () => {
     const auto = { enabled: true, compactWindow: 350_000 };
     const infos = buildAnthropicModelInfos(["gpt-5.5"], [
       { provider: "cursor", id: "gpt-5.6-luna", contextWindow: 1_000_000 },
@@ -174,16 +174,16 @@ describe("anthropic-flavor ModelInfo discovery entries (devlog 130 B4b)", () => 
       { provider: "weird--provider", id: "m1", contextWindow: 128_000 }, // unrepresentable -> hash fallback
     ], auto, "readable");
     const ids = infos.map(i => i.id);
-    expect(ids).toContain("claude-ocx-native--gpt-5.5");
+    expect(ids).toContain("claude-occx-native--gpt-5.5");
     // 272k native: NO [1m] variant under the authoritative-window contract.
-    expect(ids).not.toContain("claude-ocx-native--gpt-5.5[1m]");
-    expect(ids).toContain("claude-ocx-cursor--gpt-5.6-luna");
-    expect(ids).toContain("claude-ocx-cursor--gpt-5.6-luna[1m]");
+    expect(ids).not.toContain("claude-occx-native--gpt-5.5[1m]");
+    expect(ids).toContain("claude-occx-cursor--gpt-5.6-luna");
+    expect(ids).toContain("claude-occx-cursor--gpt-5.6-luna[1m]");
     expect(ids).toContain("claude-opus-4-8"); // anthropic canonical passthrough
     expect(ids.some(id => /^claude-opus-4-8-[a-z][0-9a-z]{2}$/.test(id))).toBe(true); // fallback row survives
     // Default style stays hashed (desktop contract untouched).
     const hashed = buildAnthropicModelInfos(["gpt-5.6-sol"], [], auto);
-    expect(hashed.map(i => i.id).some(id => id.startsWith("claude-ocx-"))).toBe(false);
+    expect(hashed.map(i => i.id).some(id => id.startsWith("claude-occx-"))).toBe(false);
   });
 });
 

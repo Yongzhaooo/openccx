@@ -1027,7 +1027,7 @@ test("Logs: an empty delta advances the proxy clock without discarding retained 
     expect(visibleRequestIds(container)).toEqual([]);
     await changeLogSelect(container, "Time", "all");
     expect(visibleRequestIds(container)).toEqual(["req-1"]);
-    expect(JSON.parse(sessionStorage.getItem("ocx.logs.list.v1:http://localhost")!)).toHaveLength(1);
+    expect(JSON.parse(sessionStorage.getItem("occx.logs.list.v1:http://localhost")!)).toHaveLength(1);
   } finally {
     await act(async () => { root.unmount(); });
   }
@@ -1055,7 +1055,7 @@ test("Logs: malformed polls preserve cursor/cache, back off, and explicit retry 
     expect(container.textContent).toContain("Could not load request logs.");
     expect(visibleRequestIds(container)).toEqual(["req-1"]);
     expect(urls.slice(1).every(url => url.includes("cursor=good"))).toBe(true);
-    expect(JSON.parse(sessionStorage.getItem("ocx.logs.list.v1:http://localhost")!)).toHaveLength(1);
+    expect(JSON.parse(sessionStorage.getItem("occx.logs.list.v1:http://localhost")!)).toHaveLength(1);
     failing = false;
     await act(async () => { clickRetry(container); });
     await flushMicrotasks();
@@ -1292,7 +1292,7 @@ test("Logs: a late body from an aborted old apiBase cannot poison the new proxy 
     await act(async () => { late.resolve(cursorLogEnvelope(PROXY_NOW + 12 * 60 * 60_000, [], "poison", true)); });
     await flushMicrotasks();
     expect(visibleRequestIds(container)).toEqual(["proxy-b"]);
-    expect(JSON.parse(sessionStorage.getItem("ocx.logs.list.v1:http://proxy-b")!)).toHaveLength(1);
+    expect(JSON.parse(sessionStorage.getItem("occx.logs.list.v1:http://proxy-b")!)).toHaveLength(1);
     await act(async () => { container.querySelector<HTMLInputElement>(".logs-auto-refresh input")!.click(); });
     await advanceSilentRefresh();
     expect(urls.at(-1)).toContain("cursor=cursor-b");

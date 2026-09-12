@@ -53,7 +53,7 @@ import {
   getTrackedCodexWebSocketCountForAccount,
   registerCodexWebSocket,
 } from "../../src/codex/websocket-registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { WsData } from "../../src/server/ws-bridge";
 import { handleNativeProfileAPI } from "../../src/codex/native-profile-api";
 import type { NativeProfileManager } from "../../src/codex/native-profile-manager";
@@ -92,9 +92,9 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let TEST_DIR = "";
 let TEST_CODEX_HOME = "";
-const MANUAL_IMPORT_ENV = "OPENCODEX_ENABLE_UNVERIFIED_CODEX_IMPORT";
+const MANUAL_IMPORT_ENV = "OPENCCX_ENABLE_UNVERIFIED_CODEX_IMPORT";
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 let previousManualImportEnv: string | undefined;
 let previousFetch: typeof fetch;
@@ -104,7 +104,7 @@ function jwtWithExp(exp: number): string {
   return enc({ alg: "RS256", typ: "JWT" }) + "." + enc({ exp }) + ".sig";
 }
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {},
@@ -130,7 +130,7 @@ function manualImportBody(overrides: Record<string, unknown> = {}): Record<strin
 }
 
 async function completeMockCodexOAuth(options: {
-  config: OcxConfig;
+  config: OccxConfig;
   requestBody: { id: string; reauth?: boolean };
   oauthAccountId: string;
   email: string;
@@ -248,7 +248,7 @@ function chatgptPlanJwt(plan: string, accountId = "acct"): string {
 }
 
 function seedPoolAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   account: {
     id: string;
     email: string;
@@ -533,16 +533,16 @@ describe("main quota refresh diagnostics", () => {
 
 beforeEach(() => {
   resetLifecycleDrainStateForTests();
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   previousManualImportEnv = process.env[MANUAL_IMPORT_ENV];
   previousFetch = globalThis.fetch;
   setIcaclsRunnerForTests(() => ICACLS_OK);
   setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-codex-auth-api-"));
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-codex-auth-api-"));
   TEST_CODEX_HOME = join(TEST_DIR, "codex");
   mkdirSync(TEST_CODEX_HOME, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   process.env.CODEX_HOME = TEST_CODEX_HOME;
   delete process.env[MANUAL_IMPORT_ENV];
   clearAccountNeedsReauth("__main__");
@@ -573,8 +573,8 @@ afterEach(async () => {
   clearCodexWebSocketRegistry();
   globalThis.fetch = previousFetch;
   resetQuotaRecoveryForTests();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   if (previousManualImportEnv === undefined) delete process.env[MANUAL_IMPORT_ENV];
@@ -1364,7 +1364,7 @@ describe("codex-auth API", () => {
     const config = makeConfig({
       codexAccounts: [
         { id: "pool-invalid-plan", email: "invalid@example.test", plan: { tier: "go" }, isMain: false },
-      ] as unknown as OcxConfig["codexAccounts"],
+      ] as unknown as OccxConfig["codexAccounts"],
     });
     saveCodexAccountCredential("pool-invalid-plan", {
       accessToken: "access-invalid-plan",
@@ -3587,7 +3587,7 @@ describe("codex-auth API", () => {
     let convergences = 0;
     const convergeCodexCatalog = async (): Promise<CatalogDisposition> => {
       convergences += 1;
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.codexAccountNamespaces).toEqual({ team: accountId });
       if (convergences === 1) {
         expect(persisted.codexAccounts).toEqual([]);
@@ -3786,7 +3786,7 @@ describe("codex-auth API", () => {
     expect(resolveCodexAccountForThread("runtime-selection", config)).toBe("pool-runtime");
   });
 
-  async function putPriority(config: OcxConfig, body: unknown): Promise<Response> {
+  async function putPriority(config: OccxConfig, body: unknown): Promise<Response> {
     const req = new Request("http://localhost/api/codex-auth/accounts/priority", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -4571,7 +4571,7 @@ describe("codex-auth API", () => {
   test("Codex OAuth login responses project raw provider errors", async () => {
     const oauth = await import("../../src/oauth");
     const startSpy = spyOn(oauth, "startLoginFlow").mockImplementation(async () => {
-      throw new Error("already in progress at C:\\Users\\Alice\\.opencodex\\auth.json.ocx-tmp sk-secret-provider-key");
+      throw new Error("already in progress at C:\\Users\\Alice\\.openccx\\auth.json.occx-tmp sk-secret-provider-key");
     });
     try {
       const req = new Request("http://localhost/api/codex-auth/login", {
@@ -4583,7 +4583,7 @@ describe("codex-auth API", () => {
       const data = await resp!.json() as { error?: string };
 
       expect(resp!.status).toBe(500);
-      expect(data.error).toBe("OAuth authentication failed. Check the OpenCodex account status and retry.");
+      expect(data.error).toBe("OAuth authentication failed. Check the Openccx account status and retry.");
       expect(JSON.stringify(data)).not.toContain("Alice");
       expect(JSON.stringify(data)).not.toContain("sk-secret-provider-key");
     } finally {
@@ -4598,7 +4598,7 @@ describe("codex-auth API", () => {
     const cases: Array<{ error: Error; expected: string }> = [
       {
         error: new oauth.OAuthLoginRequiredError("chatgpt"),
-        expected: "Not logged in to chatgpt. Run: ocx login chatgpt",
+        expected: "Not logged in to chatgpt. Run: occx login chatgpt",
       },
       {
         error: new oauth.OAuthTokenRefreshBusyError(),
@@ -4638,7 +4638,7 @@ describe("codex-auth API", () => {
     const originalLogin = oauth.OAUTH_PROVIDERS.chatgpt.login;
     oauth.OAUTH_PROVIDERS.chatgpt.login = async (controller) => {
       controller.onAuth({ url: "https://example.test/oauth" });
-      throw new Error("late failure at /home/alice/.opencodex/auth.json.ocx-tmp sk-secret-provider-key");
+      throw new Error("late failure at /home/alice/.opencodex/auth.json.occx-tmp sk-secret-provider-key");
     };
     const openSpy = spyOn(openUrlMod, "openUrl").mockImplementation(() => {});
     const timeoutSpy = spyOn(globalThis, "setTimeout").mockImplementation(((
@@ -4671,7 +4671,7 @@ describe("codex-auth API", () => {
 
       expect(state).toMatchObject({
         status: "error",
-        error: "OAuth authentication failed. Check the OpenCodex account status and retry.",
+        error: "OAuth authentication failed. Check the Openccx account status and retry.",
       });
       expect(JSON.stringify(state)).not.toContain("/home/alice");
       expect(JSON.stringify(state)).not.toContain("sk-secret-provider-key");
@@ -4700,7 +4700,7 @@ describe("codex-auth API", () => {
     const cases: Array<{ error: Error; expected: string }> = [
       {
         error: new oauth.OAuthLoginRequiredError("chatgpt"),
-        expected: "Not logged in to chatgpt. Run: ocx login chatgpt",
+        expected: "Not logged in to chatgpt. Run: occx login chatgpt",
       },
       {
         error: new oauth.OAuthTokenRefreshBusyError(),
@@ -5312,7 +5312,7 @@ describe("codex-auth API", () => {
       return new Response('data: {"type":"response.completed"}\n\n');
     }) as typeof fetch;
     const req = new Request("http://localhost/api/codex-auth/accounts/refresh", { method: "POST",
-      headers: { "x-opencodex-gui-origin": "http://localhost", "x-opencodex-csrf-token": "forged" } });
+      headers: { "x-openccx-gui-origin": "http://localhost", "x-openccx-csrf-token": "forged" } });
     const response = await handleCodexAuthAPI(req, new URL(req.url), config, undefined, principal);
     expect(response?.status).toBe(200);
     expect((await response!.json()).accounts.find((row: { id: string }) => row.id === accountId).quota.weeklyPercent).toBe(12);
@@ -5972,10 +5972,10 @@ describe("manual reset cooldown recovery (#3973)", () => {
     cool(config, "manual-a");
     return config;
   }
-  function cool(config: OcxConfig, id: string, modelId = "gpt-5.6-sol", now = Date.now()) {
+  function cool(config: OccxConfig, id: string, modelId = "gpt-5.6-sol", now = Date.now()) {
     recordCodexUpstreamOutcome(config, id, 429, { now, resetAt: now + 3_600_000, modelId, fixedAccount: true });
   }
-  function consume(config: OcxConfig, id = "manual-a", operationId = OP) {
+  function consume(config: OccxConfig, id = "manual-a", operationId = OP) {
     const req = new Request("http://localhost/api/codex-auth/reset-credits/consume", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accountId: id, operationId }),

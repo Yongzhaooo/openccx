@@ -29,13 +29,13 @@ function isFamily(value: string | undefined): value is DesktopFamily {
 
 function printDesktopHelp(): void {
   console.log(`Usage:
-  ocx claude desktop [apply] [--static|--hybrid|--discovery-only]
-  ocx claude desktop show [--json]
-  ocx claude desktop status [--json]
-  ocx claude desktop move <provider/model> <opus|fable|sonnet|haiku> [--default]
-  ocx claude desktop default <family> <provider/model|none>
-  ocx claude desktop export <path|->
-  ocx claude desktop import <path> [--apply]`);
+  occx claude desktop [apply] [--static|--hybrid|--discovery-only]
+  occx claude desktop show [--json]
+  occx claude desktop status [--json]
+  occx claude desktop move <provider/model> <opus|fable|sonnet|haiku> [--default]
+  occx claude desktop default <family> <provider/model|none>
+  occx claude desktop export <path|->
+  occx claude desktop import <path> [--apply]`);
 }
 
 export interface ApplyProfileDeps {
@@ -256,7 +256,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     if (command === "import" && argv.includes("--apply")) assertNoClientDisconnectPending();
     if (command === "import" && argv.includes("--apply") && connection.kind !== "disconnected") {
       throw new CliUsageError(connection.kind === "connected"
-        ? "Connected Desktop apply uses the hub profile. Import on the hub, then run ocx claude desktop apply here."
+        ? "Connected Desktop apply uses the hub profile. Import on the hub, then run occx claude desktop apply here."
         : "Client connection state is invalid; refusing import --apply.");
     }
     const localView = connection.kind === "connected";
@@ -271,7 +271,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     if (command === "status") {
       const rest = argv.slice(1);
       const wantsJson = takeJsonFlag(rest);
-      if (rest.length > 0) throw new CliUsageError("Usage: ocx claude desktop status [--json]");
+      if (rest.length > 0) throw new CliUsageError("Usage: occx claude desktop status [--json]");
       const live = await runtimeRequest<Record<string, unknown>>("/api/claude-desktop/status", {});
       if (wantsJson) console.log(JSON.stringify(live, null, 2));
       else {
@@ -285,7 +285,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     if (command === "show") {
       const rest = argv.slice(1);
       const wantsJson = takeJsonFlag(rest);
-      if (rest.length > 0) throw new CliUsageError("Usage: ocx claude desktop show [--json]");
+      if (rest.length > 0) throw new CliUsageError("Usage: occx claude desktop show [--json]");
       if (wantsJson) console.log(JSON.stringify(localView ? { ...state, scope: "local" } : state));
       else {
         for (const family of DESKTOP_FAMILIES) {
@@ -299,7 +299,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     }
     if (command === "move") {
       const [, route, familyRaw, ...flags] = argv;
-      if (!route || !isFamily(familyRaw) || flags.some(flag => flag !== "--default")) throw new CliUsageError("Usage: ocx claude desktop move <route> <family> [--default]");
+      if (!route || !isFamily(familyRaw) || flags.some(flag => flag !== "--default")) throw new CliUsageError("Usage: occx claude desktop move <route> <family> [--default]");
       if (!state.models.some(model => model.route === route && model.available)) throw new Error(`현재 사용할 수 없는 모델입니다: ${route}`);
       const profile = moveDesktopRoute(state.profile, route, familyRaw, flags.includes("--default"));
       saveLocalDesktopProfile(profile, config.claudeCode?.desktopProfile, connection, deps);
@@ -308,7 +308,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     }
     if (command === "default") {
       const [, familyRaw, routeRaw] = argv;
-      if (!isFamily(familyRaw) || !routeRaw || argv.length !== 3) throw new CliUsageError("Usage: ocx claude desktop default <family> <route|none>");
+      if (!isFamily(familyRaw) || !routeRaw || argv.length !== 3) throw new CliUsageError("Usage: occx claude desktop default <family> <route|none>");
       const route = routeRaw === "none" ? null : routeRaw;
       if (route && !state.models.some(model => model.route === route && model.available)) throw new Error(`현재 사용할 수 없는 모델입니다: ${route}`);
       const profile = setDesktopFamilyDefault(state.profile, familyRaw, route);
@@ -318,7 +318,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     }
     if (command === "export") {
       const target = argv[1];
-      if (!target || argv.length !== 2) throw new CliUsageError("Usage: ocx claude desktop export <path|->");
+      if (!target || argv.length !== 2) throw new CliUsageError("Usage: occx claude desktop export <path|->");
       const json = JSON.stringify(state.profile, null, 2) + "\n";
       if (target === "-") process.stdout.write(json);
       else writeFileSync(resolve(target), json, { encoding: "utf8", mode: 0o600 });
@@ -327,7 +327,7 @@ export async function handleClaudeDesktopCommand(argv: string[], deps: ApplyProf
     if (command === "import") {
       const source = argv[1];
       const flags = argv.slice(2);
-      if (!source || flags.some(flag => flag !== "--apply")) throw new CliUsageError("Usage: ocx claude desktop import <path> [--apply]");
+      if (!source || flags.some(flag => flag !== "--apply")) throw new CliUsageError("Usage: occx claude desktop import <path> [--apply]");
       const profile = parseDesktopProfile(JSON.parse(readFileSync(resolve(source), "utf8")));
       const reconciled = (await buildClaudeDesktopState(config, profile)).profile;
       if (flags.includes("--apply")) assertNoClientDisconnectPending();

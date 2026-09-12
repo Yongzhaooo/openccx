@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { deleteConfigTopLevelKey } from "../config/rebase-provenance";
 
 export interface ProviderRewriteResult {
@@ -32,7 +32,7 @@ export interface ProviderRewriteResult {
  * caller that moves a provider row handles its own allowlist, where the
  * destination catalog is known.
  */
-export function rewriteProviderReferences(config: OcxConfig, from: string, to: string): ProviderRewriteResult {
+export function rewriteProviderReferences(config: OccxConfig, from: string, to: string): ProviderRewriteResult {
   const prefix = `${from}/`;
   const collisions: string[] = [];
   let changed = 0;
@@ -48,7 +48,7 @@ export function rewriteProviderReferences(config: OcxConfig, from: string, to: s
    * Rewrite a routed-string list in place. Assigning the result unconditionally
    * would add an own property with value `undefined` where the field was absent,
    * which breaks the no-op contract. The key type is an explicit union rather
-   * than `keyof OcxConfig`: the latter also admits `customModels` and friends, so
+   * than `keyof OccxConfig`: the latter also admits `customModels` and friends, so
    * `map` would infer a union array that is not assignable back.
    */
   type RoutedListKey = "disabledModels" | "subagentModels" | "subagentModelFallback";
@@ -168,7 +168,7 @@ export function rewriteProviderReferences(config: OcxConfig, from: string, to: s
  *
  * Returns the number of rows dropped so callers can report it.
  */
-export function dropProviderCustomModels(config: OcxConfig, provider: string): number {
+export function dropProviderCustomModels(config: OccxConfig, provider: string): number {
   const existing = config.customModels;
   if (!Array.isArray(existing) || existing.length === 0) return 0;
   const kept = existing.filter(model => model.provider !== provider);

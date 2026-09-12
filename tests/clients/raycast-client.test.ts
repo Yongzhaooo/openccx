@@ -20,7 +20,7 @@ import { refreshOwnedCatalogIntegrations } from "../../src/integrations/catalog-
 import { INTEGRATION_CLIENTS } from "../../src/integrations/registry";
 import { createIntegrationStateStore, type IntegrationStateStore } from "../../src/integrations/store";
 import { applyIntegration, disableIntegration, refreshIntegration } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const CONFIG = {
@@ -28,7 +28,7 @@ const CONFIG = {
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 // One model per cell of the vision x reasoning matrix, so every ability
 // branch is exercised by a row that differs from its neighbours in one axis.
@@ -68,8 +68,8 @@ let home: string;
 let store: IntegrationStateStore;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-raycast-"));
-  store = createIntegrationStateStore(mkdtempSync(join(tmpdir(), "ocx-raycast-store-")));
+  home = mkdtempSync(join(tmpdir(), "occx-raycast-"));
+  store = createIntegrationStateStore(mkdtempSync(join(tmpdir(), "occx-raycast-store-")));
 });
 
 afterEach(() => {
@@ -108,7 +108,7 @@ describe("Raycast client config", () => {
 
     const provider = ourProvider(document);
     expect(Object.keys(provider)).toEqual(["id", "name", "base_url", "models"]);
-    expect(provider.name).toBe("OpenCodex");
+    expect(provider.name).toBe("Openccx");
     expect(provider.base_url).toBe("http://127.0.0.1:10100/v1");
     expect(Object.keys(provider)).not.toContain("api_keys");
 
@@ -130,11 +130,11 @@ describe("Raycast client config", () => {
     for (const document of [undefined, null, false, 42, "providers", [], {},
       { providers: null }, { providers: {} }, { providers: "bad" },
       { providers: [null, false, "bad", [], {}] },
-      ...[undefined, null, false, 42, "bad", {}].map(models => ({ providers: [{ id: "opencodex", models }] })),
-      { providers: [{ id: "opencodex", models: [] }, { id: "opencodex", models: [] }] },
+      ...[undefined, null, false, 42, "bad", {}].map(models => ({ providers: [{ id: "openccx", models }] })),
+      { providers: [{ id: "openccx", models: [] }, { id: "openccx", models: [] }] },
     ]) expect(summarizeRaycast(document)).toEqual(empty);
     expect(summarizeRaycast({ providers: [null, { id: "foreign", models: "bad" }, {
-      id: "opencodex", models: [null, false, 1, "bad", [], {}, { id: "x" },
+      id: "openccx", models: [null, false, 1, "bad", [], {}, { id: "x" },
         { id: "", name: "empty id" }, { id: "x", name: 1 },
         { id: "known", name: "Known", context: 1000 },
         { id: "unknown", name: "Unknown" },
@@ -180,10 +180,10 @@ describe("Raycast client config", () => {
 
   test("native YAML round-trips, leads with our element, and never carries a credential", () => {
     const sentinel = ["sk", "live", "raycast", "sentinel"].join("-");
-    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OcxConfig;
+    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OccxConfig;
     const built = buildClientConfigText("raycast", { ...context(), config: withKey });
     expect(built.format).toBe("yaml");
-    expect(built.text.startsWith(["providers:", "  - id: opencodex"].join(String.fromCharCode(10)))).toBe(true);
+    expect(built.text.startsWith(["providers:", "  - id: openccx"].join(String.fromCharCode(10)))).toBe(true);
     expect(Bun.YAML.parse(built.text)).toEqual(built.document as never);
     expect(built.text).not.toContain(sentinel);
     expect(built.text).not.toContain("api_keys");
@@ -218,7 +218,7 @@ describe("Raycast client config", () => {
   });
 
   /*
-   * The whole point of the `[id=opencodex]` selector: the user's own element
+   * The whole point of the `[id=openccx]` selector: the user's own element
    * survives every operation, we replace only ours, and a disable leaves the
    * sequence exactly as the user wrote it.
    */

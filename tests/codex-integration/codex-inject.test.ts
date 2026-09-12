@@ -11,11 +11,11 @@ import {
   setRootOpenaiBaseUrl,
   setRootRealtimeWsBaseUrl,
   stripInjectedOpenaiBaseUrl,
-  stripOpencodexConfig,
+  stripOpenccxConfig,
   stripRootContextWindowOverrides,
   standaloneCodexRoutingTarget,
 } from "../../src/codex/inject";
-import { OCX_SECTION_MARKER, stripJournaledOpenaiBaseUrl } from "../../src/codex/injected-marker";
+import { OCCX_SECTION_MARKER, stripJournaledOpenaiBaseUrl } from "../../src/codex/injected-marker";
 import {
   MANAGED_AGENTS_TABLE_MARKER,
   MANAGED_SUBAGENT_DEFAULT_MARKER,
@@ -44,12 +44,12 @@ describe("Codex config injection", () => {
       const target = standaloneCodexRoutingTarget(10100, { codexDesktopAuthless: true });
       expect(target).toMatchObject({ requiresAdmissionToken: false, desktopAuthless: true });
       const block = buildProviderTableBlock(target);
-      expect(block).toContain("[model_providers.opencodex]");
+      expect(block).toContain("[model_providers.openccx]");
       expect(block).toContain('base_url = "http://127.0.0.1:10100/v1"');
       expect(block).toContain("requires_openai_auth = false");
       expect(block).not.toContain("env_key");
       const profile = buildProfileFile(target, "/tmp/opencodex-catalog.json");
-      expect(profile).toContain('model_provider = "opencodex"');
+      expect(profile).toContain('model_provider = "openccx"');
       expect(profile).toContain("requires_openai_auth = false");
       expect(profile).not.toContain("openai_base_url");
     });
@@ -60,7 +60,7 @@ describe("Codex config injection", () => {
       expect(target.requiresAdmissionToken).toBe(true);
       const block = buildProviderTableBlock(target);
       expect(block).toContain("requires_openai_auth = true");
-      expect(block).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+      expect(block).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     });
 
     test("the unauthenticated loopback listener still honors the opt-in", () => {
@@ -88,7 +88,7 @@ describe("Codex config injection", () => {
       expect(target.desktopAuthless).toBeUndefined();
 
       const profile = buildProfileFile(target, "/tmp/opencodex-catalog.json");
-      expect(profile).toContain('model_provider = "opencodex"');
+      expect(profile).toContain('model_provider = "openccx"');
       expect(profile).toContain("requires_openai_auth = true");
       // The reference profile documents the provider table only. The root override that keeps
       // existing `openai`-tagged threads on the proxy is a config.toml global, not a profile
@@ -106,7 +106,7 @@ describe("Codex config injection", () => {
         codexDesktopAuthless: true,
       });
       const profile = buildProfileFile(target, null);
-      expect(profile).toContain('model_provider = "opencodex"');
+      expect(profile).toContain('model_provider = "openccx"');
       expect(profile).toContain("requires_openai_auth = false");
     });
 
@@ -117,7 +117,7 @@ describe("Codex config injection", () => {
       });
       expect(target.requiresAdmissionToken).toBe(true);
       const profile = buildProfileFile(target, null);
-      expect(profile).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+      expect(profile).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
       expect(profile).toContain("requires_openai_auth = true");
     });
   });
@@ -126,13 +126,13 @@ describe("Codex config injection", () => {
     const target = {
       baseUrl: "https://hub.example.test/v1",
       requiresAdmissionToken: true,
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN" as const,
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN" as const,
     };
     const block = buildProviderTableBlock(target);
     expect(block).toContain('base_url = "https://hub.example.test/v1"');
-    expect(block).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(block).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     const loopbackLooking = buildProviderTableBlock({ ...target, baseUrl: "https://127.0.0.1/v1" });
-    expect(loopbackLooking).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(loopbackLooking).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     expect(() => buildProviderTableBlock({ ...target, baseUrl: "https://hub.example.test/not-v1" })).toThrow(
       "canonical HTTP(S) /v1 URL",
     );
@@ -141,7 +141,7 @@ describe("Codex config injection", () => {
   test("omits provider-level Responses WebSocket support by default", () => {
     const block = buildProviderTableBlock(10100);
 
-    expect(block).toContain("[model_providers.opencodex]");
+    expect(block).toContain("[model_providers.openccx]");
     expect(block).toContain('wire_api = "responses"');
     expect(block).toContain("requires_openai_auth = true");
     expect(block).not.toContain("supports_websockets");
@@ -162,7 +162,7 @@ describe("Codex config injection", () => {
   test("non-loopback proxy mode injects the modern env_key admission line (#2073)", () => {
     const block = buildProviderTableBlock(10100, false, true);
 
-    expect(block).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(block).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     // The legacy header table must not come back: codex 0.146+ documents env_key as
     // the bearer form, and #1686's server-side substitution is keyed to it.
     expect(block).not.toContain("env_http_headers");
@@ -181,13 +181,13 @@ describe("Codex config injection", () => {
 
   test("strips stale root context-window overrides on injection so the catalog drives model context (gpt-5.5 regression)", () => {
     const cleaned = stripRootContextWindowOverrides([
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       "model_context_window = 1000000",
       "model_auto_compact_token_limit = 900000",
       'model_auto_compact_token_limit_scope = "total"',
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex]",
+      "[model_providers.openccx]",
       "# a nested table key must survive",
       "model_context_window = 272000",
       "",
@@ -198,19 +198,19 @@ describe("Codex config injection", () => {
     expect(cleaned).toContain("model_auto_compact_token_limit = 900000");
     expect(cleaned).toContain('model_auto_compact_token_limit_scope = "total"');
     // Non-context-window root keys are untouched.
-    expect(cleaned).toContain('model_provider = "opencodex"');
+    expect(cleaned).toContain('model_provider = "openccx"');
     expect(cleaned).toContain('model = "gpt-5.5"');
     // Table-nested keys (after the first [table]) are preserved.
     expect(cleaned).toContain("model_context_window = 272000");
   });
 
   test("preserves user root context-window overrides when restoring native Codex", () => {
-    const stripped = stripOpencodexConfig([
+    const stripped = stripOpenccxConfig([
       'model = "gpt-5.5"',
       'model_context_window = 1000000',
       'model_auto_compact_token_limit = 900000',
       'model_catalog_json = "/tmp/opencodex-catalog.json"',
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       "",
       "[features]",
       "fast_mode = true",
@@ -225,8 +225,8 @@ describe("Codex config injection", () => {
   });
 
   test("removes root routed model names when restoring native Codex", () => {
-    const stripped = stripOpencodexConfig([
-      'model_provider = "opencodex"',
+    const stripped = stripOpenccxConfig([
+      'model_provider = "openccx"',
       'model = "opencode-go/minimax-m3"',
       'model_verbosity = "high"',
       "",
@@ -241,8 +241,8 @@ describe("Codex config injection", () => {
 
   test("malformed quoted root values cannot wedge restore transforms", () => {
     const slashRun = "\\".repeat(64);
-    const stripped = stripOpencodexConfig([
-      'model_provider = "opencodex"',
+    const stripped = stripOpenccxConfig([
+      'model_provider = "openccx"',
       `model = "${slashRun}`,
       `model_catalog_json = "${slashRun}`,
       "",
@@ -252,8 +252,8 @@ describe("Codex config injection", () => {
     expect(stripped).toContain(`model_catalog_json = "${slashRun}`);
   }, 2_000);
 
-  test("preserves non-opencodex routed model names during fallback restore", () => {
-    const stripped = stripOpencodexConfig([
+  test("preserves non-openccx routed model names during fallback restore", () => {
+    const stripped = stripOpenccxConfig([
       'model_provider = "proxy"',
       'model = "openrouter/foo"',
       "",
@@ -273,8 +273,8 @@ describe("Codex config injection", () => {
     const profile = buildProfileFile(10100, null);
 
     expect(profile).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
-    expect(profile).not.toContain('model_provider = "opencodex"');
-    expect(profile).not.toContain("[model_providers.opencodex]");
+    expect(profile).not.toContain('model_provider = "openccx"');
+    expect(profile).not.toContain("[model_providers.openccx]");
     expect(profile).not.toContain("model_catalog_json");
   });
 
@@ -306,8 +306,8 @@ describe("Codex config injection", () => {
 
     expect(profile).toContain("proxy at 192.168.1.20:10100");
     expect(profile).toContain('base_url = "http://192.168.1.20:10100/v1"');
-    expect(profile).toContain('model_provider = "opencodex"');
-    expect(profile).toContain("[model_providers.opencodex]");
+    expect(profile).toContain('model_provider = "openccx"');
+    expect(profile).toContain("[model_providers.openccx]");
   });
 
   test("non-loopback fallback profile mirrors websocket and API auth provider options", () => {
@@ -315,7 +315,7 @@ describe("Codex config injection", () => {
 
     expect(profile).toContain('model_catalog_json = "/tmp/opencodex-catalog.json"');
     expect(profile).toContain("supports_websockets = true");
-    expect(profile).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(profile).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     expect(profile).not.toContain("env_http_headers");
   });
 
@@ -326,18 +326,18 @@ describe("Codex config injection", () => {
   });
 
   test("strips injected TOML sections without swallowing later indented tables", () => {
-    const stripped = stripOpencodexConfig([
-      'model_provider = "opencodex"',
+    const stripped = stripOpenccxConfig([
+      'model_provider = "openccx"',
       "",
-      "# Auto-injected by opencodex",
-      " [model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "# Auto-injected by openccx",
+      " [model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://localhost:10100/v1"',
       " [plugins.safe]",
       "enabled = true",
       "",
-      " [profiles.opencodex]",
-      'model_provider = "opencodex"',
+      " [profiles.openccx]",
+      'model_provider = "openccx"',
       " [profiles.work]",
       'model = "gpt-5.5"',
       "",
@@ -347,12 +347,12 @@ describe("Codex config injection", () => {
     expect(stripped).toContain("enabled = true");
     expect(stripped).toContain("[profiles.work]");
     expect(stripped).toContain('model = "gpt-5.5"');
-    expect(stripped).not.toContain("[model_providers.opencodex]");
-    expect(stripped).not.toContain("[profiles.opencodex]");
+    expect(stripped).not.toContain("[model_providers.openccx]");
+    expect(stripped).not.toContain("[profiles.openccx]");
   });
 
   test("strip removes only marker-owned native subagent defaults", () => {
-    const stripped = stripOpencodexConfig([
+    const stripped = stripOpenccxConfig([
       MANAGED_AGENTS_TABLE_MARKER,
       "[agents]",
       MANAGED_SUBAGENT_DEFAULT_MARKER,
@@ -390,7 +390,7 @@ describe("Design B openai_base_url injection", () => {
 
     expect(keptUserBaseUrl).toBe(false);
     const lines = content.split("\n");
-    const markerIdx = lines.findIndex(l => l.includes("Auto-injected by opencodex"));
+    const markerIdx = lines.findIndex(l => l.includes("Auto-injected by openccx"));
     const keyIdx = lines.findIndex(l => l.startsWith("openai_base_url"));
     const tableIdx = lines.findIndex(l => l.trim() === "[features]");
     expect(markerIdx).toBeGreaterThanOrEqual(0);
@@ -403,7 +403,7 @@ describe("Design B openai_base_url injection", () => {
     const second = setRootOpenaiBaseUrl(first, 10190).content;
 
     expect(second.match(/openai_base_url/g)?.length).toBe(1);
-    expect(second.match(/Auto-injected by opencodex/g)?.length).toBe(1);
+    expect(second.match(/Auto-injected by openccx/g)?.length).toBe(1);
     expect(second).toContain('openai_base_url = "http://127.0.0.1:10190/v1"');
   });
 
@@ -425,14 +425,14 @@ describe("Design B openai_base_url injection", () => {
     const injected = setRootOpenaiBaseUrl("model = \"gpt-5.5\"\n\n[features]\nfast_mode = true\n", 10100).content;
     const stripped = stripInjectedOpenaiBaseUrl(injected);
     expect(stripped).not.toContain("openai_base_url");
-    expect(stripped).not.toContain("Auto-injected by opencodex");
+    expect(stripped).not.toContain("Auto-injected by openccx");
 
     const userOwned = 'openai_base_url = "https://my-own-gateway.example/v1"\n\n[features]\n';
     expect(stripInjectedOpenaiBaseUrl(userOwned)).toBe(userOwned);
   });
 
   describe("realtime sideband override (experimental_realtime_ws_base_url)", () => {
-    const loopback = { baseUrl: "http://127.0.0.1:10100/v1", requiresAdmissionToken: false, tokenEnv: "OPENCODEX_API_AUTH_TOKEN" } as const;
+    const loopback = { baseUrl: "http://127.0.0.1:10100/v1", requiresAdmissionToken: false, tokenEnv: "OPENCCX_API_AUTH_TOKEN" } as const;
     const base = 'model = "gpt-5.5"\n\n[features]\nfast_mode = true\n';
 
     test("is written as its own marker-owned pair directly under the routing pair, with the same value", () => {
@@ -442,18 +442,18 @@ describe("Design B openai_base_url injection", () => {
       const lines = content.split("\n");
       const routing = lines.indexOf('openai_base_url = "http://127.0.0.1:10100/v1"');
       expect(routing).toBeGreaterThan(0);
-      expect(lines[routing - 1]).toContain("Auto-injected by opencodex");
-      expect(lines[routing + 1]).toContain("Auto-injected by opencodex");
+      expect(lines[routing - 1]).toContain("Auto-injected by openccx");
+      expect(lines[routing + 1]).toContain("Auto-injected by openccx");
       expect(lines[routing + 2]).toBe('experimental_realtime_ws_base_url = "http://127.0.0.1:10100/v1"');
       expect(lines.indexOf("[features]")).toBeGreaterThan(routing + 2);
-      expect(content.match(/Auto-injected by opencodex/g)?.length).toBe(2);
+      expect(content.match(/Auto-injected by openccx/g)?.length).toBe(2);
     });
 
     test("a pre-upgrade block where the user's own realtime line sits right under our routing pair is left alone", () => {
       // Older injections wrote only marker + openai_base_url. A user who added the realtime
       // key by hand directly beneath must keep it: ownership is per marker, never by adjacency.
       const original = [
-        "# Auto-injected by opencodex",
+        "# Auto-injected by openccx",
         'openai_base_url = "http://127.0.0.1:10100/v1"',
         'experimental_realtime_ws_base_url = "https://realtime.example/v1"',
         "",
@@ -471,21 +471,21 @@ describe("Design B openai_base_url injection", () => {
     test("an orphaned marker + realtime pair (routing line removed by hand) is stripped, not accumulated", () => {
       const orphan = [
         'model = "gpt-5.5"',
-        "# Auto-injected by opencodex",
+        "# Auto-injected by openccx",
         'experimental_realtime_ws_base_url = "http://127.0.0.1:10100/v1"',
         "",
-        "# Auto-injected by opencodex",
-        "[model_providers.opencodex]",
-        'name = "OpenCodex Proxy"',
+        "# Auto-injected by openccx",
+        "[model_providers.openccx]",
+        'name = "Openccx Proxy"',
         'base_url = "http://127.0.0.1:10100/v1"',
         "",
         "[features]",
         "fast_mode = true",
         "",
       ].join("\n");
-      const stripped = stripOpencodexConfig(orphan);
+      const stripped = stripOpenccxConfig(orphan);
       expect(stripped).not.toContain("experimental_realtime_ws_base_url");
-      expect(stripped).not.toContain("opencodex");
+      expect(stripped).not.toContain("openccx");
       expect(stripped).toContain('model = "gpt-5.5"');
       expect(stripped).toContain("fast_mode = true");
     });
@@ -522,16 +522,16 @@ describe("Design B openai_base_url injection", () => {
       const stripped = stripInjectedOpenaiBaseUrl(injected);
       expect(stripped).not.toContain("openai_base_url");
       expect(stripped).not.toContain("experimental_realtime_ws_base_url");
-      expect(stripped).not.toContain("Auto-injected by opencodex");
+      expect(stripped).not.toContain("Auto-injected by openccx");
       expect(stripped).toContain("[features]");
 
       const userOwned = 'experimental_realtime_ws_base_url = "https://realtime.example/v1"\n\n[features]\n';
       expect(stripInjectedOpenaiBaseUrl(userOwned)).toBe(userOwned);
     });
 
-    test("stripOpencodexConfig drops the sideband override together with the routing override", () => {
+    test("stripOpenccxConfig drops the sideband override together with the routing override", () => {
       const injected = setRootRealtimeWsBaseUrl(setRootOpenaiBaseUrl(base, loopback).content, loopback).content;
-      const stripped = stripOpencodexConfig(injected);
+      const stripped = stripOpenccxConfig(injected);
       expect(stripped).not.toContain("experimental_realtime_ws_base_url");
       expect(stripped).not.toContain("openai_base_url");
       expect(stripped).toContain("[features]");
@@ -558,7 +558,7 @@ describe("Design B openai_base_url injection", () => {
     });
   });
 
-  test("stripOpencodexConfig removes the Design B form including routed root models", () => {
+  test("stripOpenccxConfig removes the Design B form including routed root models", () => {
     const injected = setRootOpenaiBaseUrl([
       'model = "opencode-go/minimax-m3"',
       'model_verbosity = "high"',
@@ -568,7 +568,7 @@ describe("Design B openai_base_url injection", () => {
       "fast_mode = true",
       "",
     ].join("\n"), 10100).content;
-    const stripped = stripOpencodexConfig(injected);
+    const stripped = stripOpenccxConfig(injected);
 
     expect(stripped).not.toContain("openai_base_url");
     expect(stripped).not.toContain('model = "opencode-go/minimax-m3"'); // routed id useless without proxy
@@ -579,68 +579,68 @@ describe("Design B openai_base_url injection", () => {
 
   test("upgrade path: legacy table + root re-tag coexisting with Design B form all strip cleanly", () => {
     const legacy = [
-      'model_provider = "opencodex"',
-      "# Auto-injected by opencodex",
+      'model_provider = "openccx"',
+      "# Auto-injected by openccx",
       'openai_base_url = "http://127.0.0.1:10100/v1"',
       'model = "gpt-5.5"',
       "",
-      "# Auto-injected by opencodex",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "# Auto-injected by openccx",
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(legacy);
+    const stripped = stripOpenccxConfig(legacy);
 
-    expect(stripped).not.toContain("opencodex");
+    expect(stripped).not.toContain("openccx");
     expect(stripped).not.toContain("openai_base_url");
     expect(stripped).toContain('model = "gpt-5.5"');
   });
 
-  test("legacy marker directly before the provider table survives the root strip order (removeOcxSection keeps its anchor)", () => {
+  test("legacy marker directly before the provider table survives the root strip order (removeOccxSection keeps its anchor)", () => {
     // No Design B form present — stripInjectedOpenaiBaseUrl must not eat the legacy EOF marker
-    // in a way that leaves the [model_providers.opencodex] table behind.
+    // in a way that leaves the [model_providers.openccx] table behind.
     const legacyOnly = [
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       'model = "gpt-5.5"',
       "",
-      "# Auto-injected by opencodex",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "# Auto-injected by openccx",
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(legacyOnly);
+    const stripped = stripOpenccxConfig(legacyOnly);
 
-    expect(stripped).not.toContain("opencodex");
-    expect(stripped).not.toContain("[model_providers.opencodex]");
+    expect(stripped).not.toContain("openccx");
+    expect(stripped).not.toContain("[model_providers.openccx]");
     expect(stripped).toContain('model = "gpt-5.5"');
   });
 
   test("app-rewritten env_http_headers sub-table strips fully: no nameless provider survives", () => {
     // A Codex app config rewrite re-serializes the provider's inline env_http_headers table
-    // into a separate [model_providers.opencodex.env_http_headers] sub-table. Cleanup must
+    // into a separate [model_providers.openccx.env_http_headers] sub-table. Cleanup must
     // remove the provider table AND its sub-table, or the provider survives with no `name`
     // and Codex rejects the whole config ("provider name must not be empty").
     const rewritten = [
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       "",
-      "[model_providers.opencodex.env_http_headers]",
-      '"x-opencodex-api-key" = "OPENCODEX_API_AUTH_TOKEN"',
+      "[model_providers.openccx.env_http_headers]",
+      '"x-openccx-api-key" = "OPENCCX_API_AUTH_TOKEN"',
       "",
       "[agents]",
       "max_concurrent_threads_per_session = 8",
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(rewritten);
+    const stripped = stripOpenccxConfig(rewritten);
 
-    expect(stripped).not.toContain("opencodex");
+    expect(stripped).not.toContain("openccx");
     expect(stripped).toContain("[agents]");
     expect(stripped).toContain('model = "gpt-5.5"');
   });
@@ -655,32 +655,32 @@ describe("Design B openai_base_url injection", () => {
       "[agents]",
       "max_concurrent_threads_per_session = 8",
       "",
-      "[model_providers.opencodex.env_http_headers]",
-      '"x-opencodex-api-key" = "OPENCODEX_API_AUTH_TOKEN"',
+      "[model_providers.openccx.env_http_headers]",
+      '"x-openccx-api-key" = "OPENCCX_API_AUTH_TOKEN"',
       '"CF-Access-Client-Id" = "CF_ACCESS_CLIENT_ID"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(orphan);
+    const stripped = stripOpenccxConfig(orphan);
 
-    expect(stripped).not.toContain("opencodex");
+    expect(stripped).not.toContain("openccx");
     expect(stripped).not.toContain("CF-Access-Client-Id");
     expect(stripped).toContain('model = "gpt-5.5"');
     expect(stripped).toContain("[agents]");
   });
 
-  test("a user's similarly named provider table is preserved while opencodex sub-tables strip", () => {
+  test("a user's similarly named provider table is preserved while openccx sub-tables strip", () => {
     const content = [
-      "[model_providers.opencodex.env_http_headers]",
-      '"x-opencodex-api-key" = "OPENCODEX_API_AUTH_TOKEN"',
+      "[model_providers.openccx.env_http_headers]",
+      '"x-openccx-api-key" = "OPENCCX_API_AUTH_TOKEN"',
       "",
-      "[model_providers.opencodex_backup]",
+      "[model_providers.openccx_backup]",
       'name = "user backup"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(content);
+    const stripped = stripOpenccxConfig(content);
 
     expect(stripped).not.toContain("env_http_headers");
-    expect(stripped).toContain("[model_providers.opencodex_backup]");
+    expect(stripped).toContain("[model_providers.openccx_backup]");
     expect(stripped).toContain('name = "user backup"');
   });
 
@@ -688,15 +688,15 @@ describe("Design B openai_base_url injection", () => {
     const commented = [
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex] # managed provider",
-      'name = "OpenCodex Proxy"',
+      "[model_providers.openccx] # managed provider",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(commented);
+    const stripped = stripOpenccxConfig(commented);
 
-    expect(stripped).not.toContain("model_providers.opencodex");
-    expect(stripped).not.toContain("OpenCodex Proxy");
+    expect(stripped).not.toContain("model_providers.openccx");
+    expect(stripped).not.toContain("Openccx Proxy");
     expect(stripped).toContain('model = "gpt-5.5"');
   });
 
@@ -704,13 +704,13 @@ describe("Design B openai_base_url injection", () => {
     const commented = [
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex.env_http_headers] # managed sub-table",
-      '"x-opencodex-api-key" = "OPENCODEX_API_AUTH_TOKEN"',
+      "[model_providers.openccx.env_http_headers] # managed sub-table",
+      '"x-openccx-api-key" = "OPENCCX_API_AUTH_TOKEN"',
       "",
     ].join("\n");
-    const stripped = stripOpencodexConfig(commented);
+    const stripped = stripOpenccxConfig(commented);
 
-    expect(stripped).not.toContain("opencodex");
+    expect(stripped).not.toContain("openccx");
     expect(stripped).toContain('model = "gpt-5.5"');
   });
 });
@@ -741,8 +741,8 @@ describe("EOL boundary helpers (Windows CRLF configs)", () => {
 });
 
 test('managed injection is idempotent and retains every unrelated value',()=>{
- const source=`model = "gpt-6-astra"\n${OCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\nservice_tier = "fast"\n[features]\ncontext_management.experimental_mode = true\n[features.multi_agent_v2]\nenabled = true\n`;
- const target={baseUrl:'http://127.0.0.1:10100/v1',requiresAdmissionToken:false,tokenEnv:'OPENCODEX_API_AUTH_TOKEN' as const};
+ const source=`model = "gpt-6-astra"\n${OCCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\nservice_tier = "fast"\n[features]\ncontext_management.experimental_mode = true\n[features.multi_agent_v2]\nenabled = true\n`;
+ const target={baseUrl:'http://127.0.0.1:10100/v1',requiresAdmissionToken:false,tokenEnv:'OPENCCX_API_AUTH_TOKEN' as const};
  const result=setRootOpenaiBaseUrl(source,target);
  expect(result.keptUserBaseUrl).toBe(false);
  expect(result.content).toBe(source.replace('10100/v1','10100/backend-api/codex'));
@@ -753,16 +753,16 @@ test('managed injection is idempotent and retains every unrelated value',()=>{
 test('feature disabled and user-owned routing remain intact',()=>{
  const source='openai_base_url = "http://127.0.0.1:10100/v1"\n[features]\ncontext_management.experimental_mode = true\n';
  expect(setRootOpenaiBaseUrl(source,10100)).toEqual({content:source,keptUserBaseUrl:true});
- const managed=`${OCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\n[features]\ncontext_management.experimental_mode = false\n`;
+ const managed=`${OCCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\n[features]\ncontext_management.experimental_mode = false\n`;
  expect(setRootOpenaiBaseUrl(managed,10100).content).toBe(managed);
 });
 
 
 test("malformed TOML preserves user routing and does not enable context injection", () => {
-  const target = { baseUrl: "http://127.0.0.1:10100/v1", requiresAdmissionToken: false, tokenEnv: "OPENCODEX_API_AUTH_TOKEN" as const };
+  const target = { baseUrl: "http://127.0.0.1:10100/v1", requiresAdmissionToken: false, tokenEnv: "OPENCCX_API_AUTH_TOKEN" as const };
   for (const malformed of ['model = "unterminated', '[features]\ncontext_management.experimental_mode = true\nbroken = [']) {
     const userOwned = `openai_base_url = "https://example.invalid/v1"\n${malformed}\n`;
-    const managed = `${OCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\n${malformed}\n`;
+    const managed = `${OCCX_SECTION_MARKER}\nopenai_base_url = "http://127.0.0.1:10100/v1"\n${malformed}\n`;
     for (const inject of [(source: string) => setRootOpenaiBaseUrl(source, 10100), (source: string) => setRootOpenaiBaseUrl(source, target)]) {
       expect(inject(userOwned)).toEqual({ content: userOwned, keptUserBaseUrl: true });
       expect(inject(managed)).toEqual({ content: managed, keptUserBaseUrl: false });

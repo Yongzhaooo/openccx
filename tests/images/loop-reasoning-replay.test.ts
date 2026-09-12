@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { ProviderAdapter } from "../../src/adapters/base";
-import type { AdapterEvent, OcxParsedRequest } from "../../src/types";
+import type { AdapterEvent, OccxParsedRequest } from "../../src/types";
 import type { ImageBridgePlan } from "../../src/images/types";
 import type { ImageBridgeDeps } from "../../src/images/loop";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
@@ -17,7 +17,7 @@ import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 const REASONING = "I need to inspect files before answering.";
 
-const PREV_HOME = process.env.OPENCODEX_HOME;
+const PREV_HOME = process.env.OPENCCX_HOME;
 let runWithImageBridgeProduction: typeof import("../../src/images/loop")["runWithImageBridge"];
 let fulfillResult: import("../../src/images/types").ImageCallResult = {
   ok: true, model: "grok-imagine-image-quality", prompt: "a cat",
@@ -25,7 +25,7 @@ let fulfillResult: import("../../src/images/types").ImageCallResult = {
 };
 
 beforeAll(async () => {
-  process.env.OPENCODEX_HOME = join(tmpdir(), "ocx-test-" + randomUUID());
+  process.env.OPENCCX_HOME = join(tmpdir(), "occx-test-" + randomUUID());
   mock.restore();
   mock.module("../../src/web-search/progress-stream", () => ({
     parseStreamWithProgress: async function* (_resp: Response, parse: (r: Response) => AsyncGenerator<AdapterEvent>, _opts: unknown) {
@@ -41,8 +41,8 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  if (PREV_HOME === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = PREV_HOME;
+  if (PREV_HOME === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = PREV_HOME;
   mock.restore();
 });
 
@@ -85,7 +85,7 @@ const imagePlan = {
   toolNames: new Set(["image_gen"]),
 } as ImageBridgePlan;
 
-function makeParsed(): OcxParsedRequest {
+function makeParsed(): OccxParsedRequest {
   return {
     modelId: "test-model",
     context: { messages: [], tools: [] },
@@ -102,7 +102,7 @@ function makeParsed(): OcxParsedRequest {
         credentialIdentity: "key:test",
       },
     },
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 describe("issue #950 — image-bridge synthetic tool round (raw reasoning)", () => {

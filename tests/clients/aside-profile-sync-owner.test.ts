@@ -9,7 +9,7 @@ import type { OwnedIntegrationRefreshOutcome } from "../../src/integrations/owne
 import { createIntegrationStateStore } from "../../src/integrations/store";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { setIntegrationMutationFlightTestHooks, setIntegrationPathTestHooks } from "../../src/server/management/integration-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -20,7 +20,7 @@ const CHILD_BUDGET_MS = 20_000;
 let root: string;
 let home: string;
 let configHome: string;
-let config: OcxConfig;
+let config: OccxConfig;
 let isolation: IsolatedCodexHome;
 let priorConfigHome: string | undefined;
 let server: ReturnType<typeof Bun.serve> | undefined;
@@ -77,9 +77,9 @@ function startCli() {
   const child = spawn(process.execPath, ["--eval", source], {
     cwd: repoRoot(), stdio: ["pipe", "pipe", "pipe"],
     env: {
-      ...process.env, HOME: home, USERPROFILE: home, OPENCODEX_HOME: configHome,
+      ...process.env, HOME: home, USERPROFILE: home, OPENCCX_HOME: configHome,
       CODEX_HOME: isolation.path, XDG_CONFIG_HOME: join(home, ".config"),
-      OPENCODEX_ADMIN_AUTH_TOKEN: "", ASIDE_SYNC_FIXTURE_URL: baseUrl,
+      OPENCCX_ADMIN_AUTH_TOKEN: "", ASIDE_SYNC_FIXTURE_URL: baseUrl,
     },
   });
   let stderr = "";
@@ -124,10 +124,10 @@ function profileFiles() {
 }
 function catalog(id: number): string[] {
   const doc = JSON.parse(readFileSync(profilePath(id), "utf8"));
-  return (doc.providers?.opencodex?.models ?? []).map((model: { id: string }) => model.id)
+  return (doc.providers?.openccx?.models ?? []).map((model: { id: string }) => model.id)
     .filter((id: string) => id.startsWith("fixture/"));
 }
-function persist(value: OcxConfig = config): void {
+function persist(value: OccxConfig = config): void {
   writeFileSync(join(configHome, "config.json"), JSON.stringify(value));
 }
 async function api(path: string, method = "GET", body?: unknown): Promise<Response> {
@@ -138,13 +138,13 @@ async function api(path: string, method = "GET", body?: unknown): Promise<Respon
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-aside-sync-owner-"));
+  root = mkdtempSync(join(tmpdir(), "occx-aside-sync-owner-"));
   home = join(root, "home");
-  configHome = join(root, "opencodex");
+  configHome = join(root, "openccx");
   mkdirSync(configHome, { recursive: true });
-  priorConfigHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = configHome;
-  isolation = installIsolatedCodexHome("ocx-aside-sync-owner-codex-");
+  priorConfigHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = configHome;
+  isolation = installIsolatedCodexHome("occx-aside-sync-owner-codex-");
   for (const id of [0, 1, 2]) {
     mkdirSync(join(home, ".aside", "u", String(id)), { recursive: true });
     writeFileSync(profilePath(id), JSON.stringify({ theme: "keep", providers: {} }));
@@ -155,7 +155,7 @@ beforeEach(() => {
   config = {
     port: 10100, hostname: "127.0.0.1", defaultProvider: "fixture", fastRows: false,
     providers: { fixture: { adapter: "openai-chat", baseUrl: "https://fixture.invalid/v1", liveModels: false, models: ["one"] } },
-  } as OcxConfig;
+  } as OccxConfig;
   // Match the child's default ownership-store location: a local fallback must
   // encounter real owned targets, rather than vacuously skip an empty store.
   const store = createIntegrationStateStore(join(configHome, "integrations"));
@@ -195,8 +195,8 @@ afterEach(async () => {
     setIntegrationMutationFlightTestHooks(null);
     setIntegrationPathTestHooks(null);
     isolation.restore();
-    if (priorConfigHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = priorConfigHome;
+    if (priorConfigHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = priorConfigHome;
     removeTreeWithRetry(root);
   }
 });

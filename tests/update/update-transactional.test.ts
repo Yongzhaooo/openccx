@@ -22,7 +22,7 @@ function writeTree(packageDir: string, version: string): void {
   writeFileSync(join(packageDir, "package.json"), JSON.stringify({
     name: PKG, version, dependencies: { bun: "1", zod: "1" },
   }));
-  writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
+  writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
   writeFileSync(join(packageDir, "node_modules", "bun", "package.json"), JSON.stringify({ name: "bun" }));
   // The manifest size-gates the real Bun binary (>= 10MB); give the fixture one.
   writeFileSync(join(packageDir, "node_modules", "bun", "bun.exe"), Buffer.alloc(10 * 1024 * 1024 + 1024));
@@ -46,7 +46,7 @@ function stagingNpm(version: string, opts: { fail?: boolean; truncate?: boolean 
     // Mirror npm -g layout on POSIX: <prefix>/lib/node_modules/<pkg>.
     const staged = join(stageRoot, "lib", "node_modules", ...PKG.split("/"));
     writeTree(staged, version);
-    if (opts.truncate) rmSync(join(staged, "bin", "ocx.mjs"));
+    if (opts.truncate) rmSync(join(staged, "bin", "occx.mjs"));
     return { status: 0 };
   };
 }
@@ -56,8 +56,8 @@ describe("#1942 transactional update", () => {
   let packageDir: string;
 
   beforeEach(() => {
-    scopeDir = mkdtempSync(join(tmpdir(), "ocx-tx-update-"));
-    packageDir = join(scopeDir, "opencodex");
+    scopeDir = mkdtempSync(join(tmpdir(), "occx-tx-update-"));
+    packageDir = join(scopeDir, "openccx");
     writeTree(packageDir, "1.0.0");
   });
 
@@ -68,7 +68,7 @@ describe("#1942 transactional update", () => {
   test("manifest verifies a complete tree and rejects a truncated one", () => {
     expect(verifyInstallTree(packageDir, "1.0.0").ok).toBe(true);
     expect(verifyInstallTree(packageDir, "9.9.9").ok).toBe(false);
-    rmSync(join(packageDir, "bin", "ocx.mjs"));
+    rmSync(join(packageDir, "bin", "occx.mjs"));
     expect(verifyInstallTree(packageDir).ok).toBe(false);
   });
 
@@ -166,16 +166,16 @@ describe("#1942 transactional update", () => {
     });
     expect(result.ok).toBe(false);
     expect(result.phase).toBe("double-fault");
-    const marker = JSON.parse(readFileSync(join(scopeDir, ".ocx-recovery.json"), "utf8"));
-    expect(marker.restore).toContain("opencodex");
+    const marker = JSON.parse(readFileSync(join(scopeDir, ".occx-recovery.json"), "utf8"));
+    expect(marker.restore).toContain("openccx");
   });
 
   test("boot probe restores the backup over a broken live tree (D4 power-loss rows)", () => {
     // Simulate: swap moved live aside, then power loss before stage landed.
-    const backupRoot = join(scopeDir, ".ocx-backup-2026");
+    const backupRoot = join(scopeDir, ".occx-backup-2026");
     mkdirSync(backupRoot, { recursive: true });
     const { renameSync } = require("node:fs");
-    renameSync(packageDir, join(backupRoot, "opencodex"));
+    renameSync(packageDir, join(backupRoot, "openccx"));
     expect(existsSync(packageDir)).toBe(false);
     const probe = bootRestoreProbe(packageDir);
     expect(probe.action).toBe("restored");
@@ -183,9 +183,9 @@ describe("#1942 transactional update", () => {
   });
 
   test("boot probe reaps stale backups when live is healthy", () => {
-    const backupRoot = join(scopeDir, ".ocx-backup-2026");
-    mkdirSync(join(backupRoot, "opencodex"), { recursive: true });
-    writeFileSync(join(backupRoot, "opencodex", "package.json"), JSON.stringify({ version: "0.9.0" }));
+    const backupRoot = join(scopeDir, ".occx-backup-2026");
+    mkdirSync(join(backupRoot, "openccx"), { recursive: true });
+    writeFileSync(join(backupRoot, "openccx", "package.json"), JSON.stringify({ version: "0.9.0" }));
     const probe = bootRestoreProbe(packageDir);
     expect(probe.action).toBe("reaped");
     expect(existsSync(backupRoot)).toBe(false);

@@ -17,12 +17,12 @@ import { getAccountSet, upsertCredentialByIdentity } from "../../src/oauth/store
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const CANARY = "cockpit-canary-refresh-token-DO-NOT-LEAK";
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
 afterEach(() => {
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -309,8 +309,8 @@ describe("Cockpit account-import service and adapter", () => {
 
 describe("Cockpit account-import atomic identity upsert", () => {
   test("a duplicate updates one existing identity without appending a second row", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     const first = await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-one",
       refresh: "refresh-one",
@@ -334,8 +334,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("clears a terminal reauth flag when the same identity is re-imported", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-one",
       refresh: "refresh-one",
@@ -362,8 +362,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("keeps distinct accountId identities even when email matches", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     const first = await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-one",
       refresh: "refresh-one",
@@ -392,8 +392,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("upgrades an email-only legacy row when the same verified Google identity is imported", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     const first = await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-legacy",
       refresh: "refresh-legacy",
@@ -424,8 +424,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("prefers an exact accountId row over an earlier email-only legacy row", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     const authPath = join(testHome, "auth.json");
     writeFileSync(authPath, JSON.stringify({
       [ACCOUNT_IMPORT_PROVIDER]: {
@@ -480,8 +480,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("does not overwrite a stable accountId row from an incoming email-only credential", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     const first = await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-stable",
       refresh: "refresh-stable",
@@ -507,8 +507,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("rejects credentials without verified identity", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     await expect(upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-none",
       refresh: "refresh-none",
@@ -518,8 +518,8 @@ describe("Cockpit account-import atomic identity upsert", () => {
   });
 
   test("preserves an already selected active account when importing another identity", async () => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-account-import-store-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-account-import-store-"));
+    process.env.OPENCCX_HOME = testHome;
     await upsertCredentialByIdentity(ACCOUNT_IMPORT_PROVIDER, {
       access: "access-one",
       refresh: "refresh-one",

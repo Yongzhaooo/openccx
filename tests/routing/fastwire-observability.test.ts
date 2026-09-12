@@ -21,7 +21,7 @@ import {
 } from "../../src/server/request-log";
 import { applyServiceTierGate, handleResponses } from "../../src/server/responses/core";
 import { costResult } from "../../src/server/management/shared";
-import type { OcxConfig, OcxParsedRequest, TierObservationContext } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, TierObservationContext } from "../../src/types";
 import { estimateComboCost, serviceTierContextFromOutcome } from "../../src/usage/cost";
 import type { ExpectedPriceOverlay } from "../../src/usage/expected-prices";
 import { normalizeUsageEntryForTest } from "../../src/usage/log";
@@ -182,7 +182,7 @@ describe("FastWire attempt outcomes", () => {
 describe("FastWire logging and persistence", () => {
   test("the serializing adapter returns metadata for the exact emitted tier", () => {
     const rawBody = { model: "gpt-5.6-sol", input: "ping", service_tier: "flex" };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "gpt-5.6-sol",
       context: { messages: [] },
       stream: true,
@@ -238,7 +238,7 @@ describe("FastWire logging and persistence", () => {
     applyResponseLogMetadata(logCtx, { response: { service_tier: "priority" } });
 
     let logged: RequestLogEntry | undefined;
-    addFinalRequestLog("ocx-tier", Date.now(), logCtx, 200, undefined, entry => {
+    addFinalRequestLog("occx-tier", Date.now(), logCtx, 200, undefined, entry => {
       logged = entry;
     });
     expect(logged?.attempts?.[0]?.tierOutcome).toMatchObject({
@@ -311,7 +311,7 @@ describe("FastWire logging and persistence", () => {
       usage: { inputTokens: 10, outputTokens: 1 },
     };
     const normalized = normalizeUsageEntryForTest({
-      requestId: "ocx-old",
+      requestId: "occx-old",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.6-sol",
@@ -348,7 +348,7 @@ describe("FastWire logging and persistence", () => {
     expect(sanitized?.length).toBeLessThanOrEqual(64);
 
     const normalized = normalizeUsageEntryForTest({
-      requestId: "ocx-caller-tier",
+      requestId: "occx-caller-tier",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.6-sol",
@@ -391,7 +391,7 @@ describe("FastWire logging and persistence", () => {
     expect(attempt.tierOutcome?.responseServiceTier).toBe(expected);
 
     const normalized = normalizeUsageEntryForTest({
-      requestId: "ocx-upstream-tier",
+      requestId: "occx-upstream-tier",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.6-sol",
@@ -800,7 +800,7 @@ describe("FastWire gate and compatibility fingerprint", () => {
           supportsServiceTier: true,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const base = resolveProductionBehaviorValues(
       config,
       "fixture",

@@ -1,8 +1,8 @@
 /**
  * The remote hub guide has to stay runnable end to end on a FRESH standalone config.
  *
- * It did not (#4200). The setup block told the reader to run a nested `ocx config set hub.<field>`
- * immediately after `ocx config set runtimeRole hub`, but `runtimeRole` does not create the object
+ * It did not (#4200). The setup block told the reader to run a nested `occx config set hub.<field>`
+ * immediately after `occx config set runtimeRole hub`, but `runtimeRole` does not create the object
  * and the CLI refuses to create a missing parent, so the guide's own next line died with
  * `config parent path not found: hub`. A guide that cannot be followed verbatim is worse than a
  * missing one: the reader assumes they broke something.
@@ -16,7 +16,7 @@
  * defect survived to a public URL.
  *
  * The third group (#4236) pins the one-port recipe. The manual
- * `export OPENCODEX_API_AUTH_TOKEN=…` step is the one that has to stay gone: it is how the
+ * `export OPENCCX_API_AUTH_TOKEN=…` step is the one that has to stay gone: it is how the
  * maintainer's hub ended up with a management admin token in the data-plane variable, and the
  * service now provisions its own token, so re-adding the line would re-teach the incident.
  *
@@ -44,8 +44,8 @@ describe("remote hub guide", () => {
     // The ordering IS the fix. Asserting only that the initializer appears somewhere would pass on
     // a guide that still sets the field first and mentions `{}` afterwards.
     for (const parent of ["hub", "remoteGui"] as const) {
-      const initializer = source.indexOf(`ocx config set ${parent} '{}'`);
-      const nested = source.indexOf(`ocx config set ${parent}.`);
+      const initializer = source.indexOf(`occx config set ${parent} '{}'`);
+      const nested = source.indexOf(`occx config set ${parent}.`);
       expect(initializer, `the guide no longer initializes an empty ${parent} object`).toBeGreaterThanOrEqual(0);
       expect(nested, `the guide no longer sets any ${parent} field`).toBeGreaterThanOrEqual(0);
       expect(
@@ -65,18 +65,18 @@ describe("remote hub guide", () => {
     expect(source).toContain("replaces** the object");
   });
 
-  test("the guide says opencodex terminates no TLS itself", async () => {
-    // There is no tls/cert/key field in OcxConfig. A reader who assumes otherwise looks for a
+  test("the guide says openccx terminates no TLS itself", async () => {
+    // There is no tls/cert/key field in OccxConfig. A reader who assumes otherwise looks for a
     // setting that does not exist instead of standing up a frontend.
     const source = await Bun.file(GUIDE).text();
     expect(source).toContain("terminates no TLS of its own");
   });
 
-  test("ocx connect is shown with a data origin and a separate management origin", async () => {
+  test("occx connect is shown with a data origin and a separate management origin", async () => {
     // The positional URL is where /readyz and /v1/catalog are fetched; --management-url is where
     // pairing and key issuance go. They need not share a port, and the macOS recipe relies on that.
     const source = await Bun.file(GUIDE).text();
-    expect(source).toContain("ocx connect https://hub-name.tailnet-name.ts.net:8443");
+    expect(source).toContain("occx connect https://hub-name.tailnet-name.ts.net:8443");
     expect(source).toContain("--management-url https://hub-name.tailnet-name.ts.net");
   });
 
@@ -117,7 +117,7 @@ describe("the one-port hub recipe", () => {
       const source = await Bun.file(file).text();
       // The companion form IS the recipe: `{"enabled":true}` with no port binds 127.0.0.1 on the
       // proxy port, which is the address every local integration already writes.
-      expect(source, locale).toContain(`ocx config set unauthenticatedLoopbackListener '{"enabled":true}'`);
+      expect(source, locale).toContain(`occx config set unauthenticatedLoopbackListener '{"enabled":true}'`);
       // The ported form stays documented as the alternative, because existing hubs run it.
       expect(source, locale).toContain(`{"enabled":true,"port":10104}`);
     }
@@ -129,19 +129,19 @@ describe("the one-port hub recipe", () => {
       // Line-anchored, because that is the SHELL STEP the guide used to carry. Prose is still
       // free to name the variable -- it has to, to say the step is gone and why the admin token
       // is refused there. What must not come back is a line telling the reader to export it.
-      expect(source, locale).not.toMatch(/^\s*export\s+OPENCODEX_API_AUTH_TOKEN/m);
+      expect(source, locale).not.toMatch(/^\s*export\s+OPENCCX_API_AUTH_TOKEN/m);
       // Precedence has to be stated, or the reader cannot tell what an existing file will do.
       expect(source, locale).toContain("service-api-token");
     }
   });
 
-  test("both locales route a new machine through ocx hub invite", async () => {
+  test("both locales route a new machine through occx hub invite", async () => {
     for (const [locale, file] of LOCALES) {
       const source = await Bun.file(file).text();
-      expect(source, locale).toContain("ocx hub invite");
+      expect(source, locale).toContain("occx hub invite");
       // `invite` mints nothing until a loopback browser origin is admitted, and the fix is this
       // exact command. Naming the flag without the precondition sends the operator to a refusal.
-      expect(source, locale).toContain(`ocx config set corsAllowOrigins '["http://localhost:10100"]'`);
+      expect(source, locale).toContain(`occx config set corsAllowOrigins '["http://localhost:10100"]'`);
       expect(source, locale).toContain("--pairing-code-stdin");
     }
   });
@@ -149,15 +149,15 @@ describe("the one-port hub recipe", () => {
   test("the English page keeps the macOS launchd semantics a repair changed", async () => {
     const source = await Bun.file(GUIDE).text();
     // `repair` of a healthy job is a no-op, and `restart` is no longer an alias of it (#4249):
-    // `ocx service restart` refreshes the definition and, when nothing was reloaded, kickstarts
+    // `occx service restart` refreshes the definition and, when nothing was reloaded, kickstarts
     // the loaded job in place. Naming the no-op without naming the verb that DOES restart is what
     // sent operators to a hand-written launchctl command.
-    expect(source).toContain("ocx service restart");
-    expect(source).toMatch(/`ocx service restart`[^\n]*always restarts/);
-    expect(source).not.toMatch(/`ocx service restart` is an alias of `repair`/);
+    expect(source).toContain("occx service restart");
+    expect(source).toMatch(/`occx service restart`[^\n]*always restarts/);
+    expect(source).not.toMatch(/`occx service restart` is an alias of `repair`/);
     // The kickstart line stays pinned, but only as the documented manual fallback -- the page has
     // to say so, or it reads as the recommended route again.
-    expect(source).toContain("launchctl kickstart -k gui/$(id -u)/com.opencodex.proxy");
+    expect(source).toContain("launchctl kickstart -k gui/$(id -u)/com.openccx.proxy");
     expect(source).toContain("manual fallback");
     // The fourth status state is the one that used to be reported as "not loaded" and sent
     // operators to repair a serving hub.
@@ -184,8 +184,8 @@ describe("remote hub guide translations", () => {
         // Ordering is the whole fix. A guide that sets the field first and shows `{}` further
         // down still fails verbatim on the fresh standalone config it told the reader to build.
         for (const parent of ["hub", "remoteGui"] as const) {
-          const initializer = source.indexOf(`ocx config set ${parent} '{}'`);
-          const nested = source.indexOf(`ocx config set ${parent}.`);
+          const initializer = source.indexOf(`occx config set ${parent} '{}'`);
+          const nested = source.indexOf(`occx config set ${parent}.`);
           expect(initializer, `${locale} no longer initializes an empty ${parent} object`).toBeGreaterThanOrEqual(0);
           expect(nested, `${locale} no longer sets any ${parent} field`).toBeGreaterThanOrEqual(0);
           expect(
@@ -206,7 +206,7 @@ describe("remote hub guide translations", () => {
         // an emphasized caveat follows it before the section ends. Without the second half a
         // locale could keep the convenient line and lose the reason it is dangerous.
         const source = await Bun.file(path).text();
-        const wholeObject = source.indexOf(`ocx config set hub '{"managementPublicOrigin"`);
+        const wholeObject = source.indexOf(`occx config set hub '{"managementPublicOrigin"`);
         expect(wholeObject, `${locale} lost the whole-object alternative`).toBeGreaterThanOrEqual(0);
 
         // Stop at the next heading of ANY level, not just `##`. Bounding on `##` alone let the
@@ -237,8 +237,8 @@ describe("remote hub guide translations", () => {
           .toContain("socat TCP-LISTEN:10110,bind=127.0.0.1");
         expect(source, `${locale} lost the second HTTPS mapping for the data listener`)
           .toContain("tailscale serve --bg --https=8443 http://127.0.0.1:10110");
-        expect(source, `${locale} lost the data origin on ocx connect`)
-          .toContain("ocx connect https://hub-name.tailnet-name.ts.net:8443");
+        expect(source, `${locale} lost the data origin on occx connect`)
+          .toContain("occx connect https://hub-name.tailnet-name.ts.net:8443");
         expect(source, `${locale} lost the separate management origin`)
           .toContain("--management-url https://hub-name.tailnet-name.ts.net");
       });

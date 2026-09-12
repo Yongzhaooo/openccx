@@ -58,7 +58,7 @@ const reasoningItemSchema = z.object({
   id: z.string().optional(),
   summary: z.array(summaryTextSchema).optional(),
   content: z.array(reasoningTextSchema).optional(),
-  // Round-tripped opaque payload (native OpenAI encryption OR the proxy's ocxr1 envelope).
+  // Round-tripped opaque payload (native OpenAI encryption OR the proxy's occxr1 envelope).
   encrypted_content: z.string().optional(),
 });
 const functionCallItemSchema = z.object({

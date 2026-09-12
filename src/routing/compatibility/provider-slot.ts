@@ -13,15 +13,15 @@
  *
  * See devlog/_fin/260814_lab_core_decoupling/030_router_and_startup_activation.md
  */
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import type { NormalizedRoutingProfile } from "../profile";
 import type { CandidateCompatibilityEvidence } from "./types";
 
 /** Options the core assembler can supply without knowing anything Lab-specific. */
 export interface CoreEvidenceOptions {
   configDir?: string;
-  routedProviderConfig: (providerName: string, provider: import("../../types").OcxProviderConfig)
-    => import("../../types").OcxProviderConfig;
+  routedProviderConfig: (providerName: string, provider: import("../../types").OccxProviderConfig)
+    => import("../../types").OccxProviderConfig;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface CoreEvidenceOptions {
  * A candidate absent from the map has no compatibility evidence.
  */
 export type CompatibilityEvidenceProvider = (
-  config: OcxConfig,
+  config: OccxConfig,
   profile: NormalizedRoutingProfile,
   policy: NonNullable<NormalizedRoutingProfile["compatibility"]>,
   options: CoreEvidenceOptions,

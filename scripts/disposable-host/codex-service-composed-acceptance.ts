@@ -24,8 +24,8 @@ import { join, relative, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 
 const SENTINEL = "/etc/opencodex-disposable-service-host-v1";
-const SENTINEL_BYTES = "OPENCODEX_DISPOSABLE_SERVICE_HOST_V1\n";
-const UNIT = "opencodex-proxy.service";
+const SENTINEL_BYTES = "OPENCCX_DISPOSABLE_SERVICE_HOST_V1\n";
+const UNIT = "openccx-proxy.service";
 const repoRoot = resolve(import.meta.dir, "../..");
 const cliPath = join(repoRoot, "src/cli/index.ts");
 const accountHome = homedir();
@@ -127,14 +127,14 @@ function coordinatorPath(codexHome: string): string {
 }
 
 class Fixture {
-  readonly root = mkdtempSync(join(tmpdir(), "ocx-service-composed-"));
+  readonly root = mkdtempSync(join(tmpdir(), "occx-service-composed-"));
   /**
    * The REAL account home, deliberately.
    *
    * Every other path here is a fixture path, and a fake HOME was the obvious symmetry — but
    * `systemctl --user` resolves its unit directory from the running user manager, not from
-   * `$HOME`. With a fake home, `ocx service install` wrote a unit file the user manager never
-   * reads and then failed on `systemctl --user enable`: "Unit file opencodex-proxy.service does
+   * `$HOME`. With a fake home, `occx service install` wrote a unit file the user manager never
+   * reads and then failed on `systemctl --user enable`: "Unit file openccx-proxy.service does
    * not exist". Verified directly on the host — the same install against the real home succeeds
    * and lists as `enabled`.
    *
@@ -145,7 +145,7 @@ class Fixture {
   readonly home = homedir();
   readonly userprofile = join(this.root, "userprofile");
   readonly codex = join(this.root, "codex");
-  readonly ocx = join(this.root, "ocx");
+  readonly occx = join(this.root, "occx");
   readonly runtime = `/run/user/${process.getuid!()}`;
   readonly unit = accountUnit;
   readonly lock: string;
@@ -154,13 +154,13 @@ class Fixture {
   readonly seed: Record<string, unknown>;
 
   constructor(readonly row: RowId) {
-    for (const path of [this.userprofile, this.codex, this.ocx]) mkdirSync(path, { recursive: true, mode: 0o700 });
+    for (const path of [this.userprofile, this.codex, this.occx]) mkdirSync(path, { recursive: true, mode: 0o700 });
     writeFileSync(join(this.codex, "config.toml"), 'model = "gpt-5"\n');
-    // The OpenCodex home is left EMPTY on purpose.
+    // The Openccx home is left EMPTY on purpose.
     //
     // Ownership is established by the first owned write into an empty directory
     // (lib/config-ownership.ts `createOwnership`, which returns null for a non-empty root).
-    // Pre-seeding config.json means OpenCodex never claims the home, and `ocx uninstall`
+    // Pre-seeding config.json means Openccx never claims the home, and `occx uninstall`
     // then correctly refuses to delete a directory it cannot prove it owns — so P10 was
     // failing on the fixture's own shortcut rather than on the production command.
     //
@@ -195,10 +195,10 @@ class Fixture {
       HOME: this.home,
       USERPROFILE: this.userprofile,
       CODEX_HOME: this.codex,
-      OPENCODEX_HOME: this.ocx,
+      OPENCCX_HOME: this.occx,
       XDG_RUNTIME_DIR: this.runtime,
-      OPENCODEX_API_AUTH_TOKEN: "disposable-data-token",
-      OPENCODEX_ADMIN_AUTH_TOKEN: "disposable-admin-token",
+      OPENCCX_API_AUTH_TOKEN: "disposable-data-token",
+      OPENCCX_ADMIN_AUTH_TOKEN: "disposable-admin-token",
       PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
       NO_PROXY: "127.0.0.1,localhost",
       CI: "true",
@@ -219,7 +219,7 @@ class Fixture {
       // Both streams, always, and never an empty message: a row that fails with a blank error
       // tells the operator nothing, and this runner only ever runs where reproducing is costly.
       const detail = [result.stderr.trim(), result.stdout.trim()].filter(Boolean).join("\n") || "(no output on either stream)";
-      fail(`${this.row}: ocx ${args.join(" ")} failed (exit ${result.exitCode})\n${detail}`);
+      fail(`${this.row}: occx ${args.join(" ")} failed (exit ${result.exitCode})\n${detail}`);
     }
     return result;
   }
@@ -245,7 +245,7 @@ class Fixture {
     if (!existsSync(this.unit)) fail(`${this.row}: install did not create fixture unit`);
     // Now that the product owns the home, apply the fixture's routing seed. `service install`
     // wrote a default config.json, so merge rather than replace.
-    const configPath = join(this.ocx, "config.json");
+    const configPath = join(this.occx, "config.json");
     const current = existsSync(configPath)
       ? JSON.parse(readFileSync(configPath, "utf8")) as Record<string, unknown>
       : {};
@@ -253,7 +253,7 @@ class Fixture {
   }
 
   async waitForRuntime(): Promise<{ port: number; pid: number }> {
-    const path = join(this.ocx, "runtime-port.json");
+    const path = join(this.occx, "runtime-port.json");
     for (let attempt = 0; attempt < 300; attempt++) {
       if (existsSync(path)) {
         const value = JSON.parse(readFileSync(path, "utf8")) as { port?: number; pid?: number };
@@ -270,7 +270,7 @@ class Fixture {
     // script launches; the service runs under systemd with its own environment, and
     // `configuredAdminToken` falls back to `admin-api-token` in the config home. Passing the
     // env value here produced a 401 against a server that had generated a different token.
-    const tokenPath = join(this.ocx, "admin-api-token");
+    const tokenPath = join(this.occx, "admin-api-token");
     if (!existsSync(tokenPath)) fail(`${this.row}: service did not mint an admin token at ${tokenPath}`);
     const token = readFileSync(tokenPath, "utf8").trim();
     // A reset is an ACCEPTABLE outcome here, not a failure. `POST /api/stop` stops the service
@@ -279,7 +279,7 @@ class Fixture {
     // The authoritative oracle is the +1 remove transaction the caller asserts either way.
     const script = [
       `try {`,
-      `  const r = await fetch(${JSON.stringify(`http://127.0.0.1:${runtime.port}/api/stop`)}, { method: "POST", headers: { "x-opencodex-api-key": ${JSON.stringify(token)} } });`,
+      `  const r = await fetch(${JSON.stringify(`http://127.0.0.1:${runtime.port}/api/stop`)}, { method: "POST", headers: { "x-openccx-api-key": ${JSON.stringify(token)} } });`,
       `  console.log(r.status, await r.text());`,
       `  if (!r.ok) process.exit(1);`,
       `} catch (error) {`,
@@ -304,10 +304,10 @@ class Fixture {
   }
 
   async teardown(): Promise<void> {
-    // P10 is `ocx uninstall`: on success it removes its own OPENCODEX_HOME, so there is nothing
+    // P10 is `occx uninstall`: on success it removes its own OPENCCX_HOME, so there is nothing
     // left to uninstall and invoking the CLI again would fail on a home that no longer exists.
     // The gate below still runs, which is what actually proves the host was restored.
-    if (!existsSync(this.ocx)) {
+    if (!existsSync(this.occx)) {
       await emptyRegistrationGate(this.unit);
       for (const path of this.lockAllowlist) if (existsSync(path)) unlinkSync(path);
       sameManifest(this.outsideManifest(), this.baselineOutside, `${this.row}: outside-temp-root`);
@@ -349,12 +349,12 @@ async function runRow(row: RowId): Promise<void> {
       else output = await fx.cli(["service", "uninstall"]);
     }
     const after = fx.assertOneTransaction(before, direction);
-    const recordPath = join(fx.ocx, "integrations/codex.json");
+    const recordPath = join(fx.occx, "integrations/codex.json");
     if (row === "P10") {
-      // Full uninstall deliberately removes the owned OPENCODEX_HOME only after the
+      // Full uninstall deliberately removes the owned OPENCCX_HOME only after the
       // native removal transaction succeeds. Requiring its record to survive would
       // contradict the production command's contract.
-      if (existsSync(fx.ocx)) fail(`${row}: full uninstall left owned OpenCodex state behind`);
+      if (existsSync(fx.occx)) fail(`${row}: full uninstall left owned Openccx state behind`);
     } else if (existsSync(recordPath)) {
       // Provenance is OPTIONAL at record v1 (convergence-types.ts: "Provenance is OPTIONAL at
       // v1. A record written before WP12 is valid"), so its ABSENCE is not a row failure. What

@@ -1,6 +1,6 @@
 /**
  * Runtime registry for user-configured provider cost overlays
- * (`providers.<name>.modelCosts` in config.json — per-model prices in ocx's
+ * (`providers.<name>.modelCosts` in config.json — per-model prices in occx's
  * flat `modelXxx` convention, mirroring opencode's per-model pricing).
  *
  * The usage cost estimator stays pure: it receives overlays as parameters and
@@ -18,7 +18,7 @@
  *
  * Display-time estimation only — these rows never affect billing.
  */
-import type { OcxConfig, OcxProviderConfig, ProviderCostOverlay } from "../types";
+import type { OccxConfig, OccxProviderConfig, ProviderCostOverlay } from "../types";
 import { MAX_COST4_RATE, type ExpectedPriceOverlay } from "./expected-prices";
 import { redactSecretString } from "../lib/redact";
 import { isSelectableCodexPoolAccount, MAIN_CODEX_ACCOUNT_ID } from "../codex/account-id";
@@ -31,35 +31,35 @@ let activeSignature = "";
 let activeConfigured = new Set<string>();
 let activeAccountProviders = codexAccountProviders([]);
 let version = 0;
-let preservedDiskOnlyProviders: Record<string, OcxProviderConfig> | null = null;
+let preservedDiskOnlyProviders: Record<string, OccxProviderConfig> | null = null;
 
 /**
  * Preservation owner metadata rides through the shallow config projections in
  * config.ts via an enumerable SYMBOL key. JSON.stringify ignores symbol keys,
  * so the tag is process-local only and can never reach config.json or a DTO.
  */
-const PRESERVATION_OWNER_STATE = Symbol("opencodex.user-cost-overlay-preservation-owner");
-const PERSISTED_PROVIDER_DELETIONS = Symbol("opencodex.persisted-provider-deletions");
+const PRESERVATION_OWNER_STATE = Symbol("openccx.user-cost-overlay-preservation-owner");
+const PERSISTED_PROVIDER_DELETIONS = Symbol("openccx.persisted-provider-deletions");
 
 type PreservationOwnerState = {
   refs: number;
-  config: OcxConfig;
+  config: OccxConfig;
   ownedProviders: Set<string>;
 };
 
-type PreservationTaggedConfig = OcxConfig & {
+type PreservationTaggedConfig = OccxConfig & {
   [PRESERVATION_OWNER_STATE]?: PreservationOwnerState;
   [PERSISTED_PROVIDER_DELETIONS]?: readonly string[];
 };
 
 const preservationOwnerStates = new Set<PreservationOwnerState>();
 
-function providerNames(config: OcxConfig): Set<string> {
+function providerNames(config: OccxConfig): Set<string> {
   return new Set(Object.keys(config.providers ?? {}));
 }
 
 /** Exact config-owned identities only; aliases and generic OAuth stores are not authority. */
-function codexAccountProviders(accounts: OcxConfig["codexAccounts"]): Map<string, string> {
+function codexAccountProviders(accounts: OccxConfig["codexAccounts"]): Map<string, string> {
   const identities = new Set(["main", MAIN_CODEX_ACCOUNT_ID]);
   for (const account of accounts ?? []) {
     if (!isSelectableCodexPoolAccount(account)) continue;
@@ -77,7 +77,7 @@ function codexAccountProviders(accounts: OcxConfig["codexAccounts"]): Map<string
 }
 
 /** Register one active live-config owner. Multiple server leases may share one config object. */
-export function registerPreservedProviderOwner(config: OcxConfig): void {
+export function registerPreservedProviderOwner(config: OccxConfig): void {
   const tagged = config as PreservationTaggedConfig;
   const existing = tagged[PRESERVATION_OWNER_STATE];
   if (existing && preservationOwnerStates.has(existing)) {
@@ -111,7 +111,7 @@ export function registerPreservedProviderOwner(config: OcxConfig): void {
  * disappeared from disk are no longer considered owned, and newly present
  * providers are adopted only when this live config actually has the row.
  */
-export function refreshPreservedProviderOwner(config: OcxConfig, disk: OcxConfig): void {
+export function refreshPreservedProviderOwner(config: OccxConfig, disk: OccxConfig): void {
   const state = (config as PreservationTaggedConfig)[PRESERVATION_OWNER_STATE];
   if (!state || !preservationOwnerStates.has(state)) return;
   const diskNames = providerNames(disk);
@@ -124,7 +124,7 @@ export function refreshPreservedProviderOwner(config: OcxConfig, disk: OcxConfig
 }
 
 /** Release one active live-config owner lease. */
-export function unregisterPreservedProviderOwner(config: OcxConfig): void {
+export function unregisterPreservedProviderOwner(config: OccxConfig): void {
   const tagged = config as PreservationTaggedConfig;
   const state = tagged[PRESERVATION_OWNER_STATE];
   if (!state || !preservationOwnerStates.has(state)) return;
@@ -143,7 +143,7 @@ export function unregisterPreservedProviderOwner(config: OcxConfig): void {
  * in-process save cannot erase the external provider and its overlay.
  */
 export function setPreservedDiskOnlyProviders(
-  providers: Record<string, OcxProviderConfig> | null,
+  providers: Record<string, OccxProviderConfig> | null,
 ): void {
   preservedDiskOnlyProviders = providers;
 }
@@ -154,7 +154,7 @@ export function setPreservedDiskOnlyProviders(
  * preservation row and removes the provider from every active live projection,
  * so a second owner cannot resurrect it on a later unrelated save.
  */
-function commitPersistedProviderDeletions(config: OcxConfig): void {
+function commitPersistedProviderDeletions(config: OccxConfig): void {
   const tagged = config as PreservationTaggedConfig;
   const deletions = tagged[PERSISTED_PROVIDER_DELETIONS];
   if (!deletions || deletions.length === 0) return;
@@ -188,7 +188,7 @@ function commitPersistedProviderDeletions(config: OcxConfig): void {
  * successfully persisted view, so a failed atomic write cannot destroy the
  * preservation safety net.
  */
-export function withPreservedDiskOnlyProviders(config: OcxConfig): OcxConfig {
+export function withPreservedDiskOnlyProviders(config: OccxConfig): OccxConfig {
   const tagged = config as PreservationTaggedConfig;
   const owner = tagged[PRESERVATION_OWNER_STATE];
   const deletedProviders = owner && preservationOwnerStates.has(owner)
@@ -196,14 +196,14 @@ export function withPreservedDiskOnlyProviders(config: OcxConfig): OcxConfig {
     : [];
   const deletedSet = new Set(deletedProviders);
 
-  let preserved: Record<string, OcxProviderConfig> | null = null;
+  let preserved: Record<string, OccxProviderConfig> | null = null;
   if (preservedDiskOnlyProviders) {
     const filtered = Object.entries(preservedDiskOnlyProviders)
       .filter(([name]) => !deletedSet.has(name));
     if (filtered.length > 0) preserved = Object.fromEntries(filtered);
   }
 
-  let persisted: OcxConfig;
+  let persisted: OccxConfig;
   if (preserved && Object.keys(preserved).length > 0) {
     persisted = {
       ...config,
@@ -259,7 +259,7 @@ function validCost4(value: unknown): value is ProviderCostOverlay {
  * are skipped (config validation reports them separately); a provider with no
  * overlay contributes nothing.
  */
-export function refreshUserCostOverlays(config: OcxConfig): void {
+export function refreshUserCostOverlays(config: OccxConfig): void {
   // Only persisted serialization views carry PERSISTED_PROVIDER_DELETIONS.
   // Committing here means changed writes update owner state only after the
   // atomic write succeeds, while byte-identical successful saves also converge.

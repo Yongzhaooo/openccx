@@ -5,7 +5,7 @@ import { reconcileSuccessfulModelDiscoveries } from "../providers/new-model-poli
 import { pendingModelSelectionProviders } from "../providers/initial-model-selection";
 import { COMBO_NAMESPACE } from "../combos";
 import { getAuthStorePath } from "../oauth/store";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { captureCatalogAdmissionSnapshot } from "./catalog-admission";
 import { legacyCustomModelCatalogSlugs } from "./custom-model-catalog-migration";
 import {
@@ -139,7 +139,7 @@ interface CandidateState {
   readonly changed: boolean;
   readonly notices: readonly CatalogNotice[];
   readonly modelEntitlements: CodexModelEntitlementSnapshot;
-  readonly discoveryConfig?: OcxConfig;
+  readonly discoveryConfig?: OccxConfig;
 }
 
 const candidateStates = new WeakMap<object, CandidateState>();
@@ -233,7 +233,7 @@ function bindGatherPaths(
  * observados no runtime antes de retornar o catálogo resultante.
  */
 function prepareCatalog(
-  config: Readonly<OcxConfig>,
+  config: Readonly<OccxConfig>,
   source: Extract<CatalogSourceForGather, { kind: "available" }>,
   active: RawCatalog | null,
   routedModels: Awaited<ReturnType<typeof gatherRoutedModelsForCatalogGather>>,
@@ -453,7 +453,7 @@ export async function gatherCodexCatalogCandidate(
           ? active
           : !hasRoutedEntries(source.catalog) ? source.catalog : null)
         : null);
-    const discoveryConfig = structuredClone(snapshot.config) as OcxConfig;
+    const discoveryConfig = structuredClone(snapshot.config) as OccxConfig;
     const discoveryChanged = reconcileSuccessfulModelDiscoveries({
       config: discoveryConfig,
       models: routedModels,
@@ -677,7 +677,7 @@ export async function convergeCodexCatalog(
   lifecycle.onCommitBegin?.();
   const committed = await commitCodexCatalogCandidate(gathered.candidate, request.deadlineMs);
   if (committed.kind === "committed" && state.discoveryConfig) {
-    const mutable = snapshot.config as OcxConfig;
+    const mutable = snapshot.config as OccxConfig;
     mutable.modelDiscovery = state.discoveryConfig.modelDiscovery;
     mutable.disabledModels = state.discoveryConfig.disabledModels;
     saveConfigPreservingClaudeCode(mutable);

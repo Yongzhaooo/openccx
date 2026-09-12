@@ -34,7 +34,7 @@ const SOURCE_HASH = "b".repeat(64);
 const TARGET_HASH = "c".repeat(64);
 const CREATED_AT = "2026-08-02T00:00:00.000Z";
 const REPLACEMENT_TRANSACTION_ID = "44444444-4444-4444-8444-444444444444";
-const BOUNDED_READ_TEST_SEAM = Symbol.for("opencodex.native-profile-store.bounded-read-test-seam");
+const BOUNDED_READ_TEST_SEAM = Symbol.for("openccx.native-profile-store.bounded-read-test-seam");
 
 interface BoundedReadTestSeam {
   beforeOpen?: (path: string) => void;
@@ -48,13 +48,13 @@ afterEach(() => {
 });
 
 function context(): NativeProfileContext {
-  const base = mkdtempSync(join(tmpdir(), "ocx-native-profile-store-"));
+  const base = mkdtempSync(join(tmpdir(), "occx-native-profile-store-"));
   roots.push(base);
   const requestedCodexHome = join(base, "codex");
-  const configDir = join(base, "opencodex");
+  const configDir = join(base, "openccx");
   mkdirSync(requestedCodexHome, { mode: 0o700 });
   const codexHome = realpathSync.native(requestedCodexHome);
-  const rootDir = join(codexHome, ".opencodex-native-main-profiles");
+  const rootDir = join(codexHome, ".openccx-native-main-profiles");
   mkdirSync(rootDir, { mode: 0o700 });
   mkdirSync(configDir, { mode: 0o700 });
   return {
@@ -75,12 +75,12 @@ function context(): NativeProfileContext {
 }
 
 describe("native-profile path ownership", () => {
-  test("shares authoritative metadata by canonical CODEX_HOME but isolates staging by OPENCODEX_HOME", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-native-profile-layout-"));
+  test("shares authoritative metadata by canonical CODEX_HOME but isolates staging by OPENCCX_HOME", () => {
+    const root = mkdtempSync(join(tmpdir(), "occx-native-profile-layout-"));
     roots.push(root);
     const codexHome = join(root, "codex");
-    const configA = join(root, "opencodex-a");
-    const configB = join(root, "opencodex-b");
+    const configA = join(root, "openccx-a");
+    const configB = join(root, "openccx-b");
     mkdirSync(codexHome);
     mkdirSync(configA);
     mkdirSync(configB);
@@ -96,14 +96,14 @@ describe("native-profile path ownership", () => {
     expect(a.lockPath).toBe(b.lockPath);
     expect(a.stagingRoot).not.toBe(b.stagingRoot);
     expect(a.instanceId).not.toBe(b.instanceId);
-    expect(a.rootDir).toBe(join(a.codexHome, ".opencodex-native-main-profiles"));
+    expect(a.rootDir).toBe(join(a.codexHome, ".openccx-native-main-profiles"));
     expect(a.stagingRoot).toBe(join(a.configDir, "native-main-profile-staging", a.homeId));
     expect(nativeProfileHomeId("C:\\Users\\CaseSensitive\\.codex"))
       .not.toBe(nativeProfileHomeId("C:\\Users\\casesensitive\\.codex"));
     expect(legacyWindowsNativeProfileHomeId("C:\\Users\\CaseSensitive\\.codex"))
       .toBe(legacyWindowsNativeProfileHomeId("C:\\Users\\casesensitive\\.codex"));
 
-    const requestedMissing = join(root, "missing-parent", "opencodex");
+    const requestedMissing = join(root, "missing-parent", "openccx");
     const beforeCreate = resolveNativeProfileContext({ codexHome, configDir: requestedMissing });
     mkdirSync(requestedMissing, { recursive: true });
     const afterCreate = resolveNativeProfileContext({ codexHome, configDir: requestedMissing });
@@ -385,10 +385,10 @@ describe("native-profile recovery journal storage", () => {
   });
 
   test.skipIf(process.platform === "win32")("rejects a vault replaced by a FIFO after layout validation", () => {
-    const base = mkdtempSync(join(tmpdir(), "ocx-native-profile-fifo-race-"));
+    const base = mkdtempSync(join(tmpdir(), "occx-native-profile-fifo-race-"));
     roots.push(base);
     const codexHome = join(base, "codex");
-    const configDir = join(base, "opencodex");
+    const configDir = join(base, "openccx");
     mkdirSync(codexHome, { mode: 0o700 });
     mkdirSync(configDir, { mode: 0o700 });
     const moduleUrl = new URL("../../src/codex/native-profile-store.ts", import.meta.url).href;
@@ -396,14 +396,14 @@ describe("native-profile recovery journal storage", () => {
       import { execFileSync } from "node:child_process";
       import { lstatSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
       import { readNativeProfileVault, resolveNativeProfileContext } from ${JSON.stringify(moduleUrl)};
-      const codexHome = process.env.OCX_NATIVE_PROFILE_CODEX_HOME;
-      const configDir = process.env.OCX_NATIVE_PROFILE_CONFIG_DIR;
+      const codexHome = process.env.OCCX_NATIVE_PROFILE_CODEX_HOME;
+      const configDir = process.env.OCCX_NATIVE_PROFILE_CONFIG_DIR;
       if (!codexHome || !configDir) process.exit(90);
       const store = resolveNativeProfileContext({ codexHome, configDir });
       mkdirSync(store.rootDir, { recursive: true, mode: 0o700 });
       writeFileSync(store.vaultPath, "{}\\n", { mode: 0o600 });
       let replacedWithFifo = false;
-      store[Symbol.for("opencodex.native-profile-store.bounded-read-test-seam")] = {
+      store[Symbol.for("openccx.native-profile-store.bounded-read-test-seam")] = {
         beforeOpen(path) {
           if (path !== store.vaultPath) process.exit(93);
           unlinkSync(path);
@@ -431,8 +431,8 @@ describe("native-profile recovery journal storage", () => {
       encoding: "utf8",
       env: {
         ...process.env,
-        OCX_NATIVE_PROFILE_CODEX_HOME: codexHome,
-        OCX_NATIVE_PROFILE_CONFIG_DIR: configDir,
+        OCCX_NATIVE_PROFILE_CODEX_HOME: codexHome,
+        OCCX_NATIVE_PROFILE_CONFIG_DIR: configDir,
       },
       timeout: 2_000,
     });

@@ -9,7 +9,7 @@ import type { WorkspaceItem } from "../src/provider-workspace/catalog";
 const orca: CatalogPreset = {
   id: "orcarouter", label: "OrcaRouter - API", adapter: "openai-chat", auth: "key",
   baseUrl: "https://api.orcarouter.ai/v1", sponsor: "standard",
-  sponsorUrl: "https://www.orcarouter.ai/?utm_source=opencodex&utm_medium=readme",
+  sponsorUrl: "https://www.orcarouter.ai/?utm_source=openccx&utm_medium=readme",
   dashboardUrl: "https://www.orcarouter.ai/console",
 };
 const packy: CatalogPreset = {
@@ -48,7 +48,7 @@ test("key and OAuth sponsor presets render disclosed links, keeping affiliate pa
   for (const preset of [orca, { ...orca, id: "orcarouter-oauth", auth: "oauth" as const }]) {
     const html = render(preset, configured(preset));
     expect(html).toContain("pws-sponsor-badge");
-    expect(html).toContain("utm_source=opencodex&amp;utm_medium=readme");
+    expect(html).toContain("utm_source=openccx&amp;utm_medium=readme");
     expect(html).toContain('href="https://www.orcarouter.ai/console"');
     expect(html.match(/rel="noopener noreferrer"/g)).toHaveLength(2);
   }

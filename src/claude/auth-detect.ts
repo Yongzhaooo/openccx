@@ -23,16 +23,16 @@ export type AuthSourceId =
   | "macos-keychain"           // S3: security find-generic-password (metadata only)
   | "exported-env";            // S5: ANTHROPIC_API_KEY / a USER's ANTHROPIC_AUTH_TOKEN
 
-// NOTE: there is deliberately no "opencodex anthropic OAuth" source. That is a
-// PROVIDER credential in opencodex's own store which the Claude CLI never consumes,
+// NOTE: there is deliberately no "openccx anthropic OAuth" source. That is a
+// PROVIDER credential in openccx's own store which the Claude CLI never consumes,
 // so it is not evidence the client can authenticate natively (audit 002 §5).
 
 /**
- * The one opencodex-owned dummy token. Exported so the CLI, the system-env writer and
+ * The one openccx-owned dummy token. Exported so the CLI, the system-env writer and
  * the tests all compare against the same literal — a second copy is how the marker
  * feedback loop (002 §1) sneaks back in.
  */
-export const PROXY_MARKER = "opencodex-proxy";
+export const PROXY_MARKER = "openccx-proxy";
 
 const KEYCHAIN_SERVICE = "Claude Code-credentials";
 /** `security` exit code for "the item does not exist" — a real absent, not a failure. */
@@ -61,7 +61,7 @@ export interface AuthDetectDeps {
    */
   env(): NodeJS.ProcessEnv;
   /**
-   * Token values opencodex itself put into the environment. `system-env.ts` exports the
+   * Token values openccx itself put into the environment. `system-env.ts` exports the
    * configured admission key as `ANTHROPIC_AUTH_TOKEN`, so without this the detector
    * reads OUR OWN output back as proof the user can authenticate natively — the same
    * feedback loop the `PROXY_MARKER` guard closes, one variable over.
@@ -146,9 +146,9 @@ function detectExportedEnv(deps: AuthDetectDeps): AuthSourceResult {
       return { source: "exported-env", presence: "present", detail: "ANTHROPIC_API_KEY" };
     }
     const token = env.ANTHROPIC_AUTH_TOKEN?.trim();
-    // Our own dummy is opencodex state, never user auth: counting it would make a
+    // Our own dummy is openccx state, never user auth: counting it would make a
     // proxy-mode launch look authenticated on the NEXT launch (002 §1). The configured
-    // admission key is opencodex state for exactly the same reason — the system-env
+    // admission key is openccx state for exactly the same reason — the system-env
     // writer exports it into this very variable.
     if (token && !isOwn(token)) {
       return { source: "exported-env", presence: "present", detail: "ANTHROPIC_AUTH_TOKEN" };
@@ -220,7 +220,7 @@ export function defaultAuthDetectDeps(
 }
 
 /**
- * The token values opencodex itself exports. Configured admission keys land in
+ * The token values openccx itself exports. Configured admission keys land in
  * `ANTHROPIC_AUTH_TOKEN` (see `system-env.ts`), so detection must not read them back
  * as user auth.
  */

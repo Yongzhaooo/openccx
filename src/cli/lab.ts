@@ -1,5 +1,5 @@
 /**
- * `ocx lab` — Compatibility Lab inspection and explicit CL-08 automation controls.
+ * `occx lab` — Compatibility Lab inspection and explicit CL-08 automation controls.
  *
  * Read commands use the local SQLite projection. Automation mutations and manual runs are
  * explicit operator actions; read commands never start probes or scheduler ticks.
@@ -74,27 +74,27 @@ import {
 } from "../lab/public";
 
 const USAGE = `Usage:
-  ocx lab status [--json]
-  ocx lab production-signals --subject <id> [--limit <n>] [--json]
-  ocx lab verdicts [--subject <id>] [--layer <layer>] [--suite <id>] [--verdict <v>] [--from <ms>] [--to <ms>] [--limit <n>] [--cursor <c>] [--json]
-  ocx lab subjects [--kind <kind>] [--limit <n>] [--cursor <c>] [--json]
-  ocx lab subject <subjectId> [--json]
-  ocx lab observations [--subject <id>] [--layer <layer>] [--suite <id>] [--scenario <id>] [--outcome <o>] [--execution-mode <m>] [--from <ms>] [--to <ms>] [--limit <n>] [--cursor <c>] [--json]
-  ocx lab events [--event-kind <k>] [--subject <id>] [--from <ms>] [--to <ms>] [--excluded <true|false>] [--limit <n>] [--cursor <c>] [--json]
-  ocx lab event <eventId> [--json]
-  ocx lab artifacts [--status <s>] [--artifact-class <c>] [--limit <n>] [--cursor <c>] [--json]
-  ocx lab artifact <digest> [--json]
-  ocx lab catalog [--layer <layer>] [--suite <id>] [--json]
-  ocx lab public preview --event <eventId> [--event <eventId> ...] [--json]
-  ocx lab public export --event <eventId> [--event <eventId> ...] [--json]
-  ocx lab public verify --file <bundle.json> [--json]
-  ocx lab public import --file <bundle.json> [--json]
-  ocx lab public community [--json]
-  ocx lab automation status [--json]
-  ocx lab automation enable [--protocol] [--live] [--json]
-  ocx lab automation disable [--json]
-  ocx lab automation runs [--limit <n>] [--cursor <c>] [--json]
-  ocx lab run --layer <layer> --scenario <id> [--provider <name>] [--model <id>] [--json]`;
+  occx lab status [--json]
+  occx lab production-signals --subject <id> [--limit <n>] [--json]
+  occx lab verdicts [--subject <id>] [--layer <layer>] [--suite <id>] [--verdict <v>] [--from <ms>] [--to <ms>] [--limit <n>] [--cursor <c>] [--json]
+  occx lab subjects [--kind <kind>] [--limit <n>] [--cursor <c>] [--json]
+  occx lab subject <subjectId> [--json]
+  occx lab observations [--subject <id>] [--layer <layer>] [--suite <id>] [--scenario <id>] [--outcome <o>] [--execution-mode <m>] [--from <ms>] [--to <ms>] [--limit <n>] [--cursor <c>] [--json]
+  occx lab events [--event-kind <k>] [--subject <id>] [--from <ms>] [--to <ms>] [--excluded <true|false>] [--limit <n>] [--cursor <c>] [--json]
+  occx lab event <eventId> [--json]
+  occx lab artifacts [--status <s>] [--artifact-class <c>] [--limit <n>] [--cursor <c>] [--json]
+  occx lab artifact <digest> [--json]
+  occx lab catalog [--layer <layer>] [--suite <id>] [--json]
+  occx lab public preview --event <eventId> [--event <eventId> ...] [--json]
+  occx lab public export --event <eventId> [--event <eventId> ...] [--json]
+  occx lab public verify --file <bundle.json> [--json]
+  occx lab public import --file <bundle.json> [--json]
+  occx lab public community [--json]
+  occx lab automation status [--json]
+  occx lab automation enable [--protocol] [--live] [--json]
+  occx lab automation disable [--json]
+  occx lab automation runs [--limit <n>] [--cursor <c>] [--json]
+  occx lab run --layer <layer> --scenario <id> [--provider <name>] [--model <id>] [--json]`;
 
 const ARTIFACT_STATUSES = ["present", "corrupt", "purged_unavailable"] as const;
 type ArtifactStatus = (typeof ARTIFACT_STATUSES)[number];

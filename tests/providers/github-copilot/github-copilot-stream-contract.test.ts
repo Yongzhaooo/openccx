@@ -10,7 +10,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { providerConfigSeed } from "../../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../../src/providers/registry";
 import { handleResponses } from "../../../src/server/responses/core";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 
 interface SseEvent {
   event?: string;
@@ -18,7 +18,7 @@ interface SseEvent {
   payload?: Record<string, unknown>;
 }
 
-function copilotProvider(): OcxProviderConfig {
+function copilotProvider(): OccxProviderConfig {
   return {
     ...providerConfigSeed(getProviderRegistryEntry("github-copilot")!),
     authMode: "key",
@@ -175,7 +175,7 @@ describe("GitHub Copilot Responses client stream contract", () => {
 
     const config = {
       providers: { "github-copilot": copilotProvider() },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {

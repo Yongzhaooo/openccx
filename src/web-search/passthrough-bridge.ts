@@ -35,7 +35,7 @@
  */
 import { nextSseBlock, sseDataPayload } from "../server/sse-payload-rewrite";
 import { toolChoiceToolPredicate } from "../types";
-import type { OcxParsedRequest, OcxProviderConfig, ProviderWebSearchBridgeBackend } from "../types";
+import type { OccxParsedRequest, OccxProviderConfig, ProviderWebSearchBridgeBackend } from "../types";
 import type { SidecarOutcome } from "./executor";
 import { buildWebSearchTool, WEB_SEARCH_TOOL_NAME } from "./synthetic-tool";
 import { safeWebSearchSources } from "./sources";
@@ -101,7 +101,7 @@ function originOf(value: string | undefined): string | undefined {
  * its adapter happens to be openai-responses.
  */
 export function resolveOllamaWebSearchEndpoint(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): string | undefined {
   const configured = provider.webSearchBridge?.endpoint;
   if (configured !== undefined) {
@@ -124,8 +124,8 @@ export function resolveOllamaWebSearchEndpoint(
  * rewrites normalized messages, while this path must preserve the raw Responses conversation.
  */
 export function planPassthroughWebSearchBridge(
-  parsed: OcxParsedRequest,
-  provider: OcxProviderConfig,
+  parsed: OccxParsedRequest,
+  provider: OccxProviderConfig,
   options: { isPassthrough: boolean; stream: boolean },
 ): PassthroughWebSearchBridgePlan | undefined {
   if (!options.isPassthrough || !options.stream) return undefined;

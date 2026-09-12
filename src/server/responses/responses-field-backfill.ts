@@ -64,7 +64,7 @@ function backfillItemId(item: Record<string, unknown>, slot: ItemIdSlot): Record
   if (typeof item.id === "string" && item.id.length > 0) return item;
   const type = typeof item.type === "string" ? item.type : "";
   const prefix = Object.prototype.hasOwnProperty.call(ITEM_ID_PREFIXES, type) ? ITEM_ID_PREFIXES[type] : "item_";
-  return { ...item, id: prefix + "ocx_" + (slot.kind === "index" ? String(slot.index) : "fallback_" + slot.ordinal) };
+  return { ...item, id: prefix + "occx_" + (slot.kind === "index" ? String(slot.index) : "fallback_" + slot.ordinal) };
 }
 
 /**
@@ -253,7 +253,7 @@ function rewriteEvent(event: Record<string, unknown>): Record<string, unknown> {
     && isPlainObject(event.item)) {
     const rawIndex = event.output_index;
     // A malformed or absent `output_index` must not collapse to 0: two such events would then
-    // both synthesize `msg_ocx_0`, and duplicate ids are the very thing this backfill exists to
+    // both synthesize `msg_occx_0`, and duplicate ids are the very thing this backfill exists to
     // prevent. Fall back to a per-process counter so the synthesized id stays unique. Position
     // is not recoverable in that case, but a unique id is what strict decoders require, and a
     // well-formed stream still gets the stable index-derived id.

@@ -16,15 +16,15 @@ import { startServer } from "../../src/server";
 import { handleImages, IMAGES_RESPONSE_MAX_BYTES, readImageResponseBytes, setXaiResultPinnedDownloadForTests } from "../../src/server/images";
 import { MAX_ENCODED_BYTES_PER_IMAGE } from "../../src/images/artifacts";
 import { saveCredential } from "../../src/oauth/store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ANTIGRAVITY_REQUEST_UA } from "../../src/adapters/google-antigravity-wire";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-const previousImagesApiKey = process.env.OPENCODEX_TEST_IMAGES_API_KEY;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+const previousImagesApiKey = process.env.OPENCCX_TEST_IMAGES_API_KEY;
 const originalFetch = globalThis.fetch;
 const TEST_DIR = join(import.meta.dir, ".tmp-server-images-test");
 let isolatedCodexHome: IsolatedCodexHome | null = null;
@@ -33,10 +33,10 @@ const DIRECT_CHATGPT_TOKEN = fakeChatGptJwt({ chatgpt_account_id: "acct-123" });
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  process.env.OPENCODEX_TEST_IMAGES_API_KEY = "custom-images-key";
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-images-codex-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  process.env.OPENCCX_TEST_IMAGES_API_KEY = "custom-images-key";
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-images-codex-");
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
   clearAccountNeedsReauth("pool-a");
@@ -47,12 +47,12 @@ beforeEach(() => {
 afterEach(() => {
   setXaiResultPinnedDownloadForTests(undefined);
   globalThis.fetch = originalFetch;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  if (previousImagesApiKey === undefined) delete process.env.OPENCODEX_TEST_IMAGES_API_KEY;
-  else process.env.OPENCODEX_TEST_IMAGES_API_KEY = previousImagesApiKey;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  if (previousImagesApiKey === undefined) delete process.env.OPENCCX_TEST_IMAGES_API_KEY;
+  else process.env.OPENCCX_TEST_IMAGES_API_KEY = previousImagesApiKey;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   clearCodexUpstreamHealth();
@@ -98,7 +98,7 @@ function fakeImagesUpstream(captured: CapturedRequest[], status = 200, payload?:
   return upstream;
 }
 
-function forwardConfig(_baseUrl = ""): OcxConfig {
+function forwardConfig(_baseUrl = ""): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -111,7 +111,7 @@ function forwardConfig(_baseUrl = ""): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 const disabledOpenAiProvider = {
@@ -159,7 +159,7 @@ test("image response byte reader enforces the stream cap when Content-Length is 
   expect(tailPulled).toBe(false);
 });
 
-function xaiBridgeConfig(): OcxConfig {
+function xaiBridgeConfig(): OccxConfig {
   return {
     ...forwardConfig(),
     images: { bridgeEnabled: true },
@@ -167,7 +167,7 @@ function xaiBridgeConfig(): OcxConfig {
       ...forwardConfig().providers,
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", apiKey: "xai-test-token" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function stubXaiImagine(payload: unknown): CapturedRequest[] {
@@ -246,7 +246,7 @@ test("POST /v1/images/generations relays with Grok OAuth and no ChatGPT headers"
       ...forwardConfig().providers,
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   await saveCredential("xai", {
     access: "xai-oauth-token",
     refresh: "xai-refresh",
@@ -288,7 +288,7 @@ test("POST /v1/images/generations does not reach api.x.ai when OAuth token resol
       openai: { ...disabledOpenAiProvider },
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -299,7 +299,7 @@ test("POST /v1/images/generations does not reach api.x.ai when OAuth token resol
     });
     expect(response.status).toBe(400);
     const json = await response.json() as { error?: { message?: string } };
-    expect(json.error?.message).toContain("ocx login xai");
+    expect(json.error?.message).toContain("occx login xai");
     expect(captured.filter(call => call.path.includes("/images/"))).toHaveLength(0);
   } finally {
     await server.stop(true);
@@ -332,7 +332,7 @@ test("POST /v1/images/generations does not bill ChatGPT when Imagine is opted in
       ...forwardConfig().providers,
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -343,7 +343,7 @@ test("POST /v1/images/generations does not bill ChatGPT when Imagine is opted in
     });
     expect(response.status).toBe(400);
     const json = await response.json() as { error?: { message?: string } };
-    expect(json.error?.message).toContain("ocx login xai");
+    expect(json.error?.message).toContain("occx login xai");
     expect(json.error?.message).toContain("not forwarded to ChatGPT");
     expect(xaiCaptured).toHaveLength(0);
     expect(chatgptCaptured).toHaveLength(0);
@@ -632,7 +632,7 @@ test("a routed pool account's token overrides the caller bearer on the forward r
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   saveCodexAccountCredential("pool-a", {
     accessToken: "pool-access-token",
     refreshToken: "pool-refresh-token",
@@ -704,7 +704,7 @@ test("a cooled committed key is replaced before the first keyed image send", asy
     defaultProvider: "openai-apikey",
     openaiProviderTierVersion: 2,
     providers: { openai: disabledOpenAiProvider, "openai-apikey": pooled },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
 
   // Cool the committed key the way a real 429 does, then point the stored selection back at it.
   // This is the state an operator lands in after a rotation plus a restart or a config reload.
@@ -744,14 +744,14 @@ test("an unresolvable selected key fails the keyed image send instead of reusing
   const captured: CapturedRequest[] = [];
   const upstream = fakeImagesUpstream(captured);
   clearKeyCooldowns();
-  delete process.env.OCX_IMAGES_MISSING_KEY;
+  delete process.env.OCCX_IMAGES_MISSING_KEY;
   const pooled = {
     ...keyedProvider(upstream.url.toString().replace(/\/$/, "")),
     apiKeyPoolStrategy: "round-robin",
     apiKeyPool: [
       { id: "first", key: "sk-platform-key" },
       // An env reference that is deliberately not set: a revoked keychain entry looks the same.
-      { id: "second", key: "\${OCX_IMAGES_MISSING_KEY}" },
+      { id: "second", key: "\${OCCX_IMAGES_MISSING_KEY}" },
     ],
   };
   saveConfig({
@@ -759,7 +759,7 @@ test("an unresolvable selected key fails the keyed image send instead of reusing
     defaultProvider: "openai-apikey",
     openaiProviderTierVersion: 2,
     providers: { openai: disabledOpenAiProvider, "openai-apikey": pooled },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   const live = loadConfig();
   rotateKeyOn429(live, "openai-apikey", null, Date.now(), "sk-platform-key");
   const restored = loadConfig();
@@ -800,7 +800,7 @@ test("without a configured strategy the keyed image send keeps the cooled key", 
     defaultProvider: "openai-apikey",
     openaiProviderTierVersion: 2,
     providers: { openai: disabledOpenAiProvider, "openai-apikey": pooled },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   const live = loadConfig();
   rotateKeyOn429(live, "openai-apikey", null, Date.now(), "sk-platform-key");
   const restored = loadConfig();
@@ -835,7 +835,7 @@ test("falls back to a keyed openai-responses provider when no forward provider e
       openai: disabledOpenAiProvider,
       "openai-apikey": keyedProvider(upstream.url.toString().replace(/\/$/, "")),
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -882,12 +882,12 @@ test("an explicit custom Images provider uses its configured endpoint, key, and 
         baseUrl: `${upstream.url.toString().replace(/\/$/, "")}/v1`,
         allowPrivateNetwork: true,
         authMode: "key",
-        apiKey: "${OPENCODEX_TEST_IMAGES_API_KEY}",
+        apiKey: "${OPENCCX_TEST_IMAGES_API_KEY}",
         headers: { "x-provider-route": "images" },
       },
     },
     images: { provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -935,12 +935,12 @@ test("an explicit Images provider wins over the xAI Imagine relay", async () => 
         baseUrl: `${upstream.url.toString().replace(/\/$/, "")}/v1`,
         allowPrivateNetwork: true,
         authMode: "key",
-        apiKey: "${OPENCODEX_TEST_IMAGES_API_KEY}",
+        apiKey: "${OPENCCX_TEST_IMAGES_API_KEY}",
       },
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", apiKey: "xai-test-token" },
     },
     images: { bridgeEnabled: true, provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -963,7 +963,7 @@ test("an explicit Images provider wins over the xAI Imagine relay", async () => 
 });
 
 test("an explicit Images provider accepts bearer admission without leaking the proxy secret", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "proxy-admission-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "proxy-admission-secret";
   const captured: CapturedRequest[] = [];
   const upstream = Bun.serve({
     port: 0,
@@ -987,11 +987,11 @@ test("an explicit Images provider accepts bearer admission without leaking the p
         baseUrl: `${upstream.url.toString().replace(/\/$/, "")}/v1`,
         allowPrivateNetwork: true,
         authMode: "key",
-        apiKey: "${OPENCODEX_TEST_IMAGES_API_KEY}",
+        apiKey: "${OPENCCX_TEST_IMAGES_API_KEY}",
       },
     },
     images: { provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1014,7 +1014,7 @@ test("an explicit Images provider accepts bearer admission without leaking the p
 });
 
 test("an invalid explicit Images provider returns 400 after bearer admission", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "proxy-admission-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "proxy-admission-secret";
   saveConfig({
     port: 0,
     hostname: "0.0.0.0",
@@ -1028,7 +1028,7 @@ test("an invalid explicit Images provider returns 400 after bearer admission", a
       },
     },
     images: { provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1066,7 +1066,7 @@ test("an invalid explicit Images provider fails closed instead of using another 
       },
     },
     images: { provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1095,7 +1095,7 @@ test("an explicit Images provider cannot reuse a registry-managed provider id", 
       "openai-apikey": keyedProvider(),
     },
     images: { provider: "openai-apikey" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1126,7 +1126,7 @@ test.each([
     defaultProvider: "custom-images",
     providers: provider ? { "custom-images": provider } : {},
     images: { provider: "custom-images" },
-  } as OcxConfig);
+  } as OccxConfig);
 
   expect(selection.keyed).toBeUndefined();
   expect(selection.forwardCandidates).toHaveLength(0);
@@ -1144,7 +1144,7 @@ test("keyed baseUrl with a /v1 suffix is normalized (no double /v1)", async () =
       openai: disabledOpenAiProvider,
       "openai-apikey": keyedProvider(`${upstream.url.toString().replace(/\/$/, "")}/v1`),
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1174,7 +1174,7 @@ test("an unauthenticated request skips the forward provider when a keyed provide
       openai: canonicalOpenAiProvider,
       "openai-apikey": keyedProvider(upstream.url.toString().replace(/\/$/, "")),
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1198,7 +1198,7 @@ test("an unauthenticated request gets 401 when only the forward provider exists"
     defaultProvider: "openai",
     openaiProviderTierVersion: 2,
     providers: { openai: canonicalOpenAiProvider },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1232,7 +1232,7 @@ test("pool auth failure is not hidden by the keyed API provider", async () => {
     ],
     // pool-a has NO stored credential, so forward-auth resolution throws CodexAuthContextError.
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1264,7 +1264,7 @@ test("forward-auth failure surfaces its own error when no keyed provider exists"
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1290,7 +1290,7 @@ test("returns an honest 400 when no OpenAI-family upstream is configured", async
       openai: disabledOpenAiProvider,
       groq: { adapter: "openai-chat", baseUrl: "https://api.groq.example/v1", apiKey: "gsk-x" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1428,7 +1428,7 @@ test("records an oversized forward response status before returning the size err
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   saveCodexAccountCredential("pool-a", {
     accessToken: "pool-access-token",
     refreshToken: "pool-refresh-token",
@@ -1464,7 +1464,7 @@ test("an image body that stalls after headers retains the 504 deadline", async (
     }
     return originalFetch(input, init);
   }) as typeof fetch;
-  saveConfig({ ...forwardConfig(), images: { timeoutMs: 50 } } as OcxConfig);
+  saveConfig({ ...forwardConfig(), images: { timeoutMs: 50 } } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1580,7 +1580,7 @@ test("a hung upstream times out with 504 after config.images.timeoutMs", async (
   saveConfig({
     ...forwardConfig(upstream.url.toString().replace(/\/$/, "")),
     images: { timeoutMs: 100 },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1616,7 +1616,7 @@ test("GET /v1/images/generations still falls through to the JSON 404 guard", asy
 });
 
 test("images routes require API auth and local Origin on non-loopback bindings", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
   saveConfig({
     ...forwardConfig("https://chatgpt.example/backend-api/codex"),
     hostname: "0.0.0.0",
@@ -1636,7 +1636,7 @@ test("images routes require API auth and local Origin on non-loopback bindings",
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-opencodex-api-key": "local-secret",
+        "x-openccx-api-key": "local-secret",
         origin: "https://attacker.test",
       },
       body: JSON.stringify({ prompt: "a cat" }),
@@ -1648,7 +1648,7 @@ test("images routes require API auth and local Origin on non-loopback bindings",
 });
 
 test("the proxy admission secret is never relayed to the forward upstream", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
   const captured: CapturedRequest[] = [];
   const upstream = fakeImagesUpstream(captured);
   saveConfig({
@@ -1660,7 +1660,7 @@ test("the proxy admission secret is never relayed to the forward upstream", asyn
       openai: canonicalOpenAiProvider,
       "openai-apikey": keyedProvider(upstream.url.toString().replace(/\/$/, "")),
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -1690,7 +1690,7 @@ test("the proxy admission secret is never relayed to the forward upstream", asyn
  * (daily-cloudcode-pa.googleapis.com) and ignores this override. The OAuth token
  * comes from the credential store via getValidAccessToken, not from config apiKey.
  */
-function ccaConfig(): OcxConfig {
+function ccaConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "google-antigravity",
@@ -1701,9 +1701,9 @@ function ccaConfig(): OcxConfig {
         adapter: "google",
         baseUrl: "https://attacker.example.com",
         googleMode: "cloud-code-assist",
-      } as OcxConfig["providers"][string],
+      } as OccxConfig["providers"][string],
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 interface CcaFetchRequest {
@@ -1831,7 +1831,7 @@ test("CCA image fallback generates images via Google Antigravity when no OpenAI 
     expect(body.request?.generationConfig?.responseModalities).toEqual(["TEXT", "IMAGE"]);
     expect(registryHits[0].headers.get("authorization")).toBe("Bearer cca-access-token");
     // The CCA image request must use the shared Antigravity User-Agent (not a
-    // bespoke "opencodex-images/1.0"), so the request fingerprint matches the
+    // bespoke "openccx-images/1.0"), so the request fingerprint matches the
     // OAuth credential.
     expect(registryHits[0].headers.get("user-agent")).toBe(ANTIGRAVITY_REQUEST_UA);
 
@@ -1977,14 +1977,14 @@ test("CCA fallback serves images when OpenAI forward auth fails but Google Antig
         adapter: "google",
         baseUrl: "https://attacker.example.com",
         googleMode: "cloud-code-assist",
-      } as OcxConfig["providers"][string],
+      } as OccxConfig["providers"][string],
     },
     codexAccounts: [
       { id: "main", email: "main@example.test", isMain: true },
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL });
 
   const server = startServer(0);
@@ -2045,7 +2045,7 @@ test("CCA fetch network failure returns 502 without leaking the timeout timer", 
     return originalFetch(input, init);
   }) as typeof fetch;
 
-  saveConfig({ ...ccaConfig(), images: { timeoutMs: 10_000 } } as OcxConfig);
+  saveConfig({ ...ccaConfig(), images: { timeoutMs: 10_000 } } as OccxConfig);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL });
 
   const server = startServer(0);
@@ -2098,7 +2098,7 @@ test("CCA body-read timeout returns 504 when upstream stalls after sending heade
     return originalFetch(input, init);
   }) as typeof fetch;
 
-  saveConfig({ ...ccaConfig(), images: { timeoutMs: 100 } } as OcxConfig);
+  saveConfig({ ...ccaConfig(), images: { timeoutMs: 100 } } as OccxConfig);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL });
 
   const server = startServer(0);
@@ -2147,7 +2147,7 @@ test("CCA body-read client cancellation returns 499, not 504", async () => {
   }) as typeof fetch;
 
   // Use a long timeout so the deadline does NOT fire — only the client abort triggers.
-  const cfg = { ...ccaConfig(), images: { timeoutMs: 30_000 } } as OcxConfig;
+  const cfg = { ...ccaConfig(), images: { timeoutMs: 30_000 } } as OccxConfig;
   saveConfig(cfg);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL });
 
@@ -2350,7 +2350,7 @@ test("CCA client abort during OAuth preflight returns 499, not a hung response",
   hungOauthFetchMock();
 
   // Long timeout so the deadline does NOT fire — only the client abort triggers.
-  const cfg = { ...ccaConfig(), images: { timeoutMs: 30_000 } } as OcxConfig;
+  const cfg = { ...ccaConfig(), images: { timeoutMs: 30_000 } } as OccxConfig;
   saveConfig(cfg);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL_EXPIRED });
 
@@ -2381,7 +2381,7 @@ test("CCA deadline expiry during OAuth preflight returns 504, not a hung respons
   hungOauthFetchMock();
 
   // Short timeout so the deadline fires during the hung OAuth refresh.
-  const cfg = { ...ccaConfig(), images: { timeoutMs: 100 } } as OcxConfig;
+  const cfg = { ...ccaConfig(), images: { timeoutMs: 100 } } as OccxConfig;
   saveConfig(cfg);
   await saveCredential("google-antigravity", { ...CCA_CREDENTIAL_EXPIRED });
 
@@ -2579,7 +2579,7 @@ test("CCA finishReason STOP with valid image is not affected by safety block log
 });
 
 test("CCA-only request with proxy admission bearer succeeds and never sends it upstream", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "proxy-admission-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "proxy-admission-secret";
   const registryHits: CcaFetchRequest[] = [];
   const otherHits: CcaFetchRequest[] = [];
   ccaFetchMock(registryHits, otherHits);
@@ -2603,7 +2603,7 @@ test("CCA-only request with proxy admission bearer succeeds and never sends it u
     expect(registryHits[0].headers.get("authorization")).toBe("Bearer cca-access-token");
   } finally {
     await server.stop(true);
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
   }
 });
 
@@ -2718,7 +2718,7 @@ test("CCA rejects invalid base64 and non-image bytes instead of returning b64_js
 });
 
 test("GET /v1/opencodex/artifacts/:id serves opaque artifacts with API auth", async () => {
-  process.env.OPENCODEX_API_AUTH_TOKEN = "proxy-admission-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "proxy-admission-secret";
   const { materializeInlineImage, createImageBudget, artifactHttpUrl } = await import("../../src/images/artifacts");
   const filePath = await materializeInlineImage(CCA_TINY_PNG, createImageBudget());
   const urlPath = artifactHttpUrl(filePath);
@@ -2750,6 +2750,6 @@ test("GET /v1/opencodex/artifacts/:id serves opaque artifacts with API auth", as
     expect(traversal.status).toBe(404);
   } finally {
     await server.stop(true);
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
   }
 });

@@ -10,7 +10,7 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 test("Linux reports systemd absent when systemctl cannot be spawned", () => {
-  const home = mkdtempSync(join(tmpdir(), "ocx-probe-docker-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-probe-docker-"));
   const run: ProbeRunner = () => ({
     status: null,
     stdout: "",

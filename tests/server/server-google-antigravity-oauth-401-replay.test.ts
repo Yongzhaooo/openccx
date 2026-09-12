@@ -6,17 +6,17 @@ import { saveConfig } from "../../src/config";
 import { forceRefreshOAuthAccessSnapshot, getValidAccessTokenSnapshot } from "../../src/oauth";
 import { getAccountSet, saveCredential } from "../../src/oauth/store";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const PROD_API_BASE = "https://cloudcode-pa.googleapis.com";
 const DAILY_API_BASE = "https://daily-cloudcode-pa.googleapis.com";
-const PUBLIC_OAUTH_AUTHENTICATION_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
-const WINDOWS_PATH_CANARY = "C:\\Users\\Alice\\.opencodex\\auth.json.ocx-tmp";
-const UNC_PATH_CANARY = "\\\\server\\share\\opencodex\\auth.json.ocx-tmp";
-const POSIX_PATH_CANARY = "/home/alice/.opencodex/auth.json.ocx-tmp";
+const PUBLIC_OAUTH_AUTHENTICATION_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
+const WINDOWS_PATH_CANARY = "C:\\Users\\Alice\\.openccx\\auth.json.occx-tmp";
+const UNC_PATH_CANARY = "\\\\server\\share\\openccx\\auth.json.occx-tmp";
+const POSIX_PATH_CANARY = "/home/alice/.opencodex/auth.json.occx-tmp";
 
 let testDir = "";
 let previousHome: string | undefined;
@@ -25,16 +25,16 @@ let originalFetch: typeof fetch;
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-google-401-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-google-401-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-google-401-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-google-401-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -51,7 +51,7 @@ async function seedOAuth(expires = Date.now() + 3_600_000, projectId?: string | 
   });
 }
 
-function antigravityConfig(): OcxConfig {
+function antigravityConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -66,10 +66,10 @@ function antigravityConfig(): OcxConfig {
         models: ["gemini-3.8-flash"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function antigravityPassthroughConfig(): OcxConfig {
+function antigravityPassthroughConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -88,7 +88,7 @@ function antigravityPassthroughConfig(): OcxConfig {
         models: ["gemini-3.8-flash"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function jsonSuccessBody(text: string): Record<string, unknown> {

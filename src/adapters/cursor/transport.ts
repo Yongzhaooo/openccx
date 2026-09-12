@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../../types";
+import type { OccxProviderConfig } from "../../types";
 import type { CursorClientMessage, CursorRunRequest, CursorServerMessage } from "./types";
 import type { TranslatorBudget } from "../../lib/translator-budget";
 
@@ -20,7 +20,7 @@ export interface CursorTransport {
 }
 
 export interface CursorTransportFactoryInput {
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   translatorBudget: TranslatorBudget;
   headers?: Headers;
   /** Router-prepared fetch that preserves provider overrides and per-request pacing. */

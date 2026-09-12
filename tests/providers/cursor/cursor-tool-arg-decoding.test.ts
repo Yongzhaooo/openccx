@@ -35,7 +35,7 @@ function completed(args: Record<string, Uint8Array>) {
                   args: create(McpArgsSchema, {
                     name: "mcp__fs__read_file",
                     toolName: "mcp__fs__read_file",
-                    providerIdentifier: "opencodex-responses",
+                    providerIdentifier: "openccx-responses",
                     args,
                   }),
                 }),
@@ -65,7 +65,7 @@ function started() {
                   args: create(McpArgsSchema, {
                     name: "mcp__fs__read_file",
                     toolName: "mcp__fs__read_file",
-                    providerIdentifier: "opencodex-responses",
+                    providerIdentifier: "openccx-responses",
                   }),
                 }),
               },
@@ -128,7 +128,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: valueBytes("hello"), count: valueBytes(2) },
     });
 
@@ -144,7 +144,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: jsonBytes("hello") },
     });
 
@@ -160,7 +160,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "run_shell",
       toolName: "run_shell",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { cmd: jsonBytes("echo hi") },
     });
 
@@ -180,7 +180,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "run_shell",
       toolName: "run_shell",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { cmd: jsonBytes("echo hi") },
     });
 
@@ -200,7 +200,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "run_shell",
       toolName: "run_shell",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { cmd: jsonBytes("echo hi") },
     });
 
@@ -216,7 +216,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: {},
     });
 
@@ -231,7 +231,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: {},
     });
 
@@ -254,7 +254,7 @@ describe("Cursor Responses tool argument decoding", () => {
         name: toolName,
         toolName: toolName,
         toolCallId: callId,
-        providerIdentifier: "opencodex-responses",
+        providerIdentifier: "openccx-responses",
         args,
       });
     }
@@ -371,7 +371,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: valueBytes("hello") },
     });
 
@@ -388,7 +388,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "blocked",
       toolName: "blocked",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: valueBytes("hello") },
     });
 
@@ -405,14 +405,14 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: valueBytes("one") },
     });
     const second = create(McpArgsSchema, {
       name: "ping",
       toolName: "ping",
       toolCallId: "toolu_2",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { value: valueBytes("two") },
     });
 
@@ -436,7 +436,7 @@ describe("Cursor Responses tool argument decoding", () => {
       name: "mcp__fs__read_file",
       toolName: "mcp__fs__read_file",
       toolCallId: "call_1",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: wireArgs,
     });
 

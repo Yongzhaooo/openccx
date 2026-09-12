@@ -213,7 +213,7 @@ test("warning-bearing results never auto-dismiss and offer an explicit dismiss",
   expect(toast).not.toBeNull();
   expect(toast!.className).toContain("notice-warn");
   // The stale-app-server hint and warning stay in the message.
-  expect(toast!.textContent).toContain("ocx sync --restart-codex");
+  expect(toast!.textContent).toContain("occx sync --restart-codex");
   // Still visible well past the plain success 6s / error 8s hold times.
   await advanceTime(6000);
   await advanceTime(8000);

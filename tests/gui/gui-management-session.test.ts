@@ -18,10 +18,10 @@ describe("GUI management session bootstrap", () => {
   test("management requests use the injected session while data requests remain untouched", async () => {
     const seen: Array<{ url: string; method: string; headers: Headers }> = [];
     const meta = new Map([
-      ["opencodex-session-token", "ocx_session_browser-secret"],
-      ["opencodex-session-csrf", "csrf-browser-secret"],
-      ["opencodex-session-origin", "http://localhost:10100"],
-      ["opencodex-session-server-origin", "http://localhost:10100"],
+      ["openccx-session-token", "occx_session_browser-secret"],
+      ["openccx-session-csrf", "csrf-browser-secret"],
+      ["openccx-session-origin", "http://localhost:10100"],
+      ["openccx-session-server-origin", "http://localhost:10100"],
     ]);
     const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       seen.push({
@@ -52,12 +52,12 @@ describe("GUI management session bootstrap", () => {
     await window.fetch("/api/settings", { method: "PUT", body: "{}" });
     await window.fetch("/v1/models");
 
-    expect(seen[0]?.headers.get("x-opencodex-api-key")).toBe("ocx_session_browser-secret");
-    expect(seen[0]?.headers.get("x-opencodex-gui-origin")).toBe("http://localhost:10100");
-    expect(seen[0]?.headers.get("x-opencodex-csrf-token")).toBeNull();
-    expect(seen[1]?.headers.get("x-opencodex-api-key")).toBe("ocx_session_browser-secret");
-    expect(seen[1]?.headers.get("x-opencodex-csrf-token")).toBe("csrf-browser-secret");
-    expect(seen[2]?.headers.get("x-opencodex-api-key")).toBeNull();
-    expect(seen[2]?.headers.get("x-opencodex-gui-origin")).toBeNull();
+    expect(seen[0]?.headers.get("x-openccx-api-key")).toBe("occx_session_browser-secret");
+    expect(seen[0]?.headers.get("x-openccx-gui-origin")).toBe("http://localhost:10100");
+    expect(seen[0]?.headers.get("x-openccx-csrf-token")).toBeNull();
+    expect(seen[1]?.headers.get("x-openccx-api-key")).toBe("occx_session_browser-secret");
+    expect(seen[1]?.headers.get("x-openccx-csrf-token")).toBe("csrf-browser-secret");
+    expect(seen[2]?.headers.get("x-openccx-api-key")).toBeNull();
+    expect(seen[2]?.headers.get("x-openccx-gui-origin")).toBeNull();
   });
 });

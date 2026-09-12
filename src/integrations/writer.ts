@@ -1,5 +1,5 @@
 /**
- * Apply, disable and restore an opencodex provider block in a client's config.
+ * Apply, disable and restore an openccx provider block in a client's config.
  *
  * Everything here exists to keep one promise: a toggle can always be undone.
  * That means every mutation snapshots first, writes atomically, and journals
@@ -15,7 +15,7 @@ import { parseClineDocument, serializeClineDocument, preserveClineSelection } fr
 import { dirname } from "node:path";
 import { EXPORT_CLIENTS, type ExportModel, type ManagedContribution } from "../clients/config-export";
 import { shouldInjectApiAuthHeader } from "../codex/inject";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { PARSE_FAILED, defaultIntegrationIO, loadTarget, parseConfig, type IntegrationIO } from "./config-io";
 import {
   fingerprint,
@@ -56,9 +56,9 @@ function yamlRefusalReason(
   outcome: string,
 ): string {
   if (yamlFragmentUnsupportedStyle(source, path)) {
-    return `${configPath} writes ${path.join(".")} as a flow mapping or sequence, a YAML style opencodex will not re-render, so ${outcome}`;
+    return `${configPath} writes ${path.join(".")} as a flow mapping or sequence, a YAML style openccx will not re-render, so ${outcome}`;
   }
-  return `${configPath} uses YAML source opencodex cannot patch without risking unrelated comments or formatting, so ${outcome}`;
+  return `${configPath} uses YAML source openccx cannot patch without risking unrelated comments or formatting, so ${outcome}`;
 }
 import { withIntegrationWriterLock, type IntegrationWriterLockSeams } from "./writer-lock";
 
@@ -97,7 +97,7 @@ export type WriteOutcome = WriteOk | WriteRefused;
 export interface IntegrationWriteInput {
   clientId: IntegrationClientId;
   models: readonly ExportModel[];
-  config: OcxConfig;
+  config: OccxConfig;
   port: number;
   env?: NodeJS.ProcessEnv;
   home?: string;
@@ -279,7 +279,7 @@ function preflight(input: IntegrationWriteInput) {
   const parsed = clientId === "cline" ? parseClineDocument(before) : parseConfig(before, exportSpec.format);
   if (parsed === PARSE_FAILED) {
     return { failed: refuse(clientId, "unsafe", "unsafe",
-      `${configPath} could not be parsed, or holds something opencodex cannot rewrite without changing it (a non-finite number, a large integer or a tiny one a rewrite would round, -0, a duplicate member, or nesting deeper than 1000 levels)`) } as const;
+      `${configPath} could not be parsed, or holds something openccx cannot rewrite without changing it (a non-finite number, a large integer or a tiny one a rewrite would round, -0, a duplicate member, or nesting deeper than 1000 levels)`) } as const;
   }
   const contribution = exportSpec.buildContribution(exportContextOf(input));
   // A record proves ownership of the file it was written FOR. Matching only by
@@ -334,8 +334,8 @@ function applyOrRefreshIntegration(
     if (conflictPolicy === "refuse") {
       return refuse(clientId, "conflict", "conflict",
         classified.reason === "foreign-edit"
-          ? `${configPath} changed after opencodex wrote it`
-          : `${configPath} already contains an opencodex block we did not write`);
+          ? `${configPath} changed after openccx wrote it`
+          : `${configPath} already contains an openccx block we did not write`);
     }
     /*
      * The caller asked for the overwrite explicitly, so the merge below runs
@@ -356,7 +356,7 @@ function applyOrRefreshIntegration(
   if (classified.state === "unsafe") {
     return refuse(clientId, "unsafe", "unsafe",
       classified.reason === "blocked-container"
-        ? `${configPath} holds a value where opencodex would have to write a section, so applying would replace it`
+        ? `${configPath} holds a value where openccx would have to write a section, so applying would replace it`
         : classified.reason === "ambiguous-selector"
           ? `${configPath} has more than one entry matching a managed selector`
           : `${configPath} cannot be changed safely`);
@@ -449,7 +449,7 @@ function applyOrRefreshIntegration(
     }
     if (!(error instanceof UnserializableValueError)) throw error;
     return refuse(clientId, "unsafe", "unsafe",
-      `${configPath} contains something opencodex cannot rewrite safely (${error.message}), so it was left alone`);
+      `${configPath} contains something openccx cannot rewrite safely (${error.message}), so it was left alone`);
   }
 
   // Compare-before-commit: someone may have written between classify and now.
@@ -536,8 +536,8 @@ export function disableIntegration(input: IntegrationWriteInput): WriteOutcome {
   if (classified.state === "conflict") {
     return refuse(clientId, "conflict", "conflict",
       classified.reason === "foreign-edit"
-        ? `${configPath} changed after opencodex wrote it; disabling would discard that edit`
-        : `${configPath} contains an opencodex block we did not write`);
+        ? `${configPath} changed after openccx wrote it; disabling would discard that edit`
+        : `${configPath} contains an openccx block we did not write`);
   }
   /*
    * `unsafe` reaches here the same way it reaches apply, and the code below
@@ -549,7 +549,7 @@ export function disableIntegration(input: IntegrationWriteInput): WriteOutcome {
   if (classified.state === "unsafe") {
     return refuse(clientId, "unsafe", "unsafe",
       classified.reason === "blocked-container"
-        ? `${configPath} holds a value where opencodex would have to read a section, so nothing can be removed safely`
+        ? `${configPath} holds a value where openccx would have to read a section, so nothing can be removed safely`
         : classified.reason === "ambiguous-selector"
           ? `${configPath} has more than one entry matching a managed selector`
           : `${configPath} cannot be changed safely`);
@@ -605,7 +605,7 @@ export function disableIntegration(input: IntegrationWriteInput): WriteOutcome {
   } catch (error) {
     if (!(error instanceof UnserializableValueError)) throw error;
     return refuse(clientId, "unsafe", "unsafe",
-      `${configPath} contains something opencodex cannot rewrite safely (${error.message}), so nothing was removed`);
+      `${configPath} contains something openccx cannot rewrite safely (${error.message}), so nothing was removed`);
   }
 
   const recheck = io.readText(configPath);
@@ -700,7 +700,7 @@ export function restoreIntegration(input: IntegrationRestoreInput): WriteOutcome
    * It usually does — `priorRecord` was written for exactly this snapshot. But
    * a CONFIRMED drift-restore snapshots the user's edited file first, and
    * undoing that restore puts those edited bytes back while carrying a record
-   * that describes what opencodex had written. Overwriting the record's
+   * that describes what openccx had written. Overwriting the record's
    * fingerprint with the restored bytes then laundered a foreign edit into
    * owned content: the state read `current`, and a later disable deleted
    * fields the user had added by hand.

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest } from "../helpers/management-auth";
 
-const config = { providers: {} } as OcxConfig;
+const config = { providers: {} } as OccxConfig;
 
 async function apiGet(path: string): Promise<Response> {
   const req = new ManagementRequest(`http://127.0.0.1${path}`, { method: "GET" });

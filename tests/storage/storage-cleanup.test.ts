@@ -136,7 +136,7 @@ function buildHome(opts?: {
   withSatelliteStores?: boolean;
   satellites?: "all" | "logs" | "memories" | "goals";
 }): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-cleanup-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-cleanup-"));
   mkdirSync(join(dir, "sessions", "2026", "05", "27"), { recursive: true });
   writeFileSync(join(dir, "sessions", "2026", "05", "27", "rollout-active.jsonl"), "ACTIVE".repeat(20));
 
@@ -1548,7 +1548,7 @@ describe("listTrashEntries + restoreTrashEntry", () => {
   });
 
   test("legacy quarantine without satellite-backup reconstructs production-shaped thread from rollout", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-cleanup-legacy-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-cleanup-legacy-"));
     home = dir;
     mkdirSync(join(dir, "archived_sessions"), { recursive: true });
 
@@ -1634,7 +1634,7 @@ describe("listTrashEntries + restoreTrashEntry", () => {
   });
 
   test("legacy compressed-only quarantine restores .jsonl.zst and reconstructs the thread row", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-cleanup-legacy-zst-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-cleanup-legacy-zst-"));
     home = dir;
     mkdirSync(join(dir, "archived_sessions"), { recursive: true });
 

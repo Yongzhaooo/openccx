@@ -13,16 +13,16 @@ import { clearAnthropicAccountPoolState } from "../../../src/oauth/anthropic-rou
 import { clearGenericFailoverHealth } from "../../../src/oauth/generic-account-failover";
 import { getAccountSet, saveCredential, setActiveAccount } from "../../../src/oauth/store";
 import { clearAccountQuotaCache, getCachedProviderAccountQuota, resetProviderQuotaReconcileStateForTests } from "../../../src/providers/quota";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 let handleResponses: typeof import("../../../src/server/responses")["handleResponses"];
 let observedKeys: string[] = [];
 let sidecarMode = false;
 
-function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter {
+function fixtureAdapter(provider: OccxProviderConfig): ProviderAdapter {
   return {
     name: "anthropic",
     buildRequest() {
@@ -44,7 +44,7 @@ beforeAll(async () => {
   const actualResolveAdapter = actualResolver.resolveAdapter;
   mock.module("../../../src/server/adapter-resolve", () => ({
     ...actualResolver,
-    resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+    resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
       if (provider.adapter === "test-anthropic-sidecar") return fixtureAdapter(provider);
       return actualResolveAdapter(provider, cacheRetention);
     },
@@ -65,10 +65,10 @@ beforeAll(async () => {
       : undefined,
     shouldResolveOpenAiWebSearchSidecar: () => false,
     runWithWebSearch: async (args: {
-      parsed: OcxParsedRequest;
+      parsed: OccxParsedRequest;
       adapter: ProviderAdapter;
       incomingMeta: IncomingMeta;
-      fetchForRequest: (request: AdapterRequest, parsed: OcxParsedRequest) => typeof fetch;
+      fetchForRequest: (request: AdapterRequest, parsed: OccxParsedRequest) => typeof fetch;
       on429?: (retryAfter: string | null) => Promise<ProviderAdapter | null>;
     }) => {
       // This is a dispatch seam test. The real loop is covered in anthropic-quota-dispatch.
@@ -92,8 +92,8 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-oauth-429-boundaries-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-oauth-429-boundaries-"));
+  process.env.OPENCCX_HOME = testHome;
   observedKeys = [];
   sidecarMode = false;
   clearAnthropicAccountPoolState();
@@ -111,8 +111,8 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   mock.restore();
 });
 
@@ -162,7 +162,7 @@ test("Anthropic sidecar dispatch seam records A429 and B200 when proactive pooli
         }) as typeof fetch,
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 
   const response = await handleResponses(new Request("http://localhost/v1/responses", {
     method: "POST",

@@ -11,7 +11,7 @@ import { clearContextSessionOwnersForTests } from "../../src/codex/context-owner
 import { resetContextRelayActivationForTests } from "../../src/codex/context-compat";
 import { startServer } from "../../src/server";
 import { readCodexAccountRecord, saveCodexAccountCredential } from "../../src/codex/account-store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { serveGuiFile, serveSessionBootstrap } from "../../src/server/gui-static";
 import { isProxyAdmissionSecret } from "../../src/server/auth-cors";
 import {
@@ -90,10 +90,10 @@ import {
 import { setSystemRestartIoForTests } from "../../src/server/management/system-restart";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 let testHome = "";
 
 function enableContextRelay(): void {
@@ -101,7 +101,7 @@ function enableContextRelay(): void {
   resetContextRelayActivationForTests();
 }
 
-function remoteConfig(): OcxConfig {
+function remoteConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -117,7 +117,7 @@ function remoteConfig(): OcxConfig {
   };
 }
 
-function hubConfig(publicOrigin = "https://hub.example.test"): OcxConfig {
+function hubConfig(publicOrigin = "https://hub.example.test"): OccxConfig {
   return {
     ...remoteConfig(),
     runtimeRole: "hub",
@@ -163,7 +163,7 @@ function websocketHandshakeOpens(url: URL, token: string): Promise<boolean> {
     const target = new URL("/v1/responses", url);
     target.protocol = target.protocol === "https:" ? "wss:" : "ws:";
     const socket = new WebSocket(target, {
-      headers: { "X-OpenCodex-API-Key": token },
+      headers: { "X-Openccx-API-Key": token },
     } as unknown as string[]);
     let settled = false;
     const finish = (opened: boolean) => {
@@ -181,12 +181,12 @@ function websocketHandshakeOpens(url: URL, token: string): Promise<boolean> {
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-management-auth-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-management-auth-"));
+  process.env.OPENCCX_HOME = testHome;
   process.env.CODEX_HOME = testHome;
   resetContextRelayActivationForTests();
-  process.env.OPENCODEX_API_AUTH_TOKEN = "data-secret";
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "admin-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "data-secret";
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = "admin-secret";
 });
 
 afterEach(() => {
@@ -197,12 +197,12 @@ afterEach(() => {
   setIcaclsRunnerForTests(null);
   setPlatformForTests(null);
   resetHardenedStateForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -552,7 +552,7 @@ describe("management and data-plane credential separation", () => {
   test("management-token temp cleanup forgets successful ACL memos and retains failed removals", () => {
     const temporary = join(testHome, ".admin-token.tmp");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     setPlatformForTests("win32");
     setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "" }));
@@ -579,7 +579,7 @@ describe("management and data-plane credential separation", () => {
 
   test("stable-path cleanup drops only the success memo; temp cleanup releases all", () => {
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     setPlatformForTests("win32");
     setIcaclsRunnerForTests(() => ({ success: false, exitCode: null, timedOut: true, stdout: "" }));
@@ -610,8 +610,8 @@ describe("management and data-plane credential separation", () => {
 
   test("final-path timeout memo survives stable-path cleanup (anti-restall)", async () => {
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    process.env.USERNAME = "occx-test-user";
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     resetHardenedStateForTests();
     setPlatformForTests("win32");
     // The temp harden succeeds; the FINAL path harden times out.
@@ -642,7 +642,7 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       for (const token of [undefined, "admin-secret", "data-secret"]) {
-        const headers: Record<string, string> = token ? { "x-opencodex-api-key": token } : {};
+        const headers: Record<string, string> = token ? { "x-openccx-api-key": token } : {};
         const models = await fetch(new URL("/backend-api/codex/models", server.url), { headers });
         expect(models.status).toBe(token === "data-secret" ? 200 : 401);
         const context = await fetch(new URL("/backend-api/codex/alpha/notes/v2/read_file", server.url), {
@@ -749,22 +749,22 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       const managementWithDataToken = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(managementWithDataToken.status).toBe(401);
 
       const managementWithAdminToken = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(managementWithAdminToken.status).toBe(200);
 
       const dataWithDataToken = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(dataWithDataToken.status).toBe(200);
 
       const dataWithAdminToken = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(dataWithAdminToken.status).toBe(401);
     } finally {
@@ -791,17 +791,17 @@ describe("management and data-plane credential separation", () => {
       expect(anonymous.status).toBe(401);
 
       const withDataToken = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(withDataToken.status).toBe(401);
 
       const withWrongAdminToken = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "not-the-admin-secret" },
+        headers: { "x-openccx-api-key": "not-the-admin-secret" },
       });
       expect(withWrongAdminToken.status).toBe(401);
 
       const withAdminToken = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(withAdminToken.status).toBe(200);
 
@@ -817,17 +817,17 @@ describe("management and data-plane credential separation", () => {
     }
   });
   test("a management token that matches the data environment token closes only the management plane", async () => {
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "data-secret";
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "data-secret";
     saveConfig(remoteConfig());
     const server = startServer(0);
     try {
       const data = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(data.status).toBe(200);
 
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(management.status).toBe(503);
     } finally {
@@ -836,7 +836,7 @@ describe("management and data-plane credential separation", () => {
   });
 
   test("a management token that matches a configured data key closes only the management plane", async () => {
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     const config = remoteConfig();
     config.apiKeys = [{
       id: "conflict",
@@ -848,12 +848,12 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       const data = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(data.status).toBe(200);
 
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(management.status).toBe(503);
     } finally {
@@ -862,20 +862,20 @@ describe("management and data-plane credential separation", () => {
   });
 
   test("a protected management token file is generated and remains management-only", async () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
     const server = startServer(0);
     try {
       const adminToken = readFileSync(join(testHome, "admin-api-token"), "utf8").trim();
-      expect(adminToken).toMatch(/^ocx_admin_[A-Za-z0-9_-]{43}$/);
+      expect(adminToken).toMatch(/^occx_admin_[A-Za-z0-9_-]{43}$/);
 
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": adminToken },
+        headers: { "x-openccx-api-key": adminToken },
       });
       expect(management.status).toBe(200);
 
       const data = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": adminToken },
+        headers: { "x-openccx-api-key": adminToken },
       });
       expect(data.status).toBe(401);
     } finally {
@@ -884,7 +884,7 @@ describe("management and data-plane credential separation", () => {
   });
 
   test("an icacls timeout keeps the management plane closed without stopping the data plane", async () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
     setPlatformForTests("win32");
     setIcaclsRunnerForTests(args => {
@@ -901,17 +901,17 @@ describe("management and data-plane credential separation", () => {
       expect(health.status).toBe(200);
 
       const data = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "data-secret" },
+        headers: { "x-openccx-api-key": "data-secret" },
       });
       expect(data.status).toBe(200);
 
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "ocx_admin_unhardened" },
+        headers: { "x-openccx-api-key": "occx_admin_unhardened" },
       });
       expect(management.status).toBe(503);
       const body = await management.json() as { error?: string; hint?: string; reason?: string };
       expect(body.error).toBe("management API unavailable");
-      expect(body.hint).toContain("OPENCODEX_ADMIN_AUTH_TOKEN");
+      expect(body.hint).toContain("OPENCCX_ADMIN_AUTH_TOKEN");
       expect(typeof body.reason).toBe("string");
       expect(body.reason!.length).toBeGreaterThan(0);
     } finally {
@@ -920,12 +920,12 @@ describe("management and data-plane credential separation", () => {
   });
 
   test("a configured data key satisfies the remote data-plane startup requirement", async () => {
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     const config = remoteConfig();
     config.apiKeys = [{
       id: "configured",
       name: "Configured data key",
-      key: "ocx_data_configured-secret",
+      key: "occx_data_configured-secret",
       createdAt: "2026-07-28T00:00:00.000Z",
     }];
     saveConfig(config);
@@ -933,12 +933,12 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       const data = await fetch(new URL("/v1/models", server.url), {
-        headers: { "x-opencodex-api-key": "ocx_data_configured-secret" },
+        headers: { "x-openccx-api-key": "occx_data_configured-secret" },
       });
       expect(data.status).toBe(200);
 
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "ocx_data_configured-secret" },
+        headers: { "x-openccx-api-key": "occx_data_configured-secret" },
       });
       expect(management.status).toBe(401);
     } finally {
@@ -954,7 +954,7 @@ describe("management and data-plane credential separation", () => {
     try {
       const crossPort = await fetch(new URL("/api/config", server.url), {
         headers: {
-          "x-opencodex-api-key": "admin-secret",
+          "x-openccx-api-key": "admin-secret",
           origin: "http://127.0.0.1:65534",
         },
       });
@@ -962,7 +962,7 @@ describe("management and data-plane credential separation", () => {
 
       const sameOrigin = await fetch(new URL("/api/config", server.url), {
         headers: {
-          "x-opencodex-api-key": "admin-secret",
+          "x-openccx-api-key": "admin-secret",
           origin: server.url.origin,
         },
       });
@@ -997,23 +997,23 @@ describe("management and data-plane credential separation", () => {
     const page = serveGuiFile("/", guiDist, session ?? undefined);
     expect(page?.headers.get("cache-control")).toBe("no-store");
     const html = await page?.text();
-    expect(html).toContain(`name="opencodex-session-token" content="${session?.token}"`);
-    expect(html).toContain(`name="opencodex-session-csrf" content="${session?.csrfToken}"`);
+    expect(html).toContain(`name="openccx-session-token" content="${session?.token}"`);
+    expect(html).toContain(`name="openccx-session-csrf" content="${session?.csrfToken}"`);
 
     // The dev GUI fetches /opencodex-session through Vite so the app shell stays
     // Vite-owned. The backend answers that path without requiring gui/dist, so a fresh
     // source checkout (no packaged build) can still mint an origin-bound session.
     const bootstrapPage = serveSessionBootstrap(session!);
     const bootstrapHtml = await bootstrapPage.text();
-    expect(bootstrapHtml).toContain(`name="opencodex-session-origin" content="${session?.browserOrigin}"`);
-    expect(bootstrapHtml).toContain(`name="opencodex-session-server-origin" content="${session?.serverOrigin}"`);
-    expect(bootstrapHtml).toContain(`name="opencodex-session-token" content="${session?.token}"`);
+    expect(bootstrapHtml).toContain(`name="openccx-session-origin" content="${session?.browserOrigin}"`);
+    expect(bootstrapHtml).toContain(`name="openccx-session-server-origin" content="${session?.serverOrigin}"`);
+    expect(bootstrapHtml).toContain(`name="openccx-session-token" content="${session?.token}"`);
 
     const sameOriginRead = new Request("http://localhost:10100/api/config", {
       headers: {
         Host: "localhost:10100",
-        "x-opencodex-api-key": session?.token ?? "",
-        "x-opencodex-gui-origin": "http://localhost:10100",
+        "x-openccx-api-key": session?.token ?? "",
+        "x-openccx-gui-origin": "http://localhost:10100",
       },
     });
     expect(requireManagementAuth(sameOriginRead, state, config)).toBeNull();
@@ -1022,8 +1022,8 @@ describe("management and data-plane credential separation", () => {
       headers: {
         Host: "localhost:10100",
         Origin: "http://localhost:20100",
-        "x-opencodex-api-key": session?.token ?? "",
-        "x-opencodex-gui-origin": "http://localhost:20100",
+        "x-openccx-api-key": session?.token ?? "",
+        "x-openccx-gui-origin": "http://localhost:20100",
       },
     });
     expect(requireManagementAuth(crossPortRead, state, config)?.status).toBe(401);
@@ -1033,8 +1033,8 @@ describe("management and data-plane credential separation", () => {
       headers: {
         Host: "localhost:10100",
         Origin: "http://localhost:10100",
-        "x-opencodex-api-key": session?.token ?? "",
-        "x-opencodex-gui-origin": "http://localhost:10100",
+        "x-openccx-api-key": session?.token ?? "",
+        "x-openccx-gui-origin": "http://localhost:10100",
       },
     });
     expect(requireManagementAuth(mutationWithoutCsrf, state, config)?.status).toBe(401);
@@ -1044,9 +1044,9 @@ describe("management and data-plane credential separation", () => {
       headers: {
         Host: "localhost:10100",
         Origin: "http://localhost:10100",
-        "x-opencodex-api-key": session?.token ?? "",
-        "x-opencodex-gui-origin": "http://localhost:10100",
-        "x-opencodex-csrf-token": session?.csrfToken ?? "",
+        "x-openccx-api-key": session?.token ?? "",
+        "x-openccx-gui-origin": "http://localhost:10100",
+        "x-openccx-csrf-token": session?.csrfToken ?? "",
       },
     });
     expect(requireManagementAuth(mutationWithCsrf, state, config)).toBeNull();
@@ -1074,10 +1074,10 @@ describe("management and data-plane credential separation", () => {
       expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
 
       const html = await response.text();
-      expect(html).toContain('name="opencodex-session-token"');
-      expect(html).toContain('name="opencodex-session-csrf"');
-      expect(html).toContain('name="opencodex-session-origin"');
-      expect(html).toContain('name="opencodex-session-server-origin"');
+      expect(html).toContain('name="openccx-session-token"');
+      expect(html).toContain('name="openccx-session-csrf"');
+      expect(html).toContain('name="openccx-session-origin"');
+      expect(html).toContain('name="openccx-session-server-origin"');
     } finally {
       await server.stop(true);
     }
@@ -1107,18 +1107,18 @@ describe("management and data-plane credential separation", () => {
     try {
       const bootstrap = await fetch(new URL("/opencodex-session", server.url));
       const html = await bootstrap.text();
-      const token = html.match(/name="opencodex-session-token" content="([^"]+)"/)?.[1];
-      const csrf = html.match(/name="opencodex-session-csrf" content="([^"]+)"/)?.[1];
+      const token = html.match(/name="openccx-session-token" content="([^"]+)"/)?.[1];
+      const csrf = html.match(/name="openccx-session-csrf" content="([^"]+)"/)?.[1];
       expect(token).toBeDefined();
       expect(csrf).toBeDefined();
       const headers = {
         Origin: server.url.origin,
-        "x-opencodex-api-key": token!,
-        "x-opencodex-gui-origin": server.url.origin,
+        "x-openccx-api-key": token!,
+        "x-openccx-gui-origin": server.url.origin,
       };
       const url = new URL("/api/codex-auth/accounts/refresh", server.url);
       const admin = await fetch(url, { method: "POST", headers: {
-        ...headers, "x-opencodex-api-key": "admin-secret", "x-opencodex-csrf-token": csrf!,
+        ...headers, "x-openccx-api-key": "admin-secret", "x-openccx-csrf-token": csrf!,
       } });
       expect(admin.status).toBe(200);
       expect(warmups).toBe(0);
@@ -1127,12 +1127,12 @@ describe("management and data-plane credential separation", () => {
       expect(missing.status).toBe(401);
       const crossOrigin = await fetch(url, {
         method: "POST",
-        headers: { ...headers, Origin: "http://attacker.test", "x-opencodex-csrf-token": csrf! },
+        headers: { ...headers, Origin: "http://attacker.test", "x-openccx-csrf-token": csrf! },
       });
       expect(crossOrigin.status).toBe(401);
       const allowed = await fetch(url, {
         method: "POST",
-        headers: { ...headers, "x-opencodex-csrf-token": csrf! },
+        headers: { ...headers, "x-openccx-csrf-token": csrf! },
       });
       expect(allowed.status).toBe(200);
       expect(await allowed.json()).toHaveProperty("accounts");
@@ -1146,7 +1146,7 @@ describe("management and data-plane credential separation", () => {
 
   test("session bootstrap escapes both browser and server origin attributes", async () => {
     const response = serveSessionBootstrap({
-      token: "ocx_session_safe",
+      token: "occx_session_safe",
       csrfToken: "csrf-safe",
       browserOrigin: 'https://browser.example.test/\"><script>alert(1)</script>',
       serverOrigin: 'https://hub.example.test/\"><img src=x onerror=alert(1)>',
@@ -1216,13 +1216,13 @@ describe("management and data-plane credential separation", () => {
       const issued = await fetch(`http://127.0.0.1:${managementPort}/opencodex-session`, { headers });
       expect(issued.status).toBe(200);
       const html = await issued.text();
-      const token = /name="opencodex-session-token" content="([^"]+)"/.exec(html)?.[1];
+      const token = /name="openccx-session-token" content="([^"]+)"/.exec(html)?.[1];
       expect(token).toBeDefined();
       const sessionHeaders = {
         Host: "hub.example.test",
         Origin: "https://hub.example.test",
-        "x-opencodex-api-key": token!,
-        "x-opencodex-gui-origin": "https://hub.example.test",
+        "x-openccx-api-key": token!,
+        "x-openccx-gui-origin": "https://hub.example.test",
       };
       const management = await fetch(`http://127.0.0.1:${managementPort}/api/config`, {
         headers: sessionHeaders,
@@ -1241,7 +1241,7 @@ describe("management and data-plane credential separation", () => {
       expect(managementHealth.status).toBe(200);
       expect(await managementHealth.json()).toMatchObject({
         status: "ok",
-        service: "opencodex",
+        service: "openccx",
         version: expect.any(String),
         uptime: expect.any(Number),
         pid: process.pid,
@@ -1252,7 +1252,7 @@ describe("management and data-plane credential separation", () => {
         headers: {
           Host: "hub.example.test",
           Origin: "https://hub.example.test",
-          "x-opencodex-api-key": "admin-secret",
+          "x-openccx-api-key": "admin-secret",
         },
       });
       expect(adminConsent.status).toBe(403);
@@ -1282,9 +1282,9 @@ describe("management and data-plane credential separation", () => {
     expect(consumeGuiPairingGrant(
       exchange("https://dashboard.example.test", "localhost:10100"), { grant: created.grant }, config, state, now + 1,
     )).toBeNull();
-    for (const alternateCredential of ["admin-secret", "data-secret", "ocx_session_not-a-grant"]) {
+    for (const alternateCredential of ["admin-secret", "data-secret", "occx_session_not-a-grant"]) {
       expect(consumeGuiPairingGrant(
-        exchange("https://dashboard.example.test", "hub.example.test", { "x-opencodex-api-key": alternateCredential }),
+        exchange("https://dashboard.example.test", "hub.example.test", { "x-openccx-api-key": alternateCredential }),
         { grant: created.grant }, config, state, now + 1,
       )).toBeNull();
     }
@@ -1337,9 +1337,9 @@ describe("management and data-plane credential separation", () => {
       headers: { Host: "hub.example.test", Origin: "https://dashboard.example.test" },
     });
     for (let attempt = 1; attempt <= 9; attempt++) {
-      expect(consumeGuiPairingGrant(validOrigin, { grant: `ocx_pair_${String(attempt).padStart(43, "a")}` }, config, state, now + attempt, guessContext)).toBeNull();
+      expect(consumeGuiPairingGrant(validOrigin, { grant: `occx_pair_${String(attempt).padStart(43, "a")}` }, config, state, now + attempt, guessContext)).toBeNull();
     }
-    expect(consumeGuiPairingGrant(validOrigin, { grant: `ocx_pair_${"z".repeat(43)}` }, config, state, now + 10, guessContext))
+    expect(consumeGuiPairingGrant(validOrigin, { grant: `occx_pair_${"z".repeat(43)}` }, config, state, now + 10, guessContext))
       .toMatchObject({ allowed: false, reason: "source" });
   });
 
@@ -1350,7 +1350,7 @@ describe("management and data-plane credential separation", () => {
     if (!state.available) throw new Error("expected management auth state");
     const server = startServer(0, { managementAuthState: state });
     const origin = server.url.origin;
-    const token = "ocx_session_logout_test";
+    const token = "occx_session_logout_test";
     state.sessions.set(token, {
       serverOrigin: origin,
       browserOrigin: origin,
@@ -1360,9 +1360,9 @@ describe("management and data-plane credential separation", () => {
     });
     const sessionHeaders = {
       Origin: origin,
-      "x-opencodex-api-key": token,
-      "x-opencodex-gui-origin": origin,
-      "x-opencodex-csrf-token": "csrf-logout-test",
+      "x-openccx-api-key": token,
+      "x-openccx-gui-origin": origin,
+      "x-openccx-csrf-token": "csrf-logout-test",
     };
     try {
       expect((await fetch(new URL("/api/session/logout", server.url), { method: "POST", headers: sessionHeaders })).status).toBe(200);
@@ -1370,7 +1370,7 @@ describe("management and data-plane credential separation", () => {
       expect((await fetch(new URL("/api/session/logout", server.url), { method: "POST", headers: sessionHeaders })).status).toBe(401);
       expect((await fetch(new URL("/api/session/logout", server.url), {
         method: "POST",
-        headers: { Origin: origin, "x-opencodex-api-key": "admin-secret" },
+        headers: { Origin: origin, "x-openccx-api-key": "admin-secret" },
       })).status).toBe(403);
     } finally {
       await server.stop(true);
@@ -1394,7 +1394,7 @@ describe("management and data-plane credential separation", () => {
     try {
       const adminAttempt = await fetch(url, {
         method: "POST",
-        headers: { ...headers, "x-opencodex-api-key": "admin-secret" },
+        headers: { ...headers, "x-openccx-api-key": "admin-secret" },
         body: JSON.stringify({ grant: created.grant }),
       });
       expect(adminAttempt.status).toBe(401);
@@ -1491,26 +1491,26 @@ describe("management and data-plane credential separation", () => {
         headers: {
           Host: host,
           Origin: "https://dashboard.example.test",
-          "x-opencodex-api-key": session.token,
-          "x-opencodex-gui-origin": "https://dashboard.example.test",
-          ...(method === "GET" ? {} : { "x-opencodex-csrf-token": session.csrfToken }),
+          "x-openccx-api-key": session.token,
+          "x-openccx-gui-origin": "https://dashboard.example.test",
+          ...(method === "GET" ? {} : { "x-openccx-csrf-token": session.csrfToken }),
           ...overrides,
         },
       },
     );
-    expect(authorizeGuiSessionRequest(request({ "x-opencodex-gui-origin": "https://evil.example.test" }), config, state, issuedAt + 2)).toMatchObject({ ok: false, reason: "browser-origin" });
+    expect(authorizeGuiSessionRequest(request({ "x-openccx-gui-origin": "https://evil.example.test" }), config, state, issuedAt + 2)).toMatchObject({ ok: false, reason: "browser-origin" });
     expect(session.expiresAt).toBe(before);
     expect(authorizeGuiSessionRequest(request({}, "POST", "localhost:10100"), config, state, issuedAt + 3)).toMatchObject({ ok: false, reason: "server-origin" });
     expect(session.expiresAt).toBe(before);
-    expect(authorizeGuiSessionRequest(request({ "x-opencodex-csrf-token": "wrong" }, "POST"), config, state, issuedAt + 4)).toMatchObject({ ok: false, reason: "csrf" });
+    expect(authorizeGuiSessionRequest(request({ "x-openccx-csrf-token": "wrong" }, "POST"), config, state, issuedAt + 4)).toMatchObject({ ok: false, reason: "csrf" });
     expect(session.expiresAt).toBe(before);
     const missingCsrf = new Request("https://hub.example.test/api/config", {
       method: "POST",
       headers: {
         Host: "hub.example.test",
         Origin: "https://dashboard.example.test",
-        "x-opencodex-api-key": session.token,
-        "x-opencodex-gui-origin": "https://dashboard.example.test",
+        "x-openccx-api-key": session.token,
+        "x-openccx-gui-origin": "https://dashboard.example.test",
       },
     });
     expect(authorizeGuiSessionRequest(missingCsrf, config, state, issuedAt + 4)).toMatchObject({ ok: false, reason: "csrf" });
@@ -1532,7 +1532,7 @@ describe("management and data-plane credential separation", () => {
     try {
       const adminAttempt = await fetch(new URL(GUI_PAIR_PATH, server.url), {
         method: "POST",
-        headers: { "content-length": "0", "x-opencodex-api-key": "admin-secret" },
+        headers: { "content-length": "0", "x-openccx-api-key": "admin-secret" },
       });
       expect(adminAttempt.status).toBe(403);
       expect(state.pairingGrants.size).toBe(0);
@@ -1581,8 +1581,8 @@ describe("management and data-plane credential separation", () => {
       expect(exchanged.status).toBe(200);
       expect(exchanged.headers.get("cache-control")).toBe("no-store");
       const html = await exchanged.text();
-      expect(html).toContain('name="opencodex-session-origin" content="https://dashboard.example.test"');
-      expect(html).toContain('name="opencodex-session-server-origin" content="https://hub.example.test"');
+      expect(html).toContain('name="openccx-session-origin" content="https://dashboard.example.test"');
+      expect(html).toContain('name="openccx-session-server-origin" content="https://hub.example.test"');
       expect(state.pairingGrants.size).toBe(0);
     } finally {
       await server.stop(true);
@@ -1610,7 +1610,7 @@ describe("management and data-plane credential separation", () => {
       {
         id: "legacy",
         name: "Legacy data key",
-        key: `ocx_${"a".repeat(40)}`,
+        key: `occx_${"a".repeat(40)}`,
         createdAt: "2026-07-28T00:00:00.000Z",
       },
     ];
@@ -1618,14 +1618,14 @@ describe("management and data-plane credential separation", () => {
       "data-secret",
       "admin-secret",
       "manually-configured-data-secret",
-      `ocx_${"a".repeat(40)}`,
-      "ocx_data_generated",
-      "ocx_admin_generated",
-      "ocx_session_generated",
+      `occx_${"a".repeat(40)}`,
+      "occx_data_generated",
+      "occx_admin_generated",
+      "occx_session_generated",
     ]) {
       expect(isProxyAdmissionSecret(secret, config)).toBe(true);
     }
-    expect(isProxyAdmissionSecret("ocx_provider_upstream", config)).toBe(false);
+    expect(isProxyAdmissionSecret("occx_provider_upstream", config)).toBe(false);
   });
 
   test("Responses authentication and WebSocket handshakes accept data credentials only", async () => {
@@ -1634,12 +1634,12 @@ describe("management and data-plane credential separation", () => {
     saveConfig(config);
     const server = startServer(0);
     try {
-      for (const rejected of ["admin-secret", "ocx_session_browser-secret"]) {
+      for (const rejected of ["admin-secret", "occx_session_browser-secret"]) {
         const response = await fetch(new URL("/v1/responses", server.url), {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "x-opencodex-api-key": rejected,
+            "x-openccx-api-key": rejected,
           },
           body: JSON.stringify({ model: "test/gpt-test", input: "hello" }),
         });
@@ -1653,13 +1653,13 @@ describe("management and data-plane credential separation", () => {
   });
 
   test("an invalid existing management token file keeps management unavailable", async () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
     writeFileSync(join(testHome, "admin-api-token"), "corrupt-token\n", { mode: 0o600 });
     const server = startServer(0);
     try {
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "corrupt-token" },
+        headers: { "x-openccx-api-key": "corrupt-token" },
       });
       expect(management.status).toBe(503);
       expect(readFileSync(join(testHome, "admin-api-token"), "utf8")).toBe("corrupt-token\n");
@@ -1670,9 +1670,9 @@ describe("management and data-plane credential separation", () => {
   }, SERVER_BUDGET_MS); // binds a real server + live fetches; windows runner measured ~5.04s against Bun's 5s default.
 
   test("an existing management token ACL hardening failure keeps management unavailable", async () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
-    const adminToken = `ocx_admin_${"b".repeat(43)}`;
+    const adminToken = `occx_admin_${"b".repeat(43)}`;
     writeFileSync(join(testHome, "admin-api-token"), `${adminToken}\n`, { mode: 0o600 });
     setPlatformForTests("win32");
     setIcaclsRunnerForTests(args => {
@@ -1685,7 +1685,7 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": adminToken },
+        headers: { "x-openccx-api-key": adminToken },
       });
       expect(management.status).toBe(503);
       expect((await fetch(new URL("/healthz", server.url))).status).toBe(200);
@@ -1694,10 +1694,10 @@ describe("management and data-plane credential separation", () => {
     }
   });
 
-  test("directory ACL timeout keeps management unavailable and names OPENCODEX_ADMIN_AUTH_TOKEN", () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+  test("directory ACL timeout keeps management unavailable and names OPENCCX_ADMIN_AUTH_TOKEN", () => {
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
-    const adminToken = `ocx_admin_${"d".repeat(43)}`;
+    const adminToken = `occx_admin_${"d".repeat(43)}`;
     writeFileSync(join(testHome, "admin-api-token"), `${adminToken}\n`, { mode: 0o600 });
     process.env.USERNAME ??= "tester";
     setPlatformForTests("win32");
@@ -1718,13 +1718,13 @@ describe("management and data-plane credential separation", () => {
     const state = initializeManagementAuthState(remoteConfig());
     expect(state.available).toBe(false);
     if (state.available) return;
-    expect(state.reason).toContain("OPENCODEX_ADMIN_AUTH_TOKEN");
+    expect(state.reason).toContain("OPENCCX_ADMIN_AUTH_TOKEN");
   });
 
   test("required management harden retries after a soft loadConfig directory timeout", async () => {
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     saveConfig(remoteConfig());
-    const adminToken = `ocx_admin_${"f".repeat(43)}`;
+    const adminToken = `occx_admin_${"f".repeat(43)}`;
     writeFileSync(join(testHome, "admin-api-token"), `${adminToken}\n`, { mode: 0o600 });
     process.env.USERNAME ??= "tester";
     setPlatformForTests("win32");
@@ -1756,8 +1756,8 @@ describe("management and data-plane credential separation", () => {
     expect(requiredPhaseCalls).toBeGreaterThan(0);
   });
 
-  test("OPENCODEX_ADMIN_AUTH_TOKEN bypasses file-backed ACL hardening", async () => {
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "env-admin-secret";
+  test("OPENCCX_ADMIN_AUTH_TOKEN bypasses file-backed ACL hardening", async () => {
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "env-admin-secret";
     saveConfig(remoteConfig());
     process.env.USERNAME ??= "tester";
     setPlatformForTests("win32");
@@ -1782,7 +1782,7 @@ describe("management and data-plane credential separation", () => {
     const server = startServer(0);
     try {
       const management = await fetch(new URL("/api/config", server.url), {
-        headers: { "x-opencodex-api-key": "env-admin-secret" },
+        headers: { "x-openccx-api-key": "env-admin-secret" },
       });
       expect(management.status).toBe(200);
     } finally {
@@ -1847,14 +1847,14 @@ test("log cursors remain behind management admission and origin gates", async ()
   if (!state.available) throw new Error("expected management auth state");
   const server = startServer(0, { managementAuthState: state });
   const origin = server.url.origin;
-  const token = "ocx_session_log_cursor_test";
+  const token = "occx_session_log_cursor_test";
   state.sessions.set(token, {
     serverOrigin: origin, browserOrigin: origin, csrfToken: "csrf-log-test",
     expiresAt: Date.now() + 60_000, issuance: "loopback",
   });
-  const adminHeaders = { "x-opencodex-api-key": "admin-secret" };
+  const adminHeaders = { "x-openccx-api-key": "admin-secret" };
   const acceptedHeaders: HeadersInit[] = [adminHeaders, {
-    Origin: origin, "x-opencodex-api-key": token, "x-opencodex-gui-origin": origin,
+    Origin: origin, "x-openccx-api-key": token, "x-openccx-gui-origin": origin,
   }];
   try {
     const initial = await fetch(new URL("/api/logs", server.url), { headers: adminHeaders });
@@ -1864,9 +1864,9 @@ test("log cursors remain behind management admission and origin gates", async ()
     for (const suffix of ["", `?cursor=${body.cursor}`, "?cursor=malformed"]) {
       const url = new URL(`/api/logs${suffix}`, server.url);
       for (const credential of [undefined, "data-secret", "wrong-admin"]) {
-        const response = await fetch(url, { headers: credential ? { "x-opencodex-api-key": credential } : {} });
+        const response = await fetch(url, { headers: credential ? { "x-openccx-api-key": credential } : {} });
         expect(response.status).toBe(401);
-        expect(await response.json()).toEqual({ error: "opencodex admin token required" });
+        expect(await response.json()).toEqual({ error: "openccx admin token required" });
       }
       const foreign = await fetch(url, { headers: { ...adminHeaders, Origin: "https://attacker.test" } });
       expect(foreign.status).toBe(403);
@@ -1889,7 +1889,7 @@ test("unavailable management authority rejects log cursors before parsing", asyn
     const legacy = Buffer.from(JSON.stringify({ v: 1, t: 1, id: "fixture" })).toString("base64url");
     for (const suffix of ["", `?cursor=${legacy}`, "?cursor=malformed"]) {
       const response = await fetch(new URL(`/api/logs${suffix}`, server.url), {
-        headers: { "x-opencodex-api-key": "admin-secret" },
+        headers: { "x-openccx-api-key": "admin-secret" },
       });
       expect(response.status).toBe(503);
       expect(await response.json()).toMatchObject({ error: "management API unavailable" });

@@ -1,4 +1,4 @@
-import type { OcxRequestOptions } from "../types";
+import type { OccxRequestOptions } from "../types";
 import { isObj } from "./parser-content";
 
 /**
@@ -7,7 +7,7 @@ import { isObj } from "./parser-content";
  * replaces; unknown or malformed formats are ignored, never rejected, so the native
  * passthrough keeps forwarding whatever the caller sent via `_rawBody`.
  */
-export function parseTextFormat(text: unknown): OcxRequestOptions["textFormat"] {
+export function parseTextFormat(text: unknown): OccxRequestOptions["textFormat"] {
   if (!isObj(text)) return undefined;
   const format = (text as { format?: unknown }).format;
   if (!isObj(format)) return undefined;

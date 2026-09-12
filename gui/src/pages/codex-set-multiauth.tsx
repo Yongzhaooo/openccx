@@ -102,7 +102,7 @@ type CachedMode = {
  *
  * This is a MOVE, not a rewrite: every line below arrived here from
  * `CodexAuth.tsx` unchanged, including the session cache key
- * `ocx.codex-auth.config.v1`. Renaming that key would discard every user's warm
+ * `occx.codex-auth.config.v1`. Renaming that key would discard every user's warm
  * cache to gain nothing, and the backend namespace /api/codex-auth/* does not
  * move either (devlog 004 §C: a dozen test files bind to it).
  */
@@ -124,7 +124,7 @@ function CodexSetMultiauthForProxy({ apiBase }: { apiBase: string }) {
   const onHardLockSaved = useCallback(() => ownerMountedRef.current
     ? loadAccounts(false)
     : Promise.resolve(false), [loadAccounts]);
-  const configCacheKey = `ocx.codex-auth.config.v1:${apiBase}`;
+  const configCacheKey = `occx.codex-auth.config.v1:${apiBase}`;
   const cached = readSessionListCache<CachedMode>(configCacheKey);
   const [bannerState, setBannerState] = useState<OpenAiAccountBannerState>(() => cached?.bannerState ?? null);
   const [accountModeState, setAccountModeState] = useState<CodexAccountModeState | null>(

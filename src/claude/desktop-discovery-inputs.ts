@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import {
   filterCatalogVisibleModels,
   nativeContextLimits,
@@ -23,7 +23,7 @@ export interface DesktopDiscoveryInputs {
 
 /** Project captured discovery state without reading caches or installing aliases. */
 export function buildDesktopDiscoveryInputs(options: {
-  config: OcxConfig;
+  config: OccxConfig;
   models: readonly CatalogModel[];
   modelEntitlements: CodexModelEntitlementSnapshot;
   desktopNativeCandidates: readonly string[];

@@ -20,10 +20,10 @@ import {
   isValidCodexAccountNamespaceTarget,
 } from "../../src/codex/account-namespaces";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/main-account";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 type InitializableAccountNamespaceConfig = Pick<
-  OcxConfig,
+  OccxConfig,
   | "codexAccountPickerEnabled"
   | "codexAccountNamespaces"
   | "codexAccounts"

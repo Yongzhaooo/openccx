@@ -10,7 +10,7 @@ import { legacyCustomModelCatalogSlugs } from "../custom-model-catalog-migration
 import { CODEX_CONFIG_PATH, CODEX_MODELS_CACHE_PATH, DEFAULT_CATALOG_PATH, getCodexHome, readRootTomlString, resolveCodexConfigPath } from "../paths";
 import { clearModelCache, DEFAULT_MODEL_CACHE_TTL_MS, getFreshCached, getStaleCached, isModelsFetchCoolingDown, markModelsFetchFailure, setCached } from "../model-cache";
 import { buildModelsRequest, resolveModelsAuthToken } from "../../oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { modelInList } from "../../types";
 import { CODEX_REASONING_LEVELS, codexEffortRank, configuredReasoningEfforts, modelRecordValue, sanitizeCodexReasoningEfforts } from "../../reasoning-effort";
 import { getModelMetadata, getModelMetadataCaseInsensitive, listModelMetadata, resolveMetadataProvider } from "../../generated/model-metadata";
@@ -91,21 +91,21 @@ export const MAX_SPAWN_AGENT_MODEL_OVERRIDES = 5;
 
 // Base for config.modelPickerOrder display priorities (#1649). modelPickerOrder is a DISPLAY-ONLY
 // reordering of the Codex model picker: it rewrites a row's Codex-visible `priority` but not
-// OpenCodex's natural-priority guidance window. Native Codex advertisements still follow the
+// Openccx's natural-priority guidance window. Native Codex advertisements still follow the
 // visible priority and can differ from that guidance window.
 export const PICKER_ORDER_PRIORITY_BASE = 1_000;
 
-// OpenCodex-private catalog field: the guidance candidate priority a row would have WITHOUT
-// modelPickerOrder. Codex ignores unknown catalog fields (same as opencodex_catalog_kind), so this
-// is invisible to Codex; effectiveSubagentRoster reads it to keep OpenCodex guidance candidates
+// Openccx-private catalog field: the guidance candidate priority a row would have WITHOUT
+// modelPickerOrder. Codex ignores unknown catalog fields (same as openccx_catalog_kind), so this
+// is invisible to Codex; effectiveSubagentRoster reads it to keep Openccx guidance candidates
 // independent of display order. It does not freeze native advertisements. Absent on unmoved rows.
-export const SPAWN_PRIORITY_FIELD = "opencodex_spawn_priority";
+export const SPAWN_PRIORITY_FIELD = "openccx_spawn_priority";
 
-// OpenCodex-private catalog field: this row is listed but currently unable to serve (#1711).
-// Codex ignores unknown catalog fields (same as opencodex_catalog_kind and the spawn priority
+// Openccx-private catalog field: this row is listed but currently unable to serve (#1711).
+// Codex ignores unknown catalog fields (same as openccx_catalog_kind and the spawn priority
 // above) and ensureStrictCatalogFields does not strip extras, so this is invisible to the native
 // picker and cannot change what Codex offers. It never touches `visibility`.
-export const CATALOG_INACTIVE_REASON_FIELD = "opencodex_inactive_reason";
+export const CATALOG_INACTIVE_REASON_FIELD = "openccx_inactive_reason";
 
 export type SpawnAgentSurface = "v1" | "v2";
 
@@ -133,7 +133,7 @@ export type SubagentRosterExclusionReason =
  * - `"v2"`       -> eligible, and the child may itself delegate.
  * - `"v1"`       -> eligible LEAF worker. This is upstream's pin for `gpt-5.6-luna`
  *                   (models-manager/models.json); excluding it here is exactly what
- *                   kept Luna out of opencodex's roster.
+ *                   kept Luna out of openccx's roster.
  * - absent/null  -> eligible LEAF worker (routed or unpinned-native model).
  * - `"disabled"` -> the sole capability-based exclusion.
  *
@@ -162,7 +162,7 @@ export interface SubagentRosterExclusion {
 }
 
 export interface EffectiveSubagentRoster {
-  /** OpenCodex's natural-priority guidance projection, not captured native tool text. */
+  /** Openccx's natural-priority guidance projection, not captured native tool text. */
   candidates: EffectiveSubagentModel[];
   /** Configured models within that projection; exact-name eligibility is a separate check. */
   advertised: EffectiveSubagentModel[];
@@ -201,7 +201,7 @@ export function effectiveSubagentRoster(
     .filter(({ entry }) => entry.visibility === "list")
     .filter(({ entry }) => surface !== "v2" || isEligibleV2SubagentEntry(entry))
     .sort((left, right) => {
-      // OpenCodex guidance candidates rank by natural priority (SPAWN_PRIORITY_FIELD when present),
+      // Openccx guidance candidates rank by natural priority (SPAWN_PRIORITY_FIELD when present),
       // so modelPickerOrder does not change this projection. Native tool advertisements differ. Rows the
       // override did not move fall back to their Codex-visible `priority`.
       const spawnPriorityOf = (entry: RawEntry): number => {
@@ -295,7 +295,7 @@ function isExactComboCatalogEntry(
  * catalog/provider-fetch.ts (#2960) and keeps the canonical provider name. All other providers
  * keep the raw slug exactly as before.
  */
-function routedDisplayName(slug: string, model?: CatalogModel, config?: Pick<OcxConfig, "providers">): string {
+function routedDisplayName(slug: string, model?: CatalogModel, config?: Pick<OccxConfig, "providers">): string {
   const slash = slug.indexOf("/");
   if (slash <= 0) return slug;
   const provider = slug.slice(0, slash);
@@ -345,7 +345,7 @@ export function deriveEntry(
   }
   if (template || codexForwardNativeCapabilityAlias) {
     const e = JSON.parse(JSON.stringify(codexForwardNativeCapabilityAlias ?? template)) as RawEntry;
-    delete e.opencodex_native_display_name;
+    delete e.openccx_native_display_name;
     // A cached template may carry display-order history; each new row owns its natural rank.
     delete e[SPAWN_PRIORITY_FIELD];
     e.slug = slug;
@@ -371,7 +371,7 @@ export function deriveEntry(
       // alias (`provider/vendor-model`); the model object carries the native id.
       const modelName = model?.id ?? slug.slice(slug.indexOf("/") + 1);
       if (typeof e.base_instructions === "string") {
-        // Proxy-neutral: keep the GPT-5/OpenAI disclaimer but never advertise the opencodex proxy
+        // Proxy-neutral: keep the GPT-5/OpenAI disclaimer but never advertise the openccx proxy
         // (leaking that into base_instructions is a non-first-party signature → ToS risk).
         e.base_instructions = identifyRoutedModel(e.base_instructions, modelName);
       }
@@ -390,7 +390,7 @@ export function deriveEntry(
       }
       if (model) applyCatalogMetadata(e, model.provider, model.id, model.contextCap);
       applyCatalogModelMetadata(e, model);
-      if (model?.catalogKind) e.opencodex_catalog_kind = model.catalogKind;
+      if (model?.catalogKind) e.openccx_catalog_kind = model.catalogKind;
       // Additive only. `visibility` is untouched: an inactive row must still be OFFERED, which is
       // the whole point of #1711 — operator disable is what removes rows, and it stays a separate
       // path from this one.
@@ -441,7 +441,7 @@ export function deriveEntry(
   }
   if (model && isRouted) applyCatalogMetadata(entry, model.provider, model.id, model.contextCap);
   applyCatalogModelMetadata(entry, model);
-  if (model?.catalogKind) entry.opencodex_catalog_kind = model.catalogKind;
+  if (model?.catalogKind) entry.openccx_catalog_kind = model.catalogKind;
   // Same additive stamp as the templated path above. A routed row that reaches the no-template
   // fallback is still a served row, so omitting it here would make the field depend on whether a
   // template happened to be cached — which is exactly what the regression test caught.
@@ -548,18 +548,18 @@ export function buildCatalogEntriesFromObservedState({
   // catalog stays put across rebuilds. Featured rows keep their existing 0..N-1 band; when
   // modelPickerOrder is unset the helper is a no-op and every priority below is byte-identical to
   // before. The spawn_agent candidate window is derived separately from SPAWN_PRIORITY_FIELD, so
-  // this display reorder does not change OpenCodex's guidance candidate calculation.
+  // this display reorder does not change Openccx's guidance candidate calculation.
   const pickerOrder = normalizeModelPickerOrder(modelPickerOrder);
   const pickerOrderRank = new Map(pickerOrder.map((slug, i) => [slug, i] as const));
   const pickerOrderActive = pickerOrder.length > 0;
   // The display band reuses the existing high priority tier (>= PICKER_ORDER_PRIORITY_BASE, the
   // same 1_000+ neighborhood account rows occupy), keeping listed rows visually after the featured
-  // band. OpenCodex guidance membership does not depend on this — see SPAWN_PRIORITY_FIELD.
+  // band. Openccx guidance membership does not depend on this — see SPAWN_PRIORITY_FIELD.
   /**
    * Priority for a non-featured routed row that is explicitly LISTED in modelPickerOrder. Listed
    * slugs sort in declared order within the high picker-order display tier
    * (>= PICKER_ORDER_PRIORITY_BASE). This sets the Codex-visible `priority` only; the caller records
-   * the row's natural priority in SPAWN_PRIORITY_FIELD for OpenCodex's unchanged guidance window.
+   * the row's natural priority in SPAWN_PRIORITY_FIELD for Openccx's unchanged guidance window.
    * Returns undefined when the feature is off or the row is not listed, so those rows
    * keep their original assignment (default 5 / account 1_000+) untouched.
    *
@@ -590,7 +590,7 @@ export function buildCatalogEntriesFromObservedState({
       if (!slugAliasCollisionWarnings.has(model.alias)) {
         slugAliasCollisionWarnings.add(model.alias);
         console.warn(
-          `[opencodex] native combo alias collision on "${model.alias}": keeping the first configured combo and omitting later duplicates from the catalog.`,
+          `[openccx] native combo alias collision on "${model.alias}": keeping the first configured combo and omitting later duplicates from the catalog.`,
         );
       }
       continue;
@@ -612,12 +612,12 @@ export function buildCatalogEntriesFromObservedState({
     const routed = deriveEntry(
       template,
       slug,
-      `Routed via opencodex → ${nativeAlias.provider} (${nativeAlias.owned_by ?? nativeAlias.provider}).`,
+      `Routed via openccx → ${nativeAlias.provider} (${nativeAlias.owned_by ?? nativeAlias.provider}).`,
       5,
       nativeAlias,
       exactComboSlugs,
     );
-    routed.opencodex_catalog_kind = CODEX_NATIVE_ALIAS_CATALOG_KIND;
+    routed.openccx_catalog_kind = CODEX_NATIVE_ALIAS_CATALOG_KIND;
     const rankHit = rank.get(slug) ?? rank.get(`${nativeAlias.provider}/${nativeAlias.id}`);
     if (rankHit !== undefined) routed.priority = rankHit * priorityStride;
     else if (accountSelectors.length > 0) routed.priority = 1_000 + (typeof routed.priority === "number" ? routed.priority : 5);
@@ -643,8 +643,8 @@ export function buildCatalogEntriesFromObservedState({
       if (nativeSlug === NATIVE_RESERVE_MODEL && disabledNativeAccountSlugs.has(catalogSlug)) continue;
       e.slug = catalogSlug;
       e.display_name = accountBoundNativeDisplayName(selector, native);
-      // Codex ignores this OpenCodex extension; preserve the native comp_hash unchanged.
-      e.opencodex_catalog_kind = CODEX_ACCOUNT_BOUND_CATALOG_KIND;
+      // Codex ignores this Openccx extension; preserve the native comp_hash unchanged.
+      e.openccx_catalog_kind = CODEX_ACCOUNT_BOUND_CATALOG_KIND;
       const exactRank = rank.get(catalogSlug);
       // A bare featured id belongs to the compatibility combo once shadowed. Exact
       // account-qualified picks still rank normally, but the account clone must not
@@ -670,13 +670,13 @@ export function buildCatalogEntriesFromObservedState({
     const e = deriveEntry(
       template,
       slug,
-      `Routed via opencodex → ${m.provider} (${m.owned_by ?? m.provider}).`,
+      `Routed via openccx → ${m.provider} (${m.owned_by ?? m.provider}).`,
       5,
       m,
       exactComboSlugs,
     );
     if (m.provider === COMBO_NAMESPACE && m.nativeAlias === true && !slug.includes("/")) {
-      e.opencodex_catalog_kind = CODEX_NATIVE_ALIAS_CATALOG_KIND;
+      e.openccx_catalog_kind = CODEX_NATIVE_ALIAS_CATALOG_KIND;
     }
     // Featured picks may be stored raw (legacy) or encoded — honor both.
     const rankHit = rank.get(slug) ?? rank.get(`${m.provider}/${m.id}`);
@@ -690,7 +690,7 @@ export function buildCatalogEntriesFromObservedState({
     }
     // The legacy routed-only builder pass keeps featured ranks and records natural priority
     // before changing non-featured display priority. The final complete-order pass may move
-    // featured display rows too; OpenCodex guidance continues to use their natural ranks.
+    // featured display rows too; Openccx guidance continues to use their natural ranks.
     if (rankHit === undefined) {
       const pickerPriority = pickerOrderPriority(slug, `${m.provider}/${m.id}`);
       if (pickerPriority !== undefined) {
@@ -708,7 +708,7 @@ export function buildCatalogEntriesFromObservedState({
     else {
       delete entry.supports_websockets;
       // Snapshot-backed native entries carry prefer_websockets: never advertise a preference
-      // for an endpoint ocx has disabled.
+      // for an endpoint occx has disabled.
       delete entry.prefer_websockets;
     }
   }
@@ -771,19 +771,19 @@ export function orderForModelPicker(
 }
 
 /**
- * True when an existing catalog row was authored by OpenCodex routing (#855).
+ * True when an existing catalog row was authored by Openccx routing (#855).
  * Every generated routed row — current full-slug form, the June–July 2026
  * provider-name form, and legacy combo aliases — carries the stable
- * description prefix `Routed via opencodex → `; foreign rows from Cursor or
+ * description prefix `Routed via openccx → `; foreign rows from Cursor or
  * user tooling do not. `owned_by` cannot serve as the signal (upstream
- * ownership), and `comp_hash` defaults to "opencodex" for every normalized
+ * ownership), and `comp_hash` defaults to "openccx" for every normalized
  * row.
  */
-function isOcxAuthoredRoutedEntry(entry: RawEntry): boolean {
+function isOccxAuthoredRoutedEntry(entry: RawEntry): boolean {
   if (isNativeAliasCatalogEntry(entry)) return true;
   const desc = typeof entry.description === "string" ? entry.description : "";
   const slug = typeof entry.slug === "string" ? entry.slug : "";
-  return slug.includes("/") && desc.startsWith("Routed via opencodex → ");
+  return slug.includes("/") && desc.startsWith("Routed via openccx → ");
 }
 
 function recoverableNativeSlug(entry: RawEntry): string | null {
@@ -797,8 +797,8 @@ function recoverableNativeSlug(entry: RawEntry): string | null {
 
 /** Undo our display overlay before native metadata normalization and template reuse. */
 function restoreNativeDisplayName(entry: RawEntry): RawEntry {
-  const saved = entry.opencodex_native_display_name;
-  delete entry.opencodex_native_display_name;
+  const saved = entry.openccx_native_display_name;
+  delete entry.openccx_native_display_name;
   if (saved && typeof saved === "object" && !Array.isArray(saved)) {
     const label = saved as Record<string, unknown>;
     if (recoverableNativeSlug(entry) === label.slug
@@ -860,7 +860,7 @@ function modelPickerRank(order: readonly string[]): (slug: string) => number | u
   return slug => exact.get(slug) ?? equivalent.get(slugEquivalenceKey(slug));
 }
 
-/** Complete display ordering retains natural ranks for OpenCodex's separate guidance projection. */
+/** Complete display ordering retains natural ranks for Openccx's separate guidance projection. */
 export function applyFullModelPickerOrder(entries: RawEntry[], order: readonly string[]): void {
   const pickerOrder = normalizeModelPickerOrder(order);
   if (!pickerOrder.some(slug => !slug.includes("/"))) return;
@@ -946,7 +946,7 @@ export function mergeCatalogEntriesFromObservedState({
   // Track this invocation's generated custom rows, not ownership markers read from disk.
   // Their builder already finalized exact native ladders and ordinary routed mock tiers.
   const freshCustomEntries = new Set(detachedRoutedEntries.filter(entry =>
-    entry.opencodex_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND));
+    entry.openccx_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND));
   const detachedAccountBoundEntries = accountBoundEntries
     .map(entry => structuredClone(entry) as RawEntry);
   const disabledModelKeys = new Set([...disabledModels].map(slugEquivalenceKey));
@@ -962,8 +962,8 @@ export function mergeCatalogEntriesFromObservedState({
   const wouldSurviveUnreplaced = (entry: RawEntry): boolean => {
     if (entry.owned_by === COMBO_NAMESPACE
       || trustedAccountBoundNativeCatalogSlug(entry) !== undefined
-      || entry.opencodex_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
-      || isOcxAuthoredRoutedEntry(entry)
+      || entry.openccx_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
+      || isOccxAuthoredRoutedEntry(entry)
       || typeof entry.slug !== "string") return false;
     const slug = entry.slug;
     if (!slug.includes("/")) {
@@ -1010,16 +1010,16 @@ export function mergeCatalogEntriesFromObservedState({
   for (const entry of admittedRoutedEntries) {
     const slug = typeof entry.slug === "string" ? entry.slug : "";
     if (!slug
-      || entry.opencodex_catalog_kind !== undefined
+      || entry.openccx_catalog_kind !== undefined
       || entry.owned_by === COMBO_NAMESPACE
-      || !isOcxAuthoredRoutedEntry(entry)
+      || !isOccxAuthoredRoutedEntry(entry)
       || !legacyCustomModelKeys.has(slugEquivalenceKey(slug))) continue;
-    entry.opencodex_catalog_kind = CODEX_PROVIDER_MODEL_CATALOG_KIND;
+    entry.openccx_catalog_kind = CODEX_PROVIDER_MODEL_CATALOG_KIND;
   }
   const freshExactComboEntries = new Set(admittedRoutedEntries.filter(entry => (
     isExactComboCatalogEntry(entry, exactComboSlugs)
     && typeof entry.description === "string"
-    && entry.description.startsWith(`Routed via opencodex → ${COMBO_NAMESPACE} (`)
+    && entry.description.startsWith(`Routed via openccx → ${COMBO_NAMESPACE} (`)
   )));
   const rank = new Map(featured.map((slug, i) => [slug, i] as const));
   const freshEquivalentKeys = new Set(admittedRoutedEntries.flatMap(entry => (
@@ -1070,7 +1070,7 @@ export function mergeCatalogEntriesFromObservedState({
         || !isUnsupportedOpenAiNativeSlug(m.slug as string)))
     .map(m => {
       const slug = m.slug as string;
-      // Fallback-quality entries (ocx synthesis / codex-rs model_info fallback: display_name
+      // Fallback-quality entries (occx synthesis / codex-rs model_info fallback: display_name
       // stamped with the bare slug) are upgraded to the pinned upstream snapshot entry so a
       // previously synthesized ladder (e.g. luna advertising ultra) self-heals on sync. A
       // genuine catalog entry (real display name) is preserved untouched.
@@ -1131,7 +1131,7 @@ export function mergeCatalogEntriesFromObservedState({
     aligned.display_name = entry.display_name;
     aligned.priority = entry.priority;
     aligned.visibility = "list";
-    aligned.opencodex_catalog_kind = CODEX_ACCOUNT_BOUND_CATALOG_KIND;
+    aligned.openccx_catalog_kind = CODEX_ACCOUNT_BOUND_CATALOG_KIND;
     return aligned;
   });
 
@@ -1149,13 +1149,13 @@ export function mergeCatalogEntriesFromObservedState({
     if (isNativeAliasCatalogEntry(entry)) return exactComboSlugs.has(slug);
     // Current custom rows are always regenerated from config, even while provider discovery is
     // degraded. A marked row absent from the fresh projection is therefore an intentional delete.
-    if (entry.opencodex_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND) return false;
+    if (entry.openccx_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND) return false;
     // Before custom rows had a marker, a config deletion could otherwise be mistaken for a
-    // provider outage. Only explicit save-boundary evidence may classify an unmarked OpenCodex
+    // provider outage. Only explicit save-boundary evidence may classify an unmarked Openccx
     // row; foreign and future-marked rows fail closed and remain preserved.
-    if (entry.opencodex_catalog_kind === undefined
+    if (entry.openccx_catalog_kind === undefined
       && entry.owned_by !== COMBO_NAMESPACE
-      && isOcxAuthoredRoutedEntry(entry)
+      && isOccxAuthoredRoutedEntry(entry)
       && legacyCustomModelKeys.has(slugEquivalenceKey(slug))) return false;
     const provider = slug.slice(0, slug.indexOf("/"));
     if (gatheredProviderNames.has(provider)) {
@@ -1163,9 +1163,9 @@ export function mergeCatalogEntriesFromObservedState({
       // catalogs and successful removals still delete stale rows even when another provider fails.
       return degradedProviderNames.has(provider);
     }
-    // Deleted/disabled providers cannot retain OpenCodex-authored ghosts. Foreign catalog rows
+    // Deleted/disabled providers cannot retain Openccx-authored ghosts. Foreign catalog rows
     // remain outside provider ownership and survive unless a fresh row replaces their exact slug.
-    return !isOcxAuthoredRoutedEntry(entry);
+    return !isOccxAuthoredRoutedEntry(entry);
   });
   // Retained rows bypass the builder. Recompute managed spawn ranks from current config
   // before either display-order mode; a saved display override is not current roster authority.
@@ -1181,7 +1181,7 @@ export function mergeCatalogEntriesFromObservedState({
       delete entry[SPAWN_PRIORITY_FIELD];
     }
     const slug = String(entry.slug);
-    if (!isOcxAuthoredRoutedEntry(entry) || isNativeAliasCatalogEntry(entry)) continue;
+    if (!isOccxAuthoredRoutedEntry(entry) || isNativeAliasCatalogEntry(entry)) continue;
     const featuredRank = featuredRankOf(slug);
     entry.priority = featuredRank !== undefined
       ? featuredRank * priorityStride
@@ -1246,7 +1246,7 @@ export function mergeCatalogEntriesFromObservedState({
     return gatheredProviderNames.has(provider) && degradedProviderNames.has(provider);
   }).length;
   if (degradedPreservedCount > 0 && policy.warningPolicy === "emit") {
-    console.warn(`[opencodex] catalog sync: provider discovery degraded; preserving ${degradedPreservedCount} existing routed entr${degradedPreservedCount === 1 ? "y" : "ies"} on disk.`);
+    console.warn(`[openccx] catalog sync: provider discovery degraded; preserving ${degradedPreservedCount} existing routed entr${degradedPreservedCount === 1 ? "y" : "ies"} on disk.`);
   }
 
   const managedEntries = [...finalRoutedEntries, ...alignedAccountBoundEntries];
@@ -1297,24 +1297,24 @@ export function mergeCatalogEntriesFromObservedState({
   applyFullModelPickerOrder(versionedEntries, modelPickerOrder);
   for (const entry of versionedEntries) {
     // Templates and account clones must not inherit the native row's overlay marker.
-    delete entry.opencodex_native_display_name;
+    delete entry.openccx_native_display_name;
     const slug = recoverableNativeSlug(entry);
     if (slug !== null) {
       const label = nativeDisplayNames && Object.hasOwn(nativeDisplayNames, slug)
         ? nativeDisplayNames[slug]?.trim() : undefined;
       if (label && label !== entry.display_name) {
-        entry.opencodex_native_display_name = { slug, original: entry.display_name, applied: label };
+        entry.openccx_native_display_name = { slug, original: entry.display_name, applied: label };
         entry.display_name = label;
       }
     }
-    const kind = entry.opencodex_catalog_kind;
+    const kind = entry.openccx_catalog_kind;
     if (trustedAccountBoundNativeCatalogSlug(entry) === undefined
       && kind !== CODEX_CUSTOM_MODEL_CATALOG_KIND
       && kind !== CODEX_PROVIDER_MODEL_CATALOG_KIND) continue;
     // Canonicalize extension-field order after every normalizer. This keeps an unchanged catalog
     // byte-idempotent whether an owned row was freshly built or retained from the prior pass.
-    delete entry.opencodex_catalog_kind;
-    entry.opencodex_catalog_kind = kind;
+    delete entry.openccx_catalog_kind;
+    entry.openccx_catalog_kind = kind;
   }
   return versionedEntries;
 }
@@ -1411,8 +1411,8 @@ interface RetainedCatalogSyncResult {
 /**
  * Catalog/cache commit overrides.
  *
- * An explicit `ocx sync` is also the refresh path for side profiles that consume
- * the OpenCodex catalog without injection (for example a custom `model_provider`
+ * An explicit `occx sync` is also the refresh path for side profiles that consume
+ * the Openccx catalog without injection (for example a custom `model_provider`
  * that routes to the proxy). In that mode the Codex integration toggle only
  * governs config/history injection; the catalog and models cache may still be
  * refreshed, so `allowWhenDesiredDisabled` lets the commit path ignore the OFF
@@ -1423,7 +1423,7 @@ export interface CodexCatalogSyncOptions {
 }
 
 interface RetainedCatalogSyncWrite {
-  readonly config: OcxConfig;
+  readonly config: OccxConfig;
   readonly goModels: CatalogModel[];
   readonly providerModelOutcomes: readonly CatalogGatherProviderModelOutcome[];
   readonly comboOmissions: ComboCatalogOmission[];
@@ -1457,7 +1457,7 @@ function loadCatalogForRetainedSync(path: string): RawCatalog | null {
 }
 
 function retainedCatalogSyncEvidence(
-  config: OcxConfig,
+  config: OccxConfig,
   catalogPath: string,
   catalog: RawCatalog,
 ): string {
@@ -1505,7 +1505,7 @@ function retainedCatalogProcessEvidence(): string {
  * provider await. The exact evidence is compared after K acquisition; a newer
  * catalog/backup/cache or target selection makes this attempt a no-write.
  */
-function readRetainedCatalogSync(config: OcxConfig): RetainedCatalogSyncRead | null {
+function readRetainedCatalogSync(config: OccxConfig): RetainedCatalogSyncRead | null {
   const catalogPath = readCodexCatalogPath();
   const catalog = loadCatalogForRetainedSync(catalogPath);
   if (!catalog) return null;
@@ -1521,7 +1521,7 @@ function readRetainedCatalogSync(config: OcxConfig): RetainedCatalogSyncRead | n
 }
 
 function revalidateRetainedCatalogSync(
-  config: OcxConfig,
+  config: OccxConfig,
   prepared: RetainedCatalogSyncRead,
 ): RetainedCatalogSyncRead | null {
   const catalogPath = readCodexCatalogPath();
@@ -1601,7 +1601,7 @@ export type AutoReviewModelOverrideResult = "absent" | "applied" | "invalid" | "
 function isRoutedCatalogEntry(entry: RawEntry): boolean {
   const slug = typeof entry.slug === "string" ? entry.slug : "";
   return slug.includes("/")
-    || (typeof entry.description === "string" && entry.description.startsWith("Routed via opencodex → "));
+    || (typeof entry.description === "string" && entry.description.startsWith("Routed via openccx → "));
 }
 
 function clearAutoReviewModelOverride(
@@ -1646,7 +1646,7 @@ function warnAutoReviewModelDiagnostic(
     ? "the selector was not found in the final catalog"
     : "the selector format is invalid";
   console.warn(
-    `[opencodex] auto_review_model ${detail} (${safeConfigured}); preserving normal upstream auto-review behavior.`,
+    `[openccx] auto_review_model ${detail} (${safeConfigured}); preserving normal upstream auto-review behavior.`,
   );
 }
 
@@ -1753,7 +1753,7 @@ export function gatedNativeReauthSuppressionReason(args: {
 }
 
 /** Durable, operator-facing label for a pool account id; never the raw id or the email. */
-function gatedNativeAccountLabel(config: OcxConfig, accountId: string): string {
+function gatedNativeAccountLabel(config: OccxConfig, accountId: string): string {
   // Direct mode narrows eligibility to the native main credential, so this is the account most
   // likely to be named here. `codexAuthContextLogLabel` calls it "main" everywhere else; hashing
   // it into a `p`-prefixed digest would name the one account the operator cannot look up.
@@ -1774,7 +1774,7 @@ function warnGatedNativeSuppressedOnce(slug: string, reason: string): void {
   if (warnedGatedNativeSuppression.has(signature)) return;
   warnedGatedNativeSuppression.add(signature);
   console.warn(
-    `[opencodex] catalog sync: ${slug} is not being offered because ${reason}. `
+    `[openccx] catalog sync: ${slug} is not being offered because ${reason}. `
       + "Sign in again to restore it.",
   );
 }
@@ -1805,7 +1805,7 @@ function writeRetainedCatalogSync({
   const template = findSupportedNativeTemplate(catalog);
 
   try {
-    // Once-only: preserve the PRISTINE pre-opencodex catalog as the native-priority baseline
+    // Once-only: preserve the PRISTINE pre-openccx catalog as the native-priority baseline
     // (later syncs would otherwise overwrite it with featured-modified priorities).
     const pristine = pristineCatalogBytes(read);
     if (pristine !== null) {
@@ -1898,9 +1898,9 @@ function writeRetainedCatalogSync({
     // Cache invalidation carries historical bare observations alongside emitted models.
     // Only unmarked observations are fresh enough to supersede the retained source.
     reserveObservations.filter(entry => entry.slug === NATIVE_RESERVE_MODEL
-      && entry.opencodex_account_observed_native === undefined), reserveMainSelectors,
+      && entry.openccx_account_observed_native === undefined), reserveMainSelectors,
   ) ?? retainedReserveSource ?? observedReserveCatalogSource(reserveObservations, reserveMainSelectors);
-  // This root is read only by OCX. Upstream ModelsResponse ignores unknown root fields.
+  // This root is read only by OCCX. Upstream ModelsResponse ignores unknown root fields.
   // Retain before final runtime clamping: an omitted row must not turn into Luna next sync.
   if (observedReserveSource) catalog[RESERVE_SOURCE_CATALOG_FIELD] = structuredClone(observedReserveSource);
   else delete catalog[RESERVE_SOURCE_CATALOG_FIELD];
@@ -2035,9 +2035,9 @@ function writeRetainedCatalogSync({
   // A byte-identical rewrite is not a catalog change, but every mtime-keyed reader
   // has to treat it as one. The app-server staleness classifier (#857) is the one
   // that matters: it compares this file's mtime against each running Codex's start
-  // time, so an ordinary `ocx start` — or any dashboard action that re-syncs an
+  // time, so an ordinary `occx start` — or any dashboard action that re-syncs an
   // unchanged model set — marked every already-running Codex as holding an outdated
-  // in-memory catalog. Since #1407 that verdict silences opencodex's own model
+  // in-memory catalog. Since #1407 that verdict silences openccx's own model
   // guidance entirely (no preferred model, no roster) for the rest of that Codex's
   // lifetime, so a configured injectionModel stops reaching the session even though
   // nothing about the catalog changed. Skipping the no-op write keeps both the mtime
@@ -2109,7 +2109,7 @@ function currentDisabledModelsForRestore(): Set<string> | null {
 }
 
 export async function syncCatalogModels(
-  config: OcxConfig,
+  config: OccxConfig,
   options?: CodexCatalogSyncOptions,
 ): Promise<RetainedCatalogSyncResult> {
   if (pendingModelSelectionProviders(config).size) {
@@ -2290,11 +2290,11 @@ export function invalidateCodexModelsCacheWithPermit(
       .map(entry => ({
         ...entry,
         // Keep the observation in Codex's cache without advertising a new bare picker row. The
-        // next OpenCodex catalog sync consumes this marker and creates only selector-qualified
+        // next Openccx catalog sync consumes this marker and creates only selector-qualified
         // rows for the currently configured public account selectors.
         visibility: "hide",
-        opencodex_account_observed_native: true,
-        opencodex_account_observed_selectors: mainSelectors,
+        openccx_account_observed_native: true,
+        openccx_account_observed_selectors: mainSelectors,
       }));
     const wrapper = {
       fetched_at: "2000-01-01T00:00:00Z",

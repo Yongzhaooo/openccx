@@ -424,7 +424,7 @@ test("21+22+23. the linter flags each rule, spans the right text, and stays quie
     for (const finding of found) expect(finding.level, sample).toBe("warn");
   }
 
-  // Advisory, never a warning: the 8 KB cap is opencodex policy, not an upstream limit.
+  // Advisory, never a warning: the 8 KB cap is openccx policy, not an upstream limit.
   const big = lintPromptLayer("x".repeat(8 * 1024 + 1));
   expect(big).toHaveLength(1);
   expect(big[0]!.level).toBe("info");

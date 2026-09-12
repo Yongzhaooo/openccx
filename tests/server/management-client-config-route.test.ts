@@ -25,32 +25,32 @@ import {
   type PiGeneratedConfig,
   type RaycastGeneratedConfig,
 } from "../../src/clients/config-export";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
- * A key that looks exactly like a real one. Every assertion about `ocx_` absence is
+ * A key that looks exactly like a real one. Every assertion about `occx_` absence is
  * worthless unless the running config actually holds a serializable secret (030 §Security).
  */
-const REAL_LOOKING_KEY = "ocx_live_9f3c7a2b41d84e6fa05c8e17b3d92764";
+const REAL_LOOKING_KEY = "occx_live_9f3c7a2b41d84e6fa05c8e17b3d92764";
 
-const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 const originalCodexHome = process.env.CODEX_HOME;
 let entitlementTestRoot = "";
 let entitlementCodexHome = "";
 
 beforeAll(() => {
-  entitlementTestRoot = mkdtempSync(join(tmpdir(), "ocx-client-config-entitlement-"));
+  entitlementTestRoot = mkdtempSync(join(tmpdir(), "occx-client-config-entitlement-"));
   entitlementCodexHome = join(entitlementTestRoot, "codex");
   mkdirSync(entitlementCodexHome, { recursive: true });
-  process.env.OPENCODEX_HOME = join(entitlementTestRoot, "opencodex");
+  process.env.OPENCCX_HOME = join(entitlementTestRoot, "openccx");
   process.env.CODEX_HOME = entitlementCodexHome;
 });
 
 afterAll(() => {
-  if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
   if (originalCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = originalCodexHome;
   removeTreeWithRetry(entitlementTestRoot);
@@ -94,7 +94,7 @@ interface ModelRow {
  * test ever reaches the network. `b/no-context` carries no context window, which is what
  * makes `modelsWithoutLimits` non-zero and therefore actually assertable.
  */
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
@@ -120,10 +120,10 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
       },
     },
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-async function clientConfigApi(config: OcxConfig, query: string): Promise<Response> {
+async function clientConfigApi(config: OccxConfig, query: string): Promise<Response> {
   const url = new URL(`http://127.0.0.1:10100/api/client-config${query}`);
   const response = await handleManagementAPI(
     new Request(url, { headers: { Host: url.host } }),
@@ -135,7 +135,7 @@ async function clientConfigApi(config: OcxConfig, query: string): Promise<Respon
   return response!;
 }
 
-async function modelRows(config: OcxConfig): Promise<ModelRow[]> {
+async function modelRows(config: OccxConfig): Promise<ModelRow[]> {
   const url = new URL("http://127.0.0.1:10100/api/models");
   const response = await handleManagementAPI(
     new Request(url, { headers: { Host: url.host } }),
@@ -191,7 +191,7 @@ describe("native Anthropic effort ladder reaches the Aside document", () => {
           liveModels: false,
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const models = await loadExportModels(config);
     const document = buildClientConfig("aside", {
@@ -248,7 +248,7 @@ describe("GET /api/client-config", () => {
     expect(response.status).toBe(200);
     const body = await response.json() as ClientConfigEnvelope;
     expect(body.client).toBe("opencode");
-    expect((body.config as OpencodeGeneratedConfig).provider.opencodex!.options.baseURL)
+    expect((body.config as OpencodeGeneratedConfig).provider.openccx!.options.baseURL)
       .toBe("http://127.0.0.1:10237/v1");
   });
 
@@ -273,7 +273,7 @@ describe("GET /api/client-config", () => {
     expect(body.exportHint).toBe(`export ${OPENCODE_API_KEY_ENV}=<your key>`);
 
     // Accept criterion 1: the route's `config` must equal what the shared builder produces
-    // for the same input, so the GUI download and `ocx export` can never disagree.
+    // for the same input, so the GUI download and `occx export` can never disagree.
     const rows = await modelRows(config);
     const expected = buildClientConfig("opencode", {
       baseUrl: "http://127.0.0.1:10100/v1",
@@ -536,11 +536,11 @@ describe("GET /api/client-config", () => {
   test("no response body serializes a real key", async () => {
     const config = baseConfig();
     // Precondition: the secret really is present in the config this route reads.
-    expect(JSON.stringify(config)).toContain("ocx_");
+    expect(JSON.stringify(config)).toContain("occx_");
 
     for (const client of ["opencode", "pi"]) {
       const raw = await (await clientConfigApi(config, `?client=${client}`)).text();
-      expect(raw).not.toContain("ocx_");
+      expect(raw).not.toContain("occx_");
       expect(raw).not.toContain(REAL_LOOKING_KEY);
     }
   }, 15_000);
@@ -656,7 +656,7 @@ describe("GET /api/client-config", () => {
 
 
 describe("default Fast availability reaches external exports", () => {
-  function fastConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+  function fastConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
     return baseConfig({
       defaultProvider: "fixture",
       providers: { fixture: {
@@ -675,7 +675,7 @@ describe("default Fast availability reaches external exports", () => {
     expect(rows.find(row => row.namespaced === "fixture/slow")?.fastRowAvailable).toBe(false);
     const response = await clientConfigApi(config, "?client=pi");
     const body = await response.json() as ClientConfigEnvelope;
-    const models = (body.config as PiGeneratedConfig).providers.opencodex.models.map(model => model.id);
+    const models = (body.config as PiGeneratedConfig).providers.openccx.models.map(model => model.id);
     expect(models).toContain("fixture/m");
     expect(models).toContain("fixture/m--fast");
     expect(models).not.toContain("fixture/slow--fast");
@@ -686,7 +686,7 @@ describe("default Fast availability reaches external exports", () => {
     const rows = await loadExportModels(config);
     expect(rows.every(row => row.fastRowAvailable === false)).toBe(true);
     const result = buildClientConfig("pi", { baseUrl: "http://127.0.0.1:10100/v1", models: rows, config }) as PiGeneratedConfig;
-    expect(result.providers.opencodex.models.map(model => model.id)).not.toContain("fixture/m--fast");
+    expect(result.providers.openccx.models.map(model => model.id)).not.toContain("fixture/m--fast");
   });
 
   test("a disabled real Fast-named model defeats synthesis before visibility filtering", async () => {
@@ -695,7 +695,7 @@ describe("default Fast availability reaches external exports", () => {
     const rows = await loadExportModels(config);
     expect(rows.find(row => row.namespaced === "fixture/m")?.fastRowAvailable).toBe(false);
     const result = buildClientConfig("pi", { baseUrl: "http://127.0.0.1:10100/v1", models: rows, config }) as PiGeneratedConfig;
-    expect(result.providers.opencodex.models.map(model => model.id)).not.toContain("fixture/m--fast");
+    expect(result.providers.openccx.models.map(model => model.id)).not.toContain("fixture/m--fast");
   });
 });
 
@@ -715,7 +715,7 @@ describe("Pi and Aside provider selection", () => {
     const ids = async () => {
       const models = await loadExportModels(config);
       const doc = buildClientConfig(client, { baseUrl: "http://127.0.0.1:10100/v1", config, models }) as PiGeneratedConfig;
-      return doc.providers.opencodex!.models.map(model => model.id).filter(id => id.startsWith("xai/"));
+      return doc.providers.openccx!.models.map(model => model.id).filter(id => id.startsWith("xai/"));
     };
     const management = await listManagementModelRows(config);
     expect(management.filter(row => row.provider === "xai")).toHaveLength(3);

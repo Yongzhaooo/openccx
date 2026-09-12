@@ -1,9 +1,9 @@
 /**
- * Additive merge and surgical removal of the fragments opencodex owns.
+ * Additive merge and surgical removal of the fragments openccx owns.
  *
  * The rule that shapes this file: we insert exactly the paths our builder
  * named, and we delete exactly the paths a record says we wrote. Nothing here
- * ever scans for a prefix — a user's own `opencodex/...` entry is not ours to
+ * ever scans for a prefix — a user's own `openccx/...` entry is not ours to
  * remove, and inferring ownership from a name is how a config editor destroys
  * work it did not create.
  *

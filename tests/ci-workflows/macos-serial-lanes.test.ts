@@ -212,7 +212,7 @@ function runShell(directory: string, shard: number): Promise<{ status: number | 
 async function runShard(shard: number, options: FixtureOptions = {}) {
   // Spaces and a quote in cwd exercise the executable/config/log path quoting
   // without inventing manifest characters forbidden by the source path policy.
-  const directory = mkdtempSync(join(tmpdir(), "ocx macos' lanes-"));
+  const directory = mkdtempSync(join(tmpdir(), "occx macos' lanes-"));
   try {
     createFixture(directory, options);
     const log = join(directory, "invocations.jsonl");

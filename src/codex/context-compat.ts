@@ -20,7 +20,7 @@ export function contextExperimentalEnabled(configContent: string): boolean {
 let activation: { key: string; active: boolean } | undefined;
 
 /**
- * Whether this proxy may serve the context relay at all, decided by opencodex reading Codex own
+ * Whether this proxy may serve the context relay at all, decided by openccx reading Codex own
  * config rather than by anything a caller sends.
  *
  * Rewriting the injected base URL is what makes the feature REACHABLE, and gating only that would

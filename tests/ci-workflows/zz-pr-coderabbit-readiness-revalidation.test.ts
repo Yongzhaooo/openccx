@@ -27,7 +27,7 @@ type Workflow = {
   jobs?: Record<string, WorkflowJob>;
 };
 
-const GATE_MARKER = "<!-- opencodex-pr-gate -->";
+const GATE_MARKER = "<!-- openccx-pr-gate -->";
 const CHECKLIST_START = "<!-- pr-quality-readiness-checklist:start -->";
 const CHECKLIST_END = "<!-- pr-quality-readiness-checklist:end -->";
 const CHECKLIST_ITEMS = [
@@ -209,8 +209,8 @@ describe("workflow comment-spam hardening", () => {
     expect(callsTo(statusWake, "issues.removeLabel")).toEqual([]);
     expect(callsTo(statusWake, "pulls.update")).toEqual([]);
     expect(callsTo(statusWake, "issues.deleteComment")).toEqual([
-      { owner: "lidge-jun", repo: "opencodex", comment_id: 8 },
-      { owner: "lidge-jun", repo: "opencodex", comment_id: 9 },
+      { owner: "lidge-jun", repo: "openccx", comment_id: 8 },
+      { owner: "lidge-jun", repo: "openccx", comment_id: 9 },
     ]);
 
     const graphqlCalls = callsTo(statusWake, "graphql") as Array<{ query: string }>;

@@ -14,7 +14,7 @@ import { safeConfigDTO, providerEditorConfigDTO } from "../../src/server/auth-co
 import { handleManagementAPI } from "../../src/server/management-api";
 import { upsertOAuthProvider } from "../../src/oauth";
 import { commitKeyLoginProvider } from "../../src/oauth/login-cli";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -24,22 +24,22 @@ let home = "";
 let previousHome: string | undefined;
 let codex: IsolatedCodexHome;
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-initial-selection-"));
-  process.env.OPENCODEX_HOME = home;
-  codex = installIsolatedCodexHome("ocx-initial-selection-codex-");
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-initial-selection-"));
+  process.env.OPENCCX_HOME = home;
+  codex = installIsolatedCodexHome("occx-initial-selection-codex-");
 });
 afterEach(async () => {
   clearModelCache();
   await flushConfigDirHardeningForTests();
   codex.restore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
-function fixture(count = 20): OcxConfig {
-  const provider: OcxProviderConfig = {
+function fixture(count = 20): OccxConfig {
+  const provider: OccxProviderConfig = {
     adapter: "openai-chat", baseUrl: "https://models.example.test/v1", authMode: "key",
     apiKey: "fixture-key", liveModels: false,
     models: Array.from({ length: count }, (_, i) => `model-${i}`),
@@ -50,7 +50,7 @@ function fixture(count = 20): OcxConfig {
 function rows(count: number) {
   return Array.from({ length: count }, (_, i) => ({ provider: "vendor", id: `model-${i}` }));
 }
-async function api(config: OcxConfig, path: string, body?: unknown, method = "PUT"): Promise<Response> {
+async function api(config: OccxConfig, path: string, body?: unknown, method = "PUT"): Promise<Response> {
   const url = new URL(`http://localhost${path}`);
   const response = await handleManagementAPI(new ManagementRequest(url, body === undefined ? {} : {
     method, headers: { "content-type": "application/json" }, body: JSON.stringify(body),
@@ -104,9 +104,9 @@ describe("initial provider model switches", () => {
     key.apiKey = "fixture-key";
     initializeProviderModelSelection("xai", key);
     expect(key.initialModelSelection?.status).toBe("pending");
-    const local = { adapter: "openai-chat", baseUrl: "http://127.0.0.1:11434/v1", authMode: "local" } satisfies OcxProviderConfig;
+    const local = { adapter: "openai-chat", baseUrl: "http://127.0.0.1:11434/v1", authMode: "local" } satisfies OccxProviderConfig;
     initializeProviderModelSelection("local-test", local);
-    expect((local as OcxProviderConfig).initialModelSelection?.status).toBe("pending");
+    expect((local as OccxProviderConfig).initialModelSelection?.status).toBe("pending");
   });
 
   test("existing selections and marker survive provider replacement and OAuth upsert", () => {
@@ -115,7 +115,7 @@ describe("initial provider model switches", () => {
     existing.modelPreset = { mode: "custom" };
     existing.newModelPolicy = "off";
     existing.initialModelSelection = { ...existing.initialModelSelection!, status: "all-off", modelCount: 20 };
-    const replacement: OcxProviderConfig = { adapter: "openai-chat", baseUrl: existing.baseUrl };
+    const replacement: OccxProviderConfig = { adapter: "openai-chat", baseUrl: existing.baseUrl };
     initializeProviderModelSelection("vendor", replacement, existing);
     expect(replacement.selectedModels).toEqual(["chosen"]);
     expect(replacement.modelPreset).toEqual({ mode: "custom" });
@@ -123,14 +123,14 @@ describe("initial provider model switches", () => {
     expect(replacement.initialModelSelection).toEqual(existing.initialModelSelection);
     const xai = providerConfigSeed(getProviderRegistryEntry("xai")!);
     xai.selectedModels = ["grok-4.6"];
-    const config: OcxConfig = { port: 0, defaultProvider: "xai", providers: { xai } };
+    const config: OccxConfig = { port: 0, defaultProvider: "xai", providers: { xai } };
     upsertOAuthProvider(config, "xai");
     expect(config.providers.xai.selectedModels).toEqual(["grok-4.6"]);
     expect(config.providers.xai.initialModelSelection).toBeUndefined();
   });
 
   test("an unresolved mixed-auth key follows the router's OAuth exemption", () => {
-    const env = "OCX_INITIAL_SELECTION_KEY_FIXTURE";
+    const env = "OCCX_INITIAL_SELECTION_KEY_FIXTURE";
     const previous = process.env[env];
     delete process.env[env];
     try {
@@ -183,7 +183,7 @@ describe("initial provider model switches", () => {
   });
 
   test("POST creation stamps its own pending state and overwrite preserves selections", async () => {
-    const config: OcxConfig = { ...configStore.getDefaultConfig(), port: 0, clientIntegrations: { codex: false } };
+    const config: OccxConfig = { ...configStore.getDefaultConfig(), port: 0, clientIntegrations: { codex: false } };
     configStore.saveConfig(config);
     const provider = {
       adapter: "openai-chat", baseUrl: "http://127.0.0.1:11434/v1", allowPrivateNetwork: true,
@@ -207,7 +207,7 @@ describe("initial provider model switches", () => {
   });
 
   test("new registration clears orphaned OFF selectors without touching other providers", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...configStore.getDefaultConfig(), port: 0, clientIntegrations: { codex: false },
       disabledModels: ["vendor/model-0", "vendor/a/b", "vendor-old/keep", "other/keep"],
       modelDiscovery: {
@@ -232,15 +232,15 @@ describe("initial provider model switches", () => {
     const config = fixture();
     config.disabledModels = ["vendor/combo-alias", "vendor/orphan", "other/keep"];
     config.combos = { retained: { alias: "vendor/combo-alias", targets: [{ provider: "other", model: "keep" }] } };
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://models.example.test/v1" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://models.example.test/v1" };
     initializeProviderModelSelection("vendor", provider, undefined, config);
     expect(config.disabledModels).toEqual(["vendor/combo-alias", "other/keep"]);
   });
 
   test("key-login commit initializes new rows and preserves choices during key replacement", async () => {
-    const config: OcxConfig = { ...configStore.getDefaultConfig(), port: 0, clientIntegrations: { codex: false } };
+    const config: OccxConfig = { ...configStore.getDefaultConfig(), port: 0, clientIntegrations: { codex: false } };
     configStore.saveConfig(config);
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://models.example.test/v1", apiKey: "fixture-first" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://models.example.test/v1", apiKey: "fixture-first" };
     await commitKeyLoginProvider(config, "vendor", provider);
     const first = configStore.loadConfig().providers.vendor;
     expect(first.initialModelSelection?.status).toBe("pending");
@@ -378,7 +378,7 @@ describe("initial provider model switches", () => {
     configStore.saveConfig(config);
     const loaded = configStore.loadConfig();
     expect(loaded.providers.vendor.initialModelSelection?.status).toBe("pending");
-    expect((safeConfigDTO(loaded) as { providers: Record<string, OcxProviderConfig> }).providers.vendor.initialModelSelection?.status).toBe("pending");
+    expect((safeConfigDTO(loaded) as { providers: Record<string, OccxProviderConfig> }).providers.vendor.initialModelSelection?.status).toBe("pending");
     expect(providerEditorConfigDTO(loaded).providers.vendor.initialModelSelection).toBeUndefined();
     writeFileSync(configStore.getConfigPath(), JSON.stringify({ ...config, providers: { vendor: { ...config.providers.vendor, initialModelSelection: { version: 1, status: "invalid" } } } }));
     expect(configStore.loadConfig().providers.vendor.initialModelSelection).toBeUndefined();

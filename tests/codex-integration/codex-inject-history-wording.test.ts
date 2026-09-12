@@ -128,15 +128,15 @@ test("doctor distinguishes zero, pending, retryable, and integrity restore state
   expect(doctorSource).toContain("backup manifest entr${pending.backupEntries === 1 ? \"y\" : \"ies\"} pending exact metadata restore");
   expect(doctorSource).toContain("history database, backup manifest, or rollout file is busy — exact metadata restore is pending");
   expect(doctorSource).toContain("backup manifest or restore target failed integrity checks — manual review required");
-  expect(doctorSource).toContain("do not repeatedly run 'ocx sync' until the mismatch is understood");
+  expect(doctorSource).toContain("do not repeatedly run 'occx sync' until the mismatch is understood");
   expect(doctorSource).toContain("Untracked routed history is not relabeled.");
-  expect(doctorSource).not.toContain("no legacy opencodex-tagged threads pending");
+  expect(doctorSource).not.toContain("no legacy openccx-tagged threads pending");
 });
 
 test("legacy recovery surfaces its full destructive scope before execution", () => {
-  expect(cliSource).toContain("every user-message opencodex row");
+  expect(cliSource).toContain("every user-message openccx row");
   expect(integrationGuide).toContain("every thread");
-  expect(integrationGuide).toContain("currently tagged `opencodex`");
+  expect(integrationGuide).toContain("currently tagged `openccx`");
   expect(cliSource).toContain("dedicated-provider history");
   expect(integrationGuide).toContain("dedicated-provider history");
   expect(cliSource).toContain("normalizes exec to cli");

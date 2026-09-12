@@ -12,12 +12,12 @@ import { mapCcaGroundedResponse } from "../../../src/web-search/gemini-executor"
 import { findGeminiSidecarProvider, planWebSearch } from "../../../src/web-search";
 import { resolveAntigravityEffortWireModel } from "../../../src/providers/antigravity-models";
 import { parseRequest } from "../../../src/responses/parser";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 
-const routed: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
-const cca: OcxProviderConfig = { adapter: "google", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" };
+const routed: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
+const cca: OccxProviderConfig = { adapter: "google", baseUrl: "https://daily-cloudcode-pa.googleapis.com", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "routed", providers: { routed, "google-antigravity": cca }, ...overrides };
 }
 function parsedWithWebSearch() {
@@ -133,7 +133,7 @@ describe("runGeminiWebSearch request shape (review P1)", () => {
       return new Response(JSON.stringify({ response: { candidates: [{ content: { parts: [{ text: "ok" }] } }] } }), { status: 200 });
     }) as typeof fetch;
     try {
-      const evil: OcxProviderConfig = { adapter: "google", baseUrl: "https://evil.example/v1", authMode: "oauth" };
+      const evil: OccxProviderConfig = { adapter: "google", baseUrl: "https://evil.example/v1", authMode: "oauth" };
       const out = await runGeminiWebSearch("q", "google-antigravity", evil, { model: "gemini-3.7-flash", reasoning: "low", timeoutMs: 5000, describeImages: false });
       expect(out.text).toBe("ok");
       expect(captured).toHaveLength(1);

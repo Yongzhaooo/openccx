@@ -11,7 +11,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-nous-oauth-test");
 const TEST_PORTAL = "https://portal.test";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousPortalBase: string | undefined;
 
 function jwtWithClaims(claims: Record<string, unknown>): string {
@@ -62,22 +62,22 @@ describe("Nous token-response wiring", () => {
 
   beforeEach(() => {
     previousPortalBase = process.env.NOUS_PORTAL_BASE_URL;
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     process.env.NOUS_PORTAL_BASE_URL = TEST_PORTAL;
     // Isolate durable refresh-intent state so this block never leaves intent
     // files in the developer/runner config tree (review: 1st wiring test must
-    // isolate OPENCODEX_HOME).
+    // isolate OPENCCX_HOME).
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
     globalThis.fetch = realFetch;
     if (previousPortalBase === undefined) delete process.env.NOUS_PORTAL_BASE_URL;
     else process.env.NOUS_PORTAL_BASE_URL = previousPortalBase;
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -452,15 +452,15 @@ describe("Nous device-flow error handling", () => {
 describe("Nous Portal base URL hardening", () => {
   const realFetch = globalThis.fetch;
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
   afterEach(() => {
     globalThis.fetch = realFetch;
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -579,19 +579,19 @@ describe("Nous refresh token safety", () => {
 
   beforeEach(() => {
     previousPortalBase = process.env.NOUS_PORTAL_BASE_URL;
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
     process.env.NOUS_PORTAL_BASE_URL = TEST_PORTAL;
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
     globalThis.fetch = realFetch;
     if (previousPortalBase === undefined) delete process.env.NOUS_PORTAL_BASE_URL;
     else process.env.NOUS_PORTAL_BASE_URL = previousPortalBase;
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -648,15 +648,15 @@ describe("Nous refresh token safety", () => {
 
 describe("Nous multiauth via saveCredential", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -708,19 +708,19 @@ describe("Nous refresh failure-atomicity + terminal errors", () => {
   beforeEach(() => {
     previousPortalBase = process.env.NOUS_PORTAL_BASE_URL;
     process.env.NOUS_PORTAL_BASE_URL = TEST_PORTAL;
-    // Isolate the refresh-intent dir under a temp OPENCODEX_HOME.
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    // Isolate the refresh-intent dir under a temp OPENCCX_HOME.
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
     globalThis.fetch = realFetch;
     if (previousPortalBase === undefined) delete process.env.NOUS_PORTAL_BASE_URL;
     else process.env.NOUS_PORTAL_BASE_URL = previousPortalBase;
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -850,16 +850,16 @@ describe("Nous refresh-intent schema is validated fail-closed", () => {
   let previousHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
+    previousHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
     globalThis.fetch = realFetch;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
@@ -928,16 +928,16 @@ describe("Nous HTTP refresh failure-atomicity classification", () => {
   let previousHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
+    previousHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
     globalThis.fetch = realFetch;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 

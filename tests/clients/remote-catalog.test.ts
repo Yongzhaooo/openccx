@@ -16,14 +16,14 @@ function response(body: string, headers: HeadersInit = JSON_HEADERS): Response {
 describe("remote Desktop snapshot consumer", () => {
   test.each(["https://hub.example.test", "http://127.0.0.1:2345", "http://localhost:2345", "http://[::1]:2345"])(
     "uses authenticated opt-in discovery at permitted origin %s", async origin => {
-      const result = await downloadDesktop3pModels(origin, "ocx_data_test", {
+      const result = await downloadDesktop3pModels(origin, "occx_data_test", {
         fetchImpl: async (input, init) => {
           expect(String(input)).toBe(`${origin}/v1/models?ids=desktop&format=desktop-config`);
           expect(init?.method).toBe("GET");
           expect(init?.redirect).toBe("manual");
           const headers = new Headers(init?.headers);
           expect(headers.get("anthropic-version")).toBe("2023-06-01");
-          expect(headers.get("x-opencodex-api-key")).toBe("ocx_data_test");
+          expect(headers.get("x-openccx-api-key")).toBe("occx_data_test");
           expect(headers.get("accept")).toBe("application/json");
           expect(headers.has("if-none-match")).toBe(false);
           return response(JSON.stringify({ version: 1, models: [desktopModel] }));
@@ -95,7 +95,7 @@ describe("remote Desktop snapshot consumer", () => {
 
   test("projects only known fields while keeping valid capability flags and an 80-character label", async () => {
     const known = { ...desktopModel, labelOverride: "x".repeat(80), isFamilyDefault: false, supports1m: true, prefer1m: true };
-    const result = await downloadDesktop3pModels("https://hub.example.test", "ocx_data_test", {
+    const result = await downloadDesktop3pModels("https://hub.example.test", "occx_data_test", {
       fetchImpl: async () => response(JSON.stringify({ version: 1, models: [{ ...known, apiKey: "remote-marker", endpoint: "http://wrong.test" }], unknown: 1 })),
     });
     expect(result).toEqual({ version: 1, models: [known] });
@@ -104,7 +104,7 @@ describe("remote Desktop snapshot consumer", () => {
   test("accepts empty snapshots and 2000 rows, refuses 2001", async () => {
     for (const count of [0, 2000, 2001]) {
       const models = Array.from({ length: count }, (_, index) => ({ ...desktopModel, name: `claude-test-${index}` }));
-      const pending = downloadDesktop3pModels("https://hub.example.test", "ocx_data_test", {
+      const pending = downloadDesktop3pModels("https://hub.example.test", "occx_data_test", {
         fetchImpl: async () => response(JSON.stringify({ version: 1, models })),
       });
       if (count <= 2000) expect((await pending).models).toEqual(models);
@@ -117,7 +117,7 @@ describe("remote Desktop snapshot consumer", () => {
     for (const extra of [0, 1]) {
       for (const declared of [undefined, "1"]) {
         const body = prefix + " ".repeat(1024 * 1024 - prefix.length + extra);
-        const pending = downloadDesktop3pModels("https://hub.example.test", "ocx_data_test", {
+        const pending = downloadDesktop3pModels("https://hub.example.test", "occx_data_test", {
           fetchImpl: async () => new Response(new ReadableStream<Uint8Array>({
             start(controller) {
               const bytes = new TextEncoder().encode(body);
@@ -155,10 +155,10 @@ describe("remote Desktop snapshot consumer", () => {
   });
 
   test("normalizes a /v1 URL and accepts JSON-compatible content types", async () => {
-    expect(await downloadDesktop3pModels("https://hub.example.test/v1/", "ocx_data_test", {
+    expect(await downloadDesktop3pModels("https://hub.example.test/v1/", "occx_data_test", {
       fetchImpl: async input => {
         expect(String(input)).toBe("https://hub.example.test/v1/models?ids=desktop&format=desktop-config");
-        return response('{"version":1,"models":[]}', { "Content-Type": "application/vnd.opencodex+json; charset=utf-8" });
+        return response('{"version":1,"models":[]}', { "Content-Type": "application/vnd.openccx+json; charset=utf-8" });
       },
     })).toEqual({ version: 1, models: [] });
   });
@@ -199,7 +199,7 @@ describe("remote Desktop snapshot consumer", () => {
       },
     });
     try {
-      await expect(downloadDesktop3pModels(`http://127.0.0.1:${server.port}`, "ocx_data_test", {
+      await expect(downloadDesktop3pModels(`http://127.0.0.1:${server.port}`, "occx_data_test", {
         timeoutMs,
         fetchImpl: async (input, init) => {
           observed.signal = init?.signal ?? undefined;
@@ -232,7 +232,7 @@ describe("remote Desktop snapshot consumer", () => {
   });
 
   test("bounds stalled response headers and streamed bodies without exposing their errors", async () => {
-    await expect(downloadDesktop3pModels("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadDesktop3pModels("https://hub.example.test", "occx_data_test", {
       timeoutMs: 25,
       fetchImpl: async (_input, init) => new Promise<Response>((_resolve, reject) => {
         const signal = init!.signal!;
@@ -240,7 +240,7 @@ describe("remote Desktop snapshot consumer", () => {
         else signal.addEventListener("abort", () => reject(signal.reason), { once: true });
       }),
     })).rejects.toMatchObject({ code: "unreachable" });
-    await expect(downloadDesktop3pModels("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadDesktop3pModels("https://hub.example.test", "occx_data_test", {
       timeoutMs: 25,
       fetchImpl: async () => new Response(new ReadableStream<Uint8Array>({
         start(controller) { controller.enqueue(new TextEncoder().encode('{"version":1,"models":[')); },
@@ -271,7 +271,7 @@ describe("remote catalog adversarial consumer", () => {
       },
     });
     try {
-      const result = await downloadClientCatalog(`http://127.0.0.1:${server.port}`, "ocx_data_test");
+      const result = await downloadClientCatalog(`http://127.0.0.1:${server.port}`, "occx_data_test");
       expect(JSON.parse(result.body)).toEqual({ models: [{ slug: "provider/model" }] });
     } finally {
       server.stop(true);
@@ -291,7 +291,7 @@ describe("remote catalog adversarial consumer", () => {
     });
     const startedAt = performance.now();
     try {
-      await expect(downloadClientCatalog(`http://127.0.0.1:${server.port}`, "ocx_data_test", {
+      await expect(downloadClientCatalog(`http://127.0.0.1:${server.port}`, "occx_data_test", {
         timeoutMs: 50,
       })).rejects.toMatchObject({ code: "unreachable" });
       expect(performance.now() - startedAt).toBeLessThan(1_000);
@@ -302,8 +302,8 @@ describe("remote catalog adversarial consumer", () => {
 
   test("accepts additive fields only after the required model schema and key id pass", async () => {
     const body = JSON.stringify({ models: [{ slug: "provider/model", future: { enabled: true } }], futureTop: 1 });
-    const result = await downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
-      fetchImpl: async () => response(body, { ...JSON_HEADERS, "X-OpenCodex-Key-Id": "client-key-1" }),
+    const result = await downloadClientCatalog("https://hub.example.test", "occx_data_test", {
+      fetchImpl: async () => response(body, { ...JSON_HEADERS, "X-Openccx-Key-Id": "client-key-1" }),
     });
     // No etag in the result: /v1/catalog emits no validator (Phase 1, D2), and the fixture's
     // ETag header is deliberately left in place to prove the client ignores one even when a
@@ -324,7 +324,7 @@ describe("remote catalog adversarial consumer", () => {
   ])("rejects %s without returning writable bytes", async (_label, body, code) => {
     let caught: unknown;
     try {
-      await downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+      await downloadClientCatalog("https://hub.example.test", "occx_data_test", {
         fetchImpl: async () => response(body),
       });
     } catch (error) { caught = error; }
@@ -334,7 +334,7 @@ describe("remote catalog adversarial consumer", () => {
 
   test("rejects 2,001 rows and a forged small Content-Length with oversized chunks", async () => {
     const rows = JSON.stringify({ models: Array.from({ length: 2_001 }, (_, index) => ({ slug: `p/m-${index}` })) });
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async () => response(rows),
     })).rejects.toMatchObject({ code: "catalog_schema_invalid" });
 
@@ -345,7 +345,7 @@ describe("remote catalog adversarial consumer", () => {
         controller.close();
       },
     });
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       maxBytes: 32,
       fetchImpl: async () => new Response(stream, { headers: { "Content-Type": "application/json", "Content-Length": "1" } }),
     })).rejects.toMatchObject({ code: "body_too_large" });
@@ -353,7 +353,7 @@ describe("remote catalog adversarial consumer", () => {
 
   test("allows the exact byte cap", async () => {
     const body = '{"models":[]}';
-    const exact = await downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    const exact = await downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       maxBytes: new TextEncoder().encode(body).byteLength,
       fetchImpl: async () => response(body),
     });
@@ -365,7 +365,7 @@ describe("remote catalog adversarial consumer", () => {
     // the client no longer makes. With no validator to send, a 304 is a protocol error
     // (asserted below) rather than something to retry past.
     let sentConditional: boolean | null = null;
-    const result = await downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    const result = await downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async (_input, init) => {
         sentConditional = new Headers(init?.headers).has("if-none-match");
         return response('{"models":[]}');
@@ -381,13 +381,13 @@ describe("remote catalog adversarial consumer", () => {
     // Earlier revisions of this phase distinguished "304 with no last-known-good" from
     // "304 whose ETag disagrees with the one we sent"; neither situation is reachable now,
     // and the single refusal below is strictly wider than both.
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async () => new Response(null, { status: 304 }),
     })).rejects.toMatchObject({ code: "catalog_unexpected_304" });
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async () => new Response(null, { status: 304, headers: { ETag: '"other"' } }),
     })).rejects.toMatchObject({ code: "catalog_unexpected_304" });
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async () => new Response('{"models":[]}', { headers: { "Content-Type": "text/html" } }),
     })).rejects.toMatchObject({ code: "catalog_content_type_invalid" });
   });

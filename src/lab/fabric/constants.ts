@@ -6,7 +6,7 @@ export const FABRIC_SCENARIO_ID = "fabric-core.task.synthetic-patch";
 export const FABRIC_SCENARIO_VERSION = "1.0.0";
 export const FABRIC_TASK_CLASS_ID = "fabric-core.task.synthetic-patch";
 export const FABRIC_TASK_CLASS_VERSION = "1.0.0";
-export const FABRIC_COMPATIBILITY_VERSION = "ocx-fabric-producer-v1";
+export const FABRIC_COMPATIBILITY_VERSION = "occx-fabric-producer-v1";
 export const FABRIC_VERIFIER_ID = "exact-tree-diff-v1";
 export const FABRIC_EVIDENCE_LAYER = "task_effectiveness" as const;
 

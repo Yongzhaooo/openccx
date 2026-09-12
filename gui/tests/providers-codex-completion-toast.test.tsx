@@ -172,11 +172,11 @@ async function completeCodexLogin(): Promise<{
 
   const accountRow = testWindow.document.querySelector(".provider-catalog-account-row");
   expect(accountRow).toBeTruthy();
-  const openCodexLogin = Array.from(accountRow!.querySelectorAll("button")).find(button =>
+  const openccxLogin = Array.from(accountRow!.querySelectorAll("button")).find(button =>
     button.textContent?.trim() === "Add account" || button.textContent?.trim() === "Log in"
   );
-  expect(openCodexLogin).toBeTruthy();
-  await act(async () => { openCodexLogin!.click(); });
+  expect(openccxLogin).toBeTruthy();
+  await act(async () => { openccxLogin!.click(); });
   await flush();
 
   const codexDialog = testWindow.document.querySelector('dialog[aria-label="Add Codex Account"]');
@@ -208,7 +208,7 @@ test("pending Codex completion stays amber, private, dismissible, and refreshes 
   expect(warning).toBeTruthy();
   expect(warning!.textContent).toContain("The change was saved");
   expect(host.querySelector('[role="dialog"]')?.textContent).toContain("Choose models");
-  expect(warning!.textContent).toContain("ocx sync");
+  expect(warning!.textContent).toContain("occx sync");
   expect(testWindow.document.body.textContent).not.toContain("private-account-detail");
   expect(pathCount("/api/config")).toBeGreaterThan(before.config);
   expect(pathCount("/api/oauth/providers")).toBeGreaterThan(before.oauth);
@@ -243,7 +243,7 @@ test("completed Codex catalog convergence reports clean success without sync adv
   const success = testWindow.document.querySelector<HTMLElement>(".toast-notice.notice-ok");
   expect(success).toBeTruthy();
   expect(success!.textContent).toContain("Account added");
-  expect(success!.textContent).not.toContain("ocx sync");
+  expect(success!.textContent).not.toContain("occx sync");
   expect(testWindow.document.querySelector(".toast-notice.notice-warn")).toBeNull();
 });
 
@@ -267,7 +267,7 @@ for (const embedded of [false, true]) {
     await flush();
     const notice = host.querySelector('[role="dialog"]');
     expect(notice?.textContent).toContain("Choose models");
-    expect(notice?.textContent).toContain("ocx sync");
+    expect(notice?.textContent).toContain("occx sync");
     expect(notice?.textContent).not.toContain("All model switches were turned OFF");
     await act(async () => { buttonWithText(notice!, "Open Models").click(); });
     expect(testWindow.location.hash).toBe("#models");

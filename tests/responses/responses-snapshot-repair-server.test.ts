@@ -7,7 +7,7 @@ import { startServer } from "../../src/server";
 import { handleResponses } from "../../src/server/responses";
 import { isEagerRelaySseResponse } from "../../src/server/relay";
 import { createGrokResponsesControlFrameBlockRewrite } from "../../src/server/grok-responses-control-frame";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -108,9 +108,9 @@ function stubSparseGateway(
 }
 
 beforeEach(() => {
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-snapshot-repair-server-"));
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  isolated = installIsolatedCodexHome("ocx-snapshot-repair-codex-");
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-snapshot-repair-server-"));
+  process.env.OPENCCX_HOME = TEST_DIR;
+  isolated = installIsolatedCodexHome("occx-snapshot-repair-codex-");
 });
 
 afterEach(async () => {
@@ -193,7 +193,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
             responsesSnapshotRepair: true,
           },
         },
-      } as OcxConfig;
+      } as OccxConfig;
 
       const response = await handleResponses(
         new Request("http://localhost/v1/responses", {
@@ -232,7 +232,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
           responsesSnapshotRepair: true,
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -280,7 +280,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
           apiKey: "test-key",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -313,7 +313,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
           apiKey: "test-key",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -321,7 +321,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...(grokMarker ? { "x-opencodex-grok": "1" } : {}),
+          ...(grokMarker ? { "x-openccx-grok": "1" } : {}),
         },
         body: JSON.stringify({ model: "sparse-model", input: "hi", stream: true }),
       });
@@ -366,7 +366,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
           apiKey: "test-key",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -374,7 +374,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-opencodex-grok": "1",
+          "x-openccx-grok": "1",
         },
         body: JSON.stringify({ model: "sparse-model", input: "hi", stream: true }),
       });
@@ -387,7 +387,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
       };
       expect(completed.response.output).toHaveLength(1);
       expect(completed.response.output[0]).toMatchObject({
-        id: "msg_ocx_0",
+        id: "msg_occx_0",
         type: "message",
         role: "assistant",
         status: "completed",
@@ -411,7 +411,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
           apiKey: "test-key",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -419,7 +419,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...(grokMarker ? { "x-opencodex-grok": "1" } : {}),
+          ...(grokMarker ? { "x-openccx-grok": "1" } : {}),
         },
         body: JSON.stringify({ model: "sparse-model", input: "hi", stream: true }),
       });
@@ -454,7 +454,7 @@ test("sparse JSON completion inference precedes function repair in client output
   const config = {
     port: 0, defaultProvider: "sparse",
     providers: { sparse: { adapter: "openai-responses", baseUrl: "https://sparse-function.invalid/v1", authMode: "key", apiKey: "fixture", responsesSnapshotRepair: true } },
-  } as OcxConfig;
+  } as OccxConfig;
   const request = (extra: object = {}) => new Request("http://localhost/v1/responses", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({

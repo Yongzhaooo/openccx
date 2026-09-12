@@ -1,9 +1,9 @@
 import { mutatePersistedConfig } from "../config";
 import { migrateZaiResponsesDefault } from "../providers/zai-responses-migration";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /** Rebase the one-time Z.AI wire upgrade before initializing any live config consumers. */
-export function migrateStartupZaiResponses(config: OcxConfig): OcxConfig {
+export function migrateStartupZaiResponses(config: OccxConfig): OccxConfig {
   const projection = { ...config };
   if (!migrateZaiResponsesDefault(projection)) return config;
   try {

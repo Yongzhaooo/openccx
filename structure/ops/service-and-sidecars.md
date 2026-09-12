@@ -2,12 +2,12 @@
 
 ## Background service command selection
 
-A bare `ocx service` is an idempotent install-or-repair command. Argument validation happens before
+A bare `occx service` is an idempotent install-or-repair command. Argument validation happens before
 any platform status probe. macOS and Linux choose from the registration file's proven presence;
 Windows combines the Task Scheduler and WinSW probes into `installed`, `absent`, or `unknown`.
 Only proven absence enters registration. A query failure refuses the bare command with status
 guidance, because treating `unknown` as absent can rerun elevated `schtasks /create` against an
-existing task. Explicit `ocx service install` remains the operator-owned registration request.
+existing task. Explicit `occx service install` remains the operator-owned registration request.
 
 > Decision record: [ADR-0028](../decisions/ADR-0028-background-service-command-selection.md)
 
@@ -23,7 +23,7 @@ enumeration twice made a measured 12.3-second fallback cost roughly 25 seconds b
 
 ## Stable service launcher (launchd and systemd)
 
-Launchd and systemd installation resolve the first absolute `ocx` PATH candidate that is both a regular file
+Launchd and systemd installation resolve the first absolute `occx` PATH candidate that is both a regular file
 and executable, keeps that path lexical so a version-manager shim remains an indirection, and
 records the same single resolution in the service definition and service state. Definition
 construction (`buildPlist`, `buildUnit`) never performs PATH discovery itself: callers provide either the resolved launcher or an explicit direct Bun/CLI
@@ -31,7 +31,7 @@ fallback, keeping diagnostics and tests independent of the host PATH.
 
 Launcher mode omits the package-local Bun provenance pair because an upgrade may delete that
 versioned tree. The only runtime path carried through the launcher is a pre-Bun, proof-bound
-`OPENCODEX_BUN_PATH` whose durable runtime source is `override`; bundled and process fallbacks are
+`OPENCCX_BUN_PATH` whose durable runtime source is `override`; bundled and process fallbacks are
 rediscovered by the current launcher. The API-auth token remains file-backed and is loaded only by
 the service shell at start. On macOS, `start` and detailed `status` compare the live launchd job
 against `expectedLaunchdCommand`, which follows the recorded `launcherPath` rather than re-walking
@@ -125,7 +125,7 @@ upstream request was attempted. No retry or broader envelope acceptance is enabl
 
 ## Voice diagnostic metadata
 
-`src/server/live.ts` owns optional `OCX_LIVE_FRAME_LOG` diagnostics for both sideband directions.
+`src/server/live.ts` owns optional `OCCX_LIVE_FRAME_LOG` diagnostics for both sideband directions.
 The JSONL schema contains only `ts`, `dir`, `kind`, `bytes`, and `fffd`. It never stores frame
 content or transcript excerpts, and logging failures do not affect transparent frame delivery.
 Binary detection decodes only the supplied buffer view; malformed UTF-8 can itself produce U+FFFD,

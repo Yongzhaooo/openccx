@@ -128,7 +128,7 @@ export interface AutomationDispatchDeps {
   configDir?: string;
   routeExecutor?: import("../live/types").TrustedLabRouteExecutor;
   patchExecutor?: import("../fabric/types").TrustedFabricPatchExecutor;
-  loadConfig?: () => import("../../types").OcxConfig;
+  loadConfig?: () => import("../../types").OccxConfig;
   abortSignal?: AbortSignal;
   /** Orchestrator-set guard that requires the queued identity to match current frozen contracts. */
   enforceRunIdentity?: boolean;

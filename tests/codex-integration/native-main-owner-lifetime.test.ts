@@ -25,21 +25,21 @@ import {
 import { NativeProfileManager } from "../../src/codex/native-profile-manager";
 import { probeNativeProfileRecoveryState } from "../../src/codex/native-profile-store";
 import type { NativeProfileKey, NativeProfileKeyProvider } from "../../src/codex/native-profile-types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { helperPath, repoRoot } from "../helpers/repo-root";
 
 const roots: string[] = [];
 const previousCodexHome = process.env.CODEX_HOME;
-const previousOpenCodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 
-function restoreEnv(name: "CODEX_HOME" | "OPENCODEX_HOME", value: string | undefined): void {
+function restoreEnv(name: "CODEX_HOME" | "OPENCCX_HOME", value: string | undefined): void {
   if (value === undefined) delete process.env[name];
   else process.env[name] = value;
 }
 
 afterEach(() => {
   restoreEnv("CODEX_HOME", previousCodexHome);
-  restoreEnv("OPENCODEX_HOME", previousOpenCodexHome);
+  restoreEnv("OPENCCX_HOME", previousOpenccxHome);
   for (const root of roots.splice(0)) {
     rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
@@ -79,7 +79,7 @@ function writeConfig(
 ): void {
   mkdirSync(configDir, { recursive: true });
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = configDir;
+  process.env.OPENCCX_HOME = configDir;
   saveConfig({
     port: 0,
     hostname: "127.0.0.1",
@@ -100,7 +100,7 @@ function writeConfig(
     codexAccounts: includePool ? [{ id: "pool-a", email: "pool@example.test", isMain: false }] : [],
     activeCodexAccountId: active,
     autoSwitchThreshold: 0,
-  } as OcxConfig);
+  } as OccxConfig);
   if (includePool) {
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access",
@@ -110,11 +110,11 @@ function writeConfig(
     });
   }
   restoreEnv("CODEX_HOME", previousCodexHome);
-  restoreEnv("OPENCODEX_HOME", previousOpenCodexHome);
+  restoreEnv("OPENCCX_HOME", previousOpenccxHome);
 }
 
-function fixture(configName = "opencodex", includePool = true): Fixture {
-  const root = mkdtempSync(join(tmpdir(), "ocx-native-owner-"));
+function fixture(configName = "openccx", includePool = true): Fixture {
+  const root = mkdtempSync(join(tmpdir(), "occx-native-owner-"));
   roots.push(root);
   const codexHome = join(root, "codex");
   const configDir = join(root, configName);
@@ -173,8 +173,8 @@ class ChildHarness {
         HOME: f.root,
         USERPROFILE: f.root,
         CODEX_HOME: f.codexHome,
-        OPENCODEX_HOME: f.configDir,
-        OPENCODEX_ADMIN_AUTH_TOKEN: "owner-test-admin",
+        OPENCCX_HOME: f.configDir,
+        OPENCCX_ADMIN_AUTH_TOKEN: "owner-test-admin",
         NATIVE_OWNER_CODEX_HOME: f.codexHome,
         NATIVE_OWNER_CONFIG_DIR: f.configDir,
         NATIVE_OWNER_KEY: f.key.toString("base64"),
@@ -452,7 +452,7 @@ describe("native-main process owner lease", () => {
       await owner.snapshot(isHeldReady);
       const switchRequest = fetch(`http://127.0.0.1:${Number(listening.port)}/api/native-main-profiles/switch`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "owner-test-admin" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "owner-test-admin" },
         body: JSON.stringify({ target: target.profile.id, confirmedStopped: true }),
       }).catch(() => null);
       await owner.waitFor(event => event.event === "switch-boundary" && event.boundary === "auth-replaced");
@@ -495,7 +495,7 @@ describe("native-main process owner lease", () => {
       await owner.snapshot(isHeldReady);
       const switchRequest = fetch(`http://127.0.0.1:${Number(listening.port)}/api/native-main-profiles/switch`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": "owner-test-admin" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": "owner-test-admin" },
         body: JSON.stringify({ target: target.profile.id, confirmedStopped: true }),
       }).catch(() => null);
       const written = await Promise.race([
@@ -506,7 +506,7 @@ describe("native-main process owner lease", () => {
         }),
       ]);
       const tempName = String(written.name);
-      expect(tempName).toMatch(/^auth\.json\.ocx\.[1-9]\d*\.[1-9]\d*\.tmp$/);
+      expect(tempName).toMatch(/^auth\.json\.occx\.[1-9]\d*\.[1-9]\d*\.tmp$/);
       const tempPath = join(f.codexHome, tempName);
       expect(readFileSync(tempPath, "utf8")).toContain("access-target");
       expect(probeNativeProfileRecoveryState(f.manager.context)).toBe("journal");
@@ -540,7 +540,7 @@ describe("native-main process owner lease", () => {
   test("an ambiguous exact residue keeps native-main startup fail closed", async () => {
     const f = fixture("unsafe-residue", false);
     const target = join(f.codexHome, "hardlink-target");
-    const residue = join(f.codexHome, "auth.json.ocx.123.1.tmp");
+    const residue = join(f.codexHome, "auth.json.occx.123.1.tmp");
     writeFileSync(target, "hardlink-private-value");
     linkSync(target, residue);
     const child = new ChildHarness(f);

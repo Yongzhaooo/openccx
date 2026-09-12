@@ -3,7 +3,7 @@ import { clearCachedProviderQuotas, setCachedProviderQuotaForTests, replaceCache
 import { quotaInactiveReason } from "../../src/combos/resolve";
 import { buildCatalogEntries, CATALOG_INACTIVE_REASON_FIELD, deriveEntry } from "../../src/codex/catalog/sync";
 import type { RawEntry } from "../../src/codex/catalog/parsing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { ProviderQuotaReport, ProviderQuota } from "../../src/providers/quota";
 
 /**
@@ -32,7 +32,7 @@ function funded(updatedAt = NOW): ProviderQuota {
   return { updatedAt, creditsUsd: { remaining: 12.5, percent: 40, unlimited: false } } as ProviderQuota;
 }
 
-function config(extra: Partial<OcxConfig> = {}): OcxConfig {
+function config(extra: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -40,7 +40,7 @@ function config(extra: Partial<OcxConfig> = {}): OcxConfig {
       beta: { adapter: "openai-chat", baseUrl: "https://beta.example.test/v1", apiKey: "sk-b" },
     },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 afterEach(() => { clearCachedProviderQuotas(); });
@@ -124,7 +124,7 @@ describe("quota-inactive catalog rows (#1711)", () => {
       providers: {
         openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" },
       },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     setCachedProviderQuotaForTests("openai", exhausted());
     expect(quotaInactiveReason(forward, [{ provider: "openai" }], NOW)).toBeUndefined();
   });
@@ -135,7 +135,7 @@ describe("quota-inactive catalog rows (#1711)", () => {
         alpha: { adapter: "openai-chat", baseUrl: "https://alpha.example.test/v1", apiKey: "sk-a", disabled: true },
         beta: { adapter: "openai-chat", baseUrl: "https://beta.example.test/v1", apiKey: "sk-b" },
       },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     // The disabled target drops out of the vote; the one usable target decides.
     setCachedProviderQuotaForTests("beta", funded());
     expect(quotaInactiveReason(withDisabled, [{ provider: "alpha" }, { provider: "beta" }], NOW)).toBeUndefined();

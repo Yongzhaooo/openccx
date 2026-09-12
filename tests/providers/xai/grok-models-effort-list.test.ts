@@ -8,7 +8,7 @@ import {
   seedCodexModelEntitlementsForTests,
 } from "../../../src/codex/model-entitlements";
 import { startServer } from "../../../src/server";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { SERVER_BUDGET_MS } from "../../helpers/test-budget";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -16,10 +16,10 @@ import { removeTreeWithRetry } from "../../helpers/remove-tree";
 // server class so a slow runner does not turn a discovery probe into a flake.
 setDefaultTimeout(SERVER_BUDGET_MS);
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
-function effortConfig(): OcxConfig {
+function effortConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -44,14 +44,14 @@ function effortConfig(): OcxConfig {
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-grok-effort-list-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-grok-effort-list-"));
+  process.env.OPENCCX_HOME = testHome;
 });
 
 afterEach(() => {
   resetCodexModelEntitlementCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });

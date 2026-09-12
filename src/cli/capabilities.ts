@@ -1,7 +1,7 @@
 /**
- * What `ocx` can do, as data an agent can read without parsing help text.
+ * What `occx` can do, as data an agent can read without parsing help text.
  *
- * This is the machine-readable index behind `ocx capabilities`. It relates each CLI
+ * This is the machine-readable index behind `occx capabilities`. It relates each CLI
  * capability to the management route(s) it drives, which nothing in this repository did
  * before: help lived in twenty per-module `USAGE` constants and a hand-written banner
  * that a test explicitly licensed to drift from the command registry.
@@ -56,7 +56,7 @@ export interface Capability {
   readonly details?: readonly string[];
   /**
    * Extra banner rows this capability owns, for surfaces the banner shows separately
-   * from the bare command (`ocx restore back`, `ocx doctor --reclaim-response-temps`).
+   * from the bare command (`occx restore back`, `occx doctor --reclaim-response-temps`).
    * Without this the banner cannot equal the capability set: it legitimately carries more
    * rows than there are commands.
    */
@@ -66,7 +66,7 @@ export interface Capability {
 /**
  * Surfaces resolved in the CLI head, before dispatch.
  *
- * They belong in `ocx capabilities` output and in the banner, but not in `CLI_COMMANDS`:
+ * They belong in `occx capabilities` output and in the banner, but not in `CLI_COMMANDS`:
  * `--version`, `-v`, and `version` are answered at `root.ts` and exit, so none of them is
  * a runner key to parity-check against.
  */
@@ -80,18 +80,18 @@ export const HEAD_CAPABILITIES: readonly HeadCapability[] = [
   {
     invocations: ["--version", "-v", "version"],
     summary: "Print the CLI version and exit.",
-    bannerLine: "ocx --version | -v          Print version",
+    bannerLine: "occx --version | -v          Print version",
   },
   {
     invocations: ["help", "--help", "-h"],
-    summary: "Print the command list, or one command's usage with `ocx help <command>`.",
-    bannerLine: "ocx help [command]          Show help for a command",
+    summary: "Print the command list, or one command's usage with `occx help <command>`.",
+    bannerLine: "occx help [command]          Show help for a command",
   },
 ];
 
 /**
  * Capabilities declared so far. Incomplete by design: later phases add verbs.
- * `ocx capabilities` is the index of what is listed here, not of every CLI command.
+ * `occx capabilities` is the index of what is listed here, not of every CLI command.
  * A capability must not name a route the command does not actually fetch.
  */
 export const CAPABILITIES: readonly Capability[] = [
@@ -134,9 +134,9 @@ export const CAPABILITIES: readonly Capability[] = [
   },
   {
     command: ["hub", "invite"],
-    summary: "Mint a single-use pairing code on a hub and print the exact `ocx connect` line for one more machine.",
+    summary: "Mint a single-use pairing code on a hub and print the exact `occx connect` line for one more machine.",
     // Deliberately empty. The command DOES drive `POST /api/gui/pairing-grants` -- the attested
-    // local mint route `ocx gui pair` uses, authorized by a capability HMAC'd with the running
+    // local mint route `occx gui pair` uses, authorized by a capability HMAC'd with the running
     // proxy's own attestation secret rather than by the admin token, which is why it needs
     // nothing exported in the shell. That route is answered in the composition root, ahead of
     // `handleManagementAPI`, so it is not in MANAGEMENT_ROUTES; declaring it here would fail the
@@ -157,7 +157,7 @@ export const CAPABILITIES: readonly Capability[] = [
       "The bound browser origin is always printed; when it is not http://localhost:10100 the warning names the port the connecting machine must use.",
       "Refuses when the advertised data origin would be loopback (a loopback or wildcard bind with no hub.dataPublicOrigin and no --data-url) rather than printing a line that dials the other machine itself.",
       "Prints no data-plane token. Remote machines receive their own revocable per-client key from the exchange.",
-      "Mints through the attested local pairing-grant route, the same one ocx gui pair uses; no admin token is read.",
+      "Mints through the attested local pairing-grant route, the same one occx gui pair uses; no admin token is read.",
     ],
   },
   {
@@ -194,7 +194,7 @@ export const CAPABILITIES: readonly Capability[] = [
     ],
     mutates: false,
     json: "envelope",
-    details: ["Start here when driving ocx programmatically: it is the declared surface index, not a complete verb list."],
+    details: ["Start here when driving occx programmatically: it is the declared surface index, not a complete verb list."],
   },
   {
     command: ["provider", "list"],
@@ -418,7 +418,7 @@ export const CAPABILITIES: readonly Capability[] = [
     flags: [{ name: "--json", value: "boolean", summary: "Emit the storage report as JSON." }],
     mutates: false,
     json: "payload",
-    bannerLines: ["ocx storage                 Storage report (default subcommand)"],
+    bannerLines: ["occx storage                 Storage report (default subcommand)"],
   },
   {
     command: ["storage", "cleanup"],
@@ -693,7 +693,7 @@ export const CAPABILITIES: readonly Capability[] = [
   },
 ];
 
-/** Capabilities that drive `route`, for `ocx capabilities --route`. */
+/** Capabilities that drive `route`, for `occx capabilities --route`. */
 export function capabilitiesForRoute(path: string): Capability[] {
   return CAPABILITIES.filter(cap => cap.routes.some(r => r.path === path));
 }
@@ -707,7 +707,7 @@ export function capabilityRouteKeys(): Set<string> {
   return keys;
 }
 
-/** Rendered command path, e.g. `ocx account pause`. */
+/** Rendered command path, e.g. `occx account pause`. */
 export function capabilityInvocation(cap: Capability): string {
-  return `ocx ${cap.command.join(" ")}`;
+  return `occx ${cap.command.join(" ")}`;
 }

@@ -3,7 +3,7 @@ import { readBoundedResponseBody } from "../../lib/bounded-body";
 import { readJsonRequestBody, resolveInboundBodyLimitBytes } from "../request-decompress";
 import { finishRequestAttempt, type RequestLogContext } from "../request-log";
 import { linkRequestSessionLane } from "../request-log-conversation";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import type { RouteCandidateTrace, RouteDecisionTraceV1 } from "../../routing/trace";
 import { handleResponses as handleResponsesCore } from "./core";
 import { requestPacingOverloadResponse } from "./pacing-overload";
@@ -121,7 +121,7 @@ function finishFailedPolicyAttempt(logCtx: RequestLogContext, status: number): v
  */
 export async function handleResponsesWithPolicyFallback(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   options: CoreOptions = {},
   deps: PolicyFallbackDeps = {},

@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
   Fully restarts the Windows Codex desktop app (MSIX package) so the model
-  picker re-reads the on-disk catalog after ocx sync.
+  picker re-reads the on-disk catalog after occx sync.
 .NOTES
   Run this from an external terminal. Running it from inside a Codex
   conversation kills the app hosting that conversation.

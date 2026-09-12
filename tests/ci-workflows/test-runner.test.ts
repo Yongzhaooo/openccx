@@ -49,7 +49,7 @@ function runGit(cwd: string, ...args: string[]): string {
 // file: scripts/privacy-scan.ts matches any email-shaped string and `.invalid` is not
 // allow-listed, so writing it whole fails the repository's own privacy gate. The bytes
 // handed to git are identical either way.
-const FIXTURE_COMMIT_EMAIL = ["test", "opencodex.invalid"].join("@");
+const FIXTURE_COMMIT_EMAIL = ["test", "openccx.invalid"].join("@");
 
 function pathIsContainedBy(parent: string, candidate: string, platform: "posix" | "win32"): boolean {
   const path = platform === "win32" ? win32 : posix;
@@ -83,7 +83,7 @@ function commitFixture(cwd: string, path: string, contents: string, message: str
   runGit(
     cwd,
     "-c",
-    "user.name=OpenCodex Test",
+    "user.name=Openccx Test",
     "-c",
     `user.email=${FIXTURE_COMMIT_EMAIL}`,
     "commit",
@@ -94,7 +94,7 @@ function commitFixture(cwd: string, path: string, contents: string, message: str
 }
 
 function initChangedRunFixture(): { cwd: string; base: string } {
-  const cwd = mkdtempSync(join(tmpdir(), "opencodex-changed-ref-"));
+  const cwd = mkdtempSync(join(tmpdir(), "openccx-changed-ref-"));
   runGit(cwd, "init", "--quiet");
   const base = commitFixture(cwd, "base.txt", "base\n", "base");
   return { cwd, base };
@@ -204,15 +204,15 @@ describe("test runner captured output", () => {
   test.each(["pass", "fail", "timeout"] as const)(
     "returns and prints a %s lane's output exactly once",
     async outcome => {
-      const root = mkdtempSync(join(tmpdir(), "opencodex-capture-lane-"));
+      const root = mkdtempSync(join(tmpdir(), "openccx-capture-lane-"));
       const fixture = join(root, "capture.test.ts");
       const stdout: string[] = [];
       const stderr: string[] = [];
       writeFileSync(fixture, `
         import { test } from "bun:test";
         test("capture fixture", async () => {
-          process.stdout.write("OCX_CAPTURE_STDOUT_MARKER\\n");
-          process.stderr.write("OCX_CAPTURE_STDERR_MARKER\\n");
+          process.stdout.write("OCCX_CAPTURE_STDOUT_MARKER\\n");
+          process.stderr.write("OCCX_CAPTURE_STDERR_MARKER\\n");
           ${outcome === "timeout" ? "await new Promise(() => {});" : ""}
           ${outcome === "fail" ? 'throw new Error("fixture assertion failure");' : ""}
         }, 60_000);
@@ -227,13 +227,13 @@ describe("test runner captured output", () => {
           { stdout: value => { stdout.push(value); }, stderr: value => { stderr.push(value); } },
         );
         expect(result.exitCode).toBe(outcome === "timeout" ? 124 : outcome === "fail" ? 1 : 0);
-        expect(result.output).toContain("OCX_CAPTURE_STDOUT_MARKER\n");
-        expect(result.output).toContain("OCX_CAPTURE_STDERR_MARKER\n");
+        expect(result.output).toContain("OCCX_CAPTURE_STDOUT_MARKER\n");
+        expect(result.output).toContain("OCCX_CAPTURE_STDERR_MARKER\n");
         // A failed Bun assertion may quote the fixture source containing the marker.
         // Count emitted marker lines, not mentions inside the error's code frame.
-        expect(stdout.join("").split(/\r?\n/).filter(line => line === "OCX_CAPTURE_STDOUT_MARKER"))
+        expect(stdout.join("").split(/\r?\n/).filter(line => line === "OCCX_CAPTURE_STDOUT_MARKER"))
           .toHaveLength(1);
-        expect(stderr.join("").split(/\r?\n/).filter(line => line === "OCX_CAPTURE_STDERR_MARKER"))
+        expect(stderr.join("").split(/\r?\n/).filter(line => line === "OCCX_CAPTURE_STDERR_MARKER"))
           .toHaveLength(1);
         expect(result.output).toBe(stdout.join("") + "\n" + stderr.join(""));
       } finally {
@@ -252,10 +252,10 @@ describe("test runner isolation", () => {
         PATH: "/test/bin",
         HOME: isolated.root,
         USERPROFILE: isolated.root,
-        OPENCODEX_HOME: join(isolated.root, ".opencodex"),
+        OPENCCX_HOME: join(isolated.root, ".openccx"),
         CODEX_HOME: join(isolated.root, ".codex"),
       });
-      expect(existsSync(isolated.env.OPENCODEX_HOME!)).toBe(true);
+      expect(existsSync(isolated.env.OPENCCX_HOME!)).toBe(true);
       expect(existsSync(isolated.env.CODEX_HOME!)).toBe(true);
     } finally {
       isolated.cleanup();
@@ -517,7 +517,7 @@ describe("bun test argv", () => {
   });
 
   test("the wrapper passes parallel execution through to bun", () => {
-    const fixtureRoot = mkdtempSync(join(tmpdir(), "opencodex-test-runner-"));
+    const fixtureRoot = mkdtempSync(join(tmpdir(), "openccx-test-runner-"));
     const fixturePath = join(fixtureRoot, "parallel-smoke.test.ts");
     const markerPath = join(fixtureRoot, "executed.marker");
     writeFileSync(
@@ -531,7 +531,7 @@ describe("bun test argv", () => {
         fixturePath,
       ], {
         cwd: repoRoot(),
-        env: { ...process.env, OCX_TEST_NO_QUEUE: "1" },
+        env: { ...process.env, OCCX_TEST_NO_QUEUE: "1" },
         stdout: "pipe",
         stderr: "pipe",
       });
@@ -717,7 +717,7 @@ describe("bun test user lock", () => {
       hardenWindowsDirectory: () => { hardenCalls += 1; },
     });
 
-    expect(lockPath).toContain("\\bun-test-locks\\opencodex-bun-test-");
+    expect(lockPath).toContain("\\bun-test-locks\\openccx-bun-test-");
     expect(created).toBe(true);
     expect(hardenCalls).toBe(1);
   });
@@ -808,7 +808,7 @@ describe("bun test user lock", () => {
   test.if(process.platform === "win32" && process.env[TEST_RUN_NO_QUEUE_ENV] !== "1")(
     "nested Windows Bun tests inherit the acquired live lock and refuse an incomplete capability",
     () => {
-      const root = mkdtempSync(join(tmpdir(), "opencodex-nested-test-"));
+      const root = mkdtempSync(join(tmpdir(), "openccx-nested-test-"));
       try {
         const lockPath = process.env[TEST_RUN_LOCK_PATH_ENV];
         expect(Boolean(lockPath && process.env[TEST_RUN_LOCK_TOKEN_ENV] && process.env[TEST_RUN_ID_ENV])).toBe(true);
@@ -819,15 +819,15 @@ describe("bun test user lock", () => {
           import { readFileSync, existsSync } from "node:fs";
           import { join } from "node:path";
           test("nested lock receipt", () => {
-            const path = process.env.OCX_TEST_RUN_LOCK_PATH;
+            const path = process.env.OCCX_TEST_RUN_LOCK_PATH;
             const owner = JSON.parse(readFileSync(join(path, "owner.json"), "utf8"));
             console.log(JSON.stringify({ nestedLockReceipt: {
               samePath: path === ${JSON.stringify(lockPath)},
               sameRun: owner.runId === ${JSON.stringify(process.env[TEST_RUN_ID_ENV])},
-              sameToken: owner.token === process.env.OCX_TEST_RUN_LOCK_TOKEN,
+              sameToken: owner.token === process.env.OCCX_TEST_RUN_LOCK_TOKEN,
               member: existsSync(join(path, "members", process.pid + "-" + owner.token)),
-              preloadRan: process.env.OCX_TEST_PRELOAD_PID === String(process.pid),
-              guardArmed: process.env.OCX_TEST_HOME_GUARD === "1",
+              preloadRan: process.env.OCCX_TEST_PRELOAD_PID === String(process.pid),
+              guardArmed: process.env.OCCX_TEST_HOME_GUARD === "1",
             } }));
           });
         `);
@@ -861,7 +861,7 @@ describe("bun test user lock", () => {
 
   test("falls back from an unsafe XDG root to a validated mode-0700 UID directory", () => {
     if (process.platform === "win32" || typeof process.getuid !== "function") return;
-    const root = mkdtempSync(join(tmpdir(), "opencodex-runtime-fallback-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-runtime-fallback-"));
     const unsafeXdg = join(root, "not-a-directory");
     writeFileSync(unsafeXdg, "unsafe\n");
     try {
@@ -874,7 +874,7 @@ describe("bun test user lock", () => {
       const runtimeRoot = dirname(lockPath);
       const entry = statSync(runtimeRoot);
 
-      expect(runtimeRoot).toBe(join(root, `opencodex-test-runtime-${process.getuid()}`));
+      expect(runtimeRoot).toBe(join(root, `openccx-test-runtime-${process.getuid()}`));
       expect(entry.isDirectory()).toBe(true);
       expect(entry.uid).toBe(process.getuid());
       expect(entry.mode & 0o777).toBe(0o700);
@@ -935,7 +935,7 @@ describe("bun test user lock", () => {
   });
 
   test("one run owns the lock while sibling workers with its run ID join", async () => {
-    const root = mkdtempSync(join(tmpdir(), "opencodex-test-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-test-lock-"));
     const lockPath = join(root, "suite.lock");
     try {
       const owner = await acquireTestRunLock({ runId: "suite-a", lockPath, pollMs: 5, maxWaitMs: 50 });
@@ -952,7 +952,7 @@ describe("bun test user lock", () => {
   });
 
   test("an inherited worker can only join the exact live wrapper owner", async () => {
-    const root = mkdtempSync(join(tmpdir(), "opencodex-test-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-test-lock-"));
     const lockPath = join(root, "suite.lock");
     try {
       const owner = await acquireTestRunLock({ runId: "wrapped", lockPath, pollMs: 5, maxWaitMs: 50 });
@@ -987,7 +987,7 @@ describe("bun test user lock", () => {
   });
 
   test("a dead owner is reclaimed even when the next bare invocation derives the same run ID", async () => {
-    const root = mkdtempSync(join(tmpdir(), "opencodex-test-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-test-lock-"));
     const lockPath = join(root, "suite.lock");
     try {
       const stale = await acquireTestRunLock({
@@ -1009,7 +1009,7 @@ describe("bun test user lock", () => {
   });
 
   test("a live competing run fails closed after the bounded wait", async () => {
-    const root = mkdtempSync(join(tmpdir(), "opencodex-test-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-test-lock-"));
     const lockPath = join(root, "suite.lock");
     try {
       const owner = await acquireTestRunLock({ runId: "live", lockPath, pollMs: 5, maxWaitMs: 50 });
@@ -1029,7 +1029,7 @@ describe("bun test user lock", () => {
   });
 
   test("the explicit no-queue escape hatch does not create a lock", async () => {
-    const root = mkdtempSync(join(tmpdir(), "opencodex-test-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "openccx-test-lock-"));
     const lockPath = join(root, "suite.lock");
     try {
       const lock = await acquireTestRunLock({

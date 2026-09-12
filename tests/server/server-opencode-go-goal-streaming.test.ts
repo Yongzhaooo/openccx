@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -17,22 +17,22 @@ let originalFetch: typeof fetch;
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-opencode-go-goal-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-opencode-go-goal-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-opencode-go-goal-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-opencode-go-goal-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -45,7 +45,7 @@ function config(): OcxConfig {
         models: ["deepseek-v4-flash"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function goalRequestBody(): Record<string, unknown> {

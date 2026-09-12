@@ -29,7 +29,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const HOMES: string[] = [];
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-sanitize-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-sanitize-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -38,7 +38,7 @@ afterEach(() => {
   for (const dir of HOMES.splice(0)) {
     try { removeTreeWithRetry(dir); } catch { /* ignore */ }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function behavior(adapter: string, upstreamProtocol: string): LabBehaviorValues {
@@ -56,7 +56,7 @@ function mockRoute(): LabRouteContext {
   return {
     providerId: "fixture-provider", providerInstanceKey: "fixture-provider-instance", clientModelId: "fixture-model", upstreamModelId: "fixture-model",
     effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http",
-    baseUrl: "https://api.example.com/v1", opencodexCompatibilityVersion: "a".repeat(64), labRunApproval: true, allowPrivateNetwork: false,
+    baseUrl: "https://api.example.com/v1", openccxCompatibilityVersion: "a".repeat(64), labRunApproval: true, allowPrivateNetwork: false,
     requiredClaims: ["tools", "image", "reasoning"],
     availableHarnessFeatures: ["live_transport", "inert_tools", "adapter_vector", "reasoning_replay", "synthetic_image", "in_memory_mcp_stub", "mcp_call_result_v1", "mcp_lab_stub"],
     behaviorValues: behavior("openai-responses", "openai-responses"),
@@ -385,7 +385,7 @@ describe("SEC-02 activation on persisted evidence", () => {
   test("live constructor sanitizes both the event and the assertion report", async () => {
     for (const { label, raw, token } of FORBIDDEN) {
       const home = tempHome();
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       const authority = loadLiveCaseAuthority();
       const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
       // A host-issued executor keeps the trusted receipt genuine. Supplying a
@@ -418,7 +418,7 @@ describe("SEC-02 activation on persisted evidence", () => {
 
   test("non-contract artifacts declare the v2 redaction policy", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadLiveCaseAuthority();
     const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(caseRecord, mockRoute(), {
@@ -439,7 +439,7 @@ describe("SEC-02 activation on persisted evidence", () => {
     // can be built directly. Covering it separately matters: removing the
     // sanitizer from this constructor alone would otherwise pass unnoticed.
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadCaseAuthority();
     const caseRecord = discoverScenarios(authority, ["responses-core"]).find(
       (c) => c.id === "responses-core.protocol.request-shape",

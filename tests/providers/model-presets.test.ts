@@ -6,7 +6,7 @@ import {
   modelPresetFor,
   MODEL_PRESETS,
 } from "../../src/providers/model-presets";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 describe("#2465 model presets", () => {
   test("rules match vendor snapshot suffixes, not just bare ids", () => {
@@ -71,7 +71,7 @@ describe("#2465 model presets", () => {
     test("an edit while in preset mode flips to custom and keeps the applied version", () => {
       const provider = {
         modelPreset: { mode: "preset" as const, appliedVersion: 1, appliedAt: "2026-08-26T00:00:00Z" },
-      } as OcxProviderConfig;
+      } as OccxProviderConfig;
       markModelPresetDiverged(provider);
       expect(provider.modelPreset?.mode).toBe("custom");
       // Retained so the GUI can still offer "a newer preset is available".
@@ -79,11 +79,11 @@ describe("#2465 model presets", () => {
     });
 
     test("custom is terminal and all has nothing to flip", () => {
-      const custom = { modelPreset: { mode: "custom" as const } } as OcxProviderConfig;
+      const custom = { modelPreset: { mode: "custom" as const } } as OccxProviderConfig;
       markModelPresetDiverged(custom);
       expect(custom.modelPreset?.mode).toBe("custom");
 
-      const none = {} as OcxProviderConfig;
+      const none = {} as OccxProviderConfig;
       markModelPresetDiverged(none);
       // Absent marker means "all", exactly today's semantics — no marker is invented.
       expect(none.modelPreset).toBeUndefined();

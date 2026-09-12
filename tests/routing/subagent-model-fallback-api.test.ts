@@ -7,15 +7,15 @@ import { mkdtempSync} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const savedHome = process.env.OPENCODEX_HOME;
+const savedHome = process.env.OPENCCX_HOME;
 let tempHome: string | null = null;
 
 afterEach(() => {
-  if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedHome;
+  if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedHome;
   if (tempHome) {
     removeTreeWithRetry(tempHome);
     tempHome = null;
@@ -23,21 +23,21 @@ afterEach(() => {
 });
 
 function isolatedHome(): void {
-  tempHome = mkdtempSync(join(tmpdir(), "ocx-subagent-fallback-api-"));
-  process.env.OPENCODEX_HOME = tempHome;
+  tempHome = mkdtempSync(join(tmpdir(), "occx-subagent-fallback-api-"));
+  process.env.OPENCCX_HOME = tempHome;
 }
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {},
     defaultProvider: "openai",
     subagentModelFallback: ["gpt-5.6-sol", "kimi/k3"],
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-async function put(config: OcxConfig, body: unknown): Promise<Response> {
+async function put(config: OccxConfig, body: unknown): Promise<Response> {
   const req = new Request("http://localhost/api/subagent-model-fallback", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

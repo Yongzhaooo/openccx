@@ -142,7 +142,7 @@ treated as a repository path only when its first segment is a top-level entry th
 used to have. That covers root files too, so `package.json` and `MAINTAINERS.md` are checked directly,
 not only through the links that point at them. What is NOT checked is a bare filename that was never
 a top-level entry, because these docs name runtime files that live in a user's home rather than in
-the repository — `config.toml`, `models_cache.json`, `ocx.pid` — and validating every filename-shaped
+the repository — `config.toml`, `models_cache.json`, `occx.pid` — and validating every filename-shaped
 token would reject them.
 
 The top-level set deliberately includes roots that no longer exist, such as `go/`. Deriving it from

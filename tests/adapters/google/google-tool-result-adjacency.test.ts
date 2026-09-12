@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createGoogleAdapter } from "../../../src/adapters/google";
-import type { OcxContentPart, OcxMessage, OcxParsedRequest } from "../../../src/types";
+import type { OccxContentPart, OccxMessage, OccxParsedRequest } from "../../../src/types";
 
 const provider = { adapter: "google", baseUrl: "https://generativelanguage.googleapis.com", apiKey: "key" };
 
@@ -9,7 +9,7 @@ interface GeminiTurn {
   parts: Array<Record<string, unknown>>;
 }
 
-function assistant(calls: Array<{ id: string; name: string }>): OcxMessage {
+function assistant(calls: Array<{ id: string; name: string }>): OccxMessage {
   return {
     role: "assistant",
     content: calls.map(call => ({ type: "toolCall", id: call.id, name: call.name, arguments: {} })),
@@ -17,7 +17,7 @@ function assistant(calls: Array<{ id: string; name: string }>): OcxMessage {
   };
 }
 
-function result(id: string, name: string, content: string | OcxContentPart[] = "ok"): OcxMessage {
+function result(id: string, name: string, content: string | OccxContentPart[] = "ok"): OccxMessage {
   return {
     role: "toolResult",
     toolCallId: id,
@@ -25,20 +25,20 @@ function result(id: string, name: string, content: string | OcxContentPart[] = "
     content,
     isError: false,
     timestamp: 0,
-  } as OcxMessage;
+  } as OccxMessage;
 }
 
-function user(text: string): OcxMessage {
+function user(text: string): OccxMessage {
   return { role: "user", content: text, timestamp: 0 };
 }
 
-async function wire(messages: OcxMessage[]): Promise<GeminiTurn[]> {
+async function wire(messages: OccxMessage[]): Promise<GeminiTurn[]> {
   const parsed = {
     modelId: "claude-opus-4.8",
     stream: false,
     options: {},
     context: { messages },
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
   const built = await createGoogleAdapter(provider).buildRequest(parsed);
   return (JSON.parse(built.body) as { contents: GeminiTurn[] }).contents;
 }

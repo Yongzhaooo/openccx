@@ -4,8 +4,8 @@ import { handleModelsRuntimeCommand } from "../../src/cli/models-runtime";
 /**
  * Regression coverage for #3666 — the CLI half.
  *
- * The issue asks for `ocx model list --free-only`. That command does not exist; the live
- * catalog listing is `ocx models live`, so the flag lands there, on the same
+ * The issue asks for `occx model list --free-only`. That command does not exist; the live
+ * catalog listing is `occx models live`, so the flag lands there, on the same
  * `pricingStatus` the Dashboard filter reads. Absent `pricingStatus` is excluded for the
  * same fail-closed reason the classifier omits it: a model the provider never priced is not
  * evidence of a free one.
@@ -32,7 +32,7 @@ async function runLive(args: string[]): Promise<{ code: number | null; out: stri
   }
 }
 
-describe("ocx models live --free-only (#3666)", () => {
+describe("occx models live --free-only (#3666)", () => {
   test("--free-only keeps only rows the provider priced at zero", async () => {
     const { code, out } = await runLive(["--free-only", "--json"]);
     expect(code).toBe(0);

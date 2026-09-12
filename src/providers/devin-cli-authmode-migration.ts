@@ -18,10 +18,10 @@
  * silently. The warning names the custom-id row that still gets them ACP.
  */
 import { PROVIDER_REGISTRY } from "./registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export interface DevinCliAuthModeProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   warnings: string[];
 }
@@ -29,7 +29,7 @@ export interface DevinCliAuthModeProjection {
 const ACP_ESCAPE_HATCH =
   'a custom-named row still reaches it, e.g. "devin-acp": { "adapter": "devin-cli", "baseUrl": "https://cli.devin.ai" }';
 
-export function projectDevinCliAuthMode(config: OcxConfig): DevinCliAuthModeProjection {
+export function projectDevinCliAuthMode(config: OccxConfig): DevinCliAuthModeProjection {
   const warnings: string[] = [];
   const prov = config.providers?.["devin-cli"];
   if (!prov) return { config, changed: false, warnings };

@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
-  recoverOcxCompactionHistory,
-  rewriteOcxCompactionsForNativeReplay,
-} from "../../src/codex/ocx-compaction-history";
+  recoverOccxCompactionHistory,
+  rewriteOccxCompactionsForNativeReplay,
+} from "../../src/codex/occx-compaction-history";
 import { encodeCompactionSummary, SUMMARY_PREFIX } from "../../src/responses/compaction";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -36,7 +36,7 @@ describe("OpenCodeX compaction history recovery", () => {
       "",
     ].join("\n");
 
-    const result = rewriteOcxCompactionsForNativeReplay(source);
+    const result = rewriteOccxCompactionsForNativeReplay(source);
 
     expect(result.replaced).toBe(1);
     const lines = result.content.trimEnd().split("\n").map(line => JSON.parse(line));
@@ -49,7 +49,7 @@ describe("OpenCodeX compaction history recovery", () => {
       },
       { type: "compaction", id: "cmp_native", encrypted_content: "native-opaque" },
     ]);
-    expect(lines[2].payload.encrypted_content).toStartWith("ocx1:");
+    expect(lines[2].payload.encrypted_content).toStartWith("occx1:");
     expect(result.content.endsWith("\n")).toBe(true);
   });
 
@@ -59,11 +59,11 @@ describe("OpenCodeX compaction history recovery", () => {
       payload: { replacement_history: [{ type: "compaction", encrypted_content: "native-opaque" }] },
     })}\nnot-json\n`;
 
-    expect(rewriteOcxCompactionsForNativeReplay(source)).toEqual({ content: source, replaced: 0 });
+    expect(rewriteOccxCompactionsForNativeReplay(source)).toEqual({ content: source, replaced: 0 });
   });
 
   test("backs up and atomically repairs one database-selected rollout", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-compaction-recovery-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-compaction-recovery-"));
     try {
       const codexHome = join(root, "codex");
       const rolloutDir = join(codexHome, "sessions", "2026", "09", "07");
@@ -88,7 +88,7 @@ describe("OpenCodeX compaction history recovery", () => {
       db.query("INSERT INTO threads (id, rollout_path) VALUES (?, ?)").run(threadId, rolloutPath);
       db.close();
 
-      const result = recoverOcxCompactionHistory({
+      const result = recoverOccxCompactionHistory({
         threadId,
         codexHome,
         stateDbPath,
@@ -100,7 +100,7 @@ describe("OpenCodeX compaction history recovery", () => {
       expect(result.backupPath).not.toBeNull();
       expect(readFileSync(result.backupPath!, "utf8")).toBe(original);
       expect(readFileSync(rolloutPath, "utf8")).toContain(`${SUMMARY_PREFIX}\\nrecover me`);
-      expect(readFileSync(rolloutPath, "utf8")).not.toContain("ocx1:");
+      expect(readFileSync(rolloutPath, "utf8")).not.toContain("occx1:");
     } finally {
       removeTreeWithRetry(root);
     }

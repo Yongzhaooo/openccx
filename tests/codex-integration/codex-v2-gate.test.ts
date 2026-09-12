@@ -79,7 +79,7 @@ function efforts(entry: { supported_reasoning_levels?: unknown }): string[] {
 }
 
 function fixtureConfig(content: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-v2-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-v2-"));
   const path = join(dir, "config.toml");
   writeFileSync(path, content);
   return path;
@@ -98,7 +98,7 @@ function selectRuntime(command: string, version = "test"): void {
 }
 
 function installModeHintRuntime(supported = true): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-mode-hint-runtime-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-mode-hint-runtime-"));
   const command = join(dir, "codex");
   writeFileSync(command, native(supported));
   selectRuntime(command);
@@ -615,7 +615,7 @@ describe("multi_agent_mode_hint_text reader/writer", () => {
 
 describe("multi_agent_mode_hint_text native capability probe", () => {
   test("clear bypasses an unsupported runtime probe so invalid old config can recover", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-mode-hint-clear-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-mode-hint-clear-"));
     const command = join(dir, "codex-old");
     writeFileSync(command, native(false));
     selectRuntime(command);
@@ -629,7 +629,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("probe cache tracks in-place replacement and selected command changes", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-mode-hint-cache-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-mode-hint-cache-"));
     const supported = join(dir, "codex-supported");
     const unsupported = join(dir, "codex-unsupported");
     writeFileSync(supported, native(true));
@@ -649,12 +649,12 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("probe ignores unrelated PATH installations and script wrappers", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-mode-hint-selected-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-mode-hint-selected-"));
     const selected = join(dir, "selected-old");
     const unrelated = join(dir, "unrelated-bin");
     mkdirSync(unrelated);
     writeFileSync(selected, native(false));
-    writeFileSync(join(unrelated, "codex.opencodex-real"), native(true));
+    writeFileSync(join(unrelated, "codex.openccx-real"), native(true));
     const oldPath = process.env.PATH;
     process.env.PATH = `${unrelated}${delimiter}${oldPath ?? ""}`;
     try {
@@ -671,7 +671,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("probe resolves the selected Windows npm wrapper's platform package", () => {
-    const prefix = mkdtempSync(join(tmpdir(), "ocx-mode-hint-win-"));
+    const prefix = mkdtempSync(join(tmpdir(), "occx-mode-hint-win-"));
     const command = join(prefix, "codex.cmd");
     const pkg = join(prefix, "node_modules", "@openai", "codex-win32-x64");
     const binary = join(pkg, "vendor", "x86_64-pc-windows-msvc", "bin", "codex.exe");
@@ -688,7 +688,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("probe resolves an exact bare PATH command without scanning peer installs", () => {
-    const prefix = mkdtempSync(join(tmpdir(), "ocx-mode-hint-bare-"));
+    const prefix = mkdtempSync(join(tmpdir(), "occx-mode-hint-bare-"));
     const binDir = join(prefix, "bin");
     const js = join(prefix, "node_modules", "@openai", "codex", "bin", "codex.js");
     const pkg = join(prefix, "node_modules", "@openai", "codex-darwin-arm64");
@@ -708,7 +708,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
     // claude-agents-inject and codex-service-manager-probe already use, rather than
     // failing on EPERM before the probe under test has run.
     try {
-      symlinkSync(js, join(binDir, "codex.opencodex-real"));
+      symlinkSync(js, join(binDir, "codex.openccx-real"));
     } catch (err) {
       // Windows without Developer Mode / elevated privileges cannot create symlinks.
       if (process.platform === "win32" && (err as NodeJS.ErrnoException).code === "EPERM") return;
@@ -717,7 +717,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
     const oldPath = process.env.PATH;
     process.env.PATH = `${binDir}${delimiter}${oldPath ?? ""}`;
     try {
-      selectRuntime("codex.opencodex-real");
+      selectRuntime("codex.openccx-real");
       expect(probeCodexSupportsModeHint()).toBe(true);
     } finally {
       if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
@@ -726,10 +726,10 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("probe cache distinguishes different PATH targets for the same bare command", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-mode-hint-path-swap-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-mode-hint-path-swap-"));
     const supportedDir = join(root, "supported");
     const oldDir = join(root, "old");
-    const command = "codex.opencodex-real";
+    const command = "codex.openccx-real";
     mkdirSync(supportedDir);
     mkdirSync(oldDir);
     writeFileSync(join(supportedDir, command), native(true));
@@ -749,7 +749,7 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
   });
 
   test("a bare selected command is resolved from PATH, never a same-named cwd file", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-mode-hint-cwd-shadow-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-mode-hint-cwd-shadow-"));
     const cwd = join(root, "cwd");
     const bin = join(root, "bin");
     const command = "codex-cwd-shadow";
@@ -771,9 +771,9 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
     }
   });
 
-  test("probe follows only the selected OCX shim's recorded backing runtime", () => {
-    const prefix = mkdtempSync(join(tmpdir(), "ocx-mode-hint-shim-"));
-    const ocxHome = join(prefix, "ocx-home");
+  test("probe follows only the selected OCCX shim's recorded backing runtime", () => {
+    const prefix = mkdtempSync(join(tmpdir(), "occx-mode-hint-shim-"));
+    const occxHome = join(prefix, "occx-home");
     const shim = join(prefix, "bin", "codex");
     const backing = join(prefix, "node_modules", "@openai", "codex", "bin", "codex.js");
     const pkg = join(prefix, "node_modules", "@openai", "codex-darwin-arm64");
@@ -781,21 +781,21 @@ describe("multi_agent_mode_hint_text native capability probe", () => {
     mkdirSync(dirname(shim), { recursive: true });
     mkdirSync(dirname(backing), { recursive: true });
     mkdirSync(dirname(binary), { recursive: true });
-    mkdirSync(ocxHome, { recursive: true });
+    mkdirSync(occxHome, { recursive: true });
     writeFileSync(shim, `#!/bin/sh\nexec '${backing}' "$@"\n`);
     writeFileSync(backing, "#!/usr/bin/env node\n");
     writeFileSync(join(pkg, "package.json"), JSON.stringify({ name: "@openai/codex", version: "test" }));
     writeFileSync(binary, native(true));
-    writeFileSync(join(ocxHome, "codex-shim.json"), JSON.stringify({
+    writeFileSync(join(occxHome, "codex-shim.json"), JSON.stringify({
       wrappers: [{ wrapperPath: shim, originalPath: shim, backupPath: backing }],
     }));
-    const oldHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = ocxHome;
+    const oldHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = occxHome;
     try {
       selectRuntime(shim);
       expect(probeCodexSupportsModeHint()).toBe(true);
     } finally {
-      if (oldHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = oldHome;
+      if (oldHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = oldHome;
       resetCodexRuntimeResolveCacheForTests();
     }
   });
@@ -1013,7 +1013,7 @@ describe("v1<->v2 root-slot translation", () => {
 });
 
 describe("config-surface parity: agents.enabled, max_depth, subagent_developer_instructions", () => {
-  test("opencodex mirrors exactly one upstream feature key", async () => {
+  test("openccx mirrors exactly one upstream feature key", async () => {
     const source = await Bun.file(new URL("../../src/codex/features.ts", import.meta.url)).text();
     // Upstream feature keys are snake_case, so the underscore requirement is the
     // discriminator: JS member accesses on locals named `features` (features.match,
@@ -1025,7 +1025,7 @@ describe("config-surface parity: agents.enabled, max_depth, subagent_developer_i
     const referenced = new Set(
       [...source.matchAll(/features\.([a-z0-9]+(?:_[a-z0-9]+)+)/g)].map(m => m[1]),
     );
-    // multi_agent_v2 is deliberately mirrored because opencodex migrates its
+    // multi_agent_v2 is deliberately mirrored because openccx migrates its
     // concurrency value across the v1/v2 boundary and exposes the multi-agent
     // config surface. Every other upstream feature flag is delegated to
     // `codex features` and must NOT be hardcoded in src/codex/features.ts: upstream
@@ -1056,7 +1056,7 @@ describe("config-surface parity: agents.enabled, max_depth, subagent_developer_i
     // install shape rather than the key delegation this case is about.
     const seams = {
       env: { PATH: "/usr/bin" },
-      configDir: mkdtempSync(join(tmpdir(), "ocx-v2-key-")),
+      configDir: mkdtempSync(join(tmpdir(), "occx-v2-key-")),
       existsSync: () => false,
       execFileSync: () => "codex-cli 0.145.0",
     };
@@ -1240,9 +1240,9 @@ describe("management API logical v1/v2 switching", () => {
   test("mode-only switches translate the limit across the root-slot boundary in both directions", async () => {
     const path = fixtureConfig("[agents]\nmax_threads = 100\nmax_depth = 2\n");
     const oldCodexHome = process.env.CODEX_HOME;
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     process.env.CODEX_HOME = dirname(path);
-    process.env.OPENCODEX_HOME = mkdtempSync(join(tmpdir(), "ocx-api-config-"));
+    process.env.OPENCCX_HOME = mkdtempSync(join(tmpdir(), "occx-api-config-"));
     const config = { providers: [] } as never;
     const toggle = (enabled: boolean) => {
       const content = readFileSync(path, "utf8");
@@ -1297,7 +1297,7 @@ describe("management API logical v1/v2 switching", () => {
       expect(await getResponse?.json()).toMatchObject({ enabled: false, maxConcurrentThreadsPerSession: 76 });
     } finally {
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = oldCodexHome;
-      if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = oldOcxHome;
+      if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = oldOccxHome;
     }
   });
 
@@ -1340,9 +1340,9 @@ describe("management API parity surface for the WP2 keys", () => {
   }) => Promise<void>) => {
     const path = fixtureConfig(content);
     const oldCodexHome = process.env.CODEX_HOME;
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     process.env.CODEX_HOME = dirname(path);
-    process.env.OPENCODEX_HOME = mkdtempSync(join(tmpdir(), "ocx-api-parity-"));
+    process.env.OPENCCX_HOME = mkdtempSync(join(tmpdir(), "occx-api-parity-"));
     installModeHintRuntime(true);
     const toggle = (enabled: boolean) => {
       const current = readFileSync(path, "utf8");
@@ -1352,7 +1352,7 @@ describe("management API parity surface for the WP2 keys", () => {
       .finally(() => {
         resetCodexRuntimeResolveCacheForTests();
         if (oldCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = oldCodexHome;
-        if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = oldOcxHome;
+        if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = oldOccxHome;
       });
   };
   const put = (payload: unknown) => new Request("http://localhost/api/v2", {
@@ -1745,20 +1745,20 @@ describe("cli surface", () => {
     const execFileSync = () => "codex-cli 0.145.0";
     expect(codexFeaturesInvocation("enable", "multi_agent_v2", "darwin", {
       env: { PATH: "" },
-      configDir: mkdtempSync(join(tmpdir(), "ocx-v2-inv-posix-")),
+      configDir: mkdtempSync(join(tmpdir(), "occx-v2-inv-posix-")),
       existsSync: () => false,
       execFileSync,
     })).toEqual({ file: "codex", args: ["features", "enable", "multi_agent_v2"], options: {} });
     expect(codexFeaturesInvocation("enable", "default_mode_request_user_input", "darwin", {
       env: { PATH: "" },
-      configDir: mkdtempSync(join(tmpdir(), "ocx-v2-inv-posix-")),
+      configDir: mkdtempSync(join(tmpdir(), "occx-v2-inv-posix-")),
       existsSync: () => false,
       execFileSync,
     })).toEqual({ file: "codex", args: ["features", "enable", "default_mode_request_user_input"], options: {} });
     // Explicit CODEX_CLI_PATH pointing at a .cmd (npm-only Windows Codex install).
     const inv = codexFeaturesInvocation("disable", "multi_agent_v2", "win32", {
       env: { CODEX_CLI_PATH: "C:\\npm\\codex.cmd", ComSpec: "C:\\WINDOWS\\system32\\cmd.exe", PATH: "" },
-      configDir: mkdtempSync(join(tmpdir(), "ocx-v2-inv-cmd-")),
+      configDir: mkdtempSync(join(tmpdir(), "occx-v2-inv-cmd-")),
       existsSync: () => true,
       execFileSync,
       exists: () => { throw new Error("explicit path must not probe PATH"); },
@@ -1769,7 +1769,7 @@ describe("cli surface", () => {
     // Bare `codex` resolving to codex.exe stays a direct spawn.
     const exe = codexFeaturesInvocation("enable", "multi_agent_v2", "win32", {
       env: { PATH: "C:\\bin" },
-      configDir: mkdtempSync(join(tmpdir(), "ocx-v2-inv-exe-")),
+      configDir: mkdtempSync(join(tmpdir(), "occx-v2-inv-exe-")),
       existsSync: (p: string) => p === "C:\\bin\\codex.exe",
       execFileSync,
       exists: (p: string) => p === "C:\\bin\\codex.exe",
@@ -1780,9 +1780,9 @@ describe("cli surface", () => {
   test("mode v2/v1 translates the limit across the root-slot boundary", async () => {
     const path = fixtureConfig("[agents]\nmax_threads = 100\n");
     const oldCodexHome = process.env.CODEX_HOME;
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     process.env.CODEX_HOME = dirname(path);
-    process.env.OPENCODEX_HOME = mkdtempSync(join(tmpdir(), "ocx-cli-config-"));
+    process.env.OPENCCX_HOME = mkdtempSync(join(tmpdir(), "occx-cli-config-"));
     const logs: string[] = [];
     const deps = {
       execFile: (_file: string, args: string[]) => {
@@ -1813,7 +1813,7 @@ describe("cli surface", () => {
       expect(getLogicalMaxThreads(path)).toBe(76);
     } finally {
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = oldCodexHome;
-      if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = oldOcxHome;
+      if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = oldOccxHome;
     }
   }, 15_000);
 });
@@ -1885,14 +1885,14 @@ describe("3-state multi-agent mode", () => {
         ...template(),
         slug: "external/model",
         display_name: "External model",
-        description: "Routed via opencodex → external (external).",
+        description: "Routed via openccx → external (external).",
         supported_reasoning_levels: [{ effort: "medium", description: "medium" }],
       }];
       const accountBoundEntries = [{
         ...template(),
         slug: "team/gpt-5.6-luna",
         display_name: "team / GPT-5.6 Luna",
-        opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+        openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
         service_tier: "fast",
       }];
       const originalCatalogModels = structuredClone(catalogModels);

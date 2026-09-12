@@ -22,7 +22,7 @@ import {
 } from "../lib/gui-pair-capability";
 import { directLocalHttpFetch } from "../server/direct-local-http";
 import {
-  isOpencodexHealthz,
+  isOpenccxHealthz,
   probeHostname,
   type HealthzIdentity,
   type LiveProxy,
@@ -58,7 +58,7 @@ function parseCreatedResult(value: unknown, browserOrigin: string): GuiPairReque
   const record = value as Record<string, unknown>;
   if (
     typeof record.grant !== "string"
-    || !/^ocx_pair_[A-Za-z0-9_-]{43}$/.test(record.grant)
+    || !/^occx_pair_[A-Za-z0-9_-]{43}$/.test(record.grant)
     || canonicalGuiBrowserOrigin(record.browserOrigin) !== browserOrigin
     || typeof record.expiresAt !== "number"
     || !Number.isSafeInteger(record.expiresAt)
@@ -107,7 +107,7 @@ export async function requestBoundGuiPairingGrant(
   const body = await proofResponse.json().catch(() => null) as HealthzIdentity | null;
   if (
     !proofResponse.ok
-    || !isOpencodexHealthz(body)
+    || !isOpenccxHealthz(body)
     || body?.pid !== target.pid
     || body?.port !== target.port
     || !verifyLocalAttestationProof(

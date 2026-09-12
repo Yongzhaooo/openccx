@@ -28,7 +28,7 @@ interface GrokStatus {
 }
 
 /** Same collapse store the Desktop page uses; Grok groups start collapsed. */
-const GROUP_COLLAPSE = makeCollapseStore("ocx.grok.collapsedGroups.v2");
+const GROUP_COLLAPSE = makeCollapseStore("occx.grok.collapsedGroups.v2");
 
 const GROUPS = [
   { id: "native", tkey: "grok.groupNative" as TKey },
@@ -53,7 +53,7 @@ function formatContext(value: number | undefined, t: TFn): string {
  *
  * The page writes ONLY the selection (config.json, via /api/grok/selection) and asks the
  * proxy to re-run the guarded sync (/api/grok/apply). The fence itself is written only
- * by injectGrokConfig — the same path `ocx start`/`ensure`/`restart` use. Aliases shown
+ * by injectGrokConfig — the same path `occx start`/`ensure`/`restart` use. Aliases shown
  * here come from readGrokStatus (what the writer actually wrote), never computed.
  */
 /**
@@ -64,7 +64,7 @@ function formatContext(value: number | undefined, t: TFn): string {
  */
 export default function Grok({ apiBase, active = true }: { apiBase: string; active?: boolean }) {
   const t = useT();
-  const cacheKey = `ocx.grok.status.v1:${apiBase}`;
+  const cacheKey = `occx.grok.status.v1:${apiBase}`;
   const cachedEntry = readSessionListCacheEntry<GrokStatus>(cacheKey);
   const cached = cachedEntry?.data ?? null;
   // Local edits are an OVERLAY on the server's selection rather than a copy of it. Copying meant
@@ -271,7 +271,7 @@ export default function Grok({ apiBase, active = true }: { apiBase: string; acti
       )}
 
       {status && status.candidates.length > 0 && (
-        <div className="ocx-group-stack">
+        <div className="occx-group-stack">
           <div className="row" style={{ gap: 6, margin: "2px 0 10px" }}>
             <button type="button" className="btn btn-ghost btn-sm text-caption" onClick={() => setAllCollapsed(true)} disabled={pending !== null}>
               <IconChevron width={12} height={12} aria-hidden="true" /> {t("models.collapseAll")}
@@ -285,25 +285,25 @@ export default function Grok({ apiBase, active = true }: { apiBase: string; acti
             if (view.total === 0) return null;
             const isCollapsed = collapsed.has(group.id);
             return (
-              <section key={group.id} className={`ocx-group${isCollapsed ? " collapsed" : ""}`} aria-labelledby={`grok-group-${group.id}`}>
-                <header className={`ocx-group-head${isCollapsed ? "" : " open"}`}>
-                  <h3 id={`grok-group-${group.id}`} className="ocx-group-heading">
+              <section key={group.id} className={`occx-group${isCollapsed ? " collapsed" : ""}`} aria-labelledby={`grok-group-${group.id}`}>
+                <header className={`occx-group-head${isCollapsed ? "" : " open"}`}>
+                  <h3 id={`grok-group-${group.id}`} className="occx-group-heading">
                     <button
                       type="button"
-                      className="ocx-group-toggle"
+                      className="occx-group-toggle"
                       aria-expanded={!isCollapsed}
                       aria-controls={`grok-group-body-${group.id}`}
                       onClick={() => toggleGroup(group.id)}
                     >
                       <IconChevron
-                        className="ocx-chevron"
+                        className="occx-chevron"
                         width={14}
                         height={14}
                         aria-hidden="true"
                         style={{ transform: isCollapsed ? "none" : "rotate(90deg)" }}
                       />
-                      <span className="ocx-group-name">{t(group.tkey)}</span>
-                      <span className="ocx-group-count">
+                      <span className="occx-group-name">{t(group.tkey)}</span>
+                      <span className="occx-group-count">
                         {t("grok.enabledCount", { on: view.enabled, total: view.total })}
                       </span>
                     </button>

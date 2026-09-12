@@ -7,18 +7,18 @@ import {
   CursorRoutingCommentarySniffer,
   MAX_MIDSTREAM_SCAN_LENGTH,
 } from "../../../src/adapters/cursor/envelope-echo";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import type { CursorRunRequest, CursorServerMessage } from "../../../src/adapters/cursor/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createCursorAdapter = (...args: Parameters<typeof createCursorAdapterProduction>) =>
   withTestTranslatorBudget(createCursorAdapterProduction(...args));
 
-const provider: OcxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
+const provider: OccxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
 
 const ECHO_TEXT = "[Tool Result]\n[tool_result]\ncall_id: run_cmd_0_abc\nname: run_cmd\nis_error: false\noutput:\nR1=A17\n";
 
-function toolResultBody(modelId: string): OcxParsedRequest {
+function toolResultBody(modelId: string): OccxParsedRequest {
   return {
     modelId,
     context: {
@@ -32,7 +32,7 @@ function toolResultBody(modelId: string): OcxParsedRequest {
     options: {},
     _cursorConversationId: "cursor_echo_fixture",
     _cursorIdentityScope: "acct-echo",
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 /** First run echoes the envelope; the retry answers normally. Records each run request. */
@@ -142,8 +142,8 @@ describe("cursor external output quarantine + corrective retry (devlog 260826 ga
       // observed emit path. If a delta were fed twice, the mid-stream echo
       // offset would shift by the duplicated length; asserting the exact
       // offset in the diagnostic proves exactly-once feeding.
-      const previousDebug = process.env.OCX_DEBUG;
-      process.env.OCX_DEBUG = "1";
+      const previousDebug = process.env.OCCX_DEBUG;
+      process.env.OCCX_DEBUG = "1";
       const errLines: string[] = [];
       const originalError = console.error;
       console.error = (line: unknown) => { errLines.push(String(line)); };
@@ -167,8 +167,8 @@ describe("cursor external output quarantine + corrective retry (devlog 260826 ga
         expect(payload.callIdCorrupt).toBe(true);
       } finally {
         console.error = originalError;
-        if (previousDebug === undefined) delete process.env.OCX_DEBUG;
-        else process.env.OCX_DEBUG = previousDebug;
+        if (previousDebug === undefined) delete process.env.OCCX_DEBUG;
+        else process.env.OCCX_DEBUG = previousDebug;
       }
     });
 
@@ -284,7 +284,7 @@ describe("cursor external output quarantine + corrective retry (devlog 260826 ga
       options: {},
       _cursorConversationId: "cursor_echo_plain",
       _cursorIdentityScope: "acct-echo",
-    } as OcxParsedRequest;
+    } as OccxParsedRequest;
     await adapter.runTurn?.(body, { headers: new Headers() }, event => events.push(event));
     expect(attempt).toBe(1);
     const text = events.filter(e => e.type === "text_delta").map(e => (e as { text: string }).text).join("");
@@ -310,7 +310,7 @@ describe("cursor external output quarantine + corrective retry (devlog 260826 ga
       options: {},
       _cursorConversationId: "cursor_echo_user_round",
       _cursorIdentityScope: "acct-echo",
-    } as OcxParsedRequest;
+    } as OccxParsedRequest;
     await adapter.runTurn?.(body, { headers: new Headers() }, event => events.push(event));
     expect(attempts()).toBe(2);
     const text = events.filter(e => e.type === "text_delta").map(e => (e as { text: string }).text).join("");
@@ -352,7 +352,7 @@ describe("cursor external output quarantine + corrective retry (devlog 260826 ga
       options: {},
       _cursorConversationId: "cursor_routing_commentary",
       _cursorIdentityScope: "acct-routing-commentary",
-    } as OcxParsedRequest;
+    } as OccxParsedRequest;
     const adapter = createCursorAdapter({ ...provider, apiKey: "cursor-token" }, { createTransport: factory as never });
     const events: AdapterEvent[] = [];
     await adapter.runTurn?.(body, { headers: new Headers() }, event => events.push(event));

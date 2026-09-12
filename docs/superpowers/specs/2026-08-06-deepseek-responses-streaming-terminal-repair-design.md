@@ -17,7 +17,7 @@ The built-in DeepSeek registry currently declares
 `modelResponsesUpstreamStreaming["deepseek-v4-flash"] = false`. Final route
 normalization therefore changes `stream:true` to `stream:false` before sending
 the request to `POST https://api.deepseek.com/responses`. For an HTTP client
-that requested streaming, opencodex waits for the complete JSON response and
+that requested streaming, openccx waits for the complete JSON response and
 only then reframes it as SSE.
 
 That compatibility policy was introduced for a historical DeepSeek stream that

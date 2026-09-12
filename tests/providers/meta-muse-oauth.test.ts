@@ -14,7 +14,7 @@ import { loginMetaMuse, refreshMetaMuseToken } from "../../src/oauth/meta-muse";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { supportsPerAccountQuota } from "../../src/providers/quota";
 import { routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const MODELS = ["muse-spark-1.3", "muse-spark-1.3-contributor"] as const;
 
@@ -73,7 +73,7 @@ describe("meta-muse registry entry", () => {
     expect(note).toContain("UNSUPPORTED");
     expect(note).toContain("treat every call as billable");
     expect(note).toContain("auth store");
-    // The env-var trap: Meta calls it MODEL_API_KEY, opencodex reads META_MODEL_API_KEY.
+    // The env-var trap: Meta calls it MODEL_API_KEY, openccx reads META_MODEL_API_KEY.
     expect(note).toContain("META_MODEL_API_KEY");
     // The quota sentence must stay true in both directions: it now claims a reading,
     // so it must also say why that reading can be old and where it is absent.
@@ -97,7 +97,7 @@ describe("meta-muse registry entry", () => {
   });
 
   test("does not capture the live command-code meta/ model namespace", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "command-code",
       providers: {
@@ -324,7 +324,7 @@ describe("meta-muse refresh", () => {
   });
 
   test("an empty key is refused rather than replayed", async () => {
-    await expect(refreshMetaMuseToken("")).rejects.toThrow(/ocx login meta-muse/);
+    await expect(refreshMetaMuseToken("")).rejects.toThrow(/occx login meta-muse/);
   });
 
   // merged() in index.ts keeps any source that is not "local-cli", so asserting

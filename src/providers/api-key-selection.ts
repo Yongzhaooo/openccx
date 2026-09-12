@@ -1,22 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { mutatePersistedConfig } from "../config";
 import { publishAccountSelection } from "../lib/account-selection-events";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import type { ProviderApiKeySelection } from "../types/provider";
 import { routedProviderConfig } from "../router";
 import { OPENCODE_GO_SESSION_HEADER } from "./opencode-go-transport";
-import { resolveProviderTransport, XAI_GROK_COMPATIBILITY, type OcxProviderTransport } from "./xai-transport";
+import { resolveProviderTransport, XAI_GROK_COMPATIBILITY, type OccxProviderTransport } from "./xai-transport";
 import { captureProviderApiKeySelection } from "./api-key-selection-capture";
 
 export { captureProviderApiKeySelection } from "./api-key-selection-capture";
 
-function matchesSelection(provider: OcxProviderConfig, expected: ProviderApiKeySelection): boolean {
+function matchesSelection(provider: OccxProviderConfig, expected: ProviderApiKeySelection): boolean {
   const current = captureProviderApiKeySelection(provider);
   return current.entryId === expected.entryId && current.reference === expected.reference
     && current.revision === expected.revision;
 }
 
-function currentKeyProvider(config: OcxConfig, name: string): OcxProviderConfig | null {
+function currentKeyProvider(config: OccxConfig, name: string): OccxProviderConfig | null {
   const configured = config.providers[name];
   if (!configured || configured.disabled) return null;
   const current = routedProviderConfig(name, { ...configured, _apiKeyAttempt: undefined });
@@ -27,9 +27,9 @@ function currentKeyProvider(config: OcxConfig, name: string): OcxProviderConfig 
 
 /** Physical-send check; stored references alone do not detect a changed env/keychain value. */
 export function providerApiKeySelectionIsCurrent(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
-  routedProvider: OcxProviderConfig,
+  routedProvider: OccxProviderConfig,
 ): boolean {
   const current = currentKeyProvider(config, name);
   const expected = routedProvider._apiKeyAttempt;
@@ -42,13 +42,13 @@ export function providerApiKeySelectionIsCurrent(
 
 /** Rebuild transport from the already committed choice; never allocate or publish a selection. */
 export function resolveCurrentProviderApiKeyTransport(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
-  routedProvider: OcxProviderConfig,
-): OcxProviderConfig | null {
+  routedProvider: OccxProviderConfig,
+): OccxProviderConfig | null {
   const current = currentKeyProvider(config, name);
   if (!current) return null;
-  const runtime = routedProvider as OcxProviderTransport;
+  const runtime = routedProvider as OccxProviderTransport;
   const headers = { ...current.headers };
   const affinityHeaders = name === "xai"
     ? [XAI_GROK_COMPATIBILITY.headers.conversationId, XAI_GROK_COMPATIBILITY.headers.sessionId]
@@ -58,7 +58,7 @@ export function resolveCurrentProviderApiKeyTransport(
     const value = Object.entries(runtime.headers ?? {}).find(([key]) => key.toLowerCase() === header.toLowerCase())?.[1];
     if (!configured && value !== undefined) headers[header] = value;
   }
-  const fetch = (current as OcxProviderTransport).fetch ?? runtime.fetch;
+  const fetch = (current as OccxProviderTransport).fetch ?? runtime.fetch;
   return resolveProviderTransport(name, {
     ...current,
     ...(Object.keys(headers).length ? { headers } : {}),
@@ -68,15 +68,15 @@ export function resolveCurrentProviderApiKeyTransport(
 
 type SelectionMutation<T> = { changed: boolean; value: T; selectionChanged?: boolean };
 export type ProviderApiKeyCommit<T> =
-  | { status: "committed"; provider: OcxProviderConfig; value: T }
-  | { status: "superseded"; provider: OcxProviderConfig }
+  | { status: "committed"; provider: OccxProviderConfig; value: T }
+  | { status: "superseded"; provider: OccxProviderConfig }
   | { status: "unavailable" };
 
 /** GUI and recovery share one persisted selection transaction and post-commit notification. */
 export function commitProviderApiKeySelection<T>(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
-  mutation: (provider: OcxProviderConfig) => SelectionMutation<T>,
+  mutation: (provider: OccxProviderConfig) => SelectionMutation<T>,
   expectedSelection?: ProviderApiKeySelection,
 ): ProviderApiKeyCommit<T> {
   const outcome = mutatePersistedConfig<ProviderApiKeyCommit<T> & { notify?: boolean }>(fresh => {

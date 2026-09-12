@@ -4,13 +4,13 @@ import { enrichProviderFromRegistry, providerConfigSeed } from "../../src/provid
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { resolveProviderTransport } from "../../src/providers/xai-transport";
 import { routedProviderConfig } from "../../src/router";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createResponsesPassthroughAdapter = (...args: Parameters<typeof createResponsesPassthroughAdapterProduction>) =>
   withTestTranslatorBudget(createResponsesPassthroughAdapterProduction(...args));
 
-function buildWebSearchBody(provider: OcxProviderConfig): Record<string, unknown> {
+function buildWebSearchBody(provider: OccxProviderConfig): Record<string, unknown> {
   const request = createResponsesPassthroughAdapter(provider).buildRequest({
     modelId: "test-model",
     context: { messages: [] },
@@ -116,7 +116,7 @@ describe("Responses buildRequest web_search capability", () => {
   });
 
   test("non-xAI classified gateways use generic field stripping, not xAI cached-search policy", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-responses",
       baseUrl: "https://responses.example.com/v1",
       authMode: "key",
@@ -181,7 +181,7 @@ describe("Responses buildRequest web_search capability", () => {
 // of the adapter, in what the router hands it.
 describe("routedProviderConfig web_search capability backfill", () => {
   test("a saved xai row without the flag is classified by the registry", () => {
-    const saved: OcxProviderConfig = {
+    const saved: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.x.ai/v1",
       authMode: "oauth",

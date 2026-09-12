@@ -1,12 +1,12 @@
 import { createRequire } from "node:module";
 import { resolveEnvValue, saveConfigPreservingClaudeCode } from "../config";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import type { ProviderRegistryEntry } from "./registry";
 
 /** Shared with routing: a key-mode override is effective only while its key resolves. */
 export function providerUsesKeyAuthOverride(
   entry: Pick<ProviderRegistryEntry, "authKind" | "allowKeyAuthOverride">,
-  provider: Pick<OcxProviderConfig, "authMode">,
+  provider: Pick<OccxProviderConfig, "authMode">,
   resolvedKey: string | undefined,
 ): boolean {
   return entry.authKind === "oauth" && entry.allowKeyAuthOverride === true
@@ -28,7 +28,7 @@ export function providerUsesKeyAuthOverride(
  */
 
 export const KEYCHAIN_REFERENCE_PREFIX = "keychain:";
-export const PROVIDER_KEYCHAIN_SERVICE = "opencodex.provider-api-key.v1";
+export const PROVIDER_KEYCHAIN_SERVICE = "openccx.provider-api-key.v1";
 
 export interface ProviderKeychainEntry {
   getPassword(): string | null;
@@ -88,7 +88,7 @@ function readKeychain(account: string): string | undefined {
   }
   if (!warnedAccounts.has(account)) {
     warnedAccounts.add(account);
-    console.warn(`[opencodex] provider key reference keychain:${account} could not be read from the OS keychain; requests for this provider have no credential until the keychain is available (no plaintext fallback)`);
+    console.warn(`[openccx] provider key reference keychain:${account} could not be read from the OS keychain; requests for this provider have no credential until the keychain is available (no plaintext fallback)`);
   }
   return undefined;
 }
@@ -105,7 +105,7 @@ export function resolveProviderApiKey(value: string | undefined): string | undef
 
 export type ProviderKeyStoreKind = "keychain" | "env" | "file" | "none";
 
-export function providerKeyStoreKind(provider: Pick<OcxProviderConfig, "apiKey"> | undefined): ProviderKeyStoreKind {
+export function providerKeyStoreKind(provider: Pick<OccxProviderConfig, "apiKey"> | undefined): ProviderKeyStoreKind {
   const key = provider?.apiKey;
   if (!key) return "none";
   if (isKeychainReference(key)) return "keychain";
@@ -139,7 +139,7 @@ function writeVerified(account: string, secret: string): void {
  * config with references. All keychain writes are verified before config changes; on any
  * failure the entries written so far are deleted and config is left untouched.
  */
-export function storeProviderKeyInKeychain(config: OcxConfig, name: string): { ok: true; moved: number } | { ok: false; error: string; status: number } {
+export function storeProviderKeyInKeychain(config: OccxConfig, name: string): { ok: true; moved: number } | { ok: false; error: string; status: number } {
   const provider = config.providers[name];
   if (!provider) return { ok: false, error: "unknown provider", status: 404 };
   if (provider.authMode === "oauth" || provider.authMode === "forward") {
@@ -189,7 +189,7 @@ export function storeProviderKeyInKeychain(config: OcxConfig, name: string): { o
 }
 
 /** Reverse of `storeProviderKeyInKeychain`: read every reference back, write plaintext, delete items. */
-export function restoreProviderKeyFromKeychain(config: OcxConfig, name: string): { ok: true; restored: number } | { ok: false; error: string; status: number } {
+export function restoreProviderKeyFromKeychain(config: OccxConfig, name: string): { ok: true; restored: number } | { ok: false; error: string; status: number } {
   const provider = config.providers[name];
   if (!provider) return { ok: false, error: "unknown provider", status: 404 };
   const pool = provider.apiKeyPool ?? [];

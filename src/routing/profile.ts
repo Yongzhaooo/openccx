@@ -6,10 +6,10 @@
 
 import { createHash } from "node:crypto";
 import type {
-  OcxConfig,
-  OcxRoutingProfileConfig,
-  OcxRoutingUnknownEvidenceMode,
-  OcxRoutingUnknownCostCapMode,
+  OccxConfig,
+  OccxRoutingProfileConfig,
+  OccxRoutingUnknownEvidenceMode,
+  OccxRoutingUnknownCostCapMode,
 } from "../types";
 import { codexAccountNamespaceEntries } from "../codex/account-namespaces";
 import { listComboIds, resolveComboId } from "../combos";
@@ -30,22 +30,22 @@ export const DEFAULT_PROFILE_WEIGHTS = {
   quota: 0.10,
 } as const;
 
-export const DEFAULT_UNKNOWN_EVIDENCE: Record<"capability" | "health" | "quota" | "cost", OcxRoutingUnknownEvidenceMode> = {
+export const DEFAULT_UNKNOWN_EVIDENCE: Record<"capability" | "health" | "quota" | "cost", OccxRoutingUnknownEvidenceMode> = {
   capability: "exclude",
   health: "penalize",
   quota: "penalize",
   cost: "penalize",
 };
 
-export const DEFAULT_DEGRADED_EVIDENCE: OcxRoutingUnknownEvidenceMode = "penalize";
-export const DEFAULT_COMPATIBILITY_UNKNOWN_EVIDENCE: OcxRoutingUnknownEvidenceMode = "exclude";
+export const DEFAULT_DEGRADED_EVIDENCE: OccxRoutingUnknownEvidenceMode = "penalize";
+export const DEFAULT_COMPATIBILITY_UNKNOWN_EVIDENCE: OccxRoutingUnknownEvidenceMode = "exclude";
 
 export interface NormalizedRoutingProfileCompatibility {
   requiredSuites: Array<{ suiteId: string; evidenceLayer: "protocol_conformance" | "live_route_compatibility" }>;
   minStatus?: "PROBED" | "VERIFIED";
   maxEvidenceAgeMs?: number;
-  unknownEvidence: OcxRoutingUnknownEvidenceMode;
-  degradedEvidence: OcxRoutingUnknownEvidenceMode;
+  unknownEvidence: OccxRoutingUnknownEvidenceMode;
+  degradedEvidence: OccxRoutingUnknownEvidenceMode;
 }
 
 export interface RoutingProfileValidationIssue {
@@ -73,8 +73,8 @@ export interface NormalizedRoutingProfile {
   candidates: Array<{ provider: string; model: string }>;
   require: NormalizedRoutingProfileRequirements;
   optimize: { latency: number; health: number; cost: number; quota: number };
-  limits: { maxEstimatedCostUsd?: number; onUnknownCost?: OcxRoutingUnknownCostCapMode };
-  unknownEvidence: Record<"capability" | "health" | "quota" | "cost", OcxRoutingUnknownEvidenceMode>;
+  limits: { maxEstimatedCostUsd?: number; onUnknownCost?: OccxRoutingUnknownCostCapMode };
+  unknownEvidence: Record<"capability" | "health" | "quota" | "cost", OccxRoutingUnknownEvidenceMode>;
   compatibility?: NormalizedRoutingProfileCompatibility;
   revision: string;
 }
@@ -120,7 +120,7 @@ export function parsePolicyModelId(modelId: string): string | null {
  * `policy/<id>` form wins first; otherwise an exact alias match.
  */
 export function resolvePolicyProfileId(
-  config: { routingProfiles?: Record<string, OcxRoutingProfileConfig> },
+  config: { routingProfiles?: Record<string, OccxRoutingProfileConfig> },
   modelId: string,
 ): string | null {
   const direct = parsePolicyModelId(modelId);
@@ -138,7 +138,7 @@ export function resolvePolicyProfileId(
 function aliasIssues(
   id: string,
   alias: string,
-  config: Pick<OcxConfig, "providers" | "combos" | "routingProfiles" | "codexAccountNamespaces">,
+  config: Pick<OccxConfig, "providers" | "combos" | "routingProfiles" | "codexAccountNamespaces">,
   options: { excludeProfileId?: string } = {},
 ): RoutingProfileValidationIssue[] {
   const issues: RoutingProfileValidationIssue[] = [];
@@ -195,7 +195,7 @@ function aliasIssues(
 export function routingProfileIssues(
   id: string,
   raw: unknown,
-  config: Pick<OcxConfig, "providers" | "combos" | "routingProfiles" | "codexAccountNamespaces">,
+  config: Pick<OccxConfig, "providers" | "combos" | "routingProfiles" | "codexAccountNamespaces">,
   options: { excludeProfileId?: string } = {},
 ): RoutingProfileValidationIssue[] {
   const issues: RoutingProfileValidationIssue[] = [];
@@ -423,7 +423,7 @@ export function routingProfileIssues(
   return issues;
 }
 
-function normalizedRequirements(raw: OcxRoutingProfileConfig): NormalizedRoutingProfileRequirements {
+function normalizedRequirements(raw: OccxRoutingProfileConfig): NormalizedRoutingProfileRequirements {
   const require = raw.require;
   if (!require) return {};
   const out: NormalizedRoutingProfileRequirements = {};
@@ -436,7 +436,7 @@ function normalizedRequirements(raw: OcxRoutingProfileConfig): NormalizedRouting
   return out;
 }
 
-function normalizedUnknownEvidence(raw: OcxRoutingProfileConfig): NormalizedRoutingProfile["unknownEvidence"] {
+function normalizedUnknownEvidence(raw: OccxRoutingProfileConfig): NormalizedRoutingProfile["unknownEvidence"] {
   const configured = raw.unknownEvidence;
   const out = { ...DEFAULT_UNKNOWN_EVIDENCE };
   if (configured) {
@@ -451,7 +451,7 @@ function normalizedUnknownEvidence(raw: OcxRoutingProfileConfig): NormalizedRout
 }
 
 function normalizedCompatibility(
-  raw: OcxRoutingProfileConfig,
+  raw: OccxRoutingProfileConfig,
 ): NormalizedRoutingProfileCompatibility | undefined {
   if (raw.compatibility === undefined) return undefined;
   const compatibility = raw.compatibility;
@@ -499,7 +499,7 @@ function profileRevision(profile: Omit<NormalizedRoutingProfile, "revision">): s
   return digest.slice(0, 16);
 }
 
-export function normalizeRoutingProfile(id: string, raw: OcxRoutingProfileConfig): NormalizedRoutingProfile {
+export function normalizeRoutingProfile(id: string, raw: OccxRoutingProfileConfig): NormalizedRoutingProfile {
   const alias = typeof raw.alias === "string" ? raw.alias.trim() : "";
   const weights = { ...DEFAULT_PROFILE_WEIGHTS, ...(raw.optimize ?? {}) };
   const weightSum = weights.latency + weights.health + weights.cost + weights.quota;
@@ -534,7 +534,7 @@ export function normalizeRoutingProfile(id: string, raw: OcxRoutingProfileConfig
 }
 
 export function getRoutingProfile(
-  config: { routingProfiles?: Record<string, OcxRoutingProfileConfig> },
+  config: { routingProfiles?: Record<string, OccxRoutingProfileConfig> },
   id: string,
 ): NormalizedRoutingProfile | undefined {
   const profiles = config.routingProfiles;
@@ -542,6 +542,6 @@ export function getRoutingProfile(
   return normalizeRoutingProfile(id, profiles[id]!);
 }
 
-export function listRoutingProfileIds(config: { routingProfiles?: Record<string, OcxRoutingProfileConfig> }): string[] {
+export function listRoutingProfileIds(config: { routingProfiles?: Record<string, OccxRoutingProfileConfig> }): string[] {
   return Object.keys(config.routingProfiles ?? {}).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }

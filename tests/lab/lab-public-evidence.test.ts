@@ -34,7 +34,7 @@ const HOMES: string[] = [];
 const DEFAULT_COMPLETED_AT = Date.UTC(2026, 7, 12, 14, 37, 41);
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-public-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-public-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -58,7 +58,7 @@ function protocolObservation(completedAt = DEFAULT_COMPLETED_AT): ObservationEve
   const subject: ProtocolSubjectV1 = {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: "2.13.0",
+    openccxCompatibilityVersion: "2.13.0",
     effectiveAdapter: "openai-chat",
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-chat",
@@ -118,7 +118,7 @@ function routeObservation(completedAt = DEFAULT_COMPLETED_AT): ObservationEvent 
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
-    opencodexCompatibilityVersion: "2.13.0",
+    openccxCompatibilityVersion: "2.13.0",
     behaviorFingerprint: hex("PRIVATE-route-behavior"),
     endpointFingerprint: hex("PRIVATE-endpoint"),
     dependencies: [],

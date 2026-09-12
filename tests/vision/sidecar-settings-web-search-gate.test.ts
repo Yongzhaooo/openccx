@@ -30,12 +30,12 @@ import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/account-id";
 import { xaiSearchOptionsFromConfig } from "../../src/web-search";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
-const anthropicOAuth: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
+const anthropicOAuth: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "openai", providers: { openai: forward, claude: anthropicOAuth }, ...overrides };
 }
 
@@ -110,7 +110,7 @@ describe("option list", () => {
   });
 });
 
-async function sidecarSettings(config: OcxConfig, init?: { method: string; body: unknown }): Promise<Response> {
+async function sidecarSettings(config: OccxConfig, init?: { method: string; body: unknown }): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const request = init
     ? new Request(url, { method: init.method, headers: { "content-type": "application/json" }, body: JSON.stringify(init.body) })
@@ -199,7 +199,7 @@ describe("HTTP contract on /api/sidecar-settings", () => {
 // for anything else. A submitted `gemini` was therefore validated as an OpenAI
 // model and 400'd, while writing the identical pair straight into config.json
 // worked. The executor was never the problem; only the write gate was.
-const antigravityOAuth: OcxProviderConfig = {
+const antigravityOAuth: OccxProviderConfig = {
   adapter: "google",
   baseUrl: "https://cloudcode-pa.googleapis.com",
   authMode: "oauth",
@@ -372,7 +372,7 @@ describe("xSearch config round-trip (review High)", () => {
 // "a gate on one route and a stale copy on the other is the same as no gate at
 // all." It carried the same collapsed ternary, so it needs the same proof (#2457).
 describe("claude-code webSearchSidecar override honors the submitted backend (#2457)", () => {
-  async function claudeCode(cfg: OcxConfig, body: unknown): Promise<Response> {
+  async function claudeCode(cfg: OccxConfig, body: unknown): Promise<Response> {
     const url = new URL("http://localhost/api/claude-code");
     const request = new Request(url, {
       method: "PUT",
@@ -384,7 +384,7 @@ describe("claude-code webSearchSidecar override honors the submitted backend (#2
     return response;
   }
 
-  function geminiConfig(): OcxConfig {
+  function geminiConfig(): OccxConfig {
     armAntigravity();
     managementRows = [{ provider: "google-antigravity", id: "gemini-3.7-flash", disabled: false }];
     return config({

@@ -19,12 +19,12 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function fixture(config?: string) {
-  const root = mkdtempSync(join(tmpdir(), "ocx-base-variant-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-base-variant-"));
   roots.push(root);
   const paths = {
     configPath: join(root, "config.toml"),
-    storePath: join(root, "opencodex-prompt.json"),
-    baseVariantDir: join(root, "opencodex-prompt-base"),
+    storePath: join(root, "openccx-prompt.json"),
+    baseVariantDir: join(root, "openccx-prompt-base"),
   };
   if (config !== undefined) writeFileSync(paths.configPath, config, "utf8");
   return paths;

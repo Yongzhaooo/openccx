@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 test("#2792 snapshots a static asset before server framing can outlive the file", async () => {
-  const guiDist = mkdtempSync(join(tmpdir(), "ocx-gui-static-"));
+  const guiDist = mkdtempSync(join(tmpdir(), "occx-gui-static-"));
   temporaryDirectories.push(guiDist);
   writeFileSync(join(guiDist, "index.html"), "<!doctype html>");
   const assetPath = join(guiDist, "index.js");

@@ -24,7 +24,7 @@ import { handleResponses } from "../../src/server/responses/core";
 import { MAX_SYNTHESIZED_OUTPUT_ITEMS } from "../../src/server/responses-json-events";
 import type { ResponsesTerminalRepairScheduler } from "../../src/server/responses-terminal-repair";
 import { sendResponseToWebSocket } from "../../src/server/ws-bridge";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createResponsesPassthroughAdapter = (...args: Parameters<typeof createResponsesPassthroughAdapterProduction>) =>
@@ -95,11 +95,11 @@ async function drainReader(reader: ReadableStreamDefaultReader<Uint8Array>): Pro
   }
 }
 
-function deepseekProvider(): OcxProviderConfig {
+function deepseekProvider(): OccxProviderConfig {
   return { ...providerConfigSeed(getProviderRegistryEntry("deepseek")!), apiKey: "sk-test" };
 }
 
-function deepseekReasoningProvider(): OcxProviderConfig {
+function deepseekReasoningProvider(): OccxProviderConfig {
   return { ...deepseekProvider(), preserveResponsesReasoningContent: true };
 }
 
@@ -189,7 +189,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
     inboundTransport?: "websocket",
   ): Promise<{ url: string; body: Record<string, unknown> }> {
     const requests = captureUpstreamRequests();
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",
@@ -245,7 +245,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
         headers: { "content-type": "text/event-stream" },
       });
     }) as typeof fetch;
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     const options = {
       abortSignal: testAbort.signal,
       responsesTerminalRepairScheduler: scheduler,
@@ -327,7 +327,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
         output: [],
       });
     }) as typeof fetch;
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     const abort = new AbortController();
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {
@@ -439,7 +439,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
       }), { status: 200, headers: { "content-type": "text/event-stream" } });
     }) as typeof fetch;
 
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     const deadline = AbortSignal.timeout(5_000);
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {
@@ -497,7 +497,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
 
     // The plain provider seed carries no explicit repair config; the registry's
     // { repairInvalidIds: true } policy must reach the live route via backfill.
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",
@@ -511,8 +511,8 @@ describe("the inbound scope survives the handleResponses replay", () => {
     const text = await response.text();
     expect(text).not.toContain(UUID_MSG);
     expect(text).not.toContain(UUID_RS);
-    expect(text).toMatch(/"id":"msg_ocx_[0-9a-f]+/);
-    expect(text).toMatch(/"id":"rs_ocx_[0-9a-f]+/);
+    expect(text).toMatch(/"id":"msg_occx_[0-9a-f]+/);
+    expect(text).toMatch(/"id":"rs_occx_[0-9a-f]+/);
     expect(text).toContain("data: [DONE]");
   });
 
@@ -523,7 +523,7 @@ describe("the inbound scope survives the handleResponses replay", () => {
       status: 200,
       headers: { "content-type": "text/event-stream" },
     })) as typeof fetch;
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     const abort = new AbortController();
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {
@@ -566,8 +566,8 @@ describe("the inbound scope survives the handleResponses replay", () => {
       const output = (completed.response as { output: Array<{ id: string; call_id?: string }> }).output;
       const reasoningId = (reasoningAdded.item as { id: string }).id;
       const messageId = (messageAdded.item as { id: string }).id;
-      expect(reasoningId).toMatch(/^rs_ocx_/);
-      expect(messageId).toMatch(/^msg_ocx_/);
+      expect(reasoningId).toMatch(/^rs_occx_/);
+      expect(messageId).toMatch(/^msg_occx_/);
       expect((reasoningDone.item as { id: string }).id).toBe(reasoningId);
       expect((messageDone.item as { id: string }).id).toBe(messageId);
       expect(output[0]?.id).toBe(reasoningId);
@@ -615,7 +615,7 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
     if (index >= 0) mutableRegistry.splice(index, 1);
   });
 
-  function fixtureProvider(overrides?: Partial<OcxProviderConfig>): OcxProviderConfig {
+  function fixtureProvider(overrides?: Partial<OccxProviderConfig>): OccxProviderConfig {
     return {
       adapter: "openai-responses",
       baseUrl: FIXTURE_BASE,
@@ -623,13 +623,13 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
       apiKey: "sk-test",
       models: [FIXTURE_MODEL],
       ...overrides,
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
   }
 
-  function repairingFixtureProvider(): OcxProviderConfig {
+  function repairingFixtureProvider(): OccxProviderConfig {
     return fixtureProvider({
       responsesItemIdRepair: { message: ["msg_placeholder"], reasoning: ["rs_placeholder"] },
-    } as Partial<OcxProviderConfig>);
+    } as Partial<OccxProviderConfig>);
   }
 
   function completedWithPlaceholderIds(): Response {
@@ -651,10 +651,10 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
   }
 
   async function driveFixture(
-    provider: OcxProviderConfig,
+    provider: OccxProviderConfig,
     options: { stream?: boolean; websocket?: boolean } = {},
   ): Promise<Response> {
-    const config = { providers: { [FIXTURE_ID]: provider } } as unknown as OcxConfig;
+    const config = { providers: { [FIXTURE_ID]: provider } } as unknown as OccxConfig;
     return handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",
@@ -694,8 +694,8 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
     const text = await response.text();
     expect(text).not.toContain("msg_placeholder");
     expect(text).not.toContain("rs_placeholder");
-    expect(text).toMatch(/"id":"msg_ocx_[0-9a-f]{8}/);
-    expect(text).toMatch(/"id":"rs_ocx_[0-9a-f]{8}/);
+    expect(text).toMatch(/"id":"msg_occx_[0-9a-f]{8}/);
+    expect(text).toMatch(/"id":"rs_occx_[0-9a-f]{8}/);
   });
 
   test("an over-cap HTTP synthesis fails closed with 502", async () => {
@@ -721,7 +721,7 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
     const text = await response.text();
     expect(text).not.toContain("msg_placeholder");
     expect(text).not.toContain("rs_placeholder");
-    expect(text).toMatch(/"id":"msg_ocx_[0-9a-f]{8}/);
+    expect(text).toMatch(/"id":"msg_occx_[0-9a-f]{8}/);
   });
 
   test("a provider without id repair keeps the bounded-JSON body byte-identical", async () => {
@@ -754,7 +754,7 @@ describe("the bounded-JSON mechanism stays alive behind a synthetic registry ent
  * previous_response_id into a full input replay before the adapter runs.
  */
 describe("stateless Responses upstreams get no stateful parameters", () => {
-  function buildBody(provider: OcxProviderConfig, rawBody: Record<string, unknown>): Record<string, unknown> {
+  function buildBody(provider: OccxProviderConfig, rawBody: Record<string, unknown>): Record<string, unknown> {
     const built = createResponsesPassthroughAdapter(provider).buildRequest({
       modelId: MODEL,
       context: { messages: [] },
@@ -973,7 +973,7 @@ describe("stateless Responses upstreams get no stateful parameters", () => {
 
 
   test("tolerant Responses providers keep interleaved tool history unchanged", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-responses",
       baseUrl: "https://api.openai.example/v1",
       authMode: "key",

@@ -20,13 +20,13 @@ import { resetLifecycleDrainStateForTests } from "../../src/server/lifecycle";
 import { findAvailablePort } from "../../src/server/ports";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 import { isTestHomeGuardArmed } from "../../src/lib/test-home-guard";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "./fake-chatgpt-jwt";
 import { ownedServiceHomeInspection } from "./owned-service-home-inspection";
 import { removeTreeWithRetry } from "./remove-tree";
 import { INTERNAL_DEADLINE_MS } from "./test-budget";
 
-export const PROXY_KEY = "ocx_data_reserve_ingress_fixture";
+export const PROXY_KEY = "occx_data_reserve_ingress_fixture";
 export const ACCOUNT = "reserve-ingress-owned-account";
 export const ACCESS = fakeChatGptJwt({ exp: 4_000_000_000,
   "https://api.openai.com/auth": { chatgpt_account_id: ACCOUNT, chatgpt_user_id: "owned-fixture-user" } });
@@ -58,19 +58,19 @@ function clearState(): void {
 /** Actual sibling listeners, native platform locks, owned homes; no external socket fallback. */
 export async function reserveIngressFixture(options: {
   primaryLoopback?: boolean;
-  configure?: (config: OcxConfig) => void;
+  configure?: (config: OccxConfig) => void;
 } = {}) {
   expect(isTestHomeGuardArmed()).toBe(true);
-  const names = ["OPENCODEX_HOME", "CODEX_HOME", "OPENCODEX_API_AUTH_TOKEN", "OPENCODEX_ADMIN_AUTH_TOKEN"] as const;
+  const names = ["OPENCCX_HOME", "CODEX_HOME", "OPENCCX_API_AUTH_TOKEN", "OPENCCX_ADMIN_AUTH_TOKEN"] as const;
   const oldEnv = names.map(name => [name, process.env[name]] as const);
-  const root = mkdtempSync(join(tmpdir(), "ocx-reserve-ingress-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-reserve-ingress-"));
   const codexHome = join(root, "codex");
-  const configHome = join(root, "ocx");
+  const configHome = join(root, "occx");
   mkdirSync(codexHome); mkdirSync(configHome);
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = configHome;
-  process.env.OPENCODEX_API_AUTH_TOKEN = PROXY_KEY;
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "reserve-ingress-admin-fixture";
+  process.env.OPENCCX_HOME = configHome;
+  process.env.OPENCCX_API_AUTH_TOKEN = PROXY_KEY;
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = "reserve-ingress-admin-fixture";
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
   setAsyncIcaclsRunnerForTests(async () => aclOk);
@@ -82,7 +82,7 @@ export async function reserveIngressFixture(options: {
   const nativeFetch = globalThis.fetch;
   const restores: Array<() => void> = [];
   const counters: Counters = { wham: 0, credential: 0, tokenRead: 0, inference: [] };
-  let liveConfig: OcxConfig | undefined;
+  let liveConfig: OccxConfig | undefined;
   let server: ReturnType<typeof startServer> | undefined;
   let allowReserve = false;
   let holdUsage: ReturnType<typeof deferred<void>> | undefined;
@@ -179,7 +179,7 @@ export async function reserveIngressFixture(options: {
     const publicPort = await findAvailablePort(0, "0.0.0.0", { reservedPort: localPort });
     expect(publicPort).not.toBe(localPort);
     const hostname = options.primaryLoopback ? "127.0.0.1" : "0.0.0.0";
-    const config: OcxConfig = { port: publicPort, hostname, defaultProvider: "openai",
+    const config: OccxConfig = { port: publicPort, hostname, defaultProvider: "openai",
       openaiProviderTierVersion: 2, codexDesktopAuthless: true, codexMainAccountHardLock: false,
       websockets: true, subagentModels: [], codexAccounts: [], codexAccountNamespaces: { main: MAIN_CODEX_ACCOUNT_NAMESPACE_TARGET },
       unauthenticatedLoopbackListener: { enabled: true, port: localPort },

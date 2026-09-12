@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { runClaudeAuthModeMigration } from "../../src/claude/auth-mode-migration";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Before auto existed, "Subscription" was stored by DELETING the key. So the upgrade
@@ -8,8 +8,8 @@ import type { OcxConfig } from "../../src/types";
  * proxy (devlog 260726_claude_auth_auto/015).
  */
 
-function config(claudeCode?: OcxConfig["claudeCode"]): OcxConfig {
-  return { port: 10100, defaultProvider: "openai", providers: {}, ...(claudeCode ? { claudeCode } : {}) } as unknown as OcxConfig;
+function config(claudeCode?: OccxConfig["claudeCode"]): OccxConfig {
+  return { port: 10100, defaultProvider: "openai", providers: {}, ...(claudeCode ? { claudeCode } : {}) } as unknown as OccxConfig;
 }
 
 test("a pre-upgrade block without authMode is pinned to subscription", () => {

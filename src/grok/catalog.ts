@@ -9,7 +9,7 @@ import {
   visibleNativeSlugs,
   type CatalogModel,
 } from "../codex/catalog";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { GrokInjectModel } from "./inject";
 
 export interface GrokCatalogProjection {
@@ -21,11 +21,11 @@ export interface GrokCatalogProjection {
 
 /**
  * Project one fetched catalog into both emitted Grok rows and orphan-classification evidence.
- * Keeping this shared prevents `ocx start` and the management toggle from disagreeing.
+ * Keeping this shared prevents `occx start` and the management toggle from disagreeing.
  */
 export function projectGrokCatalog(
   allRouted: CatalogModel[],
-  config: OcxConfig,
+  config: OccxConfig,
 ): GrokCatalogProjection {
   const routed = filterCatalogVisibleModels(allRouted, config);
   const limits = nativeContextLimits(config);

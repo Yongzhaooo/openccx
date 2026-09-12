@@ -19,14 +19,14 @@ import {
   finishMmxClientCleanup,
   forwardMmxTerminationSignal,
   installMmxTerminationHandlers,
-  mcodeOpenCodexBaseUrl,
+  mcodeOpenccxBaseUrl,
   mmxCommandPath,
   mmxUnsafeOverride,
   isStandaloneInformationalInvocation,
   startMmxTextBridge,
   usableMinimaxLiveProxy,
 } from "../../src/cli/minimax";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fixturePath } from "../helpers/repo-root";
 
 const CONFIG = {
@@ -34,7 +34,7 @@ const CONFIG = {
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 function context(): ExportContext {
   return {
@@ -55,13 +55,13 @@ function context(): ExportContext {
 }
 
 describe("MiniMax Code client config", () => {
-  test("adds only custom_provider.opencodex, syncs model capabilities, and never changes the selected model", () => {
+  test("adds only custom_provider.openccx, syncs model capabilities, and never changes the selected model", () => {
     const document = buildClientConfig("mcode", context()) as McodeGeneratedConfig;
     expect(Object.keys(document)).toEqual(["custom_provider"]);
     expect(document).not.toHaveProperty("defaultModel");
     const provider = document.custom_provider[OPENCODE_PROVIDER_ID]!;
     expect(provider).toEqual({
-      name: "OpenCodex",
+      name: "Openccx",
       kind: "custom",
       enabled: true,
       api: "anthropic-messages",
@@ -145,8 +145,8 @@ describe("MiniMax Code client config", () => {
 
   test("launcher reads only the managed provider destination", () => {
     const { text } = buildClientConfigText("mcode", context());
-    expect(mcodeOpenCodexBaseUrl(text)).toBe("http://127.0.0.1:10100");
-    expect(mcodeOpenCodexBaseUrl("not: [valid")).toBeNull();
+    expect(mcodeOpenccxBaseUrl(text)).toBe("http://127.0.0.1:10100");
+    expect(mcodeOpenccxBaseUrl("not: [valid")).toBeNull();
   });
 });
 
@@ -393,7 +393,7 @@ describe("MiniMax CLI wrapper", () => {
           search: url.search,
           body: await req.text(),
           authorization: req.headers.get("authorization"),
-          dedicated: req.headers.get("x-opencodex-api-key"),
+          dedicated: req.headers.get("x-openccx-api-key"),
           xApiKey: req.headers.get("x-api-key"),
         });
         return Response.json({ ok: true });
@@ -406,7 +406,7 @@ describe("MiniMax CLI wrapper", () => {
         headers: {
           "content-type": "application/json",
           authorization: "Bearer must-not-forward",
-          "x-opencodex-api-key": "must-not-forward",
+          "x-openccx-api-key": "must-not-forward",
           "x-api-key": "must-be-replaced",
         },
         body: JSON.stringify({ model: "mock/model", messages: [] }),
@@ -437,7 +437,7 @@ describe("MiniMax CLI wrapper", () => {
     }
   });
 
-  test("returns 502 when the selected OpenCodex proxy address is unavailable", async () => {
+  test("returns 502 when the selected Openccx proxy address is unavailable", async () => {
     const reservation = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -455,14 +455,14 @@ describe("MiniMax CLI wrapper", () => {
       expect(response.status).toBe(502);
       expect(await response.json()).toEqual({
         type: "error",
-        error: { type: "api_error", message: "OpenCodex proxy unavailable" },
+        error: { type: "api_error", message: "Openccx proxy unavailable" },
       });
     } finally {
       await bridge.stop();
     }
   });
 
-  test("bounds the wait for response headers from a stalled OpenCodex proxy", async () => {
+  test("bounds the wait for response headers from a stalled Openccx proxy", async () => {
     const upstream = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -484,7 +484,7 @@ describe("MiniMax CLI wrapper", () => {
       expect(response.status).toBe(502);
       expect(await response.json()).toEqual({
         type: "error",
-        error: { type: "api_error", message: "OpenCodex proxy unavailable" },
+        error: { type: "api_error", message: "Openccx proxy unavailable" },
       });
     } finally {
       await bridge.stop();

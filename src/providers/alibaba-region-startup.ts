@@ -1,12 +1,12 @@
 import { saveConfig } from "../config";
 import { backupConfigBeforeAlibabaRegionMigration } from "./alibaba-region-backup";
 import { projectAlibabaRegionMigration } from "./alibaba-region-migration";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export interface AlibabaRegionStartupDeps {
   project: typeof projectAlibabaRegionMigration;
   backup: () => void;
-  save: (config: OcxConfig) => void;
+  save: (config: OccxConfig) => void;
 }
 
 /**
@@ -18,13 +18,13 @@ export interface AlibabaRegionStartupDeps {
  * migration takes.
  */
 export function runAlibabaRegionStartupMigration(
-  config: OcxConfig,
+  config: OccxConfig,
   deps: AlibabaRegionStartupDeps = {
     project: projectAlibabaRegionMigration,
     backup: () => { backupConfigBeforeAlibabaRegionMigration(); },
     save: saveConfig,
   },
-): OcxConfig {
+): OccxConfig {
   const projection = deps.project(config);
   // Warnings are emitted even on a no-op: the collision case IS the warning.
   for (const warning of projection.warnings) console.warn(`[alibaba-region-migration] ${warning}`);

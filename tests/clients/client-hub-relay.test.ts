@@ -14,12 +14,12 @@ function relayRequest(path: string, init: RequestInit = {}): Request {
     ...init,
     headers: {
       Origin: target.browserOrigin,
-      "X-OpenCodex-API-Key": "ocx_session_hub",
-      "X-OpenCodex-GUI-Origin": target.browserOrigin,
-      "X-OpenCodex-CSRF-Token": "hub-csrf",
-      "X-OpenCodex-Machine-Session": "ocx_session_machine",
-      "X-OpenCodex-Machine-GUI-Origin": target.browserOrigin,
-      "X-OpenCodex-Machine-CSRF-Token": "machine-csrf",
+      "X-Openccx-API-Key": "occx_session_hub",
+      "X-Openccx-GUI-Origin": target.browserOrigin,
+      "X-Openccx-CSRF-Token": "hub-csrf",
+      "X-Openccx-Machine-Session": "occx_session_machine",
+      "X-Openccx-Machine-GUI-Origin": target.browserOrigin,
+      "X-Openccx-Machine-CSRF-Token": "machine-csrf",
       Cookie: "private=1",
       Forwarded: "for=192.0.2.1",
       Connection: "keep-alive",
@@ -37,9 +37,9 @@ describe("fixed-target hub management relay", () => {
       [["Upgrade", "websocket"]],
       [["X-Test", "ok\r\ninjected: yes"]],
     ] as const) expect(validateHubRelayRequestHeaders(headers).ok).toBe(false);
-    const valid = validateHubRelayRequestHeaders([["Connection", "X-OpenCodex-API-Key"], ["X-OpenCodex-API-Key", "session"]]);
+    const valid = validateHubRelayRequestHeaders([["Connection", "X-Openccx-API-Key"], ["X-Openccx-API-Key", "session"]]);
     expect(valid.ok).toBe(true);
-    if (valid.ok) expect(valid.connectionNamed.has("x-opencodex-api-key")).toBe(true);
+    if (valid.ok) expect(valid.connectionNamed.has("x-openccx-api-key")).toBe(true);
   });
 
   test("forwards only to the configured hub and strips machine, cookie, forwarding, and hop headers", async () => {
@@ -52,8 +52,8 @@ describe("fixed-target hub management relay", () => {
     });
     expect(response.status).toBe(200);
     expect(captured!.url).toBe("https://hub.example.test/api/usage?range=all");
-    expect(captured!.headers.get("x-opencodex-api-key")).toBe("ocx_session_hub");
-    for (const header of ["x-opencodex-machine-session", "cookie", "forwarded", "connection", "host"]) {
+    expect(captured!.headers.get("x-openccx-api-key")).toBe("occx_session_hub");
+    for (const header of ["x-openccx-machine-session", "cookie", "forwarded", "connection", "host"]) {
       expect(captured!.headers.get(header)).toBeNull();
     }
     expect(response.headers.get("set-cookie")).toBeNull();
@@ -66,7 +66,7 @@ describe("fixed-target hub management relay", () => {
     const request = relayRequest("/opencodex-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ grant: `ocx_pair_${"a".repeat(43)}` }),
+      body: JSON.stringify({ grant: `occx_pair_${"a".repeat(43)}` }),
     });
     const response = await relayHubManagementRequest(request, "/opencodex-session", target, {
       fetchImpl: (async (input, init) => {

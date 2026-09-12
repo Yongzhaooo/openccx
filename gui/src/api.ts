@@ -7,15 +7,15 @@ import { adminTokenPromptAllowed, standaloneApiTargets, type ApiPlane, type ApiT
  * deployment that has no admin token to type. The shell renders it as a notice; nothing
  * blocks on it.
  */
-export const SESSION_UNAVAILABLE_EVENT = "opencodex:session-unavailable";
+export const SESSION_UNAVAILABLE_EVENT = "openccx:session-unavailable";
 
-const LEGACY_TOKEN_KEY = "opencodex-api-token";
+const LEGACY_TOKEN_KEY = "openccx-api-token";
 const ADMIN_TOKEN_VALIDATION_PATH = "/api/settings";
 const SESSION_REBOOTSTRAP_TIMEOUT_MS = 10_000;
 const RESOLUTION_WATCHDOG_MS = 15_000;
-const MACHINE_SESSION_HEADER = "X-OpenCodex-Machine-Session";
-const MACHINE_GUI_ORIGIN_HEADER = "X-OpenCodex-Machine-GUI-Origin";
-const MACHINE_CSRF_HEADER = "X-OpenCodex-Machine-CSRF-Token";
+const MACHINE_SESSION_HEADER = "X-Openccx-Machine-Session";
+const MACHINE_GUI_ORIGIN_HEADER = "X-Openccx-Machine-GUI-Origin";
+const MACHINE_CSRF_HEADER = "X-Openccx-Machine-CSRF-Token";
 
 interface ApiSessionState {
   token: string | null;
@@ -95,7 +95,7 @@ function storeSession(
   serverOrigin: string | null,
 ): boolean {
   const state = runtime(plane);
-  if (!token?.startsWith("ocx_session_") || !csrfToken
+  if (!token?.startsWith("occx_session_") || !csrfToken
     || browserOrigin !== window.location.origin || serverOrigin !== state.target.serverOrigin) {
     state.session = blankSession();
     return false;
@@ -106,12 +106,12 @@ function storeSession(
 }
 
 export function hasApiSession(plane: ApiPlane): boolean {
-  return Boolean(runtime(plane).session.token?.startsWith("ocx_session_"));
+  return Boolean(runtime(plane).session.token?.startsWith("occx_session_"));
 }
 
 export async function logoutApiSession(plane: ApiPlane): Promise<boolean> {
   const state = runtime(plane);
-  if (!state.session.token?.startsWith("ocx_session_")) return false;
+  if (!state.session.token?.startsWith("occx_session_")) return false;
   const bounded = createBoundedFetch(SESSION_REBOOTSTRAP_TIMEOUT_MS);
   try {
     const response = await window.fetch(`${state.target.baseUrl}/api/session/logout`, {
@@ -138,10 +138,10 @@ function takeMetaContent(name: string): string | null {
 
 function loadInjectedSession(): void {
   const values = {
-    token: takeMetaContent("opencodex-session-token"),
-    csrf: takeMetaContent("opencodex-session-csrf"),
-    browser: takeMetaContent("opencodex-session-origin"),
-    server: takeMetaContent("opencodex-session-server-origin"),
+    token: takeMetaContent("openccx-session-token"),
+    csrf: takeMetaContent("openccx-session-csrf"),
+    browser: takeMetaContent("openccx-session-origin"),
+    server: takeMetaContent("openccx-session-server-origin"),
   };
   for (const plane of ["machine", "shared"] as const) {
     if (runtime(plane).target.serverOrigin === values.server) {
@@ -163,10 +163,10 @@ function metaContentFromHtml(html: string, name: string): string | null {
 export function installApiSessionFromHtml(plane: ApiPlane, html: string): boolean {
   return storeSession(
     plane,
-    metaContentFromHtml(html, "opencodex-session-token"),
-    metaContentFromHtml(html, "opencodex-session-csrf"),
-    metaContentFromHtml(html, "opencodex-session-origin"),
-    metaContentFromHtml(html, "opencodex-session-server-origin"),
+    metaContentFromHtml(html, "openccx-session-token"),
+    metaContentFromHtml(html, "openccx-session-csrf"),
+    metaContentFromHtml(html, "openccx-session-origin"),
+    metaContentFromHtml(html, "openccx-session-server-origin"),
   );
 }
 
@@ -212,10 +212,10 @@ function sessionHeaders(plane: ApiPlane, input: RequestInfo | URL, init?: Reques
   const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
   const token = overrideToken === undefined ? state.session.token : overrideToken;
   const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
-  if (token) headers.set("X-OpenCodex-API-Key", token);
-  if (token?.startsWith("ocx_session_") && state.session.browserOrigin && state.session.csrfToken) {
-    headers.set("X-OpenCodex-GUI-Origin", state.session.browserOrigin);
-    if (method !== "GET" && method !== "HEAD") headers.set("X-OpenCodex-CSRF-Token", state.session.csrfToken);
+  if (token) headers.set("X-Openccx-API-Key", token);
+  if (token?.startsWith("occx_session_") && state.session.browserOrigin && state.session.csrfToken) {
+    headers.set("X-Openccx-GUI-Origin", state.session.browserOrigin);
+    if (method !== "GET" && method !== "HEAD") headers.set("X-Openccx-CSRF-Token", state.session.csrfToken);
   }
   if (plane === "shared" && state.target.transport === "relay") {
     const machine = runtime("machine").session;

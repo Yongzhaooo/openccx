@@ -1,5 +1,5 @@
 /**
- * CLI head: version/help early exits, `ocx ready` pre-parse, and the bounded
+ * CLI head: version/help early exits, `occx ready` pre-parse, and the bounded
  * Codex-shim auto-restore preflight, in that order (Phase 1 of the CLI
  * deepening — moved out of src/cli/index.ts).
  *
@@ -29,7 +29,7 @@ export function parseCliHead(argv: string[]): CliHead {
     return { kind: "version", command, args };
   }
   if (command === undefined || command === "help" || command === "--help" || command === "-h") {
-    // `ocx help <sub>` carries the subcommand; bare/flag help prints the full usage.
+    // `occx help <sub>` carries the subcommand; bare/flag help prints the full usage.
     return {
       kind: "help",
       command,
@@ -38,10 +38,10 @@ export function parseCliHead(argv: string[]): CliHead {
     };
   }
   if (command !== "help" && hasHelpFlag(args.slice(1))) {
-    // `ocx <cmd> --help|-h|help` prints that command's usage, not the full list.
+    // `occx <cmd> --help|-h|help` prints that command's usage, not the full list.
     return { kind: "help", command, args, helpTarget: command };
   }
-  // P1: pre-parse `ocx ready` and reject invalid arguments with exit 64 BEFORE
+  // P1: pre-parse `occx ready` and reject invalid arguments with exit 64 BEFORE
   // maybeAutoRestoreCodexShim (or any discovery/probe/filesystem-capable global
   // preflight) runs. `ready --help` / `help ready` already exited above, so this
   // only sees ready args without a help flag. Valid args are stashed so the
@@ -71,7 +71,7 @@ export async function runCli(argv: string[]): Promise<CliHead> {
       // without readyArgs means dispatch diverged. Refuse with code 64 and
       // perform NO I/O (no discovery/probe).
       if (!head.readyArgs) {
-        console.error("Usage: ocx ready [--json] [--wait [--timeout <seconds>]]");
+        console.error("Usage: occx ready [--json] [--wait [--timeout <seconds>]]");
         console.error("  --timeout requires --wait; <seconds> must be a positive integer (1..300).");
         console.error("  Default wait timeout is 45 seconds.");
         process.exit(64);

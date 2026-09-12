@@ -10,7 +10,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath, repoRoot } from "../helpers/repo-root";
 
 // The lock path is injected throughout so the suite never opens the real per-user lock and
-// therefore never serializes against a genuine `ocx service` run on the developer machine.
+// therefore never serializes against a genuine `occx service` run on the developer machine.
 let testRoot = "";
 let lockPath = "";
 
@@ -92,7 +92,7 @@ test("a second service mutation is refused while another process holds the lock"
     }
 
     // Contention fails fast and, critically, without running the operation: a blocked
-    // `ocx service repair` must never reach `schtasks` behind the holder's back.
+    // `occx service repair` must never reach `schtasks` behind the holder's back.
     let ran = false;
     const startedAt = performance.now();
     await expect(withWindowsServiceMutationLock(async () => {

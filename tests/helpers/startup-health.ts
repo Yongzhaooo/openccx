@@ -23,10 +23,10 @@ export function startupHealthFixture(overrides: Partial<StartupHealth> = {}): St
     diagnosticStale: false,
     recommendedCommand: null,
     commands: {
-      installService: "ocx service install",
-      repairService: "ocx service repair",
-      installShim: "ocx codex-shim install",
-      restoreNative: "ocx restore",
+      installService: "occx service install",
+      repairService: "occx service repair",
+      installShim: "occx codex-shim install",
+      restoreNative: "occx restore",
     },
     ...overrides,
   };

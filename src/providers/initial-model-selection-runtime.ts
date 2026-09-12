@@ -1,6 +1,6 @@
 import { mutatePersistedConfig, validateConfigCandidate } from "../config";
 import { isDeepStrictEqual } from "node:util";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import type { CatalogModel } from "../codex/catalog";
 import {
   adoptInitialModelSelections,
@@ -15,7 +15,7 @@ interface InitialSelectionBaseline {
   disabled: string;
 }
 
-function inventoryIdentity(config: OcxConfig): unknown {
+function inventoryIdentity(config: OccxConfig): unknown {
   const validated = validateConfigCandidate(config);
   if (!validated.ok) return null;
   // Compare all inventory-producing configuration, including custom rows and combos.
@@ -31,7 +31,7 @@ function inventoryIdentity(config: OcxConfig): unknown {
   return JSON.parse(JSON.stringify({ ...validated.config, providers, disabledModels: undefined, port: undefined, hostname: undefined }));
 }
 
-export function captureInitialSelectionBaseline(config: OcxConfig): InitialSelectionBaseline | null {
+export function captureInitialSelectionBaseline(config: OccxConfig): InitialSelectionBaseline | null {
   const providers = Object.entries(config.providers)
     .filter(([, provider]) => initialModelSelectionPending(provider))
     .map(([name]) => name);
@@ -42,7 +42,7 @@ export function captureInitialSelectionBaseline(config: OcxConfig): InitialSelec
 
 /** Commit only decisions whose provider and user-selection snapshot still match. */
 export function finalizeInitialModelSelection(
-  config: OcxConfig,
+  config: OccxConfig,
   baseline: InitialSelectionBaseline | null,
   models: readonly CatalogModel[],
   authoritativeProviders: readonly string[],
@@ -52,7 +52,7 @@ export function finalizeInitialModelSelection(
   try {
     const outcome = mutatePersistedConfig(fresh => {
       if (!isDeepStrictEqual(inventoryIdentity(fresh), baseline.inventory)) return { changed: false, value: null };
-      const providers: Record<string, OcxProviderConfig> = {};
+      const providers: Record<string, OccxProviderConfig> = {};
       for (const name of baseline.providers) {
         const provider = fresh.providers[name];
         if (!provider || !initialModelSelection(provider)) continue;
@@ -79,7 +79,7 @@ export function finalizeInitialModelSelection(
 }
 
 /** Ordinary discovery, before retained catalog evidence is captured. */
-export async function resolvePendingInitialModelSelection(config: OcxConfig): Promise<void> {
+export async function resolvePendingInitialModelSelection(config: OccxConfig): Promise<void> {
   const baseline = captureInitialSelectionBaseline(config);
   if (!baseline) return;
   const { gatherRoutedModels, uniqueCatalogModelsForPublicList } = await import("../codex/catalog");

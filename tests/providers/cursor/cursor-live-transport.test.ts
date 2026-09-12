@@ -7,7 +7,7 @@ import { createLiveCursorTransport, CursorMissingCredentialError, parseConnectEn
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 import { CURSOR_EXTERNAL_ROOT_BLOB_LIMIT, CURSOR_EXTERNAL_ROOT_BYTE_LIMIT, CURSOR_EXTERNAL_TOOL_CONTINUATION_TEXT, prepareCursorRunRequest } from "../../../src/adapters/cursor/protobuf-request";
 import { estimateTokens } from "../../../src/lib/token-estimate";
-import type { OcxMessage } from "../../../src/types";
+import type { OccxMessage } from "../../../src/types";
 import type { CursorRunRequest } from "../../../src/adapters/cursor/types";
 import {
   CursorBlobAdmissionError,
@@ -144,8 +144,8 @@ describe("Cursor live transport", () => {
   });
 
   test("fails before network when no Cursor credential is configured", () => {
-    const prev = process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-    delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
+    const prev = process.env.OPENCCX_CURSOR_TEST_TOKEN;
+    delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
     try {
       expect(() => createLiveCursorTransport({
         provider: { adapter: "cursor", baseUrl: "https://api2.cursor.sh" },
@@ -153,8 +153,8 @@ describe("Cursor live transport", () => {
         headers: new Headers(),
       })).toThrow(CursorMissingCredentialError);
     } finally {
-      if (prev === undefined) delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-      else process.env.OPENCODEX_CURSOR_TEST_TOKEN = prev;
+      if (prev === undefined) delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+      else process.env.OPENCCX_CURSOR_TEST_TOKEN = prev;
     }
   });
 
@@ -317,15 +317,15 @@ describe("Cursor token precedence (R2 gap-close guard)", () => {
   });
 
   test("throws CursorMissingCredentialError when no apiKey, no header, and no env token", () => {
-    const prev = process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-    delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
+    const prev = process.env.OPENCCX_CURSOR_TEST_TOKEN;
+    delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
     try {
       expect(() =>
         resolveCursorToken({ adapter: "cursor", baseUrl: "https://api2.cursor.sh" }, new Headers()),
       ).toThrow(CursorMissingCredentialError);
     } finally {
-      if (prev === undefined) delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-      else process.env.OPENCODEX_CURSOR_TEST_TOKEN = prev;
+      if (prev === undefined) delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+      else process.env.OPENCCX_CURSOR_TEST_TOKEN = prev;
     }
   });
 });
@@ -421,12 +421,12 @@ describe("Cursor live transport context estimate wiring (#373)", () => {
     for (const image of images) expect(image.byteLength).toBeLessThan(4096);
     const names = ['screen"\n' + "n".repeat(140), "screen_b", "finish_capture"];
     const ids = ["call\\\t" + "c".repeat(140), "call_b", "call_done"];
-    const rawMessages: OcxMessage[] = [
+    const rawMessages: OccxMessage[] = [
       { role: "user", content: "Compare both screenshots.", timestamp: 1 },
       { role: "assistant", content: names.map((name, i) => ({
         type: "toolCall", name, id: ids[i]!, arguments: {},
       })), timestamp: 2 },
-      ...names.map((toolName, i): OcxMessage => ({
+      ...names.map((toolName, i): OccxMessage => ({
         role: "toolResult", toolName, toolCallId: ids[i]!, isError: false, timestamp: i + 3,
         content: i === 2 ? "capture finished" : [
           { type: "text", text: `SCREENSHOT_OUTPUT_${i}` },
@@ -585,8 +585,8 @@ describe("Cursor live transport context estimate wiring (#373)", () => {
       }],
     });
 
-    expect(state?.clientToolNames?.has("ocx_client_script")).toBe(true);
+    expect(state?.clientToolNames?.has("occx_client_script")).toBe(true);
     expect(state?.freeformToolNames?.has("script")).toBe(true);
-    expect(state?.cursorToolNameMap?.get("ocx_client_script")).toBe("script");
+    expect(state?.cursorToolNameMap?.get("occx_client_script")).toBe("script");
   });
 });

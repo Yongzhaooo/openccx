@@ -25,7 +25,7 @@ import {
 } from "../../src/providers/service-tier";
 import { candidateCapabilityEvidence } from "../../src/routing/capability";
 import { resolveProductionBehaviorValues } from "../../src/routing/compatibility/behavior";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 describe("registry capability reaches saved configs without overriding them", () => {
   test("the registry holds the defaults; the seed stays free of them so explicit config stays distinguishable", () => {
@@ -41,17 +41,17 @@ describe("registry capability reaches saved configs without overriding them", ()
   });
 
   test("enrichProviderFromRegistry backfills a missing field (not a hardcoded config)", () => {
-    const prov: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.deepseek.com", apiKey: "sk-test" };
+    const prov: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.deepseek.com", apiKey: "sk-test" };
     enrichProviderFromRegistry("deepseek", prov);
     expect(prov.supportsServiceTier).toBe(false);
     expect(prov.preserveResponsesReasoningContent).toBe(true);
   });
 
   test("an explicit config value beats the registry default in both directions", () => {
-    const stripped: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", apiKey: "sk-test", supportsServiceTier: false };
+    const stripped: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", apiKey: "sk-test", supportsServiceTier: false };
     enrichProviderFromRegistry("openai-apikey", stripped);
     expect(stripped.supportsServiceTier).toBe(false);
-    const optedIn: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.deepseek.com", apiKey: "sk-test", supportsServiceTier: true };
+    const optedIn: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.deepseek.com", apiKey: "sk-test", supportsServiceTier: true };
     enrichProviderFromRegistry("deepseek", optedIn);
     expect(optedIn.supportsServiceTier).toBe(true);
   });
@@ -70,7 +70,7 @@ describe("registry capability reaches saved configs without overriding them", ()
   });
 
   test("OpenRouter registry capability is not inherited by a same-named noncanonical destination", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       ...providerConfigSeed(getProviderRegistryEntry("openrouter")!),
       baseUrl: "https://openrouter-proxy.example.test/v1",
       apiKey: "sk-test",
@@ -84,8 +84,8 @@ describe("registry capability reaches saved configs without overriding them", ()
 describe("xAI Fast capability follows the captured authentication transport", () => {
   function xaiProvider(
     authMode: "key" | "oauth",
-    overrides: Partial<OcxProviderConfig> = {},
-  ): OcxProviderConfig {
+    overrides: Partial<OccxProviderConfig> = {},
+  ): OccxProviderConfig {
     return {
       ...providerConfigSeed(getProviderRegistryEntry("xai")!),
       authMode,
@@ -96,10 +96,10 @@ describe("xAI Fast capability follows the captured authentication transport", ()
     };
   }
 
-  async function catalogEntry(provider: OcxProviderConfig) {
+  async function catalogEntry(provider: OccxProviderConfig) {
     const models = await gatherRoutedModels({
       providers: { xai: provider },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     return buildCatalogEntries(null, [], models)
       .find(entry => entry.slug === "xai/grok-4.6");
   }
@@ -169,7 +169,7 @@ describe("xAI Fast capability follows the captured authentication transport", ()
 
 describe("service-tier capability is exact-model and provider-scoped", () => {
   test("an exact model entry overrides the provider fallback in both directions", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-responses",
       baseUrl: "https://relay.example.test/v1",
       supportsServiceTier: true,
@@ -276,7 +276,7 @@ describe("applyServiceTierGate fails closed", () => {
 });
 
 describe("routing evidence uses the final model adapter", () => {
-  const relay = (overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig => ({
+  const relay = (overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig => ({
     adapter: "openai-chat",
     baseUrl: "https://relay.example.test/v1",
     chatServiceTier: true,
@@ -290,7 +290,7 @@ describe("routing evidence uses the final model adapter", () => {
       port: 10100,
       defaultProvider: "relay",
       providers: { relay: relay() },
-    } as OcxConfig;
+    } as OccxConfig;
     expect(candidateCapabilityEvidence(config, "relay", "verified").serviceTier).toBe("supported");
     expect(candidateCapabilityEvidence(config, "relay", "blocked").serviceTier).toBe("unsupported");
     expect(candidateCapabilityEvidence({
@@ -333,13 +333,13 @@ describe("the gate fires on the live handleResponses path", () => {
 
   async function drive(
     providerName: string,
-    provider: OcxProviderConfig,
+    provider: OccxProviderConfig,
     model: string,
     rawBody: Record<string, unknown>,
     fastMode?: boolean,
   ): Promise<Record<string, unknown>> {
     const { bodies } = captureBody();
-    const config = { providers: { [providerName]: provider }, ...(fastMode === undefined ? {} : { fastMode }) } as unknown as OcxConfig;
+    const config = { providers: { [providerName]: provider }, ...(fastMode === undefined ? {} : { fastMode }) } as unknown as OccxConfig;
     await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",
@@ -353,22 +353,22 @@ describe("the gate fires on the live handleResponses path", () => {
     return bodies[0] ?? {};
   }
 
-  const deepseekProvider = (): OcxProviderConfig =>
+  const deepseekProvider = (): OccxProviderConfig =>
     ({ ...providerConfigSeed(getProviderRegistryEntry("deepseek")!), apiKey: "sk-test" });
-  const openAiKeyProvider = (): OcxProviderConfig =>
+  const openAiKeyProvider = (): OccxProviderConfig =>
     ({ ...providerConfigSeed(getProviderRegistryEntry("openai-apikey")!), apiKey: "sk-test" });
-  const xaiKeyProvider = (): OcxProviderConfig => ({
+  const xaiKeyProvider = (): OccxProviderConfig => ({
     ...providerConfigSeed(getProviderRegistryEntry("xai")!),
     authMode: "key",
     apiKey: "xai-test-key",
   });
-  const xaiOAuthProvider = (): OcxProviderConfig => ({
+  const xaiOAuthProvider = (): OccxProviderConfig => ({
     ...providerConfigSeed(getProviderRegistryEntry("xai")!),
     authMode: "oauth",
     apiKey: "xai-oauth-test-token",
   });
-  const openRouterProvider = (overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig => {
-    const provider: OcxProviderConfig = {
+  const openRouterProvider = (overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig => {
+    const provider: OccxProviderConfig = {
       ...providerConfigSeed(getProviderRegistryEntry("openrouter")!),
       apiKey: "sk-test",
       ...overrides,
@@ -400,7 +400,7 @@ describe("the gate fires on the live handleResponses path", () => {
           service_tier: "priority",
         }),
       }),
-      { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig,
+      { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig,
       logCtx,
       {},
     );
@@ -442,7 +442,7 @@ describe("the gate fires on the live handleResponses path", () => {
   });
 
   test("an unclassified custom Responses provider keeps caller values; only explicit false strips", async () => {
-    const custom = (): OcxProviderConfig => ({ adapter: "openai-responses", baseUrl: "https://gateway.example.com/v1", apiKey: "sk-test" });
+    const custom = (): OccxProviderConfig => ({ adapter: "openai-responses", baseUrl: "https://gateway.example.com/v1", apiKey: "sk-test" });
     const preserved = await drive("custom-gw", custom(), "some-model", { service_tier: "priority" });
     expect(preserved.service_tier).toBe("priority");
     const stripped = await drive("custom-gw", { ...custom(), supportsServiceTier: false }, "some-model", { service_tier: "priority" });
@@ -452,7 +452,7 @@ describe("the gate fires on the live handleResponses path", () => {
   });
 
   test("an exact-model-only Chat capability forwards Fast while undeclared models stay blocked", async () => {
-    const custom = (): OcxProviderConfig => ({
+    const custom = (): OccxProviderConfig => ({
       adapter: "openai-chat",
       baseUrl: "https://gateway.example.com/v1",
       apiKey: "sk-test",
@@ -516,17 +516,17 @@ describe("the gate fires on the live handleResponses path", () => {
 
 describe("unclassified chat-wire tier projection (release-audit fix)", () => {
   test("unclassified openai-chat without chatServiceTier projects false (require.serviceTier unsupported keeps matching)", () => {
-    const provider = { adapter: "openai-chat" } as OcxProviderConfig;
+    const provider = { adapter: "openai-chat" } as OccxProviderConfig;
     expect(serviceTierSupportForModel(provider, "some-model")).toBe(false);
   });
 
   test("unclassified openai-chat WITH chatServiceTier: true keeps the historical unknown", () => {
-    const provider = { adapter: "openai-chat", chatServiceTier: true } as OcxProviderConfig;
+    const provider = { adapter: "openai-chat", chatServiceTier: true } as OccxProviderConfig;
     expect(serviceTierSupportForModel(provider, "some-model")).toBeUndefined();
   });
 
   test("unclassified Responses-wire provider stays unknown", () => {
-    const provider = { adapter: "openai-responses" } as OcxProviderConfig;
+    const provider = { adapter: "openai-responses" } as OccxProviderConfig;
     expect(serviceTierSupportForModel(provider, "some-model")).toBeUndefined();
   });
 });

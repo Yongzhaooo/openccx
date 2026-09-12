@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { defaultLabAutomationPolicyV1, normalizeLabAutomationPolicyV1 } from "../../src/lab/automation/policy";
 import {
   defaultLabAutomationStateV1,
@@ -43,14 +43,14 @@ const COMPAT_VERSION = "e".repeat(64);
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-cl08-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-cl08-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
 }
 
 function prepareHome(home: string): void {
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   readInstallationSalt(home);
   setCompatibilityVersionOverrideForTests(COMPAT_VERSION);
 }
@@ -59,7 +59,7 @@ function fixtureDnsResolve() {
   return async () => [{ address: "93.184.216.34", family: 4 as const }];
 }
 
-function providerConfig(baseUrl = "https://api.example.com/v1", providerName = "fixture-provider"): OcxConfig {
+function providerConfig(baseUrl = "https://api.example.com/v1", providerName = "fixture-provider"): OccxConfig {
   return {
     providers: {
       [providerName]: {
@@ -70,10 +70,10 @@ function providerConfig(baseUrl = "https://api.example.com/v1", providerName = "
         defaultModel: "fixture-model",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function twoRouteConfig(): OcxConfig {
+function twoRouteConfig(): OccxConfig {
   return {
     providers: {
       "route-a": {
@@ -91,7 +91,7 @@ function twoRouteConfig(): OcxConfig {
         defaultModel: "fixture-model",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function passObservation(): NormalizedObservation {
@@ -152,7 +152,7 @@ afterEach(() => {
   resetLabAutomationSchedulerStateForTests();
   setLabAutomationDispatchDeps({});
   resetCompatibilityVersionCacheForTests();
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
   for (const dir of HOMES.splice(0)) {
     try { removeTreeWithRetry(dir); } catch { /* ignore */ }
   }

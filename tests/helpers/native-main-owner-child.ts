@@ -111,10 +111,10 @@ const servers: Array<ReturnType<typeof startServer> | null> = [];
 function start(home = codexHome): ReturnType<typeof startServer> {
   const manager = home === codexHome ? primaryManager : managerFor(home);
   const server = startServer(0, {
-    // The fixture builds its own CODEX_HOME/OPENCODEX_HOME under a temp root, so
+    // The fixture builds its own CODEX_HOME/OPENCCX_HOME under a temp root, so
     // real service-home evidence on the developer's machine is irrelevant to what
     // this child proves. Without this seam `startServer` inspects the INSTALLED
-    // service instead: a machine running ocx as a launchd/systemd job reports
+    // service instead: a machine running occx as a launchd/systemd job reports
     // `ownership: "unknown"` for the fixture's homes (the job is loaded, but its
     // plist names other homes), native-main admission is fenced closed, and every
     // gate assertion here times out on `reason: "ownership-unknown"`.
@@ -164,7 +164,7 @@ async function request(port: number, kind: string): Promise<{ status: number; te
   if (kind === "management-list" || kind === "management-doctor") {
     const path = kind === "management-doctor" ? "/api/native-main-profiles/doctor" : "/api/native-main-profiles";
     const response = await fetch(`http://127.0.0.1:${port}${path}`, {
-      headers: { "x-opencodex-api-key": process.env.OPENCODEX_ADMIN_AUTH_TOKEN ?? "" },
+      headers: { "x-openccx-api-key": process.env.OPENCCX_ADMIN_AUTH_TOKEN ?? "" },
     });
     return { status: response.status, text: await response.text() };
   }
@@ -214,7 +214,7 @@ for await (const line of lines) {
           method: "PUT",
           headers: {
             "content-type": "application/json",
-            "x-opencodex-api-key": process.env.OPENCODEX_ADMIN_AUTH_TOKEN ?? "",
+            "x-openccx-api-key": process.env.OPENCCX_ADMIN_AUTH_TOKEN ?? "",
           },
           body: JSON.stringify({ accountId: mode === "pool" ? "pool-a" : MAIN_CODEX_ACCOUNT_ID }),
         });

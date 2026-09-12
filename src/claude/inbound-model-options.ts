@@ -1,4 +1,4 @@
-import type { OcxClaudeCodeConfig } from "../types";
+import type { OccxClaudeCodeConfig } from "../types";
 import { isAnthropicOutputSchema } from "../adapters/anthropic-output-schema";
 import { resolveAlias } from "./alias";
 import { stripOneMillionMarker } from "./context-windows";
@@ -25,7 +25,7 @@ function isClaudeClassifierModel(model: string): boolean {
  * affinity needs the request/session state this function does not have; it is tracked as
  * follow-up work rather than approximated from static config.
  */
-function configuredClassifierRoute(cc?: OcxClaudeCodeConfig): string | undefined {
+function configuredClassifierRoute(cc?: OccxClaudeCodeConfig): string | undefined {
   const explicit = typeof cc?.classifierModel === "string" ? cc.classifierModel.trim() : "";
   if (explicit.length > 0) return explicit;
   if (Array.isArray(cc?.classifierFallbacks)) {
@@ -37,7 +37,7 @@ function configuredClassifierRoute(cc?: OcxClaudeCodeConfig): string | undefined
 }
 
 /** Alias first, then modelMap: exact id, then date-suffix-stripped (`-\d{8}$`), then classifier affinity/config, else passthrough. */
-export function resolveInboundModel(model: string, cc?: OcxClaudeCodeConfig): string {
+export function resolveInboundModel(model: string, cc?: OccxClaudeCodeConfig): string {
   // Defensive: Desktop/CLI strip the [1m] context-variant marker client-side, but a
   // leaking build must not break alias decode (devlog 138 — the 1M signal is the
   // anthropic-beta header, never the id). Case-insensitive: the CLI matches /\[1m\]/i.
@@ -108,14 +108,14 @@ export function formatFromOutputConfig(outputConfig: unknown): Rec | undefined {
 }
 
 /**
- * ocx-route directive (devlog 072): injected agent-definition bodies carry
- * `<!-- ocx-route: <model> -->` because Claude Code 2.1.207 ignores custom
+ * occx-route directive (devlog 072): injected agent-definition bodies carry
+ * `<!-- occx-route: <model> -->` because Claude Code 2.1.207 ignores custom
  * gateway ids in agent frontmatter (live-proven fallback to sonnet). The body
  * rides the subagent's system prompt, so the proxy re-routes here. Only the
  * FIRST directive wins; the scan is bounded to the system field.
  */
-const OCX_ROUTE_RE = /<!--\s*ocx-route:\s*([^\s]+)\s*-->/;
-const OCX_EFFORT_RE = /<!--\s*ocx-effort:\s*(low|medium|high|xhigh|max)\s*-->/;
+const OCCX_ROUTE_RE = /<!--\s*occx-route:\s*([^\s]+)\s*-->/;
+const OCCX_EFFORT_RE = /<!--\s*occx-effort:\s*(low|medium|high|xhigh|max)\s*-->/;
 
 function systemText(body: unknown): string | null {
   if (!isRec(body)) return null;
@@ -129,10 +129,10 @@ function systemText(body: unknown): string | null {
   return text || null;
 }
 
-export function extractOcxRouteDirective(body: unknown): string | null {
+export function extractOccxRouteDirective(body: unknown): string | null {
   const text = systemText(body);
   if (!text) return null;
-  const match = OCX_ROUTE_RE.exec(text);
+  const match = OCCX_ROUTE_RE.exec(text);
   return match ? match[1]! : null;
 }
 
@@ -140,11 +140,11 @@ export function extractOcxRouteDirective(body: unknown): string | null {
  * Claude Code 2.1.220 collapses custom-agent frontmatter `effort: max` and
  * `effort: xhigh` into the legacy `thinking.budget_tokens` shape. Preserve the
  * exact generated-agent setting through the same trusted system-body channel as
- * ocx-route so the inbound translator can restore `output_config.effort`.
+ * occx-route so the inbound translator can restore `output_config.effort`.
  */
-export function extractOcxEffortDirective(body: unknown): NonNullable<OcxClaudeCodeConfig["subagentEffort"]> | null {
+export function extractOccxEffortDirective(body: unknown): NonNullable<OccxClaudeCodeConfig["subagentEffort"]> | null {
   const text = systemText(body);
   if (!text) return null;
-  const match = OCX_EFFORT_RE.exec(text);
-  return match ? match[1] as NonNullable<OcxClaudeCodeConfig["subagentEffort"]> : null;
+  const match = OCCX_EFFORT_RE.exec(text);
+  return match ? match[1] as NonNullable<OccxClaudeCodeConfig["subagentEffort"]> : null;
 }

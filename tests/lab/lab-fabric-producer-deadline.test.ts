@@ -87,7 +87,7 @@ type Harness = {
 };
 
 async function withProducer(body: (h: Harness) => Promise<void>, totalTimeoutMs = TOTAL_MS) {
-  const scratchRoot = mkdtempSync(join(tmpdir(), "ocx-fabric-deadline-"));
+  const scratchRoot = mkdtempSync(join(tmpdir(), "occx-fabric-deadline-"));
   const child = new DeadlineChild();
   const originals = { spawn: childProcess.spawn, set: globalThis.setTimeout, clear: globalThis.clearTimeout };
   const restorers: Array<() => void> = [];
@@ -332,7 +332,7 @@ describe("isolated fabric producer deadline admission", () => {
 });
 
 test("trusted route keeps scratch until stderr-failed child closes, then cleans it", async () => {
-  const configDir = mkdtempSync(join(tmpdir(), "ocx-fabric-consumer-deadline-"));
+  const configDir = mkdtempSync(join(tmpdir(), "occx-fabric-consumer-deadline-"));
   const child = new DeadlineChild();
   const originals = { spawn: childProcess.spawn, set: globalThis.setTimeout, clear: globalThis.clearTimeout };
   const restorers: Array<() => void> = [];
@@ -358,7 +358,7 @@ test("trusted route keeps scratch until stderr-failed child closes, then cleans 
     );
     expect(spawnSpy).toHaveBeenCalledTimes(1);
     expect(spawnSpy.mock.results[0]?.value).toBe(child);
-    const scratchRoot = spawnSpy.mock.calls[0]?.[2]?.env?.OCX_FABRIC_SCRATCH_ROOT;
+    const scratchRoot = spawnSpy.mock.calls[0]?.[2]?.env?.OCCX_FABRIC_SCRATCH_ROOT;
     expect(typeof scratchRoot).toBe("string");
     if (!scratchRoot) throw new Error("producer spawn omitted its scratch root");
     expect(child.listenerCount("close")).toBe(1);

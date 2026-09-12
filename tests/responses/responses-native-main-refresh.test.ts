@@ -11,16 +11,16 @@ import type { NativeProfileContext } from "../../src/codex/native-profile-store"
 import { clearCodexUpstreamHealth, clearThreadAccountMap } from "../../src/codex/routing";
 import { handleResponses, handleResponsesCompact } from "../../src/server/responses";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
 let home = "";
-let previousOcxHome: string | undefined;
+let previousOccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 const OTHER_ACCOUNT_ID = "other";
 
-function config(options: { secondAccount?: boolean } = {}): OcxConfig {
+function config(options: { secondAccount?: boolean } = {}): OccxConfig {
   return {
     defaultProvider: "openai",
     activeCodexAccountId: MAIN_CODEX_ACCOUNT_ID,
@@ -35,7 +35,7 @@ function config(options: { secondAccount?: boolean } = {}): OcxConfig {
     },
     codexAccounts: options.secondAccount ? [{ id: OTHER_ACCOUNT_ID, label: "other" }] : [],
     ...(options.secondAccount ? { accountPoolStrategy: "fill-first" } : {}),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(path: "/v1/responses" | "/v1/responses/compact", signal?: AbortSignal): Request {
@@ -50,10 +50,10 @@ function request(path: "/v1/responses" | "/v1/responses/compact", signal?: Abort
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-responses-main-refresh-"));
-  previousOcxHome = process.env.OPENCODEX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-responses-main-refresh-"));
+  previousOccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   clearAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID);
   clearAccountNeedsReauth(OTHER_ACCOUNT_ID);
@@ -74,8 +74,8 @@ afterEach(() => {
   clearAccountNeedsReauth(OTHER_ACCOUNT_ID);
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
-  if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOcxHome;
+  if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(home);

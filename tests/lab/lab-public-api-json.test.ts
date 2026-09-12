@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 
-const config = { port: 0, defaultProvider: "openai-apikey", providers: {} } as OcxConfig;
+const config = { port: 0, defaultProvider: "openai-apikey", providers: {} } as OccxConfig;
 
 describe("CL-10 management public JSON boundary", () => {
   test("rejects duplicate decoded object keys before request object construction", async () => {

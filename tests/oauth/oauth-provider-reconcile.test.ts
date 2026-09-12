@@ -13,24 +13,24 @@ import { getCredential, saveCredential } from "../../src/oauth/store";
 import { routeModel } from "../../src/router";
 import { CURSOR_NO_VISION_MODELS, CURSOR_STATIC_MODELS, cursorModelIds } from "../../src/adapters/cursor/discovery";
 import { modelInList } from "../../src/types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 const homes: string[] = [];
 
 afterEach(() => {
   setPersistedConfigMutationBeforeCommitForTests(null);
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   for (const home of homes.splice(0)) removeTreeWithRetry(home);
 });
 
 describe("OAuth provider reconciliation", () => {
   test("heals a stale Cursor all-models noVisionModels stamp down to the curated list", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-cursor-novision-reconcile-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-cursor-novision-reconcile-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const stale = cursorModelIds(CURSOR_STATIC_MODELS);
     expect(stale.length).toBeGreaterThan((preset.noVisionModels ?? []).length);
@@ -44,7 +44,7 @@ describe("OAuth provider reconciliation", () => {
           noVisionModels: [...stale],
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
 
     expect(reconcileOAuthProviders(config)).toBe(true);
@@ -59,9 +59,9 @@ describe("OAuth provider reconciliation", () => {
   // RED on dev (#3524): dev mutates the live object then calls saveConfig(config), so the
   // startup snapshot overwrites whatever an operator wrote after loadConfig() returned.
   test("rebases startup reconciliation over a concurrent provider edit", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-race-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-race-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const config = {
       port: 10100,
@@ -73,7 +73,7 @@ describe("OAuth provider reconciliation", () => {
           noVisionModels: cursorModelIds(CURSOR_STATIC_MODELS),
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
     setPersistedConfigMutationBeforeCommitForTests(() => {
       const concurrent = loadConfig();
@@ -93,9 +93,9 @@ describe("OAuth provider reconciliation", () => {
   // #3524 threw here, on a call site startServer() does not guard. Reconciliation is a
   // best-effort startup refresh: an unwritable config must degrade, never kill boot.
   test("a config removed between load and reconcile warns and degrades to an in-memory apply", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-unavailable-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-unavailable-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const config = {
       port: 10100,
@@ -107,7 +107,7 @@ describe("OAuth provider reconciliation", () => {
           noVisionModels: cursorModelIds(CURSOR_STATIC_MODELS),
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
     rmSync(getConfigPath());
     const warn = spyOn(console, "warn").mockImplementation(() => {});
@@ -125,9 +125,9 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("a malformed config degrades without writing and without throwing", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-invalid-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-invalid-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const config = {
       port: 10100,
@@ -139,7 +139,7 @@ describe("OAuth provider reconciliation", () => {
           noVisionModels: cursorModelIds(CURSOR_STATIC_MODELS),
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
     writeFileSync(getConfigPath(), "{ this is not json");
     const warn = spyOn(console, "warn").mockImplementation(() => {});
@@ -154,14 +154,14 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("a fresh install with nothing to reconcile neither writes nor warns", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-fresh-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-fresh-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const config = {
       port: 10100,
       defaultProvider: "cursor",
       providers: { cursor: { ...structuredClone(OAUTH_PROVIDERS.cursor.providerConfig), authMode: "oauth" } },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     const warn = spyOn(console, "warn").mockImplementation(() => {});
     try {
       // No config.json on disk at all: an unchanged projection must short-circuit before
@@ -175,9 +175,9 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("persist=false adopts the projection in memory and leaves the file untouched", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-no-persist-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-no-persist-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const config = {
       port: 10100,
@@ -189,7 +189,7 @@ describe("OAuth provider reconciliation", () => {
           noVisionModels: cursorModelIds(CURSOR_STATIC_MODELS),
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
     const before = Bun.file(getConfigPath());
     const beforeBytes = before.size;
@@ -200,9 +200,9 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("an untouched provider row keeps its live object identity across reconciliation", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-oauth-reconcile-identity-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-oauth-reconcile-identity-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS.cursor.providerConfig;
     const config = {
       port: 10100,
@@ -220,7 +220,7 @@ describe("OAuth provider reconciliation", () => {
           models: ["local-live"],
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
     const liveUntouched = config.providers.untouched;
 
@@ -230,9 +230,9 @@ describe("OAuth provider reconciliation", () => {
     expect(config.providers.untouched).toBe(liveUntouched);
   });
   test("refreshes a saved Antigravity live catalog without touching credentials or user fields", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-gemini-36-reconcile-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-gemini-36-reconcile-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     await saveCredential("google-antigravity", {
       access: "sentinel-access",
       refresh: "sentinel-refresh",
@@ -256,7 +256,7 @@ describe("OAuth provider reconciliation", () => {
           liveModels: true,
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
 
     expect(reconcileOAuthProviders(config)).toBe(true);
@@ -294,9 +294,9 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("migrates the version-1 canonical Antigravity static row to live discovery", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-static-reconcile-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-static-reconcile-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const config = {
       port: 10100,
       defaultProvider: "google-antigravity",
@@ -318,7 +318,7 @@ describe("OAuth provider reconciliation", () => {
           liveModels: false,
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
 
     expect(reconcileOAuthProviders(config)).toBe(true);
@@ -334,9 +334,9 @@ describe("OAuth provider reconciliation", () => {
     // The earlier live-discovery case preserves an id outside the static seed. This case
     // preserves a still-listed choice during an additive catalog rollout, while refreshing
     // its capability records.
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-explicit-default-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-explicit-default-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     saveCredential("google-antigravity", { access: "a", refresh: "r", projectId: "p" });
     const config = {
       port: 10100,
@@ -352,7 +352,7 @@ describe("OAuth provider reconciliation", () => {
           liveModels: true,
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
 
     reconcileOAuthProviders(config);
@@ -379,7 +379,7 @@ describe("OAuth provider reconciliation", () => {
           defaultModel: "account-specific-model",
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
 
     expect(reconcileOAuthProviders(config, false)).toBe(true);
     expect(config.providers["google-antigravity"].defaultModel).toBe("account-specific-model");
@@ -390,7 +390,7 @@ describe("OAuth provider reconciliation", () => {
 
   test.each(["reconcile", "upsert"] as const)("%s heals an obsolete static default without enabling live discovery", operation => {
     const preset = OAUTH_PROVIDERS["google-antigravity"].providerConfig;
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "google-antigravity",
       providers: {
@@ -423,7 +423,7 @@ describe("OAuth provider reconciliation", () => {
           liveModels: false,
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
 
     expect(reconcileOAuthProviders(config)).toBe(false);
     upsertOAuthProvider(config, "google-antigravity");
@@ -431,9 +431,9 @@ describe("OAuth provider reconciliation", () => {
   });
 
   test("preserves explicit Antigravity live discovery when authMode is omitted or non-OAuth", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-authmode-reconcile-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-authmode-reconcile-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const preset = OAUTH_PROVIDERS["google-antigravity"].providerConfig;
 
     for (const authMode of [undefined, "key"] as const) {
@@ -449,7 +449,7 @@ describe("OAuth provider reconciliation", () => {
         port: 10100,
         defaultProvider: "google-antigravity",
         providers: { "google-antigravity": provider },
-      } satisfies OcxConfig;
+      } satisfies OccxConfig;
 
       expect(reconcileOAuthProviders(config)).toBe(false);
       const migrated = config.providers["google-antigravity"];
@@ -470,7 +470,7 @@ describe("OAuth provider reconciliation", () => {
           liveModels: true,
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
 
     upsertOAuthProvider(config, "google-antigravity");
     expect(config.providers["google-antigravity"].liveModels).toBe(true);
@@ -498,16 +498,16 @@ describe("OAuth provider reconciliation", () => {
           requiresReasoningPlaceholderModels: [],
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
 
     reconcileOAuthProviders(config, false);
     expect(config.providers.kimi.requiresReasoningPlaceholderModels).toEqual([]);
   });
 
   test("refreshes Grok 4.6 levels while runtime fills the default without overwriting user intent", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-grok-46-reconcile-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-grok-46-reconcile-"));
     homes.push(home);
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const staleXai = structuredClone(OAUTH_PROVIDERS.xai.providerConfig);
     staleXai.modelReasoningEfforts = {
       "grok-4.6": ["low", "medium", "high"],
@@ -523,7 +523,7 @@ describe("OAuth provider reconciliation", () => {
           note: "user-owned-note",
         },
       },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     saveConfig(config);
 
     expect(reconcileOAuthProviders(config)).toBe(true);

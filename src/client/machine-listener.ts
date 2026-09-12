@@ -10,7 +10,7 @@ import {
   requireManagementAuth,
   type ManagementAuthState,
 } from "../server/management-auth";
-import type { OcxClientConnectionConfig, OcxConfig } from "../types";
+import type { OccxClientConnectionConfig, OccxConfig } from "../types";
 import { disconnectClient, syncConnectedClient } from "./connect";
 import { readClientConnectionState } from "./state";
 import { handleMachineApi, type HubReachability, type MachineApiDeps } from "./machine-api";
@@ -27,7 +27,7 @@ const GUI_SPA_PATHS = new Set([
 ]);
 
 export interface MachineListenerDeps {
-  state?: OcxClientConnectionConfig;
+  state?: OccxClientConnectionConfig;
   managementAuthState?: ManagementAuthState;
   fetchImpl?: typeof fetch;
   machineApi?: Partial<MachineApiDeps>;
@@ -38,7 +38,7 @@ function json404(req: Request): Response {
   return Response.json({ error: "not_found", method: req.method, path: url.pathname }, { status: 404 });
 }
 
-function machinePolicyConfig(config: OcxConfig): OcxConfig {
+function machinePolicyConfig(config: OccxConfig): OccxConfig {
   return { ...config, hostname: "127.0.0.1" };
 }
 
@@ -85,10 +85,10 @@ export function startMachineListener(
       const url = new URL(req.url);
       if (!machineRouteAllowed(url, req, relayEnabled)) return json404(req);
       if (url.pathname === "/healthz" && req.method === "GET") {
-        return Response.json({ service: "opencodex", version: VERSION, role: "client", uptime: process.uptime(), pid: process.pid, port: server.port });
+        return Response.json({ service: "openccx", version: VERSION, role: "client", uptime: process.uptime(), pid: process.pid, port: server.port });
       }
       if (url.pathname === "/readyz" && req.method === "GET") {
-        return Response.json({ service: "opencodex", version: VERSION, role: "client", status: "ready", uptime: process.uptime(), pid: process.pid, port: server.port, protocolVersion: 1 });
+        return Response.json({ service: "openccx", version: VERSION, role: "client", status: "ready", uptime: process.uptime(), pid: process.pid, port: server.port, protocolVersion: 1 });
       }
       if (url.pathname.startsWith("/api/machine/hub-relay/")) {
         if (!relayEnabled) return json404(req);
@@ -109,7 +109,7 @@ export function startMachineListener(
         const authError = requireManagementAuth(req, managementAuth, config);
         if (authError) return authError;
         if (managementPrincipal(req, managementAuth, config) !== "gui-session") {
-          return Response.json({ error: "opencodex machine GUI session required" }, { status: 401 });
+          return Response.json({ error: "openccx machine GUI session required" }, { status: 401 });
         }
         return await handleMachineApi(req, url, connection, machineApiDeps) ?? json404(req);
       }
@@ -130,7 +130,7 @@ export function startMachineListener(
       if (url.pathname === "/") {
         return Response.json({
           status: "ok",
-          service: "opencodex",
+          service: "openccx",
           version: VERSION,
           role: "client",
           dashboard: { available: false, reason: "GUI build not found" },

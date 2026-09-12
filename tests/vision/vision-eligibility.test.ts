@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { NATIVE_OPENAI_MODELS } from "../../src/codex/catalog/native-models";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   BASELINE_VISION_MODELS,
   isVisionEligibleModel,
@@ -11,9 +11,9 @@ import {
   type VisionCandidateModel,
 } from "../../src/vision/eligibility";
 
-const emptyConfig: Pick<OcxConfig, "providers"> = { providers: {} };
+const emptyConfig: Pick<OccxConfig, "providers"> = { providers: {} };
 
-function configWithProviders(providers: NonNullable<OcxConfig["providers"]>): Pick<OcxConfig, "providers"> {
+function configWithProviders(providers: NonNullable<OccxConfig["providers"]>): Pick<OccxConfig, "providers"> {
   return { providers };
 }
 

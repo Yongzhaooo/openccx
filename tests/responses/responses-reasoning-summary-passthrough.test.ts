@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { handleResponses } from "../../src/server/responses/core";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * The passthrough relay for DeepSeek's native /responses endpoint emits
@@ -56,7 +56,7 @@ async function runHandleResponses(body: Record<string, unknown>, upstreamBody: u
       : payload,
     { status: 200, headers: { "content-type": contentType } },
   )) as typeof fetch;
-  const config = { providers: { deepseek: deepseekSeed() } } as unknown as OcxConfig;
+  const config = { providers: { deepseek: deepseekSeed() } } as unknown as OccxConfig;
   return handleResponses(
     new Request("http://localhost/v1/responses", {
       method: "POST",

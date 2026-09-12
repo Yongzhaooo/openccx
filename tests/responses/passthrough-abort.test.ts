@@ -141,7 +141,7 @@ describe("passthrough relayWithAbort (RC2, passthrough path)", () => {
     ]);
 
     expect(first.done).toBe(false);
-    expect(new TextDecoder().decode(first.value)).toBe(": opencodex keepalive\n\n");
+    expect(new TextDecoder().decode(first.value)).toBe(": openccx keepalive\n\n");
 
     await reader.cancel("client gone");
     expect(ac.signal.aborted).toBe(true);

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { formatErrorResponse } from "../../src/bridge";
 import { RequestPacingQueueOverloadError } from "../../src/providers/request-pacing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { beginRequestAttempt, type RequestLogContext } from "../../src/server/request-log";
 import type { RouteDecisionTraceV1 } from "../../src/routing/trace";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
@@ -93,7 +93,7 @@ describe("policy candidate fallback", () => {
     const trace = policyTrace();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     const seenModels: string[] = [];
-    const runCore = async (req: Request, _config: OcxConfig, ctx: RequestLogContext) => {
+    const runCore = async (req: Request, _config: OccxConfig, ctx: RequestLogContext) => {
       const body = await req.clone().json() as { model?: string };
       seenModels.push(String(body.model));
       ctx.routeDecision = trace;
@@ -113,7 +113,7 @@ describe("policy candidate fallback", () => {
       return Response.json({ id: "resp", object: "response", status: "completed", output: [] });
     };
 
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, { runCore });
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, { runCore });
 
     expect(response.status).toBe(200);
     expect(seenModels).toEqual(["policy/daily", "provider-b/model-b"]);
@@ -126,7 +126,7 @@ describe("policy candidate fallback", () => {
     const trace = policyTrace();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     const seenModels: string[] = [];
-    const runCore = async (req: Request, _config: OcxConfig, ctx: RequestLogContext) => {
+    const runCore = async (req: Request, _config: OccxConfig, ctx: RequestLogContext) => {
       const body = await req.clone().json() as { model?: string };
       seenModels.push(String(body.model));
       ctx.routeDecision = trace;
@@ -137,7 +137,7 @@ describe("policy candidate fallback", () => {
       );
     };
 
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, { runCore });
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, { runCore });
 
     expect(response.status).toBe(400);
     expect(seenModels).toEqual(["policy/daily"]);
@@ -148,7 +148,7 @@ describe("policy candidate fallback", () => {
     const trace = policyTrace();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     const seenModels: string[] = [];
-    const runCore = async (req: Request, _config: OcxConfig, ctx: RequestLogContext) => {
+    const runCore = async (req: Request, _config: OccxConfig, ctx: RequestLogContext) => {
       const body = await req.clone().json() as { model?: string };
       seenModels.push(String(body.model));
       ctx.routeDecision = trace;
@@ -159,7 +159,7 @@ describe("policy candidate fallback", () => {
       );
     };
 
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, { runCore });
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, { runCore });
 
     expect(response.status).toBe(400);
     expect(seenModels).toEqual(["policy/daily"]);
@@ -179,7 +179,7 @@ describe("policy candidate fallback", () => {
     initialHeaders.set("chatgpt-account-id", "caller-account");
     const credentialedRequest = new Request(initialRequest, { headers: initialHeaders });
 
-    const response = await handleResponsesWithPolicyFallback(credentialedRequest, {} as OcxConfig, logCtx, {
+    const response = await handleResponsesWithPolicyFallback(credentialedRequest, {} as OccxConfig, logCtx, {
       onRequestBodyRead: () => {
         bodyAcceptedCount += 1;
       },
@@ -228,7 +228,7 @@ describe("policy candidate fallback", () => {
     const seenModels: string[] = [];
     let replaySignals = 0;
 
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {
       onStoredPool401ReplayDispatched: () => { replaySignals += 1; },
     }, {
       runCore: async (req, _config, childLog, options) => {
@@ -253,7 +253,7 @@ describe("policy candidate fallback", () => {
     const trace = policyTrace();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     let calls = 0;
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, {
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, {
       runCore: async () => {
         calls += 1;
         throw new RequestPacingQueueOverloadError("provider-a", "queue_full", 2);
@@ -268,7 +268,7 @@ describe("policy candidate fallback", () => {
     const trace = policyTrace();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     let calls = 0;
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, {
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, {
       runCore: async (_req, _config, childLog) => {
         calls += 1;
         childLog.requestedModel = "policy/daily";
@@ -288,7 +288,7 @@ describe("policy candidate fallback", () => {
     const controller = new AbortController();
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     let calls = 0;
-    const response = await handleResponsesWithPolicyFallback(request(controller.signal), {} as OcxConfig, logCtx, {}, {
+    const response = await handleResponsesWithPolicyFallback(request(controller.signal), {} as OccxConfig, logCtx, {}, {
       runCore: async (_req, _config, childLog) => {
         calls += 1;
         childLog.routeDecision = trace;
@@ -305,7 +305,7 @@ describe("policy candidate fallback", () => {
     const logCtx = { requestedModel: "policy/daily", routeDecision: trace, attempts: [] } as unknown as RequestLogContext;
     let calls = 0;
     const body = "data: {\"type\":\"response.output_text.delta\",\"delta\":\"hello\"}\n\ndata: {\"type\":\"response.failed\"}\n\n";
-    const response = await handleResponsesWithPolicyFallback(request(), {} as OcxConfig, logCtx, {}, {
+    const response = await handleResponsesWithPolicyFallback(request(), {} as OccxConfig, logCtx, {}, {
       runCore: async (_req, _config, childLog) => {
         calls += 1;
         childLog.routeDecision = trace;

@@ -16,7 +16,7 @@ import { serviceApiTokenFilePath } from "../../src/lib/service-secrets";
 import { WindowsSchtasksError } from "../../src/lib/windows-elevation";
 import { resolveCurrentWindowsPrincipal, setWindowsPrincipalRunnerForTests } from "../../src/lib/windows-user-principal";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoRoot } from "../helpers/repo-root";
 
@@ -46,17 +46,17 @@ const windowsTaskRegistrationHealthy = (...args: Parameters<typeof windowsTaskRe
   windowsTaskRegistrationHealthyProduction(args[0], args[1], args[2], args[3] === undefined ? TEST_WINDOWS_TASK_SID : args[3]);
 
 const TEST_DIR = join(import.meta.dir, ".tmp-service-test");
-const previousOpenCodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
-const previousApiAuthToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+const previousApiAuthToken = process.env.OPENCCX_API_AUTH_TOKEN;
 
 afterEach(() => {
-  if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousApiAuthToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiAuthToken;
+  if (previousApiAuthToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiAuthToken;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
 });
 
@@ -93,38 +93,38 @@ function expectTextNotToContainPath(text: string, path: string): void {
 }
 
 describe("service listen-port bake", () => {
-  test("service ownership state paths stay pinned to the captured OpenCodex home", () => {
-    const pinned = join(TEST_DIR, "pinned-opencodex");
-    process.env.OPENCODEX_HOME = join(TEST_DIR, "ambient-opencodex");
-    const paths = serviceModule.serviceStatePathsForOpenCodexHome(pinned);
+  test("service ownership state paths stay pinned to the captured Openccx home", () => {
+    const pinned = join(TEST_DIR, "pinned-openccx");
+    process.env.OPENCCX_HOME = join(TEST_DIR, "ambient-openccx");
+    const paths = serviceModule.serviceStatePathsForOpenccxHome(pinned);
     expect(paths[0]).toBe(join(pinned, "service-state.json"));
-    expect(paths).not.toContain(join(process.env.OPENCODEX_HOME, "service-state.json"));
+    expect(paths).not.toContain(join(process.env.OPENCCX_HOME, "service-state.json"));
   });
 
-  test("resolveServiceListenPort prefers override, then OCX_BAKE_PORT, then config", () => {
-    process.env.OPENCODEX_HOME = TEST_DIR;
+  test("resolveServiceListenPort prefers override, then OCCX_BAKE_PORT, then config", () => {
+    process.env.OPENCCX_HOME = TEST_DIR;
     mkdirSync(TEST_DIR, { recursive: true });
-    saveConfig({ port: 10100, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OcxConfig);
+    saveConfig({ port: 10100, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OccxConfig);
     expect(resolveServiceListenPort(18765)).toBe(18765);
-    const prev = process.env.OCX_BAKE_PORT;
+    const prev = process.env.OCCX_BAKE_PORT;
     try {
-      process.env.OCX_BAKE_PORT = "15555";
+      process.env.OCCX_BAKE_PORT = "15555";
       expect(resolveServiceListenPort()).toBe(15555);
-      delete process.env.OCX_BAKE_PORT;
+      delete process.env.OCCX_BAKE_PORT;
       expect(resolveServiceListenPort()).toBe(10100);
-      saveConfig({ port: 0, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OcxConfig);
+      saveConfig({ port: 0, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OccxConfig);
       expect(resolveServiceListenPort()).toBe(10100);
     } finally {
-      if (prev === undefined) delete process.env.OCX_BAKE_PORT;
-      else process.env.OCX_BAKE_PORT = prev;
+      if (prev === undefined) delete process.env.OCCX_BAKE_PORT;
+      else process.env.OCCX_BAKE_PORT = prev;
     }
   });
 
   test("Windows batch and launchd/systemd shell commands bake start --port", () => {
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     mkdirSync(TEST_DIR, { recursive: true });
-    saveConfig({ port: 13337, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OcxConfig);
-    const script = buildWindowsServiceScript({ bun: "C:\\OpenCodex\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\OpenCodex\\cli.ts" });
+    saveConfig({ port: 13337, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OccxConfig);
+    const script = buildWindowsServiceScript({ bun: "C:\\Openccx\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\Openccx\\cli.ts" });
     expect(script).toContain("start --port 13337");
     expect(buildPlist()).toContain("start --port 13337");
     expect(buildUnit()).toContain("start --port 13337");
@@ -145,43 +145,43 @@ describe("systemd service unit", () => {
       env: { PATH: [first, second].join(delimiter) },
       isExecutableFile: candidate => {
         probes.push(candidate);
-        return candidate === join(second, "ocx");
+        return candidate === join(second, "occx");
       },
     });
 
-    expect(probes).toEqual([join(first, "ocx"), join(second, "ocx")]);
-    expect(result).toBe(join(second, "ocx"));
+    expect(probes).toEqual([join(first, "occx"), join(second, "occx")]);
+    expect(result).toBe(join(second, "occx"));
   });
 
   test("stable launcher discovery requires a regular executable file", () => {
     if (process.platform === "win32") return;
-    const root = mkdtempSync(join(tmpdir(), "ocx-launcher-path-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-launcher-path-"));
     const directoryEntry = join(root, "directory-entry");
     const nonExecutableEntry = join(root, "non-executable-entry");
     const executableEntry = join(root, "executable-entry");
     for (const entry of [directoryEntry, nonExecutableEntry, executableEntry]) mkdirSync(entry);
-    mkdirSync(join(directoryEntry, "ocx"));
-    writeFileSync(join(nonExecutableEntry, "ocx"), "#!/bin/sh\nexit 0\n", { mode: 0o644 });
-    writeFileSync(join(executableEntry, "ocx"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+    mkdirSync(join(directoryEntry, "occx"));
+    writeFileSync(join(nonExecutableEntry, "occx"), "#!/bin/sh\nexit 0\n", { mode: 0o644 });
+    writeFileSync(join(executableEntry, "occx"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
     try {
       expect(stableLauncherEntry({
         state: null,
         env: { PATH: [directoryEntry, nonExecutableEntry, executableEntry].join(delimiter) },
-      })).toBe(join(executableEntry, "ocx"));
+      })).toBe(join(executableEntry, "occx"));
     } finally {
       removeTreeWithRetry(root);
     }
   });
 
   /**
-   * #4236 defect 1g: `ocx service repair` run from a context without `ocx` on PATH — a
-   * tray helper, `ocx update`'s child, a cron/ssh session — resolved null here, rewrote a
+   * #4236 defect 1g: `occx service repair` run from a context without `occx` on PATH — a
+   * tray helper, `occx update`'s child, a cron/ssh session — resolved null here, rewrote a
    * working launcher-form plist into the version-pinned Bun + CLI pair, and then booted the
    * healthy job out to load it. The launcher the install already recorded is what launchd
    * is running, so repair must keep naming it.
    */
   test("a recorded launcher that still exists wins over an empty PATH", () => {
-    const recorded = join(TEST_DIR, "recorded", "ocx");
+    const recorded = join(TEST_DIR, "recorded", "occx");
     const state = { version: 2, backend: "scheduler", launcherPath: recorded } as never;
 
     expect(stableLauncherEntry({
@@ -192,17 +192,17 @@ describe("systemd service unit", () => {
 
     // A recorded launcher that has disappeared falls through to discovery rather than
     // baking a path launchd cannot resolve.
-    const discovered = join(TEST_DIR, "discovered", "ocx");
+    const discovered = join(TEST_DIR, "discovered", "occx");
     expect(stableLauncherEntry({
       state,
       env: { PATH: join(TEST_DIR, "discovered") },
       isExecutableFile: candidate => candidate === discovered,
     })).toBe(discovered);
 
-    // A relative recorded value is refused for the same reason a bare `ocx` is: launchd
+    // A relative recorded value is refused for the same reason a bare `occx` is: launchd
     // would re-resolve it through PATH on every restart.
     expect(stableLauncherEntry({
-      state: { version: 2, backend: "scheduler", launcherPath: "ocx" } as never,
+      state: { version: 2, backend: "scheduler", launcherPath: "occx" } as never,
       env: { PATH: "" },
       isExecutableFile: () => true,
     })).toBe(null);
@@ -213,10 +213,10 @@ describe("systemd service unit", () => {
    * "the recorded launcher wins over a fresh PATH walk" is a LINUX change as well as a macOS
    * one. The unit keeps the `ExecStart` the install recorded instead of rewriting it to the
    * version-pinned Bun + CLI pair — the #2898 shape launcher mode exists to avoid — when a
-   * repair runs from a context without `ocx` on PATH.
+   * repair runs from a context without `occx` on PATH.
    */
-  test("a repair without ocx on PATH keeps the recorded launcher in the systemd unit too", async () => {
-    const recorded = join(TEST_DIR, "recorded-systemd", "ocx");
+  test("a repair without occx on PATH keeps the recorded launcher in the systemd unit too", async () => {
+    const recorded = join(TEST_DIR, "recorded-systemd", "occx");
     const launcher = stableLauncherEntry({
       state: { version: 2, backend: "scheduler", launcherPath: recorded } as never,
       env: { PATH: "" },
@@ -227,7 +227,7 @@ describe("systemd service unit", () => {
     const unit = buildUnit(resolvedProxyEnv(), { launcher });
     expectTextToContainPath(unit, recorded);
     // Launcher mode means the unit must NOT pin the package-local Bun + CLI pair.
-    expect(unit).not.toContain("OCX_BUN_RUNTIME_PATH");
+    expect(unit).not.toContain("OCCX_BUN_RUNTIME_PATH");
 
     // And the installer feeds exactly this resolver into exactly that builder, so the
     // preference above is the one Linux gets.
@@ -244,7 +244,7 @@ describe("systemd service unit", () => {
     expect(normalizeServiceSubcommand()).toBe("install");
     // `restart` is NOT folded into `repair` any more (#4249). It shares the whole repair path
     // and diverges only in `repairService`, which kickstarts the macOS job that repair's
-    // no-op deliberately leaves running — collapsing the verbs here made `ocx service
+    // no-op deliberately leaves running — collapsing the verbs here made `occx service
     // restart` of a healthy service restart nothing.
     expect(normalizeServiceSubcommand("restart")).toBe("restart");
     expect(normalizeServiceSubcommand("start")).toBe("start");
@@ -410,7 +410,7 @@ describe("systemd service unit", () => {
     // This builder was the only one of the three with no proxy assertion, because the only way
     // to reach it was to assign process.env — the pattern that leaked HTTP_PROXY across files.
     const script = buildWindowsServiceScript(
-      { bun: "C:\\OpenCodex\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\OpenCodex\\cli.ts" },
+      { bun: "C:\\Openccx\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\Openccx\\cli.ts" },
       10100,
       resolvedProxyEnv({ HTTP_PROXY: "http://127.0.0.1:7890", no_proxy: "localhost" }),
     );
@@ -423,32 +423,32 @@ describe("systemd service unit", () => {
   });
 
 
-  test("preserves custom Codex and OpenCodex homes", () => {
+  test("preserves custom Codex and Openccx homes", () => {
     const oldCodexHome = process.env.CODEX_HOME;
     const oldCodexSqliteHome = process.env.CODEX_SQLITE_HOME;
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
-    const oldApiAuthToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
+    const oldApiAuthToken = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
       process.env.CODEX_HOME = "/tmp/codex-home";
       process.env.CODEX_SQLITE_HOME = "/tmp/codex-sqlite-home";
-      process.env.OPENCODEX_HOME = "/tmp/opencodex-home";
-      process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+      process.env.OPENCCX_HOME = "/tmp/opencodex-home";
+      process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
       const unit = buildUnit();
       expect(unit).toContain('Environment="CODEX_HOME=/tmp/codex-home"');
       expect(unit).toContain('Environment="CODEX_SQLITE_HOME=/tmp/codex-sqlite-home"');
-      expect(unit).toContain('Environment="OPENCODEX_HOME=/tmp/opencodex-home"');
+      expect(unit).toContain('Environment="OPENCCX_HOME=/tmp/opencodex-home"');
       expectTextToContainPath(unit, serviceApiTokenFilePath());
       expect(unit).not.toContain("local-secret");
-      expect(unit).not.toContain("Environment=\"OPENCODEX_API_AUTH_TOKEN=");
+      expect(unit).not.toContain("Environment=\"OPENCCX_API_AUTH_TOKEN=");
     } finally {
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
       if (oldCodexSqliteHome === undefined) delete process.env.CODEX_SQLITE_HOME;
       else process.env.CODEX_SQLITE_HOME = oldCodexSqliteHome;
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
-      if (oldApiAuthToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = oldApiAuthToken;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
+      if (oldApiAuthToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = oldApiAuthToken;
     }
   });
 
@@ -462,7 +462,7 @@ describe("systemd service unit", () => {
     expect(unitCheckAt).toBeGreaterThan(-1);
     expect(startAt).toBeGreaterThan(-1);
     expect(unitCheckAt).toBeLessThan(startAt);
-    expect(startSystemd).toContain("ocx service install");
+    expect(startSystemd).toContain("occx service install");
     expect(startSystemd).toContain("process.exit(1)");
 
     // The write goes through writeServiceDefinitionFile so the unit lands 0600: it can carry a
@@ -475,7 +475,7 @@ describe("systemd service unit", () => {
     expect(writeAt).toBeLessThan(reloadAt);
     expect(reloadAt).toBeLessThan(enableAt);
     expect(enableAt).toBeLessThan(restartAt);
-    expect(installSystemd).not.toContain("ocx service install");
+    expect(installSystemd).not.toContain("occx service install");
     expect(installSystemd).not.toContain("process.exit(1)");
 
     // #2898: the unit and the recorded install state must agree about WHAT is launched, so
@@ -491,21 +491,21 @@ describe("systemd service unit", () => {
 
 describe("service install auth preflight", () => {
   /**
-   * #4236. The preflight used to DEMAND OPENCODEX_API_AUTH_TOKEN here, which is what taught an
+   * #4236. The preflight used to DEMAND OPENCCX_API_AUTH_TOKEN here, which is what taught an
    * operator to export the ADMIN token to make `install` proceed -- and then `repair` demanded it
    * again. Nobody should have to export a token by hand to run a hub, so install provisions one.
    */
   test("a non-loopback install no longer demands the env token", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
 
     expect(() => assertServiceAuthEnvironment()).not.toThrow();
   });
@@ -513,14 +513,14 @@ describe("service install auth preflight", () => {
   test("provisioning generates an owner-only token, then reuses it on repair and reinstall", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
 
     const first = writeServiceApiTokenFile();
     expect(first).toEqual({ path: serviceApiTokenFilePath(), origin: "generated" });
@@ -541,14 +541,14 @@ describe("service install auth preflight", () => {
   test("an env token still wins, and a loopback install generates nothing", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "operator-chosen-data-key";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "operator-chosen-data-key";
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
     expect(writeServiceApiTokenFile()).toEqual({ path: serviceApiTokenFilePath(), origin: "env" });
     expect(readFileSync(serviceApiTokenFilePath(), "utf8").trim()).toBe("operator-chosen-data-key");
 
@@ -556,13 +556,13 @@ describe("service install auth preflight", () => {
     // file holds that hub's issued client key: a local install must not invent or clobber one.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "127.0.0.1",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
     expect(writeServiceApiTokenFile()).toBeNull();
     expect(existsSync(serviceApiTokenFilePath())).toBe(false);
   });
@@ -570,34 +570,34 @@ describe("service install auth preflight", () => {
   test("an unusable token file is reported by the preflight instead of failing mid-install", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
     writeFileSync(serviceApiTokenFilePath(), "\n", "utf8");
 
     expect(() => assertServiceAuthEnvironment()).toThrow(/cannot be used/);
-    expect(() => assertServiceAuthEnvironment()).toThrow(/ocx service/);
+    expect(() => assertServiceAuthEnvironment()).toThrow(/occx service/);
     expect(() => writeServiceApiTokenFile()).toThrow(/empty/);
   });
 
   test("the admin-token refusal tells the operator to unset, not to invent a key", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = `ocx_admin_${"f".repeat(40)}`;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = `occx_admin_${"f".repeat(40)}`;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
 
-    expect(() => assertServiceAuthEnvironment()).toThrow(/unset OPENCODEX_API_AUTH_TOKEN/);
+    expect(() => assertServiceAuthEnvironment()).toThrow(/unset OPENCCX_API_AUTH_TOKEN/);
     expect(() => assertServiceAuthEnvironment()).toThrow(/provisions/);
     // The chokepoint refuses it too, so no caller can write the broken state (#2696).
     expect(() => writeServiceApiTokenFile()).toThrow(/management \(admin\) token/);
@@ -606,56 +606,56 @@ describe("service install auth preflight", () => {
 
   test("a reused token file that holds the ADMIN token is refused, not silently accepted", () => {
     // The incident shape, and the gap the first round left: the `origin: "file"` branch never
-    // re-checked the collision, so a hand-pasted admin token on disk was reused, `ocx status`
+    // re-checked the collision, so a hand-pasted admin token on disk was reused, `occx status`
     // said `present (file)`, and the hub crash-looped at boot with nothing naming the cause.
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
-    const admin = `ocx_admin_${"f".repeat(43)}`;
+    } as OccxConfig);
+    const admin = `occx_admin_${"f".repeat(43)}`;
     writeFileSync(serviceApiTokenFilePath(), `${admin}\n`, "utf8");
 
     // Install/repair stops at the preflight, where the operator can still act.
     expect(() => assertServiceAuthEnvironment()).toThrow(/management \(admin\) token/);
-    expect(() => assertServiceAuthEnvironment()).toThrow(/ocx service repair/);
+    expect(() => assertServiceAuthEnvironment()).toThrow(/occx service repair/);
     // `unset` is the WRONG remedy here: nothing is exported. Deleting the file is.
-    expect(() => assertServiceAuthEnvironment()).not.toThrow(/unset OPENCODEX_API_AUTH_TOKEN/);
+    expect(() => assertServiceAuthEnvironment()).not.toThrow(/unset OPENCCX_API_AUTH_TOKEN/);
     // And the writer is still the last line of defence, whichever caller got there.
     expect(() => writeServiceApiTokenFile()).toThrow(/not a data-plane token/);
     // Refusing must not mutate the file; the operator deletes it deliberately.
     expect(readFileSync(serviceApiTokenFilePath(), "utf8").trim()).toBe(admin);
 
     // And a LOOPBACK install is refused too: `buildServiceShellCommand` cats the file into
-    // OPENCODEX_API_AUTH_TOKEN whenever it exists, whatever the hostname, so the management
+    // OPENCCX_API_AUTH_TOKEN whenever it exists, whatever the hostname, so the management
     // plane is fenced closed at boot there as well.
     saveConfig({
       port: 10100,
       hostname: "127.0.0.1",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
     expect(() => assertServiceAuthEnvironment()).toThrow(/management \(admin\) token/);
   });
 
   test("reusing an existing token file makes 'owner-only' true rather than assumed", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
     // `readServiceApiTokenState` accepts any bounded regular file, so a reused token can be
-    // world-readable -- and `ocx status` calls that path "owner-only".
+    // world-readable -- and `occx status` calls that path "owner-only".
     writeFileSync(serviceApiTokenFilePath(), `${"c".repeat(64)}\n`, { encoding: "utf8", mode: 0o644 });
     if (process.platform !== "win32") chmodSync(serviceApiTokenFilePath(), 0o644);
 
@@ -669,14 +669,14 @@ describe("service install auth preflight", () => {
   test("allows non-loopback service install when the API token is in the service environment", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
 
     expect(() => assertServiceAuthEnvironment()).not.toThrow();
   });
@@ -684,8 +684,8 @@ describe("service install auth preflight", () => {
   test("hub-mode launchd and systemd installs reuse the protected data-token file", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "phase5-data-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "phase5-data-secret";
     saveConfig({
       port: 10100,
       hostname: "0.0.0.0",
@@ -696,7 +696,7 @@ describe("service install auth preflight", () => {
       },
       providers: { openai: { adapter: "openai-chat", baseUrl: "https://api.example.test/v1" } },
       defaultProvider: "openai",
-    } as OcxConfig);
+    } as OccxConfig);
 
     expect(() => assertServiceAuthEnvironment()).not.toThrow();
     for (const definition of [buildUnit(), buildPlist()]) {
@@ -708,12 +708,12 @@ describe("service install auth preflight", () => {
   test("rejects restore operations from a different CODEX_HOME than service install", () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     process.env.CODEX_HOME = "/tmp/current-codex-home";
     writeFileSync(join(TEST_DIR, "service-state.json"), JSON.stringify({
       version: 1,
       codexHome: "/tmp/installed-codex-home",
-      opencodexHome: TEST_DIR,
+      openccxHome: TEST_DIR,
     }) + "\n");
 
     expect(() => assertServiceEnvironmentMatchesInstall()).toThrow("Service was installed with CODEX_HOME");
@@ -722,7 +722,7 @@ describe("service install auth preflight", () => {
 
 describe("Windows service task", () => {
   test("builds schtasks create args from XML instead of runtime flags", () => {
-    const script = "C:\\Users\\a&b\\.opencodex\\opencodex-service.cmd";
+    const script = "C:\\Users\\a&b\\.openccx\\openccx-service.cmd";
     const args = buildWindowsSchtasksCreateArgs(script);
 
     expect(args).toContain("/create");
@@ -738,8 +738,8 @@ describe("Windows service task", () => {
   });
 
   test("builds service-like Task Scheduler XML settings", () => {
-    const script = "C:\\Users\\a&b\\.opencodex\\opencodex-service.cmd";
-    const launcher = "C:\\Users\\a&b\\.opencodex\\opencodex-service-launcher.vbs";
+    const script = "C:\\Users\\a&b\\.openccx\\openccx-service.cmd";
+    const launcher = "C:\\Users\\a&b\\.openccx\\openccx-service-launcher.vbs";
     const xml = buildWindowsTaskXml(script, launcher);
 
     expect(xml).toContain('<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">');
@@ -755,8 +755,8 @@ describe("Windows service task", () => {
     expect(xml).toContain("<Count>3</Count>");
     // The action is wscript running the hidden VBS launcher, never the console batch directly.
     expect(xml).toMatch(/<Command>.*wscript\.exe<\/Command>/);
-    expect(xml).toContain('<Arguments>/b /nologo &quot;C:\\Users\\a&amp;b\\.opencodex\\opencodex-service-launcher.vbs&quot;</Arguments>');
-    expect(xml).not.toContain("<Command>C:\\Users\\a&amp;b\\.opencodex\\opencodex-service.cmd</Command>");
+    expect(xml).toContain('<Arguments>/b /nologo &quot;C:\\Users\\a&amp;b\\.openccx\\openccx-service-launcher.vbs&quot;</Arguments>');
+    expect(xml).not.toContain("<Command>C:\\Users\\a&amp;b\\.openccx\\openccx-service.cmd</Command>");
   });
 
   /**
@@ -780,7 +780,7 @@ describe("Windows service task", () => {
 
   test("a task registered without session-reconnect triggers reads as unhealthy", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher).replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     expect(windowsTaskRegistrationHealthy(xml, wscript, launcher)).toBe(true);
 
@@ -804,7 +804,7 @@ describe("Windows service task", () => {
    * #3064: `schtasks /query /xml` converts the document through the console code
    * page before the bytes exist, so a profile named outside that page comes back
    * with substitution characters. An exact comparison rejected a registration this
-   * process had just created correctly, and `ocx service install` rolled it back.
+   * process had just created correctly, and `occx service install` rolled it back.
    *
    * The tolerance has to stay narrow enough that a MANGLED path still cannot match
    * a DIFFERENT account's path. A wildcard as wide as `[^\\/]*` leaves a fully
@@ -813,7 +813,7 @@ describe("Windows service task", () => {
    */
   describe("a scheduler path the console code page could not carry", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\김병준\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\김병준\\.openccx\\service-launcher.vbs";
     const healthy = (reportedLauncher: string, expectedLauncher = launcher) =>
       windowsTaskRegistrationHealthy(
         buildWindowsTaskXml("ignored.cmd", reportedLauncher)
@@ -823,26 +823,26 @@ describe("Windows service task", () => {
       );
 
     test.each([
-      ["question marks, one per character", "C:\\Users\\???\\.opencodex\\service-launcher.vbs"],
-      ["a single replacement character", "C:\\Users\\\uFFFD\\.opencodex\\service-launcher.vbs"],
+      ["question marks, one per character", "C:\\Users\\???\\.openccx\\service-launcher.vbs"],
+      ["a single replacement character", "C:\\Users\\\uFFFD\\.openccx\\service-launcher.vbs"],
     ])("accepts a registration whose profile came back as %s", (_label, reported) => {
       expect(healthy(reported)).toBe(true);
     });
 
     // The reason the tolerance is a substitution class and not a wildcard.
     test("rejects another account's path that is merely the same shape", () => {
-      expect(healthy("C:\\Users\\Admin\\.opencodex\\service-launcher.vbs")).toBe(false);
+      expect(healthy("C:\\Users\\Admin\\.openccx\\service-launcher.vbs")).toBe(false);
     });
 
     test("rejects a path whose ASCII structure differs", () => {
-      expect(healthy("C:\\Users\\???\\.opencodex\\other-launcher.vbs")).toBe(false);
-      expect(healthy("D:\\Users\\???\\.opencodex\\service-launcher.vbs")).toBe(false);
+      expect(healthy("C:\\Users\\???\\.openccx\\other-launcher.vbs")).toBe(false);
+      expect(healthy("D:\\Users\\???\\.openccx\\service-launcher.vbs")).toBe(false);
     });
 
     // An expectation with nothing unrepresentable in it has nothing to forgive.
     test("does not forgive substitutions when the expected path is pure ASCII", () => {
-      const ascii = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
-      expect(healthy("C:\\Users\\???\\.opencodex\\service-launcher.vbs", ascii)).toBe(false);
+      const ascii = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
+      expect(healthy("C:\\Users\\???\\.openccx\\service-launcher.vbs", ascii)).toBe(false);
     });
   });
 
@@ -887,7 +887,7 @@ describe("Windows service task", () => {
 
   test("accepts an explicit session scope only for the known matching identity", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const scoped = buildWindowsTaskXml("ignored.cmd", launcher, undefined, "MACHINE\\installer")
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     const foreign = scoped.replaceAll("MACHINE\\installer", "OTHER\\account");
@@ -902,7 +902,7 @@ describe("Windows service task", () => {
 
   test("never code-page-folds an explicit session identity", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const expected = "MACHINE\\김병준";
     const scoped = buildWindowsTaskXml("ignored.cmd", launcher, undefined, expected)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
@@ -917,7 +917,7 @@ describe("Windows service task", () => {
     // see. Treating it as ABSENT would accept a task bound to somebody else's session as
     // healthy, and repair would then leave that foreign scope in place.
     const guardWscript = "C:\\Windows\\System32\\wscript.exe";
-    const guardLauncher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const guardLauncher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const guardXml = buildWindowsTaskXml("ignored.cmd", guardLauncher, undefined, TEST_WINDOWS_TASK_SID)
       .replace(/<Command>.*?<\/Command>/, `<Command>${guardWscript}</Command>`);
     expect(windowsTaskRegistrationHealthy(guardXml, guardWscript, guardLauncher)).toBe(true);
@@ -939,7 +939,7 @@ describe("Windows service task", () => {
     expect(windowsTaskRegistrationHealthy(emptyScope, guardWscript, guardLauncher, "MACHINE\\installer")).toBe(false);
 
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher).replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     expect(windowsTaskRegistrationHealthy(xml, wscript, launcher)).toBe(true);
     for (const mutated of [
@@ -956,7 +956,7 @@ describe("Windows service task", () => {
 
   test("accepts canonicalized scheduler XML with omitted defaults", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     // Windows drops elements equal to their schema default when it exports a task:
@@ -980,7 +980,7 @@ describe("Windows service task", () => {
 
   test("accepts an export whose Arguments quotes were canonicalized", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     // We write `&quot;`; Task Scheduler hands the same value back with literal
@@ -997,20 +997,20 @@ describe("Windows service task", () => {
 
   test("accepts a canonicalized export whose launcher path contains an ampersand", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\a&b\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\a&b\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     // `&` stays `&amp;` (it must, or the XML is malformed); only the quotes flip.
     const canonical = xml.replace(
-      "<Arguments>/b /nologo &quot;C:\\Users\\a&amp;b\\.opencodex\\service-launcher.vbs&quot;</Arguments>",
-      "<Arguments>/b /nologo \"C:\\Users\\a&amp;b\\.opencodex\\service-launcher.vbs\"</Arguments>",
+      "<Arguments>/b /nologo &quot;C:\\Users\\a&amp;b\\.openccx\\service-launcher.vbs&quot;</Arguments>",
+      "<Arguments>/b /nologo \"C:\\Users\\a&amp;b\\.openccx\\service-launcher.vbs\"</Arguments>",
     );
     expect(windowsTaskRegistrationHealthy(canonical, wscript, launcher)).toBe(true);
   });
 
   test("the canonicalization tolerance does not weaken the launcher check", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     const canonicalArgs = `<Arguments>/b /nologo "${launcher}"</Arguments>`;
@@ -1042,7 +1042,7 @@ describe("Windows service task", () => {
 
   test("accepts elevated-create rewrites (HighestAvailable, path casing, raw quotes)", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>C:\\WINDOWS\\System32\\wscript.exe</Command>`)
       .replace("<RunLevel>LeastPrivilege</RunLevel>", "<RunLevel>HighestAvailable</RunLevel>")
@@ -1055,7 +1055,7 @@ describe("Windows service task", () => {
 
   test("rejects explicit unsafe values even though defaults may be omitted", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
 
@@ -1073,7 +1073,7 @@ describe("Windows service task", () => {
 
   test("a decoy trigger outside Triggers does not satisfy the logon requirement", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     const bootOnly = xml.replace("<LogonTrigger>\n      <Enabled>true</Enabled>\n    </LogonTrigger>", "<BootTrigger />");
@@ -1088,7 +1088,7 @@ describe("Windows service task", () => {
 
   test("namespace-prefixed values are not mistaken for omissions", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
 
@@ -1102,7 +1102,7 @@ describe("Windows service task", () => {
 
   test("a Data block disqualifies the registration", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     // taskXmlSection() takes the first match, so a Data block placed ahead of the
@@ -1125,7 +1125,7 @@ describe("Windows service task", () => {
 
   test("duplicate elements are not trusted", () => {
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const launcher = "C:\\Users\\Test\\.opencodex\\service-launcher.vbs";
+    const launcher = "C:\\Users\\Test\\.openccx\\service-launcher.vbs";
     const xml = buildWindowsTaskXml("ignored.cmd", launcher)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`);
     const duplicated = xml.replace(
@@ -1136,18 +1136,18 @@ describe("Windows service task", () => {
   });
 
   test("hidden launcher VBS stays resident and escapes quotes in the wrapper path", () => {
-    const vbs = buildWindowsLauncherVbs('C:\\Users\\quo"te\\.opencodex\\opencodex-service.cmd');
+    const vbs = buildWindowsLauncherVbs('C:\\Users\\quo"te\\.openccx\\openccx-service.cmd');
 
     // windowStyle 0 (hidden) + bWaitOnReturn True (resident, so IgnoreNew and /end keep working).
     expect(vbs).toContain(", 0, True");
-    expect(vbs).toContain('shell.Run """C:\\Users\\quo""te\\.opencodex\\opencodex-service.cmd""", 0, True');
+    expect(vbs).toContain('shell.Run """C:\\Users\\quo""te\\.openccx\\openccx-service.cmd""", 0, True');
     expect(vbs).toContain('CreateObject("WScript.Shell")');
   });
 
   test("hidden launcher VBS carries non-ASCII profile paths verbatim", () => {
-    const vbs = buildWindowsLauncherVbs("C:\\Users\\한글사용자\\.opencodex\\opencodex-service.cmd");
+    const vbs = buildWindowsLauncherVbs("C:\\Users\\한글사용자\\.openccx\\openccx-service.cmd");
 
-    expect(vbs).toContain("C:\\Users\\한글사용자\\.opencodex\\opencodex-service.cmd");
+    expect(vbs).toContain("C:\\Users\\한글사용자\\.openccx\\openccx-service.cmd");
   });
 
   test("writes the launcher VBS with a UTF-16 BOM so non-ASCII paths survive WSH decoding", async () => {
@@ -1166,27 +1166,27 @@ describe("Windows service task", () => {
 
   test("escapes environment values that would break out of set quotes", () => {
     const oldPath = process.env.PATH;
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
-    const oldApiAuthToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
+    const oldApiAuthToken = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
       process.env.PATH = 'C:\\safe" & echo PWNED & rem "';
-      process.env.OPENCODEX_HOME = 'C:\\ocx" & del C:\\important & rem "';
-      process.env.OPENCODEX_API_AUTH_TOKEN = 'token" & echo LEAK & rem "';
+      process.env.OPENCCX_HOME = 'C:\\occx" & del C:\\important & rem "';
+      process.env.OPENCCX_API_AUTH_TOKEN = 'token" & echo LEAK & rem "';
       const script = buildWindowsServiceScript();
       expect(script).toContain('set "PATH=C:\\safe & echo PWNED & rem "');
-      expect(script).toContain('set "OPENCODEX_HOME=C:\\ocx & del C:\\important & rem "');
-      expect(script).toContain('set "OCX_API_TOKEN_FILE=');
-      expect(script).toContain('set /p OPENCODEX_API_AUTH_TOKEN=<"%OCX_API_TOKEN_FILE%"');
+      expect(script).toContain('set "OPENCCX_HOME=C:\\occx & del C:\\important & rem "');
+      expect(script).toContain('set "OCCX_API_TOKEN_FILE=');
+      expect(script).toContain('set /p OPENCCX_API_AUTH_TOKEN=<"%OCCX_API_TOKEN_FILE%"');
       expect(script).not.toContain('set "PATH=C:\\safe" & echo PWNED');
-      expect(script).not.toContain('set "OPENCODEX_HOME=C:\\ocx" & del');
+      expect(script).not.toContain('set "OPENCCX_HOME=C:\\occx" & del');
       expect(script).not.toContain("token & echo LEAK");
     } finally {
       if (oldPath === undefined) delete process.env.PATH;
       else process.env.PATH = oldPath;
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
-      if (oldApiAuthToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = oldApiAuthToken;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
+      if (oldApiAuthToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = oldApiAuthToken;
     }
   });
 
@@ -1194,34 +1194,34 @@ describe("Windows service task", () => {
     const script = buildWindowsServiceScript({
       bun: "C:\\Bun&Dir\\100%bun^\\bun.exe",
       bunRuntimeSource: "bundled",
-      cli: "C:\\OpenCodex&Dir\\cli.ts",
+      cli: "C:\\Openccx&Dir\\cli.ts",
     });
 
-    expect(script).toContain('set "OCX_BUN=C:\\Bun&Dir\\100%%bun^^\\bun.exe"');
-    expect(script).toContain('set "OCX_CLI=C:\\OpenCodex&Dir\\cli.ts"');
-    expect(script).toContain('"%OCX_BUN%" "%OCX_CLI%" start --port');
+    expect(script).toContain('set "OCCX_BUN=C:\\Bun&Dir\\100%%bun^^\\bun.exe"');
+    expect(script).toContain('set "OCCX_CLI=C:\\Openccx&Dir\\cli.ts"');
+    expect(script).toContain('"%OCCX_BUN%" "%OCCX_CLI%" start --port');
     expect(script).not.toContain('"C:\\Bun&Dir\\100%bun^\\bun.exe"');
   });
 
   test("switches the wrapper console to UTF-8 and sleeps via ping (timeout dies without console stdin)", () => {
-    const script = buildWindowsServiceScript({ bun: "C:\\OpenCodex\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\OpenCodex\\cli.ts" });
+    const script = buildWindowsServiceScript({ bun: "C:\\Openccx\\bun.exe", bunRuntimeSource: "bundled", cli: "C:\\Openccx\\cli.ts" });
 
     expect(script).toContain("chcp 65001 >nul");
-    expect(script.indexOf("chcp 65001 >nul")).toBeLessThan(script.indexOf('set "OCX_SERVICE=1"'));
+    expect(script.indexOf("chcp 65001 >nul")).toBeLessThan(script.indexOf('set "OCCX_SERVICE=1"'));
     expect(script).toContain("ping -n 6 127.0.0.1 >nul");
     expect(script).not.toContain("timeout /t");
   });
 
   test("stops instead of restart-looping when an update removed the baked runtime or CLI (#1849)", () => {
     const script = buildWindowsServiceScript({
-      bun: "C:\\OpenCodex\\bun.exe",
+      bun: "C:\\Openccx\\bun.exe",
       bunRuntimeSource: "bundled",
-      cli: "C:\\OpenCodex\\cli.ts",
+      cli: "C:\\Openccx\\cli.ts",
     });
     const loopAt = script.indexOf(":loop");
-    const bunCheckAt = script.indexOf('if not exist "%OCX_BUN%"');
-    const cliCheckAt = script.indexOf('if not exist "%OCX_CLI%"');
-    const launchAt = script.indexOf('"%OCX_BUN%" "%OCX_CLI%" start --port');
+    const bunCheckAt = script.indexOf('if not exist "%OCCX_BUN%"');
+    const cliCheckAt = script.indexOf('if not exist "%OCCX_CLI%"');
+    const launchAt = script.indexOf('"%OCCX_BUN%" "%OCCX_CLI%" start --port');
     const retryAt = script.indexOf("goto loop");
 
     expect(loopAt).toBeGreaterThanOrEqual(0);
@@ -1236,7 +1236,7 @@ describe("Windows service task", () => {
     // restore, then re-checks before the hard stop — 2 artifacts x (probe + recheck).
     expect(script.slice(loopAt, launchAt).match(/if not exist/g)).toHaveLength(4);
     expect(script).toContain(":restore_backup");
-    expect(script).toContain(".ocx-backup-*");
+    expect(script).toContain(".occx-backup-*");
   });
 
   test("rewrites profile-relative paths to env indirection so non-ASCII usernames survive OEM-codepage batch parsing", () => {
@@ -1248,12 +1248,12 @@ describe("Windows service task", () => {
       const script = buildWindowsServiceScript({
         bun: "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\bun\\bin\\bun.exe",
         bunRuntimeSource: "bundled",
-        cli: "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\opencodex\\src\\cli.ts",
+        cli: "C:\\Users\\한글사용자\\AppData\\Roaming\\npm\\node_modules\\openccx\\src\\cli.ts",
       });
 
-      expect(script).toContain('set "OCX_BUN=%APPDATA%\\npm\\node_modules\\bun\\bin\\bun.exe"');
-      expect(script).toContain('set "OCX_CLI=%APPDATA%\\npm\\node_modules\\opencodex\\src\\cli.ts"');
-      expect(script).not.toContain('set "OCX_BUN=C:\\Users\\한글사용자');
+      expect(script).toContain('set "OCCX_BUN=%APPDATA%\\npm\\node_modules\\bun\\bin\\bun.exe"');
+      expect(script).toContain('set "OCCX_CLI=%APPDATA%\\npm\\node_modules\\openccx\\src\\cli.ts"');
+      expect(script).not.toContain('set "OCCX_BUN=C:\\Users\\한글사용자');
     } finally {
       if (oldUserProfile === undefined) delete process.env.USERPROFILE;
       else process.env.USERPROFILE = oldUserProfile;
@@ -1265,127 +1265,127 @@ describe("Windows service task", () => {
   test("writes token-safe startup identity and child output to the service log", () => {
     const oldCodexHome = process.env.CODEX_HOME;
     const oldCodexSqliteHome = process.env.CODEX_SQLITE_HOME;
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
-    const oldApiAuthToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
+    const oldApiAuthToken = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
       process.env.CODEX_HOME = "C:\\codex-home";
       process.env.CODEX_SQLITE_HOME = "C:\\codex-sqlite-home";
-      process.env.OPENCODEX_HOME = TEST_DIR;
-      process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+      process.env.OPENCCX_HOME = TEST_DIR;
+      process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
       const script = buildWindowsServiceScript({
-        bun: "C:\\OpenCodex\\bun.exe",
+        bun: "C:\\Openccx\\bun.exe",
         bunRuntimeSource: "bundled",
-        cli: "C:\\OpenCodex\\cli.ts",
+        cli: "C:\\Openccx\\cli.ts",
       });
 
       expectTextToContainPath(script, serviceLogPath());
-      expect(script).toContain('set "OCX_SERVICE_LOG=');
-      expect(script).toContain("opencodex service wrapper start");
-      expect(script).toContain('echo bun="%OCX_BUN%"');
+      expect(script).toContain('set "OCCX_SERVICE_LOG=');
+      expect(script).toContain("openccx service wrapper start");
+      expect(script).toContain('echo bun="%OCCX_BUN%"');
       expect(script).toContain('echo bun_source="');
-      expect(script).toContain('echo cli="%OCX_CLI%"');
-      expect(script).toContain('echo opencodex_home="%OPENCODEX_HOME%"');
+      expect(script).toContain('echo cli="%OCCX_CLI%"');
+      expect(script).toContain('echo openccx_home="%OPENCCX_HOME%"');
       expect(script).toContain('echo codex_home="%CODEX_HOME%"');
       expect(script).toContain('set "CODEX_SQLITE_HOME=C:\\codex-sqlite-home"');
-      expect(script).toContain('echo token_file="%OCX_API_TOKEN_FILE%"');
-      expect(script).toMatch(/"%OCX_BUN%" "%OCX_CLI%" start --port \d+ >>"%OCX_SERVICE_LOG%" 2>&1/);
+      expect(script).toContain('echo token_file="%OCCX_API_TOKEN_FILE%"');
+      expect(script).toMatch(/"%OCCX_BUN%" "%OCCX_CLI%" start --port \d+ >>"%OCCX_SERVICE_LOG%" 2>&1/);
       expect(script).toContain("child exited with code %ERRORLEVEL%");
       expect(script).not.toContain("local-secret");
-      expect(script).not.toContain('set "OPENCODEX_API_AUTH_TOKEN=');
+      expect(script).not.toContain('set "OPENCCX_API_AUTH_TOKEN=');
     } finally {
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
       if (oldCodexSqliteHome === undefined) delete process.env.CODEX_SQLITE_HOME;
       else process.env.CODEX_SQLITE_HOME = oldCodexSqliteHome;
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
-      if (oldApiAuthToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = oldApiAuthToken;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
+      if (oldApiAuthToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = oldApiAuthToken;
     }
   });
 });
 
 describe("launchd service plist", () => {
   test("every durable launcher stamps the Bun provenance paired with the binary it baked (#848)", () => {
-    const inheritedOverride = process.env.OPENCODEX_BUN_PATH;
-    const inheritedSource = process.env.OCX_BUN_RUNTIME_SOURCE;
-    const inheritedPath = process.env.OCX_BUN_RUNTIME_PATH;
+    const inheritedOverride = process.env.OPENCCX_BUN_PATH;
+    const inheritedSource = process.env.OCCX_BUN_RUNTIME_SOURCE;
+    const inheritedPath = process.env.OCCX_BUN_RUNTIME_PATH;
     const overrideBun = join(TEST_DIR, "provenance-override-bun.exe");
     mkdirSync(TEST_DIR, { recursive: true });
     writeFileSync(overrideBun, "x".repeat(2 * 1024 * 1024));
     try {
-      // OPENCODEX_BUN_PATH is consumed by the Node launcher before Bun can load a
+      // OPENCCX_BUN_PATH is consumed by the Node launcher before Bun can load a
       // project dotenv. Once Bun is running, an unpaired value is untrusted and
       // must never be persisted into a durable launcher.
-      delete process.env.OCX_BUN_RUNTIME_SOURCE;
-      delete process.env.OCX_BUN_RUNTIME_PATH;
-      process.env.OPENCODEX_BUN_PATH = overrideBun;
+      delete process.env.OCCX_BUN_RUNTIME_SOURCE;
+      delete process.env.OCCX_BUN_RUNTIME_PATH;
+      process.env.OPENCCX_BUN_PATH = overrideBun;
       const plist = buildPlist();
-      expect(plist).not.toContain("<key>OCX_BUN_RUNTIME_SOURCE</key><string>override</string>");
+      expect(plist).not.toContain("<key>OCCX_BUN_RUNTIME_SOURCE</key><string>override</string>");
       expect(plist).not.toContain(overrideBun);
 
       const unit = buildUnit();
-      expect(unit).not.toContain('Environment="OCX_BUN_RUNTIME_SOURCE=override"');
+      expect(unit).not.toContain('Environment="OCCX_BUN_RUNTIME_SOURCE=override"');
       expect(unit).not.toContain(overrideBun);
 
       const script = buildWindowsServiceScript();
-      expect(script).not.toContain('set "OCX_BUN_RUNTIME_SOURCE=override"');
+      expect(script).not.toContain('set "OCCX_BUN_RUNTIME_SOURCE=override"');
       expect(script).not.toContain(overrideBun);
 
       // A source/path pair stamped by the Node launcher is accepted only when it
       // names the Bun executable that is actually running this process.
-      process.env.OCX_BUN_RUNTIME_SOURCE = "override";
-      process.env.OCX_BUN_RUNTIME_PATH = process.execPath;
+      process.env.OCCX_BUN_RUNTIME_SOURCE = "override";
+      process.env.OCCX_BUN_RUNTIME_PATH = process.execPath;
       const trustedPlist = buildPlist();
-      expect(trustedPlist).toContain("<key>OCX_BUN_RUNTIME_SOURCE</key><string>override</string>");
+      expect(trustedPlist).toContain("<key>OCCX_BUN_RUNTIME_SOURCE</key><string>override</string>");
       expectTextToContainPath(trustedPlist, process.execPath);
       // The systemd unit stamps the pair only when it BAKES that pair. A stable-launcher
-      // install runs `ocx` and lets it resolve the current package's Bun, so stamping a
+      // install runs `occx` and lets it resolve the current package's Bun, so stamping a
       // path there would pin the runtime to the directory a version upgrade deletes
       // (#2898) — the opposite of what #848 asks for. Assert both modes explicitly.
-      expect(buildUnit(resolvedProxyEnv(), { launcher: null })).toContain('Environment="OCX_BUN_RUNTIME_SOURCE=override"');
-      const launched = buildUnit(resolvedProxyEnv(), { launcher: "/opt/shims/ocx" });
-      expect(launched).not.toContain("OCX_BUN_RUNTIME_SOURCE");
-      expect(launched).not.toContain("OCX_BUN_RUNTIME_PATH");
+      expect(buildUnit(resolvedProxyEnv(), { launcher: null })).toContain('Environment="OCCX_BUN_RUNTIME_SOURCE=override"');
+      const launched = buildUnit(resolvedProxyEnv(), { launcher: "/opt/shims/occx" });
+      expect(launched).not.toContain("OCCX_BUN_RUNTIME_SOURCE");
+      expect(launched).not.toContain("OCCX_BUN_RUNTIME_PATH");
       expectTextToContainPath(launched, process.execPath);
-      expect(launched).toContain("OPENCODEX_BUN_PATH=");
-      expect(buildWindowsServiceScript()).toContain('set "OCX_BUN_RUNTIME_SOURCE=override"');
+      expect(launched).toContain("OPENCCX_BUN_PATH=");
+      expect(buildWindowsServiceScript()).toContain('set "OCCX_BUN_RUNTIME_SOURCE=override"');
     } finally {
-      if (inheritedOverride === undefined) delete process.env.OPENCODEX_BUN_PATH;
-      else process.env.OPENCODEX_BUN_PATH = inheritedOverride;
-      if (inheritedSource === undefined) delete process.env.OCX_BUN_RUNTIME_SOURCE;
-      else process.env.OCX_BUN_RUNTIME_SOURCE = inheritedSource;
-      if (inheritedPath === undefined) delete process.env.OCX_BUN_RUNTIME_PATH;
-      else process.env.OCX_BUN_RUNTIME_PATH = inheritedPath;
+      if (inheritedOverride === undefined) delete process.env.OPENCCX_BUN_PATH;
+      else process.env.OPENCCX_BUN_PATH = inheritedOverride;
+      if (inheritedSource === undefined) delete process.env.OCCX_BUN_RUNTIME_SOURCE;
+      else process.env.OCCX_BUN_RUNTIME_SOURCE = inheritedSource;
+      if (inheritedPath === undefined) delete process.env.OCCX_BUN_RUNTIME_PATH;
+      else process.env.OCCX_BUN_RUNTIME_PATH = inheritedPath;
     }
   });
 
-  test("preserves custom Codex and OpenCodex homes", () => {
+  test("preserves custom Codex and Openccx homes", () => {
     const oldCodexHome = process.env.CODEX_HOME;
     const oldCodexSqliteHome = process.env.CODEX_SQLITE_HOME;
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
-    const oldApiAuthToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
+    const oldApiAuthToken = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
       process.env.CODEX_HOME = "/tmp/codex-home";
       process.env.CODEX_SQLITE_HOME = "/tmp/codex-sqlite-home";
-      process.env.OPENCODEX_HOME = "/tmp/opencodex-home";
-      process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+      process.env.OPENCCX_HOME = "/tmp/opencodex-home";
+      process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
       const plist = buildPlist();
       expect(plist).toContain("<key>CODEX_HOME</key><string>/tmp/codex-home</string>");
       expect(plist).toContain("<key>CODEX_SQLITE_HOME</key><string>/tmp/codex-sqlite-home</string>");
-      expect(plist).toContain("<key>OPENCODEX_HOME</key><string>/tmp/opencodex-home</string>");
+      expect(plist).toContain("<key>OPENCCX_HOME</key><string>/tmp/opencodex-home</string>");
       expectTextToContainPath(plist, serviceApiTokenFilePath());
       expect(plist).not.toContain("local-secret");
-      expect(plist).not.toContain("<key>OPENCODEX_API_AUTH_TOKEN</key>");
+      expect(plist).not.toContain("<key>OPENCCX_API_AUTH_TOKEN</key>");
     } finally {
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
       if (oldCodexSqliteHome === undefined) delete process.env.CODEX_SQLITE_HOME;
       else process.env.CODEX_SQLITE_HOME = oldCodexSqliteHome;
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
-      if (oldApiAuthToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = oldApiAuthToken;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
+      if (oldApiAuthToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = oldApiAuthToken;
     }
   });
 
@@ -1412,33 +1412,33 @@ describe("launchd service plist", () => {
     }
   });
 
-  // #2898. A version manager installs OpenCodex under a versioned directory and deletes the
+  // #2898. A version manager installs Openccx under a versioned directory and deletes the
   // old one on upgrade; the baked Bun and CLI both live there. The shim does not move, so the
   // unit has to name the shim and nothing from inside the version directory.
   test("a stable launcher install names the launcher and bakes no versioned path", () => {
-    const launcher = "/home/u/.local/share/mise/shims/ocx";
+    const launcher = "/home/u/.local/share/mise/shims/occx";
     const unit = buildUnit(resolvedProxyEnv({}), {
       launcher,
-      runtime: { path: "/opt/opencodex/versioned/bun", source: "bundled", overrideEnv: "OPENCODEX_BUN_PATH" },
+      runtime: { path: "/opt/opencodex/versioned/bun", source: "bundled", overrideEnv: "OPENCCX_BUN_PATH" },
     });
 
     expect(unit).toContain(launcher);
     expect(unit).toContain("start --port");
     // The versioned pair must be absent from BOTH the command and the environment: either one
     // pins the service to a directory the next upgrade removes.
-    expect(unit).not.toContain("OCX_BUN_RUNTIME_PATH");
-    expect(unit).not.toContain("OCX_BUN_RUNTIME_SOURCE");
-    expect(unit).not.toContain("OPENCODEX_BUN_PATH");
+    expect(unit).not.toContain("OCCX_BUN_RUNTIME_PATH");
+    expect(unit).not.toContain("OCCX_BUN_RUNTIME_SOURCE");
+    expect(unit).not.toContain("OPENCCX_BUN_PATH");
     expect(unit).not.toContain("/opt/opencodex/versioned/bun");
     expect(unit).not.toContain("cli/index.ts");
     // The token still comes from the file at start, never from the unit (#2107).
     expectTextToContainPath(unit, serviceApiTokenFilePath());
-    expect(unit).toContain("OPENCODEX_API_AUTH_TOKEN");
+    expect(unit).toContain("OPENCCX_API_AUTH_TOKEN");
 
     // Without a launcher the unit keeps the previous shape, so source checkouts are unaffected.
     const direct = buildUnit(resolvedProxyEnv({}), { launcher: null });
     expectTextToContainPath(direct, join("cli", "index.ts"));
-    expect(direct).toContain("OCX_BUN_RUNTIME_PATH");
+    expect(direct).toContain("OCCX_BUN_RUNTIME_PATH");
   });
 
 
@@ -1446,79 +1446,79 @@ describe("launchd service plist", () => {
   // the versioned package directory, and a plist that named the old Bun + CLI pair keeps launchd
   // on the stale build until someone restarts it. Naming the shim lets the next start follow it.
   test("a stable launcher install names the launcher in the plist and bakes no versioned path (#3464)", () => {
-    const launcher = "/home/u/.local/share/mise/shims/ocx";
+    const launcher = "/home/u/.local/share/mise/shims/occx";
     const plist = buildPlist(resolvedProxyEnv({}), {
       launcher,
-      runtime: { path: "/opt/opencodex/versioned/bun", source: "bundled", overrideEnv: "OPENCODEX_BUN_PATH" },
+      runtime: { path: "/opt/opencodex/versioned/bun", source: "bundled", overrideEnv: "OPENCCX_BUN_PATH" },
     });
 
     expect(plist).toContain(launcher);
     expect(plist).toContain("start --port");
     for (const forbidden of [
-      "OCX_BUN_RUNTIME_PATH",
-      "OCX_BUN_RUNTIME_SOURCE",
-      "OPENCODEX_BUN_PATH",
+      "OCCX_BUN_RUNTIME_PATH",
+      "OCCX_BUN_RUNTIME_SOURCE",
+      "OPENCCX_BUN_PATH",
       "/opt/opencodex/versioned/bun",
       "cli/index.ts",
     ]) expect(plist).not.toContain(forbidden);
     // The token still comes from the file at start, never from the plist.
     expectTextToContainPath(plist, serviceApiTokenFilePath());
-    expect(plist).toContain("OPENCODEX_API_AUTH_TOKEN");
+    expect(plist).toContain("OPENCCX_API_AUTH_TOKEN");
     // launchdListenPort reads the same "start --port N" tail from either command shape.
     expect(launchdListenPort({ readPlist: () => plist })).toBe(resolveServiceListenPort());
 
     // Without a launcher the plist keeps the previous shape, so source checkouts are unaffected.
     const direct = buildPlist(resolvedProxyEnv({}), { launcher: null });
     expectTextToContainPath(direct, join("cli", "index.ts"));
-    expect(direct).toContain("OCX_BUN_RUNTIME_PATH");
-    expect(direct).toContain("OCX_BUN_RUNTIME_SOURCE");
+    expect(direct).toContain("OCCX_BUN_RUNTIME_PATH");
+    expect(direct).toContain("OCCX_BUN_RUNTIME_SOURCE");
   });
 
   test("launcher mode preserves only a proof-bound Bun override, never an ambient one (#3464)", () => {
-    const launcher = "/home/u/.local/share/mise/shims/ocx";
+    const launcher = "/home/u/.local/share/mise/shims/occx";
     const trusted = buildPlist(resolvedProxyEnv({}), {
       launcher,
-      runtime: { path: "/custom/bun", source: "override", overrideEnv: "OPENCODEX_BUN_PATH" },
+      runtime: { path: "/custom/bun", source: "override", overrideEnv: "OPENCCX_BUN_PATH" },
     });
-    expect(trusted).toContain("<key>OPENCODEX_BUN_PATH</key><string>/custom/bun</string>");
-    expect(trusted).not.toContain("OCX_BUN_RUNTIME_PATH");
+    expect(trusted).toContain("<key>OPENCCX_BUN_PATH</key><string>/custom/bun</string>");
+    expect(trusted).not.toContain("OCCX_BUN_RUNTIME_PATH");
 
     const bundled = buildPlist(resolvedProxyEnv({}), {
       launcher,
-      runtime: { path: "/custom/bun", source: "bundled", overrideEnv: "OPENCODEX_BUN_PATH" },
+      runtime: { path: "/custom/bun", source: "bundled", overrideEnv: "OPENCCX_BUN_PATH" },
     });
-    expect(bundled).not.toContain("OPENCODEX_BUN_PATH");
+    expect(bundled).not.toContain("OPENCCX_BUN_PATH");
     expect(bundled).not.toContain("/custom/bun");
   });
 
   test("launcher paths with shell and XML metacharacters stay quoted in the plist (#3464)", () => {
-    const launcher = "/home/u/My Tools & Shims/it's/ocx";
+    const launcher = "/home/u/My Tools & Shims/it's/occx";
     const plist = buildPlist(resolvedProxyEnv({}), {
       launcher,
-      runtime: { path: "/opt/bun", source: "bundled", overrideEnv: "OPENCODEX_BUN_PATH" },
+      runtime: { path: "/opt/bun", source: "bundled", overrideEnv: "OPENCCX_BUN_PATH" },
     });
     // XML-escaped ampersand inside the ProgramArguments string; the shell quoting survives.
     expect(plist).toContain("&amp;");
-    expect(plist).not.toContain("Shims/it's/ocx start");
+    expect(plist).not.toContain("Shims/it's/occx start");
     expect(launchdListenPort({ readPlist: () => plist })).toBe(resolveServiceListenPort());
   });
 
   // The scenario itself, executed rather than asserted: retarget the shim the way an upgrade
   // does, delete the old version, and check the generated command still reaches live code.
   test("the generated launcher command follows a retargeted shim after the old version is gone", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-shim-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-shim-"));
     const shimDir = join(root, "shims");
     const v1 = join(root, "installs", "2.35.0 package's");
     const v2 = join(root, "installs", "2.36.0 package's");
     mkdirSync(shimDir, { recursive: true });
     mkdirSync(v1, { recursive: true });
     mkdirSync(v2, { recursive: true });
-    const v1Entry = join(v1, "ocx");
-    const v2Entry = join(v2, "ocx");
+    const v1Entry = join(v1, "occx");
+    const v2Entry = join(v2, "occx");
     writeFileSync(v1Entry, 'console.log("V1", Bun.argv.slice(2).join(" "));\n');
     writeFileSync(v2Entry, 'console.log("V2", Bun.argv.slice(2).join(" "));\n');
 
-    const shim = join(shimDir, "ocx");
+    const shim = join(shimDir, "occx");
     const retargetShim = (target: string): void => {
       writeFileSync(shim, `await import(${JSON.stringify(pathToFileURL(target).href)});\n`);
     };
@@ -1536,7 +1536,7 @@ describe("launchd service plist", () => {
 
     // Reproduce Windows' host-path serialization on every platform. systemdQuote() must
     // escape each backslash in the unit, so raw path substring assertions are invalid.
-    const windowsShim = win32.join("C:\\Users\\runneradmin", "mise", "shims", "ocx");
+    const windowsShim = win32.join("C:\\Users\\runneradmin", "mise", "shims", "occx");
     const windowsUnit = buildUnit(resolvedProxyEnv({}), { launcher: windowsShim });
     expectTextToContainPath(windowsUnit, windowsShim);
 
@@ -1606,7 +1606,7 @@ describe("service lifecycle cleanup ordering", () => {
         "refusing to mutate the machine-global Windows Task Scheduler from an armed test process",
       );
       // The guard runs before even the test recorder. Before this regression fix the recorder
-      // receives `/create /tn opencodex-proxy ... /f`, proving the live runner was reachable.
+      // receives `/create /tn openccx-proxy ... /f`, proving the live runner was reachable.
       expect(observedCalls).toEqual([]);
     } finally {
       serviceModule.setQuerySchtasksForTests(null);
@@ -1689,7 +1689,7 @@ describe("service lifecycle cleanup ordering", () => {
       ) => Promise<string | null>;
     }).rollbackWindowsSchedulerTaskOwnedByAttempt;
 
-    const result = await rollbackOwned("attempt-a", "opencodex-proxy", {
+    const result = await rollbackOwned("attempt-a", "openccx-proxy", {
       queryXml: () => buildWindowsTaskXml("ignored.cmd", "launcher.vbs", "attempt-b"),
       deleteTask: async () => { deleteCalls.push("delete"); },
       probe: () => ({ status: "present", detail: "present" }),
@@ -1697,7 +1697,7 @@ describe("service lifecycle cleanup ordering", () => {
 
     expect(deleteCalls).toEqual([]);
     expect(result).toContain("ownership could not be proven");
-    expect(result).toContain("Residual scheduler state: task opencodex-proxy remains registered");
+    expect(result).toContain("Residual scheduler state: task openccx-proxy remains registered");
   });
 
   test("rollback deletes a task carrying this install attempt's nonce", async () => {
@@ -1714,7 +1714,7 @@ describe("service lifecycle cleanup ordering", () => {
       ) => Promise<string | null>;
     }).rollbackWindowsSchedulerTaskOwnedByAttempt;
 
-    const result = await rollbackOwned("attempt-a", "opencodex-proxy", {
+    const result = await rollbackOwned("attempt-a", "openccx-proxy", {
       queryXml: () => buildWindowsTaskXml("ignored.cmd", "launcher.vbs", "attempt-a"),
       deleteTask: async () => { deleteCalls.push("delete"); },
       probe: () => ({ status: "absent", detail: "absent" }),
@@ -1726,7 +1726,7 @@ describe("service lifecycle cleanup ordering", () => {
 
   test("fresh registration elevates only the fixed create after a structured denial", async () => {
     const calls: string[] = [];
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-fixed-create-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-fixed-create-"));
     const stagedXml = join(parent, "attempt.xml");
     const expectedArgs = buildWindowsSchtasksCreateArgsForXml(stagedXml, false);
     const expectedXml = buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce);
@@ -1750,7 +1750,7 @@ describe("service lifecycle cleanup ordering", () => {
 
       expect(calls).toEqual([
         `create:${expectedArgs.join(" ")}`,
-        "elevate:opencodex-proxy",
+        "elevate:openccx-proxy",
       ]);
     } finally {
       removeTreeWithRetry(parent);
@@ -1759,7 +1759,7 @@ describe("service lifecycle cleanup ordering", () => {
 
   test("fresh registration UAC denial returns before task probing or cleanup", async () => {
     const calls: string[] = [];
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-uac-denial-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-uac-denial-"));
     const stagedXml = join(parent, "attempt.xml");
     try {
       writeFileSync(stagedXml, `\uFEFF${buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce)}`, "utf16le");
@@ -1782,7 +1782,7 @@ describe("service lifecycle cleanup ordering", () => {
 
   test("fresh registration never elevates an unstructured scheduler failure", async () => {
     const calls: string[] = [];
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-unstructured-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-unstructured-"));
     const stagedXml = join(parent, "attempt.xml");
     try {
       writeFileSync(stagedXml, `\uFEFF${buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce)}`, "utf16le");
@@ -1802,7 +1802,7 @@ describe("service lifecycle cleanup ordering", () => {
 
   test("create success followed by proven absence does not request a pointless rollback UAC", async () => {
     const calls: string[] = [];
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-proven-absence-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-proven-absence-"));
     const stagedXml = join(parent, "attempt.xml");
     try {
       writeFileSync(stagedXml, `\uFEFF${buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce)}`, "utf16le");
@@ -1822,7 +1822,7 @@ describe("service lifecycle cleanup ordering", () => {
 
   test("fresh registration requires the live Task Scheduler XML before cleanup can begin", async () => {
     const calls: string[] = [];
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-live-xml-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-live-xml-"));
     const xml = join(parent, "attempt.xml");
     try {
       writeFileSync(xml, `\uFEFF${buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce)}`, "utf16le");
@@ -1840,7 +1840,7 @@ describe("service lifecycle cleanup ordering", () => {
   });
 
   test("fresh registration elevation uses captured XML bytes after the staged file changes", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-elevated-xml-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-elevated-xml-"));
     const xmlPath = join(parent, "attempt.xml");
     const originalXml = buildWindowsTaskXml(undefined, undefined, registrationAttemptNonce);
     const foreignXml = buildWindowsTaskXml("C:\\foreign.cmd", undefined, "foreign-attempt");
@@ -1853,7 +1853,7 @@ describe("service lifecycle cleanup ordering", () => {
           throw new WindowsSchtasksError("create", "access-denied", "denied");
         },
         elevate: async (taskName, xml) => {
-          expect(taskName).toBe("opencodex-proxy");
+          expect(taskName).toBe("openccx-proxy");
           elevatedXml = xml;
         },
         probe: () => ({ status: "present", detail: "present" }),
@@ -1869,7 +1869,7 @@ describe("service lifecycle cleanup ordering", () => {
   });
 
   test("fresh registration rejects a staged definition owned by another attempt before create", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-foreign-stage-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-foreign-stage-"));
     const xmlPath = join(parent, "attempt.xml");
     const calls: string[] = [];
     try {
@@ -1981,7 +1981,7 @@ describe("service lifecycle cleanup ordering", () => {
   }
 
   test("fresh scheduler staging hardens its private directory and XML before registration", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-stage-order-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-stage-order-"));
     const stageDir = join(parent, "private-stage");
     const calls: string[] = [];
     try {
@@ -2027,7 +2027,7 @@ describe("service lifecycle cleanup ordering", () => {
   });
 
   test("fresh scheduler staging removes a partially-written private directory on failure", () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-stage-failure-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-stage-failure-"));
     const stageDir = join(parent, "private-stage");
     try {
       expect(() => serviceModule.stageWindowsSchedulerRegistrationXml("attempt", {
@@ -2122,10 +2122,10 @@ describe("service lifecycle cleanup ordering", () => {
   });
 
   test("fresh scheduler install removes staging before initializing config ownership", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-fresh-ownership-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-fresh-ownership-"));
     const home = join(parent, "config");
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     let stagedPath = "";
     try {
       // Seed the exact stale-null lifecycle: a conservative legacy refusal is cached,
@@ -2160,20 +2160,20 @@ describe("service lifecycle cleanup ordering", () => {
       expect(removeOwnedConfigState(home)).toEqual({ status: "removed", residualPaths: [] });
       expect(existsSync(home)).toBe(false);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeOwnedConfigState(home);
       removeTreeWithRetry(parent);
     }
   });
 
   test("fresh scheduler install rolls back before cleanup when a new config root cannot be claimed", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-service-ownership-race-"));
+    const parent = mkdtempSync(join(tmpdir(), "occx-service-ownership-race-"));
     const home = join(parent, "config");
     const foreign = join(home, "foreign.txt");
     const calls: string[] = [];
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     let stagedPath = "";
     try {
       await expect(installFreshWindowsSchedulerSafely({
@@ -2189,7 +2189,7 @@ describe("service lifecycle cleanup ordering", () => {
         runTask: () => { calls.push("run-task"); },
         writeState: () => { calls.push("write-state"); },
         rollbackTask: async () => { calls.push("rollback-task"); return null; },
-      })).rejects.toThrow(/fresh OpenCodex config root could not be claimed/);
+      })).rejects.toThrow(/fresh Openccx config root could not be claimed/);
 
       expect(calls).toEqual(["register", "rollback-task"]);
       expect(readFileSync(foreign, "utf8")).toBe("keep");
@@ -2197,8 +2197,8 @@ describe("service lifecycle cleanup ordering", () => {
       expect(existsSync(join(home, CONFIG_UNINSTALL_MANIFEST))).toBe(false);
       expect(existsSync(stagedPath)).toBe(false);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeOwnedConfigState(home);
       removeTreeWithRetry(parent);
     }
@@ -2295,7 +2295,7 @@ describe("service lifecycle cleanup ordering", () => {
     });
 
     expect(manager.status()).toBeNull();
-    expect(commands).toEqual(["systemctl --user show -p LoadState opencodex-proxy"]);
+    expect(commands).toEqual(["systemctl --user show -p LoadState openccx-proxy"]);
     expect(commands[0]).not.toContain("--value");
 
     commands.length = 0;
@@ -2307,7 +2307,7 @@ describe("service lifecycle cleanup ordering", () => {
     });
 
     expect(installed).toBe(true);
-    expect(commands).toEqual(["systemctl --user show -p LoadState opencodex-proxy"]);
+    expect(commands).toEqual(["systemctl --user show -p LoadState openccx-proxy"]);
   });
 
   test("legacy systemd still stops a loaded unit before installation", async () => {
@@ -2328,8 +2328,8 @@ describe("service lifecycle cleanup ordering", () => {
 
     expect(installed).toBe(true);
     expect(commands).toEqual([
-      "systemctl --user show -p LoadState opencodex-proxy",
-      "systemctl --user stop opencodex-proxy",
+      "systemctl --user show -p LoadState openccx-proxy",
+      "systemctl --user stop openccx-proxy",
     ]);
   });
 
@@ -2350,7 +2350,7 @@ describe("service lifecycle cleanup ordering", () => {
         stopTrackedProxy: async () => {},
       })).rejects.toThrow("systemd service status could not be verified");
       expect(installed).toBe(false);
-      expect(commands).toEqual(["systemctl --user show -p LoadState opencodex-proxy"]);
+      expect(commands).toEqual(["systemctl --user show -p LoadState openccx-proxy"]);
     }
   });
 
@@ -2367,8 +2367,8 @@ describe("service lifecycle cleanup ordering", () => {
     });
 
     expect(commands).toEqual([
-      "systemctl --user stop opencodex-proxy",
-      "systemctl --user disable opencodex-proxy",
+      "systemctl --user stop openccx-proxy",
+      "systemctl --user disable openccx-proxy",
       "systemctl --user daemon-reload",
     ]);
     expect(commands.join(" ")).not.toContain("--now");
@@ -2677,7 +2677,7 @@ describe("service diagnostics", () => {
     const valid = {
       version: 2,
       codexHome: "C:\\codex",
-      opencodexHome: "C:\\opencodex",
+      openccxHome: "C:\\openccx",
       backend: "scheduler",
     };
     expect(parseServiceInstallState(valid)?.backend).toBe("scheduler");
@@ -2694,10 +2694,10 @@ describe("service diagnostics", () => {
   });
 
   test("flags stale baked service paths recorded at install time", () => {
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
     const stateDir = join(TEST_DIR, "baked-paths-home");
     try {
-      process.env.OPENCODEX_HOME = stateDir;
+      process.env.OPENCCX_HOME = stateDir;
       mkdirSync(stateDir, { recursive: true });
       const statePath = join(stateDir, "service-state.json");
 
@@ -2705,7 +2705,7 @@ describe("service diagnostics", () => {
       writeFileSync(statePath, JSON.stringify({
         version: 1,
         codexHome: stateDir,
-        opencodexHome: stateDir,
+        openccxHome: stateDir,
         bunPath: missing,
         cliPath: join(import.meta.dir, "service.test.ts"),
       }), "utf8");
@@ -2716,32 +2716,32 @@ describe("service diagnostics", () => {
       writeFileSync(statePath, JSON.stringify({
         version: 1,
         codexHome: stateDir,
-        opencodexHome: stateDir,
+        openccxHome: stateDir,
         bunPath: join(import.meta.dir, "service.test.ts"),
         cliPath: join(import.meta.dir, "service.test.ts"),
       }), "utf8");
       expect(bakedServicePathsDiagnostic()).toBeNull();
 
       // Pre-loop-3 state files without baked paths stay silent.
-      writeFileSync(statePath, JSON.stringify({ version: 1, codexHome: stateDir, opencodexHome: stateDir }), "utf8");
+      writeFileSync(statePath, JSON.stringify({ version: 1, codexHome: stateDir, openccxHome: stateDir }), "utf8");
       expect(bakedServicePathsDiagnostic()).toBeNull();
     } finally {
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
     }
   });
 
-  // #2898: a version manager (mise, asdf) installs OpenCodex into a VERSIONED directory and
+  // #2898: a version manager (mise, asdf) installs Openccx into a VERSIONED directory and
   // deletes the old one on upgrade. The baked Bun and CLI both live in that directory, so the
   // unit's `exec <old-bun> <old-cli>` stops resolving and Restart=on-failure restart-loops.
   // When the install went through a stable launcher, the launcher is what systemd runs, so it
   // is the only path whose absence means anything — and the replaced version directory must
   // NOT be reported as stale.
   test("a launcher install judges staleness by the launcher, not the replaced version dir", () => {
-    const oldOpenCodexHome = process.env.OPENCODEX_HOME;
+    const oldOpenccxHome = process.env.OPENCCX_HOME;
     const stateDir = join(TEST_DIR, "launcher-paths-home");
     try {
-      process.env.OPENCODEX_HOME = stateDir;
+      process.env.OPENCCX_HOME = stateDir;
       mkdirSync(stateDir, { recursive: true });
       const statePath = join(stateDir, "service-state.json");
       const launcher = join(import.meta.dir, "service.test.ts");
@@ -2751,7 +2751,7 @@ describe("service diagnostics", () => {
       writeFileSync(statePath, JSON.stringify({
         version: 2,
         codexHome: stateDir,
-        opencodexHome: stateDir,
+        openccxHome: stateDir,
         bunPath: join(removedVersionDir, "bun"),
         cliPath: join(removedVersionDir, "cli", "index.ts"),
         launcherPath: launcher,
@@ -2760,11 +2760,11 @@ describe("service diagnostics", () => {
       expect(bakedServicePathsDiagnostic()).toBeNull();
 
       // A launcher that is itself gone is genuinely stale, and names the launcher.
-      const missingLauncher = join(stateDir, "shims", "ocx");
+      const missingLauncher = join(stateDir, "shims", "occx");
       writeFileSync(statePath, JSON.stringify({
         version: 2,
         codexHome: stateDir,
-        opencodexHome: stateDir,
+        openccxHome: stateDir,
         bunPath: join(import.meta.dir, "service.test.ts"),
         cliPath: join(import.meta.dir, "service.test.ts"),
         launcherPath: missingLauncher,
@@ -2774,8 +2774,8 @@ describe("service diagnostics", () => {
       expect(diagnostic).toContain("STALE baked paths");
       expect(diagnostic).toContain(missingLauncher);
     } finally {
-      if (oldOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOpenCodexHome;
+      if (oldOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOpenccxHome;
     }
   });
 
@@ -2921,8 +2921,8 @@ describe("service repair", () => {
   test("repair preserves a mangled legacy path instead of adopting it", async () => {
     const calls: string[] = [];
     const wscript = "C:\\Windows\\System32\\wscript.exe";
-    const expectedLauncher = "C:\\Users\\김병준\\.opencodex\\service-launcher.vbs";
-    const reportedLauncher = "C:\\Users\\???\\.opencodex\\service-launcher.vbs";
+    const expectedLauncher = "C:\\Users\\김병준\\.openccx\\service-launcher.vbs";
+    const reportedLauncher = "C:\\Users\\???\\.openccx\\service-launcher.vbs";
     const legacy = buildWindowsTaskXml("ignored.cmd", reportedLauncher, undefined, TEST_WINDOWS_TASK_SID)
       .replace(/<Command>.*?<\/Command>/, `<Command>${wscript}</Command>`)
       .replace(/<SessionStateChangeTrigger>[\s\S]*?<\/SessionStateChangeTrigger>\s*/gi, "");
@@ -2962,7 +2962,7 @@ describe("service repair", () => {
   });
 
   /**
-   * Only a recognizable OpenCodex definition that predates session triggers may be replaced
+   * Only a recognizable Openccx definition that predates session triggers may be replaced
    * automatically. Anything else registered under the fixed task name belongs to someone
    * else, so repair preserves it instead of overwriting it with `/create /f`.
    */
@@ -2985,7 +2985,7 @@ describe("service repair", () => {
         restoreSchedulerIfAbsent: async () => { throw new Error("an unrecognized definition must not be restored over"); },
         startScheduler: () => { calls.push("start"); },
         writeSchedulerState: () => { calls.push("state"); },
-      })).rejects.toThrow(/not a recognized legacy OpenCodex definition/);
+      })).rejects.toThrow(/not a recognized legacy Openccx definition/);
 
       // Nothing was stopped, rewritten, replaced, or started.
       expect(calls).toEqual(["env", "auth", "read"]);
@@ -3393,11 +3393,11 @@ describe("service repair", () => {
  * `launchctl load` reports failure on stderr and exits 0 for an already-bootstrapped
  * job, so `sh()` (execSync — throws only on a non-zero exit) treated a load that did
  * nothing as success. launchd then kept running the PREVIOUS plist while a freshly
- * written one sat unused, which is the 2026-08-02 report: `ocx service` prints a
+ * written one sat unused, which is the 2026-08-02 report: `occx service` prints a
  * checkmark, `launchctl list` shows the job, and the port answers nothing.
  *
  * Measured on macOS 27.0:
- *   $ launchctl load -w ~/Library/LaunchAgents/com.opencodex.proxy.plist
+ *   $ launchctl load -w ~/Library/LaunchAgents/com.openccx.proxy.plist
  *   Load failed: 5: Input/output error
  *   $ echo $?
  *   0
@@ -3464,14 +3464,14 @@ describe("launchctl load verification", () => {
   });
 
   describe("launchdJobMatchesPlist", () => {
-    // Shape captured from a real `launchctl print gui/$(id -u)/com.opencodex.proxy`
+    // Shape captured from a real `launchctl print gui/$(id -u)/com.openccx.proxy`
     // run on macOS 27.0: the arguments block is tab-indented one level, entries two.
     const cmd = "exec '/pkg/bun' '/pkg/src/cli/index.ts' start --port 10100";
     const printed = (command: string) => [
       "\targuments = {",
       "\t\t/bin/sh",
       "\t\t-lc",
-      `\t\tif [ -f '/h/.opencodex/service-api-token' ]; then OPENCODEX_API_AUTH_TOKEN="$(cat '/h/.opencodex/service-api-token')"; export OPENCODEX_API_AUTH_TOKEN; fi; ${command}`,
+      `\t\tif [ -f '/h/.opencodex/service-api-token' ]; then OPENCCX_API_AUTH_TOKEN="$(cat '/h/.opencodex/service-api-token')"; export OPENCCX_API_AUTH_TOKEN; fi; ${command}`,
       "\t}",
     ].join("\n");
 
@@ -3501,20 +3501,20 @@ describe("launchctl load verification", () => {
   // install state or every healthy launcher-backed service reads as "an OLDER plist".
   describe("expectedLaunchdCommand follows the recorded launcher", () => {
     const entry = { bun: "/opt/opencodex/versioned/bun", cli: "/opt/opencodex/versioned/src/cli/index.ts" };
-    const base = { version: 2 as const, codexHome: "/h/.codex", opencodexHome: "/h/.opencodex", backend: "scheduler" as const };
+    const base = { version: 2 as const, codexHome: "/h/.codex", openccxHome: "/h/.opencodex", backend: "scheduler" as const };
 
     test("a recorded launcher yields the launcher exec line at the installed port", () => {
       const command = expectedLaunchdCommand(14001, {
-        state: { ...base, bunPath: entry.bun, cliPath: entry.cli, launcherPath: "/home/u/.local/share/mise/shims/ocx" },
+        state: { ...base, bunPath: entry.bun, cliPath: entry.cli, launcherPath: "/home/u/.local/share/mise/shims/occx" },
         entry,
       });
-      expect(command).toContain("exec '/home/u/.local/share/mise/shims/ocx' start --port 14001");
+      expect(command).toContain("exec '/home/u/.local/share/mise/shims/occx' start --port 14001");
       expect(command).not.toContain(entry.cli);
     });
 
     test("v1 / legacy state without a launcher yields the Bun + CLI pair", () => {
       const command = expectedLaunchdCommand(14001, {
-        state: { version: 1, codexHome: "/h/.codex", opencodexHome: "/h/.opencodex", bunPath: entry.bun, cliPath: entry.cli },
+        state: { version: 1, codexHome: "/h/.codex", openccxHome: "/h/.opencodex", bunPath: entry.bun, cliPath: entry.cli },
         entry,
       });
       expect(command).toContain(`exec '${entry.bun}' '${entry.cli}' start --port 14001`);
@@ -3523,7 +3523,7 @@ describe("launchctl load verification", () => {
     test("missing state falls back to the Bun + CLI pair and never re-walks PATH", () => {
       const command = expectedLaunchdCommand(14001, { state: null, entry });
       expect(command).toContain(`exec '${entry.bun}' '${entry.cli}' start --port 14001`);
-      expect(command).not.toContain("shims/ocx");
+      expect(command).not.toContain("shims/occx");
     });
   });
 
@@ -3541,7 +3541,7 @@ describe("launchctl load verification", () => {
 
     /**
      * launchctl emits `Load failed` for EVERY already-bootstrapped job, including a
-     * correct one, so `ocx service start` on a healthy service hits it every time.
+     * correct one, so `occx service start` on a healthy service hits it every time.
      * An unconditional throw would break the most common benign invocation.
      */
     test("treats an already-loaded matching job as a no-op", () => {
@@ -3605,13 +3605,13 @@ describe("auth preflight retry command (260804 #970 follow-up)", () => {
   // the fix reverted — a guard that cannot fail is worse than no guard.
   test("serviceRetryCommand picks the command that can actually succeed", () => {
     // Registered and healthy enough to refresh in place: repair, no elevation needed.
-    expect(serviceRetryCommand({ installed: true, conflict: false })).toBe("ocx service repair");
+    expect(serviceRetryCommand({ installed: true, conflict: false })).toBe("occx service repair");
     // Nothing registered: repairService() would refuse, so install is the only option.
-    expect(serviceRetryCommand({ installed: false, conflict: false })).toBe("ocx service install");
+    expect(serviceRetryCommand({ installed: false, conflict: false })).toBe("occx service install");
     // Task Scheduler AND WinSW both present: repairService() refuses this outright
     // (see the conflict guard in repairService), and installWindows removes the native
     // backend first, so install is the valid recovery.
-    expect(serviceRetryCommand({ installed: true, conflict: true })).toBe("ocx service install");
+    expect(serviceRetryCommand({ installed: true, conflict: true })).toBe("occx service install");
   });
 });
 
@@ -3706,7 +3706,7 @@ describe("service serving confirmation", () => {
 
     // #3009: a Windows cold start does NTFS ACL hardening and previous-session
     // journal recovery before the listener exists, so the service can bind
-    // seconds after the deadline and then stay healthy. `ocx service repair`
+    // seconds after the deadline and then stay healthy. `occx service repair`
     // reported that as a terminal failure with exit 1, and the caller's fallback
     // is to start a second proxy against a port that is about to be taken.
     test("accepts a service that binds during the grace after the deadline", async () => {
@@ -3818,7 +3818,7 @@ describe("service serving confirmation", () => {
   });
 
   /**
-   * `ocx service status` printed raw `launchctl list` output, which reports a
+   * `occx service status` printed raw `launchctl list` output, which reports a
    * registered job identically whether it is serving, bound to nothing, or running
    * an older plist. The reporter hit exactly that: a checkmark next to a dead port.
    */
@@ -3852,8 +3852,8 @@ describe("service serving confirmation", () => {
       });
       expect(out).toContain("no proxy is answering on port 10100");
       // Registered but not serving: repair refreshes it without demanding elevation.
-      expect(out).toContain("ocx service repair");
-      expect(out).toContain("ocx start");
+      expect(out).toContain("occx service repair");
+      expect(out).toContain("occx start");
     });
 
     // The injected seam must win on every platform: the default is darwin-gated,
@@ -3881,7 +3881,7 @@ describe("service serving confirmation", () => {
 
   /**
    * systemd's analogue of the macOS stale-plist case: writing the unit file does not
-   * change the definition systemd has loaded until `daemon-reload`, so `ocx service
+   * change the definition systemd has loaded until `daemon-reload`, so `occx service
    * start` would run the PREVIOUS ExecStart.
    */
   describe("systemdNeedsDaemonReload", () => {
@@ -3930,20 +3930,20 @@ describe("service serving confirmation", () => {
 
   /**
    * Windows bakes the port into two different artifacts depending on backend: the
-   * scheduler wrapper (`opencodex-service.cmd`) and the WinSW XML. Both must be
+   * scheduler wrapper (`openccx-service.cmd`) and the WinSW XML. Both must be
    * readable or `start` probes a port the service was never told to use.
    */
   describe("windowsListenPort", () => {
     test("reads the port baked into the scheduler wrapper", () => {
       expect(windowsListenPort({
-        readScript: () => '"%OCX_BUN%" "%OCX_CLI%" start --port 18222 >>"%LOG%" 2>&1',
+        readScript: () => '"%OCCX_BUN%" "%OCCX_CLI%" start --port 18222 >>"%LOG%" 2>&1',
       })).toBe(18222);
     });
 
     // Every `set "…"` line precedes the exec line, so a decoy in a path must lose.
     test("prefers the argument tail over a path that looks like one", () => {
       expect(windowsListenPort({
-        readScript: () => 'set "OCX_BUN=C:\\start --port 9999\\bun.exe"\r\n"%OCX_BUN%" "%OCX_CLI%" start --port 18222\r\n',
+        readScript: () => 'set "OCCX_BUN=C:\\start --port 9999\\bun.exe"\r\n"%OCCX_BUN%" "%OCCX_CLI%" start --port 18222\r\n',
       })).toBe(18222);
     });
 
@@ -3997,7 +3997,7 @@ describe("service definitions are not world-readable", () => {
   const posixOnly = process.platform === "win32" ? test.skip : test;
 
   posixOnly("a freshly written definition is owner-only", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-service-mode-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-service-mode-"));
     try {
       const path = join(dir, "unit");
       writeServiceDefinitionFile(path, buildUnit(resolvedProxyEnv({ HTTP_PROXY: "http://u:p@127.0.0.1:7890" })), "utf8");
@@ -4012,7 +4012,7 @@ describe("service definitions are not world-readable", () => {
 
   posixOnly("an install over a loose definition from an older version tightens it", () => {
     // `mode` applies only on creation, so a reinstall would otherwise leave 0644 standing.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-service-mode-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-service-mode-"));
     try {
       const path = join(dir, "plist");
       writeFileSync(path, "stale", { encoding: "utf8", mode: 0o644 });
@@ -4027,7 +4027,7 @@ describe("service definitions are not world-readable", () => {
   });
 
   posixOnly("utf16le scheduler assets take the same mode", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-service-mode-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-service-mode-"));
     try {
       const path = join(dir, "task.xml");
       writeServiceDefinitionFile(path, "\uFEFF<Task />", "utf16le");

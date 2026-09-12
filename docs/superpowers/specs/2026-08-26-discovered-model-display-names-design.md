@@ -8,9 +8,9 @@ Base: `dev` at `01b5da9f574956f8eb55b13e55dd48e79ab74502`.
 
 ## Problem
 
-OpenCodex can assign a display name to a custom model, but a model returned by provider discovery has no operator owned display name. The generated Codex catalog therefore falls back to a namespaced routing slug such as `xai/grok-composer-2.5-fast`.
+Openccx can assign a display name to a custom model, but a model returned by provider discovery has no operator owned display name. The generated Codex catalog therefore falls back to a namespaced routing slug such as `xai/grok-composer-2.5-fast`.
 
-Editing `opencodex-catalog.json` is not a durable solution because sync, startup, provider refresh, and updates regenerate that file. A Windows startup script that edits generated state introduces ordering problems with Codex Desktop and the OpenCodex proxy.
+Editing `openccx-catalog.json` is not a durable solution because sync, startup, provider refresh, and updates regenerate that file. A Windows startup script that edits generated state introduces ordering problems with Codex Desktop and the Openccx proxy.
 
 The dashboard also has no control for naming an existing discovered model. Its current Add control creates a separate custom model row and rejects an ID that already exists in discovery.
 
@@ -79,7 +79,7 @@ config.json provider.modelDisplayNames
   -> Codex catalog display_name
 ```
 
-The resolver belongs at the shared catalog construction boundary so startup sync, `ocx sync`, live provider refresh, management mutations, and service restart use the same behavior. No caller should patch the generated catalog after it is written.
+The resolver belongs at the shared catalog construction boundary so startup sync, `occx sync`, live provider refresh, management mutations, and service restart use the same behavior. No caller should patch the generated catalog after it is written.
 
 ## Management API
 
@@ -220,7 +220,7 @@ manual dashboard test against a disposable config
 desktop and mobile screenshots
 ```
 
-The manual test uses a disposable OpenCodex config and catalog. It must not modify the user's installed configuration, provider credentials, or production catalog.
+The manual test uses a disposable Openccx config and catalog. It must not modify the user's installed configuration, provider credentials, or production catalog.
 
 ## Acceptance criteria
 

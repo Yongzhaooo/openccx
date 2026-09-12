@@ -156,7 +156,7 @@ describe("#2698 the status mapping and transport cause are actually reachable", 
 });
 
 describe("#2696 doctor names the credential collision", () => {
-  const ADMIN = `ocx_admin_${"a".repeat(43)}`;
+  const ADMIN = `occx_admin_${"a".repeat(43)}`;
 
   test("reports OK when no data-plane token is set", () => {
     const check = dataPlaneCredentialCollisionCheck({} as NodeJS.ProcessEnv, null);
@@ -164,12 +164,12 @@ describe("#2696 doctor names the credential collision", () => {
   });
 
   test("reports OK when the two credentials are distinct", () => {
-    const check = dataPlaneCredentialCollisionCheck({ OPENCODEX_API_AUTH_TOKEN: "ocx_data_live" } as NodeJS.ProcessEnv, null);
+    const check = dataPlaneCredentialCollisionCheck({ OPENCCX_API_AUTH_TOKEN: "occx_data_live" } as NodeJS.ProcessEnv, null);
     expect(check.level).toBe("OK");
   });
 
   test("fails and names the remedy when the admin token is the data-plane secret", () => {
-    const check = dataPlaneCredentialCollisionCheck({ OPENCODEX_API_AUTH_TOKEN: ADMIN } as NodeJS.ProcessEnv, null);
+    const check = dataPlaneCredentialCollisionCheck({ OPENCCX_API_AUTH_TOKEN: ADMIN } as NodeJS.ProcessEnv, null);
     // FAIL, not WARN: while this holds every /api/* returns 503, so the management
     // surface is unusable rather than degraded.
     expect(check.level).toBe("FAIL");
@@ -180,7 +180,7 @@ describe("#2696 doctor names the credential collision", () => {
   });
 
   test("fails when the installed service token file collides and the doctor shell has no env", () => {
-    // Production doctor almost never has OPENCODEX_API_AUTH_TOKEN; the service wrapper
+    // Production doctor almost never has OPENCCX_API_AUTH_TOKEN; the service wrapper
     // re-exports the file. Passing null-env + the file token is the already-broken install.
     const check = dataPlaneCredentialCollisionCheck({} as NodeJS.ProcessEnv, ADMIN);
     expect(check.level).toBe("FAIL");
@@ -208,13 +208,13 @@ describe("#2698 management errors carry reason and hint", () => {
       {
         error: "management API unavailable",
         reason: "management credential conflicts with a data-plane credential",
-        hint: "unset OPENCODEX_API_AUTH_TOKEN and reinstall the service",
+        hint: "unset OPENCCX_API_AUTH_TOKEN and reinstall the service",
       },
       503,
     );
     expect(message).toContain("management API unavailable");
     expect(message).toContain("reason: management credential conflicts with a data-plane credential");
-    expect(message).toContain("hint: unset OPENCODEX_API_AUTH_TOKEN and reinstall the service");
+    expect(message).toContain("hint: unset OPENCCX_API_AUTH_TOKEN and reinstall the service");
   });
 
   test("a reason-only body does not degrade to the generic message", async () => {
@@ -256,34 +256,34 @@ describe("#2698 the account client keeps the transport cause and maps status cod
 });
 
 describe("#2696 a management token is refused as the data-plane secret", () => {
-  const ADMIN = `ocx_admin_${"a".repeat(43)}`;
+  const ADMIN = `occx_admin_${"a".repeat(43)}`;
 
-  test("assertNotAdminToken rejects an ocx_admin_ value with an actionable message", () => {
+  test("assertNotAdminToken rejects an occx_admin_ value with an actionable message", () => {
     expect(() => assertNotAdminToken(ADMIN)).toThrow(/management \(admin\) token/);
-    expect(() => assertNotAdminToken(ADMIN)).toThrow(/OPENCODEX_API_AUTH_TOKEN/);
+    expect(() => assertNotAdminToken(ADMIN)).toThrow(/OPENCCX_API_AUTH_TOKEN/);
   });
 
   test("assertNotAdminToken accepts a distinct data-plane secret", () => {
-    expect(() => assertNotAdminToken("ocx_data_live_secret")).not.toThrow();
+    expect(() => assertNotAdminToken("occx_data_live_secret")).not.toThrow();
     expect(() => assertNotAdminToken("local-secret")).not.toThrow();
   });
 
   test("assertNotAdminToken rejects a non-prefixed admin token equal to the configured value", () => {
     expect(() => assertNotAdminToken("shared-secret", {
-      OPENCODEX_ADMIN_AUTH_TOKEN: "shared-secret",
+      OPENCCX_ADMIN_AUTH_TOKEN: "shared-secret",
     } as NodeJS.ProcessEnv)).toThrow(/management \(admin\) token/);
   });
 
   test("assertServiceAuthEnvironment refuses the collision even on loopback", () => {
     // The loopback short-circuit used to return before any token check, which is how
     // an install could produce a service whose management plane was fenced closed.
-    const previous = process.env.OPENCODEX_API_AUTH_TOKEN;
+    const previous = process.env.OPENCCX_API_AUTH_TOKEN;
     try {
-      process.env.OPENCODEX_API_AUTH_TOKEN = ADMIN;
+      process.env.OPENCCX_API_AUTH_TOKEN = ADMIN;
       expect(() => assertServiceAuthEnvironment()).toThrow(/management \(admin\) token/);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = previous;
+      if (previous === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = previous;
     }
   });
 

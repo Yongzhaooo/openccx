@@ -13,7 +13,7 @@
  * so the lane timeout and this floor move together.
  *
  * Windows needs a higher floor still. Its shards run four Bun pools on one runner, and process
- * spawn there is slower than on the POSIX lanes to begin with — a `ocx restore --json` child
+ * spawn there is slower than on the POSIX lanes to begin with — a `occx restore --json` child
  * that finishes comfortably elsewhere was observed failing the 30 s floor at 30,147 ms (#2152).
  * 45 s keeps the watchdog meaningful while staying under the lane's own 60 s per-test timeout,
  * so a genuinely hung test is still bounded by something rather than running to the ceiling.
@@ -46,7 +46,7 @@ export function watchdogMs(base: number): number {
  * machine is busy. Windows spawns slowest, so it gets the larger floor.
  */
 export function isolationBudgetMs(base: number): number {
-  const underLoad = process.env.CI === "true" || process.env.OCX_TEST_FULL_SUITE === "1";
+  const underLoad = process.env.CI === "true" || process.env.OCCX_TEST_FULL_SUITE === "1";
   if (!underLoad) return base;
   return Math.max(base, process.platform === "win32" ? 8_000 : 5_000);
 }

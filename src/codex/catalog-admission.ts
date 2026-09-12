@@ -11,7 +11,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { join, resolve } from "node:path";
 
 import { observeConfigGeneration } from "../config";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type {
   CatalogAdmissionSnapshot,
   CatalogConvergeRequestInput,
@@ -116,7 +116,7 @@ function keyedConfigIdentity(domain: string, payload: string): string {
 }
 
 function catalogConfigIdentity(
-  config: Readonly<OcxConfig>,
+  config: Readonly<OccxConfig>,
   generation: ConfigGeneration,
 ): CatalogAdmissionSnapshot["configIdentity"] {
   let referenceIdentity = configReferenceIdentities.get(config);
@@ -138,7 +138,7 @@ function catalogConfigIdentity(
  * replace the object already held by the management callback.
  */
 export function captureCatalogAdmissionSnapshot(
-  config: Readonly<OcxConfig>,
+  config: Readonly<OccxConfig>,
 ): CatalogAdmissionSnapshot {
   const generation = observeConfigGeneration();
   if (generation.kind === "absent") {
@@ -171,7 +171,7 @@ export function captureCatalogAdmissionSnapshot(
   const configuredCatalogPath = configBytes === null
     ? null
     : readRootTomlString(Buffer.from(configBytes).toString("utf8"), "model_catalog_json");
-  const defaultCatalogPath = join(homeSelection.canonicalCodexHome, "opencodex-catalog.json");
+  const defaultCatalogPath = join(homeSelection.canonicalCodexHome, "openccx-catalog.json");
   const catalogPath = configuredCatalogPath
     ? resolve(homeSelection.canonicalCodexHome, configuredCatalogPath)
     : defaultCatalogPath;

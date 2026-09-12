@@ -18,7 +18,7 @@ function expiredJwt(): string {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-main-refresh-"));
+  home = mkdtempSync(join(tmpdir(), "occx-main-refresh-"));
   previousCodexHome = process.env.CODEX_HOME;
   process.env.CODEX_HOME = home;
 });
@@ -126,26 +126,26 @@ describe("native main token refresh", () => {
 
   /**
    * #2999: the refresh lock is keyed on the grant fingerprint and lives under
-   * OPENCODEX_HOME, but the file it protects is `auth.json` under CODEX_HOME, which
-   * every install on the machine shares. Two proxies with different OPENCODEX_HOMEs
+   * OPENCCX_HOME, but the file it protects is `auth.json` under CODEX_HOME, which
+   * every install on the machine shares. Two proxies with different OPENCCX_HOMEs
    * therefore took two unrelated locks and refreshed the one credential at once, so
    * the loser's rotated grant was published over the winner's and then rejected by
    * the provider.
    *
    * The claim this now takes lives in CODEX_HOME, so it is the same lock for both.
-   * Driven through the real `getValidMainAccountToken` with OPENCODEX_HOME actually
+   * Driven through the real `getValidMainAccountToken` with OPENCCX_HOME actually
    * swapped between the two calls: asserting on the claim primitive directly would
    * pass even if `main-account.ts` never took it.
    */
-  test("two OPENCODEX_HOMEs serialize on the one CODEX_HOME credential", async () => {
+  test("two OPENCCX_HOMEs serialize on the one CODEX_HOME credential", async () => {
     const authPath = join(home, "auth.json");
     writeFileSync(authPath, JSON.stringify({
       tokens: { access_token: expiredJwt(), refresh_token: "old-refresh", account_id: "account-main" },
     }));
 
-    const homeA = mkdtempSync(join(tmpdir(), "ocx-home-a-"));
-    const homeB = mkdtempSync(join(tmpdir(), "ocx-home-b-"));
-    const previousOcxHome = process.env.OPENCODEX_HOME;
+    const homeA = mkdtempSync(join(tmpdir(), "occx-home-a-"));
+    const homeB = mkdtempSync(join(tmpdir(), "occx-home-b-"));
+    const previousOccxHome = process.env.OPENCCX_HOME;
     // The first refresh records its entry and exit. A concurrent second refresh would
     // add enter:b before the first release; the serialized follower instead rereads
     // fresh credentials and does not refresh the now-rotated grant itself.
@@ -169,13 +169,13 @@ describe("native main token refresh", () => {
     };
 
     try {
-      process.env.OPENCODEX_HOME = homeA;
+      process.env.OPENCCX_HOME = homeA;
       const first = getValidMainAccountToken({ refreshToken: refreshFor("a", true) });
       await firstEntered.promise;
 
-      // Second install, different OPENCODEX_HOME, same CODEX_HOME. Before the fix
+      // Second install, different OPENCCX_HOME, same CODEX_HOME. Before the fix
       // this entered immediately; now it waits on the shared claim.
-      process.env.OPENCODEX_HOME = homeB;
+      process.env.OPENCCX_HOME = homeB;
       const second = getValidMainAccountToken({ refreshToken: refreshFor("b", false) });
       expect(order).toEqual(["enter:a"]);
 
@@ -185,8 +185,8 @@ describe("native main token refresh", () => {
       expect(order).toEqual(["enter:a", "leave:a"]);
     } finally {
       release?.();
-      if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOcxHome;
+      if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOccxHome;
       removeTreeWithRetry(homeA);
       removeTreeWithRetry(homeB);
     }
@@ -198,9 +198,9 @@ describe("native main token refresh", () => {
       tokens: { access_token: expiredJwt(), refresh_token: "old-refresh", account_id: "account-main" },
     }));
 
-    const homeA = mkdtempSync(join(tmpdir(), "ocx-home-a-"));
-    const homeB = mkdtempSync(join(tmpdir(), "ocx-home-b-"));
-    const previousOcxHome = process.env.OPENCODEX_HOME;
+    const homeA = mkdtempSync(join(tmpdir(), "occx-home-a-"));
+    const homeB = mkdtempSync(join(tmpdir(), "occx-home-b-"));
+    const previousOccxHome = process.env.OPENCCX_HOME;
     const firstEntered = Promise.withResolvers<void>();
     const releaseFirst = Promise.withResolvers<void>();
     const abort = new AbortController();
@@ -208,7 +208,7 @@ describe("native main token refresh", () => {
     let secondRefreshStarted = false;
 
     try {
-      process.env.OPENCODEX_HOME = homeA;
+      process.env.OPENCCX_HOME = homeA;
       const first = getValidMainAccountToken({
         refreshToken: async () => {
           firstEntered.resolve();
@@ -225,7 +225,7 @@ describe("native main token refresh", () => {
 
       // The first refresh holds the CODEX_HOME claim. Cancellation must release the
       // second caller from that wait instead of letting it refresh after the holder exits.
-      process.env.OPENCODEX_HOME = homeB;
+      process.env.OPENCCX_HOME = homeB;
       const second = getValidMainAccountToken({
         signal: abort.signal,
         refreshToken: async () => {
@@ -241,8 +241,8 @@ describe("native main token refresh", () => {
       expect(secondRefreshStarted).toBe(false);
     } finally {
       releaseFirst.resolve();
-      if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOcxHome;
+      if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOccxHome;
       removeTreeWithRetry(homeA);
       removeTreeWithRetry(homeB);
     }
@@ -251,8 +251,8 @@ describe("native main token refresh", () => {
 
 describe("publication never overwrites an external Codex writer (#2999)", () => {
   const refreshOk = async () => ({
-    access: "ocx-staged-access",
-    refresh: "ocx-staged-refresh",
+    access: "occx-staged-access",
+    refresh: "occx-staged-refresh",
     expires: Date.now() + 3_600_000,
     accountId: "account-main",
   });
@@ -282,7 +282,7 @@ describe("publication never overwrites an external Codex writer (#2999)", () => 
     await expect(getValidMainAccountToken({ refreshToken: refreshOk })).rejects.toThrow();
 
     expect(readFileSync(authPath, "utf8")).toBe(external);
-    expect(readFileSync(authPath, "utf8")).not.toContain("ocx-staged-access");
+    expect(readFileSync(authPath, "utf8")).not.toContain("occx-staged-access");
   });
 
   test("a same-bytes replacement with a new inode is still refused", async () => {
@@ -302,7 +302,7 @@ describe("publication never overwrites an external Codex writer (#2999)", () => 
     await expect(getValidMainAccountToken({ refreshToken: refreshOk })).rejects.toThrow();
 
     expect(readFileSync(authPath, "utf8")).toBe(identical);
-    expect(readFileSync(authPath, "utf8")).not.toContain("ocx-staged-access");
+    expect(readFileSync(authPath, "utf8")).not.toContain("occx-staged-access");
   });
 
   test("the canonical target survives a refused publication", async () => {
@@ -325,7 +325,7 @@ describe("publication never overwrites an external Codex writer (#2999)", () => 
     const authPath = join(home, "auth.json");
     seedExpired(authPath);
     const token = await getValidMainAccountToken({ refreshToken: refreshOk });
-    expect(token?.accessToken).toBe("ocx-staged-access");
-    expect(readFileSync(authPath, "utf8")).toContain("ocx-staged-access");
+    expect(token?.accessToken).toBe("occx-staged-access");
+    expect(readFileSync(authPath, "utf8")).toContain("occx-staged-access");
   });
 });

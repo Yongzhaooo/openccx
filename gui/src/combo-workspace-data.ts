@@ -13,7 +13,7 @@ export type ComboStrategy = "failover" | "round-robin" | "random" | "least-used"
 export type ComboEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
 
 export const COMBO_EFFORTS: ComboEffort[] = ["low", "medium", "high", "xhigh", "max", "ultra"];
-/** Mirrors OcxComboStrategy in src/types/config.ts. */
+/** Mirrors OccxComboStrategy in src/types/config.ts. */
 export const COMBO_STRATEGIES: readonly ComboStrategy[] = [
   "failover",
   "round-robin",

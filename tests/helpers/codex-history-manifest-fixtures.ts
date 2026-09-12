@@ -28,7 +28,7 @@ export const INVALID_HISTORY_BACKUP_FIXTURES: InvalidHistoryBackupFixture[] = [
   { name: "unsupported model provider", mutate: manifest => { manifest.entries["thread-1"].modelProvider = "other"; } },
   { name: "missing source", mutate: manifest => { delete manifest.entries["thread-1"].source; } },
   { name: "mistyped source", mutate: manifest => { manifest.entries["thread-1"].source = 7; } },
-  { name: "invalid provider/source tuple", mutate: manifest => { manifest.entries["thread-1"].modelProvider = "opencodex"; } },
+  { name: "invalid provider/source tuple", mutate: manifest => { manifest.entries["thread-1"].modelProvider = "openccx"; } },
   { name: "missing event marker", mutate: manifest => { delete manifest.entries["thread-1"].hasUserEvent; } },
   { name: "mistyped event marker", mutate: manifest => { manifest.entries["thread-1"].hasUserEvent = "1"; } },
   { name: "non-boolean event marker", mutate: manifest => { manifest.entries["thread-1"].hasUserEvent = 2; } },

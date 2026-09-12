@@ -96,7 +96,7 @@ function modelInfo(id: string, displayName: string, ladder: readonly string[], i
 
 /**
  * Which id family the discovery list carries (devlog 050): Claude Code (CLI)
- * gets readable `claude-ocx-*` ids; Claude Desktop keeps the hashed
+ * gets readable `claude-occx-*` ids; Claude Desktop keeps the hashed
  * `claude-opus-4-8-<code>` family its 3P config was written with. Both families
  * decode in resolveInboundModel regardless of the style served here.
  */

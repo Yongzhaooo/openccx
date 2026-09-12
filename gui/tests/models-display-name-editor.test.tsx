@@ -108,8 +108,8 @@ describe("Models dashboard discovered display name integration", () => {
     mutationGate = null;
     modelFetches = 0;
     modelFetchFailure = null;
-    testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
-    testWindow.sessionStorage.setItem("ocx.models.catalog.v1:http://localhost", JSON.stringify({
+    testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
+    testWindow.sessionStorage.setItem("occx.models.catalog.v1:http://localhost", JSON.stringify({
       models: currentModels,
       providers: [
         { name: "xai-demo", liveModels: false, models: ["grok-4.6", "custom-one"] },

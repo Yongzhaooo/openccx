@@ -1,5 +1,5 @@
 /**
- * OpenCode Zen short-window rate-limit guidance (#1145 / OCX-56).
+ * OpenCode Zen short-window rate-limit guidance (#1145 / OCCX-56).
  *
  * OpenCode's keyed and keyless Zen chat endpoints share `https://opencode.ai/zen/v1`.
  * Free-model traffic can hit a short-window burst ceiling around 15–20 RPM
@@ -11,7 +11,7 @@
  * The same module also owns the keyless free-tier admission explanation (#4121):
  * Zen rejects a request that carries no `x-opencode-session` header with
  * `MissingSessionID` / "OpenCode's free tier can only be used in OpenCode".
- * opencodex does not synthesize that header — see {@link enrichOpenCodeZenFreeTierMessage}.
+ * openccx does not synthesize that header — see {@link enrichOpenCodeZenFreeTierMessage}.
  */
 import { validateClientRetryAfterHeader } from "../lib/retry-after";
 import { registryEntryForProviderDestination } from "./registry";
@@ -111,7 +111,7 @@ export function enrichOpenCodeZenRateLimitMessage(
  * `x-opencode-session` header is refused with error type `MissingSessionID` and the
  * message "OpenCode's free tier can only be used in OpenCode" (#4121).
  *
- * Presence of the header is the whole gate — any value clears it — so opencodex could
+ * Presence of the header is the whole gate — any value clears it — so openccx could
  * pass by minting one. It does not. Fabricating a session identifier and a versioned
  * `opencode/<version>` User-Agent is a claim to *be* the OpenCode client, and no upstream
  * contract authorizes a third-party agent to make it; an HTTP 200 obtained that way is a
@@ -156,7 +156,7 @@ export function enrichOpenCodeZenFreeTierMessage(
     `${message}`
     + " OpenCode Zen's keyless free tier admits only OpenCode's own client: it refuses any"
     + " request that arrives without an x-opencode-session header."
-    + ` opencodex ${FREE_TIER_ENRICHMENT_MARKER}, because presenting itself as the OpenCode`
+    + ` openccx ${FREE_TIER_ENRICHMENT_MARKER}, because presenting itself as the OpenCode`
     + " client is a claim no upstream contract supports."
     + " Use the keyed opencode-zen provider with an OpenCode Zen API key"
     + " (https://opencode.ai/auth), or route this model through another provider."

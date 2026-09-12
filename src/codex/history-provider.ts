@@ -104,7 +104,7 @@ function appendRolloutLine(path: string, line: string): Buffer {
  * (covered by appending a trailing meta), but `read_session_meta_line` reads only the FIRST line
  * and `update_thread_metadata` clones it when the app later writes git/memory-mode metadata
  * (codex-rs `thread-store/src/local/update_thread_metadata.rs`). If the first line still says
- * `opencodex` after a native restore, that clone re-appends `opencodex` and last-writer-wins
+ * `openccx` after a native restore, that clone re-appends `openccx` and last-writer-wins
  * resurrects the routed provider. So a durable restore must also fix line 1.
  *
  * Safety: Codex parses each rollout line as `serde_json::from_str(line.trim())`, which tolerates
@@ -112,7 +112,7 @@ function appendRolloutLine(path: string, line: string): Buffer {
  * with spaces so the line's byte length is unchanged. Equal length means we can write at offset 0
  * with no truncate and no inode swap, so this composes safely with the app's cached append handle.
  * A previous shrink leaves JSON whitespace in the token slot. That padding is part of the slot,
- * so an exact restore can later grow "openai" back to "opencodex" without moving any bytes.
+ * so an exact restore can later grow "openai" back to "openccx" without moving any bytes.
  *
  * Distinguishes an already-correct line from an unsafe one so exact restore never consumes its
  * manifest after only the trailing metadata was repaired.
@@ -231,7 +231,7 @@ function patchFirstLineProviderInPlace(
   }
 }
 
-export type CodexHistoryProvider = "openai" | "opencodex";
+export type CodexHistoryProvider = "openai" | "openccx";
 
 export type CodexHistoryFailureReason = "busy" | "permission" | "integrity";
 
@@ -331,8 +331,8 @@ export function preflightCodexHistoryInjection(
       SELECT rollout_path, ${paginatedColumn ? "history_mode" : "NULL AS history_mode"}
       FROM threads
       WHERE ${providerTableMode
-        ? resumeHistory ? "model_provider IN ('openai', 'opencodex')" : "0"
-        : "model_provider = 'opencodex'"}
+        ? resumeHistory ? "model_provider IN ('openai', 'openccx')" : "0"
+        : "model_provider = 'openccx'"}
     `).all();
     for (const row of rows) {
       if (paginatedColumn || row.history_mode === "paginated") return "history_paginated_requires_native_writer";
@@ -611,7 +611,7 @@ function rememberOriginal(manifest: CodexHistoryBackupManifest, row: ApplyRowSna
   if (existing) {
     // A surviving entry means a previous route/restore cycle did not consume its manifest.
     // Its `relabel` describes THAT attempt, and this one has not written yet, so a stale
-    // `committed` would let a later restore treat the marker as proof that OpenCodex
+    // `committed` would let a later restore treat the marker as proof that Openccx
     // authored an event flag the user had since set.
     //
     // The provenance tuple stays — it is the ORIGINAL, and a routed row must never
@@ -628,7 +628,7 @@ function rememberOriginal(manifest: CodexHistoryBackupManifest, row: ApplyRowSna
     // events stale — a restore that already landed, plus whatever the user did afterwards.
     // Refreshing it needs proof that the previous relabel was UNDONE, because the original
     // tuple alone is not proof: route-then-legacy-recovery lands on that same tuple, so
-    // refreshing there would adopt OpenCodex's own write as the user's baseline.
+    // refreshing there would adopt Openccx's own write as the user's baseline.
     //
     const atOriginalTuple = row.model_provider === existing.modelProvider
       && row.source === existing.source;
@@ -646,7 +646,7 @@ function rememberOriginal(manifest: CodexHistoryBackupManifest, row: ApplyRowSna
       // - `0 -> 1` with `relabel: "none"` is the user's: a restore landed and undid the
       //   previous relabel, so the observed row is the honest pre-route state.
       // - `0 -> 1` where the previous route would have written 0 is the user's, because
-      //   OpenCodex could not have authored a 1 it never writes.
+      //   Openccx could not have authored a 1 it never writes.
       // - `0 -> 1` where the previous route WOULD have written 1, or where a legacy entry
       //   records nothing about it, is undecidable: routing-never-landed-plus-activity and
       //   routing-landed-then-legacy-recovery produce the same row. Refuse rather than pick.
@@ -674,7 +674,7 @@ function rememberOriginal(manifest: CodexHistoryBackupManifest, row: ApplyRowSna
     // Emptiness only, never the text: the manifest is a file on disk and the message is
     // user content. Routing derives the post-image event flag from the message as it was
     // HERE, so a restore that re-reads the current message would mistake later user
-    // activity for OpenCodex's own write.
+    // activity for Openccx's own write.
     hadFirstUserMessage: hasFirstUserMessage(row.first_user_message),
     // The routing write has not happened yet. Resolved to "committed" after it lands, or
     // left pending if the process dies between the two - in which case the observed row
@@ -698,17 +698,17 @@ function rowMatchesExpectedPostImage(row: RestoreRowSnapshot, entry: CodexHistor
   if (entry.modelProvider === "openai") {
     // Routing derived this from the message AT SNAPSHOT TIME (`routeOpenai`), so read the
     // recorded flag when the manifest has one. Recomputing from the row's CURRENT message
-    // mistakes a first message the user sent after routing for OpenCodex's own write, and
+    // mistakes a first message the user sent after routing for Openccx's own write, and
     // restore then erases it. Manifests written before the flag existed fall back to the
     // current reading, which is exactly the behaviour this replaces and no worse.
     const hadMessage = entry.hadFirstUserMessage ?? hasFirstUserMessage(row.first_user_message);
     const postHasUserEvent = hadMessage ? 1 : entry.hasUserEvent;
-    return rowMatchesRestoreTuple(row, "opencodex", entry.source, postHasUserEvent);
+    return rowMatchesRestoreTuple(row, "openccx", entry.source, postHasUserEvent);
   }
   return hasFirstUserMessage(row.first_user_message)
     && (
-      rowMatchesRestoreTuple(row, "opencodex", "cli", 1)
-      // Older restore code coerced an opencodex/exec original into this exact tuple before
+      rowMatchesRestoreTuple(row, "openccx", "cli", 1)
+      // Older restore code coerced an openccx/exec original into this exact tuple before
       // consuming its manifest. Accept that one known post-image so an interrupted old restore
       // can use its preserved first-line padding to recover exact provenance.
       || rowMatchesRestoreTuple(row, "openai", "cli", 1)
@@ -723,11 +723,11 @@ function rowMatchesExpectedPostImage(row: RestoreRowSnapshot, entry: CodexHistor
  * shapes cover every row reachable in practice, and the tuple the row wears says which:
  *
  * - **A** exactly the recorded original: untouched, or already restored.
- * - **B** the expected post-image: OpenCodex wrote it, so the recorded value is authoritative.
+ * - **B** the expected post-image: Openccx wrote it, so the recorded value is authoritative.
  * - **C** the original tuple with the flag moved 0 to 1: either Codex-side user activity, or
- *   OpenCodex routing that legacy recovery has since pulled back to the original provider.
+ *   Openccx routing that legacy recovery has since pulled back to the original provider.
  * - **D** the post-image tuple with the flag moved 0 to 1: a routed row the user then touched.
- *   No provenance needed - a row wearing the routed tuple was written by OpenCodex, so drift
+ *   No provenance needed - a row wearing the routed tuple was written by Openccx, so drift
  *   on top of it can only be what followed.
  *
  * Only C is ambiguous, and only when the route's own expected event was 1: then "routing
@@ -746,11 +746,11 @@ export function restoredUserEventFor(row: RestoreRowSnapshot, entry: CodexHistor
 
   const routeExpectedEvent = entry.hadFirstUserMessage ?? hasFirstUserMessage(row.first_user_message) ? 1 : 0;
 
-  // D: wearing the routed tuple, so the 1 arrived after OpenCodex wrote the row. The tuple
+  // D: wearing the routed tuple, so the 1 arrived after Openccx wrote the row. The tuple
   // is the one routing actually produces — `routeOpenai` keeps the source, `routeExec`
   // moves exec to cli — so D and C cannot both match rather than merely being ordered.
   const routedSource = entry.modelProvider === "openai" ? entry.source : "cli";
-  if (rowMatchesRestoreTuple(row, "opencodex", routedSource, 1)) return 1;
+  if (rowMatchesRestoreTuple(row, "openccx", routedSource, 1)) return 1;
 
   // C: wearing the original tuple.
   if (rowMatchesRestoreTuple(row, entry.modelProvider, entry.source, 1)) {
@@ -759,7 +759,7 @@ export function restoredUserEventFor(row: RestoreRowSnapshot, entry: CodexHistor
     if (entry.modelProvider !== "openai") return 1;
     if (entry.relabel === "none") return 1;
     if (entry.relabel === "committed") {
-      // OpenCodex authored the 1 only if its own routing write would have produced one.
+      // Openccx authored the 1 only if its own routing write would have produced one.
       return routeExpectedEvent === 1 ? 0 : 1;
     }
     if (entry.relabel === undefined) return null;  // legacy manifest: the pre-existing refusal
@@ -802,13 +802,13 @@ function rolloutMatchesExpectedPostImage(meta: ParsedSessionMeta, entry: CodexHi
     const tuple = normalizedSessionMetaTuple(meta);
     const rawSource = meta.record.payload.source;
     return meta.record.payload.id === entry.id
-      && tuple.provider === "opencodex"
+      && tuple.provider === "openccx"
       // Older/native session_meta records can omit source even when SQLite identifies the
       // surface as vscode. Apply changes only the provider, so absence is a valid post-image;
       // restore appends the exact manifest source before consuming provenance.
       && ((typeof rawSource !== "string" || !rawSource) || tuple.source === entry.source);
   }
-  return rolloutMatchesRestoreTuple(meta, entry, "opencodex", "cli")
+  return rolloutMatchesRestoreTuple(meta, entry, "openccx", "cli")
     // Keep the same one-version recovery bridge as the database tuple check: older forced
     // restore code could already have produced openai/cli before consuming this manifest.
     || rolloutMatchesRestoreTuple(meta, entry, "openai", "cli");
@@ -826,7 +826,7 @@ function snapshotRolloutForRestore(entry: CodexHistoryBackupEntry): RestoreRollo
     throw new CodexHistoryIntegrityError("history_backup_rollout_postimage_mismatch");
   }
   const firstProvider = readFirstLineProviderValue(entry.rolloutPath, entry.id);
-  if (firstProvider !== "openai" && firstProvider !== "opencodex") {
+  if (firstProvider !== "openai" && firstProvider !== "openccx") {
     throw new CodexHistoryIntegrityError("history_backup_rollout_postimage_mismatch");
   }
   if (inspectFirstLineProvider(entry.rolloutPath, entry.id, entry.modelProvider) === "unsafe") {
@@ -850,7 +850,7 @@ interface RestoreTargetPreflight {
 
 /**
  * Read-only authority shared by restore and status/doctor. Every manifest entry must still
- * identify either its exact target tuple or the one OpenCodex post-image, and its rollout
+ * identify either its exact target tuple or the one Openccx post-image, and its rollout
  * must be present, stable, same-id, and durably restorable before callers call it pending.
  */
 function preflightRestoreTargets(
@@ -1281,7 +1281,7 @@ function relabelAllRoutedHistoryToOpenai(db: Database): { rows: number; files: n
     .query<ThreadRow, []>(`
       SELECT id, rollout_path, model_provider, source, has_user_event
       FROM threads
-      WHERE model_provider = 'opencodex'
+      WHERE model_provider = 'openccx'
         AND trim(coalesce(first_user_message, '')) != ''
     `)
     .all();
@@ -1370,7 +1370,7 @@ export function withHistoryRetry<T>(fn: () => T, io: { sleepFn?: (ms: number) =>
 /**
  * True when a READONLY probe proves the native-direction restore would be a no-op:
  * the history database is readable and the backup manifest has no restore entries. Bare
- * opencodex-tagged rows are not actionable: without a manifest their original provider is
+ * openccx-tagged rows are not actionable: without a manifest their original provider is
  * unknown, so only the explicit legacy recovery command may relabel them. Used to skip the
  * write-open entirely in the Design B steady state — on Windows the Codex app holds
  * `state_5.sqlite` (WAL, busy_timeout 5s), so an unnecessary write open can stall for
@@ -1379,7 +1379,7 @@ export function withHistoryRetry<T>(fn: () => T, io: { sleepFn?: (ms: number) =>
  * to the write attempt and keep today's behavior for genuinely unknown state.
  */
 function openaiRestoreIsNoop(stateDbPath: string, backupPath: string): boolean {
-  const pending = countPendingOpencodexHistory(stateDbPath, backupPath, {
+  const pending = countPendingOpenccxHistory(stateDbPath, backupPath, {
     validateRestoreTargets: false,
   });
   return !pending.failed && pending.pendingRows === 0 && pending.backupEntries === 0;
@@ -1433,7 +1433,7 @@ function syncCodexHistoryProviderUnsafe(provider: CodexHistoryProvider, stateDbP
       .query<ApplyRowSnapshot, []>(`
         SELECT id, rollout_path, model_provider, source, has_user_event, first_user_message
         FROM threads
-        WHERE model_provider = 'opencodex'
+        WHERE model_provider = 'openccx'
           AND source = 'exec'
           AND trim(coalesce(first_user_message, '')) != ''
       `)
@@ -1449,7 +1449,7 @@ function syncCodexHistoryProviderUnsafe(provider: CodexHistoryProvider, stateDbP
     const update = db.transaction(() => {
       const routeOpenai = db.query(`
         UPDATE threads
-        SET model_provider = 'opencodex',
+        SET model_provider = 'openccx',
             has_user_event = ?
         WHERE id = ?
           AND rollout_path = ?
@@ -1505,7 +1505,7 @@ function syncCodexHistoryProviderUnsafe(provider: CodexHistoryProvider, stateDbP
       // stale snapshot or a newly inserted row cannot be routed before its provenance exists.
       for (const row of openaiRows) {
         try {
-          if (updateSessionMeta(row.rollout_path, row.id, { provider: "opencodex" }).changed) files++;
+          if (updateSessionMeta(row.rollout_path, row.id, { provider: "openccx" }).changed) files++;
         } catch (error) {
           if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") throw error;
         }
@@ -1529,7 +1529,7 @@ function syncCodexHistoryProviderUnsafe(provider: CodexHistoryProvider, stateDbP
     }
 
     // The routing writes landed. Resolve every pending marker and rewrite the manifest, so a
-    // later restore knows the relabel is OpenCodex's rather than having to infer it. A crash
+    // later restore knows the relabel is Openccx's rather than having to infer it. A crash
     // before this point leaves `pending`, which the observed row resolves at restore time.
     for (const row of [...openaiRows, ...execRows]) {
       const entry = manifest.entries[row.id];
@@ -1556,7 +1556,7 @@ function restoreCodexHistoryProvider(stateDbPath: string, backupPath: string): C
     assertLegacyHistoryStore(db);
 
     // Validate the whole manifest-to-database target set before touching a rollout. Only the
-    // OpenCodex post-image (or an already-restored target from an interrupted retry) is owned by
+    // Openccx post-image (or an already-restored target from an interrupted retry) is owned by
     // this manifest. Any other tuple is a newer/foreign provider decision and must win.
     const current = db.query<RestoreRowSnapshot, [string]>(`
       SELECT id, rollout_path, model_provider, source, has_user_event, first_user_message
@@ -1581,7 +1581,7 @@ function restoreCodexHistoryProvider(stateDbPath: string, backupPath: string): C
       for (const entry of entries) {
         const before = snapshots.get(entry.id);
         if (!before) throw new CodexHistoryIntegrityError("history_backup_snapshot_missing");
-        // Codex-side activity that arrived after OpenCodex wrote the row is the user's, and
+        // Codex-side activity that arrived after Openccx wrote the row is the user's, and
         // restoring the manifest's snapshot over it would erase it.
         const restoredEvent = restoredUserEventFor(before, entry) ?? entry.hasUserEvent;
         const result = update.run(
@@ -1707,7 +1707,7 @@ export function restoreLegacyOpenaiHistory(stateDbPath = resolveCodexStateDbPath
 
 /**
  * One-time Design-B migration: restore only manifest-backed originals. Untracked
- * opencodex-tagged threads have unknown provider provenance and remain routed unless the
+ * openccx-tagged threads have unknown provider provenance and remain routed unless the
  * user explicitly invokes legacy OpenAI recovery. Thin wrapper over the restore path with a
  * configurable retry budget — the daemon migration guardian uses `{ attempts: 1 }`
  * per tick so a locked DB never stalls the event loop beyond one sqlite busy wait.
@@ -1771,7 +1771,7 @@ export function snapshotCodexHistoryNoop(
     if (dataVersionBefore === null) {
       return { kind: "unknown", pendingRows: null, backupEntries: null, ...base, reason: "database-query" };
     }
-    const pending = countPendingOpencodexHistory(stateDbPath, backupPath, {
+    const pending = countPendingOpenccxHistory(stateDbPath, backupPath, {
       validateRestoreTargets: false,
     });
     if (pending.failed) {
@@ -1822,14 +1822,14 @@ export interface PendingHistoryCount {
 }
 
 /**
- * Read-only migration progress probe for the guardian and `ocx doctor`. Opens sqlite
+ * Read-only migration progress probe for the guardian and `occx doctor`. Opens sqlite
  * readonly with a SHORT busy timeout so a locked DB cannot stall a daemon tick. Only a
  * valid, database-bound backup manifest is actionable work; bare routed rows remain
  * untouched because their original provider is not known. Operator diagnostics keep the
  * default deep rollout validation. Recurring no-op probes explicitly opt out because any
  * nonempty manifest already prevents a no-op and the mutation path always preflights files.
  */
-export function countPendingOpencodexHistory(
+export function countPendingOpenccxHistory(
   stateDbPath = resolveCodexStateDbPath(),
   backupPath = historyBackupPathFor(stateDbPath),
   opts: { validateRestoreTargets?: boolean } = {},

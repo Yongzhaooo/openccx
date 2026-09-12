@@ -1,4 +1,4 @@
-import type { CodexAccountMode, FastWire, OcxProviderConfig } from "../types";
+import type { CodexAccountMode, FastWire, OccxProviderConfig } from "../types";
 import { fastWireDeclarationError } from "./fastwire";
 import { KIRO_MODELS, KIRO_MODEL_CONTEXT_WINDOWS, KIRO_MODEL_REASONING_EFFORTS } from "./kiro-models";
 import { DEVIN_MODEL_CONTEXT_WINDOWS } from "../adapters/devin/live-models";
@@ -142,7 +142,7 @@ export interface ProviderRegistryEntry {
   label: string;
   adapter: string;
   baseUrl: string;
-  apiKeyTransport?: OcxProviderConfig["apiKeyTransport"];
+  apiKeyTransport?: OccxProviderConfig["apiKeyTransport"];
   alias?: string;
   authKind: ProviderAuthKind;
   codexAccountMode?: CodexAccountMode;
@@ -261,7 +261,7 @@ export interface ProviderRegistryEntry {
   annotateEmptyToolOutputs?: boolean;
   /**
    * Registry default for the provider's `service_tier` support; see
-   * `OcxProviderConfig.supportsServiceTier`. Registry-only: backfilled (never
+   * `OccxProviderConfig.supportsServiceTier`. Registry-only: backfilled (never
    * overriding) at enrich/route time and deliberately NOT seeded into saved
    * config, so an explicit user value stays distinguishable from the default
    * (and the canonical openai seed comparison keeps its exact key set).
@@ -290,7 +290,7 @@ export interface ProviderRegistryEntry {
    * without changing provider ownership, routing, authentication, or config validation.
    */
   modelServiceTierCapabilityBaseUrlGuard?: (baseUrl: string) => boolean;
-  /** Registry default for plaintext reasoning replay; see `OcxProviderConfig.preserveResponsesReasoningContent`. Registry-only like `supportsServiceTier`. */
+  /** Registry default for plaintext reasoning replay; see `OccxProviderConfig.preserveResponsesReasoningContent`. Registry-only like `supportsServiceTier`. */
   preserveResponsesReasoningContent?: boolean;
   /** Registry defaults for per-model Codex reasoning propagation; explicit user keys win during enrichment. */
   modelSupportsReasoningSummaries?: Record<string, boolean>;
@@ -329,19 +329,19 @@ export interface ProviderRegistryEntry {
    * as a thinking-budget/toggle model. This is registry-only and is never persisted as user config.
    */
   directReasoningEffortModels?: string[];
-  reasoningWireFormat?: OcxProviderConfig["reasoningWireFormat"];
+  reasoningWireFormat?: OccxProviderConfig["reasoningWireFormat"];
   noVisionModels?: string[];
   noReasoningModels?: string[];
   noTemperatureModels?: string[];
   noTopPModels?: string[];
   noPenaltyModels?: string[];
   /**
-   * Registry-only seed for `OcxProviderConfig.noJsonSchemaModels`. Merged into the
+   * Registry-only seed for `OccxProviderConfig.noJsonSchemaModels`. Merged into the
    * resolved provider at route time rather than persisted as user config, the same way
    * `directReasoningEffortModels` above is registry-owned.
    */
   noJsonSchemaModels?: string[];
-  /** Opt this provider into parallel tool calls (see OcxProviderConfig.parallelToolCalls). */
+  /** Opt this provider into parallel tool calls (see OccxProviderConfig.parallelToolCalls). */
   parallelToolCalls?: boolean;
   /** Opt this provider into forwarding prompt_cache_key (OpenAI-specific; strict backends reject it). */
   promptCacheKey?: boolean;
@@ -373,7 +373,7 @@ export interface ProviderRegistryEntry {
 }
 
 export type ProviderConfigSeed = Pick<
-  OcxProviderConfig,
+  OccxProviderConfig,
   "adapter" | "baseUrl" | "apiKeyTransport" | "responsesPath" | "chatCompletionsPath" | "authMode" | "keyOptional" | "freeTier" | "modelSuffixBracketStrip" | "defaultModel" | "models"
   | "liveModels" | "contextWindow" | "modelContextWindows" | "modelInputModalities"
   | "modelDisplayNames"
@@ -397,13 +397,13 @@ const ANTHROPIC_MODEL_CONTEXT_WINDOWS: Record<string, number> = { "claude-fable-
 // larger request never over-allocates; it only stops the 8192 truncation.
 const ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS = 64_000;
 /**
- * The effort rungs opencodex exposes for native Anthropic models. Without this the
+ * The effort rungs openccx exposes for native Anthropic models. Without this the
  * providers advertised no ladder at all, so every client that keys its effort control off
  * `reasoningEfforts` — Aside and the rest of the Pi-shaped exports — wrote these models
  * with no control, while the SAME Claude models routed through `cursor` or
  * `google-antigravity` had one.
  *
- * This is an opencodex ladder, not a claim that each model takes `output_config.effort`.
+ * This is an openccx ladder, not a claim that each model takes `output_config.effort`.
  * The adapter serves two wire shapes (src/adapters/anthropic.ts): adaptive families
  * (fable, sonnet >= 5, opus >= 4.7) send the effort directly, while opus 4.6, sonnet 4.6
  * and haiku 4.5 take the legacy path where `reasoningBudget` TRANSLATES each rung into
@@ -1056,7 +1056,7 @@ const NEURALWATT_REASONING_HISTORY_MODELS = [
 // 260728 Baseten Model APIs: `/v1/models` owns the live lineup, while these hints
 // describe only capabilities that Baseten documents per slug. Unlisted live models
 // intentionally inherit the empty provider ladder instead of being advertised with
-// opencodex's generic reasoning defaults. Audio is omitted because the current proxy
+// openccx's generic reasoning defaults. Audio is omitted because the current proxy
 // request model does not carry OpenAI `audio_url` parts.
 // Evidence: https://docs.baseten.co/inference/model-apis/reasoning
 //           https://docs.baseten.co/inference/model-apis/vision
@@ -1286,7 +1286,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     authKind: "oauth",
     featured: false,
     dashboardPreset: true,
-    note: "Experimental Cursor bridge. Live transport and live model discovery are enabled after a standalone PKCE browser login via 'ocx login cursor'; native read/write/delete/shell/fetch execution is disabled by default and request text such as Codex sandbox markers never authorizes it. Set \"nativeLocalExec\": \"on\" on providers.cursor in ~/.opencodex/config.json (dashboard: Providers → Cursor → Edit JSON) only for a trusted local experiment where every data-plane caller is trusted. \"off\" denies all, \"codex-sandbox\" is accepted for backwards compatibility but fails closed, and legacy \"unsafeAllowNativeLocalExec\": true still means explicit operator opt-in.",
+    note: "Experimental Cursor bridge. Live transport and live model discovery are enabled after a standalone PKCE browser login via 'occx login cursor'; native read/write/delete/shell/fetch execution is disabled by default and request text such as Codex sandbox markers never authorizes it. Set \"nativeLocalExec\": \"on\" on providers.cursor in ~/.opencodex/config.json (dashboard: Providers → Cursor → Edit JSON) only for a trusted local experiment where every data-plane caller is trusted. \"off\" denies all, \"codex-sandbox\" is accepted for backwards compatibility but fails closed, and legacy \"unsafeAllowNativeLocalExec\": true still means explicit operator opt-in.",
     models: cursorModelIds(CURSOR_STATIC_MODELS),
     liveModels: true,
     defaultModel: "auto",
@@ -1318,7 +1318,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     // The signed-in Devin CLI as an account source.
     //
     // The CLI writes a `devin-session-token$<JWT>` to its own credentials.toml,
-    // which is the same credential RegisterUser hands `ocx login devin` and which
+    // which is the same credential RegisterUser hands `occx login devin` and which
     // the cloud-direct client already speaks. So this provider imports that token
     // and streams over Connect-RPC like its browser-login sibling, rather than
     // spawning `devin acp`.
@@ -1359,7 +1359,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     authKind: "oauth",
     featured: false,
     dashboardPreset: false,
-    note: "Experimental unofficial Cognition/Devin bridge. ocx login devin opens Auth0 browser sign-in, then exchanges the token via Cognition's RegisterUser for a long-lived API key.",
+    note: "Experimental unofficial Cognition/Devin bridge. occx login devin opens Auth0 browser sign-in, then exchanges the token via Cognition's RegisterUser for a long-lived API key.",
     models: ["swe-1-7", "swe-1-7-lightning", "gpt-5-6-sol", "gpt-5-6-luna", "gpt-5-6-terra", "claude-opus-4-8", "claude-fable-5-1", "claude-sonnet-5", "glm-5-2", "kimi-k2-7", "grok-4-5"],
     liveModels: true,
     defaultModel: "swe-1-7",
@@ -1535,7 +1535,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     liveModels: true,
     modelDiscovery: ORCAROUTER_MODEL_DISCOVERY,
     modelReasoningEfforts: ORCAROUTER_MODEL_REASONING_EFFORTS,
-    note: "Connect your OrcaRouter account with OAuth 2.0 + PKCE; the issued API key is stored in OpenCodex's existing credential store.",
+    note: "Connect your OrcaRouter account with OAuth 2.0 + PKCE; the issued API key is stored in Openccx's existing credential store.",
   },
   {
     id: "anthropic",
@@ -1730,7 +1730,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     // No defaultMaxOutputTokens: Meta publishes none. The only number in its docs
     // (131072) appears inside a third-party config sample, and the protocol pages call
     // the real limit "model-dependent".
-    // Meta names its variable MODEL_API_KEY, but the env var opencodex reads is derived
+    // Meta names its variable MODEL_API_KEY, but the env var openccx reads is derived
     // from the provider id (META_MODEL_API_KEY). Saying only Meta's name would send a
     // user to export a variable this proxy never reads.
     note: "Pay-as-you-go Meta Model API. Get a key at https://dev.meta.ai (Meta calls it MODEL_API_KEY; export it here as META_MODEL_API_KEY) — a Meta developer account needs a payment method before it can serve requests, and every call is metered per token. A Muse Code subscription does NOT work here: Meta scopes that credential to the Muse Code CLI and bills any other key pay-as-you-go (dev.meta.ai/docs/muse-code/subscriptions). The Contributor tier (muse-spark-1.3-contributor) is cheap because Meta trains on your prompts — about 92% off input, 95% off output, 99% off cached input; do not send confidential material through it. Muse Spark is also reachable through resellers: command-code carries both tiers, opencode-go serves only muse-spark-1.3-contributor.",
@@ -1760,7 +1760,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     modelInputModalities: Object.fromEntries(META_MUSE_MODELS.map(id => [id, ["text", "image"] as ["text", "image"]])),
     modelReasoningEfforts: Object.fromEntries(META_MUSE_MODELS.map(id => [id, META_MUSE_REASONING_EFFORTS])),
     modelReasoningEffortMap: Object.fromEntries(META_MUSE_MODELS.map(id => [id, META_MUSE_REASONING_EFFORT_MAP])),
-    note: "Reuses the API key the Muse Code CLI stores after `muse login` (macOS only; requires the CLI installed and signed in). Meta ships no native Windows CLI and the Linux credential storage has not been measured, so on those platforms OpenCodex asks you to paste the Muse Code API key from https://dev.meta.ai instead of importing one; a pasted key faces the same format check and live validation as an imported one. Meta scopes that credential to the Muse Code CLI, so this is an UNSUPPORTED use: Meta does not authorize subscription coverage outside its own CLI, how these calls settle is not observable from the API, and you should treat every call as billable against your account. The key, imported or pasted, is copied into OpenCodex's auth store. OpenCodex reads Meta's subscription windows from streaming responses and shows the last observed value with its age; there is no endpoint to query them on demand, so refreshing one requires another streaming turn, and translated (non-passthrough) turns report none. Rate limits apply per team, not per key. For a supported path use the meta-model provider with your own key (export it as META_MODEL_API_KEY).",
+    note: "Reuses the API key the Muse Code CLI stores after `muse login` (macOS only; requires the CLI installed and signed in). Meta ships no native Windows CLI and the Linux credential storage has not been measured, so on those platforms Openccx asks you to paste the Muse Code API key from https://dev.meta.ai instead of importing one; a pasted key faces the same format check and live validation as an imported one. Meta scopes that credential to the Muse Code CLI, so this is an UNSUPPORTED use: Meta does not authorize subscription coverage outside its own CLI, how these calls settle is not observable from the API, and you should treat every call as billable against your account. The key, imported or pasted, is copied into Openccx's auth store. Openccx reads Meta's subscription windows from streaming responses and shows the last observed value with its age; there is no endpoint to query them on demand, so refreshing one requires another streaming turn, and translated (non-passthrough) turns report none. Rate limits apply per team, not per key. For a supported path use the meta-model provider with your own key (export it as META_MODEL_API_KEY).",
   },
   {
     id: "umans",
@@ -2041,7 +2041,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     apiKeyValidation: "unknown",
     // Standard sponsor under SPONSORS.md (agreement signed 2026-09-07). Pins the row in the
     // picker and adds the chip; nothing about routing or defaults changes.
-    sponsor: { tier: "standard", url: "https://www.orcarouter.ai/?utm_source=opencodex&utm_medium=readme" },
+    sponsor: { tier: "standard", url: "https://www.orcarouter.ai/?utm_source=openccx&utm_medium=readme" },
     defaultModel: "openai/gpt-5.5",
     models: ORCAROUTER_MODELS,
     liveModels: true,
@@ -2417,7 +2417,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     },
     // Verified 2026-08-03: public /provider/v1/models returns 51 rows; /chat/completions returns
     // 401 UNAUTHORIZED without a Bearer key. Primary source: https://commandcode.ai/docs/provider.
-    note: "Command Code Provider API (OpenAI-compatible); API access requires the Provider plan. Use `ocx login command-code` for OAuth account login (imports an existing local Command Code CLI credential when present). Docs: https://commandcode.ai/docs/provider.",
+    note: "Command Code Provider API (OpenAI-compatible); API access requires the Provider plan. Use `occx login command-code` for OAuth account login (imports an existing local Command Code CLI credential when present). Docs: https://commandcode.ai/docs/provider.",
   },
   {
     id: "sambanova",
@@ -3162,7 +3162,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     // continuations, or the gateway answers HTTP 400 (issues #950/#994). Mirror the DeepSeek
     // reasoning + thinking metadata so `opencode-zen/deepseek-v4-flash-free` — and the other
     // Zen DeepSeek thinking models — never serialize a bare tool-call turn.
-    note: "Keyed OpenCode Zen gateway. Free models on this tier are often short-window rate-limited at roughly 15-20 requests/minute (community-measured; OpenCode does not publish RPM). Zen may return generic 429s without Retry-After / X-RateLimit headers; when Retry-After is omitted, opencodex adds a synthetic backoff hint (upstream Retry-After still wins). Distinct from the keyless opencode-free desktop quota (~200 Big Pickle/free-model requests per 5 hours). Docs: https://opencode.ai/docs/zen/. Free-model prompts may be retained for training — do not send confidential material.",
+    note: "Keyed OpenCode Zen gateway. Free models on this tier are often short-window rate-limited at roughly 15-20 requests/minute (community-measured; OpenCode does not publish RPM). Zen may return generic 429s without Retry-After / X-RateLimit headers; when Retry-After is omitted, openccx adds a synthetic backoff hint (upstream Retry-After still wins). Distinct from the keyless opencode-free desktop quota (~200 Big Pickle/free-model requests per 5 hours). Docs: https://opencode.ai/docs/zen/. Free-model prompts may be retained for training — do not send confidential material.",
     modelReasoningEfforts: Object.fromEntries(
       [...DEEPSEEK_GATEWAY_THINKING_MODELS, ...OPENCODE_FREE_DEEPSEEK_MODELS].map(id => [id, deepseekThinkingEffortsFor(id)]),
     ),
@@ -3193,7 +3193,7 @@ export const PROVIDER_REGISTRY: readonly ProviderRegistryEntry[] = [
     keyOptional: true,
     featured: true,
     liveModels: true,
-    note: "No key needed, but OpenCode now gates this tier to its own client: Zen refuses any request that arrives without an x-opencode-session header (error type MissingSessionID, \"OpenCode's free tier can only be used in OpenCode\"). opencodex does not mint that header or claim an OpenCode client identity, because no upstream contract authorizes a third-party agent to present itself as OpenCode. Until OpenCode publishes a third-party integration path for the keyless tier, use the keyed opencode-zen provider instead (https://opencode.ai/auth). Quota figures for when the tier admitted a request: OpenCode advertises about 200 Big Pickle/free-model requests per 5 hours, and the same Zen gateway can short-window rate-limit free models at roughly 15-20 requests/minute, and may return generic 429s without Retry-After (opencodex synthesizes backoff only when that header is omitted). Free models are discovered live from Zen. Data use: per OpenCode's Zen docs (https://opencode.ai/docs/zen/), prompts sent to free models may be retained and used for training/improvement — do not send confidential material through this provider.",
+    note: "No key needed, but OpenCode now gates this tier to its own client: Zen refuses any request that arrives without an x-opencode-session header (error type MissingSessionID, \"OpenCode's free tier can only be used in OpenCode\"). openccx does not mint that header or claim an OpenCode client identity, because no upstream contract authorizes a third-party agent to present itself as OpenCode. Until OpenCode publishes a third-party integration path for the keyless tier, use the keyed opencode-zen provider instead (https://opencode.ai/auth). Quota figures for when the tier admitted a request: OpenCode advertises about 200 Big Pickle/free-model requests per 5 hours, and the same Zen gateway can short-window rate-limit free models at roughly 15-20 requests/minute, and may return generic 429s without Retry-After (openccx synthesizes backoff only when that header is omitted). Free models are discovered live from Zen. Data use: per OpenCode's Zen docs (https://opencode.ai/docs/zen/), prompts sent to free models may be retained and used for training/improvement — do not send confidential material through this provider.",
     dashboardUrl: "https://opencode.ai",
     staticHeaders: {
       // Zen answers a bare runtime User-Agent (Bun/x.y.z) more aggressively than a client
@@ -3508,7 +3508,7 @@ export function mergeRegistryStaticHeaders(
 /** Whether this registry row's per-model service-tier evidence applies to one configured target. */
 export function registryModelServiceTierCapabilityApplies(
   entry: Pick<ProviderRegistryEntry, "modelServiceTierCapabilityBaseUrlGuard">,
-  provider: Pick<OcxProviderConfig, "baseUrl">,
+  provider: Pick<OccxProviderConfig, "baseUrl">,
 ): boolean {
   const guard = entry.modelServiceTierCapabilityBaseUrlGuard;
   return guard === undefined || guard(provider.baseUrl);
@@ -3535,7 +3535,7 @@ function normalizedProviderEndpoint(value: string): string {
  */
 export function providerMatchesRegistryTransport(
   id: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
 ): boolean {
   const entry = getProviderRegistryEntry(id);
   if (!entry) return false;
@@ -3562,7 +3562,7 @@ export function providerMatchesRegistryTransport(
  * base URL are skipped, because their configured URL cannot identify one vendor route.
  */
 export function registryEntryForProviderDestination(
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
 ): ProviderRegistryEntry | undefined {
   if (typeof provider.baseUrl !== "string" || !provider.baseUrl) return undefined;
   if (provider.authMode !== undefined && provider.authMode !== "key") return undefined;
@@ -3593,7 +3593,7 @@ export function registryEntryForProviderDestination(
  */
 export function providerModelWireDefault(
   id: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   modelId: string,
   allowedWires: ReadonlySet<string>,
   inbound: InboundWire,
@@ -3616,7 +3616,7 @@ export function providerModelWireDefault(
 /** Resolve a registry-only upstream-streaming compatibility hint for Responses turns. */
 export function providerModelResponsesUpstreamStreaming(
   id: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   modelId: string,
 ): boolean | undefined {
   const entry = getProviderRegistryEntry(id);
@@ -3627,7 +3627,7 @@ export function providerModelResponsesUpstreamStreaming(
 /** Resolve a registry-only terminal-repair policy for native Responses streams. */
 export function providerModelResponsesTerminalRepair(
   id: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   modelId: string,
 ): ResponsesTerminalRepairPolicy | undefined {
   const entry = getProviderRegistryEntry(id);
@@ -3643,7 +3643,7 @@ export function providerModelResponsesTerminalRepair(
  * `codexAccountMode` on the provider config wins and a missing/invalid value defaults to
  * `"pool"`. Other providers keep registry-only metadata (there is no mode for `openai-apikey`).
  */
-export function providerCodexAccountMode(id: string, provider?: OcxProviderConfig): CodexAccountMode | undefined {
+export function providerCodexAccountMode(id: string, provider?: OccxProviderConfig): CodexAccountMode | undefined {
   const registryMode = getProviderRegistryEntry(id)?.codexAccountMode;
   if (id !== "openai") return registryMode;
   const persisted = provider?.codexAccountMode;

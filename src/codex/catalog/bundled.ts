@@ -6,7 +6,7 @@ import { atomicWriteFile, expandUserPath, getConfigDir, websocketsEnabled } from
 import { CODEX_CONFIG_PATH, CODEX_MODELS_CACHE_PATH, DEFAULT_CATALOG_PATH, readRootTomlString, resolveCodexConfigPath } from "../paths";
 import { clearModelCache, DEFAULT_MODEL_CACHE_TTL_MS, getFreshCached, getStaleCached, isModelsFetchCoolingDown, markModelsFetchFailure, setCached } from "../model-cache";
 import { buildModelsRequest, resolveModelsAuthToken } from "../../oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { modelInList } from "../../types";
 import { CODEX_REASONING_LEVELS, codexEffortRank, configuredReasoningEfforts, modelRecordValue, sanitizeCodexReasoningEfforts } from "../../reasoning-effort";
 import { getModelMetadata, getModelMetadataCaseInsensitive, listModelMetadata, resolveMetadataProvider } from "../../generated/model-metadata";
@@ -96,9 +96,9 @@ function cloneAndDeepFreeze<T>(value: T): DeepReadonly<T> {
 
 function bundledRuntimeKey(
   runtime: Pick<ResolvedCodexRuntime, "command" | "version">,
-  opencodexHome: string = process.env.OPENCODEX_HOME ?? "",
+  openccxHome: string = process.env.OPENCCX_HOME ?? "",
 ): string {
-  return [runtime.command, runtime.version ?? "", opencodexHome].join("\0");
+  return [runtime.command, runtime.version ?? "", openccxHome].join("\0");
 }
 
 function publishBundledCatalogCache(
@@ -142,10 +142,10 @@ export function invalidateBundledCatalogCache(): void {
 export function setBundledCatalogCacheForTests(
   runtime: Pick<ResolvedCodexRuntime, "command" | "version">,
   value: RawCatalog | null,
-  options: Readonly<{ expiresAt?: number; opencodexHome?: string }> = {},
+  options: Readonly<{ expiresAt?: number; openccxHome?: string }> = {},
 ): void {
   publishBundledCatalogCache(
-    bundledRuntimeKey(runtime, options.opencodexHome),
+    bundledRuntimeKey(runtime, options.openccxHome),
     options.expiresAt ?? Date.now() + BUNDLED_CATALOG_CACHE_MS,
     value,
   );
@@ -240,7 +240,7 @@ export function loadBundledCodexCatalog(deps: BundledCatalogDeps = {}): Readonly
   const useCache = !deps.commandCandidates && !deps.execFileSync && !deps.configDir && !deps.env;
   const execFile = deps.execFileSync ?? (execFileSync as unknown as ExecFile);
   // Prefer the single resolved runtime so sync/clamp never probe a different binary
-  // than OpenCodex will launch. Tests may inject commandCandidates to stub probing.
+  // than Openccx will launch. Tests may inject commandCandidates to stub probing.
   let cacheKey: string | null = null;
   const candidates = deps.commandCandidates?.() ?? (() => {
     const resolved = resolveAndPersistCodexRuntime({
@@ -256,7 +256,7 @@ export function loadBundledCodexCatalog(deps: BundledCatalogDeps = {}): Readonly
       now: deps.now,
       // Catalog loading only consumes `resolved.runtime.command`, never `newerAvailable`.
       // Full PATH discovery probes every candidate launcher (100+ on a dev machine, ~1.2s),
-      // which alone can exceed the 3s budget `ocx claude` allows /api/claude-code. Priority
+      // which alone can exceed the 3s budget `occx claude` allows /api/claude-code. Priority
       // selection is identical either way; callers wanting discovery diagnostics opt in.
       discoverAlternatives: deps.discoverAlternatives ?? false,
     });

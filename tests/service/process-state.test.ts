@@ -6,14 +6,14 @@ import * as configFacade from "../../src/config";
 import {
   getPidPath,
   getRuntimePortPath,
-  isOcxStartCommandLine,
-  ocxStartProcessCacheSizeForTests,
+  isOccxStartCommandLine,
+  occxStartProcessCacheSizeForTests,
   parsePidFile,
   readPid,
   readRuntimePort,
   removePid,
   removeRuntimePort,
-  setOcxStartProcessCacheForTests,
+  setOccxStartProcessCacheForTests,
   setProcessCommandLineExecForTests,
   setProcessCommandLinePlatformForTests,
   writePid,
@@ -26,17 +26,17 @@ import { repoPath } from "../helpers/repo-root";
 let testDir = "";
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-process-state-"));
-  process.env.OPENCODEX_HOME = testDir;
-  setOcxStartProcessCacheForTests([]);
+  testDir = mkdtempSync(join(tmpdir(), "occx-process-state-"));
+  process.env.OPENCCX_HOME = testDir;
+  setOccxStartProcessCacheForTests([]);
 });
 
 afterEach(() => {
   setProcessCommandLineExecForTests(null);
   setProcessCommandLinePlatformForTests(null);
   setTrustedWindowsSystemDirectoryResolverForTests(null);
-  setOcxStartProcessCacheForTests([]);
-  delete process.env.OPENCODEX_HOME;
+  setOccxStartProcessCacheForTests([]);
+  delete process.env.OPENCCX_HOME;
   if (testDir && existsSync(testDir)) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -63,17 +63,17 @@ describe("proxy process-state ownership", () => {
     expect(parsePidFile("not-json")).toBeNull();
   });
 
-  test("recognizes opencodex start command lines", () => {
-    expect(isOcxStartCommandLine("bun run src/cli.ts start")).toBe(true);
-    expect(isOcxStartCommandLine('"C:/tools/bun/bin/bun.exe" "run" "src/cli/index.ts" "start"')).toBe(true);
-    expect(isOcxStartCommandLine("bun C:/tools/bun/install/global/node_modules/@bitkyc08/opencodex/src/cli.ts start")).toBe(true);
-    expect(isOcxStartCommandLine(
+  test("recognizes openccx start command lines", () => {
+    expect(isOccxStartCommandLine("bun run src/cli.ts start")).toBe(true);
+    expect(isOccxStartCommandLine('"C:/tools/bun/bin/bun.exe" "run" "src/cli/index.ts" "start"')).toBe(true);
+    expect(isOccxStartCommandLine("bun C:/tools/bun/install/global/node_modules/@bitkyc08/opencodex/src/cli.ts start")).toBe(true);
+    expect(isOccxStartCommandLine(
       "bun C:/nvm/node_modules/@bitkyc08/.opencodex-1JejBqbZ/src/cli/index.ts start --port 10100",
     )).toBe(true);
-    expect(isOcxStartCommandLine("opencodex start")).toBe(true);
-    expect(isOcxStartCommandLine("bun run src/cli.ts status")).toBe(false);
-    expect(isOcxStartCommandLine("bun test C:/work/opencodex/tests/server/config.test.ts")).toBe(false);
-    expect(isOcxStartCommandLine("notepad.exe")).toBe(false);
+    expect(isOccxStartCommandLine("openccx start")).toBe(true);
+    expect(isOccxStartCommandLine("bun run src/cli.ts status")).toBe(false);
+    expect(isOccxStartCommandLine("bun test C:/work/opencodex/tests/server/config.test.ts")).toBe(false);
+    expect(isOccxStartCommandLine("notepad.exe")).toBe(false);
   });
 
   test("writes pid state through the shared atomic writer", () => {
@@ -88,7 +88,7 @@ describe("proxy process-state ownership", () => {
     const previousPath = process.env.PATH;
     const probes: string[] = [];
     mkdirSync(attackerDir);
-    writeFileSync(fakePs, `#!/bin/sh\ntouch "$0.executed"\necho 'ocx start'\n`, { mode: 0o755 });
+    writeFileSync(fakePs, `#!/bin/sh\ntouch "$0.executed"\necho 'occx start'\n`, { mode: 0o755 });
 
     try {
       setProcessCommandLinePlatformForTests("darwin");
@@ -108,7 +108,7 @@ describe("proxy process-state ownership", () => {
     }
 
     expect(process.env.PATH).toBe(previousPath);
-    expect(ocxStartProcessCacheSizeForTests()).toBe(0);
+    expect(occxStartProcessCacheSizeForTests()).toBe(0);
   });
 
   test("pid validation selects only trusted Windows process probes", () => {
@@ -131,32 +131,32 @@ describe("proxy process-state ownership", () => {
 
       setProcessCommandLineExecForTests(executable => {
         calls.push(executable);
-        if (executable === trustedWmic) return "CommandLine=ocx start\r\n";
+        if (executable === trustedWmic) return "CommandLine=occx start\r\n";
         throw new Error(`unexpected process probe: ${executable}`);
       });
       expect(readPid()).toBe(process.pid);
       expect(calls).toEqual([trustedWmic]);
 
       calls.length = 0;
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
       setProcessCommandLineExecForTests(executable => {
         calls.push(executable);
         if (executable === trustedWmic) throw new Error("WMIC unavailable");
-        if (executable === trustedPowerShell) return "ocx start\n";
+        if (executable === trustedPowerShell) return "occx start\n";
         throw new Error(`unexpected process probe: ${executable}`);
       });
       expect(readPid()).toBe(process.pid);
       expect(calls).toEqual([trustedWmic, trustedPowerShell]);
       expect(calls.every(executable => !executable.startsWith(attackerRoot))).toBe(true);
     } finally {
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
       if (previousSystemRoot === undefined) delete process.env.SystemRoot;
       else process.env.SystemRoot = previousSystemRoot;
       if (previousWindir === undefined) delete process.env.WINDIR;
       else process.env.WINDIR = previousWindir;
     }
 
-    expect(ocxStartProcessCacheSizeForTests()).toBe(0);
+    expect(occxStartProcessCacheSizeForTests()).toBe(0);
   });
 
   test("removes pid state only while the expected pid still matches", () => {

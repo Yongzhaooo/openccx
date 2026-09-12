@@ -85,7 +85,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import { drainAndShutdown } from "../lifecycle";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "../request-log";
 import { estimateComboCost, estimateRequestCost, normalizeCostTokens, tokensPerSecond } from "../../usage/cost";
@@ -126,7 +126,7 @@ import { readManagementJsonBody, rethrowManagementBodyTooLarge } from "./body";
 type ProviderPatchApplication =
   | { error: string }
   | {
-      next: OcxProviderConfig;
+      next: OccxProviderConfig;
       touched: boolean;
       editorTouched: boolean;
       enablingOpenAi: boolean;
@@ -143,7 +143,7 @@ type ProviderAliasOverlayField = typeof PROVIDER_ALIAS_OVERLAY_FIELDS[number];
  */
 function providerAliasOverlayOwnershipError(
   submitted: Record<string, unknown>,
-  existing: OcxProviderConfig | undefined,
+  existing: OccxProviderConfig | undefined,
 ): string | null {
   for (const field of PROVIDER_ALIAS_OVERLAY_FIELDS) {
     if (!Object.hasOwn(submitted, field)) continue;
@@ -179,7 +179,7 @@ function providerTransportValidationCandidate(provider: Record<string, unknown>)
 }
 
 /** Preserve the authoritative alias values from the stored provider during a full edit. */
-function restorePersistedAliasOverlays(target: OcxProviderConfig, existing: OcxProviderConfig | undefined): void {
+function restorePersistedAliasOverlays(target: OccxProviderConfig, existing: OccxProviderConfig | undefined): void {
   for (const field of PROVIDER_ALIAS_OVERLAY_FIELDS) {
     delete (target as Record<ProviderAliasOverlayField, unknown>)[field];
     if (!existing || !Object.hasOwn(existing, field)) continue;
@@ -191,16 +191,16 @@ function restorePersistedAliasOverlays(target: OcxProviderConfig, existing: OcxP
 }
 
 type ProviderEditorCandidateResult =
-  | { ok: true; config: OcxConfig; removedProviders: string[] }
+  | { ok: true; config: OccxConfig; removedProviders: string[] }
   | { ok: false; status: 400 | 409; error: string; code: string };
 
 type ProviderEditorMutationValue = ProviderEditorCandidateResult;
 
 function mergeProviderEditorRow(
-  persisted: OcxProviderConfig | undefined,
+  persisted: OccxProviderConfig | undefined,
   baseline: ProviderEditorProviderDTO | undefined,
   next: ProviderEditorProviderDTO,
-): OcxProviderConfig {
+): OccxProviderConfig {
   const merged = structuredClone(persisted ?? {}) as Record<string, unknown>;
   const fields = new Set([...Object.keys(baseline ?? {}), ...Object.keys(next)]);
   for (const field of fields) {
@@ -215,12 +215,12 @@ function mergeProviderEditorRow(
     if (nextHasField) merged[field] = structuredClone(next[field]);
     else delete merged[field];
   }
-  return merged as unknown as OcxProviderConfig;
+  return merged as unknown as OccxProviderConfig;
 }
 
 /** Build and validate a complete candidate without mutating the caller's snapshot. */
 function providerEditorCandidate(
-  persisted: OcxConfig,
+  persisted: OccxConfig,
   baseline: ProviderEditorConfigDTO,
   next: ProviderEditorConfigDTO,
 ): ProviderEditorCandidateResult {
@@ -243,7 +243,7 @@ function providerEditorCandidate(
     }
   }
 
-  const providers: Record<string, OcxProviderConfig> = Object.create(null);
+  const providers: Record<string, OccxProviderConfig> = Object.create(null);
   for (const [name, publicProvider] of Object.entries(next.providers)) {
     if (!isValidProviderName(name)) {
       return {
@@ -291,7 +291,7 @@ function providerEditorCandidate(
   return { ok: true, config: candidate, removedProviders };
 }
 
-function adoptProviderEditorCandidate(live: OcxConfig, persisted: OcxConfig): void {
+function adoptProviderEditorCandidate(live: OccxConfig, persisted: OccxConfig): void {
   live.defaultProvider = persisted.defaultProvider;
   for (const name of Object.keys(live.providers)) {
     if (!Object.hasOwn(persisted.providers, name)) delete live.providers[name];
@@ -313,9 +313,9 @@ function adoptProviderEditorCandidate(live: OcxConfig, persisted: OcxConfig): vo
 
 /** Share pin merge/clear semantics between POST and the PATCH mask. */
 function applyProviderPinFields(
-  next: OcxProviderConfig,
+  next: OccxProviderConfig,
   patch: Record<string, unknown>,
-  current: OcxProviderConfig | undefined,
+  current: OccxProviderConfig | undefined,
 ): string | null {
   const scalarError = pinnedReasoningEffortConfigError(patch.pinnedReasoningEffort, true);
   const mapError = modelPinnedEffortsConfigError(patch.modelPinnedReasoningEfforts, "modelPinnedReasoningEfforts", true);
@@ -340,12 +340,12 @@ function applyProviderPinFields(
  */
 function applyProviderPatchFields(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   rawBody: Record<string, unknown>,
   keys: string[],
-  config: OcxConfig,
+  config: OccxConfig,
 ): ProviderPatchApplication {
-  const next: OcxProviderConfig = { ...provider };
+  const next: OccxProviderConfig = { ...provider };
   let touched = false;
   let headersTouched = false;
 
@@ -452,7 +452,7 @@ function applyProviderPatchFields(
       if (pacingError) return { error: pacingError };
       // `requestPacingConfigError` is the runtime narrowing boundary above; keep the
       // assertion explicit because a generic plain record cannot express `enabled`.
-      next.requestPacing = structuredClone(value) as unknown as OcxProviderConfig["requestPacing"];
+      next.requestPacing = structuredClone(value) as unknown as OccxProviderConfig["requestPacing"];
     }
     touched = true;
   }
@@ -465,7 +465,7 @@ function applyProviderPatchFields(
       if (versionError) return { error: versionError };
       // `upstreamHttpVersionConfigError` is the shared write boundary; the assertion is
       // explicit because the incoming value is an unknown JSON scalar.
-      next.upstreamHttpVersion = value as OcxProviderConfig["upstreamHttpVersion"];
+      next.upstreamHttpVersion = value as OccxProviderConfig["upstreamHttpVersion"];
     }
     touched = true;
   }
@@ -685,10 +685,10 @@ function applyProviderPatchFields(
 
 /** Validate the canonical OpenAI soft-budget overlay against a fresh registry seed. */
 function canonicalOpenAiBudgetPatchError(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   rawBody: Record<string, unknown>,
   keys: string[],
-  config: OcxConfig,
+  config: OccxConfig,
 ): string | null {
   if (!isCanonicalOpenAiForwardProvider(provider)) {
     return "provider openai must be the canonical built-in provider";
@@ -706,7 +706,7 @@ function canonicalOpenAiBudgetPatchError(
     ?? providerEmptyToolOutputConfigError("openai", applied.next);
 }
 
-function providerRoutingQuota(config: OcxConfig, name: string, now: number): ProviderRoutingQuota {
+function providerRoutingQuota(config: OccxConfig, name: string, now: number): ProviderRoutingQuota {
   const provider = hasOwnProvider(config.providers, name) ? config.providers[name] : undefined;
   const quota = getCachedProviderRoutingQuota(name, provider, now);
   if (!quota || !Number.isFinite(quota.updatedAt) || quota.updatedAt < 0 || quota.updatedAt > now
@@ -844,7 +844,7 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     // Destination validation awaits DNS. A cooperating writer holds the same SQLite
     // mutation lock, so the final exact-byte check and live adoption happen as one
     // synchronous authority decision. The route does not save or reserialize disk.
-    let currentDiskConfig: OcxConfig | null = null;
+    let currentDiskConfig: OccxConfig | null = null;
     let sourceChanged = false;
     withConfigMutationLockSync(() => {
       const current = readConfigAdmissionSnapshot();
@@ -1000,7 +1000,7 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     const aliasOwnershipError = providerAliasOverlayOwnershipError(body.provider, existing);
     if (aliasOwnershipError) return jsonResponse({ error: aliasOwnershipError }, 400);
     const transportCandidate = providerTransportValidationCandidate(body.provider);
-    const pinError = applyProviderPinFields(transportCandidate as unknown as OcxProviderConfig, body.provider, existing);
+    const pinError = applyProviderPinFields(transportCandidate as unknown as OccxProviderConfig, body.provider, existing);
     if (pinError) return jsonResponse({ error: pinError }, 400);
     const providerError = providerManagementConfigError(name, transportCandidate)
       ?? providerEmptyToolOutputConfigError(name, transportCandidate);
@@ -1011,7 +1011,7 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     }
     const serviceTierError = providerServiceTierConfigError(name, transportCandidate);
     if (serviceTierError) return jsonResponse({ error: serviceTierError }, 400);
-    const prov = stripCodexRuntimeProviderFields(transportCandidate as unknown as OcxProviderConfig);
+    const prov = stripCodexRuntimeProviderFields(transportCandidate as unknown as OccxProviderConfig);
     // PATCH already clears on null; POST persisted the body as submitted, so a `null` here
     // reached disk and the next loadConfig() refused it. Canonicalize to absent, which is what
     // "clear" means everywhere else.
@@ -1452,7 +1452,7 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     }
     const project = prov.project ?? snapshot?.projectId;
     if (antigravity && !project) {
-      return jsonResponse({ ok: false, latencyMs: 0, error: "Antigravity project unavailable — re-run `ocx login google-antigravity`" });
+      return jsonResponse({ ok: false, latencyMs: 0, error: "Antigravity project unavailable — re-run `occx login google-antigravity`" });
     }
     const { method, url: modelsUrl, headers } = buildModelsRequest(prov, apiKey, name);
     const discovery = resolveProviderModelDiscovery(name, prov);

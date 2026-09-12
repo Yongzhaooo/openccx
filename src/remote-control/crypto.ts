@@ -104,7 +104,7 @@ function capabilityTranscript(capabilities: readonly RemoteControlCapability[]):
 
 function clientTranscript(hello: Omit<RemoteControlClientHello, "signature">): Buffer {
   return Buffer.concat([
-    Buffer.from("opencodex-remote-control-client-v1\0", "utf8"),
+    Buffer.from("openccx-remote-control-client-v1\0", "utf8"),
     Buffer.from([hello.version]),
     Buffer.from(remoteControlUuidBytes(hello.sessionId)),
     Buffer.from(remoteControlUuidBytes(hello.deviceId)),
@@ -120,7 +120,7 @@ function hostTranscript(
   hello: Omit<RemoteControlHostHello, "signature">,
 ): Buffer {
   return Buffer.concat([
-    Buffer.from("opencodex-remote-control-host-v1\0", "utf8"),
+    Buffer.from("openccx-remote-control-host-v1\0", "utf8"),
     createHash("sha256").update(client).digest(),
     capabilityTranscript(hello.capabilities),
     lengthPrefixed(decode(hello.ephemeralPublicKey, "remote control ephemeral key", 256)),
@@ -215,7 +215,7 @@ function frameAad(sessionId: string, direction: 0 | 1, counter: bigint): Buffer 
   const counterBytes = Buffer.alloc(COUNTER_BYTES);
   counterBytes.writeBigUInt64BE(counter);
   return Buffer.concat([
-    Buffer.from("opencodex-remote-control-frame-v1\0", "utf8"),
+    Buffer.from("openccx-remote-control-frame-v1\0", "utf8"),
     Buffer.from(remoteControlUuidBytes(sessionId)),
     Buffer.from([direction]),
     counterBytes,
@@ -301,10 +301,10 @@ function deriveCipher(options: {
     Buffer.from(info, "utf8"),
     length,
   ));
-  const clientToHostKey = expand("opencodex remote control client to host key v1", 32);
-  const hostToClientKey = expand("opencodex remote control host to client key v1", 32);
-  const clientToHostNonce = expand("opencodex remote control client to host nonce v1", 4);
-  const hostToClientNonce = expand("opencodex remote control host to client nonce v1", 4);
+  const clientToHostKey = expand("openccx remote control client to host key v1", 32);
+  const hostToClientKey = expand("openccx remote control host to client key v1", 32);
+  const clientToHostNonce = expand("openccx remote control client to host nonce v1", 4);
+  const hostToClientNonce = expand("openccx remote control host to client nonce v1", 4);
   options.shared.fill(0);
   return options.role === "client"
     ? new RemoteControlCipher(options.sessionId, 0, clientToHostKey, hostToClientKey, clientToHostNonce, hostToClientNonce)

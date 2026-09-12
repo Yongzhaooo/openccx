@@ -8,21 +8,21 @@ import { getAccountSet, markAccountNeedsReauth, saveCredential } from "../../src
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const origHome = process.env.HOME;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 let tmp: string;
 
 beforeEach(() => {
   tmp = join(tmpdir(), `cli-status-oauth-health-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(tmp, { recursive: true });
   process.env.HOME = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
 });
 
 afterEach(() => {
   if (origHome === undefined) delete process.env.HOME;
   else process.env.HOME = origHome;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = origOccxHome;
   removeTreeWithRetry(tmp);
 });
 
@@ -32,7 +32,7 @@ describe("formatOAuthHealthForStatus", () => {
       provider: "openai",
       accountId: "acct_abcdefghijklmnopqrstuvwxyz",
       health: { status: "reauth_required", reason: "refresh_failed" },
-      action: "run `ocx login openai`",
+      action: "run `occx login openai`",
     }]);
     expect(text).toContain("OAuth health: warning");
     expect(text).toContain("account-…wxyz");

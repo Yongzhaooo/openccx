@@ -13,7 +13,7 @@ const FIRST_INODE = 2n ** 53n;
 const SECOND_INODE = FIRST_INODE + 1n;
 
 test("Aside preserves high file identities without admitting shared targets or directory replacement", async () => {
-  const home = fs.mkdtempSync(join(tmpdir(), "ocx-aside-identity-"));
+  const home = fs.mkdtempSync(join(tmpdir(), "occx-aside-identity-"));
   const root = join(home, ".aside");
   const paths = [0, 1].map(id => join(root, "u", String(id), "models.json"));
   const identities = new Map<string, bigint>();

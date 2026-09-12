@@ -5,17 +5,17 @@ import { handleModelsRuntimeCommand } from "../../src/cli/models-runtime";
 test("registration guidance uses real CLI model commands and preserves exact listed IDs", () => {
   const next = modelSelectionNextSteps("openrouter");
   expect(next.commands).toEqual({
-    list: "ocx models live --provider openrouter",
-    enable: 'ocx models enable "<model-id-from-list>"',
-    disable: 'ocx models disable "<model-id-from-list>"',
-    enableNative: 'ocx models enable "<model-id-from-list>" --native',
-    disableNative: 'ocx models disable "<model-id-from-list>" --native',
-    enableAll: "ocx models provider openrouter on",
-    disableAll: "ocx models provider openrouter off",
+    list: "occx models live --provider openrouter",
+    enable: 'occx models enable "<model-id-from-list>"',
+    disable: 'occx models disable "<model-id-from-list>"',
+    enableNative: 'occx models enable "<model-id-from-list>" --native',
+    disableNative: 'occx models disable "<model-id-from-list>" --native',
+    enableAll: "occx models provider openrouter on",
+    disableAll: "occx models provider openrouter off",
   });
   expect(next.requiresRunningProxy).toBe(true);
   const text = modelSelectionGuidance("openrouter").join("\n");
-  expect(text).toContain("ocx start");
+  expect(text).toContain("occx start");
   expect(text).toContain("the provider stays active");
   expect(text).toContain("For rows marked native");
   expect(text).not.toContain("http");
@@ -46,7 +46,7 @@ test("generated native commands preserve qualified IDs through the actual CLI pa
 
 test("Codex login aliases target the native provider and no-wait advice is explicitly future work", () => {
   for (const alias of ["codex", "chatgpt", "openai"]) {
-    expect(modelSelectionNextSteps(alias).commands.list).toBe("ocx models live --provider openai");
+    expect(modelSelectionNextSteps(alias).commands.list).toBe("occx models live --provider openai");
   }
   expect(modelSelectionNextSteps("xai", true).afterLogin).toBe(true);
   expect(modelSelectionGuidance("xai", true)[0]).toContain("After login completes");

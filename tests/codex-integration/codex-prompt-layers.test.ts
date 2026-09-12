@@ -134,7 +134,7 @@ describe("encoding", () => {
     "trailing backslash \\",
     "line1\nline2",
     "emoji 😀 and é",
-    "# >>> ocx-layer:abc123",     // the retired fence text is now inert
+    "# >>> occx-layer:abc123",     // the retired fence text is now inert
     "'''literal'''",
     'quote " inside',
     "\\n literal backslash-n",
@@ -183,7 +183,7 @@ describe("revision", () => {
   });
 
   test("changes when only the marker is removed", () => {
-    const withMarker = '# Auto-injected by opencodex\ndeveloper_instructions = "x"\n';
+    const withMarker = '# Auto-injected by openccx\ndeveloper_instructions = "x"\n';
     const without = 'developer_instructions = "x"\n';
     expect(computeRevision(withMarker, "{}")).not.toBe(computeRevision(without, "{}"));
   });

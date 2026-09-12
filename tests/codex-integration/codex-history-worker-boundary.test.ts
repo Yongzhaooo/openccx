@@ -16,27 +16,27 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let root = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 const cleanup: string[] = [];
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-hist-boundary-"));
+  root = mkdtempSync(join(tmpdir(), "occx-hist-boundary-"));
   cleanup.push(root);
   const codexHome = join(root, ".codex");
-  const opencodexHome = join(root, ".opencodex");
+  const openccxHome = join(root, ".openccx");
   mkdirSync(codexHome, { recursive: true });
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
 });
 
@@ -54,7 +54,7 @@ describe("a dead worker is not a slow one", () => {
       operation: "skip",
       canonicalCodexHome: process.env.CODEX_HOME!,
       canonicalStateDbPath: join(root, ".codex", "state_5.sqlite"),
-      canonicalBackupPath: join(root, ".codex", "state_5.sqlite.ocx-backup.json"),
+      canonicalBackupPath: join(root, ".codex", "state_5.sqlite.occx-backup.json"),
     });
     expect(outcome.kind).toBe("skipped");
   });
@@ -98,7 +98,7 @@ describe("the result validator", () => {
     )).toBe(false);
     const target = {
       canonicalStateDbPath: "/state/state_5.sqlite",
-      canonicalBackupPath: "/state/state_5.sqlite.ocx-backup.json",
+      canonicalBackupPath: "/state/state_5.sqlite.occx-backup.json",
       operation: "migrate-openai" as const,
     };
     const verifiedNoop = {
@@ -126,7 +126,7 @@ describe("the result validator", () => {
     expect(isPlausibleWorkerResultForTests({ ...verifiedNoop, outcome: "skipped" }, "r", "j", target)).toBe(false);
     expect(isPlausibleWorkerResultForTests(verifiedNoop, "r", "j")).toBe(false);
     expect(isPlausibleWorkerResultForTests(
-      verifiedNoop, "r", "j", { ...target, operation: "apply-opencodex" },
+      verifiedNoop, "r", "j", { ...target, operation: "apply-openccx" },
     )).toBe(false);
   });
 

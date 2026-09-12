@@ -416,7 +416,7 @@ export function setServerStartupLifecycleReleaseForTests(
 /**
  * Mark this process as a recycle (dashboard drain-and-restart). Exit cleanup
  * must keep Codex/Grok/system-env injection so the replacement process inherits
- * a working fence — unlike an intentional `ocx stop` teardown.
+ * a working fence — unlike an intentional `occx stop` teardown.
  */
 export function markRecyclingForExit(): void { recyclingForExit = true; }
 export function isRecyclingForExit(): boolean { return recyclingForExit; }

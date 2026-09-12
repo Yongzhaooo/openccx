@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { isWildcardHostname } from "../../codex/loopback-target";
 import { localInferenceDestination } from "../../lib/local-destinations";
 import { probeHostname } from "../proxy-liveness";
@@ -73,7 +73,7 @@ function originBaseUrl(raw: string): string | null {
  * Falls back to loopback only when no usable request context is available.
  */
 export function resolveApiAccessBaseUrl(
-  config: Pick<OcxConfig, "hostname" | "port" | "unauthenticatedLoopbackListener">,
+  config: Pick<OccxConfig, "hostname" | "port" | "unauthenticatedLoopbackListener">,
   opts: BuildApiAccessEndpointsOptions = {},
 ): string {
   const port = config.port ?? 10100;
@@ -135,7 +135,7 @@ export function resolveApiAccessDisplayHost(
 }
 
 export function buildApiAccessEndpoints(
-  config: OcxConfig,
+  config: OccxConfig,
   opts: BuildApiAccessEndpointsOptions = {},
 ): ApiAccessEndpoints {
   const baseUrl = resolveApiAccessBaseUrl(config, opts);

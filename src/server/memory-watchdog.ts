@@ -135,7 +135,7 @@ export function startMemoryWatchdog(opts?: {
       lastWarnAt = now();
       const observedMb = Math.round(s.observedBytes / (1024 * 1024));
       const thresholdMb = Math.round(warnThresholdBytes / (1024 * 1024));
-      warn(`⚠️  opencodex observed memory ${observedMb}MB (${s.observedMetric}) exceeds the ${thresholdMb}MB watch threshold. On Windows this is usually the upstream Bun runtime memory issue — see ${DOCS_URL}`);
+      warn(`⚠️  openccx observed memory ${observedMb}MB (${s.observedMetric}) exceeds the ${thresholdMb}MB watch threshold. On Windows this is usually the upstream Bun runtime memory issue — see ${DOCS_URL}`);
     }
   };
 

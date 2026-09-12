@@ -14,7 +14,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync } from "n
 import { join } from "node:path";
 import { atomicWriteFile, readConfigDiagnostics, withConfigMutationLockSync } from "../config";
 import { claudeDesktopIntegrationEnabled } from "../codex/desired-state";
-import type { OcxClaudeDesktopProfile } from "../types";
+import type { OccxClaudeDesktopProfile } from "../types";
 import {
   reconcileDesktopProfile,
   renderDesktopProfile,
@@ -62,7 +62,7 @@ export interface Desktop3pRoutedModel {
  */
 export const DESKTOP_SUPPORTS_1M_THRESHOLD = 1_000_000;
 
-/** CLI arg parsing for `ocx claude desktop` mode flags (mutually exclusive). */
+/** CLI arg parsing for `occx claude desktop` mode flags (mutually exclusive). */
 export function parseDesktop3pModeArgs(flags: string[]): { mode: Desktop3pConfigMode } | { error: string } {
   const known = new Map<string, Desktop3pConfigMode>([
     ["--static", "static"],
@@ -91,7 +91,7 @@ export interface Desktop3pLibraryInspection {
   libraryPath: string;
   selectedProfilePath: string | null;
   appliedId: string | null;
-  /** Paths of opencodex-owned rows that are not selected by Desktop. */
+  /** Paths of openccx-owned rows that are not selected by Desktop. */
   residualPaths: string[];
   /** Bounded reason code; never includes metadata or profile contents. */
   reason?: "metadata_unreadable" | "unsafe_applied_id" | "invalid_owned_profile";
@@ -164,7 +164,7 @@ function displayModelId(modelId: string): string {
 function collectDesktop3pModels(
   nativeSlugs: string[],
   routedModels: Array<Desktop3pRoutedModel>,
-  profile?: OcxClaudeDesktopProfile,
+  profile?: OccxClaudeDesktopProfile,
   nativeContextCap?: NativeContextLimitsInput,
 ): { models: Desktop3pModelEntry[]; registry: Map<string, string>; realAnthropicIds: Set<string> } {
   const registry = new Map<string, string>();
@@ -213,7 +213,7 @@ function collectDesktop3pModels(
       const legacy = legacyDesktop3pAlias(provider, id);
       const existing = registry.get(legacy);
       if (existing && existing !== model.route) {
-        console.warn(`[opencodex] Claude Desktop legacy alias collision: ${legacy} stays bound to ${existing}; ignoring ${model.route}`);
+        console.warn(`[openccx] Claude Desktop legacy alias collision: ${legacy} stays bound to ${existing}; ignoring ${model.route}`);
         continue;
       }
       registry.set(legacy, model.route);
@@ -243,7 +243,7 @@ function collectDesktop3pModels(
     }
     const existingRoute = registry.get(alias);
     if (existingRoute !== undefined) {
-      console.warn(`[opencodex] Claude Desktop 3P alias collision: ${alias} maps to both ${existingRoute} and ${route}; skipping ${route}`);
+      console.warn(`[openccx] Claude Desktop 3P alias collision: ${alias} maps to both ${existingRoute} and ${route}; skipping ${route}`);
       continue;
     }
 
@@ -269,7 +269,7 @@ function collectDesktop3pModels(
 export function buildDesktop3pRegistry(
   nativeSlugs: string[],
   routedModels: Array<Desktop3pRoutedModel>,
-  profile?: OcxClaudeDesktopProfile,
+  profile?: OccxClaudeDesktopProfile,
   nativeContextCap?: NativeContextLimitsInput,
 ): Map<string, string> {
   const { registry, realAnthropicIds } = collectDesktop3pModels(nativeSlugs, routedModels, profile, nativeContextCap);
@@ -282,7 +282,7 @@ export function buildDesktop3pRegistry(
 export function generateDesktop3pModels(
   nativeSlugs: string[],
   routedModels: Array<Desktop3pRoutedModel>,
-  profile?: OcxClaudeDesktopProfile,
+  profile?: OccxClaudeDesktopProfile,
   nativeContextCap?: NativeContextLimitsInput,
 ): Desktop3pModelEntry[] {
   const { models, registry, realAnthropicIds } = collectDesktop3pModels(nativeSlugs, routedModels, profile, nativeContextCap);
@@ -333,9 +333,9 @@ export function generateDesktop3pConfig(
   portOrOrigin: number | string,
   nativeSlugs: string[],
   routedModels: Array<Desktop3pRoutedModel>,
-  apiKey = "ocx",
+  apiKey = "occx",
   mode: Desktop3pConfigMode = "static",
-  profile?: OcxClaudeDesktopProfile,
+  profile?: OccxClaudeDesktopProfile,
   nativeContextCap?: NativeContextLimitsInput,
 ): object {
   const base = {
@@ -448,7 +448,7 @@ export function inspectDesktop3pConfigLibrary(
  * The old metadata row remains as a retry locator only until both its profile
  * and backup are absent; successful cleanup removes it in the same operation.
  *
- * `gateway_drifted` is still an owned opencodex gateway (name + valid shape); the
+ * `gateway_drifted` is still an owned openccx gateway (name + valid shape); the
  * fingerprint only says on-disk bytes differ from the last saved marker. Refusing
  * OFF for drift left users unable to disable after a lost `appliedFingerprint`
  * (or any other benign mismatch), while the Integrations card still showed the
@@ -563,7 +563,7 @@ function removeDesktop3pStandardPivotLocal(
       const standardId = randomUUID();
       const standardPath = profilePath(inspected.libraryPath, standardId);
       atomicWriteFile(standardPath, "{}\n");
-      const standardEntry: Desktop3pMetadataEntry = { id: standardId, name: "opencodex-standard" };
+      const standardEntry: Desktop3pMetadataEntry = { id: standardId, name: "openccx-standard" };
       metadataAfterPivot = { ...metadata, appliedId: standardId, entries: [...metadata.entries, standardEntry] };
       atomicWriteFile(metadataPath, JSON.stringify(metadataAfterPivot, null, 2) + "\n");
     }
@@ -590,7 +590,7 @@ function removeDesktop3pStandardPivotLocal(
       };
     }
     // Do not leave a metadata row pointing at a deleted profile. For a foreign
-    // selection this only removes proven opencodex residues; appliedId is kept.
+    // selection this only removes proven openccx residues; appliedId is kept.
     atomicWriteFile(
       metadataPath,
       JSON.stringify({ ...metadataAfterPivot, entries: metadataAfterPivot.entries.filter(entry => !targetIds.includes(entry.id)) }, null, 2) + "\n",
@@ -601,14 +601,14 @@ function removeDesktop3pStandardPivotLocal(
   }
 }
 
-/** Write and apply the opencodex config in Claude Desktop 3P's config library. */
+/** Write and apply the openccx config in Claude Desktop 3P's config library. */
 export function writeDesktop3pConfig(
   port: number,
   nativeSlugs: string[],
   routedModels: Array<Desktop3pRoutedModel>,
   apiKey?: string,
   mode: Desktop3pConfigMode = "static",
-  profile?: OcxClaudeDesktopProfile,
+  profile?: OccxClaudeDesktopProfile,
   nativeContextCap?: NativeContextLimitsInput,
   lifecycleLockDeps?: ClientLifecycleLockDeps,
 ): { written: boolean; path: string; reason?: string; fingerprint?: string } {
@@ -643,7 +643,7 @@ export function writeDesktop3pConfig(
         // The placeholder the generator defaults to would 401 on this bind. Write the profile
         // anyway — a reachable URL with a visible auth failure beats a dead socket — but say so.
         console.error(
-          `⚠ Claude Desktop will dial ${destination.origin}, which requires an opencodex data-plane `
+          `⚠ Claude Desktop will dial ${destination.origin}, which requires an openccx data-plane `
           + "credential that could not be resolved. Configure an API key or enable "
           + "`unauthenticatedLoopbackListener`.",
         );
@@ -697,7 +697,7 @@ function writeDesktop3pConfigWithGenerator(
     const existing = selected ?? metadata.entries.find(entry => isOwnedDesktopGatewayEntry(entry) && typeof entry.id === "string");
     const id = existing?.id ?? randomUUID();
     configPath = profilePath(libraryPath, id);
-    const entry: Desktop3pMetadataEntry = existing ? { ...existing, id, name: "opencodex" } : { id, name: "opencodex" };
+    const entry: Desktop3pMetadataEntry = existing ? { ...existing, id, name: "openccx" } : { id, name: "openccx" };
     const entries = existing
       ? metadata.entries.map(current => current === existing ? entry : current)
       : [...metadata.entries, entry];

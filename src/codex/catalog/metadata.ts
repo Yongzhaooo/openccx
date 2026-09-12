@@ -7,7 +7,7 @@ import { CODEX_CONFIG_PATH, CODEX_MODELS_CACHE_PATH, DEFAULT_CATALOG_PATH, readR
 import { codexAccountNamespaceEntries, isMainCodexAccountTarget } from "../account-namespaces";
 import { clearModelCache, DEFAULT_MODEL_CACHE_TTL_MS, getFreshCached, getStaleCached, isModelsFetchCoolingDown, markModelsFetchFailure, setCached } from "../model-cache";
 import { buildModelsRequest, resolveModelsAuthToken } from "../../oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { modelInList } from "../../types";
 import { CODEX_REASONING_LEVELS, codexEffortRank, configuredReasoningEfforts, modelRecordValue, sanitizeCodexReasoningEfforts } from "../../reasoning-effort";
 import { getModelMetadata, getModelMetadataCaseInsensitive, listModelMetadata, resolveMetadataProvider } from "../../generated/model-metadata";
@@ -79,7 +79,7 @@ export const DOCUMENTED_NATIVE_OPENAI_ADDITIONS = [
 ];
 
 export function configuredNativeAliasSlugs(
-  config: Pick<OcxConfig, "combos">,
+  config: Pick<OccxConfig, "combos">,
 ): Set<string> {
   const aliases = new Set<string>();
   for (const raw of Object.values(config.combos ?? {})) {
@@ -96,7 +96,7 @@ export function configuredNativeAliasSlugs(
  * omitting disabled native rows is therefore part of the explicit native-alias opt-in.
  */
 export function desktopAllowlistSuppressedNativeSlugs(
-  config: Pick<OcxConfig, "combos" | "disabledModels">,
+  config: Pick<OccxConfig, "combos" | "disabledModels">,
 ): Set<string> {
   const suppressed = configuredNativeAliasSlugs(config);
   if (suppressed.size === 0) return suppressed;
@@ -108,7 +108,7 @@ export function desktopAllowlistSuppressedNativeSlugs(
 }
 
 export function isNativeAliasCatalogEntry(entry: RawEntry): boolean {
-  return entry.opencodex_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND;
+  return entry.openccx_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND;
 }
 
 export function isUnsupportedOpenAiNativeSlug(slug: string): boolean {
@@ -209,7 +209,7 @@ const PINNED_NATIVE_CAPABILITY_ENTRIES: Map<string, RawEntry> = new Map(
  * 922k ceiling. Other native slugs still only ever lower.
  *
  * This travels as an ARGUMENT rather than module state on purpose. `grok/sync.ts` runs in
- * the `ocx ensure` parent process, outside the server, so an injected global would never
+ * the `occx ensure` parent process, outside the server, so an injected global would never
  * reach it — that failure is recorded in
  * devlog/_plan/260817_native_gpt56_1m_context/006_root_cause_replan.md. Every call site
  * already holds a config or a cap, so passing one more field costs nothing.
@@ -240,7 +240,7 @@ function asLimits(input: NativeContextLimitsInput): NativeContextLimits {
 
 /** Read both levers out of a config once, for call sites that hold one. */
 export function nativeContextLimits(
-  config: Pick<OcxConfig, "providers" | "providerContextCaps">,
+  config: Pick<OccxConfig, "providers" | "providerContextCaps">,
 ): NativeContextLimits {
   const provider = config.providers?.[OPENAI_CODEX_PROVIDER_ID];
   const modelWindows: Record<string, number> = {};
@@ -420,11 +420,11 @@ export function hasComboTargets(config: { combos?: Record<string, { targets?: un
   return Object.values(combos).some(c => Array.isArray(c?.targets) && c!.targets!.length > 0);
 }
 
-export function disabledNativeSlugs(config: Pick<OcxConfig, "disabledModels">): Set<string> {
+export function disabledNativeSlugs(config: Pick<OccxConfig, "disabledModels">): Set<string> {
   return new Set((config.disabledModels ?? []).filter(id => !id.includes("/")));
 }
 
-export function visibleNativeSlugs(config: Pick<OcxConfig, "disabledModels" | "combos">): string[] {
+export function visibleNativeSlugs(config: Pick<OccxConfig, "disabledModels" | "combos">): string[] {
   const disabled = disabledNativeSlugs(config);
   const shadowed = configuredNativeAliasSlugs(config);
   return nativeOpenAiSlugs().filter(slug => !disabled.has(slug) && !shadowed.has(slug));
@@ -432,7 +432,7 @@ export function visibleNativeSlugs(config: Pick<OcxConfig, "disabledModels" | "c
 
 /** Whether an enabled canonical OpenAI provider can serve exact account-qualified routes. */
 export function shouldIncludeAccountBoundNativeOpenAi(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
 ): boolean {
   const provider = config.providers[OPENAI_CODEX_PROVIDER_ID];
   if (!provider || provider.disabled === true) return false;
@@ -444,7 +444,7 @@ export function shouldIncludeAccountBoundNativeOpenAi(
 }
 
 /** Whether native ChatGPT/Codex rows belong in this provider configuration. */
-export function shouldIncludeNativeOpenAi(config: Pick<OcxConfig, "providers">): boolean {
+export function shouldIncludeNativeOpenAi(config: Pick<OccxConfig, "providers">): boolean {
   const hasEnabledProvider = Object.values(config.providers)
     .some(provider => provider.disabled !== true);
   // Preserve the existing no-enabled-provider catalog bootstrap, but do not use that bootstrap
@@ -453,7 +453,7 @@ export function shouldIncludeNativeOpenAi(config: Pick<OcxConfig, "providers">):
 }
 
 type AccountSelectorConfig = Pick<
-  OcxConfig,
+  OccxConfig,
   "codexAccounts" | "codexAccountNamespaces" | "codexAccountPickerEnabled"
 >;
 
@@ -465,7 +465,7 @@ function mainAccountSelectors(config: AccountSelectorConfig): string[] {
 
 /** Native slugs exposed to Claude Desktop show/export/apply (opt-out via claudeCode.desktopNativeModels). */
 export function desktopVisibleNativeSlugs(
-  config: Pick<OcxConfig, "claudeCode" | "disabledModels" | "combos" | "providers"
+  config: Pick<OccxConfig, "claudeCode" | "disabledModels" | "combos" | "providers"
     | "codexAccounts" | "codexAccountNamespaces" | "codexAccountPickerEnabled">,
 ): string[] {
   if (config.claudeCode?.desktopNativeModels === false) return [];
@@ -483,7 +483,7 @@ export function desktopVisibleNativeSlugs(
   ]);
 }
 
-export function nativeModelRows(config: Pick<OcxConfig, "disabledModels" | "combos" | "providerContextCaps" | "providers">): Array<{ slug: string; disabled: boolean; contextWindow?: number; maxInputTokens?: number; autoCompactTokenLimit?: number }> {
+export function nativeModelRows(config: Pick<OccxConfig, "disabledModels" | "combos" | "providerContextCaps" | "providers">): Array<{ slug: string; disabled: boolean; contextWindow?: number; maxInputTokens?: number; autoCompactTokenLimit?: number }> {
   const disabled = disabledNativeSlugs(config);
   const shadowed = configuredNativeAliasSlugs(config);
   // Both user levers, not just the cap: a per-model window set from the dashboard has to show
@@ -624,13 +624,13 @@ export function nativeOpenAiCapabilityDisplayName(slug: string): string | undefi
  *
  * `shouldUpgradeToUpstreamEntry`'s normal rule ("upgrade only fallback-quality rows, where
  * `display_name === slug`") assumes any row with a real label came from upstream and is therefore
- * authoritative. That assumption broke for `gpt-6-astra`: opencodex shipped a speculative row with
+ * authoritative. That assumption broke for `gpt-6-astra`: openccx shipped a speculative row with
  * a hand-written "GPT-6 Astra" label and a provisional description while the slug was still a leak.
  * Those rows are already on disk in every install that ran that release, and they look genuine, so
  * without this list they would survive every future sync and permanently shadow the real shipped
  * metadata — the wrong label, the wrong 922k ceiling, the wrong priority.
  *
- * Membership is a statement about opencodex's own history, not about upstream. Add a slug only
+ * Membership is a statement about openccx's own history, not about upstream. Add a slug only
  * when a released version of this project wrote a fabricated row for it.
  */
 const SELF_AUTHORED_NATIVE_ROWS: ReadonlySet<string> = new Set([NATIVE_GPT6_ASTRA_MODEL]);
@@ -654,8 +654,8 @@ export function nativeOpenAiSlugs(): string[] {
 }
 
 const ACCOUNT_BOUND_OPENAI_NATIVE_PREFIX = /^(?:gpt-|o1-|o3-|o4-)/;
-const ACCOUNT_BOUND_OBSERVED_NATIVE_MARKER = "opencodex_account_observed_native";
-const ACCOUNT_BOUND_OBSERVED_SELECTORS_MARKER = "opencodex_account_observed_selectors";
+const ACCOUNT_BOUND_OBSERVED_NATIVE_MARKER = "openccx_account_observed_native";
+const ACCOUNT_BOUND_OBSERVED_SELECTORS_MARKER = "openccx_account_observed_selectors";
 
 function isAccountBoundOpenAiNativeSlug(slug: string): boolean {
   return !slug.includes("/") && ACCOUNT_BOUND_OPENAI_NATIVE_PREFIX.test(slug);
@@ -672,7 +672,7 @@ function isAccountBoundOpenAiNativeSlug(slug: string): boolean {
  * later mistakes this predicate for a security boundary.
  *
  * That is acceptable here because the file is user-owned and written by Codex itself: anyone
- * able to rewrite it can already edit `config.json` or run `ocx` directly, and `router.ts`
+ * able to rewrite it can already edit `config.json` or run `occx` directly, and `router.ts`
  * accepts any bare `gpt-*` id under an account namespace regardless of this catalog. What the
  * filter buys is that garbage rows do not get advertised through discovery — not that an
  * advertised row is proven genuine.
@@ -712,7 +712,7 @@ function observedAccountBoundNativeSlug(entry: RawEntry): string | undefined {
   return slug;
 }
 
-/** Prefer a genuine bare observation; an adapted OCX row must never become native evidence. */
+/** Prefer a genuine bare observation; an adapted OCCX row must never become native evidence. */
 export function observedReserveCatalogSource(
   entries: readonly RawEntry[],
   mainSelectors: readonly string[],
@@ -732,7 +732,7 @@ export function observedReserveCatalogSource(
     }
   }
   source.slug = NATIVE_RESERVE_MODEL;
-  delete source.opencodex_catalog_kind;
+  delete source.openccx_catalog_kind;
   delete source[RESERVE_METADATA_SOURCE_FIELD];
   delete source[ACCOUNT_BOUND_OBSERVED_NATIVE_MARKER];
   delete source[ACCOUNT_BOUND_OBSERVED_SELECTORS_MARKER];

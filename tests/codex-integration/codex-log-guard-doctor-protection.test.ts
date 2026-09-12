@@ -38,7 +38,7 @@ describe("Codex Log Guard doctor protection output", () => {
       state: "drifted",
     })).join("\n");
     expect(text).toContain("protection drifted");
-    expect(text).toContain("ocx storage codex-logs repair");
+    expect(text).toContain("occx storage codex-logs repair");
   });
 
   test("reports disabled protection as informational", () => {

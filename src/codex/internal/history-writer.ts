@@ -48,7 +48,7 @@ export interface HistoryWriteTarget {
 }
 
 /**
- * Apply opencodex routing to resumable history, or restore it to native.
+ * Apply openccx routing to resumable history, or restore it to native.
  *
  * `provider` is the DURABLE operation's direction, resolved by the caller from
  * the coordinator row — never a caller-supplied preference. The Worker passes

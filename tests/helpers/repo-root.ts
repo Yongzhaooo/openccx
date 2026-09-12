@@ -6,7 +6,7 @@ let cached: string | null = null;
 
 /**
  * Repository root, found by walking up from this helper to the package.json that names
- * opencodex. Tests use this instead of `import.meta.dir + "/.."`, which is only correct while
+ * openccx. Tests use this instead of `import.meta.dir + "/.."`, which is only correct while
  * the test sits directly under tests/ and silently reads the wrong tree once it moves into a
  * domain directory (devlog 260905_test_modularization_and_windows/030).
  */

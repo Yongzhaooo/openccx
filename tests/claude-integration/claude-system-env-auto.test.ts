@@ -5,10 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { injectSystemEnv } from "../../src/server/system-env";
 import { PROXY_MARKER } from "../../src/claude/auth-detect";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
- * Auto must reach PLAIN `claude` launches, not just `ocx claude`. Before this, the
+ * Auto must reach PLAIN `claude` launches, not just `occx claude`. Before this, the
  * shell-env file and launchctl keyed on a stored "proxy", so an auto+absent user got
  * nothing from auto-connect (devlog 260726_claude_auth_auto/035).
  *
@@ -39,7 +39,7 @@ const baseConfig = {
   providers: {},
   defaultProvider: "test",
   claudeCode: { systemEnv: true },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 beforeEach(() => {
   setPlatform("darwin");
@@ -54,7 +54,7 @@ beforeEach(() => {
   delete process.env.ANTHROPIC_API_KEY;
   delete process.env.ANTHROPIC_AUTH_TOKEN;
   // An empty profile dir + a HOME with no ~/.claude.json = detection "absent".
-  const empty = fs.mkdtempSync(join(tmpdir(), "ocx-sysenv-"));
+  const empty = fs.mkdtempSync(join(tmpdir(), "occx-sysenv-"));
   process.env.CLAUDE_CONFIG_DIR = empty;
   process.env.HOME = empty;
 
@@ -111,7 +111,7 @@ test("an explicit subscription withholds the marker even under the same detectio
   await injectSystemEnv(4567, {
     ...baseConfig,
     claudeCode: { systemEnv: true, authMode: "subscription" },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   expect(shellEnvContents).not.toContain(PROXY_MARKER);
 });
 
@@ -119,7 +119,7 @@ test("an explicit proxy still writes the marker", async () => {
   await injectSystemEnv(4567, {
     ...baseConfig,
     claudeCode: { systemEnv: true, authMode: "proxy" },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   expect(shellEnvContents).toContain(`ANTHROPIC_AUTH_TOKEN='${PROXY_MARKER}'`);
 });
 
@@ -129,7 +129,7 @@ test("proxy mode writes the configured admission key instead of the marker", asy
     ...baseConfig,
     claudeCode: { systemEnv: true, authMode: "proxy" },
     apiKeys: [{ key: "admission-key" }],
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   expect(shellEnvContents).toContain("ANTHROPIC_AUTH_TOKEN='admission-key'");
   expect(shellEnvContents).not.toContain(PROXY_MARKER);
 });
@@ -139,7 +139,7 @@ test("subscription mode omits the configured admission key", async () => {
     ...baseConfig,
     claudeCode: { systemEnv: true, authMode: "subscription" },
     apiKeys: [{ key: "admission-key" }],
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
   expect(shellEnvContents).not.toContain("ANTHROPIC_AUTH_TOKEN='admission-key'");
   expect(shellEnvContents).not.toContain(PROXY_MARKER);
 });

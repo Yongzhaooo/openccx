@@ -344,7 +344,7 @@ export function Tooltip({ content, children, side = "top", maxWidth = 280 }: {
   return (
     <button
       type="button"
-      className="ocx-tooltip"
+      className="occx-tooltip"
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
@@ -357,7 +357,7 @@ export function Tooltip({ content, children, side = "top", maxWidth = 280 }: {
     >
       {children}
       {open && (
-        <span id={tipId} className={`ocx-tooltip-bubble ocx-tooltip-bubble--${side}`} role="tooltip" style={{ maxWidth }}>
+        <span id={tipId} className={`occx-tooltip-bubble occx-tooltip-bubble--${side}`} role="tooltip" style={{ maxWidth }}>
           {content}
         </span>
       )}

@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxContentPart, OcxParsedRequest, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxContentPart, OccxParsedRequest, OccxProviderConfig } from "../types";
 import type { VisionReasoningEffort } from "../reasoning-effort";
 import type { VisionSettings } from "./describe";
 import type { ResolvedOpenAiForwardSidecar } from "../providers/openai-sidecar";
@@ -38,14 +38,14 @@ export function resolveVisionTimeoutMs(value: unknown): number {
 
 export interface AnthropicVisionProvider {
   providerName: string;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
 }
 
 /**
  * First enabled Anthropic OAuth provider whose active stored account is not marked for reauth.
  * Delegates to the shared sidecar auth module (#2188) — same predicate as web-search.
  */
-export function findAnthropicVisionProvider(config: OcxConfig): AnthropicVisionProvider | undefined {
+export function findAnthropicVisionProvider(config: OccxConfig): AnthropicVisionProvider | undefined {
   const auth = resolveSidecarAuth(config);
   if (!auth.isAnthropicAuth || !auth.anthropicProviderName || !auth.anthropicProvider) return undefined;
   return { providerName: auth.anthropicProviderName, provider: auth.anthropicProvider };
@@ -64,7 +64,7 @@ export function resolveVisionBackend(
 }
 
 /** Native model used by the OpenAI vision helper, including its bounded default. */
-export function resolveOpenAiVisionModel(config: Pick<OcxConfig, "visionSidecar">): string {
+export function resolveOpenAiVisionModel(config: Pick<OccxConfig, "visionSidecar">): string {
   const configured = config.visionSidecar?.model;
   // Namespaced routed ids never reach the forward executor (see
   // resolveEffectiveVisionModel).
@@ -73,7 +73,7 @@ export function resolveOpenAiVisionModel(config: Pick<OcxConfig, "visionSidecar"
 
 /** Effective describer model for the backend `planVisionSidecar` selected. */
 export function resolveEffectiveVisionModel(
-  config: Pick<OcxConfig, "visionSidecar">,
+  config: Pick<OccxConfig, "visionSidecar">,
   backend: "openai" | "anthropic",
 ): string {
   const configured = config.visionSidecar?.model;
@@ -87,13 +87,13 @@ export function resolveEffectiveVisionModel(
     : usable || DEFAULT_VISION_MODEL;
 }
 
-function messagesHaveImage(parsed: OcxParsedRequest): boolean {
+function messagesHaveImage(parsed: OccxParsedRequest): boolean {
   return parsed.context.messages.some(m =>
-    carriesImages(m.role) && Array.isArray(m.content) && (m.content as OcxContentPart[]).some(p => p.type === "image"));
+    carriesImages(m.role) && Array.isArray(m.content) && (m.content as OccxContentPart[]).some(p => p.type === "image"));
 }
 
 /** Shared by auth admission and planning so a routed describer never borrows OpenAI auth. */
-function usableRoutedVisionModel(config: OcxConfig): string | undefined {
+function usableRoutedVisionModel(config: OccxConfig): string | undefined {
   const cfg = config.visionSidecar;
   if (cfg?.backend !== "routed") return undefined;
   const routedModel = cfg.model;
@@ -107,10 +107,10 @@ function usableRoutedVisionModel(config: OcxConfig): string | undefined {
 }
 
 export function shouldResolveOpenAiVisionSidecar(
-  config: OcxConfig,
-  provider: OcxProviderConfig,
+  config: OccxConfig,
+  provider: OccxProviderConfig,
  modelId: string,
- parsed: OcxParsedRequest,
+ parsed: OccxParsedRequest,
 ): boolean {
   if (!isModelTextOnly(provider, modelId) || !messagesHaveImage(parsed)) return false;
   const cfg = config.visionSidecar ?? {};
@@ -126,7 +126,7 @@ export interface VisionPlan {
   /** Namespaced "provider/model" describer for the routed backend (roadmap 180). */
   routedModel?: string;
   /** Loopback dispatch inputs for the routed backend (the listener decides WHICH local port). */
-  routedConfig?: Pick<OcxConfig, "port" | "hostname" | "apiKeys" | "unauthenticatedLoopbackListener">;
+  routedConfig?: Pick<OccxConfig, "port" | "hostname" | "apiKeys" | "unauthenticatedLoopbackListener">;
   settings: VisionSettings;
   maxDescriptionsPerTurn: number;
 }
@@ -138,10 +138,10 @@ export interface VisionPlan {
  * otherwise (the caller strips images before sending to a text-only model).
  */
 export function planVisionSidecar(
-  config: OcxConfig,
-  provider: OcxProviderConfig,
+  config: OccxConfig,
+  provider: OccxProviderConfig,
   modelId: string,
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   openAiSidecar?: ResolvedOpenAiForwardSidecar,
   options: { admission?: Pick<DataPlaneAdmission, "source">; codexAuthPolicy?: CodexAuthPolicyConfig } = {},
 ): VisionPlan | undefined {

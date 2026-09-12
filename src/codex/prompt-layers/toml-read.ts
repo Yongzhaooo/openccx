@@ -1,4 +1,4 @@
-import { OCX_SECTION_MARKER } from "../injected-marker";
+import { OCCX_SECTION_MARKER } from "../injected-marker";
 import { decodeBasicString } from "./encoding";
 
 /**
@@ -144,7 +144,7 @@ export function boolInLines(lines: string[], key: string): boolean | null {
 //
 // Canonical physical form, always exactly two lines at the top of the document:
 //
-//     # Auto-injected by opencodex
+//     # Auto-injected by openccx
 //     developer_instructions = "<single-line basic string>"
 //
 // Replacement is "find the marker, replace the next line" — never a span search.
@@ -171,7 +171,7 @@ export function inspectOwnership(configBytes: string | null): Ownership {
   for (let i = 0; i < lines.length; i += 1) {
     const raw = lines[i]!;
     if (!ANY_DEV_INSTRUCTIONS.test(raw)) continue;
-    const marked = i > 0 && lines[i - 1]!.includes(OCX_SECTION_MARKER);
+    const marked = i > 0 && lines[i - 1]!.includes(OCCX_SECTION_MARKER);
     if (!marked) return { state: "external", line: i + 1, raw };
     if (!CANONICAL_LINE.test(raw)) return { state: "owned-malformed", line: i + 1, raw };
     const literal = raw.slice(`${DEV_INSTRUCTIONS_KEY} = `.length);

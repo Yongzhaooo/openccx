@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function root(): string {
-  const value = mkdtempSync(join(tmpdir(), "ocx-cl10-recovery-"));
+  const value = mkdtempSync(join(tmpdir(), "occx-cl10-recovery-"));
   roots.push(value);
   return value;
 }

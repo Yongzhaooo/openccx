@@ -21,7 +21,7 @@ function seedSubagents(cacheKey: string): CachedSubagents | null {
 
 export default function Subagents({ apiBase }: { apiBase: string }) {
   const t = useT();
-  const cacheKey = `ocx.subagents.v1:${apiBase}`;
+  const cacheKey = `occx.subagents.v1:${apiBase}`;
   const cached = seedSubagents(cacheKey);
   const [chosen, setChosen] = useState<string[]>(() => cached?.chosen ?? []);
   const [fallback, setFallback] = useState<string[]>(() => cached?.fallback ?? []);
@@ -263,7 +263,7 @@ export default function Subagents({ apiBase }: { apiBase: string }) {
       committed.current = next;
       writeSessionListCache(cacheKey, next);
       setOk(true);
-      setStatus(t("sub.saved", { n: applied.length, cmd: "ocx sync" }));
+      setStatus(t("sub.saved", { n: applied.length, cmd: "occx sync" }));
     } catch (error) {
       setOk(false);
       setStatus(error instanceof Error && error.message ? error.message : t("sub.networkError"));

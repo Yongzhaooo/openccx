@@ -6,16 +6,16 @@ import { handleOauthAccountRoutes } from "../../src/server/management/oauth-acco
 import { clearAccountQuotaCache, clearProviderQuotaCache } from "../../src/providers/quota";
 import * as quotaApi from "../../src/providers/quota";
 import { getAccountSet, saveCredential } from "../../src/oauth/store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const originalHome = process.env.OPENCODEX_HOME;
-const originalFixtureKey = process.env.OCX_QUOTA_ROW_FIXTURE;
+const originalHome = process.env.OPENCCX_HOME;
+const originalFixtureKey = process.env.OCCX_QUOTA_ROW_FIXTURE;
 let home = "";
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-quota-rows-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-quota-rows-"));
+  process.env.OPENCCX_HOME = home;
   clearAccountQuotaCache();
   clearProviderQuotaCache();
 });
@@ -23,14 +23,14 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   clearAccountQuotaCache();
   clearProviderQuotaCache();
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
-  if (originalFixtureKey === undefined) delete process.env.OCX_QUOTA_ROW_FIXTURE;
-  else process.env.OCX_QUOTA_ROW_FIXTURE = originalFixtureKey;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
+  if (originalFixtureKey === undefined) delete process.env.OCCX_QUOTA_ROW_FIXTURE;
+  else process.env.OCCX_QUOTA_ROW_FIXTURE = originalFixtureKey;
   removeTreeWithRetry(home);
 });
 
-function keyConfig(): OcxConfig {
+function keyConfig(): OccxConfig {
   return { port: 0, defaultProvider: "openrouter", providers: { openrouter: {
     adapter: "openai-chat", authMode: "key", baseUrl: "https://openrouter.ai/api/v1",
     apiKey: "fixture-first", apiKeyPool: [
@@ -39,7 +39,7 @@ function keyConfig(): OcxConfig {
   } } };
 }
 
-async function read(path: string, config: OcxConfig) {
+async function read(path: string, config: OccxConfig) {
   const req = new Request(`http://localhost${path}`);
   const response = await handleOauthAccountRoutes({
     req, url: new URL(req.url), config, version: "test", deps: {},
@@ -111,12 +111,12 @@ test("unsupported key destinations do not resolve or probe credentials", async (
 
 test("same-id environment credential replacement cannot inherit a settled old quota", async () => {
   const config = keyConfig();
-  process.env.OCX_QUOTA_ROW_FIXTURE = "fixture-old";
-  config.providers.openrouter.apiKey = "${OCX_QUOTA_ROW_FIXTURE}";
-  config.providers.openrouter.apiKeyPool = [{ id: "same-id", key: "${OCX_QUOTA_ROW_FIXTURE}" }];
+  process.env.OCCX_QUOTA_ROW_FIXTURE = "fixture-old";
+  config.providers.openrouter.apiKey = "${OCCX_QUOTA_ROW_FIXTURE}";
+  config.providers.openrouter.apiKeyPool = [{ id: "same-id", key: "${OCCX_QUOTA_ROW_FIXTURE}" }];
   globalThis.fetch = (async () => {
     const response = Response.json({ data: { limit: 100, limit_remaining: 80 } });
-    process.env.OCX_QUOTA_ROW_FIXTURE = "fixture-new";
+    process.env.OCCX_QUOTA_ROW_FIXTURE = "fixture-new";
     return response;
   }) as typeof fetch;
   const body = await (await read("/api/providers/keys?name=openrouter&quota=1", config)).json();
@@ -146,7 +146,7 @@ test("the final route projection checks private identity even for a non-null com
 
 test("OAuth cheap rows carry probe mode and enriched rows clear stale failure flags", async () => {
   await saveCredential("anthropic", { access: "fixture-access", refresh: "fixture-refresh", expires: Date.now() + 3600000, accountId: "fixture-upstream" });
-  const config: OcxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
+  const config: OccxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
   const before = getAccountSet("anthropic")?.activeAccountId;
   let fail = true;
   let probes = 0;
@@ -169,7 +169,7 @@ test("OAuth cheap rows carry probe mode and enriched rows clear stale failure fl
 test("OAuth final projection rejects quota from a replaced stored identity", async () => {
   await saveCredential("anthropic", { access: "fixture-access", refresh: "fixture-refresh", expires: Date.now() + 3600000, accountId: "fixture-upstream" });
   const accountId = getAccountSet("anthropic")!.activeAccountId;
-  const config: OcxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
+  const config: OccxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
   let checked = 0;
   const probe = spyOn(quotaApi, "fetchProviderAccountQuotas").mockResolvedValue([{
     accountId, quota: { weeklyPercent: 77, updatedAt: Date.now() },
@@ -188,7 +188,7 @@ test("OAuth final projection rejects quota from a replaced stored identity", asy
 test("OAuth final projection rejects a replaced configured provider object", async () => {
   await saveCredential("anthropic", { access: "fixture-access", refresh: "fixture-refresh", expires: Date.now() + 3600000, accountId: "fixture-upstream" });
   const accountId = getAccountSet("anthropic")!.activeAccountId;
-  const config: OcxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
+  const config: OccxConfig = { port: 0, defaultProvider: "anthropic", providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com" } } };
   const probe = spyOn(quotaApi, "fetchProviderAccountQuotas").mockImplementation(async () => {
     config.providers.anthropic = { ...config.providers.anthropic, disabled: true };
     return [{ accountId, quota: { weeklyPercent: 77, updatedAt: Date.now() }, isCurrent: () => true }];
@@ -204,7 +204,7 @@ test("OAuth final projection rejects a replaced configured provider object", asy
 
 test("passive account refresh reports unobserved without sending a quota request", async () => {
   await saveCredential("meta-muse", { access: "fixture-passive", refresh: "", expires: Date.now() + 3600000, accountId: "fixture-passive-account" });
-  const config: OcxConfig = { port: 0, defaultProvider: "meta-muse", providers: { "meta-muse": { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://example.invalid" } } };
+  const config: OccxConfig = { port: 0, defaultProvider: "meta-muse", providers: { "meta-muse": { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://example.invalid" } } };
   let requests = 0;
   globalThis.fetch = (async () => { requests++; throw new Error("passive readers must not probe"); }) as typeof fetch;
   const body = await (await read("/api/oauth/accounts?provider=meta-muse&quota=1&refresh=1", config)).json();

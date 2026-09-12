@@ -19,7 +19,7 @@ import { providerOutboundPost, providerRedirectError, type ProviderOutboundDepen
 import { apiKeyPoolEntryId } from "./api-keys";
 import { XAI_GROK_CLIENT_VERSION, XAI_GROK_COMPATIBILITY } from "./xai-transport";
 import { getProviderRegistryEntry, providerCodexAccountMode, registryEntryForProviderDestination } from "./registry";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { isCanonicalOpenAiForwardProvider, OPENAI_CODEX_PROVIDER_ID } from "./openai-tiers";
 import {
   captureConfigGeneration,
@@ -176,7 +176,7 @@ export function clearProviderQuotaCache(): void {
   invalidationEpoch += 1;
 }
 
-function cacheKey(config: OcxConfig): string {
+function cacheKey(config: OccxConfig): string {
   const providers = Object.entries(config.providers)
     .map(([name, provider]) => {
       const resolvedKey = typeof provider.apiKey === "string"
@@ -192,7 +192,7 @@ function cacheKey(config: OcxConfig): string {
 
 type CodexAuthAccountsSnapshotPromise = ReturnType<typeof listCodexAuthAccountsSnapshot>;
 
-function hasCodexPoolProvider(config: OcxConfig): boolean {
+function hasCodexPoolProvider(config: OccxConfig): boolean {
   return Object.entries(config.providers).some(([name, provider]) => (
     provider.disabled !== true
     && isBuiltInChatGptForwardProvider(name, provider)
@@ -239,7 +239,7 @@ function providerQuotaFromCodexQuota(
 
 /** Hash only presentation-relevant state; account ids and email addresses never enter the key. */
 function cacheKeyWithAggregationState(
-  config: OcxConfig,
+  config: OccxConfig,
   prefetchedSnapshot?: CodexAuthAccountsSnapshotPromise,
 ): string | Promise<string> {
   const base = cacheKey(config);
@@ -314,7 +314,7 @@ export async function readProviderQuotaJsonForTests(response: Response, timeoutM
   return result === QUOTA_JSON_READ_FAILURE ? null : result;
 }
 
-function isBuiltInChatGptForwardProvider(name: string, provider: OcxProviderConfig): boolean {
+function isBuiltInChatGptForwardProvider(name: string, provider: OccxProviderConfig): boolean {
   return name === OPENAI_CODEX_PROVIDER_ID && isCanonicalOpenAiForwardProvider(provider);
 }
 
@@ -415,7 +415,7 @@ function firstFinite(record: Record<string, unknown> | null, names: string[]): n
   return undefined;
 }
 
-async function fetchA6apiQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchA6apiQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   // Never send a configured API key to a lookalike host or through a redirect.
   if (!isCanonicalA6apiBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
@@ -514,7 +514,7 @@ function parseOpenCodeGoUsageWindow(value: unknown): { percent: number; resetAt?
   return { percent, ...(resetAt !== undefined ? { resetAt } : {}) };
 }
 
-async function fetchOpenCodeGoQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchOpenCodeGoQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   // Never send a configured API key when the provider destination is not the built-in Go endpoint.
   if (!isCanonicalOpenCodeGoBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
@@ -560,7 +560,7 @@ async function fetchOpenCodeGoQuota(provider: string, config: OcxProviderConfig)
  * When no cap is set there is no hard limit to meter against, so no bar is
  * produced — the provider falls back to its documented reference.
  */
-async function fetchOpenRouterQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchOpenRouterQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   // Never send a configured API key to a lookalike host or through a redirect.
   if (!isCanonicalOpenRouterBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
@@ -611,7 +611,7 @@ async function fetchOpenRouterQuota(provider: string, config: OcxProviderConfig)
  * component, not the original grant ceiling, so no consumed percentage is
  * fabricated — the balance is reported as a balance-only window.
  */
-async function fetchDeepSeekQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchDeepSeekQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalDeepSeekBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -656,7 +656,7 @@ async function fetchDeepSeekQuota(provider: string, config: OcxProviderConfig): 
  * ProviderQuota windows directly. The endpoint 404s (or returns a null plan)
  * for accounts without an active ClinePass, which is a no-report, not an error.
  */
-async function fetchClineQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchClineQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalClineBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -753,7 +753,7 @@ export function parseOllamaCloudQuota(body: Record<string, unknown> | null): Pro
   return windows > 0 ? quota : null;
 }
 
-async function fetchOllamaCloudQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchOllamaCloudQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   const effectiveBaseUrl = config.baseUrl ?? getProviderRegistryEntry(provider)?.baseUrl ?? "";
   if (!isCanonicalOllamaCloudBaseUrl(effectiveBaseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
@@ -876,7 +876,7 @@ function parseZaiQuotaLegacyFields(data: Record<string, unknown> | null): Provid
  * `redirect: "error"` stays set, so the bare key cannot travel to a lookalike
  * host or follow a redirect off-origin.
  */
-async function fetchZaiQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchZaiQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   const monitorHost = zaiQuotaMonitorHost(config.baseUrl);
   if (!monitorHost) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
@@ -924,7 +924,7 @@ async function fetchZaiQuota(provider: string, config: OcxProviderConfig): Promi
  * is derived from it. Region selects the host: `minimax` → www.minimax.io,
  * `minimax-cn` → api.minimaxi.com.
  */
-async function fetchMinimaxQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchMinimaxQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalMinimaxBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -968,7 +968,7 @@ async function fetchMinimaxQuota(provider: string, config: OcxProviderConfig): P
  * (voucher + cash). Renders a single balance window against the sum of
  * voucher + cash when positive (there is no per-window rate limit to meter).
  */
-async function fetchMoonshotQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchMoonshotQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalMoonshotBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -1012,7 +1012,7 @@ async function fetchMoonshotQuota(provider: string, config: OcxProviderConfig): 
  * Venice `GET /api/v1/billing/balance` — DIEM (native credits) or USD balance.
  * Shows the remaining balance; epoch allocation progress when present.
  */
-async function fetchVeniceQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchVeniceQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalVeniceBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -1055,7 +1055,7 @@ async function fetchVeniceQuota(provider: string, config: OcxProviderConfig): Pr
  * Synthetic `GET /v2/quotas` — the known quota lanes (rolling 5-hour,
  * weekly token, search-hourly) mapped onto the quota windows.
  */
-async function fetchSyntheticQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchSyntheticQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalSyntheticBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -1105,7 +1105,7 @@ async function fetchSyntheticQuota(provider: string, config: OcxProviderConfig):
  * recent spend, spending limit, and suspension state. Renders a balance
  * window (prepaid funds are a negative `stripe_balance` → positive available).
  */
-async function fetchDeepInfraQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchDeepInfraQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalDeepInfraBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -1147,7 +1147,7 @@ async function fetchDeepInfraQuota(provider: string, config: OcxProviderConfig):
  * Neuralwatt `GET /v1/quota` — subscription kWh usage (primary window) and
  * prepaid USD credit balance (secondary).
  */
-async function fetchNeuralwattQuota(provider: string, config: OcxProviderConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchNeuralwattQuota(provider: string, config: OccxProviderConfig): Promise<ProviderQuotaProbeResult> {
   if (!isCanonicalNeuralwattBaseUrl(config.baseUrl)) return null;
   const apiKey = resolveProviderApiKey(config.apiKey)?.trim();
   if (!apiKey) return null;
@@ -1223,7 +1223,7 @@ function keyReport(
   provider: string,
   source: string,
   quota: ProviderQuota,
-  config: OcxProviderConfig,
+  config: OccxProviderConfig,
   probedCredential: string,
   inferenceQuota?: ProviderQuota,
 ): ProviderQuotaReport | null {
@@ -1255,7 +1255,7 @@ export function publishKeyReportForTests(
   provider: string,
   source: string,
   quota: ProviderQuota,
-  config: OcxProviderConfig,
+  config: OccxProviderConfig,
   probedCredential: string,
   inferenceQuota?: ProviderQuota,
 ): { report: ProviderQuotaReport | null; routing: ProviderQuotaRoutingEvidence | undefined } {
@@ -1270,9 +1270,9 @@ function isProviderQuotaReportCurrent(value: ProviderQuotaReport): boolean {
 }
 
 async function fetchChatGptForwardQuota(
-  config: OcxConfig,
+  config: OccxConfig,
   provider: string,
-  providerConfig: OcxProviderConfig,
+  providerConfig: OccxProviderConfig,
   forceRefresh: boolean,
   prefetchedSnapshot?: CodexAuthAccountsSnapshotPromise,
 ): Promise<ProviderQuotaReport | null> {
@@ -1607,7 +1607,7 @@ async function fetchKiroQuota(provider: string): Promise<ProviderQuotaReport | n
  * subscription windows, the same shape `fetchAnthropicQuota` and `fetchKiroQuota`
  * return.
  *
- * Cache-only. A dashboard load or `ocx account refresh` must never spend an inference
+ * Cache-only. A dashboard load or `occx account refresh` must never spend an inference
  * turn, so `forceRefresh` does not exist on this path — there is nothing to refresh.
  * `report.updatedAt` is the observation time, which is what both GUI surfaces render
  * as the relative age of the row.
@@ -2020,13 +2020,13 @@ async function getTokenForAccountQuotaProbe(provider: string, accountId: string)
   return getValidAccessTokenForAccount(provider, accountId);
 }
 
-function explicitQuotaConfig(provider: string, configured?: OcxProviderConfig): OcxProviderConfig | undefined {
+function explicitQuotaConfig(provider: string, configured?: OccxProviderConfig): OccxProviderConfig | undefined {
   if (configured) return configured;
   const entry = getProviderRegistryEntry(provider);
   return entry ? { adapter: entry.adapter, baseUrl: entry.baseUrl, authMode: "oauth" } : undefined;
 }
 
-function explicitQuotaIdentity(provider: string, accountId: string, configured?: OcxProviderConfig): string | undefined {
+function explicitQuotaIdentity(provider: string, accountId: string, configured?: OccxProviderConfig): string | undefined {
   const credential = getAccountCredential(provider, accountId);
   const target = explicitQuotaConfig(provider, configured);
   if (!credential || !target) return undefined;
@@ -2037,7 +2037,7 @@ function explicitQuotaIdentity(provider: string, accountId: string, configured?:
   ])).digest("hex");
 }
 
-function explicitQuotaDestination(provider: string, config: OcxProviderConfig): boolean {
+function explicitQuotaDestination(provider: string, config: OccxProviderConfig): boolean {
   if (config.disabled === true || config.authMode !== "oauth") return false;
   if (provider === "kimi") return isCanonicalKimiCodeBaseUrl(config.baseUrl);
   if (provider === "command-code") return isCanonicalCommandCodeBaseUrl(config.baseUrl);
@@ -2045,7 +2045,7 @@ function explicitQuotaDestination(provider: string, config: OcxProviderConfig): 
   return provider === "xai" || provider === "cursor";
 }
 
-async function readExplicitAccountQuota(provider: string, accountId: string, configured?: OcxProviderConfig): Promise<{
+async function readExplicitAccountQuota(provider: string, accountId: string, configured?: OccxProviderConfig): Promise<{
   result: ProviderQuotaProbeResult;
   identity: string | undefined;
   isCurrent: () => boolean;
@@ -2073,7 +2073,7 @@ async function readExplicitAccountQuota(provider: string, accountId: string, con
   return { result, identity, isCurrent };
 }
 
-async function fetchExplicitAccountQuota(provider: string, accountId: string, force: boolean, configured?: OcxProviderConfig): Promise<AccountQuotaCacheEntry> {
+async function fetchExplicitAccountQuota(provider: string, accountId: string, force: boolean, configured?: OccxProviderConfig): Promise<AccountQuotaCacheEntry> {
   const key = accountCacheKey(provider, accountId);
   const identity = explicitQuotaIdentity(provider, accountId, configured);
   const previous = accountQuotaCache.get(key);
@@ -2109,7 +2109,7 @@ async function fetchExplicitAccountQuota(provider: string, accountId: string, fo
   return flight;
 }
 
-async function fetchExplicitCurrentQuota(provider: string, config: OcxProviderConfig, liveConfig: OcxConfig): Promise<ProviderQuotaProbeResult> {
+async function fetchExplicitCurrentQuota(provider: string, config: OccxProviderConfig, liveConfig: OccxConfig): Promise<ProviderQuotaProbeResult> {
   const id = getAccountSet(provider)?.activeAccountId;
   if (!id) return null;
   const read = await readExplicitAccountQuota(provider, id, config);
@@ -2125,7 +2125,7 @@ async function fetchAccountQuota(
   provider: string,
   accountId: string,
   forceRefresh: boolean,
-  providerConfig?: OcxProviderConfig,
+  providerConfig?: OccxProviderConfig,
 ): Promise<AccountQuotaCacheEntry> {
   if (!supportsPerAccountQuota(provider)) return { ts: Date.now(), quota: null, unavailable: true };
   if (explicitAccountReader(provider)) return fetchExplicitAccountQuota(provider, accountId, forceRefresh, providerConfig);
@@ -2222,7 +2222,7 @@ async function fetchAccountQuota(
 export async function fetchProviderAccountQuotas(
   provider: string,
   forceRefresh = false,
-  providerConfig?: OcxProviderConfig,
+  providerConfig?: OccxProviderConfig,
 ): Promise<ProviderAccountQuota[]> {
   if (!supportsPerAccountQuota(provider)) return [];
   const set = getAccountSet(provider);
@@ -2361,7 +2361,7 @@ function parseKimiQuotaPayload(value: unknown): ProviderQuota | null {
   return hasQuotaRows(quota) ? quota : null;
 }
 
-async function resolveKimiQuotaBearer(config: OcxProviderConfig, accountId?: string): Promise<string | null> {
+async function resolveKimiQuotaBearer(config: OccxProviderConfig, accountId?: string): Promise<string | null> {
   if (config.authMode === "oauth") {
     try {
       return accountId ? await getTokenForAccountQuotaProbe("kimi", accountId) : null;
@@ -2376,7 +2376,7 @@ async function resolveKimiQuotaBearer(config: OcxProviderConfig, accountId?: str
   return primary || null;
 }
 
-async function fetchKimiQuota(provider: string, config: OcxProviderConfig, accessToken: string): Promise<ProviderQuotaReport | null> {
+async function fetchKimiQuota(provider: string, config: OccxProviderConfig, accessToken: string): Promise<ProviderQuotaReport | null> {
   // Never release credentials to a user-edited or lookalike provider host.
   if (!isCanonicalKimiCodeBaseUrl(config.baseUrl)) return null;
   if (!accessToken) return null;
@@ -2469,7 +2469,7 @@ async function fetchCommandCodeSpend(
 }
 
 /** OAuth access token or ACTIVE Provider-API key for the Command Code quota probe. */
-async function resolveCommandCodeQuotaBearer(config: OcxProviderConfig, accountId?: string): Promise<string | null> {
+async function resolveCommandCodeQuotaBearer(config: OccxProviderConfig, accountId?: string): Promise<string | null> {
   if (config.authMode === "oauth") {
     try {
       return accountId ? await getTokenForAccountQuotaProbe("command-code", accountId) : null;
@@ -2487,7 +2487,7 @@ async function resolveCommandCodeQuotaBearer(config: OcxProviderConfig, accountI
  * usage view uses (windowLimits.fiveHour / windowLimits.weekly), plus soft
  * whoami (team orgId scoping) and subscription-scoped spend for creditsUsd.
  */
-async function fetchCommandCodeQuota(provider: string, config: OcxProviderConfig, bearer: string): Promise<ProviderQuotaProbeResult> {
+async function fetchCommandCodeQuota(provider: string, config: OccxProviderConfig, bearer: string): Promise<ProviderQuotaProbeResult> {
   // Never release credentials to a user-edited or lookalike provider host.
   if (!isCanonicalCommandCodeBaseUrl(config.baseUrl)) return null;
   if (!bearer) return null;
@@ -2536,7 +2536,7 @@ async function fetchCursorQuota(provider: string, accessToken: string): Promise<
   const authHeaders = {
     Accept: "application/json",
     Authorization: `Bearer ${accessToken}`,
-    "User-Agent": "opencodex-quota",
+    "User-Agent": "openccx-quota",
   } as const;
 
   // Prefer dashboard period usage (Pro/Team/Ultra spend allowance in USD cents).
@@ -2964,10 +2964,10 @@ async function fetchAntigravityQuota(provider: string): Promise<ProviderQuotaRep
   });
 }
 
-type KeyQuotaReader = (name: string, provider: OcxProviderConfig) => Promise<ProviderQuotaProbeResult>;
+type KeyQuotaReader = (name: string, provider: OccxProviderConfig) => Promise<ProviderQuotaProbeResult>;
 
 /** Same selector drives cheap capabilities and uncached reads; never resolves credentials. */
-function keyQuotaReaderForProvider(name: string, provider: OcxProviderConfig): KeyQuotaReader | null {
+function keyQuotaReaderForProvider(name: string, provider: OccxProviderConfig): KeyQuotaReader | null {
   if (provider.disabled === true || (provider.authMode ?? "key") !== "key") return null;
   if (isCanonicalKimiCodeBaseUrl(provider.baseUrl)) {
     return async (id, config) => {
@@ -3001,11 +3001,11 @@ function keyQuotaReaderForProvider(name: string, provider: OcxProviderConfig): K
   return null;
 }
 
-export function providerApiKeyQuotaMode(name: string, provider: OcxProviderConfig): AccountQuotaMode {
+export function providerApiKeyQuotaMode(name: string, provider: OccxProviderConfig): AccountQuotaMode {
   return keyQuotaReaderForProvider(name, provider) ? "probe" : "unsupported";
 }
 
-export async function fetchProviderApiKeyQuotas(config: OcxConfig, name: string, forceRefresh = false): Promise<ProviderApiKeyQuota[]> {
+export async function fetchProviderApiKeyQuotas(config: OccxConfig, name: string, forceRefresh = false): Promise<ProviderApiKeyQuota[]> {
   const provider = config.providers[name];
   if (!provider || !keyQuotaReaderForProvider(name, provider)) return [];
   return readProviderApiKeyQuotas(config, name, forceRefresh, async (isolatedProvider, isolatedConfig) => {
@@ -3018,8 +3018,8 @@ export async function fetchProviderApiKeyQuotas(config: OcxConfig, name: string,
 
 async function maybeFetchProviderQuota(
   name: string,
-  provider: OcxProviderConfig,
-  config: OcxConfig,
+  provider: OccxProviderConfig,
+  config: OccxConfig,
   forceRefresh: boolean,
   prefetchedCodexSnapshot?: CodexAuthAccountsSnapshotPromise,
 ): Promise<ProviderQuotaProbeResult> {
@@ -3080,7 +3080,7 @@ let pendingProviderObservation: Promise<void> = Promise.resolve();
  * cache key already discriminates these at cacheKey() via apiKeyPoolEntryId, so this
  * mirrors that discriminator instead of inventing a second notion of identity.
  */
-function providerObservationAccountKey(provider: string, config: OcxConfig): string {
+function providerObservationAccountKey(provider: string, config: OccxConfig): string {
   const oauthAccountId = getAccountSet(provider)?.activeAccountId;
   if (oauthAccountId !== undefined) return `${provider}\u0000${oauthAccountId}`;
   const providerConfig = config.providers[provider];
@@ -3092,13 +3092,13 @@ function providerObservationAccountKey(provider: string, config: OcxConfig): str
 }
 
 /** Test-only view of the observation account key. */
-export function providerObservationAccountKeyForTests(provider: string, config: OcxConfig): string {
+export function providerObservationAccountKeyForTests(provider: string, config: OccxConfig): string {
   return providerObservationAccountKey(provider, config);
 }
 
 function notifyProviderQuotaSnapshot(
   reports: ReadonlyArray<ProviderQuotaReport>,
-  config: OcxConfig,
+  config: OccxConfig,
 ): void {
   if (reports.length === 0) return;
   // Resolved here, synchronously, while the identity is still the one that produced these
@@ -3132,7 +3132,7 @@ export function flushProviderQuotaObservationsForTests(): Promise<void> {
   return pendingProviderObservation;
 }
 
-export async function fetchProviderQuotaReports(config: OcxConfig, forceRefresh = false): Promise<ProviderQuotaResponse> {
+export async function fetchProviderQuotaReports(config: OccxConfig, forceRefresh = false): Promise<ProviderQuotaResponse> {
   // A Pool report's cache signature and provider fetch must share one account snapshot.
   // Preserve force semantics when deciding whether that snapshot refreshes upstream data.
   const prefetchedCodexSnapshot = hasCodexPoolProvider(config)

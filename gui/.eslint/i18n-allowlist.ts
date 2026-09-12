@@ -25,8 +25,8 @@ const BRAND_LITERALS = new Set([
   "Mimo",
   "Claude",
   "ChatGPT",
-  "OpenCodex",
-  "opencodex",
+  "Openccx",
+  "openccx",
   "OAuth",
   "API",
 ]);
@@ -98,7 +98,7 @@ export function isTechnicalLiteral(value: string): boolean {
   // `^-H` rule above never sees it. Still a shell sample, still not translatable. The
   // leading run is one-or-more because the raw template text keeps the escape.
   if (/^\\+\s+-(?:H|d)\b/.test(trimmed)) return true;
-  if (/^ocx\b/i.test(trimmed)) return true;
+  if (/^occx\b/i.test(trimmed)) return true;
   if (/^codex\b/i.test(trimmed)) return true;
 
   // HTTP protocol / headers / auth schemes

@@ -2,7 +2,7 @@
 
 ## Multi-agent surface mode (3-state)
 
-`OcxConfig.multiAgentMode` controls the `multi_agent_version` field stamped on catalog entries:
+`OccxConfig.multiAgentMode` controls the `multi_agent_version` field stamped on catalog entries:
 
 | Mode | Behavior |
 | --- | --- |
@@ -15,14 +15,14 @@ The override is applied as a final pass in both `buildCatalogEntries` (live `/v1
 ensures `normalizeRoutedCatalogEntry` (which deletes `multi_agent_version` from routed entries) does
 not clobber the forced value.
 
-CLI: `ocx v2 mode v1|default|v2`. GUI: segmented control on the Models page. API: `GET/PUT /api/v2`
+CLI: `occx v2 mode v1|default|v2`. GUI: segmented control on the Models page. API: `GET/PUT /api/v2`
 with `multiAgentMode` field.
 
 The `multi_agent_v2` feature flag and the logical maximum thread count are separate from
 `multiAgentMode` (`src/codex/features.ts`): the mode decides which surface Codex advertises, while
 the flag and thread count decide what the native runtime allows.
 
-`keepNativeChatGptOnV1` makes mode `v2` a catalog-driven hybrid: OpenCodex disables the global
+`keepNativeChatGptOnV1` makes mode `v2` a catalog-driven hybrid: Openccx disables the global
 `multi_agent_v2` override because codex-rs resolves that override before a model row's explicit
 `multi_agent_version`. Native ChatGPT rows then select v1 from the catalog and routed rows select
 v2. An explicit attempt to enable the global flag while the hybrid pin is active is rejected.
@@ -62,9 +62,9 @@ Same catalog, different advertised list:
 | 6 | `disabled-b` | `disabled` | — | — |
 | 7 | `null-b` | absent | — | ✅ |
 
-opencodex already matches this: `effectiveSubagentRoster` filters with
+openccx already matches this: `effectiveSubagentRoster` filters with
 `surface !== "v2" || isEligibleV2SubagentEntry(entry)`, so the V1 path skips the eligibility
-filter exactly as upstream does. opencodex also injects no roster on V1
+filter exactly as upstream does. openccx also injects no roster on V1
 (`src/server/responses/collaboration.ts` emits only proactive text at the top effort tier), so
 the upstream tool description remains the authority there.
 
@@ -74,18 +74,18 @@ advertises) but `expose_spawn_agent_model_overrides` on V2 (default `true`; when
 is omitted *and* the `model`/`reasoning_effort` schema fields are removed). And V2's
 `hide_spawn_agent_metadata` defaults true, which removes `service_tier`.
 
-`modelPickerOrder` (#1649) separates **OpenCodex guidance** from native advertisement.
+`modelPickerOrder` (#1649) separates **Openccx guidance** from native advertisement.
 `SPAWN_PRIORITY_FIELD` preserves the natural priority used by `effectiveSubagentRoster`, so
-OpenCodex's preferred/guidance candidate calculation stays independent of display order.
+Openccx's preferred/guidance candidate calculation stays independent of display order.
 Native Codex ignores that private field: its advertised five on V1 and exposed V2 follow the
 native `priority` and may change when the picker is reordered. Exact-name override lookup is
-not restricted to those five advertised rows. V1 receives no OpenCodex preferred-roster
+not restricted to those five advertised rows. V1 receives no Openccx preferred-roster
 injection; V2 can additionally receive natural-priority guidance when its catalog state permits.
 The helper tests pin guidance behavior, not native tool-description equivalence.
 
 A nonblank bare id in `modelPickerOrder` opts into complete-picker display ordering. Exact
 ids take precedence over raw/encoded equivalents; routed-only and empty lists keep the legacy
-ordering behavior. This does not change the separate `opencodex_spawn_priority` contract.
+ordering behavior. This does not change the separate `openccx_spawn_priority` contract.
 Retained rows recompute their natural ranks from the current featured roster and account-selector
 stride before display order is applied, so a discovery outage cannot preserve an obsolete
 featured or picker rank. Canonical `opencode-go` rows retain their configured reasoning ladder
@@ -115,7 +115,7 @@ Codex `spawn_agent` advertises only the highest-priority first five picker-visib
 Use at most five configured `subagentModels` ids; they may contain bare catalog ids, routed
 `provider/model` ids, or exact account-qualified `<selector>/<native-openai-model>` ids. The
 dashboard offers bare native and routed choices; exact account-qualified choices are configured
-through `ocx agent subagents set` or the opencodex configuration.
+through `occx agent subagents set` or the openccx configuration.
 
 When account selectors are active, one featured bare native id expands into a complete selector row
 group. Catalog priorities use the selector count as a stride so each group stays together without
@@ -134,15 +134,15 @@ the requested model id only; effort remains owned by the caps described under
 [Ultra reasoning level](catalog.md#ultra-reasoning-level).
 
 `injectionModel` and `injectionEffort` are shared selections with two independent consumers.
-`multiAgentGuidanceEnabled` controls only OpenCodex-authored delegation guidance.
+`multiAgentGuidanceEnabled` controls only Openccx-authored delegation guidance.
 `syncCodexSubagentDefaults` is a separate, default-off opt-in that applies the selected values to
-Codex's native `[agents]` defaults on sync/restart for newly created Codex tasks when OpenCodex owns
+Codex's native `[agents]` defaults on sync/restart for newly created Codex tasks when Openccx owns
 the active Codex routing; external user-managed provider configs remain untouched. It does not itself
 cause delegation. The TOML edit owns only marker-tagged values, preserves existing unmarked
 user-owned `[agents]` defaults rather than overwriting them, and rejects ambiguous table shapes
 without changing the file.
 
-V2 proxy guidance uses `<opencodex_subagent_guidance>` for both built-in metadata and
+V2 proxy guidance uses `<openccx_subagent_guidance>` for both built-in metadata and
 custom `injectionPrompt` bodies. The built-in text reports the resolved preferred model,
 effort, roster and fallback chain without prescribing delegation, spawn overrides or
 `fork_turns`. Custom bodies retain their placeholder behavior. The guidance switch and
@@ -162,18 +162,18 @@ The native mode hint is separate from proxy guidance and native `[agents]` defau
 `src/codex/multi-agent-mode-policy.ts` owns the proactive recommendation; the dashboard
 obtains it from `/api/v2` rather than maintaining its own preset. An explicit dashboard,
 API or CLI hint write passes through `setMultiAgentModeHintText`, which replaces only
-the two byte-exact released OpenCodex presets with the current recommendation. Other
+the two byte-exact released Openccx presets with the current recommendation. Other
 valid custom text, including whitespace variants, is preserved. Reads, unrelated writes
 and upgrades do not migrate stored hints. The writer retains its native capability check
 and stores only `features.multi_agent_v2.multi_agent_mode_hint_text` in Codex TOML;
 `null` removes that key. The hint affects new native Codex sessions when their v2 surface
 is active, without changing reasoning effort or the proxy guidance switch.
 
-Claude Code `ocx-*` agent definitions consume the same effective `claudeCode.blockedSkills` policy
+Claude Code `occx-*` agent definitions consume the same effective `claudeCode.blockedSkills` policy
 as inbound bundle elision. When the list is non-empty (default: `claude-api`), generated definitions
 whose marker-stripped model resolves to a routed id receive a preventive instruction not to invoke
 those skills. Direct `provider/model` selectors are routed even when their inbound resolution is
-identity. The only unguarded `ocx-self` case is an identity-resolved `claude|anthropic` model while
+identity. The only unguarded `occx-self` case is an identity-resolved `claude|anthropic` model while
 native passthrough is enabled; `modelMap` claims and `nativePassthrough:false` restore the guard. The
 guard avoids creating oversized skill messages before the proxy can intervene; inbound elision remains
 the fallback if a client still sends a blocked bundle. An explicit empty list disables both routed-model

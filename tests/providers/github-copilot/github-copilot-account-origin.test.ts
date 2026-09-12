@@ -7,7 +7,7 @@ import { getAccountSet, saveCredential, setActiveAccount } from "../../../src/oa
 import { handleResponses } from "../../../src/server/responses";
 import { saveConfig } from "../../../src/config";
 import { setActiveProviderApiKey } from "../../../src/providers/api-keys";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const ACCOUNT_A_ORIGIN = "https://a.githubcopilot.com";
@@ -16,7 +16,7 @@ const COPILOT_TOKEN_URL = "https://api.github.com/copilot_internal/v2/token";
 const GITHUB_USER_URL = "https://api.github.com/user";
 
 const originalFetch = globalThis.fetch;
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home = "";
 let beforeBuildReturns: (() => Promise<void>) | undefined;
 let beforePacingReturns: (() => Promise<void>) | undefined;
@@ -56,7 +56,7 @@ function bearer(accessToken: string): string {
   return ["Bearer", accessToken].join(" ");
 }
 
-function config(wire: Wire): OcxConfig {
+function config(wire: Wire): OccxConfig {
   const model = wire === "chat" ? "gpt-4o" : "gpt-5.4";
   return {
     port: 0,
@@ -70,7 +70,7 @@ function config(wire: Wire): OcxConfig {
         ...(wire === "responses" ? { modelAdapters: { [model]: "openai-responses" } } : {}),
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(wire: Wire, extra: Record<string, unknown> = {}): Request {
@@ -190,16 +190,16 @@ function installFetch(options: {
 beforeEach(() => {
   beforeBuildReturns = undefined;
   beforePacingReturns = undefined;
-  home = mkdtempSync(join(tmpdir(), "ocx-copilot-origin-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-copilot-origin-"));
+  process.env.OPENCCX_HOME = home;
   clearGenericFailoverHealth();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearGenericFailoverHealth();
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 

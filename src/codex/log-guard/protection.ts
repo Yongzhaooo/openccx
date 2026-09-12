@@ -20,8 +20,8 @@ import {
 export { type CodexLogGuardMode } from "./policy";
 
 const IMMUTABLE_READONLY_FLAGS = sqliteConstants.SQLITE_OPEN_READONLY | sqliteConstants.SQLITE_OPEN_URI;
-const COMPAT_TRIGGER = "opencodex_log_guard_compat_v1";
-const QUIET_TRIGGER = "opencodex_log_guard_quiet_v1";
+const COMPAT_TRIGGER = "openccx_log_guard_compat_v1";
+const QUIET_TRIGGER = "openccx_log_guard_quiet_v1";
 const OWNED_TRIGGER_NAMES = [COMPAT_TRIGGER, QUIET_TRIGGER] as const;
 
 const CURRENT_LOG_COLUMNS = [
@@ -212,7 +212,7 @@ function openReadOnly(databasePath: string): Database {
 
 function openReadWrite(databasePath: string): Database {
   // READWRITE without CREATE: a missing/moved canonical DB is a refusal, not a
-  // reason for OpenCodex to materialise a new foreign database.
+  // reason for Openccx to materialise a new foreign database.
   return new Database(databasePath, sqliteConstants.SQLITE_OPEN_READWRITE);
 }
 
@@ -406,7 +406,7 @@ function performMutation(
   // Removal must not be gated on the schema still being recognized. A Codex
   // upgrade that changes the logs schema would otherwise strand an installed
   // trigger: Protect is refused (correctly), but so is Disable, leaving the
-  // user with an active OpenCodex trigger and no in-product way to remove it.
+  // user with an active Openccx trigger and no in-product way to remove it.
   // Installing into an unknown schema stays refused; taking our own trigger
   // back out is always allowed.
   const removingProtection = typeof requestedMode !== "function" && requestedMode === "off";
@@ -439,7 +439,7 @@ function performMutation(
       if (!mutation.ok) return mutation;
 
       // Desired state belongs to the same logical transition as the trigger.
-      // Keep L held through this write so another OpenCodex process cannot
+      // Keep L held through this write so another Openccx process cannot
       // interleave a different mode between the DB commit and config commit.
       try {
         writeDesired(effectiveMode);

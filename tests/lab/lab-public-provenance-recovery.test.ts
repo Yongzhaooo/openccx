@@ -70,9 +70,9 @@ function signedBundle(config: string, day = "2026-08-12") {
 }
 
 test("one corrupt origin marker does not discard later valid purge provenance", () => {
-  const home = configDir("ocx-cl10-origin-salvage-");
-  const publisherA = configDir("ocx-cl10-origin-publisher-a-");
-  const publisherB = configDir("ocx-cl10-origin-publisher-b-");
+  const home = configDir("occx-cl10-origin-salvage-");
+  const publisherA = configDir("occx-cl10-origin-publisher-a-");
+  const publisherB = configDir("occx-cl10-origin-publisher-b-");
   const bundles = [signedBundle(publisherA), signedBundle(publisherB, "2026-08-13")];
 
   for (const bundle of bundles) {
@@ -93,7 +93,7 @@ test("one corrupt origin marker does not discard later valid purge provenance", 
 });
 
 test("origin pressure preserves provenance while the matching local export exists", () => {
-  const home = configDir("ocx-cl10-origin-export-retain-");
+  const home = configDir("occx-cl10-origin-export-retain-");
   const bundle = signedBundle(home);
   writePublicEvidenceBundle(bundle, home);
   recordLocalPublicOrigin({ publisherKeyId: bundle.publisher.keyId, bundleId: bundle.bundleId }, home);
@@ -115,7 +115,7 @@ test("origin pressure preserves provenance while the matching local export exist
 });
 
 test("operator import of an own verified bundle restores missing local-origin provenance", () => {
-  const home = configDir("ocx-cl10-origin-rehydrate-");
+  const home = configDir("occx-cl10-origin-rehydrate-");
   const bundle = signedBundle(home);
   expect(listLocalPublicOrigins(home)).toEqual([]);
 
@@ -127,8 +127,8 @@ test("operator import of an own verified bundle restores missing local-origin pr
 });
 
 test("operator import of a third-party verified bundle does not create local-origin provenance", () => {
-  const home = configDir("ocx-cl10-origin-third-party-home-");
-  const publisher = configDir("ocx-cl10-origin-third-party-publisher-");
+  const home = configDir("occx-cl10-origin-third-party-home-");
+  const publisher = configDir("occx-cl10-origin-third-party-publisher-");
   signedBundle(home);
   const bundle = signedBundle(publisher);
 
@@ -137,7 +137,7 @@ test("operator import of a third-party verified bundle does not create local-ori
 });
 
 test("failed own-origin commit rolls back a newly imported community copy", () => {
-  const home = configDir("ocx-cl10-origin-rollback-");
+  const home = configDir("occx-cl10-origin-rollback-");
   const bundle = signedBundle(home);
   const dir = labPublicOriginDir(home);
   const exportDir = labExportDir(home);
@@ -159,8 +159,8 @@ test("failed own-origin commit rolls back a newly imported community copy", () =
 test.skipIf(process.platform === "win32")(
   "origin and community persistence recover after same-process parent-directory sync failures",
   () => {
-    const home = configDir("ocx-cl10-origin-recovery-");
-    const publisher = configDir("ocx-cl10-community-recovery-publisher-");
+    const home = configDir("occx-cl10-origin-recovery-");
+    const publisher = configDir("occx-cl10-community-recovery-publisher-");
     const identity = {
       publisherKeyId: publicEvidenceId("publisher_key", { seed: "recovery-publisher" }),
       bundleId: publicEvidenceId("bundle", { seed: "recovery-bundle" }),
@@ -180,7 +180,7 @@ test.skipIf(process.platform === "win32")(
 );
 
 test("V1 revocations are bounded to one already-verified anchor bundle", () => {
-  const publisher = configDir("ocx-cl10-revocation-anchor-");
+  const publisher = configDir("occx-cl10-revocation-anchor-");
   const first = signedBundle(publisher, "2026-08-12");
   const second = signedBundle(publisher, "2026-08-13");
 

@@ -7,7 +7,7 @@ import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { gatherRoutedModels as gatherRoutedModelsDirect } from "../../src/codex/catalog";
 import { clearModelCache, getStaleCached, setCached } from "../../src/codex/model-cache";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
@@ -21,17 +21,17 @@ import { publishAccountSelection } from "../../src/lib/account-selection-events"
 
 function selectionSessionFixture() {
   const origin = "http://127.0.0.1:10100";
-  const token = "ocx_session_selection_liveness_test";
+  const token = "occx_session_selection_liveness_test";
   const state: Extract<ManagementAuthState, { available: true }> = {
-    available: true, token: "ocx_admin_selection_test", source: "environment",
+    available: true, token: "occx_admin_selection_test", source: "environment",
     sessions: new Map([[token, {
       serverOrigin: origin, browserOrigin: origin, csrfToken: "selection-csrf",
       expiresAt: Date.now() + 60_000, issuance: "loopback",
     }]]), pairingGrants: new Map(),
   };
   const req = new Request(`${origin}/api/accounts/events`, { headers: {
-    Host: "127.0.0.1:10100", Origin: origin, "x-opencodex-gui-origin": origin,
-    "x-opencodex-api-key": token, "x-opencodex-csrf-token": "selection-csrf",
+    Host: "127.0.0.1:10100", Origin: origin, "x-openccx-gui-origin": origin,
+    "x-openccx-api-key": token, "x-openccx-csrf-token": "selection-csrf",
   } });
   const ctx: ManagementContext = {
     req, url: new URL(req.url), config: baseConfig(), deps: {}, version: "test",
@@ -52,7 +52,7 @@ const originalFetch = globalThis.fetch;
 const gatherRoutedModels: typeof gatherRoutedModelsDirect = config =>
   gatherRoutedModelsDirect(withStubbedProviderFetch(config));
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -60,7 +60,7 @@ function baseConfig(): OcxConfig {
     providers: {
       anthropic: { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function writeAccounts(): void {
@@ -76,10 +76,10 @@ function writeAccounts(): void {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-oauth-accounts-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-oauth-accounts-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-oauth-accounts-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-oauth-accounts-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
   writeAccounts();
 });
@@ -87,8 +87,8 @@ beforeEach(() => {
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearModelCache("google-antigravity");
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -219,10 +219,10 @@ describe("multiauth accounts API", () => {
     expect(control.revokeCurrent(ctx.req)).toBe(true);
     expect(control.isCurrent(ctx.req, ctx.config)).toBe(false);
     expect(state.sessions.has(token)).toBe(false);
-    const adminReq = new Request(ctx.req.url, { headers: { "x-opencodex-api-key": state.token } });
+    const adminReq = new Request(ctx.req.url, { headers: { "x-openccx-api-key": state.token } });
     expect(requireManagementAuth(adminReq, state, ctx.config)).toBeNull();
     expect(control.isCurrent(adminReq, ctx.config)).toBe(true);
-    state.token = "ocx_admin_rotated_selection_test";
+    state.token = "occx_admin_rotated_selection_test";
     expect(control.isCurrent(adminReq, ctx.config)).toBe(false);
     expect(createManagementSessionControl({ available: false, reason: "test" }).isCurrent(adminReq, ctx.config)).toBe(false);
   });
@@ -346,7 +346,7 @@ describe("multiauth accounts API", () => {
       expect(account.healthSummary).toMatch(/account-…/);
       expect(account.healthSummary).not.toContain("aaaa1111");
       expect(account.healthSummary).not.toContain("first@example.com");
-      expect(account.healthAction).toContain("ocx login anthropic");
+      expect(account.healthAction).toContain("occx login anthropic");
     } finally {
       await server.stop(true);
     }
@@ -765,7 +765,7 @@ describe("multiauth accounts API", () => {
           liveModels: true,
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let releaseAccountA!: () => void;
     const accountAStarted = new Promise<void>(resolve => {
       releaseAccountA = resolve;

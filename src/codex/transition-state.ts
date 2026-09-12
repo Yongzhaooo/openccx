@@ -447,7 +447,7 @@ function createCapability(
   };
 }
 
-export function openCodexCoordinatorTransaction(
+export function openccxCoordinatorTransaction(
   finalDatabasePath: string,
   adoption?: CodexCoordinatorAdoptionOptions,
 ): CodexCoordinatorTransactionController {
@@ -627,7 +627,7 @@ function mapReadError(error: unknown): TransitionStateRead {
 export const readCodexTransitionState: ReadCodexTransitionState = () => {
   let transaction: CodexCoordinatorTransactionController | undefined;
   try {
-    transaction = openCodexCoordinatorTransaction(currentCoordinatorDatabasePath());
+    transaction = openccxCoordinatorTransaction(currentCoordinatorDatabasePath());
     // Initialization and validation happen while N is held. Commit that setup
     // before reopening read-only; the controller never leaks its Database.
     transaction.commit();
@@ -659,7 +659,7 @@ function readCommittedState(): TransitionStateRead {
 export const beginCodexTransition: BeginCodexTransition = (expected, next) => {
   let transaction: CodexCoordinatorTransactionController | undefined;
   try {
-    transaction = openCodexCoordinatorTransaction(currentCoordinatorDatabasePath());
+    transaction = openccxCoordinatorTransaction(currentCoordinatorDatabasePath());
     const result = transaction.capability.beginTransition(expected, next);
     transaction.commit();
     return result;

@@ -25,12 +25,12 @@ import { pickerVisibleSidecarCandidates } from "../../src/sidecar/candidates";
 import { resolveSidecarAuth } from "../../src/sidecar/auth";
 import { resolveSidecarBackend } from "../../src/web-search";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/account-id";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const forward: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
-const anthropicOAuth: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
+const forward: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" };
+const anthropicOAuth: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "openai", providers: { openai: forward, claude: anthropicOAuth }, ...overrides };
 }
 
@@ -40,7 +40,7 @@ afterEach(() => {
   managementRows = [];
 });
 
-async function candidatesFor(cfg: OcxConfig) {
+async function candidatesFor(cfg: OccxConfig) {
   const auth = resolveSidecarAuth(cfg);
   const all = await pickerVisibleSidecarCandidates(cfg, auth);
   return webSearchSidecarCandidates(cfg, auth, all);
@@ -78,7 +78,7 @@ describe("webSearchSidecarCandidates = (picker ∪ slots) ∩ active backend", (
 
   test("keyed same-adapter anthropic provider rows stay unreachable", async () => {
     accountSets = { claude: { accounts: [{ id: "a1" }], activeAccountId: "a1" } };
-    const keyedClaude: OcxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "key", apiKey: "k" };
+    const keyedClaude: OccxProviderConfig = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "key", apiKey: "k" };
     managementRows = [{ provider: "keyed-claude", id: "claude-sonnet-5", disabled: false }];
     const cfg = config({ providers: { openai: forward, claude: anthropicOAuth, "keyed-claude": keyedClaude } });
     const ids = (await candidatesFor(cfg)).map(c => c.id).sort();

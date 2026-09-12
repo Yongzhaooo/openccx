@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory = $true)][string]$BunPath,
   [Parameter(Mandatory = $true)][string]$CliPath,
   [Parameter(Mandatory = $true)][string]$CodexHome,
-  [Parameter(Mandatory = $true)][string]$OpenCodexHome,
+  [Parameter(Mandatory = $true)][string]$OpenccxHome,
   # Provenance of $BunPath, chosen when the tray entry was built. Optional so an
   # already-installed launcher command from an older version still starts.
   [ValidateSet("", "override", "bundled", "process")][string]$BunRuntimeSource = "",
@@ -23,12 +23,12 @@ function Normalize-HomePath([string]$Value) {
   if ($full -eq $root) { return $full }
   return $full.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
 }
-$OpenCodexHome = Normalize-HomePath $OpenCodexHome
+$OpenccxHome = Normalize-HomePath $OpenccxHome
 $CodexHome = Normalize-HomePath $CodexHome
 
 $script:ownedIcons = New-Object System.Collections.Generic.List[System.Drawing.Icon]
 function Load-TrayIcon([string]$Name, [System.Drawing.Icon]$Fallback) {
-  $path = Join-Path $OpenCodexHome $Name
+  $path = Join-Path $OpenccxHome $Name
   if (-not [System.IO.File]::Exists($path)) { return $Fallback }
   try {
     $icon = New-Object System.Drawing.Icon($path)
@@ -38,9 +38,9 @@ function Load-TrayIcon([string]$Name, [System.Drawing.Icon]$Fallback) {
     return $Fallback
   }
 }
-$onlineIcon = Load-TrayIcon "opencodex-tray-online.ico" ([System.Drawing.SystemIcons]::Information)
-$warningIcon = Load-TrayIcon "opencodex-tray-warning.ico" ([System.Drawing.SystemIcons]::Warning)
-$offlineIcon = Load-TrayIcon "opencodex-tray-offline.ico" ([System.Drawing.SystemIcons]::Error)
+$onlineIcon = Load-TrayIcon "openccx-tray-online.ico" ([System.Drawing.SystemIcons]::Information)
+$warningIcon = Load-TrayIcon "openccx-tray-warning.ico" ([System.Drawing.SystemIcons]::Warning)
+$offlineIcon = Load-TrayIcon "openccx-tray-offline.ico" ([System.Drawing.SystemIcons]::Error)
 
 function Get-StableHash([string]$Value) {
   $sha = [System.Security.Cryptography.SHA256]::Create()
@@ -53,9 +53,9 @@ function Get-StableHash([string]$Value) {
   }
 }
 
-$stableHash = Get-StableHash $OpenCodexHome
+$stableHash = Get-StableHash $OpenccxHome
 $stopEventCreated = $false
-$stopEvent = New-Object System.Threading.EventWaitHandle($false, [System.Threading.EventResetMode]::AutoReset, "Local\OpenCodexTrayStop-$stableHash", [ref]$stopEventCreated)
+$stopEvent = New-Object System.Threading.EventWaitHandle($false, [System.Threading.EventResetMode]::AutoReset, "Local\OpenccxTrayStop-$stableHash", [ref]$stopEventCreated)
 if ($Mode -eq "Stop") {
   [void]$stopEvent.Set()
   $stopEvent.Dispose()
@@ -63,7 +63,7 @@ if ($Mode -eq "Stop") {
 }
 
 $createdNew = $false
-$mutex = New-Object System.Threading.Mutex($true, "Local\OpenCodexTray-$stableHash", [ref]$createdNew)
+$mutex = New-Object System.Threading.Mutex($true, "Local\OpenccxTray-$stableHash", [ref]$createdNew)
 if (-not $createdNew) {
   $stopEvent.Dispose()
   $mutex.Dispose()
@@ -71,8 +71,8 @@ if (-not $createdNew) {
 }
 [void]$stopEvent.Reset()
 
-$heartbeatPath = Join-Path $OpenCodexHome "tray-heartbeat.json"
-$actionLogPath = Join-Path $OpenCodexHome "tray-actions.log"
+$heartbeatPath = Join-Path $OpenccxHome "tray-heartbeat.json"
+$actionLogPath = Join-Path $OpenccxHome "tray-actions.log"
 
 function Write-ActionLog([string]$Message) {
   $line = "[$([DateTimeOffset]::Now.ToString('o'))] $Message"
@@ -86,7 +86,7 @@ function ConvertTo-NativeArgument([string]$Value) {
   return '"' + $Value + '"'
 }
 
-function Start-OcxCommand([string[]]$CommandArgs, [switch]$TrackExit) {
+function Start-OccxCommand([string[]]$CommandArgs, [switch]$TrackExit) {
   try {
     $allArgs = @($CliPath) + $CommandArgs
     $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -96,12 +96,12 @@ function Start-OcxCommand([string[]]$CommandArgs, [switch]$TrackExit) {
     $psi.CreateNoWindow = $true
     $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
     $psi.EnvironmentVariables["CODEX_HOME"] = $CodexHome
-    $psi.EnvironmentVariables["OPENCODEX_HOME"] = $OpenCodexHome
+    $psi.EnvironmentVariables["OPENCCX_HOME"] = $OpenccxHome
     if ($BunRuntimeSource) {
-      $psi.EnvironmentVariables["OCX_BUN_RUNTIME_SOURCE"] = $BunRuntimeSource
+      $psi.EnvironmentVariables["OCCX_BUN_RUNTIME_SOURCE"] = $BunRuntimeSource
       # Paired with the source so a later relaunch can tell the marker still describes
       # this binary rather than one it merely inherited.
-      $psi.EnvironmentVariables["OCX_BUN_RUNTIME_PATH"] = $BunPath
+      $psi.EnvironmentVariables["OCCX_BUN_RUNTIME_PATH"] = $BunPath
     }
     $process = [System.Diagnostics.Process]::Start($psi)
     if ($null -eq $process) { throw "Process did not start" }
@@ -111,13 +111,13 @@ function Start-OcxCommand([string[]]$CommandArgs, [switch]$TrackExit) {
     return $true
   } catch {
     Write-ActionLog "launch failed: $($_.Exception.GetType().Name)"
-    $notify.ShowBalloonTip(5000, "opencodex action failed", "The action could not start. Open the logs folder or run ocx doctor.", [System.Windows.Forms.ToolTipIcon]::Error)
+    $notify.ShowBalloonTip(5000, "openccx action failed", "The action could not start. Open the logs folder or run occx doctor.", [System.Windows.Forms.ToolTipIcon]::Error)
     return $false
   }
 }
 
 function Read-ListenTarget {
-  foreach ($path in @((Join-Path $OpenCodexHome "runtime-port.json"), (Join-Path $OpenCodexHome "config.json"))) {
+  foreach ($path in @((Join-Path $OpenccxHome "runtime-port.json"), (Join-Path $OpenccxHome "config.json"))) {
     try {
       $value = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
       $candidate = [int]$value.port
@@ -212,10 +212,10 @@ function Complete-PendingAction([bool]$Success) {
   }
   if ($Success) {
     Write-ActionLog "$action completed (port=$($script:port), pid=$($script:proxyPid))"
-    $notify.ShowBalloonTip(2500, "opencodex", "$action completed.", [System.Windows.Forms.ToolTipIcon]::Info)
+    $notify.ShowBalloonTip(2500, "openccx", "$action completed.", [System.Windows.Forms.ToolTipIcon]::Info)
   } else {
     Write-ActionLog "$action failed to reach the expected state"
-    $notify.ShowBalloonTip(5000, "opencodex action failed", "$action did not reach the expected state. Open the logs folder or run ocx doctor.", [System.Windows.Forms.ToolTipIcon]::Error)
+    $notify.ShowBalloonTip(5000, "openccx action failed", "$action did not reach the expected state. Open the logs folder or run occx doctor.", [System.Windows.Forms.ToolTipIcon]::Error)
   }
 }
 
@@ -226,11 +226,11 @@ function Update-TrayState {
   $origin = "http://$($target.host):$($script:port)"
   try { $health = Read-JsonUrl "$origin/healthz" } catch { }
   $pidMatches = $null -eq $target.pid -or [int]$target.pid -eq [int]$health.pid
-  $script:online = $null -ne $health -and $health.status -eq "ok" -and $health.service -eq "opencodex" -and [int]$health.port -eq $script:port -and $pidMatches
+  $script:online = $null -ne $health -and $health.status -eq "ok" -and $health.service -eq "openccx" -and [int]$health.port -eq $script:port -and $pidMatches
   $script:proxyPid = if ($script:online) { [int]$health.pid } else { $null }
   if ($script:online) {
     $statusItem.Text = "Proxy: Online (port $($script:port))"
-    $notify.Text = "opencodex: Online"
+    $notify.Text = "openccx: Online"
     $startItem.Enabled = $false
     $stopItem.Enabled = $true
     $restartItem.Enabled = $true
@@ -246,7 +246,7 @@ function Update-TrayState {
   } else {
     $statusItem.Text = "Proxy: Offline"
     $safetyItem.Text = "Restart safety: start the proxy to inspect"
-    $notify.Text = "opencodex: Offline"
+    $notify.Text = "openccx: Offline"
     $notify.Icon = $offlineIcon
     $startItem.Enabled = $true
     $stopItem.Enabled = $false
@@ -286,12 +286,12 @@ function Update-TrayState {
   }
 }
 
-$openItem.add_Click({ Start-OcxCommand @("gui") })
+$openItem.add_Click({ Start-OccxCommand @("gui") })
 $startItem.add_Click({
   if (-not (Set-PendingAction "Start Proxy" 75)) { return }
   $statusItem.Text = "Proxy: Starting..."
   # service start can spend 20s and the CLI then observes health for another 40s.
-  $startProcess = Start-OcxCommand @("__tray-start") -TrackExit
+  $startProcess = Start-OccxCommand @("__tray-start") -TrackExit
   if ($startProcess -is [System.Diagnostics.Process]) {
     $script:pendingProcess = $startProcess
   } else {
@@ -301,7 +301,7 @@ $startItem.add_Click({
 $stopItem.add_Click({
   if (-not (Set-PendingAction "Stop Proxy" 15)) { return }
   $statusItem.Text = "Proxy: Stopping..."
-  $stopProcess = Start-OcxCommand @("stop") -TrackExit
+  $stopProcess = Start-OccxCommand @("stop") -TrackExit
   if ($stopProcess -is [System.Diagnostics.Process]) {
     $script:pendingProcess = $stopProcess
   } else {
@@ -315,7 +315,7 @@ $restartItem.add_Click({
   # handing off to an identity-verified replacement. The tray observes health/PID
   # rather than the detached CLI exit, so keep a watchdog margin around that shared
   # lifecycle budget. The CLI remains the lifecycle owner; the tray never kills.
-  $restartProcess = Start-OcxCommand @("__tray-restart") -TrackExit
+  $restartProcess = Start-OccxCommand @("__tray-restart") -TrackExit
   if ($restartProcess -is [System.Diagnostics.Process]) {
     $script:pendingProcess = $restartProcess
   } else {
@@ -324,12 +324,12 @@ $restartItem.add_Click({
 })
 $logsItem.add_Click({
   $psi = New-Object System.Diagnostics.ProcessStartInfo
-  $psi.FileName = $OpenCodexHome
+  $psi.FileName = $OpenccxHome
   $psi.UseShellExecute = $true
   [void][System.Diagnostics.Process]::Start($psi)
 })
 $exitItem.add_Click({ [System.Windows.Forms.Application]::Exit() })
-$notify.add_DoubleClick({ Start-OcxCommand @("gui") })
+$notify.add_DoubleClick({ Start-OccxCommand @("gui") })
 
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 3000
@@ -347,7 +347,7 @@ $timer.add_Tick({
 $notify.ContextMenuStrip = $menu
 $notify.Icon = $offlineIcon
 $notify.Visible = $true
-$notify.Text = "opencodex: Checking..."
+$notify.Text = "openccx: Checking..."
 
 try {
   Update-TrayState

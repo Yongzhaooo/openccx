@@ -1,4 +1,4 @@
-import type { AdapterEvent, OcxMessage, OcxParsedRequest, OcxUsage } from "../../types";
+import type { AdapterEvent, OccxMessage, OccxParsedRequest, OccxUsage } from "../../types";
 
 /**
  * Shared stream-json protocol for official coding-agent CLIs (CodeBuddy Code and Qoder CLI).
@@ -114,8 +114,8 @@ function asString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-/** Extract OpenCodex usage from a `result` frame's Anthropic-shaped usage object. */
-export function usageFromResult(message: StreamMessage): OcxUsage | undefined {
+/** Extract Openccx usage from a `result` frame's Anthropic-shaped usage object. */
+export function usageFromResult(message: StreamMessage): OccxUsage | undefined {
   const usage = asRecord(message.usage);
   if (!usage) return undefined;
   const inputTokens = typeof usage.input_tokens === "number" ? usage.input_tokens : 0;
@@ -296,7 +296,7 @@ function textPart(text: string): WireContentPart {
   return { type: "text", text };
 }
 
-/** Encode an OpenCodex image content part as an Anthropic base64/url image block; never drop it. */
+/** Encode an Openccx image content part as an Anthropic base64/url image block; never drop it. */
 function imagePart(imageUrl: string): WireContentPart | undefined {
   const match = /^data:([^;]+);base64,(.+)$/s.exec(imageUrl);
   if (match) return { type: "image", source: { type: "base64", media_type: match[1], data: match[2] } };
@@ -304,7 +304,7 @@ function imagePart(imageUrl: string): WireContentPart | undefined {
   return undefined;
 }
 
-function formatMessageForHistory(message: OcxMessage): string {
+function formatMessageForHistory(message: OccxMessage): string {
   if (message.role === "user") {
     const text = typeof message.content === "string"
       ? message.content
@@ -336,13 +336,13 @@ function formatMessageForHistory(message: OcxMessage): string {
 }
 
 /**
- * Format an isolated OpenCodex message into stream-json user message input lines.
+ * Format an isolated Openccx message into stream-json user message input lines.
  *
  * In stream-json mode, the official CLI stdin parser (`StreamJsonUtils.parseUserMessage`) only
  * accepts `type: "user"` frames. Writing undocumented `type: "assistant"` frames is rejected.
  * Non-user messages are therefore projected into valid user frames.
  */
-export function buildInputLines(message: OcxMessage): string[] {
+export function buildInputLines(message: OccxMessage): string[] {
   if (message.role === "developer") return [];
 
   const content: WireContentPart[] = [];
@@ -369,7 +369,7 @@ export function buildInputLines(message: OcxMessage): string[] {
 }
 
 /** Fold the request's system + developer prompts into one system-prompt string. */
-export function buildSystemPrompt(parsed: OcxParsedRequest): string | undefined {
+export function buildSystemPrompt(parsed: OccxParsedRequest): string | undefined {
   const parts: string[] = [];
   for (const line of parsed.context.systemPrompt ?? []) {
     if (line && line.trim()) parts.push(line);
@@ -395,7 +395,7 @@ export function buildSystemPrompt(parsed: OcxParsedRequest): string | undefined 
  * prior conversation turns are structured as bounded context text with tool results as text,
  * clearly demarcated from the current user request. Codex retains tool control; vendor tools are never invoked.
  */
-export function buildConversationInput(parsed: OcxParsedRequest): string[] {
+export function buildConversationInput(parsed: OccxParsedRequest): string[] {
   const nonDev = parsed.context.messages.filter(m => m.role !== "developer");
   if (nonDev.length === 0) {
     return [JSON.stringify({ type: "user", message: { role: "user", content: [{ type: "text", text: "" }] } })];

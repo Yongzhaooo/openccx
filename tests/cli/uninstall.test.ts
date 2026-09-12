@@ -41,7 +41,7 @@ describe("full uninstall command", () => {
     const cli = await readText("src/cli/index.ts");
 
     expect(dispatch).toContain('"recover-history": async');
-    expect(cli).toContain("ocx recover-history --legacy-openai");
+    expect(cli).toContain("occx recover-history --legacy-openai");
     expect(cli).toContain("async function handleRecoverHistory()");
     // The command still performs legacy recovery, but through the serialized
     // history job rather than by calling the writer inline — the operation name
@@ -166,7 +166,7 @@ describe("uninstall gates shared teardown on a proven service stop", () => {
     const at = cli.indexOf("async function handleUninstall(");
     const fn = cli.slice(at, at + 9000);
     // A missing pid file is not proof that nothing is serving — the same discovery
-    // `ocx stop` performs. Without it, uninstall restored shared config under a live proxy.
+    // `occx stop` performs. Without it, uninstall restored shared config under a live proxy.
     expect(fn).toContain("const live = await findLiveProxy();");
     expect(fn).toContain("observed.proxyProvenDown = await proxyEndpointProvenDown();");
     expect(fn).toContain("no process id could be resolved for it");
@@ -217,9 +217,9 @@ describe("uninstall gates shared teardown on a proven service stop", () => {
     // to run once the blocker is resolved.
     expect(fn).toContain('failures.push("native Codex restored", "Grok Build config restored");');
     expect(fn).toContain("Skipping shared teardown");
-    // Naming only `ocx restore` was wrong: it restores client routing but leaves the
+    // Naming only `occx restore` was wrong: it restores client routing but leaves the
     // service removal and local cleanup this command had not reached.
-    expect(fn).toContain("rerun 'ocx uninstall'");
+    expect(fn).toContain("rerun 'occx uninstall'");
     expect(fn).toContain("interim step");
   });
 });
@@ -278,7 +278,7 @@ const connectedFixture: ReturnType<UninstallClientStateDeps["readConnection"]> =
   kind: "connected",
   value: {
     ...cleanupOwner, managementUrl: "https://hub.example", managementTransport: "direct",
-    selectedClients: ["codex"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+    selectedClients: ["codex"], tokenEnv: "OPENCCX_API_AUTH_TOKEN",
     tokenFingerprint: "a".repeat(64), protocolVersion: 1,
   },
 };
@@ -287,7 +287,7 @@ function disconnectReceipt(phase: DesktopDisconnectReceipt["phase"], keepCatalog
 }
 
 function uninstallFixture() {
-  const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-uninstall-client-"));
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-uninstall-client-"));
   const configDir = join(fixtureRoot, "config");
   const lockPath = join(fixtureRoot, "runtime", "lifecycle.sqlite");
   mkdirSync(join(configDir, "desktop-remote"), { recursive: true });

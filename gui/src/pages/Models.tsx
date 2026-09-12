@@ -238,7 +238,7 @@ export default function Models({ apiBase, restartEpoch = 0 }: { apiBase: string;
   const [compatibilityCount, setCompatibilityCount] = useState<number | null>(null);
 
   const t: TFn = useT();
-  const cacheKey = `ocx.models.catalog.v1:${apiBase}`;
+  const cacheKey = `occx.models.catalog.v1:${apiBase}`;
   const cached = useMemo(() => readSessionListCache<CachedModelsPage>(cacheKey), [cacheKey]);
   const [models, setModels] = useState<ModelRow[]>(() => cached?.models ?? []);
   const [providers, setProviders] = useState<ConfiguredProviderSummary[]>(() => cached?.providers ?? []);

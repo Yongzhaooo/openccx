@@ -13,12 +13,12 @@ import {
   shouldAttemptOpaqueBlobRecovery,
 } from "../../src/server/responses/core";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { markBodyNonPersistable, rememberResponseState, previousResponseProviderState } from "../../src/responses/state";
 
 const originalFetch = globalThis.fetch;
-const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 const BLOB = "provider-minted-opaque-state";
 // Synthetic Fernet-shaped data must survive the outbound ciphertext shape gate.
 const FUNCTION_OUTPUT_BLOB = `g${"A".repeat(127)}`;
@@ -57,8 +57,8 @@ const XAI_DECRYPT_ERROR = JSON.stringify({
 let testDir = "";
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-opaque-blob-recovery-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-opaque-blob-recovery-"));
+  process.env.OPENCCX_HOME = testDir;
   clearReasoningReplayCacheForTests();
   resetThoughtSignatureReplayForTests();
 });
@@ -67,8 +67,8 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   clearReasoningReplayCacheForTests();
   resetThoughtSignatureReplayForTests();
-  if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
   removeTreeWithRetry(testDir);
 });
 
@@ -171,7 +171,7 @@ function recoveredAgentMessage(): Record<string, unknown> {
   };
 }
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     defaultProvider: "first",
     providers: {
@@ -189,7 +189,7 @@ function config(): OcxConfig {
         apiKey: "second-test-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(provider = "first", threadId = "thread-opaque-recovery"): Request {
@@ -941,7 +941,7 @@ data: ${JSON.stringify(created)}
         { id: "pool-a", email: "a@example.test", chatgptAccountId: "workspace-a", isMain: false },
         { id: "pool-b", email: "b@example.test", chatgptAccountId: "workspace-b", isMain: false },
       ],
-    } as OcxConfig;
+    } as OccxConfig;
     const poolRequest = () => new Request("http://localhost/v1/responses", {
       method: "POST",
       headers: {

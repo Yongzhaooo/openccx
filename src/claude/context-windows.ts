@@ -3,7 +3,7 @@
  * (devlog/260712_cli_context_cache/010 B2, audit R2#1/R3#1/R3#4/R4#3).
  *
  * The map registers EVERY selector form a Claude Code model slot might store —
- * bare native slug, provider/id, desktop3p alias, legacy claude-ocx-* alias —
+ * bare native slug, provider/id, desktop3p alias, legacy claude-occx-* alias —
  * with first-wins dedupe (mirrors the desktop3p registry collision policy).
  * Values are authoritative context windows only (native override table /
  * adapter-reported CatalogModel.contextWindow); nothing is guessed.

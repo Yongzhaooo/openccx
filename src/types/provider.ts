@@ -227,7 +227,7 @@ export type TierDecision =
  * One configured provider entry. `authMode` (default `"key"`) decides whether same-target 429
  * retries are allowed; OAuth/forward credentials and local runtimes are never replayed.
  */
-export interface OcxProviderConfig {
+export interface OccxProviderConfig {
   /** Optional short provider namespace used only at request/catalog presentation time. */
   alias?: string;
   /** Native model id -> short, slash-free request alias. */
@@ -331,7 +331,7 @@ export interface OcxProviderConfig {
    * (DeepSeek documents reasoning items with plaintext content). When set, the
    * passthrough serializer keeps `reasoning_text` content on replayed reasoning
    * items instead of blanking it the way the ChatGPT backend requires; proxy-minted
-   * `ocxr1` envelopes are still stripped because no upstream can decrypt them.
+   * `occxr1` envelopes are still stripped because no upstream can decrypt them.
    */
   preserveResponsesReasoningContent?: boolean;
   /**
@@ -341,7 +341,7 @@ export interface OcxProviderConfig {
   decodesNativeCompactionBlobs?: boolean;
   /**
    * Trust this direct key-auth Responses provider to consume or relay opaque encrypted
-   * V2 agent tasks. OpenCodex does not decrypt, translate, or recover an eligible task.
+   * V2 agent tasks. Openccx does not decrypt, translate, or recover an eligible task.
    * Absent or false keeps the existing recovery/fail-closed behavior.
    */
   allowEncryptedV2AgentTasks?: boolean;
@@ -494,7 +494,7 @@ export interface OcxProviderConfig {
   modelMaxOutputTokens?: Record<string, number>;
   /**
    * Per-model display prices (USD per 1M tokens) keyed by exact model id —
-   * opencode-style per-model pricing in ocx's flat `modelXxx` convention:
+   * opencode-style per-model pricing in occx's flat `modelXxx` convention:
    * `{ "deepseek-v4-flash": { "input": 0.14, "output": 0.28, "cacheRead": 0.0028, "cacheWrite": 0 } }`.
    * User-configured prices win over the built-in jawcode/expected catalogs in
    * the Logs `~$` estimate. Display-time estimation only; never billing. An
@@ -694,7 +694,7 @@ export interface OcxProviderConfig {
   /**
    * Model ids that accept a reasoning-effort field on an ordinary turn but reject it
    * once function tools are present. The model keeps its advertised effort ladder;
-   * OpenCodex omits the wire field for tool-bearing requests only and lets the
+   * Openccx omits the wire field for tool-bearing requests only and lets the
    * upstream default apply. Narrower than `noReasoningModels`, which strips reasoning
    * from every request and costs the model its picker entirely.
    */
@@ -836,13 +836,13 @@ export interface OcxProviderConfig {
   /** Vertex AI location, e.g. "us-central1" or "global" (or GOOGLE_CLOUD_LOCATION env). */
   location?: string;
   /**
-   * Cursor adapter only: MCP servers opencodex starts/connects and exposes to the Cursor agent
+   * Cursor adapter only: MCP servers openccx starts/connects and exposes to the Cursor agent
    * as callable tools. Each entry is spawned (stdio `command`) or connected (`url`) lazily per
    * stream; their tools are advertised to the Cursor server and executed against the live server.
    */
   mcpServers?: Record<string, import("../adapters/cursor/mcp-config").CursorMcpServerConfig>;
   /**
-   * Cursor adapter only: opt-in external executor for computer-use / record-screen. opencodex is
+   * Cursor adapter only: opt-in external executor for computer-use / record-screen. openccx is
    * headless and cannot control a screen itself; provide commands here only when running on a host
    * that can. With no executor, these tools honestly report "not supported".
    */
@@ -861,7 +861,7 @@ export interface OcxProviderConfig {
    * provider and should be used only for a trusted local experiment on a host where every
    * data-plane caller is trusted. "codex-sandbox" is accepted for backwards compatibility
    * but is fail-closed like "off": Responses instructions/system/developer text is
-   * caller-controlled prose, and opencodex has no trustworthy per-request attestation that it
+   * caller-controlled prose, and openccx has no trustworthy per-request attestation that it
    * reflects a real Codex sandbox state. The default loopback bind admits ANY local process
    * without auth (including other local users on multi-user machines), and
    * isAllowedRequestOrigin blocks non-loopback browser origins by default but not

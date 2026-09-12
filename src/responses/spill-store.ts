@@ -27,7 +27,7 @@ import {
   windowsSecretAclApplies,
 } from "../lib/windows-secret-acl";
 import { isValidProviderContinuationOwner } from "./provider-continuation";
-import type { OcxProviderContinuationState } from "../types";
+import type { OccxProviderContinuationState } from "../types";
 
 export const RESPONSE_SPILL_VERSION = 1;
 export const RESPONSE_SPILL_DIR_NAME = "responses-state-spill";
@@ -56,7 +56,7 @@ export interface ResponseSpillPayload {
    * replay miss — an already-handled path — not to corrupted live state.
    */
   providerOutputStart?: number;
-  providers?: OcxProviderContinuationState;
+  providers?: OccxProviderContinuationState;
 }
 
 export interface ResponseSpillRef {
@@ -531,10 +531,10 @@ function validPayload(value: unknown, responseId: string): value is ResponseSpil
   if (payload.providers !== undefined) {
     if (!payload.providers || typeof payload.providers !== "object" || Array.isArray(payload.providers)) return false;
     const providers = payload.providers as Record<string, unknown>;
-    if (providers.__ocxOwner !== undefined
-      && !isValidProviderContinuationOwner(providers.__ocxOwner)) return false;
+    if (providers.__occxOwner !== undefined
+      && !isValidProviderContinuationOwner(providers.__occxOwner)) return false;
     for (const [provider, providerState] of Object.entries(providers)) {
-      if (provider === "__ocxOwner") continue;
+      if (provider === "__occxOwner") continue;
       if (!providerState || typeof providerState !== "object" || Array.isArray(providerState)) return false;
     }
   }

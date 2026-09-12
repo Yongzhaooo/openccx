@@ -43,7 +43,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "";
 const INITIAL_TARGETS = standaloneApiTargets(API_BASE);
 configureApiTargets(INITIAL_TARGETS);
 installApiAuthFetch();
-const THEME_KEY = "ocx-theme";
+const THEME_KEY = "occx-theme";
 
 /**
  * Every sidebar row maps one-to-one onto a page again.
@@ -264,7 +264,7 @@ export default function App() {
       {...(page === "dashboard" ? { "aria-current": "page" as const } : {})}
     >
       <span className="brand-logo" role="img" aria-label={t("app.logoAria")} />
-      <span className="name">opencodex</span>
+      <span className="name">openccx</span>
       <span className="ver" title={displayedVersion}>v{displayedVersion}</span>
     </button>
   );

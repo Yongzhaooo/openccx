@@ -4,26 +4,26 @@ import { stripResponsesOnlyEncryptedMarker, stripUnicodePropertyPatterns } from 
 import { getDebugLogEntries, resetDebugLogBufferForTests } from "../../../src/lib/debug-log-buffer";
 import { resetDebugSettingsForTests } from "../../../src/lib/debug-settings";
 import { routeModel } from "../../../src/router";
-import type { AdapterEvent, OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createOpenAIChatAdapter = (...args: Parameters<typeof createOpenAIChatAdapterProduction>) =>
   withTestTranslatorBudget(createOpenAIChatAdapterProduction(...args));
 
-const previousDebug = process.env.OCX_DEBUG;
+const previousDebug = process.env.OCCX_DEBUG;
 
 afterEach(() => {
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
-  if (previousDebug === undefined) delete process.env.OCX_DEBUG;
-  else process.env.OCX_DEBUG = previousDebug;
+  if (previousDebug === undefined) delete process.env.OCCX_DEBUG;
+  else process.env.OCCX_DEBUG = previousDebug;
 });
 
 describe("AgentRouter openai-chat compatibility", () => {
   const preamble = "[Instruction: Process the user request below and respond in the appropriate language.]";
 
   describe("omitReasoningEffortWithToolsModels", () => {
-    const toolBearing = (modelId: string): OcxParsedRequest => ({
+    const toolBearing = (modelId: string): OccxParsedRequest => ({
       modelId,
       context: {
         messages: [{ role: "user", content: "hi", timestamp: 0 }],
@@ -36,7 +36,7 @@ describe("AgentRouter openai-chat compatibility", () => {
       stream: false,
       options: { reasoning: "high" },
     });
-    const plain = (modelId: string): OcxParsedRequest => ({
+    const plain = (modelId: string): OccxParsedRequest => ({
       modelId,
       context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
       stream: false,
@@ -79,7 +79,7 @@ describe("AgentRouter openai-chat compatibility", () => {
         reasoningWireFormat: "gateway-object",
         omitReasoningEffortWithToolsModels: ["picky-model"],
       });
-      const none = (modelId: string): OcxParsedRequest => ({
+      const none = (modelId: string): OccxParsedRequest => ({
         ...toolBearing(modelId),
         options: { reasoning: "none" },
       });
@@ -142,7 +142,7 @@ describe("AgentRouter openai-chat compatibility", () => {
   });
 });
 
-function parsed(): OcxParsedRequest {
+function parsed(): OccxParsedRequest {
   return {
     modelId: "test-model",
     context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
@@ -151,7 +151,7 @@ function parsed(): OcxParsedRequest {
   };
 }
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",
@@ -170,7 +170,7 @@ async function collect(stream: AsyncGenerator<AdapterEvent>): Promise<AdapterEve
   return events;
 }
 
-function routedProvider(name: "litellm" | "ollama", apiKey?: string): OcxProviderConfig {
+function routedProvider(name: "litellm" | "ollama", apiKey?: string): OccxProviderConfig {
   const config = {
     port: 10100,
     defaultProvider: name,
@@ -182,7 +182,7 @@ function routedProvider(name: "litellm" | "ollama", apiKey?: string): OcxProvide
         ...(apiKey !== undefined ? { apiKey } : {}),
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
   return routeModel(config, `${name}/test-model`).provider;
 }
 
@@ -720,7 +720,7 @@ describe("openai-chat non-stream response hardening", () => {
   });
 
   test("debug mode records only the non-stream tool-call shape failure", async () => {
-    process.env.OCX_DEBUG = "1";
+    process.env.OCCX_DEBUG = "1";
     const secretArguments = "private-tool-arguments";
     const adapter = createOpenAIChatAdapter(provider());
     const events = await adapter.parseResponse!(new Response(JSON.stringify({
@@ -737,7 +737,7 @@ describe("openai-chat non-stream response hardening", () => {
       message: "upstream response contained invalid tool calls (tool_call_function_arguments_invalid; callIndex=0; valueType=object)",
     }]);
     const lines = getDebugLogEntries().map(entry => entry.line).join("\n");
-    expect(lines).toContain("[ocx:openai-chat:invalid-tool-calls]");
+    expect(lines).toContain("[occx:openai-chat:invalid-tool-calls]");
     expect(lines).toContain('"mode":"response"');
     expect(lines).toContain('"reason":"tool_call_function_arguments_invalid"');
     expect(lines).toContain('"valueType":"object"');
@@ -746,7 +746,7 @@ describe("openai-chat non-stream response hardening", () => {
   });
 
   test("tool-call structural diagnostics stay disabled by default", async () => {
-    delete process.env.OCX_DEBUG;
+    delete process.env.OCCX_DEBUG;
     const adapter = createOpenAIChatAdapter(provider());
     await adapter.parseResponse!(new Response(JSON.stringify({
       choices: [{ message: { role: "assistant", tool_calls: { privateArguments: "secret" } } }],
@@ -761,7 +761,7 @@ describe("openai-chat non-stream response hardening", () => {
   // two defects at once, so only the matching order produces the expected reason.
   describe("diagnostic precedence matches the buffered validator", () => {
     async function reasonFor(toolCall: unknown): Promise<string> {
-      process.env.OCX_DEBUG = "1";
+      process.env.OCCX_DEBUG = "1";
       const adapter = createOpenAIChatAdapter(provider());
       await adapter.parseResponse!(new Response(JSON.stringify({
         choices: [{ message: { role: "assistant", tool_calls: [toolCall] } }],
@@ -880,7 +880,7 @@ describe("openai-chat stream response hardening", () => {
   });
 
   test("debug mode classifies streaming tool-call structure without retaining values", async () => {
-    process.env.OCX_DEBUG = "1";
+    process.env.OCCX_DEBUG = "1";
     const privateName = "private-tool-name";
     const adapter = createOpenAIChatAdapter(provider());
     const response = new Response([
@@ -908,7 +908,7 @@ describe("openai-chat stream response hardening", () => {
   });
 
   test("debug mode skips accepted null padding and blames the real malformed delta (#1731)", async () => {
-    process.env.OCX_DEBUG = "1";
+    process.env.OCCX_DEBUG = "1";
     const adapter = createOpenAIChatAdapter(provider());
     const response = new Response([
       `data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [
@@ -1005,7 +1005,7 @@ describe("openai-chat stream response hardening", () => {
   // stateless rescan stops at the first structurally odd value, which here is the ACCEPTED
   // padding on call 0, and would blame the wrong call for the real defect on call 1.
   test("parallel calls blame the unresolved call, not the accepted padding (#2155)", async () => {
-    process.env.OCX_DEBUG = "1";
+    process.env.OCCX_DEBUG = "1";
     const adapter = createOpenAIChatAdapter(provider());
     const response = new Response([
       `data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [
@@ -1164,7 +1164,7 @@ describe("openai-chat credential hardening", () => {
       ["kimi", "oauth"],
       ["kimi-code", "key"],
     ] as const) {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: providerName,
         providers: {
@@ -1191,7 +1191,7 @@ describe("openai-chat credential hardening", () => {
   });
 
   test("an explicit Kimi promptCacheKey false remains an opt-out", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "kimi",
       providers: {
@@ -1326,7 +1326,7 @@ describe("openai-chat response_format emission", () => {
     const adapter = createOpenAIChatAdapter(provider({
       noStructuredOutputModels: ["test-model"],
     }));
-    const options: OcxParsedRequest["options"] = {
+    const options: OccxParsedRequest["options"] = {
       textFormat: { type: "json_schema", name: "answer", schema: { type: "object" }, strict: true },
     };
 
@@ -1386,7 +1386,7 @@ describe("openai-chat response_format emission", () => {
     };
     const passthrough = (
       modelId: string,
-      providerOverrides: Partial<OcxProviderConfig>,
+      providerOverrides: Partial<OccxProviderConfig>,
       responseFormat: unknown = schemaFormat,
     ) => JSON.parse(buildOpenAIChatPassthroughRequest(
       provider(providerOverrides),

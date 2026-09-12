@@ -1,6 +1,6 @@
-import type { OcxProviderConfig } from "../../types";
+import type { OccxProviderConfig } from "../../types";
 
-export function fixtureProviderConfig(adapter: string): OcxProviderConfig {
+export function fixtureProviderConfig(adapter: string): OccxProviderConfig {
   return {
     adapter,
     // The Chat fixture intentionally exercises native OpenAI Chat semantics (including

@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../types";
 import { modelInList, toolChoiceToolPredicate } from "../types";
 import { isModelTextOnly } from "../vision";
 import type { SidecarSettings } from "./executor";
@@ -9,7 +9,7 @@ import type { ResolvedOpenAiForwardSidecar } from "../providers/openai-sidecar";
 import { resolveSidecarAuth } from "../sidecar/auth";
 import { getAccountSet } from "../oauth/store";
 import { validateXaiSearchOptions, type XaiSearchOptions } from "./xai-executor";
-import type { OcxWebSearchSidecarConfig } from "../types";
+import type { OccxWebSearchSidecarConfig } from "../types";
 import { DEFAULT_STALL_TIMEOUT_SEC } from "../stall-timeout";
 import { buildWebSearchTool, extractHostedWebSearch, WEB_SEARCH_TOOL_NAME } from "./synthetic-tool";
 
@@ -88,7 +88,7 @@ export function webSearchStallTimeoutSec(
 /** A configured anthropic-adapter OAuth provider whose ACTIVE stored account is usable (not needs-reauth). */
 export interface AnthropicSidecarProvider {
   providerName: string;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface AnthropicSidecarProvider {
  * Delegates to the shared sidecar auth module (#2188) so web-search and vision
  * cannot drift on what "Anthropic auth present" means.
  */
-export function findAnthropicSidecarProvider(config: OcxConfig): AnthropicSidecarProvider | undefined {
+export function findAnthropicSidecarProvider(config: OccxConfig): AnthropicSidecarProvider | undefined {
   const auth = resolveSidecarAuth(config);
   if (!auth.isAnthropicAuth || !auth.anthropicProviderName || !auth.anthropicProvider) return undefined;
   return { providerName: auth.anthropicProviderName, provider: auth.anthropicProvider };
@@ -110,7 +110,7 @@ export function findAnthropicSidecarProvider(config: OcxConfig): AnthropicSideca
  * reauth — the only credential the xai web-search executor may spend. Same account-set
  * predicate the shared sidecar auth module applies to Anthropic.
  */
-export function findXaiSidecarProvider(config: OcxConfig): { providerName: string; provider: OcxProviderConfig } | undefined {
+export function findXaiSidecarProvider(config: OccxConfig): { providerName: string; provider: OccxProviderConfig } | undefined {
   // The stored Grok credential lives under the provider named "xai" (registry id);
   // OAuth account sets are keyed by provider name, so the name IS the credential key.
   const provider = config.providers["xai"];
@@ -127,7 +127,7 @@ export function findXaiSidecarProvider(config: OcxConfig): { providerName: strin
  * active stored account is healthy AND carries a discovered CCA projectId — the
  * executor cannot form the envelope without it.
  */
-export function findGeminiSidecarProvider(config: OcxConfig): { providerName: string; provider: OcxProviderConfig } | undefined {
+export function findGeminiSidecarProvider(config: OccxConfig): { providerName: string; provider: OccxProviderConfig } | undefined {
   const provider = config.providers["google-antigravity"];
   if (!provider || provider.disabled === true || provider.authMode !== "oauth") return undefined;
   const set = getAccountSet("google-antigravity");
@@ -139,7 +139,7 @@ export function findGeminiSidecarProvider(config: OcxConfig): { providerName: st
 }
 
 /** Lift the persisted xSearch config block into executor options (absent block = web_search only). */
-export function xaiSearchOptionsFromConfig(cfg: Pick<OcxWebSearchSidecarConfig, "xSearch">): XaiSearchOptions {
+export function xaiSearchOptionsFromConfig(cfg: Pick<OccxWebSearchSidecarConfig, "xSearch">): XaiSearchOptions {
   const x = cfg.xSearch;
   if (!x || x.enabled !== true) return {};
   return {
@@ -177,9 +177,9 @@ export interface SidecarPlan {
   /** Present for the anthropic backend (stored-OAuth /v1/messages path); undefined for openai. */
   anthropicSidecar?: AnthropicSidecarProvider;
   /** Present for the xai backend (stored Grok OAuth /v1/responses path). */
-  xaiSidecar?: { providerName: string; provider: OcxProviderConfig };
+  xaiSidecar?: { providerName: string; provider: OccxProviderConfig };
   /** Present for the gemini backend (Antigravity CCA grounding path). */
-  geminiSidecar?: { providerName: string; provider: OcxProviderConfig };
+  geminiSidecar?: { providerName: string; provider: OccxProviderConfig };
   /** Opt-in x_search options for the xai backend (validated at the management layer and again in the executor). */
   xaiSearchOptions?: XaiSearchOptions;
   /** Presence marker for the exa backend — the API key itself never rides the plan. */
@@ -196,8 +196,8 @@ export interface SidecarPlan {
 }
 
 export function shouldResolveOpenAiWebSearchSidecar(
-  config: OcxConfig,
-  parsed: OcxParsedRequest,
+  config: OccxConfig,
+  parsed: OccxParsedRequest,
   isPassthrough: boolean,
 ): boolean {
   if (!parsed._webSearch || isPassthrough) return false;
@@ -213,10 +213,10 @@ export function shouldResolveOpenAiWebSearchSidecar(
  * and the caller forwarded ChatGPT auth. Returns undefined otherwise (request takes the normal path).
  */
 export function planWebSearch(
-  config: OcxConfig,
-  parsed: OcxParsedRequest,
+  config: OccxConfig,
+  parsed: OccxParsedRequest,
   isPassthrough: boolean,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
   openAiSidecar?: ResolvedOpenAiForwardSidecar,
   options: { admission?: Pick<DataPlaneAdmission, "source">; codexAuthPolicy?: CodexAuthPolicyConfig } = {},

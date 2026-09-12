@@ -15,9 +15,9 @@ let home: string;
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-main-evidence-"));
-  process.env.OPENCODEX_HOME = home;
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-main-evidence-"));
+  process.env.OPENCCX_HOME = home;
   clearAccountQuota();
   clearMainAccountInfoCache();
 });
@@ -25,8 +25,8 @@ beforeEach(() => {
 afterEach(() => {
   clearAccountQuota();
   clearMainAccountInfoCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 

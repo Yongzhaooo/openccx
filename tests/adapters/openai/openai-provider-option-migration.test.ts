@@ -4,15 +4,15 @@ import {
   OpenAiTierMigrationCollisionError,
   projectOpenAiTierMigration,
 } from "../../../src/providers/openai-tiers";
-import type { OcxConfig, OcxProviderConfig, ProviderCostOverlay } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig, ProviderCostOverlay } from "../../../src/types";
 
-const forward: OcxProviderConfig = {
+const forward: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.com/backend-api/codex",
   authMode: "forward",
 };
 
-function cfg(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function cfg(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: { openai: { ...forward } },
@@ -366,10 +366,10 @@ describe("OpenAI provider option migration matrix", () => {
       customMigrationNote: "keep openai-multi/secret-like-text verbatim",
       nestedUnknown: { model: "openai-multi/gpt-unknown" },
       injectionModel: "openai-multi/gpt-known",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     const result = projectOpenAiTierMigration(input);
-    expect((result.config as OcxConfig & { customMigrationNote: string }).customMigrationNote).toContain("openai-multi");
-    expect((result.config as OcxConfig & { nestedUnknown: { model: string } }).nestedUnknown.model).toBe("openai-multi/gpt-unknown");
+    expect((result.config as OccxConfig & { customMigrationNote: string }).customMigrationNote).toContain("openai-multi");
+    expect((result.config as OccxConfig & { nestedUnknown: { model: string } }).nestedUnknown.model).toBe("openai-multi/gpt-unknown");
     expect(result.config.injectionModel).toBe("gpt-known");
     expect(result.warnings).toEqual([
       "customMigrationNote: legacy OpenAI provider id left unchanged",
@@ -393,7 +393,7 @@ describe("OpenAI provider option migration matrix", () => {
       openaiProviderTierVersion: 2,
       providers: { openai: { ...forward, codexAccountMode: "pool" } },
       customMigrationNote: "openai-multi/history stays" as never,
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     const result = projectOpenAiTierMigration(input);
     expect(result.changed).toBe(false);
     expect(result.config).toEqual(input);

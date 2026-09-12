@@ -31,7 +31,7 @@ import { inspectGrokConfig } from "../../grok/inspect";
 import { grokConfigPath } from "../../grok/status";
 import { assertNativeTeardownOwned } from "../../integrations/native/ownership-preflight";
 import type { CodexNativeRestoreResult } from "../../codex/inject";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { jsonResponse } from "../auth-cors";
 import { readManagementJsonBody, rethrowManagementBodyTooLarge } from "./body";
 import type { ManagementContext } from "./context";
@@ -186,7 +186,7 @@ function grokStatus(config: ManagementContext["config"]): NativeStatus {
   if (seen.kind === "orphaned_marker") {
     disableBlocked = {
       reason: "orphaned_marker",
-      message: "The managed block in the Grok config is ambiguous (a begin marker with no end marker), so opencodex cannot tell where it ends and will not touch it. Remove the opencodex markers by hand, then retry.",
+      message: "The managed block in the Grok config is ambiguous (a begin marker with no end marker), so openccx cannot tell where it ends and will not touch it. Remove the openccx markers by hand, then retry.",
     };
   } else {
     const owned = assertNativeTeardownOwned();
@@ -251,15 +251,15 @@ let grokToggleFlight: Promise<Response> | null = null;
  * module, so a static import of fetchAllModels back from it would close a
  * cycle. sync.ts:18-21 dodges the same cycle the same way.
  */
-async function defaultFetchAllModels(config: OcxConfig) {
+async function defaultFetchAllModels(config: OccxConfig) {
   const { fetchAllModels } = await import("../management-api");
   return fetchAllModels(config);
 }
 
 const ORPHANED_MARKER_MESSAGE =
   "The managed block in the Grok config is ambiguous (a begin marker with no end marker), "
-  + "so opencodex cannot tell where it ends and will not touch it. "
-  + "Remove the opencodex markers by hand, then retry.";
+  + "so openccx cannot tell where it ends and will not touch it. "
+  + "Remove the openccx markers by hand, then retry.";
 
 const NOT_INSTALLED_MESSAGE =
   "Grok home was not found, so there is nothing to change. Install Grok Build first.";
@@ -274,14 +274,14 @@ let codexToggleFlight: Promise<Response> | null = null;
 /**
  * Turn native Codex routing on or off.
  *
- * THE PROXY STAYS UP. Turning Codex off is not `ocx stop`: other clients keep
+ * THE PROXY STAYS UP. Turning Codex off is not `occx stop`: other clients keep
  * routing through this process, `/healthz` keeps answering, and only Codex goes
  * back to its own path. That is the entire point of having a per-client switch
  * rather than a kill switch, and it is why this route restores rather than
  * stopping anything.
  *
  * Two writes, in this order:
- *   1. persist the desired state, so the decision survives the next `ocx start`;
+ *   1. persist the desired state, so the decision survives the next `occx start`;
  *   2. converge the artifacts to match it.
  *
  * Intent first is deliberate. If the process dies between them, the next start
@@ -347,7 +347,7 @@ async function handleCodexToggle(ctx: ManagementContext): Promise<Response> {
         state: applied.ok ? "current" : "absent",
         desiredEnabled: enabled,
         message: applied.ok
-          ? "Codex now routes through opencodex"
+          ? "Codex now routes through openccx"
           : `Codex intent saved, but applying it did not complete: ${applied.message}`,
         ...(applied.ok
           ? (durable ? {} : { reason: "not_durable" })
@@ -366,14 +366,14 @@ async function handleCodexToggle(ctx: ManagementContext): Promise<Response> {
       }
     }
     const { restoreNativeCodexAsync } = await import("../../codex/inject");
-    const { OCX_NATIVE_REPLAY_RECOVERY_NOTE } = await import("../../responses/compaction");
+    const { OCCX_NATIVE_REPLAY_RECOVERY_NOTE } = await import("../../responses/compaction");
     const restored = await restoreNativeCodexAsync({ revalidateDesiredState: true });
     return jsonResponse({
       ok: true, clientId: "codex", changed: durable && persisted.status === "committed",
       state: restored.success ? "absent" : "unsafe",
       desiredEnabled: enabled,
       message: restored.success
-        ? `Codex restored to its native path; the proxy is still serving other clients. ${OCX_NATIVE_REPLAY_RECOVERY_NOTE}`
+        ? `Codex restored to its native path; the proxy is still serving other clients. ${OCCX_NATIVE_REPLAY_RECOVERY_NOTE}`
         : `Codex intent saved, but restoring the native path did not complete: ${restored.message}`,
       ...(restored.success
         ? (durable ? {} : { reason: "not_durable" })
@@ -426,7 +426,7 @@ async function handleGrokToggle(ctx: ManagementContext): Promise<Response> {
      * Persist the DECISION before touching the fence.
      *
      * This route shipped without it, which is the whole bug: stripping the fence
-     * records nothing, so the next `ocx start` calls syncGrokConfig
+     * records nothing, so the next `occx start` calls syncGrokConfig
      * unconditionally and writes it straight back. The switch worked and lasted
      * exactly one restart.
      *
@@ -485,7 +485,7 @@ async function handleGrokToggle(ctx: ManagementContext): Promise<Response> {
         state: "absent",
         desiredEnabled,
         message: result.changed
-          ? "Grok integration disabled — the opencodex block was removed. Re-enabling regenerates it from the current model list."
+          ? "Grok integration disabled — the openccx block was removed. Re-enabling regenerates it from the current model list."
           : "Grok integration is already off",
       } satisfies NativeToggleEnvelope);
     }
@@ -549,14 +549,14 @@ async function handleGrokToggle(ctx: ManagementContext): Promise<Response> {
           return postCommitRefusal(409, "grok", "orphaned_marker", ORPHANED_MARKER_MESSAGE, { desiredEnabled });
         case "present":
           // A well-formed fence arrived from elsewhere between the strip and
-          // this read (`ocx ensure`, another proxy, a hand edit). It is not
+          // this read (`occx ensure`, another proxy, a hand edit). It is not
           // ours to remove under a policy that just declined to write one,
           // and calling it `absent` would contradict the read.
           return jsonResponse({
             ok: true, clientId: "grok", changed: result.changed,
             state: "current", reason: "non_loopback_superseded",
             desiredEnabled,
-            message: "opencodex is bound to a non-loopback address, so this request did not write a block — but a well-formed opencodex block is present in the Grok config, written by something else. The card shows what is on disk.",
+            message: "openccx is bound to a non-loopback address, so this request did not write a block — but a well-formed openccx block is present in the Grok config, written by something else. The card shows what is on disk.",
           } satisfies NativeToggleEnvelope);
         case "not_installed":
           return postCommitRefusal(404, "grok", "not_installed", NOT_INSTALLED_MESSAGE, { desiredEnabled });
@@ -565,7 +565,7 @@ async function handleGrokToggle(ctx: ManagementContext): Promise<Response> {
             ok: true, clientId: "grok", changed: result.changed,
             state: "absent", reason: "non_loopback_removed",
             desiredEnabled,
-            message: "opencodex is bound to a non-loopback address, so Grok cannot be auto-registered. The previously generated block was removed because it pointed at a loopback address that no longer serves.",
+            message: "openccx is bound to a non-loopback address, so Grok cannot be auto-registered. The previously generated block was removed because it pointed at a loopback address that no longer serves.",
           } satisfies NativeToggleEnvelope);
         default: {
           // A future fifth GrokInspection kind must fail to COMPILE, not fall
@@ -589,7 +589,7 @@ async function handleGrokToggle(ctx: ManagementContext): Promise<Response> {
       ok: true, clientId: "grok", changed: result.changed,
       state: "current",
       desiredEnabled,
-      message: result.changed ? "Grok integration enabled — the opencodex block was regenerated from the current model list." : "Grok integration is already on",
+      message: result.changed ? "Grok integration enabled — the openccx block was regenerated from the current model list." : "Grok integration is already on",
     } satisfies NativeToggleEnvelope);
   })();
   try {
@@ -729,7 +729,7 @@ export async function handleNativeIntegrationRoutes(ctx: ManagementContext): Pro
 
     /*
      * `deps.` first: ManagementApiDeps carries this seam so route tests with an
-     * in-memory fixture cannot overwrite the developer's real OPENCODEX_HOME.
+     * in-memory fixture cannot overwrite the developer's real OPENCCX_HOME.
      */
     const persist = deps.saveConfigPreservingClaudeCode ?? saveConfigPreservingClaudeCode;
     try {

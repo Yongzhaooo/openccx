@@ -4,18 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig } from "../../src/config";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-async function getSidecarSettings(config: OcxConfig): Promise<Response> {
+async function getSidecarSettings(config: OccxConfig): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(new Request(url), url, config);
   if (!response) throw new Error("sidecar settings route did not handle GET");
   return response;
 }
 
-async function putSidecarSettings(config: OcxConfig, webSearch: Record<string, unknown>): Promise<Response> {
+async function putSidecarSettings(config: OccxConfig, webSearch: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(
     new Request(url, {
@@ -30,7 +30,7 @@ async function putSidecarSettings(config: OcxConfig, webSearch: Record<string, u
   return response;
 }
 
-function emptyConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function emptyConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   // A schema-valid provider setup: for an invalid file, loadConfig() first retries with
   // defaults merged in and falls back to backup + pure defaults only when that repair also
   // fails validation — either path would silently void the reload assertions below.
@@ -39,7 +39,7 @@ function emptyConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     defaultProvider: "dummy",
     providers: { dummy: { adapter: "openai-chat", baseUrl: "https://example.test/v1" } },
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("sidecar-settings webSearch.streamRoutedModelOutput", () => {
@@ -47,14 +47,14 @@ describe("sidecar-settings webSearch.streamRoutedModelOutput", () => {
   let isolatedHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    isolatedHome = mkdtempSync(join(tmpdir(), "ocx-sidecar-ws-stream-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    previousHome = process.env.OPENCCX_HOME;
+    isolatedHome = mkdtempSync(join(tmpdir(), "occx-sidecar-ws-stream-"));
+    process.env.OPENCCX_HOME = isolatedHome;
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (isolatedHome) removeTreeWithRetry(isolatedHome);
     isolatedHome = undefined;
   });

@@ -3,11 +3,11 @@ import { collectCodexEnvKeyReadiness } from "../../src/cli/doctor";
 import type { CodexShimDiagnostic } from "../../src/codex/shim";
 
 const config = `
-model_provider = "opencodex"
+model_provider = "openccx"
 
-[model_providers.opencodex]
+[model_providers.openccx]
 base_url = "http://127.0.0.1:10100/v1"
-env_key = "OPENCODEX_API_AUTH_TOKEN"
+env_key = "OPENCCX_API_AUTH_TOKEN"
 `;
 
 const missingShim: CodexShimDiagnostic = {
@@ -25,10 +25,10 @@ const healthyShim: CodexShimDiagnostic = {
 describe("doctor Codex env_key launch readiness", () => {
   test("warns when env_key is unset, the shim is missing, and a service token exists", () => {
     expect(collectCodexEnvKeyReadiness(config, {}, missingShim, true)).toEqual({
-      envName: "OPENCODEX_API_AUTH_TOKEN",
+      envName: "OPENCCX_API_AUTH_TOKEN",
       shimState: "missing",
-      detail: "Codex uses env_key OPENCODEX_API_AUTH_TOKEN, but that variable is unset and the OpenCodex shim is missing; the service token file exists but plain Codex does not load it",
-      action: "Run 'ocx codex-shim install' to repair launch-time token injection, or export OPENCODEX_API_AUTH_TOKEN in the process that starts Codex",
+      detail: "Codex uses env_key OPENCCX_API_AUTH_TOKEN, but that variable is unset and the Openccx shim is missing; the service token file exists but plain Codex does not load it",
+      action: "Run 'occx codex-shim install' to repair launch-time token injection, or export OPENCCX_API_AUTH_TOKEN in the process that starts Codex",
     });
   });
 
@@ -38,11 +38,11 @@ describe("doctor Codex env_key launch readiness", () => {
   });
 
   test("does not warn when the configured environment variable is set", () => {
-    expect(collectCodexEnvKeyReadiness(config, { OPENCODEX_API_AUTH_TOKEN: "secret" }, missingShim, true)).toBeNull();
+    expect(collectCodexEnvKeyReadiness(config, { OPENCCX_API_AUTH_TOKEN: "secret" }, missingShim, true)).toBeNull();
   });
 
   test("treats prototype names as unset unless they are own environment properties", () => {
-    const prototypeNameConfig = config.replace("OPENCODEX_API_AUTH_TOKEN", "toString");
+    const prototypeNameConfig = config.replace("OPENCCX_API_AUTH_TOKEN", "toString");
     expect(() => collectCodexEnvKeyReadiness(prototypeNameConfig, {}, missingShim, true)).not.toThrow();
     expect(collectCodexEnvKeyReadiness(prototypeNameConfig, {}, missingShim, true)?.envName).toBe("toString");
     expect(collectCodexEnvKeyReadiness(prototypeNameConfig, { toString: "set" }, missingShim, true)).toBeNull();
@@ -57,7 +57,7 @@ describe("doctor Codex env_key launch readiness", () => {
   });
 
   test("ignores another active provider and env_key text outside the active table", () => {
-    const other = `${config.replace('model_provider = "opencodex"', 'model_provider = "openai"')}\n# env_key = "SHOULD_NOT_MATCH"`;
+    const other = `${config.replace('model_provider = "openccx"', 'model_provider = "openai"')}\n# env_key = "SHOULD_NOT_MATCH"`;
     expect(collectCodexEnvKeyReadiness(other, {}, missingShim, true)).toBeNull();
   });
 

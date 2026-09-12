@@ -1,18 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { createResponsesPassthroughAdapter as createProductionAdapter } from "../../src/adapters/openai-responses";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
-const createAdapter = (provider: OcxProviderConfig) =>
+const createAdapter = (provider: OccxProviderConfig) =>
   withTestTranslatorBudget(createProductionAdapter(provider));
 
-const canonicalForward: OcxProviderConfig = {
+const canonicalForward: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.com/backend-api/codex",
   authMode: "forward",
 };
 
-function outboundBody(provider: OcxProviderConfig, rawBody: Record<string, unknown>): Record<string, unknown> {
+function outboundBody(provider: OccxProviderConfig, rawBody: Record<string, unknown>): Record<string, unknown> {
   const adapter = createAdapter(provider);
   const request = adapter.buildRequest({
     modelId: String(rawBody.model ?? "gpt-5.6-luna"),

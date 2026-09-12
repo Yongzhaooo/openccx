@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { mapReasoningEffort } from "../../src/reasoning-effort";
 import { NoEnabledOpenAiProviderError, routeCompactionModel, routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 describe("routeModel registry effort defaults", () => {
   test("allows only opted-in OAuth presets to use explicit API-key billing", () => {
-    const xaiKey: OcxConfig = {
+    const xaiKey: OccxConfig = {
       port: 10100,
       defaultProvider: "xai",
       providers: {
@@ -17,11 +17,11 @@ describe("routeModel registry effort defaults", () => {
         },
       },
     };
-    const xaiDefault: OcxConfig = {
+    const xaiDefault: OccxConfig = {
       ...xaiKey,
       providers: { xai: { ...xaiKey.providers.xai, authMode: undefined } },
     };
-    const cursorKeyAttempt: OcxConfig = {
+    const cursorKeyAttempt: OccxConfig = {
       port: 10100,
       defaultProvider: "cursor",
       providers: {
@@ -40,8 +40,8 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("falls back to OAuth routing for allowKeyAuthOverride providers when the active key is unresolved", () => {
-    const envName = "OCX_TEST_XAI_ROUTER_ENV";
-    const config: OcxConfig = {
+    const envName = "OCCX_TEST_XAI_ROUTER_ENV";
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xai",
       providers: {
@@ -67,7 +67,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("routes bare OpenAI/Codex model ids to OpenAI before adopted Cursor model lists", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -95,7 +95,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("routes account-qualified native models to one exact Codex account", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -143,7 +143,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("requires an enabled canonical OpenAI forward provider before exact credential injection", () => {
-    const providers: OcxProviderConfig[] = [
+    const providers: OccxProviderConfig[] = [
       { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "key" },
       { adapter: "openai-chat", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" },
       { adapter: "openai-responses", baseUrl: "https://proxy.example.test/v1", authMode: "forward" },
@@ -151,7 +151,7 @@ describe("routeModel registry effort defaults", () => {
     ];
 
     for (const openai of providers) {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "openai",
         providers: { openai },
@@ -160,7 +160,7 @@ describe("routeModel registry effort defaults", () => {
       expect(() => routeModel(config, "side/gpt-5.5")).toThrow(NoEnabledOpenAiProviderError);
     }
 
-    const withoutOpenAi: OcxConfig = {
+    const withoutOpenAi: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {},
@@ -170,7 +170,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("routes a self-namespaced native id whole instead of stripping to the remainder", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "orcarouter",
       providers: {
@@ -204,7 +204,7 @@ describe("routeModel registry effort defaults", () => {
   test("routes bare OpenAI models only through canonical openai and stops terminally", () => {
     const forward = { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" as const };
     const api = { adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", authMode: "key" as const, apiKey: "sk-test", defaultModel: "gpt-5.5" };
-    const base: OcxConfig = {
+    const base: OccxConfig = {
       port: 10100,
       defaultProvider: "openai-apikey",
       providers: {
@@ -223,7 +223,7 @@ describe("routeModel registry effort defaults", () => {
       providerName: "openai-apikey",
       modelId: "codex-third-party-model",
     });
-    const withDeepSeekDefault: OcxConfig = {
+    const withDeepSeekDefault: OccxConfig = {
       ...base,
       defaultProvider: "deepseek",
       providers: {
@@ -248,12 +248,12 @@ describe("routeModel registry effort defaults", () => {
     expect(() => routeModel({ ...base, providers: { ...base.providers, openai: { ...forward, disabled: true } } }, "gpt-5.5"))
       .toThrow(/requires the canonical openai provider/);
     const unavailable = { ...base, providers: { "openai-proxy": base.providers["openai-proxy"] } };
-    expect(() => routeModel(unavailable, "gpt-5.5")).toThrow(/ocx provider add openai/);
+    expect(() => routeModel(unavailable, "gpt-5.5")).toThrow(/occx provider add openai/);
     expect(() => routeModel(unavailable, "codex-auto-review")).toThrow(NoEnabledOpenAiProviderError);
   });
 
   test("rejects legacy chatgpt namespaces even when configured", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "chatgpt",
       providers: { chatgpt: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" } },
@@ -265,7 +265,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("does not hydrate legacy xhigh to max maps for stale persisted ollama-cloud configs", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "ollama-cloud",
       providers: {
@@ -286,7 +286,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("preserves user reasoning effort map overrides", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "ollama-cloud",
       providers: {
@@ -306,7 +306,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("leaves custom providers without registry entries unchanged", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-ollama",
       providers: {
@@ -325,7 +325,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("blocks custom private-network providers without explicit opt-in before routing", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-local",
       providers: {
@@ -342,7 +342,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("allows trusted self-hosted presets and explicit private-network opt-in", () => {
-    const trustedPreset: OcxConfig = {
+    const trustedPreset: OccxConfig = {
       port: 10100,
       defaultProvider: "litellm",
       providers: {
@@ -355,7 +355,7 @@ describe("routeModel registry effort defaults", () => {
     };
     expect(routeModel(trustedPreset, "litellm/gpt-4.1-mini").provider.baseUrl).toBe("http://192.168.1.9:4000/v1");
 
-    const optedIn: OcxConfig = {
+    const optedIn: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-private",
       providers: {
@@ -371,7 +371,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("blocks metadata endpoints even when private-network access is opted in", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-metadata",
       providers: {
@@ -388,7 +388,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("does not hydrate legacy nested xhigh to max maps for stale persisted configs", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "opencode-go",
       providers: {
@@ -410,7 +410,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("hydrates registry model capability metadata for stale persisted Umans configs", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "umans",
       providers: {
@@ -432,7 +432,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("minimal persisted DeepSeek config inherits the registry text-only classification (issue #88)", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "deepseek",
       providers: {
@@ -452,7 +452,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("user per-model effort-map override is preserved without registry aliases", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "opencode-go",
       providers: {
@@ -472,7 +472,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("registry model limitation lists are preserved alongside user additions", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "opencode-go",
       providers: {
@@ -493,7 +493,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("does not route inherited object keys as provider namespaces or defaults", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "constructor",
       providers: {
@@ -509,7 +509,7 @@ describe("routeModel registry effort defaults", () => {
   });
 
   test("skips disabled providers during routing", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "active",
       providers: {
@@ -537,7 +537,7 @@ describe("routeModel registry effort defaults", () => {
 
 describe("routeModel backfills google wire mode from the registry", () => {
   test("a minimal google-antigravity config (no googleMode) is routed with googleMode cloud-code-assist", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "google-antigravity",
       providers: {
@@ -554,7 +554,7 @@ describe("routeModel backfills google wire mode from the registry", () => {
   });
 
   test("a minimal google-vertex config is routed with googleMode vertex", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "google-vertex",
       providers: {
@@ -570,7 +570,7 @@ describe("routeModel backfills google wire mode from the registry", () => {
     // That crosses a provider/privacy/billing boundary the operator never asked for, so it is gone.
     // Routing a classifier turn to a specific provider is an operator decision, expressed through
     // `claudeCode.classifierModel` / `classifierFallbacks`.
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "deepseek",
       providers: {
@@ -593,7 +593,7 @@ describe("routeModel backfills google wire mode from the registry", () => {
   test("a disabled provider is not selected by the known-model pattern (#1697)", () => {
     // This half of the draft is kept: matching a pattern provider that is disabled and routing to
     // it anyway was a real defect.
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "fallbackProvider",
       providers: {
@@ -616,7 +616,7 @@ describe("routeModel backfills google wire mode from the registry", () => {
 
 describe("routeModel blocked model redirect", () => {
   test("routes gpt-5.6-terra normally when blockedModelRedirects is unset", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       providers: {
@@ -637,7 +637,7 @@ describe("routeModel blocked model redirect", () => {
   });
 
   test("opt-in intercepts gpt-5.6-terra and rewrites to gpt-5.6-luna with blocked-model-redirect reason", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       blockedModelRedirects: {
@@ -666,7 +666,7 @@ describe("routeModel blocked model redirect", () => {
   });
 
   test("opt-in intercepts account-namespaced gpt-5.6-terra and rewrites to gpt-5.6-luna", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openai",
       blockedModelRedirects: {
@@ -701,7 +701,7 @@ describe("routeModel blocked model redirect", () => {
 });
 
 describe("routeCompactionModel (#2901)", () => {
-  const ghcpOnly: OcxConfig = {
+  const ghcpOnly: OccxConfig = {
     port: 10100,
     defaultProvider: "github-copilot",
     providers: {
@@ -736,7 +736,7 @@ describe("routeCompactionModel (#2901)", () => {
     // An account-qualified native selector names a credential; it must stay fail-closed.
     expect(() => routeCompactionModel(ghcpOnly, "side/gpt-5.6-sol")).toThrow(NoEnabledOpenAiProviderError);
     // With canonical openai enabled the compaction route is identical to the ordinary one.
-    const withOpenAi: OcxConfig = {
+    const withOpenAi: OccxConfig = {
       ...ghcpOnly,
       providers: {
         ...ghcpOnly.providers,
@@ -754,14 +754,14 @@ describe("routeCompactionModel (#2901)", () => {
   });
 
   test("does not resurrect a disabled, missing, or legacy default provider", () => {
-    const disabledDefault: OcxConfig = {
+    const disabledDefault: OccxConfig = {
       ...ghcpOnly,
       providers: { "github-copilot": { ...ghcpOnly.providers["github-copilot"]!, disabled: true } },
     };
     expect(() => routeCompactionModel(disabledDefault, "gpt-5.6-sol")).toThrow(NoEnabledOpenAiProviderError);
-    const missingDefault: OcxConfig = { ...ghcpOnly, defaultProvider: "nowhere" };
+    const missingDefault: OccxConfig = { ...ghcpOnly, defaultProvider: "nowhere" };
     expect(() => routeCompactionModel(missingDefault, "gpt-5.6-sol")).toThrow(NoEnabledOpenAiProviderError);
-    const openAiDefaultDisabled: OcxConfig = {
+    const openAiDefaultDisabled: OccxConfig = {
       ...ghcpOnly,
       defaultProvider: "openai",
       providers: {

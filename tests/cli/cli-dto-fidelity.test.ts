@@ -212,7 +212,7 @@ describe("#2705 access key usage columns", () => {
   test("prints request counts and last-used instead of only id/name/prefix", async () => {
     const out = await listOutput({
       keys: [{
-        id: "k_9f2a", name: "ci-runner", prefix: "ocx_data_abc...",
+        id: "k_9f2a", name: "ci-runner", prefix: "occx_data_abc...",
         usage: { requests7d: 1204, totalRequests: 18330, lastUsedAt: "2026-08-27T04:11:00Z" },
       }],
     });
@@ -227,7 +227,7 @@ describe("#2705 access key usage columns", () => {
     // number beside an ambiguity marker. Reporting 0 requests for a key that may be in heavy
     // use is the dangerous answer for someone deciding what to delete.
     const out = await listOutput({
-      keys: [{ id: "k_11bd", name: "laptop", prefix: "ocx_data_def...", usage: { ambiguous: true } }],
+      keys: [{ id: "k_11bd", name: "laptop", prefix: "occx_data_def...", usage: { ambiguous: true } }],
     });
     expect(out).toContain("ambiguous");
     expect(out).not.toMatch(/\b0\b/);
@@ -235,7 +235,7 @@ describe("#2705 access key usage columns", () => {
 
   test("a never-used key says never rather than showing an empty cell", async () => {
     const out = await listOutput({
-      keys: [{ id: "k_new", name: "fresh", prefix: "ocx_data_ghi...", usage: { requests7d: 0, totalRequests: 0 } }],
+      keys: [{ id: "k_new", name: "fresh", prefix: "occx_data_ghi...", usage: { requests7d: 0, totalRequests: 0 } }],
     });
     expect(out).toContain("never");
   });

@@ -39,7 +39,7 @@ export const OPENAI_CODEX_FORWARD_GPT56_SOL_MANIFEST = defineCompatibilityManife
       feature: "request.previous_response_id",
       disposition: "translated",
       summary: "Continuation is owned by the proxy rather than the ChatGPT backend field.",
-      limitation: "OpenCodex expands remembered input locally and removes previous_response_id before dispatch.",
+      limitation: "Openccx expands remembered input locally and removes previous_response_id before dispatch.",
       evidence: [
         { kind: "fixture", id: FIXTURE_ID, assertionIds: ["previous-response-id-removed"] },
         { kind: "lab-scenario", id: "codex-core.protocol.previous-response-replay" },

@@ -36,14 +36,14 @@ function writePackage(packageDir: string, version: string): void {
   writeFileSync(join(packageDir, "package.json"), JSON.stringify({
     name: PKG, version, dependencies: { bun: "1", zod: "1" },
   }));
-  writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
+  writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
 }
 
 describe("#4202 install-tree dependency ownership", () => {
   let root: string;
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), "ocx-tree-ownership-"));
+    root = mkdtempSync(join(tmpdir(), "occx-tree-ownership-"));
   });
 
   afterEach(() => {
@@ -99,7 +99,7 @@ describe("#4202 install-tree dependency ownership", () => {
     writeFileSync(join(packageDir, "package.json"), JSON.stringify({
       name: PKG, version: "2.0.0", dependencies: { zod: "1" },
     }));
-    writeFileSync(join(packageDir, "bin", "ocx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
+    writeFileSync(join(packageDir, "bin", "occx.mjs"), "#!/usr/bin/env node\n" + "x".repeat(2048));
     writeDependency(join(packageDir, "node_modules", "zod"), "zod");
     // Interrupted extraction: the binary landed, the manifest did not.
     mkdirSync(join(packageDir, "node_modules", "bun"), { recursive: true });
@@ -115,12 +115,12 @@ describe("#4202 install-tree dependency ownership", () => {
     // Live tree in a global npm layout, its dependencies supplied only by the sibling install.
     const globalRoot = join(root, "lib", "node_modules");
     const scopeDir = join(globalRoot, "@bitkyc08");
-    const packageDir = join(scopeDir, "opencodex");
+    const packageDir = join(scopeDir, "openccx");
     writePackage(packageDir, "2.0.0");
     writeDependency(join(globalRoot, "bun"), "bun");
     writeDependency(join(globalRoot, "zod"), "zod");
     // A known-good backup from the previous swap, sitting where bootRestoreProbe looks.
-    const backup = join(scopeDir, ".ocx-backup-2026-01-01T00-00-00-000Z", "opencodex");
+    const backup = join(scopeDir, ".occx-backup-2026-01-01T00-00-00-000Z", "openccx");
     writePackage(backup, "1.0.0");
     writeDependency(join(backup, "node_modules", "bun"), "bun");
     writeDependency(join(backup, "node_modules", "zod"), "zod");
@@ -133,12 +133,12 @@ describe("#4202 install-tree dependency ownership", () => {
 
   test("boot restore still reaps the backup for a genuinely self-contained live tree", () => {
     const scopeDir = join(root, "lib", "node_modules", "@bitkyc08");
-    const packageDir = join(scopeDir, "opencodex");
+    const packageDir = join(scopeDir, "openccx");
     writePackage(packageDir, "2.0.0");
     writeDependency(join(packageDir, "node_modules", "bun"), "bun");
     writeDependency(join(packageDir, "node_modules", "zod"), "zod");
-    const backupRoot = join(scopeDir, ".ocx-backup-2026-01-01T00-00-00-000Z");
-    writePackage(join(backupRoot, "opencodex"), "1.0.0");
+    const backupRoot = join(scopeDir, ".occx-backup-2026-01-01T00-00-00-000Z");
+    writePackage(join(backupRoot, "openccx"), "1.0.0");
 
     const probe = bootRestoreProbe(packageDir);
 
@@ -206,7 +206,7 @@ describe("#4202 install-tree dependency ownership", () => {
     // neither in the package's own tree nor a child of the group root, which is why
     // ownership has to be probed through the link farm rather than the resolved realpath.
     const virtualStore = join(root, "global", "v11", "node_modules", ".pnpm");
-    const instance = join(virtualStore, "@bitkyc08+opencodex@2.0.0", "node_modules");
+    const instance = join(virtualStore, "@bitkyc08+openccx@2.0.0", "node_modules");
     const packageDir = join(instance, ...PKG.split("/"));
     writePackage(packageDir, "2.0.0");
     writeDependency(join(virtualStore, "bun@1.0.0", "node_modules", "bun"), "bun");
@@ -220,7 +220,7 @@ describe("#4202 install-tree dependency ownership", () => {
     // The instance directory is per package@version, so a dependency parked in a DIFFERENT
     // instance's link farm is not reachable from this one and must not satisfy it.
     const virtualStore = join(root, "global", "v11", "node_modules", ".pnpm");
-    const instance = join(virtualStore, "@bitkyc08+opencodex@2.0.0", "node_modules");
+    const instance = join(virtualStore, "@bitkyc08+openccx@2.0.0", "node_modules");
     const packageDir = join(instance, ...PKG.split("/"));
     writePackage(packageDir, "2.0.0");
     const otherInstance = join(virtualStore, "something-else@1.0.0", "node_modules");

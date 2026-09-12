@@ -10,7 +10,7 @@ import {
   setIntegrationMutationFlightTestHooks,
   setIntegrationPathTestHooks,
 } from "../../src/server/management/integration-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -31,13 +31,13 @@ let store: IntegrationStateStore;
 const routeEnv = {} as NodeJS.ProcessEnv;
 
 /** Shaped like a real key, assembled at runtime so no literal secret is committed. */
-const REAL_LOOKING_KEY = ["ocx", "live", "9f3c7a2b41d84e6fa05c8e17b3d92764"].join("_");
+const REAL_LOOKING_KEY = ["occx", "live", "9f3c7a2b41d84e6fa05c8e17b3d92764"].join("_");
 
 const MODELS_FIXTURE: ExportModel[] = [
   { namespaced: "a/m1", provider: "a", id: "m1", contextWindow: 128_000 },
 ];
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
@@ -54,13 +54,13 @@ function baseConfig(): OcxConfig {
         modelReasoningEfforts: { m1: ["minimal", "low", "high"] },
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-let config: OcxConfig;
+let config: OccxConfig;
 
 beforeEach(() => {
-  base = mkdtempSync(join(tmpdir(), "ocx-journal-delete-"));
+  base = mkdtempSync(join(tmpdir(), "occx-journal-delete-"));
   home = join(base, "home");
   storeRoot = join(base, "store", "integrations");
   mkdirSync(home, { recursive: true });

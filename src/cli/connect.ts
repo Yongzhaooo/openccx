@@ -18,7 +18,7 @@ import { inspectClientRotationRecoveryGate, readClientConnectionState } from "..
 import { readServiceApiTokenState } from "../lib/service-secrets";
 import type { ClientLifecycleLockDeps } from "../client/lifecycle-lock";
 import { inspectRemoteDesktopStore } from "../claude/desktop-remote-store";
-import type { OcxConnectedClientId } from "../types";
+import type { OccxConnectedClientId } from "../types";
 import {
   CliUsageError,
   csv,
@@ -43,17 +43,17 @@ export interface ClientCatalogProbeDeps extends CatalogCompatibilityDeps {
 }
 
 export const CONNECT_USAGE = `Usage:
-  ocx connect <url> [--management-url <url>]
+  occx connect <url> [--management-url <url>]
       (--pairing-code-stdin | --admin-token-stdin)
       [--clients codex,claude] [--management-transport direct|relay]
       [--catalog-timeout <seconds>] [--no-sync]
-  ocx connect status [--json]
-  ocx connect rotate (--pairing-code-stdin | --admin-token-stdin)
+  occx connect status [--json]
+  occx connect rotate (--pairing-code-stdin | --admin-token-stdin)
       [--json]
-  ocx connect revoke --admin-token-stdin [--json]`;
+  occx connect revoke --admin-token-stdin [--json]`;
 
 export const DISCONNECT_USAGE = `Usage:
-  ocx disconnect [--keep-catalog] [--json]`;
+  occx disconnect [--keep-catalog] [--json]`;
 
 export type ClientConnectionStatus = {
   state: "disconnected" | "connected" | "invalid" | "mismatched";
@@ -63,7 +63,7 @@ export type ClientConnectionStatus = {
   managementTransport?: "direct" | "relay";
   protocolVersion?: number;
   apiKeyId?: string;
-  selectedClients?: OcxConnectedClientId[];
+  selectedClients?: OccxConnectedClientId[];
   connectedAt?: string;
   catalogSyncedAt?: string;
   catalogAgeSeconds?: number;
@@ -99,10 +99,10 @@ function readInstalledCatalogBody(): string | null {
  * The ladder the selected Codex CLI accepts, observed without persisting anything.
  *
  * `codexSupportedReasoningEfforts()` with no deps reaches `resolveAndPersistCodexRuntime`, which
- * writes codex-runtime.json. `ocx status` deliberately resolves without persisting, and a
+ * writes codex-runtime.json. `occx status` deliberately resolves without persisting, and a
  * read-only diagnostics command should not start writing runtime selection state because a
  * readiness check was added to it. Handing the already-resolved command in as the only candidate
- * skips that path and reuses the resolve cache `ocx status` has usually already filled.
+ * skips that path and reuses the resolve cache `occx status` has usually already filled.
  */
 function observeLocalCodexEffortLadder(): ReadonlySet<string> | null {
   const command = resolveCodexRuntime().runtime.command;
@@ -114,13 +114,13 @@ function observeLocalCodexEffortLadder(): ReadonlySet<string> | null {
  * when nothing was injected, so production does not silently fall back to the default inside
  * {@link assertClientCatalogCompatible} — that default persists runtime selection state and
  * would run its own probe, which is how the two checks could disagree about the ladder within
- * a single `ocx connect`.
+ * a single `occx connect`.
  */
 function catalogObserver(deps: ClientCatalogProbeDeps | undefined): CatalogCompatibilityDeps {
   return { supportedEfforts: deps?.supportedEfforts ?? observeLocalCodexEffortLadder };
 }
 
-/** The stat half of the catalog verdict, shared by the status collector and `ocx connect`. */
+/** The stat half of the catalog verdict, shared by the status collector and `occx connect`. */
 function installedCatalogFileState(): ClientCatalogFileState {
   if (!existsSync(DEFAULT_CATALOG_PATH)) return "missing";
   try {
@@ -197,12 +197,12 @@ export function collectClientConnectionStatus(
   };
 }
 
-function parseClients(raw: string | undefined): OcxConnectedClientId[] {
+function parseClients(raw: string | undefined): OccxConnectedClientId[] {
   const values = csv(raw) ?? ["codex", "claude"];
   if (values.length < 1 || values.some(value => value !== "codex" && value !== "claude")) {
     throw new CliUsageError("--clients must contain codex and/or claude", CONNECT_USAGE);
   }
-  return values as OcxConnectedClientId[];
+  return values as OccxConnectedClientId[];
 }
 
 /** Reads as a verdict, not a field dump: "ready" is the only word that means the client works. */
@@ -217,12 +217,12 @@ function readinessLine(status: ClientConnectionStatus): string {
 
 export type ConnectCompletionReport = {
   readonly lines: readonly string[];
-  /** Non-null when `ocx connect` must exit non-zero rather than report success. */
+  /** Non-null when `occx connect` must exit non-zero rather than report success. */
   readonly failure: string | null;
 };
 
 /**
- * What `ocx connect` says once the hub and the credential are settled, and whether the command
+ * What `occx connect` says once the hub and the credential are settled, and whether the command
  * still fails (#4207).
  *
  * Pure so the fail-closed decision can be exercised without a hub. Two rules it encodes:
@@ -239,7 +239,7 @@ export type ConnectCompletionReport = {
  */
 export function connectCompletionReport(
   connection: { serverUrl: string; apiKeyId: string },
-  selectedClients: readonly OcxConnectedClientId[],
+  selectedClients: readonly OccxConnectedClientId[],
   readiness: ClientCatalogReadiness,
 ): ConnectCompletionReport {
   const connected = `Connected to ${connection.serverUrl} as key ${connection.apiKeyId}.`;
@@ -259,7 +259,7 @@ export function connectCompletionReport(
     };
   }
   return {
-    lines: [verdict, `The connection to ${connection.serverUrl} as key ${connection.apiKeyId} was saved; run 'ocx connect status' to see it.`],
+    lines: [verdict, `The connection to ${connection.serverUrl} as key ${connection.apiKeyId} was saved; run 'occx connect status' to see it.`],
     failure: `client_not_ready: ${readiness.reason}`,
   };
 }

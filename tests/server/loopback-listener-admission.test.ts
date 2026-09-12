@@ -1,7 +1,7 @@
 /**
  * Tests for the unauthenticated loopback listener (#1102).
  *
- * The defect: with `hostname: "0.0.0.0"`, every caller needs `x-opencodex-api-key`, but a
+ * The defect: with `hostname: "0.0.0.0"`, every caller needs `x-openccx-api-key`, but a
  * `codex app-server` spawned from the resolved entrypoint never goes through the generated
  * shim and so never inherits the token. Every model call 401s at admission.
  *
@@ -21,12 +21,12 @@ import {
 import { buildProviderTableBlock, shouldInjectApiAuthHeader } from "../../src/codex/inject";
 import { effectiveLoopbackListenerPort, loopbackCompanionAllowed } from "../../src/codex/loopback-target";
 import { validateConfigCandidate } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const wildcardConfig = {
   hostname: "0.0.0.0",
-  apiKeys: [{ id: "k1", key: "ocx_data_realsecret", name: "test" }],
-} as unknown as OcxConfig;
+  apiKeys: [{ id: "k1", key: "occx_data_realsecret", name: "test" }],
+} as unknown as OccxConfig;
 
 function request(path = "/v1/responses", headers: Record<string, string> = {}): Request {
   return new Request(`http://127.0.0.1:10200${path}`, { headers });
@@ -55,7 +55,7 @@ describe("loopback listener policy view", () => {
     // before reading any header. Assert the public listener keeps per-key attribution so a
     // future refactor cannot quietly make every admission anonymous.
     expect(resolveResponsesApiAuth(
-      request("/v1/responses", { "x-opencodex-api-key": "ocx_data_realsecret" }),
+      request("/v1/responses", { "x-openccx-api-key": "occx_data_realsecret" }),
       wildcardConfig,
     )).toEqual({ kind: "configured", keyId: "k1", source: "dedicated", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
   });
@@ -265,9 +265,9 @@ describe("loopback companion listener configuration", () => {
   });
 
   test("pointing hostname back at loopback is refused by the same check, not by the next start", () => {
-    // `ocx config set hostname 127.0.0.1` on a host whose listener is already the companion
+    // `occx config set hostname 127.0.0.1` on a host whose listener is already the companion
     // form writes a candidate carrying BOTH keys. Validating only the key being written would
-    // let this through and turn the next `ocx start` into an EADDRINUSE rollback.
+    // let this through and turn the next `occx start` into an EADDRINUSE rollback.
     const enabled = validateConfigCandidate(candidate({ hostname: "100.76.170.81" }));
     expect(enabled.ok).toBe(true);
     const reverted = validateConfigCandidate(candidate({ hostname: "127.0.0.1" }));
@@ -342,7 +342,7 @@ describe("hub management ingress configuration", () => {
             managementUrl: "https://hub.example.test",
             managementTransport: "direct",
             selectedClients: ["codex"],
-            tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+            tokenEnv: "OPENCCX_API_AUTH_TOKEN",
             apiKeyId: "client-key-1",
             tokenFingerprint: "a".repeat(64),
             protocolVersion: 1,
@@ -382,7 +382,7 @@ describe("injected Codex provider block", () => {
   });
 
   test("enabling the loopback listener drops the header", () => {
-    // The directly-spawned app-server has no OPENCODEX_API_AUTH_TOKEN, so emitting the header
+    // The directly-spawned app-server has no OPENCCX_API_AUTH_TOKEN, so emitting the header
     // would make Codex send an empty value rather than authenticate.
     expect(shouldInjectApiAuthHeader({
       hostname: "0.0.0.0",

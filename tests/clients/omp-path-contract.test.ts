@@ -6,7 +6,7 @@ import { ompModelsConfigPath } from "../../src/clients/config-export";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 function withTempHome(run: (home: string) => void): void {
-  const home = mkdtempSync(join(tmpdir(), "opencodex-omp-home-"));
+  const home = mkdtempSync(join(tmpdir(), "openccx-omp-home-"));
   try {
     run(home);
   } finally {

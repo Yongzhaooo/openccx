@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { createCursorRequest } from "../../../src/adapters/cursor/request-builder";
-import type { OcxParsedRequest } from "../../../src/types/request";
+import type { OccxParsedRequest } from "../../../src/types/request";
 
-function parsedRequest(overrides: Partial<OcxParsedRequest> = {}): OcxParsedRequest {
+function parsedRequest(overrides: Partial<OccxParsedRequest> = {}): OccxParsedRequest {
   return {
     modelId: "cursor/grok-4.6",
     context: {
@@ -12,7 +12,7 @@ function parsedRequest(overrides: Partial<OcxParsedRequest> = {}): OcxParsedRequ
     },
     options: {},
     ...overrides,
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 const CALLER_TOOL = {
@@ -28,19 +28,19 @@ describe("cursor default-catalog suppression (preamble floor)", () => {
   });
 
   test("_clientThreadId identity keeps the default catalog (flag unset)", () => {
-    const request = createCursorRequest(parsedRequest({ _clientThreadId: "thread-1" } as Partial<OcxParsedRequest>));
+    const request = createCursorRequest(parsedRequest({ _clientThreadId: "thread-1" } as Partial<OccxParsedRequest>));
     expect(request.suppressDefaultCursorToolCatalog).toBeUndefined();
   });
 
   test("_cursorClientThreadId identity keeps the default catalog (flag unset)", () => {
-    const request = createCursorRequest(parsedRequest({ _cursorClientThreadId: "app:x" } as Partial<OcxParsedRequest>));
+    const request = createCursorRequest(parsedRequest({ _cursorClientThreadId: "app:x" } as Partial<OccxParsedRequest>));
     expect(request.suppressDefaultCursorToolCatalog).toBeUndefined();
   });
 
   test("caller-supplied tools never set the flag", () => {
     const request = createCursorRequest(parsedRequest({
       context: { systemPrompt: [], messages: [{ role: "user", content: "hi" }], tools: [CALLER_TOOL] },
-    } as Partial<OcxParsedRequest>));
+    } as Partial<OccxParsedRequest>));
     expect(request.suppressDefaultCursorToolCatalog).toBeUndefined();
     expect(request.tools?.length).toBe(1);
   });

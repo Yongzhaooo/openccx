@@ -35,7 +35,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) removeTreeWithRetry(root);
 });
 
-function configDir(prefix = "ocx-cl10-community-"): string {
+function configDir(prefix = "occx-cl10-community-"): string {
   const root = mkdtempSync(join(tmpdir(), prefix));
   roots.push(root);
   return root;
@@ -56,7 +56,7 @@ function protocolObservation(scenarioId = "responses-core.protocol.request-shape
   const subject: ProtocolSubjectV1 = {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: "2.13.0",
+    openccxCompatibilityVersion: "2.13.0",
     effectiveAdapter: "openai-chat",
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-chat",
@@ -132,8 +132,8 @@ function signedUnreviewedScenarioBundle(config: string) {
 
 describe("CL-10 community quarantine", () => {
   test("imports valid signed evidence without touching canonical Lab authority", () => {
-    const publisherDir = configDir("ocx-cl10-publisher-");
-    const consumerDir = configDir("ocx-cl10-consumer-");
+    const publisherDir = configDir("occx-cl10-publisher-");
+    const consumerDir = configDir("occx-cl10-consumer-");
     const bundle = signedBundle(publisherDir);
     const imported = importCommunityEvidenceBundle(bundle, consumerDir);
     expect(imported).toMatchObject({ created: true, status: "cryptographically_valid", bundleId: bundle.bundleId });
@@ -149,16 +149,16 @@ describe("CL-10 community quarantine", () => {
   });
 
   test("rejects cryptographically valid but unknown scenario authority", () => {
-    const publisherDir = configDir("ocx-cl10-publisher-");
-    const consumerDir = configDir("ocx-cl10-consumer-");
+    const publisherDir = configDir("occx-cl10-publisher-");
+    const consumerDir = configDir("occx-cl10-consumer-");
     const bundle = signedUnreviewedScenarioBundle(publisherDir);
     expect(() => importCommunityEvidenceBundle(bundle, consumerDir)).toThrow(/authority/i);
     expect(listCommunityEvidence(consumerDir)).toEqual([]);
   });
 
   test("same-key revocation is verified, idempotent, and removes records from default community context", () => {
-    const publisherDir = configDir("ocx-cl10-publisher-");
-    const consumerDir = configDir("ocx-cl10-consumer-");
+    const publisherDir = configDir("occx-cl10-publisher-");
+    const consumerDir = configDir("occx-cl10-consumer-");
     const bundle = signedBundle(publisherDir);
     importCommunityEvidenceBundle(bundle, consumerDir);
 
@@ -176,9 +176,9 @@ describe("CL-10 community quarantine", () => {
   });
 
   test("rejects cross-key revocation and conflicting same-id stored bytes", () => {
-    const publisherDir = configDir("ocx-cl10-publisher-");
-    const otherDir = configDir("ocx-cl10-other-");
-    const consumerDir = configDir("ocx-cl10-consumer-");
+    const publisherDir = configDir("occx-cl10-publisher-");
+    const otherDir = configDir("occx-cl10-other-");
+    const consumerDir = configDir("occx-cl10-consumer-");
     const bundle = signedBundle(publisherDir);
     importCommunityEvidenceBundle(bundle, consumerDir);
     expect(() => createPublicEvidenceRevocation({
@@ -202,8 +202,8 @@ describe("CL-10 community quarantine", () => {
   });
 
   test("sensitive export purge removes local exports and local community copies but preserves third-party bundles", () => {
-    const consumerDir = configDir("ocx-cl10-consumer-");
-    const thirdPartyDir = configDir("ocx-cl10-third-party-");
+    const consumerDir = configDir("occx-cl10-consumer-");
+    const thirdPartyDir = configDir("occx-cl10-third-party-");
     const localBundle = signedBundle(consumerDir);
     const localStored = writePublicEvidenceBundle(localBundle, consumerDir);
     importCommunityEvidenceBundle(localBundle, consumerDir);

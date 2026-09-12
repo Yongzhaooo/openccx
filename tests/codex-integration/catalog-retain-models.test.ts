@@ -6,8 +6,8 @@ import {
 import { gatherRoutedModels as gatherRoutedModelsDirect, resetCatalogRuntimeStateForTests } from "../../src/codex/catalog";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
-import type { OcxConfig } from "../../src/types";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 const originalFetch = globalThis.fetch;
 
@@ -24,7 +24,7 @@ function stubLiveModels(ids: string[]): void {
   }) as typeof fetch;
 }
 
-function discoveryConfig(prov: Partial<OcxProviderConfig>): OcxConfig {
+function discoveryConfig(prov: Partial<OccxProviderConfig>): OccxConfig {
   return withStubbedProviderFetch({
     port: 10100,
     defaultProvider: "demo",
@@ -37,10 +37,10 @@ function discoveryConfig(prov: Partial<OcxProviderConfig>): OcxConfig {
         ...prov,
       },
     },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
 }
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",

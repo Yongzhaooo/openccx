@@ -10,15 +10,15 @@ import {
   resetCodexModelEntitlementCacheForTests,
   seedCodexModelEntitlementsForTests,
 } from "../../../src/codex/model-entitlements";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
-const baseConfig = { port: 10100, defaultProvider: "openai", providers: {} } as unknown as OcxConfig;
+const baseConfig = { port: 10100, defaultProvider: "openai", providers: {} } as unknown as OccxConfig;
 
 afterEach(() => resetCodexModelEntitlementCacheForTests());
 
 function tempGrokHome(): { root: string; grokHome: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-grok-sync-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-grok-sync-"));
   const grokHome = join(root, ".grok");
   mkdirSync(grokHome);
   return { root, grokHome };
@@ -38,8 +38,8 @@ describe("syncGrokConfig", () => {
       expect(result).toMatchObject({ ok: true, changed: true });
       const content = readFileSync(join(grokHome, "config.toml"), "utf8");
       // Native slugs come from visibleNativeSlugs(config) — at least one gpt native present.
-      expect(content).toContain("[model.ocx-gpt-");
-      expect(content).toContain("[model.ocx-cursor-grok-4-5]");
+      expect(content).toContain("[model.occx-gpt-");
+      expect(content).toContain("[model.occx-cursor-grok-4-5]");
       expect(content).toContain("context_window = 500000");
       expect(content).toContain('base_url = "http://127.0.0.1:10190/v1"');
     } finally {
@@ -53,18 +53,18 @@ describe("syncGrokConfig", () => {
       const config = {
         ...baseConfig,
         providers: { stub: { selectedModels: ["visible"] } },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
       const catalog = [
         { id: "visible", provider: "stub" } as CatalogModel,
         { id: "hidden", provider: "stub" } as CatalogModel,
       ];
       writeFileSync(join(grokHome, "config.toml"), [
-        "[model.ocx-stub-hidden]",
+        "[model.occx-stub-hidden]",
         'model = "stub/hidden"',
         'base_url = "http://127.0.0.1:10100/v1"',
         'api_backend = "responses"',
-        'api_key = "opencodex-loopback"',
-        'extra_headers = { "x-opencodex-grok" = "1" }',
+        'api_key = "openccx-loopback"',
+        'extra_headers = { "x-openccx-grok" = "1" }',
         "",
       ].join("\n"));
 
@@ -75,7 +75,7 @@ describe("syncGrokConfig", () => {
       expect(result).toMatchObject({ ok: true, changed: true });
       const content = readFileSync(join(grokHome, "config.toml"), "utf8");
       expect(content).toContain('model = "stub/visible"');
-      expect(content).not.toContain("[model.ocx-stub-hidden]");
+      expect(content).not.toContain("[model.occx-stub-hidden]");
       expect(content).not.toContain('model = "stub/hidden"');
     } finally {
       removeTreeWithRetry(root);
@@ -94,14 +94,14 @@ describe("syncGrokConfig", () => {
             disabled: true,
           },
         },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
       writeFileSync(join(grokHome, "config.toml"), [
-        "[model.ocx-disabled-provider-legacy]",
+        "[model.occx-disabled-provider-legacy]",
         'model = "disabled-provider/legacy"',
         'base_url = "http://127.0.0.1:10100/v1"',
         'api_backend = "responses"',
-        'api_key = "opencodex-loopback"',
-        'extra_headers = { "x-opencodex-grok" = "1" }',
+        'api_key = "openccx-loopback"',
+        'extra_headers = { "x-openccx-grok" = "1" }',
         "",
       ].join("\n"));
 
@@ -111,7 +111,7 @@ describe("syncGrokConfig", () => {
       });
       expect(result).toMatchObject({ ok: true, changed: true });
       const content = readFileSync(join(grokHome, "config.toml"), "utf8");
-      expect(content).not.toContain("[model.ocx-disabled-provider-legacy]");
+      expect(content).not.toContain("[model.occx-disabled-provider-legacy]");
       expect(content).not.toContain('model = "disabled-provider/legacy"');
     } finally {
       removeTreeWithRetry(root);
@@ -136,14 +136,14 @@ describe("syncGrokConfig", () => {
             targets: [{ provider: "other", model: "m1" }],
           },
         },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
       const manual = [
-        "[model.ocx-disabled-provider-legacy]",
+        "[model.occx-disabled-provider-legacy]",
         'model = "disabled-provider/legacy"',
         'base_url = "http://127.0.0.1:10100/v1"',
         'api_backend = "responses"',
-        'api_key = "opencodex-loopback"',
-        'extra_headers = { "x-opencodex-grok" = "1" }',
+        'api_key = "openccx-loopback"',
+        'extra_headers = { "x-openccx-grok" = "1" }',
         "",
       ].join("\n");
       writeFileSync(join(grokHome, "config.toml"), manual);
@@ -165,7 +165,7 @@ describe("syncGrokConfig", () => {
     let catalogModelIds: ReadonlySet<string> | undefined;
     const result = await syncGrokConfig(
       10190,
-      { ...baseConfig, disabledModels: [hiddenNative] } as OcxConfig,
+      { ...baseConfig, disabledModels: [hiddenNative] } as OccxConfig,
       {},
       {
         fetchAllModels: async () => [],
@@ -196,7 +196,7 @@ describe("syncGrokConfig", () => {
       expect(result).toMatchObject({ ok: true, changed: true });
       const content = readFileSync(join(grokHome, "config.toml"), "utf8");
 
-      const solBlock = content.slice(content.indexOf("[model.ocx-gpt-5-6-sol]"));
+      const solBlock = content.slice(content.indexOf("[model.occx-gpt-5-6-sol]"));
       expect(solBlock).toContain(`context_window = ${nativeOpenAiContextWindow("gpt-5.6-sol")}`);
       expect(nativeOpenAiContextWindow("gpt-5.6-sol")).toBe(272_000);
 
@@ -204,7 +204,7 @@ describe("syncGrokConfig", () => {
       // none recorded, and inject.ts deliberately omits the line rather than writing a
       // placeholder — asserting "every block has one" would encode a bug as a requirement.
       const windowBySlug = visibleNativeSlugs(baseConfig).map(slug => {
-        const header = `[model.ocx-${slug.replace(/\./g, "-")}]`;
+        const header = `[model.occx-${slug.replace(/\./g, "-")}]`;
         const start = content.indexOf(header);
         if (start < 0) return `${slug}: MISSING BLOCK`;
         const rest = content.slice(start + header.length);
@@ -256,7 +256,7 @@ describe("syncGrokConfig", () => {
         runtimeRole: "hub",
         hostname: "100.64.0.10",
         unauthenticatedLoopbackListener: { enabled: true, port: 10102 },
-      } as OcxConfig;
+      } as OccxConfig;
       const result = await syncGrokConfig(10100, config, {
         grokHome,
         hostname: "100.64.0.10",
@@ -282,9 +282,9 @@ describe("syncGrokConfig", () => {
         runtimeRole: "hub",
         hostname: "100.64.0.10",
         // No port: the listener shares the proxy port on 127.0.0.1, so the fence grok writes is
-        // the same origin `ocx claude` and Claude Desktop hardcode.
+        // the same origin `occx claude` and Claude Desktop hardcode.
         unauthenticatedLoopbackListener: { enabled: true },
-      } as OcxConfig;
+      } as OccxConfig;
       const result = await syncGrokConfig(10100, config, {
         grokHome,
         hostname: "100.64.0.10",
@@ -331,9 +331,9 @@ describe("syncGrokConfig", () => {
         fetchAllModels: async () => [{ id: "new", provider: "p" } as CatalogModel],
       });
       const content = readFileSync(join(grokHome, "config.toml"), "utf8");
-      expect(content.match(/>>> opencodex managed block/g) ?? []).toHaveLength(1);
-      expect(content).not.toContain("[model.ocx-p-old]");
-      expect(content).toContain("[model.ocx-p-new]");
+      expect(content.match(/>>> openccx managed block/g) ?? []).toHaveLength(1);
+      expect(content).not.toContain("[model.occx-p-old]");
+      expect(content).toContain("[model.occx-p-new]");
     } finally {
       removeTreeWithRetry(root);
     }

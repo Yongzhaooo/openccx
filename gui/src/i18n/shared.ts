@@ -15,7 +15,7 @@ export const LOCALES: { code: Locale; htmlLang: string }[] = [
   { code: "tr", htmlLang: "tr" },
 ];
 
-const LANG_KEY = "ocx-lang";
+const LANG_KEY = "occx-lang";
 
 let activeLocale: Locale | null = null;
 

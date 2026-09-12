@@ -21,22 +21,22 @@ catalog refreshes, and runtime side effects.
 - 검토한 주요 대안: Duplicate all route validation in CLI modules; expose a generic raw HTTP command; use a shared management client and resource-oriented commands.
 - 선택한 방식: Add a shared identity-checked runtime API client and resource-oriented commands (`provider`, `account`, `models`, `combo`, `agent`, `observe`, `access`, `grok`, `system`, `config`). Existing commands and aliases remain compatible.
 - 다른 대안 대신 이 방식을 선택한 이유: Reusing management routes keeps GUI and CLI validation, persistence, cache refresh, and live side effects aligned. Resource commands remain easier to discover than arbitrary endpoint invocation.
-- 장점, 단점 및 영향: Headless parity improves and future operations share consistent errors. Live management commands require a running proxy; offline config inspection/import remains available through a separately validated `ocx config` path.
+- 장점, 단점 및 영향: Headless parity improves and future operations share consistent errors. Live management commands require a running proxy; offline config inspection/import remains available through a separately validated `occx config` path.
 
 ## Command structure
 
 ```text
-ocx setup                  interactive first-run flow (`init` remains an alias)
-ocx provider ...           provider config, test, quota, selected models
-ocx account ...            Codex/OAuth/key-pool login and lifecycle
-ocx models ...             live/custom models, visibility, context, shadow calls
-ocx route combo ...        failover and round-robin virtual models
-ocx agent ...              subagents, fallback, injection, effort, sidecars
-ocx observe ...            logs, usage, storage, memory, debug captures
-ocx access ...             external API keys, endpoints, model tests
-ocx integration ...        Claude and Grok client integrations
-ocx system ...             settings, startup, diagnostics, sync, update jobs
-ocx config ...             masked inspection and validated offline import/edit
+occx setup                  interactive first-run flow (`init` remains an alias)
+occx provider ...           provider config, test, quota, selected models
+occx account ...            Codex/OAuth/key-pool login and lifecycle
+occx models ...             live/custom models, visibility, context, shadow calls
+occx route combo ...        failover and round-robin virtual models
+occx agent ...              subagents, fallback, injection, effort, sidecars
+occx observe ...            logs, usage, storage, memory, debug captures
+occx access ...             external API keys, endpoints, model tests
+occx integration ...        Claude and Grok client integrations
+occx system ...             settings, startup, diagnostics, sync, update jobs
+occx config ...             masked inspection and validated offline import/edit
 ```
 
 Convenience aliases (`model`, `combo`, `logs`, `usage`, `storage`, `memory`,
@@ -50,7 +50,7 @@ uses `--json`; streaming request logs use `--jsonl`.
 - Cloudflare Tunnel is intentionally outside this ADR and this implementation.
 - Secrets are masked in config/account/provider reads. API admission-key creation is the
   deliberate exception: the newly generated key is returned once so it can be stored.
-- Live mutations go through the running management API. `ocx config import/set` validates
+- Live mutations go through the running management API. `occx config import/set` validates
   the complete candidate before an atomic write and never hot-reloads a stopped process.
 
 ## Consequences

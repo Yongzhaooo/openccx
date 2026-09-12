@@ -5,20 +5,20 @@ import { join } from "node:path";
 import { getConfigPath, loadConfig, saveConfig } from "../../src/config";
 import { handleManagementAPI, type ManagementApiDeps } from "../../src/server/management-api";
 import { invalidateStartupHealthCache } from "../../src/server/startup-health-cache";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { startupHealthFixture } from "../helpers/startup-health";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let home: string;
 let previousHome: string | undefined;
 let previousCodexHome: string | undefined;
-const config = (): OcxConfig => ({
+const config = (): OccxConfig => ({
   port: 10100,
   defaultProvider: "example",
   providers: { example: { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "fixture" } },
 });
 
-function request(cfg: OcxConfig, body?: unknown, overrides: Partial<ManagementApiDeps> = {}) {
+function request(cfg: OccxConfig, body?: unknown, overrides: Partial<ManagementApiDeps> = {}) {
   const req = new Request("http://127.0.0.1:10100/api/settings", {
     method: body === undefined ? "GET" : "PUT",
     headers: { host: "127.0.0.1:10100", "content-type": "application/json" },
@@ -31,18 +31,18 @@ function request(cfg: OcxConfig, body?: unknown, overrides: Partial<ManagementAp
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-hard-lock-settings-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-hard-lock-settings-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   invalidateStartupHealthCache();
 });
 
 afterEach(() => {
   invalidateStartupHealthCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(home);

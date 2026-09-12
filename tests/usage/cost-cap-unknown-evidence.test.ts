@@ -31,7 +31,7 @@ import { evaluatePolicyProfile } from "../../src/routing/evaluator";
 import { normalizeRouteDecisionTrace } from "../../src/routing/trace";
 import { NoEligiblePolicyCandidateError, routeModel } from "../../src/router";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -39,14 +39,14 @@ let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-cost-cap-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-cost-cap-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (!testDir) return;
   try {
     removeTreeWithRetry(testDir);
@@ -56,7 +56,7 @@ afterEach(() => {
 });
 
 /** Mirrors the live routing path: a cap is configured, usage is NOT available. */
-function configWithCap(capUsd: number, overrides: Record<string, unknown> = {}): OcxConfig {
+function configWithCap(capUsd: number, overrides: Record<string, unknown> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "anthropic",
@@ -77,7 +77,7 @@ function configWithCap(capUsd: number, overrides: Record<string, unknown> = {}):
         ...overrides,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function livePathEvidence(capUsd: number) {
@@ -188,7 +188,7 @@ describe("issue #1181 — hard cost cap under unknown evidence", () => {
           unknownEvidence: { capability: "allow", health: "allow", quota: "allow", cost: "allow" },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const result = evaluatePolicyProfile(noCap, "cost", {}, [
       { provider: "anthropic", model: "claude-opus-5", capability: { contextWindow: 200000 }, cost: evidence },

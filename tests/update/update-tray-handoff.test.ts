@@ -53,7 +53,7 @@ describe("Windows tray update handoff contract", () => {
 
   test("all three updater lanes consume the same tested plan", () => {
     const root = repoRoot();
-    for (const path of ["src/update/index.ts", "src/update/job.ts", "bin/ocx.mjs"]) {
+    for (const path of ["src/update/index.ts", "src/update/job.ts", "bin/occx.mjs"]) {
       const source = readFileSync(join(root, path), "utf8");
       expect(source).toContain("planWindowsTrayUpdate");
       expect(source).toContain("handoffWindowsTrayForUpdate");

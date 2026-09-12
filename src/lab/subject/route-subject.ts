@@ -37,8 +37,8 @@ export function buildRouteSubjectV1(
   installationSalt?: Uint8Array | string,
 ): RouteSubjectV1 {
   if (!routeContext.providerInstanceKey) throw new Error("harness_failure: provider instance identity is required");
-  if (!/^[0-9a-f]{64}$/.test(routeContext.opencodexCompatibilityVersion)) {
-    throw new Error("harness_failure: invalid opencodexCompatibilityVersion");
+  if (!/^[0-9a-f]{64}$/.test(routeContext.openccxCompatibilityVersion)) {
+    throw new Error("harness_failure: invalid openccxCompatibilityVersion");
   }
   const adapterValue = routeContext.behaviorValues["wire.adapter"]?.value;
   const protocolValue = routeContext.behaviorValues["wire.upstreamProtocol"]?.value;
@@ -59,7 +59,7 @@ export function buildRouteSubjectV1(
     inboundProtocol: routeContext.inboundProtocol,
     upstreamProtocol: routeContext.upstreamProtocol,
     surface: routeContext.surface,
-    opencodexCompatibilityVersion: routeContext.opencodexCompatibilityVersion,
+    openccxCompatibilityVersion: routeContext.openccxCompatibilityVersion,
     behaviorFingerprint: buildBehaviorFingerprintV1(routeContext.behaviorValues),
     endpointFingerprint: destination.fingerprint,
     dependencies,

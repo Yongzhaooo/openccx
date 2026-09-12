@@ -40,8 +40,8 @@ import { STORE_BUDGET_MS } from "../helpers/test-budget";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-doctor-test");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
-const TEST_OPENCODEX_HOME = join(TEST_DIR, "opencodex");
-let prevOpencodexHome: string | undefined;
+const TEST_OPENCCX_HOME = join(TEST_DIR, "openccx");
+let prevOpenccxHome: string | undefined;
 let prevCodexHome: string | undefined;
 let prevHttpsProxy: string | undefined;
 let prevLowerHttpsProxy: string | undefined;
@@ -50,47 +50,47 @@ let prevAdminToken: string | undefined;
 
 describe("doctor", () => {
   beforeEach(() => {
-    prevOpencodexHome = process.env.OPENCODEX_HOME;
+    prevOpenccxHome = process.env.OPENCCX_HOME;
     prevCodexHome = process.env.CODEX_HOME;
     prevHttpsProxy = process.env.HTTPS_PROXY;
     prevLowerHttpsProxy = process.env.https_proxy;
-    prevProxyRef = process.env.OCX_TEST_PROXY_REF;
-    prevAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    prevProxyRef = process.env.OCCX_TEST_PROXY_REF;
+    prevAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_CODEX_HOME, { recursive: true });
-    mkdirSync(TEST_OPENCODEX_HOME, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_OPENCODEX_HOME;
+    mkdirSync(TEST_OPENCCX_HOME, { recursive: true });
+    process.env.OPENCCX_HOME = TEST_OPENCCX_HOME;
     process.env.CODEX_HOME = TEST_CODEX_HOME;
     delete process.env.HTTPS_PROXY;
     delete process.env.https_proxy;
-    delete process.env.OCX_TEST_PROXY_REF;
+    delete process.env.OCCX_TEST_PROXY_REF;
   });
 
   afterEach(() => {
-    if (prevOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prevOpencodexHome;
+    if (prevOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prevOpenccxHome;
     if (prevCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = prevCodexHome;
     if (prevHttpsProxy === undefined) delete process.env.HTTPS_PROXY;
     else process.env.HTTPS_PROXY = prevHttpsProxy;
     if (prevLowerHttpsProxy === undefined) delete process.env.https_proxy;
     else process.env.https_proxy = prevLowerHttpsProxy;
-    if (prevProxyRef === undefined) delete process.env.OCX_TEST_PROXY_REF;
-    else process.env.OCX_TEST_PROXY_REF = prevProxyRef;
-    if (prevAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-    else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = prevAdminToken;
+    if (prevProxyRef === undefined) delete process.env.OCCX_TEST_PROXY_REF;
+    else process.env.OCCX_TEST_PROXY_REF = prevProxyRef;
+    if (prevAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+    else process.env.OPENCCX_ADMIN_AUTH_TOKEN = prevAdminToken;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 
   test("path report flips auth.json/config.json from absent to present", () => {
     let rows = collectPaths();
     const auth = () => rows.find(r => r.label === "CODEX_HOME/auth.json")!;
-    const cfg = () => rows.find(r => r.label === "OPENCODEX_HOME/config.json")!;
+    const cfg = () => rows.find(r => r.label === "OPENCCX_HOME/config.json")!;
     expect(auth().exists).toBe(false);
     expect(cfg().exists).toBe(false);
 
     writeFileSync(join(TEST_CODEX_HOME, "auth.json"), "{}");
-    writeFileSync(join(TEST_OPENCODEX_HOME, "config.json"), "{}");
+    writeFileSync(join(TEST_OPENCCX_HOME, "config.json"), "{}");
     rows = collectPaths();
     expect(auth().exists).toBe(true);
     expect(cfg().exists).toBe(true);
@@ -111,11 +111,11 @@ describe("doctor", () => {
       appCodexHome: appHome,
     });
     expect(mismatch.mismatch).toBe(true);
-    expect(mismatch.warning).toContain("OpenCodex injection will not reach that app");
+    expect(mismatch.warning).toContain("Openccx injection will not reach that app");
     expect(mismatch.effectiveCodexHome).toContain("C:\\Users\\[USER]\\");
     expect(mismatch.effectiveCodexHome).not.toContain("alice");
-    expect(mismatch.action).toContain("ocx service uninstall");
-    expect(mismatch.action).toContain("ocx service install");
+    expect(mismatch.action).toContain("occx service uninstall");
+    expect(mismatch.action).toContain("occx service install");
     expect(mismatch.action).toContain("%USERPROFILE%\\.codex");
     expect(mismatch.action).toContain("Remove-Item Env:ORCA_CODEX_HOME");
     expect(mismatch.action).toContain("SilentlyContinue; $env:CODEX_HOME");
@@ -144,7 +144,7 @@ describe("doctor", () => {
     const usersRoot = join(TEST_DIR, "mnt-c", "Users");
     const windowsCodexHome = join(usersRoot, "example", ".codex");
     mkdirSync(windowsCodexHome, { recursive: true });
-    writeFileSync(join(windowsCodexHome, "config.toml"), "model_provider = \"opencodex\"\n");
+    writeFileSync(join(windowsCodexHome, "config.toml"), "model_provider = \"openccx\"\n");
 
     expect(resolveCodexHomeDir({
       env: { WSL_DISTRO_NAME: "Ubuntu" },
@@ -327,14 +327,14 @@ describe("doctor", () => {
   });
 
   test("collectConfiguredProxy reports effective config proxy without leaking values", () => {
-    writeFileSync(join(TEST_OPENCODEX_HOME, "config.json"), JSON.stringify({ proxy: "${OCX_TEST_PROXY_REF}" }));
+    writeFileSync(join(TEST_OPENCCX_HOME, "config.json"), JSON.stringify({ proxy: "${OCCX_TEST_PROXY_REF}" }));
 
     let diagnostic = collectConfiguredProxy();
     expect(diagnostic.configured).toBe(true);
     expect(diagnostic.present).toBe(false);
-    expect(diagnostic.detail).toContain("OCX_TEST_PROXY_REF");
+    expect(diagnostic.detail).toContain("OCCX_TEST_PROXY_REF");
 
-    process.env.OCX_TEST_PROXY_REF = "http://user:secret@proxy.example.test:8080";
+    process.env.OCCX_TEST_PROXY_REF = "http://user:secret@proxy.example.test:8080";
     diagnostic = collectConfiguredProxy();
     expect(diagnostic.configured).toBe(true);
     expect(diagnostic.present).toBe(true);
@@ -342,7 +342,7 @@ describe("doctor", () => {
   });
 
   test("collectConfiguredProxy diagnoses an inherited env reference instead of throwing", () => {
-    writeFileSync(join(TEST_OPENCODEX_HOME, "config.json"), JSON.stringify({ proxy: "$toString" }));
+    writeFileSync(join(TEST_OPENCCX_HOME, "config.json"), JSON.stringify({ proxy: "$toString" }));
 
     expect(collectConfiguredProxy()).toEqual({
       key: "config.proxy",
@@ -437,7 +437,7 @@ describe("service memory section (#314 WP4)", () => {
   };
 
   test("fetchServiceMemory: ok / unauthorized / unreachable / malformed", async () => {
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "admin-token-must-not-leave-doctor";
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "admin-token-must-not-leave-doctor";
     const target = { hostname: "127.0.0.1", port: 10100, pid: 4242, source: "runtime" } as const;
     const attestationSecret = "A".repeat(43);
     const nonce = "B".repeat(43);
@@ -452,7 +452,7 @@ describe("service memory section (#314 WP4)", () => {
       fetchImpl: (async (_input, init) => {
         const headers = new Headers(init?.headers);
         expect(headers.get("authorization")).toBeNull();
-        expect(headers.get("x-opencodex-api-key")).toBeNull();
+        expect(headers.get("x-openccx-api-key")).toBeNull();
         expect(headers.get(LOCAL_MANAGEMENT_EXPECTED_PID_HEADER)).toBe("4242");
         expect(verifyLocalManagementReadCapability(
           attestationSecret,
@@ -538,7 +538,7 @@ describe("service memory section (#314 WP4)", () => {
       data: { ...baseData, heapUsed: 4 * 1024 ** 3, jscHeap: { heapSize: 4 * 1024 ** 3 } },
     });
     expect(lines.some(l => l.includes("possible JS-side retention"))).toBe(true);
-    expect(lines.some(l => l.includes("likely an opencodex bug"))).toBe(false);
+    expect(lines.some(l => l.includes("likely an openccx bug"))).toBe(false);
   });
 
   test("interpretation: all observed counters below threshold → normal line", () => {
@@ -566,21 +566,21 @@ describe("service memory section (#314 WP4)", () => {
   });
 
   test("guidance gating: win32 + auto-known-bad prints version-claiming guidance", () => {
-    // A bundled runtime is the case where "set OPENCODEX_BUN_PATH" is still the right advice.
+    // A bundled runtime is the case where "set OPENCCX_BUN_PATH" is still the right advice.
     const lines = formatServiceMemoryLines({ status: "ok", data: { ...baseData, bunRuntimeSource: "bundled" } });
-    expect(lines.some(l => l.includes("OPENCODEX_BUN_PATH"))).toBe(true);
+    expect(lines.some(l => l.includes("OPENCCX_BUN_PATH"))).toBe(true);
     // Version-claiming, never binary-claiming.
     expect(lines.join("\n")).not.toContain("bundled binary");
   });
 
-  test("guidance gating: an active override is never told to set OPENCODEX_BUN_PATH again (#848)", () => {
+  test("guidance gating: an active override is never told to set OPENCCX_BUN_PATH again (#848)", () => {
     const lines = formatServiceMemoryLines({
       status: "ok",
       data: { ...baseData, bunRuntimeSource: "override" },
     });
     const text = lines.join("\n");
-    expect(text).toContain("OPENCODEX_BUN_PATH is already active");
-    expect(text).not.toContain("set OPENCODEX_BUN_PATH to a runtime you trust");
+    expect(text).toContain("OPENCCX_BUN_PATH is already active");
+    expect(text).not.toContain("set OPENCCX_BUN_PATH to a runtime you trust");
     // The affected-version warning itself must survive; only the remedy changes.
     expect(text).toContain("affected by the upstream Bun memory issue");
   });
@@ -589,7 +589,7 @@ describe("service memory section (#314 WP4)", () => {
     const { bunRuntimeSource: _omitted, ...legacy } = { ...baseData, bunRuntimeSource: undefined };
     const text = formatServiceMemoryLines({ status: "ok", data: legacy as ServiceMemoryData }).join("\n");
     expect(text).toContain("records no runtime origin");
-    expect(text).not.toContain("set OPENCODEX_BUN_PATH to a runtime you trust");
+    expect(text).not.toContain("set OPENCCX_BUN_PATH to a runtime you trust");
   });
 
   test("guidance gating: a process-provenance runtime is not described as bundled", () => {
@@ -598,7 +598,7 @@ describe("service memory section (#314 WP4)", () => {
       data: { ...baseData, bunRuntimeSource: "process" },
     }).join("\n");
     expect(text).toContain("the runtime that launched it");
-    expect(text).toContain("set OPENCODEX_BUN_PATH to a runtime you trust");
+    expect(text).toContain("set OPENCCX_BUN_PATH to a runtime you trust");
   });
 
   test("guidance gating: darwin auto-off or fixed Windows runtime prints no override guidance", () => {
@@ -610,13 +610,13 @@ describe("service memory section (#314 WP4)", () => {
         eagerRelay: { useEagerRelay: false, reason: "auto-known-bad" },
       },
     });
-    expect(darwin.some(l => l.includes("OPENCODEX_BUN_PATH"))).toBe(false);
+    expect(darwin.some(l => l.includes("OPENCCX_BUN_PATH"))).toBe(false);
 
     const fixedRuntime = formatServiceMemoryLines({
       status: "ok",
       data: { ...baseData, eagerRelay: { useEagerRelay: true, reason: "auto-fixed-runtime" } },
     });
-    expect(fixedRuntime.some(l => l.includes("OPENCODEX_BUN_PATH"))).toBe(false);
+    expect(fixedRuntime.some(l => l.includes("OPENCCX_BUN_PATH"))).toBe(false);
   });
 
   test("unauthorized and unreachable render honest lines without fake data", () => {
@@ -638,8 +638,8 @@ describe("service memory section (#314 WP4)", () => {
     const hint = proxyDownRestartHint({ proxyRunning: false, port: 10100, serviceViable: false });
     expect(hint).toContain("error sending request for url");
     expect(hint).toContain("127.0.0.1:10100");
-    expect(hint).toContain("ocx start");
-    expect(hint).toContain("ocx service install");
+    expect(hint).toContain("occx start");
+    expect(hint).toContain("occx service install");
   });
 
   test("ChatGPT public endpoint hint explains channel latency without claiming a fixed delay", () => {
@@ -678,11 +678,11 @@ describe("service memory section (#314 WP4)", () => {
     expect(chatgptPublicEndpointHint({ openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "   " } })).not.toBeNull();
   });
 
-  test("proxyDownRestartHint prefers 'ocx service start' when a service is installed", () => {
+  test("proxyDownRestartHint prefers 'occx service start' when a service is installed", () => {
     const hint = proxyDownRestartHint({ proxyRunning: false, port: 12000, serviceViable: true });
-    expect(hint).toContain("ocx service start");
+    expect(hint).toContain("occx service start");
     expect(hint).toContain("127.0.0.1:12000");
-    expect(hint).not.toContain("ocx service install");
+    expect(hint).not.toContain("occx service install");
   });
 
   // 260804 #970 follow-up: serviceViable=false conflates "no service" with "registered
@@ -690,15 +690,15 @@ describe("service memory section (#314 WP4)", () => {
   // costs a UAC prompt on Windows and can switch a WinSW backend to Task Scheduler.
   test("an installed but unhealthy service is pointed at repair, not install", () => {
     const broken = proxyDownRestartHint({ proxyRunning: false, port: 10100, serviceViable: false, serviceInstalled: true });
-    expect(broken).toContain("ocx service repair");
-    expect(broken).not.toContain("ocx service install");
+    expect(broken).toContain("occx service repair");
+    expect(broken).not.toContain("occx service install");
 
     const absent = proxyDownRestartHint({ proxyRunning: false, port: 10100, serviceViable: false, serviceInstalled: false });
-    expect(absent).toContain("ocx service install");
+    expect(absent).toContain("occx service install");
 
     // A two-manager conflict must be uninstalled first; repairService() refuses it.
     const conflict = proxyDownRestartHint({ proxyRunning: false, port: 10100, serviceViable: false, serviceInstalled: true, serviceConflict: true });
-    expect(conflict).toContain("ocx service install");
+    expect(conflict).toContain("occx service install");
   });
 
   // #1419: the records outliving the process is the only signal the user gets that a
@@ -713,7 +713,7 @@ describe("service memory section (#314 WP4)", () => {
       staleProcessState: true,
     });
     expect(crashed).toContain("may have exited unexpectedly");
-    expect(crashed).toContain("ocx service install");
+    expect(crashed).toContain("occx service install");
 
     // Absent or false must not invent a crash for a proxy that was never started.
     const neverStarted = proxyDownRestartHint({
@@ -750,7 +750,7 @@ describe("doctor abandoned response-state temps", () => {
     const lines = formatResponseTempLines(result({ matched: 9, eligible: 3, eligibleBytes: 72 * 1024 * 1024 }), false);
     expect(lines[0]).toContain("3 abandoned response-state temp file(s)");
     expect(lines[0]).toContain("72MB");
-    expect(lines.join("\n")).toContain("ocx doctor --reclaim-response-temps");
+    expect(lines.join("\n")).toContain("occx doctor --reclaim-response-temps");
   });
 
   test("reports eligible, never matched", () => {
@@ -824,8 +824,8 @@ describe("doctor abandoned response-state temps", () => {
 describe("doctor version skew projection", () => {
   test.each([
     ["2.42.0", "2.10.1-preview.20260805", "the running proxy is older"],
-    ["2.35.0", "2.36.1", "this ocx on PATH is older"],
-    ["2.43.0", "2.43.0", "ok ocx 2.43.0 matches the running proxy"],
+    ["2.35.0", "2.36.1", "this occx on PATH is older"],
+    ["2.43.0", "2.43.0", "ok occx 2.43.0 matches the running proxy"],
     ["2.43.0+a", "2.43.0+b", "neither can be identified as older"],
     ["v2.43.0", "2.43.0", "neither can be identified as older"],
     ["2.43.0", "unknown", null],
@@ -835,16 +835,16 @@ describe("doctor version skew projection", () => {
     ["unknown", "unknown", null],
     ["2.43.0", undefined, null],
   ] as const)("projects CLI %s / proxy %s without false matches", async (cli, proxy, expected) => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-doctor-skew-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-doctor-skew-"));
     const codexHome = join(home, "codex");
-    const previousHome = process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
     const previousCodexHome = process.env.CODEX_HOME;
     const previousExitCode = process.exitCode;
     const restore: Array<() => void> = [];
     try {
       // Runtime history diagnostics resolve and stat an explicit CODEX_HOME.
       mkdirSync(codexHome, { recursive: true });
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       process.env.CODEX_HOME = codexHome;
       writeFileSync(join(home, "config.json"), JSON.stringify({ ...getDefaultConfig(), port: 9, codexAutoStart: false }));
       const logged: string[] = [];
@@ -867,12 +867,12 @@ describe("doctor version skew projection", () => {
       if (cli !== "2.43.0" || proxy !== "2.43.0") expect(output).not.toContain("matches the running proxy");
       // A version skew leaves the service definition byte-identical, so `repair` would no-op over the
       // old process; the advice names `restart`, which kickstarts an unchanged job.
-      if (expected === "the running proxy is older") expect(output).toContain("ocx service restart");
+      if (expected === "the running proxy is older") expect(output).toContain("occx service restart");
     } finally {
       for (const cleanup of restore.reverse()) cleanup();
       process.exitCode = previousExitCode;
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = previousCodexHome;
       removeTreeWithRetry(home);
@@ -889,23 +889,23 @@ describe("doctor reclaim wiring (end to end)", () => {
   const realLog = console.log;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    tempHome = join(tmpdir(), `ocx-doctor-temps-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    previousHome = process.env.OPENCCX_HOME;
+    tempHome = join(tmpdir(), `occx-doctor-temps-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(tempHome, { recursive: true });
-    process.env.OPENCODEX_HOME = tempHome;
+    process.env.OPENCCX_HOME = tempHome;
     logged = [];
     console.log = (...parts: unknown[]) => { logged.push(parts.join(" ")); };
   });
   afterEach(() => {
     console.log = realLog;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(tempHome);
   });
 
   const seedStaleTemp = (): string => {
     const deadPid = findDeadPid();
-    const path = join(tempHome, `responses-state.json.ocx.${deadPid}.1.tmp`);
+    const path = join(tempHome, `responses-state.json.occx.${deadPid}.1.tmp`);
     writeFileSync(path, "abandoned snapshot");
     const old = new Date(Date.now() - 48 * 60 * 60 * 1_000);
     utimesSync(path, old, old);
@@ -937,7 +937,7 @@ describe("doctor reclaim wiring (end to end)", () => {
 /**
  * The wiring test, and the reason a helper-only assertion was rejected during plan
  * review: `proxyDownRestartHint` can accept `staleProcessState` and stay green while
- * `runDoctor` never passes it, leaving real `ocx doctor` output unchanged. This drives
+ * `runDoctor` never passes it, leaving real `occx doctor` output unchanged. This drives
  * the actual command against a home holding a dead owner record.
  */
 describe("doctor reports an unclean prior proxy exit", () => {
@@ -947,17 +947,17 @@ describe("doctor reports an unclean prior proxy exit", () => {
   const realLog = console.log;
 
   beforeEach(() => {
-    tempHome = mkdtempSync(join(tmpdir(), "ocx-doctor-unclean-"));
-    previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = tempHome;
+    tempHome = mkdtempSync(join(tmpdir(), "occx-doctor-unclean-"));
+    previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = tempHome;
     logged = [];
     console.log = (...args: unknown[]) => { logged.push(args.map(String).join(" ")); };
   });
 
   afterEach(() => {
     console.log = realLog;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(tempHome);
   });
 
@@ -981,7 +981,7 @@ describe("doctor reports an unclean prior proxy exit", () => {
   test("a dead owner record surfaces the unclean-exit diagnosis", async () => {
     seedConfig();
     const pid = deadPid();
-    writeFileSync(join(tempHome, "ocx.pid"), String(pid), "utf8");
+    writeFileSync(join(tempHome, "occx.pid"), String(pid), "utf8");
     writeFileSync(join(tempHome, "runtime-port.json"), JSON.stringify({ pid, port: 9, hostname: "127.0.0.1" }), "utf8");
 
     await runDoctor([]);

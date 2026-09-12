@@ -619,7 +619,7 @@ function AutoCleanupPolicyPanel({
   t: TFn;
   onDone: () => void;
 }) {
-  const cacheKey = `ocx.storage.cleanup-policy.v1:${apiBase}`;
+  const cacheKey = `occx.storage.cleanup-policy.v1:${apiBase}`;
   const cached = readSessionListCache<CachedCleanupPolicy>(cacheKey);
   const hasCacheRef = useRef(Boolean(cached));
   const [policy, setPolicy] = useState<CleanupPolicy | null>(() => cached?.policy ?? null);
@@ -1346,7 +1346,7 @@ function StorageCleanupCard({
 
 export default function Storage({ apiBase }: { apiBase: string }) {
   const { t, locale } = useI18n();
-  const storageCacheKey = `ocx.storage.report.v1:${apiBase}`;
+  const storageCacheKey = `occx.storage.report.v1:${apiBase}`;
   const cachedReport = readSessionListCache<StorageReport>(storageCacheKey);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
   const [trashReloadToken, setTrashReloadToken] = useState(0);

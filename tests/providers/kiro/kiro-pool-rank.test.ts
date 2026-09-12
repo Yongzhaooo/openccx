@@ -18,7 +18,7 @@ import {
   setActiveAccount,
 } from "../../../src/oauth/store";
 import { getValidAccessSnapshotForAccount } from "../../../src/oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 import {
   clearAccountQuotaCache,
   setCachedProviderAccountQuotaForTests,
@@ -141,10 +141,10 @@ describe("pre-dispatch account preference", () => {
     adapter: "openai-chat",
     baseUrl: "https://api.x.ai/v1",
     authMode: "oauth",
-  } as unknown as OcxProviderConfig;
+  } as unknown as OccxProviderConfig;
 
-  const config = { providers: { xai: OAUTH_PROVIDER }, oauthAccountFailover: { enabled: true } } as unknown as OcxConfig;
-  const originalHome = process.env.OPENCODEX_HOME;
+  const config = { providers: { xai: OAUTH_PROVIDER }, oauthAccountFailover: { enabled: true } } as unknown as OccxConfig;
+  const originalHome = process.env.OPENCCX_HOME;
   let home: string;
 
   async function seedAccounts(count: number, providerName = "xai"): Promise<string[]> {
@@ -160,8 +160,8 @@ describe("pre-dispatch account preference", () => {
   }
 
   test("an enabled pool avoids a known-exhausted selected account", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -173,15 +173,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("no quota evidence leaves the active account alone", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -193,15 +193,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("a single account is never redirected", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -211,15 +211,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("an account cooled by a recent 429 is not chosen to open the next request", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -233,15 +233,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("an exhausted account without Retry-After stays cooled through its reset window", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -250,22 +250,22 @@ describe("pre-dispatch account preference", () => {
       seedExhausted(ids[0]!, now + 60 * 60_000);
       const kiroConfig = {
         providers: { kiro: OAUTH_PROVIDER },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       expect(rotateGenericOAuthAccountOn429(kiroConfig, "kiro", ids[0]!, null, now)).toBe(ids[1]);
       expect(genericFailoverRetryAfterSeconds("kiro", now)).toBe(60 * 60);
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("an unparseable Retry-After uses an exhausted account reset", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -274,7 +274,7 @@ describe("pre-dispatch account preference", () => {
       seedExhausted(ids[0]!, now + 60 * 60_000);
       const kiroConfig = {
         providers: { kiro: OAUTH_PROVIDER },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       expect(
         rotateGenericOAuthAccountOn429(kiroConfig, "kiro", ids[0]!, "not-a-duration", now),
@@ -283,15 +283,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("valid immediate Retry-After values override an exhausted account reset", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -300,7 +300,7 @@ describe("pre-dispatch account preference", () => {
       seedExhausted(ids[0]!, now + 60 * 60_000);
       const kiroConfig = {
         providers: { kiro: OAUTH_PROVIDER },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       for (const retryAfter of ["0", new Date(now - 1_000).toUTCString()]) {
         clearGenericFailoverHealth();
@@ -312,15 +312,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("a valid Retry-After overrides an exhausted account reset", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -329,15 +329,15 @@ describe("pre-dispatch account preference", () => {
       seedExhausted(ids[0]!, now + 60 * 60_000);
       const kiroConfig = {
         providers: { kiro: OAUTH_PROVIDER },
-      } as unknown as OcxConfig;
+      } as unknown as OccxConfig;
 
       expect(rotateGenericOAuthAccountOn429(kiroConfig, "kiro", ids[0]!, "120", now)).toBe(ids[1]);
       expect(genericFailoverRetryAfterSeconds("kiro", now)).toBe(120);
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
@@ -347,8 +347,8 @@ describe("pre-dispatch account preference", () => {
     // cooling the active account collapses the eligible list to a single candidate, which
     // any ranking returns unchanged. That looks like a ranked answer but nothing was ever
     // measured, so evidence has to be checked against the whole roster first.
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -359,15 +359,15 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
 
   test("removing the credential store invalidates an earlier selection proposal", async () => {
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -387,8 +387,8 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
@@ -398,8 +398,8 @@ describe("pre-dispatch account preference", () => {
     // chosen. Resolving it then throws, and the request path must fall back to the active
     // account rather than 401 — a preference must never break a request that would have
     // worked without it.
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -420,8 +420,8 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });
@@ -431,8 +431,8 @@ describe("pre-dispatch account preference", () => {
     // still has a readable credential, so resolution SUCCEEDS and no error path fires. The
     // request would dispatch on an account already known to need a fresh login while a
     // healthy active account sat unused.
-    home = mkdtempSync(join(tmpdir(), "ocx-predispatch-"));
-    process.env.OPENCODEX_HOME = home;
+    home = mkdtempSync(join(tmpdir(), "occx-predispatch-"));
+    process.env.OPENCCX_HOME = home;
     clearGenericFailoverHealth();
     clearAccountQuotaCache();
     try {
@@ -454,8 +454,8 @@ describe("pre-dispatch account preference", () => {
     } finally {
       clearGenericFailoverHealth();
       clearAccountQuotaCache();
-      if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = originalHome;
+      if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = originalHome;
       removeTreeWithRetry(home);
     }
   });

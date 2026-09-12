@@ -191,7 +191,7 @@ export function useProvidersOAuth({
           if (sameIdentityAdd) {
             notify(t("prov.loginSameAccount", { provider: oauthLabel(provider) }), false);
           } else {
-            notify(t("prov.loginOk", { provider: oauthLabel(provider), cmd: "ocx sync" }), true);
+            notify(t("prov.loginOk", { provider: oauthLabel(provider), cmd: "occx sync" }), true);
           }
           void fetchConfig();
           void fetchProviderQuotas(true);

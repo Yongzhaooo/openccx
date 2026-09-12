@@ -20,14 +20,14 @@ describe("Cline shared SDK store contract", () => {
     // Oracle: cline/cline cfe9cadab996, core/types/provider-settings.ts and local-provider-registry.ts.
     const doc = buildClientConfig("cline", context) as ClineGeneratedConfig;
     expect(doc.settings.version).toBe(1);
-    expect(doc.settings.providers.opencodex!.settings).toEqual({ provider: "opencodex", protocol: "openai-responses", client: "openai", apiKey: "opencodex-loopback", baseUrl: context.baseUrl });
+    expect(doc.settings.providers.openccx!.settings).toEqual({ provider: "openccx", protocol: "openai-responses", client: "openai", apiKey: "openccx-loopback", baseUrl: context.baseUrl });
     expect(doc.settings).not.toHaveProperty("lastUsedProvider");
-    expect(doc.catalog.providers.opencodex!.models).toEqual({
+    expect(doc.catalog.providers.openccx!.models).toEqual({
       "mock/vision": { name: "vision (mock)", contextWindow: 200000, modalities: { input: ["text", "image"], output: ["text"] }, supportsVision: true },
       "mock/unknown": { name: "unknown (mock)" },
     });
     expect(buildClientContribution("cline", context).fragments.map(f => f.path)).toEqual([
-      ["settings", "providers", "opencodex"], ["catalog", "providers", "opencodex"],
+      ["settings", "providers", "openccx"], ["catalog", "providers", "openccx"],
     ]);
     expect(EXPORT_CLIENTS.cline.summarize(doc)).toEqual({ modelCount: 2, modelsWithoutLimits: 1 });
     expect(JSON.parse(buildClientConfigText("cline", context).text)).toEqual(doc);

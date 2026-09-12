@@ -22,7 +22,7 @@ const target: LiveProxy = { pid: 4242, port: 10100, hostname: "127.0.0.1", sourc
 function proofResponse(init?: RequestInit, capabilityVersion: unknown = GUI_PAIR_CAPABILITY_VERSION): Response {
   const challenge = new Headers(init?.headers).get(LOCAL_ATTESTATION_CHALLENGE_HEADER)!;
   return Response.json({
-    service: "opencodex",
+    service: "openccx",
     status: "ok",
     version: "test",
     uptime: 1,
@@ -84,7 +84,7 @@ describe("GUI pairing client", () => {
       createChallenge: () => nonce,
       fetchImpl: async () => {
         calls += 1;
-        return Response.json({ service: "opencodex", pid: target.pid, port: target.port });
+        return Response.json({ service: "openccx", pid: target.pid, port: target.port });
       },
     });
     expect(unattested).toEqual({ kind: "unavailable", reason: "attestation" });
@@ -115,7 +115,7 @@ describe("GUI pairing client", () => {
         requests.push({ url: String(input), init });
         if (requests.length === 1) return proofResponse(init);
         return Response.json({
-          grant: `ocx_pair_${"C".repeat(43)}`,
+          grant: `occx_pair_${"C".repeat(43)}`,
           browserOrigin,
           serverOrigin: "https://hub.example.test",
           expiresAt: now + 300_000,
@@ -124,7 +124,7 @@ describe("GUI pairing client", () => {
     });
     expect(result).toEqual({
       kind: "created",
-      grant: `ocx_pair_${"C".repeat(43)}`,
+      grant: `occx_pair_${"C".repeat(43)}`,
       browserOrigin,
       serverOrigin: "https://hub.example.test",
       expiresAt: now + 300_000,
@@ -135,7 +135,7 @@ describe("GUI pairing client", () => {
     const headers = new Headers(requests[1]!.init?.headers);
     expect(headers.get(GUI_PAIR_BROWSER_ORIGIN_HEADER)).toBe(browserOrigin);
     expect(headers.has("authorization")).toBe(false);
-    expect(headers.has("x-opencodex-api-key")).toBe(false);
+    expect(headers.has("x-openccx-api-key")).toBe(false);
     expect(verifyGuiPairCapability(
       secret,
       nonce,
@@ -144,7 +144,7 @@ describe("GUI pairing client", () => {
       browserOrigin,
       target.pid!,
       target.port,
-      Number(headers.get("x-opencodex-gui-pair-expires-at")),
+      Number(headers.get("x-openccx-gui-pair-expires-at")),
       headers.get(GUI_PAIR_CAPABILITY_HEADER),
       now,
     )).toBe(true);

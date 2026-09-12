@@ -1,5 +1,5 @@
 /**
- * `ocx v2 status|on|off` — toggle/report the codex `multi_agent_v2` feature that
+ * `occx v2 status|on|off` — toggle/report the codex `multi_agent_v2` feature that
  * controls the multi-agent surface (v1 vs v2 collab mode).
  *
  * Contract:
@@ -120,7 +120,7 @@ export async function cmdV2(args: string[], deps: V2CliDeps = {}, findPort?: () 
     log.log(multiAgentModeLine(mode, keepNativeV1));
     log.log(cfg.keepNativeChatGptOnV1 === true
       ? requiresGlobalV2Disabled(mode, keepNativeV1) && isEnabled()
-        ? "keep_native_chatgpt_on_v1: CONFLICT — global multi_agent_v2 overrides the native v1 catalog pin; run 'ocx v2 keep-native-v1 on' to reconcile"
+        ? "keep_native_chatgpt_on_v1: CONFLICT — global multi_agent_v2 overrides the native v1 catalog pin; run 'occx v2 keep-native-v1 on' to reconcile"
         : "keep_native_chatgpt_on_v1: ON — global V2 override is off; ChatGPT-native rows use v1 and routed rows use v2 when mode is v2"
       : "keep_native_chatgpt_on_v1: OFF");
     const threads = getLogicalMaxThreads();
@@ -210,7 +210,7 @@ export async function cmdV2(args: string[], deps: V2CliDeps = {}, findPort?: () 
       const sync = deps.sync ?? (await import("../codex/sync")).syncModelsToCodex;
       await sync(findPort ? await findPort() : undefined);
     } catch (err) {
-      log.error(`catalog resync failed: ${err instanceof Error ? err.message : String(err)} — run 'ocx sync' manually.`);
+      log.error(`catalog resync failed: ${err instanceof Error ? err.message : String(err)} — run 'occx sync' manually.`);
       return 1;
     }
     log.log(multiAgentModeLine(modeArg));
@@ -240,7 +240,7 @@ export async function cmdV2(args: string[], deps: V2CliDeps = {}, findPort?: () 
       const sync = deps.sync ?? (await import("../codex/sync")).syncModelsToCodex;
       await sync(findPort ? await findPort() : undefined);
     } catch (err) {
-      log.error(`catalog resync failed: ${err instanceof Error ? err.message : String(err)} — run 'ocx sync' manually.`);
+      log.error(`catalog resync failed: ${err instanceof Error ? err.message : String(err)} — run 'occx sync' manually.`);
       return 1;
     }
     if (already) {
@@ -263,7 +263,7 @@ export async function cmdV2(args: string[], deps: V2CliDeps = {}, findPort?: () 
   if (want) {
     const cfg = loadConfig();
     if (requiresGlobalV2Disabled(cfg.multiAgentMode, cfg.keepNativeChatGptOnV1 === true)) {
-      log.error("v2 on: incompatible with keep-native-v1 while mode is v2 — Codex's global multi_agent_v2 overrides the native v1 catalog pin. Run 'ocx v2 keep-native-v1 off' first.");
+      log.error("v2 on: incompatible with keep-native-v1 while mode is v2 — Codex's global multi_agent_v2 overrides the native v1 catalog pin. Run 'occx v2 keep-native-v1 off' first.");
       return 1;
     }
   }
@@ -283,7 +283,7 @@ export async function cmdV2(args: string[], deps: V2CliDeps = {}, findPort?: () 
     const sync = deps.sync ?? (await import("../codex/sync")).syncModelsToCodex;
     await sync(findPort ? await findPort() : undefined);
   } catch (err) {
-    log.error(`catalog resync failed (flag IS flipped): ${err instanceof Error ? err.message : String(err)} — run 'ocx sync' manually.`);
+    log.error(`catalog resync failed (flag IS flipped): ${err instanceof Error ? err.message : String(err)} — run 'occx sync' manually.`);
     return 1;
   }
   log.log(v2StatusLine(want));

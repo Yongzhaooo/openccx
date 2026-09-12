@@ -4,7 +4,7 @@ import { KEY_LOGIN_PROVIDERS } from "../../src/oauth/key-providers";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { mapReasoningEffort } from "../../src/reasoning-effort";
 import { routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 describe("Xiaomi MiMo public OpenAI Chat endpoint (#1483)", () => {
   const baseUrl = "https://api.xiaomimimo.com/v1";
@@ -22,7 +22,7 @@ describe("Xiaomi MiMo public OpenAI Chat endpoint (#1483)", () => {
     });
     expect(KEY_LOGIN_PROVIDERS["xiaomi-mimo"]?.baseUrl).toBe(baseUrl);
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xiaomi-mimo",
       providers: {
@@ -48,7 +48,7 @@ describe("Xiaomi MiMo public OpenAI Chat endpoint (#1483)", () => {
   });
 
   test("does not claim a same-named provider at another destination", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xiaomi-mimo",
       providers: {
@@ -98,7 +98,7 @@ describe("Xiaomi MiMo token plan (#1158)", () => {
     // exercise. Someone may already have a hand-rolled provider called `mimo` pointing
     // elsewhere; without `preserveCustomDestination`, routing would canonicalize their base URL
     // onto the registry's and send their key to a host they never chose.
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "mimo",
       providers: {
@@ -129,7 +129,7 @@ describe("Xiaomi MiMo token plan (#1158)", () => {
   // conflicting map. This test records that boundary so the next reader does not mistake the
   // clamp for an enforcement the code does not implement.
   test("a user reasoningEffortMap deliberately overrides the registry clamp", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xiaomi-mimo",
       providers: {
@@ -162,7 +162,7 @@ describe("Xiaomi MiMo token plan (#1158)", () => {
   // The case the clamp actually governs: no user map, so the registry ladder is authoritative
   // and a direct max/ultra/xhigh request lands on `high` instead of reproducing the #1483 400.
   test("without a conflicting user map the registry clamp holds", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "xiaomi-mimo",
       providers: {
@@ -184,7 +184,7 @@ describe("Xiaomi MiMo token plan (#1158)", () => {
   });
 
   test("an alias that lands inside the ladder still resolves through the map", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "custom-alias",
       providers: {
@@ -204,7 +204,7 @@ describe("Xiaomi MiMo token plan (#1158)", () => {
   });
 
   test("a provider without a configured ladder keeps its alias verbatim", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "no-ladder",
       providers: {

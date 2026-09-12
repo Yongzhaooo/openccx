@@ -24,7 +24,7 @@ import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { atomicWriteFileAsync, getConfigDir } from "../config";
-import type { OcxProviderOpaqueToolCallMetadata, OcxReasoningReplayScopeRef } from "../types";
+import type { OccxProviderOpaqueToolCallMetadata, OccxReasoningReplayScopeRef } from "../types";
 import { isCarryableSignature, responsesExtraContentFromProviderMetadata } from "./provider-opaque-metadata";
 
 const STORE_FILE_NAME = "thought-signature-replay.json";
@@ -120,7 +120,7 @@ function nonEmpty(value: unknown): value is string {
  * The reasoning cache's identities are process-local HMACs, so this key deliberately uses
  * only the stable, non-secret fields that survive a restart.
  */
-function keyFor(callId: string, scope: OcxReasoningReplayScopeRef | undefined): string | undefined {
+function keyFor(callId: string, scope: OccxReasoningReplayScopeRef | undefined): string | undefined {
   const identity = scope?.current;
   if (
     !nonEmpty(callId)
@@ -228,7 +228,7 @@ function persist(): Promise<void> {
 export function rememberThoughtSignatureForReplay(
   callId: string,
   signature: string,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): { result: ThoughtSignatureRememberResult; durable: Promise<void> } {
   if (!callId || !isCarryableSignature(signature)) {
     return { result: "ignored", durable: Promise.resolve() };
@@ -254,8 +254,8 @@ export function rememberThoughtSignatureForReplay(
  */
 export function rememberAndSerializeExtraContent(
   callId: string,
-  metadata: OcxProviderOpaqueToolCallMetadata | undefined,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  metadata: OccxProviderOpaqueToolCallMetadata | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): {
   extra?: { extra_content: { google: { thought_signature: string } } };
   durable: Promise<void>;
@@ -278,8 +278,8 @@ export function rememberAndSerializeExtraContent(
  */
 export function rememberExtraContentForReplay(
   callId: string,
-  metadata: OcxProviderOpaqueToolCallMetadata | undefined,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  metadata: OccxProviderOpaqueToolCallMetadata | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): Promise<void> {
   const extra = responsesExtraContentFromProviderMetadata(metadata);
   if (!extra) return Promise.resolve();
@@ -293,7 +293,7 @@ export function rememberExtraContentForReplay(
 /** Look up a signature previously handed out for this call in THIS scope, if still fresh. */
 export function lookupReplayThoughtSignature(
   callId: string,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): string | undefined {
   const key = keyFor(callId, scope);
   if (key === undefined) return undefined;
@@ -311,7 +311,7 @@ export function lookupReplayThoughtSignature(
 /** Drop a remembered signature for a specific callId and scope (e.g. when upstream rejects it). */
 export function forgetThoughtSignatureForReplay(
   callId: string,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): boolean {
   const key = keyFor(callId, scope);
   if (key === undefined) return false;

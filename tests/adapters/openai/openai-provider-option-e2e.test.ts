@@ -58,7 +58,7 @@ const PRINCIPAL_OK = {
   success: true,
   exitCode: 0,
   timedOut: false,
-  stdout: "S-1-5-21-1-2-3-1001\nocx-provider-option-e2e\n",
+  stdout: "S-1-5-21-1-2-3-1001\noccx-provider-option-e2e\n",
 };
 
 function hashTree(path: string): string {
@@ -121,14 +121,14 @@ function responsesLifecycle(body: Record<string, unknown>): string {
 
 describe("OpenAI provider-option integration spine", () => {
   test("keeps Pool, Direct, and API ownership stable across transports and management", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-provider-option-e2e-"));
-    const opencodexHome = join(root, "opencodex");
+    const root = mkdtempSync(join(tmpdir(), "occx-provider-option-e2e-"));
+    const openccxHome = join(root, "openccx");
     const codexHome = join(root, "codex");
     const claudeConfigDir = join(root, "claude");
     const realClaudeDir = join(homedir(), ".claude");
     const realClaudeHashBefore = hashTree(realClaudeDir);
     const previousEnv = {
-      OPENCODEX_HOME: process.env.OPENCODEX_HOME,
+      OPENCCX_HOME: process.env.OPENCCX_HOME,
       CODEX_HOME: process.env.CODEX_HOME,
       CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR,
     };
@@ -165,10 +165,10 @@ describe("OpenAI provider-option integration spine", () => {
     ]);
 
     try {
-      for (const dir of [opencodexHome, codexHome, claudeConfigDir]) {
+      for (const dir of [openccxHome, codexHome, claudeConfigDir]) {
         mkdirSync(dir, { recursive: true, mode: 0o700 });
       }
-      process.env.OPENCODEX_HOME = opencodexHome;
+      process.env.OPENCCX_HOME = openccxHome;
       process.env.CODEX_HOME = codexHome;
       process.env.CLAUDE_CONFIG_DIR = claudeConfigDir;
       const authPath = join(codexHome, "auth.json");
@@ -434,8 +434,8 @@ describe("OpenAI provider-option integration spine", () => {
       expect(await directPatch.json()).toEqual({ success: true, name: "openai", codexAccountMode: "direct" });
       expect((await local("/api/config").then(response => response.json()) as typeof configDto).providers.openai.codexAccountMode).toBe("direct");
       const directBaseline = {
-        config: hashTree(join(opencodexHome, "config.json")),
-        accounts: hashTree(join(opencodexHome, "codex-accounts.json")),
+        config: hashTree(join(openccxHome, "config.json")),
+        accounts: hashTree(join(openccxHome, "codex-accounts.json")),
         active: configModule.loadConfig().activeCodexAccountId,
         mainQuota: authApi.getAccountQuota(mainAccount.MAIN_CODEX_ACCOUNT_ID),
         addedQuota: authApi.getAccountQuota("fixture-pool"),
@@ -462,8 +462,8 @@ describe("OpenAI provider-option integration spine", () => {
       });
       expect(websocketRegistry.getTrackedCodexWebSocketCountForAccount("fixture-pool")).toBe(0);
       const directAfter = {
-        config: hashTree(join(opencodexHome, "config.json")),
-        accounts: hashTree(join(opencodexHome, "codex-accounts.json")),
+        config: hashTree(join(openccxHome, "config.json")),
+        accounts: hashTree(join(openccxHome, "codex-accounts.json")),
         active: configModule.loadConfig().activeCodexAccountId,
         mainQuota: authApi.getAccountQuota(mainAccount.MAIN_CODEX_ACCOUNT_ID),
         addedQuota: authApi.getAccountQuota("fixture-pool"),
@@ -563,8 +563,8 @@ describe("OpenAI provider-option integration spine", () => {
         && row.model === "gpt-5.6-sol-pro"
         && row.requestedModel === selected
         && row.resolvedModel === "gpt-5.6-sol")).toBe(true);
-      const usageLines = existsSync(join(opencodexHome, "usage.jsonl"))
-        ? readFileSync(join(opencodexHome, "usage.jsonl"), "utf8").trim().split("\n").filter(Boolean)
+      const usageLines = existsSync(join(openccxHome, "usage.jsonl"))
+        ? readFileSync(join(openccxHome, "usage.jsonl"), "utf8").trim().split("\n").filter(Boolean)
           .map(line => JSON.parse(line) as Record<string, unknown>)
         : [];
       for (const expected of [
@@ -573,12 +573,12 @@ describe("OpenAI provider-option integration spine", () => {
         { provider: "openai-apikey", model: "gpt-5.6-sol-pro", requestedModel: selected, resolvedModel: "gpt-5.6-sol" },
       ]) expect(usageLines.some(row => Object.entries(expected).every(([key, value]) => row[key] === value))).toBe(true);
 
-      const migrationRoot = mkdtempSync(join(tmpdir(), "ocx-provider-option-migration-"));
+      const migrationRoot = mkdtempSync(join(tmpdir(), "occx-provider-option-migration-"));
       try {
         const child = Bun.spawn([
           process.execPath,
           repoPath("tests", "fixtures", "openai-provider-option-migration-child.ts"),
-          join(migrationRoot, "opencodex"),
+          join(migrationRoot, "openccx"),
           join(migrationRoot, "codex"),
         ], { stdout: "pipe", stderr: "pipe", env: { ...process.env } });
         const [stdout, stderr, exitCode] = await Promise.all([
@@ -632,7 +632,7 @@ describe("OpenAI provider-option integration spine", () => {
         expect(principalSeamCalls).toBeGreaterThan(0);
       }
       expect(captures.every(capture => upstreamTuples.has(`${capture.method} ${capture.url}`))).toBe(true);
-      const evidenceDir = process.env.OCX_EVIDENCE_DIR;
+      const evidenceDir = process.env.OCCX_EVIDENCE_DIR;
       if (evidenceDir) {
         mkdirSync(evidenceDir, { recursive: true, mode: 0o700 });
         writeFileSync(join(evidenceDir, "030_e2e.json"), JSON.stringify({
@@ -657,7 +657,7 @@ describe("OpenAI provider-option integration spine", () => {
         globalThis.fetch = savedFetch;
         globalThis.WebSocket = savedWebSocket;
         for (const reset of resets) reset();
-        restoreEnv("OPENCODEX_HOME", previousEnv.OPENCODEX_HOME);
+        restoreEnv("OPENCCX_HOME", previousEnv.OPENCCX_HOME);
         restoreEnv("CODEX_HOME", previousEnv.CODEX_HOME);
         restoreEnv("CLAUDE_CONFIG_DIR", previousEnv.CLAUDE_CONFIG_DIR);
         removeTreeWithRetry(root);

@@ -17,7 +17,7 @@ import {
 } from "../../src/codex/quota";
 import { handleManagementAPI, type ManagementApiDeps } from "../../src/server/management-api";
 import { loadConfig, readConfigDiagnostics, validateConfigCandidate } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { startupHealthFixture } from "../helpers/startup-health";
 import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { clearAccountNeedsReauth, isAccountNeedsReauth } from "../../src/codex/account-runtime-state";
@@ -44,7 +44,7 @@ function completedWithQuota(resetAt: number) {
   } });
 }
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     defaultProvider: "openai",
     providers: {
@@ -71,7 +71,7 @@ function quota(overrides: Partial<StoredAccountQuota> = {}): StoredAccountQuota 
 }
 
 function recordMarkers(
-  cfg: OcxConfig,
+  cfg: OccxConfig,
   accountId: string,
   completed: CodexQuotaAutoRefreshWindows,
 ): boolean {
@@ -91,7 +91,7 @@ const routeDeps: ManagementApiDeps = {
   getCachedStartupHealth: async () => startupHealthFixture(),
 };
 
-function putSettings(cfg: OcxConfig, value: unknown): Promise<Response | null> {
+function putSettings(cfg: OccxConfig, value: unknown): Promise<Response | null> {
   const request = new Request("http://127.0.0.1:10100/api/settings", {
     method: "PUT",
     headers: {
@@ -106,9 +106,9 @@ function putSettings(cfg: OcxConfig, value: unknown): Promise<Response | null> {
 
 beforeEach(() => {
   previousFetch = globalThis.fetch;
-  previousHome = process.env.OPENCODEX_HOME;
-  testHome = mkdtempSync(join(tmpdir(), "ocx-quota-auto-refresh-"));
-  process.env.OPENCODEX_HOME = testHome;
+  previousHome = process.env.OPENCCX_HOME;
+  testHome = mkdtempSync(join(tmpdir(), "occx-quota-auto-refresh-"));
+  process.env.OPENCCX_HOME = testHome;
   clearAccountQuota();
   resetCodexQuotaAutoRefreshForTests();
 });
@@ -118,8 +118,8 @@ afterEach(() => {
   clearAccountNeedsReauth("pool-a");
   clearAccountQuota();
   resetCodexQuotaAutoRefreshForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome && existsSync(testHome)) rmSync(testHome, { recursive: true, force: true });
 });
 
@@ -371,7 +371,7 @@ describe("Codex quota window auto refresh", () => {
         attempts += 1;
         if (attempts === 1) return false;
       },
-      persistCompleted: (target: OcxConfig, id: string, completed: CodexQuotaAutoRefreshWindows) => {
+      persistCompleted: (target: OccxConfig, id: string, completed: CodexQuotaAutoRefreshWindows) => {
         writes += 1;
         return recordMarkers(target, id, completed);
       },
@@ -402,7 +402,7 @@ describe("Codex quota window auto refresh", () => {
     let warmups = 0;
     let writes = 0;
     let observed = RESET_SECONDS;
-    const persist = (target: OcxConfig, id: string, completed: CodexQuotaAutoRefreshWindows) => {
+    const persist = (target: OccxConfig, id: string, completed: CodexQuotaAutoRefreshWindows) => {
       writes += 1;
       return writes > 2 ? recordMarkers(target, id, completed) : false;
     };

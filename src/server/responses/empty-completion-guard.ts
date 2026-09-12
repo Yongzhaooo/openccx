@@ -1,4 +1,4 @@
-import type { AdapterEvent, OcxConfig, OcxUsage } from "../../types";
+import type { AdapterEvent, OccxConfig, OccxUsage } from "../../types";
 import { sanitizeLogMetadataString } from "../../lib/redact";
 
 /**
@@ -17,10 +17,10 @@ import { sanitizeLogMetadataString } from "../../lib/redact";
  * success.
  *
  * The retry is explicitly enabled by top-level config. The environment switch
- * is a disable-only emergency override: OCX_EMPTY_COMPLETION_RETRY=0 restores
+ * is a disable-only emergency override: OCCX_EMPTY_COMPLETION_RETRY=0 restores
  * the previous relay behavior without editing the persisted config.
  */
-export const EMPTY_COMPLETION_RETRY_ENV = "OCX_EMPTY_COMPLETION_RETRY";
+export const EMPTY_COMPLETION_RETRY_ENV = "OCCX_EMPTY_COMPLETION_RETRY";
 
 /**
  * The observability notice for a turn that ended empty with the retry guard off.
@@ -33,7 +33,7 @@ export const EMPTY_COMPLETION_RETRY_ENV = "OCX_EMPTY_COMPLETION_RETRY";
 export function emptyCompletionNotice(providerName: unknown, modelId: unknown): string {
   const provider = sanitizeLogMetadataString(providerName) ?? "unknown";
   const model = sanitizeLogMetadataString(modelId) ?? "unknown";
-  return `[opencodex] ${provider}/${model} completed with no output text and no tool call. `
+  return `[openccx] ${provider}/${model} completed with no output text and no tool call. `
     + "Set \"emptyCompletionRetry\": true to retry such turns once.";
 }
 
@@ -42,7 +42,7 @@ export const EMPTY_COMPLETION_MAX_BUFFERED_EVENTS = 1_024;
 export const EMPTY_COMPLETION_MAX_BUFFERED_BYTES = 1_048_576;
 
 export function emptyCompletionRetryEnabled(
-  config: Pick<OcxConfig, "emptyCompletionRetry">,
+  config: Pick<OccxConfig, "emptyCompletionRetry">,
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return config.emptyCompletionRetry === true && env[EMPTY_COMPLETION_RETRY_ENV] !== "0";
@@ -136,7 +136,7 @@ export function isContentEvent(event: AdapterEvent): boolean {
 }
 
 export function emptyCompletionRetryFailedEvent(
-  usage?: OcxUsage,
+  usage?: OccxUsage,
   retryFailedUpstream = false,
 ): Extract<AdapterEvent, { type: "error" }> {
   return {
@@ -146,7 +146,7 @@ export function emptyCompletionRetryFailedEvent(
     code: EMPTY_COMPLETION_RETRY_FAILED_CODE,
     message: retryFailedUpstream
       ? "The model returned an empty completion and the retry failed upstream."
-      : "The model returned an empty completion. opencodex retried once and the completion was empty again.",
+      : "The model returned an empty completion. openccx retried once and the completion was empty again.",
     ...(usage ? { usage } : {}),
   };
 }
@@ -157,12 +157,12 @@ export function emptyCompletionRetryFailedEvent(
  * `estimated` wins when either attempt only estimated.
  */
 export function mergeUsage(
-  first: OcxUsage | undefined,
-  second: OcxUsage | undefined,
-): OcxUsage | undefined {
+  first: OccxUsage | undefined,
+  second: OccxUsage | undefined,
+): OccxUsage | undefined {
   if (!first) return second;
   if (!second) return first;
-  const sumOptional = (key: keyof OcxUsage): number | undefined => {
+  const sumOptional = (key: keyof OccxUsage): number | undefined => {
     const left = first[key];
     const right = second[key];
     return typeof left === "number" || typeof right === "number"
@@ -227,9 +227,9 @@ export async function* guardEmptyCompletionEventStream(
   let sawContent = false;
   let passthrough = false;
   let retries = 0;
-  let usage: OcxUsage | undefined;
+  let usage: OccxUsage | undefined;
 
-  const withUsage = (event: AdapterEvent & { usage?: OcxUsage }): AdapterEvent => {
+  const withUsage = (event: AdapterEvent & { usage?: OccxUsage }): AdapterEvent => {
     const merged = mergeUsage(usage, event.usage);
     return merged ? { ...event, ...(merged ? { usage: merged } : {}) } : event;
   };

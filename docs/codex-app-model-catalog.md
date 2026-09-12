@@ -6,14 +6,14 @@ Date: 2026-06-20
 > documentation. For up-to-date behavior see the published docs at
 > [opencodex.me](https://opencodex.me/) and the
 > maintainer source-of-truth under [`structure/`](../structure). The current injected
-> provider table name is `"OpenCodex Proxy"` (see `src/codex/inject.ts`).
+> provider table name is `"Openccx Proxy"` (see `src/codex/inject.ts`).
 
-This document records why opencodex routed models can appear in Codex App's model picker without
+This document records why openccx routed models can appear in Codex App's model picker without
 patching Codex App itself.
 
 ## Summary
 
-Codex CLI, TUI, and App share the Codex home configuration surface. opencodex integrates by writing
+Codex CLI, TUI, and App share the Codex home configuration surface. openccx integrates by writing
 Codex-native config and catalog files under the resolved `CODEX_HOME`:
 
 - `$CODEX_HOME/config.toml`
@@ -21,7 +21,7 @@ Codex-native config and catalog files under the resolved `CODEX_HOME`:
 - `$CODEX_HOME/opencodex-catalog.json`
 - `$CODEX_HOME/models_cache.json`
 
-When Codex App reads the same config/catalog state, routed opencodex models are visible because they
+When Codex App reads the same config/catalog state, routed openccx models are visible because they
 look like valid Codex catalog entries.
 
 ## Required config shape
@@ -29,7 +29,7 @@ look like valid Codex catalog entries.
 The global provider must be a root TOML key:
 
 ```toml
-model_provider = "opencodex"
+model_provider = "openccx"
 ```
 
 It must not be appended under whichever TOML table happened to be last. TOML root keys after a table
@@ -44,8 +44,8 @@ model_catalog_json = "/absolute/path/to/opencodex-catalog.json"
 The provider block must advertise a Responses-compatible provider:
 
 ```toml
-[model_providers.opencodex]
-name = "OpenCodex Proxy"
+[model_providers.openccx]
+name = "Openccx Proxy"
 base_url = "http://localhost:10100/v1"
 wire_api = "responses"
 requires_openai_auth = true
@@ -57,20 +57,20 @@ hidden even when the user has ChatGPT auth.
 
 ## Catalog entry shape
 
-opencodex does not generate minimal JSON entries. It clones a native Codex model catalog entry and
+openccx does not generate minimal JSON entries. It clones a native Codex model catalog entry and
 then changes the routed fields:
 
 ```text
 slug = "<provider>/<model>"
 display_name = "<provider>/<model>"
-description = "Routed via opencodex -> <provider> ..."
+description = "Routed via openccx -> <provider> ..."
 priority = <picker priority>
 visibility = "list"
 ```
 
 Slash-containing native ids: some providers namespace their own model ids
 (zenmux `moonshotai/kimi-k3-free`, openrouter `anthropic/...`, nvidia `moonshotai/...`).
-Codex's models-manager metadata lookup tolerates exactly one "/", so opencodex aliases
+Codex's models-manager metadata lookup tolerates exactly one "/", so openccx aliases
 inner slashes to "-" in the Codex-facing slug (`zenmux/moonshotai-kimi-k3-free`) and
 decodes back to the native id in the proxy via an exact known-id lookup
 (`src/providers/slug-codec.ts`). Raw full-slash selectors keep working; upstream
@@ -94,7 +94,7 @@ The recognized Codex effort ladder is `low < medium < high < xhigh < max < ultra
 
 - `ultra` is a client-facing selection: maximum reasoning plus proactive multi-agent delegation
   (derived in codex-rs core, not by the proxy). Upstream converts it to `max` at the inference
-  boundary; ocx mirrors that in two places — the Responses parser normalizes `ultra -> max` at
+  boundary; occx mirrors that in two places — the Responses parser normalizes `ultra -> max` at
   ingest, and `mapReasoningEffort` converts any direct `ultra` caller to the `max` wire value.
 - Routed models default to the `low..max` ladder. `ultra` is per-model opt-in via the
   `reasoningEfforts` provider config; when opted in it renders its canonical description.
@@ -102,7 +102,7 @@ The recognized Codex effort ladder is `low < medium < high < xhigh < max < ultra
   (`src/codex/data/upstream-models.json`, openai/codex PR #31684): exact per-slug ladders
   (`sol`/`terra` end at `ultra`, `luna` ends at `max` — no ultra), default efforts
   (`sol` = `low`, `terra`/`luna` = `medium`), real display names/descriptions/NUX, and
-  `multi_agent_version` (`sol`/`terra` v2, `luna` v1). ocx adaptations: `minimal_client_version`
+  `multi_agent_version` (`sol`/`terra` v2, `luna` v1). occx adaptations: `minimal_client_version`
   is stripped (it would hide the model from older installed clients) and
   `prefer_websockets`/`supports_websockets` follow the central websocket gate. A future
   `gpt-5.6-*` slug the snapshot predates falls back to template synthesis plus
@@ -149,7 +149,7 @@ Codex caches models in:
 $CODEX_HOME/models_cache.json
 ```
 
-After changing providers, hidden models, featured models, or service-tier metadata, opencodex should
+After changing providers, hidden models, featured models, or service-tier metadata, openccx should
 delete that cache so the next Codex process or model refresh sees the updated catalog.
 
 ## Native GPT enable/disable
@@ -175,13 +175,13 @@ Useful probes:
 ```bash
 codex doctor --json
 codex debug models
-ocx sync
-ocx status
+occx sync
+occx status
 ```
 
 Expected high-level result:
 
-- active model provider is `opencodex`
+- active model provider is `openccx`
 - provider uses ChatGPT auth reachability semantics
 - native `gpt-*` entries keep fast support
 - routed `<provider>/<model>` entries are `visibility = "list"`

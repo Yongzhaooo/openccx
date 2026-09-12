@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import type { ProviderQuota, ProviderQuotaReport } from "./quota";
 import { providerUsesKeyAuthOverride, resolveProviderApiKey } from "./key-store";
 import { getProviderRegistryEntry } from "./registry";
@@ -20,7 +20,7 @@ const quotaCache = new Map<string, CachedQuota>();
 /** Private cache identity; neither key material nor this digest enters management reports. */
 export function providerQuotaRoutingBinding(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   credential = resolveProviderApiKey(provider.apiKey)?.trim(),
 ): string | null {
   if ((provider.authMode ?? "key") !== "key" || !credential) return null;
@@ -66,7 +66,7 @@ export function getCachedProviderQuota(
 /** Only inference-wide evidence for this sole credential may rank or veto a whole provider. */
 export function getCachedProviderRoutingQuota(
   name: string,
-  provider: OcxProviderConfig | undefined,
+  provider: OccxProviderConfig | undefined,
   now: number,
   maxAgeMs = PROVIDER_QUOTA_MAX_AGE_MS,
 ): ProviderQuota | null {

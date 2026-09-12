@@ -7,7 +7,7 @@
  * `server.codeium.com/exa.api_server_pb.ApiServerService/GetChatMessage`
  * with no local language_server in the path. Returns an async iterable of
  * CloudChatEvent deltas (text, reasoning, tool calls, usage, finish) so the
- * caller can stream straight into opencodex's internal AdapterEvent model.
+ * caller can stream straight into openccx's internal AdapterEvent model.
  *
  * What this supports:
  *   - Single- or multi-turn chat using the prompt-and-history pattern the LS
@@ -887,7 +887,7 @@ export async function* streamChatEvents(req: CloudChatRequest): AsyncGenerator<C
   // The hosted chat path does not require the short-lived user_jwt; the working
   // reference omits it by default. Minting it is opt-in so a mint failure or a
   // JWT the chat service does not accept cannot break every turn.
-  const userJwt = process.env.OPENCODEX_DEVIN_SEND_USER_JWT === "1"
+  const userJwt = process.env.OPENCCX_DEVIN_SEND_USER_JWT === "1"
     ? await getCachedUserJwt(req.apiKey, host, req.signal)
     : undefined;
 

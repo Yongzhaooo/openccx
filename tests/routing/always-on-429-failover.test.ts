@@ -25,15 +25,15 @@ import {
 import { clearPoolRotationState } from "../../src/codex/pool-rotation";
 import { getAccountSet, saveCredential, setActiveAccount } from "../../src/oauth/store";
 import { clearAccountQuotaCache, setCachedProviderAccountQuotaForTests } from "../../src/providers/quota";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home: string;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-always-on-429-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-always-on-429-"));
+  process.env.OPENCCX_HOME = home;
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   clearAccountQuotaCache("anthropic");
@@ -43,25 +43,25 @@ afterEach(() => {
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   clearAccountQuotaCache("anthropic");
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 
 /** No `anthropicAccountPool` key at all: what a stock install that never opted in looks like. */
-function poolAbsent(): OcxConfig {
+function poolAbsent(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "anthropic",
     providers: {
       anthropic: { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** An operator who explicitly wrote `false` -- the strongest form of "I did not opt in". */
-function poolDisabled(): OcxConfig {
-  return { ...poolAbsent(), anthropicAccountPool: { enabled: false } } as OcxConfig;
+function poolDisabled(): OccxConfig {
+  return { ...poolAbsent(), anthropicAccountPool: { enabled: false } } as OccxConfig;
 }
 
 async function seedAccounts(count: number): Promise<string[]> {
@@ -110,7 +110,7 @@ describe("Anthropic reactive 429 failover without the pool flag", () => {
     const disabledRoundRobin = {
       ...poolAbsent(),
       anthropicAccountPool: { enabled: false, strategy: "round-robin" },
-    } as OcxConfig;
+    } as OccxConfig;
 
     // Round-robin would hand back ids[1] (the next account in order); quota ordering picks the
     // account with the most headroom instead.

@@ -14,15 +14,15 @@ import type {
 } from "../../src/codex/convergence-types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-let opencodexHome = "";
-let previousOpencodexHome: string | undefined;
+let openccxHome = "";
+let previousOpenccxHome: string | undefined;
 
 function integrationRecordPath(): string {
-  return join(opencodexHome, "integrations", "codex.json");
+  return join(openccxHome, "integrations", "codex.json");
 }
 
 function writeRecord(value: unknown): void {
-  mkdirSync(join(opencodexHome, "integrations"), { recursive: true });
+  mkdirSync(join(openccxHome, "integrations"), { recursive: true });
   writeFileSync(integrationRecordPath(), JSON.stringify(value, null, 2));
 }
 
@@ -51,15 +51,15 @@ function knownArtifactFields(artifact: CodexArtifactId): CodexArtifactId {
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-integration-record-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-integration-record-"));
+  process.env.OPENCCX_HOME = openccxHome;
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
 });
 
 describe("Codex integration record", () => {
@@ -237,7 +237,7 @@ describe("Codex integration record", () => {
   });
 
   test("fails closed on unparseable bytes without invoking the mutator or resetting the file", () => {
-    mkdirSync(join(opencodexHome, "integrations"), { recursive: true });
+    mkdirSync(join(openccxHome, "integrations"), { recursive: true });
     writeFileSync(integrationRecordPath(), "{ definitely-not-json", "utf8");
     let invoked = false;
 

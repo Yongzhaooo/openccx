@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, readFileSync} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { defaultLabAutomationPolicyV1 } from "../../src/lab/automation/policy";
 import * as persistence from "../../src/lab/automation/persistence";
 import {
@@ -27,14 +27,14 @@ import { repoPath } from "../helpers/repo-root";
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-ingwannu-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-ingwannu-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
 }
 
-function emptyConfig(): OcxConfig {
-  return { providers: {} } as OcxConfig;
+function emptyConfig(): OccxConfig {
+  return { providers: {} } as OccxConfig;
 }
 
 afterEach(() => {

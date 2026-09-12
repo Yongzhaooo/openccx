@@ -33,11 +33,11 @@ function writeStdoutFully(text: string): void {
 }
 
 const USAGE = `Usage:
-  ocx account login <provider> [--id <account-id>] [--reauth] [--device] [--code -] [--no-wait] [--json]
-  ocx account code <provider> [--flow <flow-id>] [--json]   (reads the code from stdin)
-  ocx account cancel <provider> [--flow <flow-id>] [--json]
-  ocx account reset-credits <account-id|main> [--consume --yes [--operation-id <uuid>]] [--json]
-  ocx account grok-reset-coupons [<account-id>] [--consume --yes [--token-id <token-id>] [--operation-id <uuid>]] [--json]
+  occx account login <provider> [--id <account-id>] [--reauth] [--device] [--code -] [--no-wait] [--json]
+  occx account code <provider> [--flow <flow-id>] [--json]   (reads the code from stdin)
+  occx account cancel <provider> [--flow <flow-id>] [--json]
+  occx account reset-credits <account-id|main> [--consume --yes [--operation-id <uuid>]] [--json]
+  occx account grok-reset-coupons [<account-id>] [--consume --yes [--token-id <token-id>] [--operation-id <uuid>]] [--json]
 
 --device runs the OpenAI device-code login instead of the browser callback: use
 it when the proxy has no browser or nothing can reach localhost:1455, such as a
@@ -47,13 +47,13 @@ machine.
 The redirect URL or authorization code is a short-lived credential. Pipe it in
 rather than passing it as an argument, where it lands in shell history and is
 visible to anyone who can run ps:
-  pbpaste | ocx account code <provider> --flow <flow-id>
-  ocx account login <provider> --code -   (same, for the login flow)`;
+  pbpaste | occx account code <provider> --flow <flow-id>
+  occx account login <provider> --code -   (same, for the login flow)`;
 
 /**
  * The Codex account pool answers to three spellings, and a user reaches for whichever
- * one they already have a word for. `ocx login codex` routes here as well (dispatch.ts):
- * the pool is deliberately not an `ocx login` provider -- it keeps its own account
+ * one they already have a word for. `occx login codex` routes here as well (dispatch.ts):
+ * the pool is deliberately not an `occx login` provider -- it keeps its own account
  * ledger and runs its browser flow inside the proxy -- but that is an implementation
  * boundary, not something a user should have to know before they can log in.
  */
@@ -115,7 +115,7 @@ async function login(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   if (!provider) throw new CliUsageError("provider is required", USAGE);
   // A bare leftover here is plausibly the authorization code itself: this flow takes one
   // through --code, and a user who pastes it as a positional would otherwise see it echoed
-  // back in the usage error. `ocx login codex` reaches this parser too, so the paste lands
+  // back in the usage error. `occx login codex` reaches this parser too, so the paste lands
   // one word away from a command people run constantly. Flag-shaped leftovers stay visible,
   // because a mistyped flag is exactly what the message has to name.
   rejectArgs(args, USAGE, { redactValues: true });
@@ -125,7 +125,7 @@ async function login(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   if (device && !CODEX_NAMES.has(provider) && !DEVICE_NATIVE_PROVIDERS.has(provider)) {
     throw new CliUsageError(`--device is not supported for provider '${provider}'`, USAGE);
   }
-  // Only resolve when --code was actually given: a plain `ocx account login`
+  // Only resolve when --code was actually given: a plain `occx account login`
   // opens the browser flow and polls, and must not block on stdin.
   const code = await resolveCode(suppliedCode, deps, false);
 
@@ -173,9 +173,9 @@ async function login(argv: string[], deps: RuntimeApiDeps): Promise<void> {
       );
       if (state.status === "done") {
         if (state.validationPending === true) {
-          printData({ ...state, recoveryCommand: "ocx gui", recoveryAction: "After quota recovers, click Refresh quotas in the dashboard Codex account pool." }, wantsJson, [
+          printData({ ...state, recoveryCommand: "occx gui", recoveryAction: "After quota recovers, click Refresh quotas in the dashboard Codex account pool." }, wantsJson, [
             "Account registered; validation pending (routing disabled).",
-            "After quota recovers, open 'ocx gui' and click Refresh quotas to complete validation.",
+            "After quota recovers, open 'occx gui' and click Refresh quotas to complete validation.",
           ]);
         } else {
           printData({ ...state, modelSelection: modelSelectionNextSteps("openai") }, wantsJson, [`Logged in${state.email ? ` as ${String(state.email)}` : ""}.`, ...modelSelectionGuidance("openai")]);
@@ -229,7 +229,7 @@ async function code(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   const args = [...argv];
   const provider = args.shift()?.trim().toLowerCase();
   // Flags first. Taking the positional before parsing them made
-  // `ocx account code openai --flow f1` read `--flow` as the code and then
+  // `occx account code openai --flow f1` read `--flow` as the code and then
   // reject `f1` as an unexpected argument.
   const wantsJson = takeFlag(args, "--json");
   const flowId = takeOption(args, "--flow");

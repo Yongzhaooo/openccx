@@ -8,7 +8,7 @@ import { armClaudeCodeBaseline, saveConfigPreservingClaudeCode } from "../../src
 import { handleManagementAPI } from "../../src/server/management-api";
 import { handleModelRoutes } from "../../src/server/management/model-routes";
 import { listManagementModelRows } from "../../src/server/management/model-rows";
-import type { OcxConfig, ProviderCostOverlay } from "../../src/types";
+import type { OccxConfig, ProviderCostOverlay } from "../../src/types";
 import { activeUserCostOverlays, refreshUserCostOverlays } from "../../src/usage/user-cost-overlays";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -20,7 +20,7 @@ let home: string;
 let previousHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function fixture(costs?: Record<string, ProviderCostOverlay>): OcxConfig {
+function fixture(costs?: Record<string, ProviderCostOverlay>): OccxConfig {
   return {
     port: 10100,
     defaultProvider: PROVIDER,
@@ -39,10 +39,10 @@ function fixture(costs?: Record<string, ProviderCostOverlay>): OcxConfig {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-model-prices-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-model-prices-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = join(home, "codex");
 });
 
@@ -50,15 +50,15 @@ afterEach(() => {
   clearModelCache();
   resetCodexModelEntitlementCacheForTests();
   refreshUserCostOverlays(fixture());
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(home);
 });
 
-function harness(config = fixture(), persist?: (saved: OcxConfig) => void) {
-  const persisted: OcxConfig[] = [];
+function harness(config = fixture(), persist?: (saved: OccxConfig) => void) {
+  const persisted: OccxConfig[] = [];
   let convergeCalls = 0;
   async function call(method: "GET" | "PUT", body?: unknown, provider = PROVIDER, rawBody?: string | ReadableStream<Uint8Array>, rawProvider?: string) {
     const url = new URL(`http://127.0.0.1:10100/api/providers/${rawProvider ?? encodeURIComponent(provider)}/model-costs`);
@@ -148,7 +148,7 @@ describe("provider model costs API", () => {
     writeFileSync(join(home, "config.json"), JSON.stringify(config));
     const h = harness(config, saveConfigPreservingClaudeCode);
     await h.call("PUT", { modelId: "org/model", cost: COST });
-    const disk = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as OcxConfig;
+    const disk = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as OccxConfig;
     expect(disk.providers[PROVIDER]!.modelCosts).toEqual({ sibling: SIBLING, "org/model": COST });
     expect(activeUserCostOverlays().find(row => row.provider === PROVIDER && row.modelId === "org/model")?.cost4).toEqual(COST);
     expect(await (await harness(disk).call("GET")).json()).toEqual({ provider: PROVIDER, modelCosts: { sibling: SIBLING, "org/model": COST } });
@@ -167,7 +167,7 @@ describe("provider model costs API", () => {
     const h = harness(config, saveConfigPreservingClaudeCode);
 
     expect((await h.call("PUT", { modelId: "org/model", cost: null })).status).toBe(200);
-    const disk = JSON.parse(readFileSync(path, "utf8")) as OcxConfig;
+    const disk = JSON.parse(readFileSync(path, "utf8")) as OccxConfig;
     expect(disk.providers[PROVIDER]!.modelCosts).toEqual({ sibling: SIBLING });
     expect(config.providers[PROVIDER]!.modelCosts).toEqual({ sibling: SIBLING });
     expect(activeUserCostOverlays().find(row => row.provider === PROVIDER && row.modelId === "sibling")?.cost4).toEqual(SIBLING);
@@ -208,7 +208,7 @@ describe("provider model costs API", () => {
     expect(h.persisted).toHaveLength(1);
     expect(h.persisted[0]!.providers[PROVIDER]!.pinnedReasoningEffort).toBe("high");
     expect(h.persisted[0]!.providers[PROVIDER]!.modelCosts).toEqual(expected);
-    const disk = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as OcxConfig;
+    const disk = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as OccxConfig;
     expect(disk.providers[PROVIDER]!.pinnedReasoningEffort).toBe("high");
     expect(disk.providers[PROVIDER]!.modelCosts).toEqual(expected);
     expect(h.convergeCalls).toBe(0);
@@ -344,7 +344,7 @@ describe("provider model costs API", () => {
     const h = harness(config);
     expect((await h.call("PUT", { modelId: "org/model", cost: ZERO })).status).toBe(200);
     expect((await h.call("PUT", { modelId: "custom", cost: COST })).status).toBe(200);
-    const reloaded = JSON.parse(JSON.stringify(config)) as OcxConfig;
+    const reloaded = JSON.parse(JSON.stringify(config)) as OccxConfig;
     const rows = await listManagementModelRows(reloaded, { entitlementWaitMs: 0 });
     expect(rows.find(row => row.provider === PROVIDER && row.id === "org/model")?.manualPricing).toBe(true);
     for (const modelId of ["org/other", "sibling"]) {

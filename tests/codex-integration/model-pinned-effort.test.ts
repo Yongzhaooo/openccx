@@ -13,10 +13,10 @@ import { routeModel } from "../../src/router";
 import { createTestTranslatorBudget, withTestTranslatorBudget } from "../helpers/translator-budget";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 describe("model pinned reasoning effort policy", () => {
-  const providerWithPinned: OcxProviderConfig = {
+  const providerWithPinned: OccxProviderConfig = {
     adapter: "openai-responses",
     baseUrl: "https://api.openai.com/v1",
     pinnedReasoningEffort: "high",
@@ -37,20 +37,20 @@ describe("model pinned reasoning effort policy", () => {
   });
 
   test("resolves global config modelPinnedEfforts fallback when provider has none", () => {
-    const emptyProvider: OcxProviderConfig = {
+    const emptyProvider: OccxProviderConfig = {
       adapter: "openai-responses",
       baseUrl: "https://api.openai.com/v1",
     };
     const config = {
       modelPinnedEfforts: { "global-pinned": "max" },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const route = { provider: emptyProvider, modelId: "global-pinned" };
     expect(resolvePinnedEffort(route, undefined, config)).toBe("max");
   });
 
   test("applyPinnedEffort overrides caller effort in both parsed options and raw body", () => {
     const route = { provider: providerWithPinned, modelId: "special-model" };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "special-model",
       context: { messages: [] },
       stream: true,
@@ -66,7 +66,7 @@ describe("model pinned reasoning effort policy", () => {
 
   test("applyPinnedEffort applies pinned effort when caller sent none", () => {
     const route = { provider: providerWithPinned, modelId: "other-model" };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "other-model",
       context: { messages: [] },
       stream: true,
@@ -82,7 +82,7 @@ describe("model pinned reasoning effort policy", () => {
 
   test("applyPinnedEffort with none strips effort from both shapes", () => {
     const route = { provider: providerWithPinned, modelId: "disabled-effort-model" };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "disabled-effort-model",
       context: { messages: [] },
       stream: true,
@@ -100,19 +100,19 @@ describe("model pinned reasoning effort policy", () => {
 
 describe("management API pinned reasoning effort configuration", () => {
   let tempHome: string | undefined;
-  const savedHome = process.env.OPENCODEX_HOME;
+  const savedHome = process.env.OPENCCX_HOME;
   afterEach(() => {
-    if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = savedHome;
+    if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = savedHome;
     if (tempHome) removeTreeWithRetry(tempHome);
     tempHome = undefined;
   });
   function isolatedHome(): void {
-    tempHome = mkdtempSync(join(tmpdir(), "ocx-pinned-effort-"));
-    process.env.OPENCODEX_HOME = tempHome;
+    tempHome = mkdtempSync(join(tmpdir(), "occx-pinned-effort-"));
+    process.env.OPENCCX_HOME = tempHome;
   }
 
-  function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+  function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
     return {
       version: 1,
       defaultProvider: "custom",
@@ -124,7 +124,7 @@ describe("management API pinned reasoning effort configuration", () => {
         },
       },
       ...overrides,
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   test("PATCH /api/providers sets and updates pinned reasoning efforts", async () => {
@@ -267,10 +267,10 @@ describe("operator pins on the actual request wire", () => {
   let onFirstSend: (() => void) | undefined;
 
   beforeEach(() => {
-    savedHome = process.env.OPENCODEX_HOME;
-    home = mkdtempSync(join(tmpdir(), "ocx-pin-wire-"));
-    process.env.OPENCODEX_HOME = home;
-    codexHome = installIsolatedCodexHome("ocx-pin-wire-codex-");
+    savedHome = process.env.OPENCCX_HOME;
+    home = mkdtempSync(join(tmpdir(), "occx-pin-wire-"));
+    process.env.OPENCCX_HOME = home;
+    codexHome = installIsolatedCodexHome("occx-pin-wire-codex-");
     captured = [];
     failFirst = false;
     failureStatus = 503;
@@ -310,13 +310,13 @@ describe("operator pins on the actual request wire", () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = savedHome;
+    if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = savedHome;
     codexHome.restore();
     removeTreeWithRetry(home);
   });
 
-  function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+  function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
     return {
       adapter: "openai-chat", authMode: "key", apiKey: "fixture-pin-key",
       baseUrl: "http://127.0.0.1:65534/v1", allowPrivateNetwork: true,
@@ -326,12 +326,12 @@ describe("operator pins on the actual request wire", () => {
     };
   }
 
-  function config(p: Partial<OcxProviderConfig> = {}, overrides: Partial<OcxConfig> = {}): OcxConfig {
+  function config(p: Partial<OccxProviderConfig> = {}, overrides: Partial<OccxConfig> = {}): OccxConfig {
     return { port: 0, defaultProvider: "fixture", providers: { fixture: provider(p) },
       multiAgentGuidanceEnabled: false, ...overrides };
   }
 
-  async function request(c: OcxConfig, inbound: "chat" | "responses", extra: Record<string, unknown> = {}, headers: HeadersInit = {}) {
+  async function request(c: OccxConfig, inbound: "chat" | "responses", extra: Record<string, unknown> = {}, headers: HeadersInit = {}) {
     const body = inbound === "chat"
       ? { model: "fixture/pin-model", messages: [{ role: "user", content: "hello" }], stream: false, reasoning_effort: "low", ...extra }
       : { model: "fixture/pin-model", input: "hello", stream: false, reasoning: { effort: "low", summary: "auto" }, ...extra };
@@ -545,7 +545,7 @@ describe("repeated Responses effort normalization", () => {
 
   test("pre-namespace selectors are destination-scoped and restore parser-normalized effort independently of raw effort", () => {
     const parsed = parseRequest({ model: "first/pin-model", input: "hello", reasoning: { effort: "ultra", summary: "auto" } });
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "http://127.0.0.1:65534/v1" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "http://127.0.0.1:65534/v1" };
     const first = { providerName: "first", modelId: "pin-model", provider };
     const second = { ...first, providerName: "second" };
     const config = { port: 0, providers: { first: provider, second: provider },

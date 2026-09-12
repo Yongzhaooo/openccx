@@ -1,4 +1,4 @@
-import type { OcxContentPart, OcxTextContent } from "../types";
+import type { OccxContentPart, OccxTextContent } from "../types";
 
 export function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -16,12 +16,12 @@ function nonEmptyString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
-export function inputContentParts(blocks: unknown): string | OcxContentPart[] {
+export function inputContentParts(blocks: unknown): string | OccxContentPart[] {
   if (typeof blocks === "string") return blocks;
   // The catch-all can also hand back a non-array `content` (an object, a number), which would
   // throw at the loop below before any per-block guard runs.
   if (!Array.isArray(blocks)) return [];
-  const parts: OcxContentPart[] = [];
+  const parts: OccxContentPart[] = [];
   for (const raw of blocks) {
     // A malformed message item fails its strict schema and falls through to inputItemSchema's
     // permissive catch-all, so blocks reaching here are NOT guaranteed to match the declared
@@ -69,10 +69,10 @@ export function inputContentParts(blocks: unknown): string | OcxContentPart[] {
 
 type OutputBlock = { type: "output_text"; text: string } | { type: "text"; text: string } | { type: "refusal"; refusal: string };
 
-export function outputTextOf(blocks: unknown): OcxTextContent[] {
+export function outputTextOf(blocks: unknown): OccxTextContent[] {
   if (typeof blocks === "string") return blocks.length > 0 ? [{ type: "text", text: blocks }] : [];
   if (!Array.isArray(blocks)) return [];
-  const out: OcxTextContent[] = [];
+  const out: OccxTextContent[] = [];
   for (const raw of blocks) {
     // Same catch-all caveat as inputContentParts: validate before use.
     if (!isObj(raw)) continue;
@@ -91,10 +91,10 @@ export function outputTextOf(blocks: unknown): OcxTextContent[] {
  * `input_image` items): returns content parts when any image is present, else a plain joined string.
  * Never inlines an image_url as text (that would explode the token count).
  */
-export function outputToToolResultContent(output: string | unknown[] | undefined): string | OcxContentPart[] {
+export function outputToToolResultContent(output: string | unknown[] | undefined): string | OccxContentPart[] {
   if (typeof output === "string") return output;
   if (!Array.isArray(output)) return "";
-  const parts: OcxContentPart[] = [];
+  const parts: OccxContentPart[] = [];
   let hasImage = false;
   for (const raw of output) {
     if (!isObj(raw)) continue;

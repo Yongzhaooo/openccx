@@ -13,18 +13,18 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let coordinatorPath = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-transition-first-use-codex-"));
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-transition-first-use-ocx-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  codexHome = mkdtempSync(join(tmpdir(), "occx-transition-first-use-codex-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-transition-first-use-occx-"));
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   coordinatorPath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
     realpathSync.native(codexHome),
@@ -34,13 +34,13 @@ beforeEach(() => {
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   for (const suffix of ["", "-journal", "-wal", "-shm"]) {
     rmSync(`${coordinatorPath}${suffix}`, { force: true });
   }
   removeTreeWithRetry(codexHome);
-  removeTreeWithRetry(opencodexHome);
+  removeTreeWithRetry(openccxHome);
 });
 
 function next(txId: string) {

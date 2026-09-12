@@ -41,7 +41,7 @@ import type {
 } from "./convergence-types";
 import { getCodexHome } from "./paths";
 import { nativeMainOwnerFilesystemSupported } from "./native-main-owner";
-import { openCodexCoordinatorTransaction } from "./transition-state";
+import { openccxCoordinatorTransaction } from "./transition-state";
 import {
   CodexUserIdentityRefusal,
   resolveCodexCoordinatorDatabasePath,
@@ -229,7 +229,7 @@ export function canonicalizeCodexHome(
   // hash alike there; POSIX paths are not, so they must not be folded.
   const normalized = process.platform === "win32" ? canonical.toLowerCase() : canonical;
   const lockId = createHash("sha256")
-    .update("opencodex-codex-write-lock-v1\0")
+    .update("openccx-codex-write-lock-v1\0")
     .update(normalized)
     .digest("hex");
   return { ok: true, home: { path: canonical, lockId } };
@@ -313,9 +313,9 @@ export async function withCodexWriteLock<T>(
   for (;;) {
     if (signal?.aborted) return { status: "busy", reason: "cancelled", retryable: true, waitedMs: waited(), lockId: target.lockId };
 
-    let transaction: ReturnType<typeof openCodexCoordinatorTransaction> | undefined;
+    let transaction: ReturnType<typeof openccxCoordinatorTransaction> | undefined;
     try {
-      transaction = openCodexCoordinatorTransaction(databasePath, options.adoption);
+      transaction = openccxCoordinatorTransaction(databasePath, options.adoption);
     } catch (error) {
       // Only contention retries. A malformed database, an unsafe path, or an
       // identity failure will fail identically forever; telling a caller to retry

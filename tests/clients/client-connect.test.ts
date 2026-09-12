@@ -43,7 +43,7 @@ async function readStateProbe(script: string, home: string, timeoutMs = INTERNAL
     try {
       child = spawn(process.execPath, ["--eval", script], {
         cwd: repoRoot,
-        env: { ...process.env, OPENCODEX_HOME: home, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(home, "desktop") },
+        env: { ...process.env, OPENCCX_HOME: home, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(home, "desktop") },
         stdio: ["ignore", "pipe", "pipe"],
       });
     } catch { reject(new ClientStateProbeError(0, null, null, false)); return; }
@@ -106,7 +106,7 @@ async function readStateProbe(script: string, home: string, timeoutMs = INTERNAL
 
 function readyBody(protocol = 1, minimumClientProtocol = 1) {
   return {
-    service: "opencodex",
+    service: "openccx",
     version: "0.0.0",
     uptime: 1,
     pid: 1,
@@ -120,14 +120,14 @@ function readyBody(protocol = 1, minimumClientProtocol = 1) {
 
 describe("remote hub client boundary", () => {
   test("runtimeRole=hub without client state reads as disconnected so the hub can start", async () => {
-    // First clisu-oracle dogfood boot: the hub role refused 'ocx start' because the
+    // First clisu-oracle dogfood boot: the hub role refused 'occx start' because the
     // client-state reader classified role=hub (no client block) as mismatched. A hub
     // is a server; without client state it is simply not a connected client.
     const readScript = `
       const { readClientConnectionState } = require("./src/client/state");
       console.log(JSON.stringify(readClientConnectionState()));
     `;
-    const home = mkdtempSync(join(tmpdir(), "ocx-hub-role-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-hub-role-"));
     try {
       writeFileSync(join(home, "config.json"), JSON.stringify({ port: 10190, runtimeRole: "hub" }));
       expect((await readStateProbe(readScript, home)).kind).toBe("disconnected");
@@ -140,11 +140,11 @@ describe("remote hub client boundary", () => {
   }, 35_000); // Two 15s child deadlines plus bounded 1s cleanup each, below the CI 60s cap.
 
   test("state probe kills a stalled child before parsing its output", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-state-probe-stall-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-state-probe-stall-"));
     const startedPath = join(home, "probe-started");
     const script = `
       const fs = require("node:fs");
-      fs.writeFileSync(require("node:path").join(process.env.OPENCODEX_HOME, "probe-started"), String(process.pid));
+      fs.writeFileSync(require("node:path").join(process.env.OPENCCX_HOME, "probe-started"), String(process.pid));
       fs.writeSync(1, "not-json");
       setInterval(() => {}, 1000);
     `;
@@ -204,7 +204,7 @@ describe("remote hub client boundary", () => {
     let calls = 0;
     await expect(issueClientKey("http://hub.example.test", {
       kind: "admin",
-      value: new TextEncoder().encode("ocx_admin_secret"),
+      value: new TextEncoder().encode("occx_admin_secret"),
     }, "client", {
       fetchImpl: async () => { calls += 1; return new Response(); },
     })).rejects.toThrow("only over HTTPS");
@@ -212,10 +212,10 @@ describe("remote hub client boundary", () => {
 
     const browserOrigin = "http://localhost:10100";
     const sessionHtml = [
-      '<meta name="opencodex-session-token" content="ocx_session_test">',
-      '<meta name="opencodex-session-csrf" content="csrf-test">',
-      `<meta name="opencodex-session-origin" content="${browserOrigin}">`,
-      '<meta name="opencodex-session-server-origin" content="https://hub.example.test">',
+      '<meta name="openccx-session-token" content="occx_session_test">',
+      '<meta name="openccx-session-csrf" content="csrf-test">',
+      `<meta name="openccx-session-origin" content="${browserOrigin}">`,
+      '<meta name="openccx-session-server-origin" content="https://hub.example.test">',
     ].join("");
     const seen: Array<{ url: string; headers: Headers; body: string }> = [];
     const fetchImpl: typeof fetch = async (input, init) => {
@@ -224,11 +224,11 @@ describe("remote hub client boundary", () => {
       return Response.json({
         id: "issued-id",
         name: "client",
-        key: `ocx_data_${"a".repeat(40)}`,
+        key: `occx_data_${"a".repeat(40)}`,
         createdAt: "2026-08-28T00:00:00.000Z",
       }, { status: 201 });
     };
-    const grant = new TextEncoder().encode(`ocx_pair_${"b".repeat(43)}`);
+    const grant = new TextEncoder().encode(`occx_pair_${"b".repeat(43)}`);
     const session = await exchangeConnectPairingGrant(
       "https://hub.example.test",
       browserOrigin,
@@ -238,8 +238,8 @@ describe("remote hub client boundary", () => {
     const issued = await issueClientKey("https://hub.example.test", { kind: "gui-session", value: session }, "client", { fetchImpl });
     expect(issued.id).toBe("issued-id");
     expect(seen[0]?.headers.get("origin")).toBe(browserOrigin);
-    expect(seen[1]?.headers.get("x-opencodex-gui-origin")).toBe(browserOrigin);
-    expect(seen[1]?.headers.get("x-opencodex-csrf-token")).toBe("csrf-test");
+    expect(seen[1]?.headers.get("x-openccx-gui-origin")).toBe(browserOrigin);
+    expect(seen[1]?.headers.get("x-openccx-csrf-token")).toBe("csrf-test");
     expect(seen[1]?.body).toBe(JSON.stringify({ name: "client" }));
   });
 
@@ -251,7 +251,7 @@ describe("remote hub client boundary", () => {
     await expect(exchangeConnectPairingGrant(
       "http://hub.example.test",
       "http://localhost:10100",
-      new TextEncoder().encode(`ocx_pair_${"c".repeat(43)}`),
+      new TextEncoder().encode(`occx_pair_${"c".repeat(43)}`),
       { fetchImpl: async () => { calls += 1; return new Response(); } },
     )).rejects.toThrow("loopback or HTTPS");
     // Refused before any request: the grant is still spendable over a permitted transport.
@@ -262,7 +262,7 @@ describe("remote hub client boundary", () => {
     // /v1/catalog emits no validator (Phase 1, D2), so the client sends no If-None-Match and
     // has no 304 branch to keep correct. The size bound is unaffected by that change.
     let sentConditional: string | null = null;
-    const fresh = await downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    const fresh = await downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       fetchImpl: async (_input, init) => {
         sentConditional = new Headers(init?.headers).get("if-none-match");
         return new Response('{"models":[]}', { headers: { "Content-Type": "application/json" } });
@@ -271,7 +271,7 @@ describe("remote hub client boundary", () => {
     expect(sentConditional).toBeNull();
     expect(fresh).toMatchObject({ kind: "fresh" });
 
-    await expect(downloadClientCatalog("https://hub.example.test", "ocx_data_test", {
+    await expect(downloadClientCatalog("https://hub.example.test", "occx_data_test", {
       maxBytes: 4,
       fetchImpl: async () => new Response('{"models":[]}', { headers: { "Content-Type": "application/json" } }),
     })).rejects.toThrow("allowed size");
@@ -320,9 +320,9 @@ function runTransactionScenario(
   stage: "success" | "catalog" | "preflight" | "commit" | "prior-catalog" | "coordinator",
   options: { script?: string; timeoutMs?: number } = {},
 ) {
-  const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-client-connect-home-"));
-  const codexHome = mkdtempSync(join(tmpdir(), "ocx-client-connect-codex-"));
-  const configPath = join(opencodexHome, "config.json");
+  const openccxHome = mkdtempSync(join(tmpdir(), "occx-client-connect-home-"));
+  const codexHome = mkdtempSync(join(tmpdir(), "occx-client-connect-codex-"));
+  const configPath = join(openccxHome, "config.json");
   const originalConfig = {
     port: 10100,
     providers: { openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" } },
@@ -332,11 +332,11 @@ function runTransactionScenario(
   if (stage !== "preflight") writeFileSync(join(codexHome, "config.toml"), 'model_provider = "openai"\n', "utf8");
   // A catalog the user already had. Connect overwrites it; disconnect has to put it back.
   if (stage === "prior-catalog") {
-    writeFileSync(join(codexHome, "opencodex-catalog.json"), PRIOR_CATALOG_BYTES, "utf8");
+    writeFileSync(join(codexHome, "openccx-catalog.json"), PRIOR_CATALOG_BYTES, "utf8");
   }
   if (stage === "coordinator") {
     const { mkdirSync } = require("node:fs") as typeof import("node:fs");
-    mkdirSync(join(opencodexHome, "config-mutation.sqlite"));
+    mkdirSync(join(openccxHome, "config-mutation.sqlite"));
   }
   const script = options.script ?? `
     const { existsSync, readFileSync } = require("node:fs");
@@ -352,7 +352,7 @@ function runTransactionScenario(
     const catalog = '{"models":[]}';
     const etag = '"sha256-' + createHash("sha256").update(catalog).digest("base64url") + '"';
     const calls = [];
-    const credential = new TextEncoder().encode("ocx_admin_test-authority");
+    const credential = new TextEncoder().encode("occx_admin_test-authority");
     const fetchImpl = async (input, init = {}) => {
       const url = String(input);
       calls.push({ url, method: init.method || "GET" });
@@ -360,7 +360,7 @@ function runTransactionScenario(
       if (url.endsWith("/api/keys") && init.method === "POST") return Response.json({
         id: "issued-id",
         name: "client",
-        key: "ocx_data_${"d".repeat(40)}",
+        key: "occx_data_${"d".repeat(40)}",
         createdAt: "2026-08-28T00:00:00.000Z",
       }, { status: 201 });
       if (url.endsWith("/api/keys") && init.method === "DELETE") return Response.json({ success: true });
@@ -386,7 +386,7 @@ function runTransactionScenario(
             throw new Error("fixture_final_client_commit_failed");
           });
           return new Date("2026-08-28T00:00:00.000Z");
-        }, lifecycleLockDeps: { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" } });
+        }, lifecycleLockDeps: { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" } });
       } catch (cause) { error = cause instanceof Error ? cause.message : String(cause); }
       const beforeDisconnect = readClientConnectionState();
       // The hub-state cache is derived from THIS connection; disconnect has to take it with it.
@@ -404,7 +404,7 @@ function runTransactionScenario(
         credentialZeroed: credential.every(value => value === 0),
       };
       let disconnected = null;
-      if ((stage === "success" || stage === "prior-catalog") && connected) disconnected = await disconnectClient({}, { lifecycleLockDeps: { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" } });
+      if ((stage === "success" || stage === "prior-catalog") && connected) disconnected = await disconnectClient({}, { lifecycleLockDeps: { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" } });
       const catalogAfter = existsSync(DEFAULT_CATALOG_PATH) ? readFileSync(DEFAULT_CATALOG_PATH, "utf8") : null;
       const hubStateCacheAfter = existsSync(hubStateCachePath());
       console.log(JSON.stringify({ connected, error, beforeDisconnect, artifacts, disconnected, catalogAfter, hubStateCacheBefore, hubStateCacheAfter, after: readClientConnectionState(), calls, commitFaultTriggered }));
@@ -412,7 +412,7 @@ function runTransactionScenario(
   `;
   const cleanup = () => {
     const failures: unknown[] = [];
-    for (const home of [opencodexHome, codexHome]) {
+    for (const home of [openccxHome, codexHome]) {
       try { removeTreeWithRetry(home); }
       catch (error) { failures.push(error); }
     }
@@ -421,7 +421,7 @@ function runTransactionScenario(
   try {
     const result = spawnSync(process.execPath, ["--eval", script], {
       cwd: repoRoot,
-      env: { ...process.env, OPENCODEX_HOME: opencodexHome, CODEX_HOME: codexHome, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(opencodexHome, "desktop") },
+      env: { ...process.env, OPENCCX_HOME: openccxHome, CODEX_HOME: codexHome, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(openccxHome, "desktop") },
       encoding: "utf8",
       timeout: options.timeoutMs ?? INTERNAL_DEADLINE_MS,
       killSignal: "SIGKILL",
@@ -442,13 +442,13 @@ function runTransactionScenario(
 
 describe("connect transaction and offline disconnect", () => {
   test("transaction fixture stops a child retained after valid output", async () => {
-    const proofHome = mkdtempSync(join(tmpdir(), "ocx-transaction-child-proof-"));
+    const proofHome = mkdtempSync(join(tmpdir(), "occx-transaction-child-proof-"));
     const markerPath = join(proofHome, "child-started.json");
     const naturalExitPath = join(proofHome, "natural-exit");
     const script = `
       const fs = require("node:fs");
       fs.writeFileSync(${JSON.stringify(markerPath)}, JSON.stringify({
-        pid: process.pid, home: process.env.OPENCODEX_HOME, codexHome: process.env.CODEX_HOME,
+        pid: process.pid, home: process.env.OPENCCX_HOME, codexHome: process.env.CODEX_HOME,
       }));
       fs.writeSync(1, '{"ok":true}\\n');
       setTimeout(() => { fs.writeFileSync(${JSON.stringify(naturalExitPath)}, "exited"); }, 5_000);
@@ -483,12 +483,12 @@ describe("connect transaction and offline disconnect", () => {
     ["invalid JSON", "private-child-output", 0],
   ] as const) {
     test(`transaction fixture cleans homes after ${mode}`, () => {
-      const proofHome = mkdtempSync(join(tmpdir(), "ocx-transaction-child-proof-"));
+      const proofHome = mkdtempSync(join(tmpdir(), "occx-transaction-child-proof-"));
       const markerPath = join(proofHome, "child-started.json");
       const script = `
         const fs = require("node:fs");
         fs.writeFileSync(${JSON.stringify(markerPath)}, JSON.stringify({
-          pid: process.pid, home: process.env.OPENCODEX_HOME, codexHome: process.env.CODEX_HOME,
+          pid: process.pid, home: process.env.OPENCCX_HOME, codexHome: process.env.CODEX_HOME,
         }));
         fs.writeSync(1, ${JSON.stringify(output)});
         process.exit(${status});
@@ -583,23 +583,23 @@ describe("connect transaction and offline disconnect", () => {
           expect(run.parsed.calls.some((call: any) => call.method === "POST" && call.url.endsWith("/api/keys"))).toBe(true);
         }
         expect(run.configBytes).not.toContain("issued-id");
-        expect(`${run.parsed.error} ${run.stderr}`).not.toContain(`ocx_data_${"d".repeat(40)}`);
+        expect(`${run.parsed.error} ${run.stderr}`).not.toContain(`occx_data_${"d".repeat(40)}`);
       } finally { run.cleanup(); }
     });
   }
 });
 
 function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-conflict" | "disconnect-process-journal") {
-  const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-client-state-home-"));
-  const codexHome = mkdtempSync(join(tmpdir(), "ocx-client-state-codex-"));
-  const token = `ocx_data_${"e".repeat(40)}`;
+  const openccxHome = mkdtempSync(join(tmpdir(), "occx-client-state-home-"));
+  const codexHome = mkdtempSync(join(tmpdir(), "occx-client-state-codex-"));
+  const token = `occx_data_${"e".repeat(40)}`;
   const fingerprint = createHash("sha256").update(token).digest("hex");
   const catalog = '{"models":[]}';
   const catalogFingerprint = createHash("sha256").update(catalog).digest("base64url");
-  const injected = 'model_provider = "opencodex"\n';
+  const injected = 'model_provider = "openccx"\n';
   const isDisconnect = mode === "disconnect-conflict" || mode === "disconnect-process-journal";
   const selectedClients = isDisconnect ? ["codex"] : ["claude"];
-  writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+  writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
     port: 10100,
     providers: {},
     defaultProvider: "openai",
@@ -609,7 +609,7 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
       managementUrl: "https://hub.example.test",
       managementTransport: "direct",
       selectedClients,
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: "client-key-1",
       tokenFingerprint: fingerprint,
       protocolVersion: 1,
@@ -618,13 +618,13 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
       catalogSyncedAt: "2026-08-28T00:00:00.000Z",
     },
   }), "utf8");
-  writeFileSync(join(opencodexHome, "service-api-token"), `${token}\n`, { mode: 0o600 });
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), catalog, "utf8");
+  writeFileSync(join(openccxHome, "service-api-token"), `${token}\n`, { mode: 0o600 });
+  writeFileSync(join(codexHome, "openccx-catalog.json"), catalog, "utf8");
   writeFileSync(join(codexHome, "config.toml"), isDisconnect
     ? injected
     : 'model_provider = "openai"\n', "utf8");
   if (mode === "disconnect-conflict") {
-    writeFileSync(join(codexHome, "opencodex-journal.json"), JSON.stringify({
+    writeFileSync(join(codexHome, "openccx-journal.json"), JSON.stringify({
       version: 1,
       originalConfig: Buffer.from('model_provider = "openai"\n').toString("base64"),
       originalProfile: null,
@@ -636,11 +636,11 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
     }));
   }
   if (mode === "disconnect-process-journal") {
-    // The state `ocx start` leaves behind: routing is injected and the journal is owned by
+    // The state `occx start` leaves behind: routing is injected and the journal is owned by
     // the proxy PROCESS, not by any client key. Connecting on top of this does not take
     // ownership — writeJournal() refuses to overwrite a journal whose config is already
     // injected — so the process owner survives into the connected state.
-    writeFileSync(join(codexHome, "opencodex-journal.json"), JSON.stringify({
+    writeFileSync(join(codexHome, "openccx-journal.json"), JSON.stringify({
       version: 1,
       originalConfig: Buffer.from('model_provider = "openai"\n').toString("base64"),
       originalProfile: null,
@@ -661,9 +661,9 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
       let result = null;
       let error = null;
       try {
-        if (mode === "disconnect-conflict" || mode === "disconnect-process-journal") result = await disconnectClient({}, { lifecycleLockDeps: { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" } });
+        if (mode === "disconnect-conflict" || mode === "disconnect-process-journal") result = await disconnectClient({}, { lifecycleLockDeps: { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" } });
         else result = await syncConnectedClient({}, {
-          lifecycleLockDeps: { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" },
+          lifecycleLockDeps: { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" },
           fetchImpl: async () => Response.json({ error: "fixture" }, { status: mode === "sync-401" ? 401 : 503 }),
         });
       } catch (cause) { error = cause instanceof Error ? cause.message : String(cause); }
@@ -671,14 +671,14 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
         result,
         error,
         state: readClientConnectionState(),
-        tokenExists: fs.existsSync(path.join(process.env.OPENCODEX_HOME, "service-api-token")),
-        journalExists: fs.existsSync(path.join(process.env.CODEX_HOME, "opencodex-journal.json")),
+        tokenExists: fs.existsSync(path.join(process.env.OPENCCX_HOME, "service-api-token")),
+        journalExists: fs.existsSync(path.join(process.env.CODEX_HOME, "openccx-journal.json")),
       }));
     })();
   `;
   const child = spawnSync(process.execPath, ["--eval", script], {
     cwd: repoRoot,
-    env: { ...process.env, OPENCODEX_HOME: opencodexHome, CODEX_HOME: codexHome, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(opencodexHome, "desktop") },
+    env: { ...process.env, OPENCCX_HOME: openccxHome, CODEX_HOME: codexHome, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(openccxHome, "desktop") },
     encoding: "utf8",
   });
   const parsed = JSON.parse(child.stdout.trim().split("\n").at(-1) ?? "{}") as Record<string, any>;
@@ -686,7 +686,7 @@ function runConnectedStateScenario(mode: "sync-401" | "sync-503" | "disconnect-c
     status: child.status,
     parsed,
     cleanup: () => {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
       removeTreeWithRetry(codexHome);
     },
   };
@@ -727,7 +727,7 @@ describe("connected sync and disconnect conflicts", () => {
   });
 
   test("a journal left owned by the proxy process does not strand the connection", () => {
-    // Connecting after `ocx start` is the normal path, not an edge case: routing is already
+    // Connecting after `occx start` is the normal path, not an edge case: routing is already
     // injected and the journal is owned by the proxy process. Ownership never transfers,
     // because writeJournal() will not overwrite a journal whose config is already injected.
     //
@@ -746,11 +746,11 @@ describe("connected sync and disconnect conflicts", () => {
 
 describe("recoverable connected key rotation", () => {
   test("a dropped first commit is recovered from doubly-accepted current and .prev keys", () => {
-    const opencodexHome = mkdtempSync(join(tmpdir(), "ocx-client-rotation-"));
-    const oldKey = `ocx_data_${"1".repeat(40)}`;
-    const newKey = `ocx_data_${"2".repeat(40)}`;
+    const openccxHome = mkdtempSync(join(tmpdir(), "occx-client-rotation-"));
+    const oldKey = `occx_data_${"1".repeat(40)}`;
+    const newKey = `occx_data_${"2".repeat(40)}`;
     const oldFingerprint = createHash("sha256").update(oldKey).digest("hex");
-    writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+    writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
       port: 10100,
       providers: {},
       defaultProvider: "openai",
@@ -760,14 +760,14 @@ describe("recoverable connected key rotation", () => {
         managementUrl: "https://hub.example.test",
         managementTransport: "direct",
         selectedClients: ["claude"],
-        tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+        tokenEnv: "OPENCCX_API_AUTH_TOKEN",
         apiKeyId: "client-key-1",
         tokenFingerprint: oldFingerprint,
         protocolVersion: 1,
         connectedAt: "2026-08-28T00:00:00.000Z",
       },
     }));
-    writeFileSync(join(opencodexHome, "service-api-token"), `${oldKey}\n`, { mode: 0o600 });
+    writeFileSync(join(openccxHome, "service-api-token"), `${oldKey}\n`, { mode: 0o600 });
     const script = `
       const fs = require("node:fs");
       const path = require("node:path");
@@ -791,22 +791,22 @@ describe("recoverable connected key rotation", () => {
           return Response.json({ ok: true });
         }
         if (url.endsWith("/v1/catalog")) {
-          const token = new Headers(init.headers).get("x-opencodex-api-key");
+          const token = new Headers(init.headers).get("x-openccx-api-key");
           const accepted = token === newKey || (!committed && token === oldKey);
           return accepted
-            ? new Response('{"models":[]}', { headers: { "Content-Type": "application/json", "X-OpenCodex-Key-Id": "client-key-1" } })
+            ? new Response('{"models":[]}', { headers: { "Content-Type": "application/json", "X-Openccx-Key-Id": "client-key-1" } })
             : Response.json({ error: "unauthorized" }, { status: 401 });
         }
         throw new Error("unexpected request " + url);
       };
       (async () => {
-        const credential = new TextEncoder().encode("ocx_admin_rotation_test");
-        const result = await rotateConnectedClientKey({ credential: { kind: "admin", value: credential } }, { fetchImpl, lifecycleLockDeps: { lockPath: process.env.OPENCODEX_HOME + "/lifecycle.sqlite" } });
+        const credential = new TextEncoder().encode("occx_admin_rotation_test");
+        const result = await rotateConnectedClientKey({ credential: { kind: "admin", value: credential } }, { fetchImpl, lifecycleLockDeps: { lockPath: process.env.OPENCCX_HOME + "/lifecycle.sqlite" } });
         console.log(JSON.stringify({
           result,
           state: readClientConnectionState(),
-          tokenIsNew: fs.readFileSync(path.join(process.env.OPENCODEX_HOME, "service-api-token"), "utf8").trim() === newKey,
-          backup: fs.existsSync(path.join(process.env.OPENCODEX_HOME, "service-api-token.prev")),
+          tokenIsNew: fs.readFileSync(path.join(process.env.OPENCCX_HOME, "service-api-token"), "utf8").trim() === newKey,
+          backup: fs.existsSync(path.join(process.env.OPENCCX_HOME, "service-api-token.prev")),
           commitCalls,
           credentialZeroed: credential.every(value => value === 0),
         }));
@@ -814,7 +814,7 @@ describe("recoverable connected key rotation", () => {
     `;
     const child = spawnSync(process.execPath, ["--eval", script], {
       cwd: repoRoot,
-      env: { ...process.env, OPENCODEX_HOME: opencodexHome, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(opencodexHome, "desktop") },
+      env: { ...process.env, OPENCCX_HOME: openccxHome, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(openccxHome, "desktop") },
       encoding: "utf8",
     });
     try {
@@ -827,29 +827,29 @@ describe("recoverable connected key rotation", () => {
       expect(result.state.value.pendingOperation).toBeUndefined();
       expect(result.credentialZeroed).toBe(true);
     } finally {
-      removeTreeWithRetry(opencodexHome);
+      removeTreeWithRetry(openccxHome);
     }
   });
 
   test("status removes a .prev orphan only when no rotation marker exists", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-client-orphan-"));
-    const token = `ocx_data_${"3".repeat(40)}`;
+    const home = mkdtempSync(join(tmpdir(), "occx-client-orphan-"));
+    const token = `occx_data_${"3".repeat(40)}`;
     const fingerprint = createHash("sha256").update(token).digest("hex");
     writeFileSync(join(home, "config.json"), JSON.stringify({
       port: 10100, providers: {}, defaultProvider: "openai", runtimeRole: "client",
       client: {
         serverUrl: "https://hub.example.test", managementUrl: "https://hub.example.test",
-        managementTransport: "direct", selectedClients: ["claude"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+        managementTransport: "direct", selectedClients: ["claude"], tokenEnv: "OPENCCX_API_AUTH_TOKEN",
         apiKeyId: "client-key-1", tokenFingerprint: fingerprint, protocolVersion: 1,
         connectedAt: "2026-08-28T00:00:00.000Z",
       },
     }));
     writeFileSync(join(home, "service-api-token"), `${token}\n`, { mode: 0o600 });
     writeFileSync(join(home, "service-api-token.prev"), `${token}\n`, { mode: 0o600 });
-    const previous = process.env.OPENCODEX_HOME;
-    const previousDesktop = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    process.env.OPENCODEX_HOME = home;
-    process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(home, "desktop");
+    const previous = process.env.OPENCCX_HOME;
+    const previousDesktop = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    process.env.OPENCCX_HOME = home;
+    process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(home, "desktop");
     try {
       const errors: string[] = [];
       const spy = spyOn(console, "error").mockImplementation(value => errors.push(String(value)));
@@ -859,10 +859,10 @@ describe("recoverable connected key rotation", () => {
       expect(readFileSync(join(home, "service-api-token"), "utf8").trim()).toBe(token);
       expect(errors.join(" ")).not.toContain(token);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
-      if (previousDesktop === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-      else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktop;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
+      if (previousDesktop === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+      else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktop;
       removeTreeWithRetry(home);
     }
   });
@@ -871,7 +871,7 @@ describe("recoverable connected key rotation", () => {
 
 /** Real per-process files and SQLite; only hub HTTP is substituted. Never return credential bytes. */
 function runDesktopLifecycleScenario(mode: string) {
-  const root = mkdtempSync(join(tmpdir(), "ocx-desktop-lifecycle-client-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-desktop-lifecycle-client-"));
   const script = `
     const fs = require("node:fs"), path = require("node:path"), crypto = require("node:crypto");
     const { Readable } = require("node:stream");
@@ -884,10 +884,10 @@ function runDesktopLifecycleScenario(mode: string) {
     const { handleConnectCommand } = require("./src/cli/connect");
     const { DEFAULT_CATALOG_PATH } = require("./src/codex/paths");
     const mode = ${JSON.stringify(mode)};
-    const home = process.env.OPENCODEX_HOME, desktop = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
+    const home = process.env.OPENCCX_HOME, desktop = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
     for (const dir of [home, desktop, process.env.CODEX_HOME]) fs.mkdirSync(dir, { recursive: true });
     const lockDeps = { lockPath: path.join(home, "fixture-lifecycle.sqlite") };
-    const oldKey = "ocx_data_" + "1".repeat(40), newKey = "ocx_data_" + "2".repeat(40);
+    const oldKey = "occx_data_" + "1".repeat(40), newKey = "occx_data_" + "2".repeat(40);
     const hash = value => crypto.createHash("sha256").update(value).digest("hex");
     const oldHash = hash(oldKey), newHash = hash(newKey);
     const owner = { serverUrl: "https://hub.example.test", apiKeyId: "fixture-key", connectedAt: "2026-09-06T00:00:00.000Z" };
@@ -896,7 +896,7 @@ function runDesktopLifecycleScenario(mode: string) {
       providers: { openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" } },
       defaultProvider: "openai", runtimeRole: "client", client: {
       ...owner, managementUrl: owner.serverUrl, managementTransport: "direct", selectedClients: ["claude"],
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN", tokenFingerprint: oldHash, protocolVersion: 1,
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN", tokenFingerprint: oldHash, protocolVersion: 1,
       catalogFingerprint: crypto.createHash("sha256").update(catalog).digest("base64url"),
       priorCatalog: Buffer.from(prior).toString("base64"),
     } };
@@ -914,7 +914,7 @@ function runDesktopLifecycleScenario(mode: string) {
     const unused = mode.startsWith("status-") || mode === "disconnect-expected-owner";
     fixtureFailurePhase = "desktop_setup";
     if (!unused) {
-      fs.writeFileSync(path.join(desktop, "_meta.json"), JSON.stringify({ appliedId: "fixture", entries: [{ id: "fixture", name: "opencodex" }], foreignMeta: "preserve" }));
+      fs.writeFileSync(path.join(desktop, "_meta.json"), JSON.stringify({ appliedId: "fixture", entries: [{ id: "fixture", name: "openccx" }], foreignMeta: "preserve" }));
       fs.writeFileSync(profilePath, JSON.stringify({
         inferenceProvider: "gateway", inferenceCredentialKind: "static",
         inferenceGatewayBaseUrl: mode === "disconnect-legacy" ? owner.serverUrl : "http://127.0.0.1:10100",
@@ -971,11 +971,11 @@ function runDesktopLifecycleScenario(mode: string) {
         }
         if (mode === "sync-queued-guard") return Response.json({ models: [{ slug: "new/model" }] });
         if (mode === "recover-probe-error") throw new Error("fixture probe unavailable");
-        const value = new Headers(init.headers).get("x-opencodex-api-key");
+        const value = new Headers(init.headers).get("x-openccx-api-key");
         const oldAdmitted = !committed;
         const newAdmitted = !aborted && !["recover-backup", "recover-backup-cli", "rollback"].includes(mode);
         const admitted = mode !== "recover-neither" && ((value === oldKey && oldAdmitted) || (value === newKey && newAdmitted));
-        return admitted ? new Response(catalog, { headers: { "Content-Type": "application/json", "X-OpenCodex-Key-Id": owner.apiKeyId } })
+        return admitted ? new Response(catalog, { headers: { "Content-Type": "application/json", "X-Openccx-Key-Id": owner.apiKeyId } })
           : Response.json({ error: "unauthorized" }, { status: 401 });
       }
       throw new Error("unexpected fixture request");
@@ -983,7 +983,7 @@ function runDesktopLifecycleScenario(mode: string) {
     fixtureFailurePhase = "scenario";
     await (async () => {
       let result = null, error = null, second = null, statusInside = null, statusOutside = null, cliRotation = null;
-      const credential = new TextEncoder().encode("ocx_admin_fixture");
+      const credential = new TextEncoder().encode("occx_admin_fixture");
       const deps = { fetchImpl, lifecycleLockDeps: lockDeps };
       try {
         if (mode.startsWith("disconnect")) {
@@ -995,7 +995,7 @@ function runDesktopLifecycleScenario(mode: string) {
           if (mode === "disconnect-order") {
             saveClient(client => { client.selectedClients = ["codex"]; });
             const journal = require("./src/codex/journal");
-            fs.writeFileSync(path.join(process.env.CODEX_HOME, "config.toml"), 'model_provider = "opencodex"');
+            fs.writeFileSync(path.join(process.env.CODEX_HOME, "config.toml"), 'model_provider = "openccx"');
             fs.writeFileSync(journal.JOURNAL_PATH, JSON.stringify({ version: 1,
               originalConfig: Buffer.from('model_provider = "openai"').toString("base64"), originalProfile: null,
               injectedConfigHash: hash(fs.readFileSync(path.join(process.env.CODEX_HOME, "config.toml"), "utf8")),
@@ -1065,7 +1065,7 @@ function runDesktopLifecycleScenario(mode: string) {
           const err = spyOn(console, "error").mockImplementation(value => errors.push(String(value)));
           try {
             const exitCode = await handleConnectCommand(["rotate", "--admin-token-stdin", "--json"], {
-              ...deps, stdinImpl: Readable.from(["ocx_admin_fixture\\n"]),
+              ...deps, stdinImpl: Readable.from(["occx_admin_fixture\\n"]),
             });
             cliRotation = { exitCode, value: logs.length ? JSON.parse(logs.at(-1)) : null, revokedClaim: logs.some(x => x.includes("previous key is no longer admitted")) };
           } finally { log.mockRestore(); err.mockRestore(); }
@@ -1112,7 +1112,7 @@ function runDesktopLifecycleScenario(mode: string) {
   // discovery restriction for this generated temporary test file.
   const child = spawnSync(process.execPath, ["test", "--preload", join(repoRoot, "tests/preload.ts"), fixturePath], {
     cwd: root,
-    env: { ...process.env, OPENCODEX_HOME: join(root, "ocx"), CODEX_HOME: join(root, "codex"), OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: join(root, "desktop") },
+    env: { ...process.env, OPENCCX_HOME: join(root, "occx"), CODEX_HOME: join(root, "codex"), OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: join(root, "desktop") },
     encoding: "utf8", timeout: INTERNAL_DEADLINE_MS, killSignal: "SIGKILL",
   });
   try {

@@ -5,15 +5,15 @@
  * agent DEFINITION's frontmatter `model:` is a free string ("Model alias this agent
  * uses. If omitted, inherits the parent's model"). So we sync the featured
  * subagent roster (config.subagentModels, <=5) plus the main model (when not
- * already covered) into ~/.claude/agents/ocx-*.md — one dispatchable
+ * already covered) into ~/.claude/agents/occx-*.md — one dispatchable
  * `subagent_type` per routed model, loaded at the next session start.
  *
  * Ownership contract: this module only creates/overwrites/deletes files matching
- * `ocx-*.md` inside the agents dir. User-authored agents are never touched.
+ * `occx-*.md` inside the agents dir. User-authored agents are never touched.
  */
 import { lstatSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { renameAtomicFile } from "../lib/windows-atomic-replace";
 import { claudeCodeAlias, claudeCodeNativeAlias } from "./alias";
 import { AUTO_CONTEXT_OFF, shouldMarkOneMillion, stripOneMillionMarker, withOneMillionMarker } from "./context-windows";
@@ -29,13 +29,13 @@ export interface ClaudeAgentDef {
   name: string;
   model: string;
   description: string;
-  effort?: NonNullable<OcxConfig["claudeCode"]>["subagentEffort"];
+  effort?: NonNullable<OccxConfig["claudeCode"]>["subagentEffort"];
   blockedSkills: readonly string[];
 }
 
-const OWNED_PREFIX = "ocx-";
+const OWNED_PREFIX = "occx-";
 /** Ownership proof (audit 071 #2): a file without this marker is NEVER touched. */
-const GENERATED_MARKER = "generated-by: opencodex";
+const GENERATED_MARKER = "generated-by: openccx";
 
 function sanitizeName(value: string): string {
   const cleaned = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -45,7 +45,7 @@ function sanitizeName(value: string): string {
 /**
  * The user's default model as saved by the /model picker (settings.json `model`).
  * `model: "inherit"` in agent frontmatter is DISPROVEN on 2.1.207 (live: a
- * no-model ocx-self dispatch fell back to claude-fable-5 — devlog 072), so the
+ * no-model occx-self dispatch fell back to claude-fable-5 — devlog 072), so the
  * self-clone pins this value instead, refreshed at every launch-time sync.
  */
 function pickerDefaultModel(configDir: string): string | null {
@@ -81,7 +81,7 @@ function withSubagentContextMarker(selector: string, windows: Record<string, num
   }
   return wasMarked ? selector : bare;
 }
-function entryParts(entry: string, config: OcxConfig): { alias: string; id: string; provider: string } {
+function entryParts(entry: string, config: OccxConfig): { alias: string; id: string; provider: string } {
   const slash = entry.indexOf("/");
   if (slash > 0) {
     const provider = entry.slice(0, slash);
@@ -95,7 +95,7 @@ function entryParts(entry: string, config: OcxConfig): { alias: string; id: stri
 }
 
 export function buildClaudeAgentDefs(
-  config: OcxConfig,
+  config: OccxConfig,
   windows: Record<string, number>,
   configDir = claudeConfigDir(),
   /**
@@ -158,7 +158,7 @@ export function buildClaudeAgentDefs(
   for (const entry of roster.slice(0, 5)) {
     if (typeof entry !== "string" || entry.trim() === "") continue;
     const { alias, id, provider } = entryParts(entry.trim(), config);
-    push(sanitizeName(id), alias, `Delegate work to ${id} (${provider}) via opencodex routing. General-purpose worker/explorer on that model. ${NO_MODEL_ARG}`);
+    push(sanitizeName(id), alias, `Delegate work to ${id} (${provider}) via openccx routing. General-purpose worker/explorer on that model. ${NO_MODEL_ARG}`);
   }
 
   // Self-clone slot: pin the picker-saved default (settings.json), falling back to
@@ -207,17 +207,17 @@ function renderAgentDef(def: ClaudeAgentDef): string {
     // ids in agent frontmatter (falls back to sonnet — live-proven), but the agent
     // BODY rides the subagent's system prompt verbatim. The proxy detects this
     // directive and overrides the request model before routing/passthrough.
-    `<!-- ocx-route: ${def.model} -->`,
-    ...(def.effort ? [`<!-- ocx-effort: ${def.effort} -->`] : []),
+    `<!-- occx-route: ${def.model} -->`,
+    ...(def.effort ? [`<!-- occx-effort: ${def.effort} -->`] : []),
     "",
-    `You are a delegated worker running on \`${def.model}\` through the local opencodex proxy.`,
-    `IDENTITY: your ACTUAL underlying model is \`${def.model}\` — the opencodex proxy routes this`,
+    `You are a delegated worker running on \`${def.model}\` through the local openccx proxy.`,
+    `IDENTITY: your ACTUAL underlying model is \`${def.model}\` — the openccx proxy routes this`,
     "session there regardless of what model name the Claude Code harness displays or claims.",
     "If asked which model you are, answer with the id above; do not guess a Claude model name.",
     ...blockedSkillGuard,
     "",
     "Complete the dispatched task directly and report results concisely. This file is",
-    "auto-generated by opencodex (`ocx claude`) from the featured subagent roster —",
+    "auto-generated by openccx (`occx claude`) from the featured subagent roster —",
     "manual edits will be overwritten; remove the model from the roster to drop it.",
     "",
   ].join("\n");
@@ -235,7 +235,7 @@ function isOwnedFile(path: string): boolean {
 }
 
 /**
- * Sync owned agent files: write/overwrite current defs, prune stale ocx-*.md,
+ * Sync owned agent files: write/overwrite current defs, prune stale occx-*.md,
  * never touch anything else. Ownership requires the generated marker; writes are
  * atomic (tmp + rename). Best-effort — returns null on any failure.
  */
@@ -260,7 +260,7 @@ export function syncClaudeAgentDefs(defs: readonly ClaudeAgentDef[], configDir =
     const written: string[] = [];
     for (const def of defs) {
       const target = join(dir, def.file);
-      // A pre-existing ocx-* file WITHOUT our marker is user property: skip the def.
+      // A pre-existing occx-* file WITHOUT our marker is user property: skip the def.
       try {
         lstatSync(target);
         if (!isOwnedFile(target)) continue;
@@ -276,9 +276,9 @@ export function syncClaudeAgentDefs(defs: readonly ClaudeAgentDef[], configDir =
   }
 }
 
-/** Launch-time hook: gate + build + sync in one call (used by ocx claude and systemEnv). */
+/** Launch-time hook: gate + build + sync in one call (used by occx claude and systemEnv). */
 export function injectClaudeAgentDefs(
-  config: OcxConfig,
+  config: OccxConfig,
   windows: Record<string, number>,
   configDir?: string,
   /** Hub-sourced roster on a connected client; see `buildClaudeAgentDefs`. */
@@ -293,7 +293,7 @@ export function injectClaudeAgentDefs(
   return syncClaudeAgentDefs(buildClaudeAgentDefs(config, windows, configDir, rosterOverride), configDir);
 }
 /**
- * Dispatcher directive appended to every ocx-* description. The ocx-route body
+ * Dispatcher directive appended to every occx-* description. The occx-route body
  * directive makes the Agent tool's `model` argument INERT (the proxy overrides
  * the request model before routing — live-proven), so instead of asking the
  * dispatcher to omit it (which caused schema-anxiety loops), we hand it a fixed
@@ -301,4 +301,4 @@ export function injectClaudeAgentDefs(
  * is visibly a placeholder in the Claude Code UI, while "sonnet" was
  * indistinguishable from a genuine Sonnet call (issue #252).
  */
-const NO_MODEL_ARG = "NOTE: this agent's real model is pinned by the opencodex proxy — the `model` argument is ignored. Pass model: \"haiku\" as a placeholder (or omit it); routing is unaffected either way.";
+const NO_MODEL_ARG = "NOTE: this agent's real model is pinned by the openccx proxy — the `model` argument is ignored. Pass model: \"haiku\" as a placeholder (or omit it); routing is unaffected either way.";

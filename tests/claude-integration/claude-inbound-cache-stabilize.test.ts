@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../src/config";
 import { handleClaudeMessages } from "../../src/server/claude-messages";
-import type { OcxConfig, OcxClaudeCodeConfig } from "../../src/types";
+import type { OccxConfig, OccxClaudeCodeConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { beforeEach, afterEach, describe, expect, test } from "bun:test";
@@ -406,16 +406,16 @@ describe("Messages operator opt-in at the outbound boundary", () => {
   let configHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    isolatedHome = installIsolatedCodexHome("ocx-prefix-contract-");
-    configHome = mkdtempSync(join(tmpdir(), "ocx-prefix-config-"));
-    process.env.OPENCODEX_HOME = configHome;
+    previousHome = process.env.OPENCCX_HOME;
+    isolatedHome = installIsolatedCodexHome("occx-prefix-contract-");
+    configHome = mkdtempSync(join(tmpdir(), "occx-prefix-config-"));
+    process.env.OPENCCX_HOME = configHome;
   });
   afterEach(() => {
     globalThis.fetch = originalFetch;
     isolatedHome?.restore();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (configHome) removeTreeWithRetry(configHome);
   });
 
@@ -431,7 +431,7 @@ describe("Messages operator opt-in at the outbound boundary", () => {
     const config = {
       providers: { prefix: { adapter: "openai-responses", authMode: "key", baseUrl: "https://prefix.example/v1", apiKey: "test-key", models: ["m"] } },
       ...(enabled === undefined ? {} : { claudeCode: { stabilizePromptCache: enabled } }),
-    } as OcxConfig;
+    } as OccxConfig;
     const response = await handleClaudeMessages(new Request("http://localhost/v1/messages", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ model: "prefix/m", max_tokens: 32, system,
@@ -485,7 +485,7 @@ describe("Messages operator opt-in at the outbound boundary", () => {
 
   test("malformed truthy configuration never activates relocation", () => {
     const system = `System.\n\n${footer(1)}`;
-    const config = JSON.parse('{"stabilizePromptCache":"true"}') as OcxClaudeCodeConfig;
+    const config = JSON.parse('{"stabilizePromptCache":"true"}') as OccxClaudeCodeConfig;
     const { body } = anthropicToResponsesTranslation({ model: "m", system, messages: [{ role: "user", content: "hi" }] }, config);
     expect(body.instructions).toBe(system);
     expect(body.input).toHaveLength(1);

@@ -1,10 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { isLocalAttestationSecret } from "./local-management-attestation";
 
-export const LOCAL_MANAGEMENT_EXPECTED_PID_HEADER = "x-opencodex-local-expected-pid";
-export const LOCAL_MANAGEMENT_NONCE_HEADER = "x-opencodex-local-nonce";
-export const LOCAL_MANAGEMENT_CAPABILITY_EXPIRES_AT_HEADER = "x-opencodex-local-expires-at";
-export const LOCAL_MANAGEMENT_CAPABILITY_HEADER = "x-opencodex-local-capability";
+export const LOCAL_MANAGEMENT_EXPECTED_PID_HEADER = "x-openccx-local-expected-pid";
+export const LOCAL_MANAGEMENT_NONCE_HEADER = "x-openccx-local-nonce";
+export const LOCAL_MANAGEMENT_CAPABILITY_EXPIRES_AT_HEADER = "x-openccx-local-expires-at";
+export const LOCAL_MANAGEMENT_CAPABILITY_HEADER = "x-openccx-local-capability";
 export const LOCAL_MANAGEMENT_CAPABILITY_TTL_MS = 10_000;
 
 export const LOCAL_MANAGEMENT_READ_PATHS = {
@@ -48,7 +48,7 @@ function localReadCapabilityPayload(
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
   if (!Number.isSafeInteger(expiresAt) || expiresAt <= 0) return null;
-  return `opencodex-local-management-read-v1\n${nonce}\n${method}\n${path}\n${pid}\n${port}\n${expiresAt}`;
+  return `openccx-local-management-read-v1\n${nonce}\n${method}\n${path}\n${pid}\n${port}\n${expiresAt}`;
 }
 
 /** Process-scoped authorization for one allowlisted local management GET. */

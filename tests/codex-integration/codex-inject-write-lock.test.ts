@@ -42,7 +42,7 @@ setDefaultTimeout(SPAWN_BUDGET_MS);
 
 let root = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 const cleanup: string[] = [];
 const coordinatorCleanup: string[] = [];
 
@@ -111,20 +111,20 @@ function runInject(
     runChild([CHILD], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
-      OCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port, lockTimeoutMs }),
+      OPENCCX_HOME: openccxHome,
+      OCCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port, lockTimeoutMs }),
     }, timeoutMs),
     `inject child (port=${port})`,
   );
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-inject-race-"));
+  root = mkdtempSync(join(tmpdir(), "occx-inject-race-"));
   cleanup.push(root);
   codexHome = join(root, ".codex");
-  opencodexHome = join(root, ".opencodex");
+  openccxHome = join(root, ".openccx");
   mkdirSync(codexHome, { recursive: true });
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
 });
 
 afterEach(() => {
@@ -158,7 +158,7 @@ describe("the lock is on the production path", () => {
     seedNative();
     const configPath = join(codexHome, "config.toml");
     const before = readFileSync(configPath, "utf8");
-    writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+    writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
       providers: {}, defaultProvider: "openai", clientIntegrations: { codex: false },
     }));
 
@@ -170,8 +170,8 @@ describe("the lock is on the production path", () => {
 
   test("a clean first apply coordinates and records a transition", () => {
     seedNative();
-    mkdirSync(join(opencodexHome, "integrations"), { recursive: true });
-    writeFileSync(join(opencodexHome, "integrations", "codex.json"), JSON.stringify({
+    mkdirSync(join(openccxHome, "integrations"), { recursive: true });
+    writeFileSync(join(openccxHome, "integrations", "codex.json"), JSON.stringify({
       version: 1,
       futureSection: { owner: "newer-writer" },
     }));
@@ -185,7 +185,7 @@ describe("the lock is on the production path", () => {
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
     });
     const row = parseChildJson<{
       kind?: string;
@@ -198,7 +198,7 @@ describe("the lock is on the production path", () => {
     expect(typeof row.state?.currentTxId).toBe("string");
 
     const record = JSON.parse(
-      readFileSync(join(opencodexHome, "integrations", "codex.json"), "utf8"),
+      readFileSync(join(openccxHome, "integrations", "codex.json"), "utf8"),
     ) as {
       futureSection?: unknown;
       provenance?: { entries?: Array<{ txId?: string; artifact?: { kind?: string } }> };
@@ -226,12 +226,12 @@ describe("the lock is on the production path", () => {
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
     }), "read transition state around failed provenance append");
     const admitted = readTransition();
     expect(typeof admitted.state?.currentTxId).toBe("string");
 
-    writeFileSync(join(opencodexHome, "integrations", "codex.json"), "{ malformed", "utf8");
+    writeFileSync(join(openccxHome, "integrations", "codex.json"), "{ malformed", "utf8");
     const append = parseChildJson<{ kind?: string }>(runChild(["--eval", `
       const {
         captureCodexPreImages,
@@ -239,24 +239,24 @@ describe("the lock is on the production path", () => {
       } = require("./src/codex/inject-coordination");
       console.log(JSON.stringify(recordCodexNativeTransactionProvenance(
         captureCodexPreImages(),
-        process.env.OCX_TEST_TX_ID,
+        process.env.OCCX_TEST_TX_ID,
       )));
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
-      OCX_TEST_TX_ID: admitted.state!.currentTxId!,
+      OPENCCX_HOME: openccxHome,
+      OCCX_TEST_TX_ID: admitted.state!.currentTxId!,
     }), "failed provenance append");
     expect(append.kind).toBe("invalid");
     expect(readTransition()).toEqual(admitted);
-    expect(readFileSync(join(opencodexHome, "integrations", "codex.json"), "utf8"))
+    expect(readFileSync(join(openccxHome, "integrations", "codex.json"), "utf8"))
       .toBe("{ malformed");
   });
 
   test("irreducible ledger extension overhead refuses the append without rewriting", () => {
     seedNative();
-    const recordPath = join(opencodexHome, "integrations", "codex.json");
-    mkdirSync(join(opencodexHome, "integrations"), { recursive: true });
+    const recordPath = join(openccxHome, "integrations", "codex.json");
+    mkdirSync(join(openccxHome, "integrations"), { recursive: true });
     writeFileSync(recordPath, JSON.stringify({
       version: 1,
       provenance: {
@@ -291,7 +291,7 @@ describe("the lock is on the production path", () => {
       `], {
         ...process.env,
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: opencodexHome,
+        OPENCCX_HOME: openccxHome,
       }),
       "irreducible ledger extension overhead",
     );
@@ -322,8 +322,8 @@ describe("the lock is on the production path", () => {
       env: {
         ...process.env,
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: opencodexHome,
-        OCX_LOCK_CHILD_PAYLOAD: JSON.stringify({
+        OPENCCX_HOME: openccxHome,
+        OCCX_LOCK_CHILD_PAYLOAD: JSON.stringify({
           timeoutMs: 5_000,
           holdMarker,
           releaseMarker,
@@ -422,11 +422,11 @@ describe("pre-substrate home adoption", () => {
    */
   test("a pre-substrate routed home adopts and records a coordinated transition", () => {
     writeFileSync(join(codexHome, "config.toml"), [
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       "",
@@ -450,18 +450,18 @@ describe("pre-substrate home adoption", () => {
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
     }), "read adopted transition");
     expect(state).toMatchObject({ kind: "ready", state: { nativeGeneration: 1 } });
   });
 
   test("a zero-byte coordinator remnant does not wedge a pre-substrate routed home", () => {
     writeFileSync(join(codexHome, "config.toml"), [
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       'model = "gpt-5.5"',
       "",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       "",
@@ -501,7 +501,7 @@ describe("the transition is resolved, not left pending", () => {
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
     });
     const row = parseChildJson<{
       kind?: string;
@@ -513,7 +513,7 @@ describe("the transition is resolved, not left pending", () => {
 
   test("an opted-out apply records the opt-out as converged, not blocked", () => {
     seedNative();
-    writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({
+    writeFileSync(join(openccxHome, "config.json"), JSON.stringify({
       port: 10100,
       providers: {
         openai: {
@@ -529,8 +529,8 @@ describe("the transition is resolved, not left pending", () => {
     const result = runChild([CHILD], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
-      OCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port: 10100, lockTimeoutMs: 0 }),
+      OPENCCX_HOME: openccxHome,
+      OCCX_INJECT_RACE_PAYLOAD: JSON.stringify({ port: 10100, lockTimeoutMs: 0 }),
     });
     requireChildSuccess(result, "opted-out inject child");
 
@@ -540,7 +540,7 @@ describe("the transition is resolved, not left pending", () => {
     `], {
       ...process.env,
       CODEX_HOME: codexHome,
-      OPENCODEX_HOME: opencodexHome,
+      OPENCCX_HOME: openccxHome,
     });
     const row = parseChildJson<{
       kind?: string;

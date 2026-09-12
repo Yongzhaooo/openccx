@@ -8,7 +8,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function makeRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-reclaim-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-reclaim-"));
   roots.push(root);
   return root;
 }

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { jcsStringify } from "../../lab/digest";
 
-const VERSION_DOMAIN = "ocx-lab:compatibility-version:v1";
+const VERSION_DOMAIN = "occx-lab:compatibility-version:v1";
 let cachedVersion: string | null | undefined;
 let testOverride: string | null | undefined;
 
@@ -76,13 +76,13 @@ function readEmbeddedManifest(): CompatibilityVersionManifest | null {
 }
 
 /**
- * OpenCodex compatibility version for route subject identity.
+ * Openccx compatibility version for route subject identity.
  *
  * There is intentionally no runtime-only fallback: without the generated file
  * manifest we cannot prove exact implementation identity, so live-route subject
  * resolution fails closed and follows the profile's unknown-evidence policy.
  */
-export function readOpenCodexCompatibilityVersion(): string | null {
+export function readOpenccxCompatibilityVersion(): string | null {
   if (testOverride !== undefined) return testOverride;
   if (cachedVersion !== undefined) return cachedVersion;
   const embedded = readEmbeddedManifest();

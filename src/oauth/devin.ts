@@ -166,5 +166,5 @@ export async function refreshDevinToken(
   // the carried implementation did, and it makes a revoked key look valid
   // forever. Throwing lets the request path mark the account needsReauth the
   // first time a forced refresh happens.
-  throw new Error("invalid_grant: Devin API keys do not refresh. Run ocx login devin again.");
+  throw new Error("invalid_grant: Devin API keys do not refresh. Run occx login devin again.");
 }

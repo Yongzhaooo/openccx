@@ -17,7 +17,7 @@
  * in the operator's tree after the turn returned.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig, OcxUsage } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig, OccxUsage } from "../../types";
 import type { IncomingMeta, ProviderAdapter } from "../base";
 import { baseScopedEnv } from "../coding-agent/turn";
 import {
@@ -57,7 +57,7 @@ export const DEVIN_CLI_IDENTITY_URL = "https://cli.devin.ai";
  * Off by default: this provider runs an agent in the operator's own tree, and a
  * proxy that auto-approves whatever a prompt asks for is a remote shell.
  */
-const DEVIN_CLI_ALLOW_TOOLS_ENV = "OPENCODEX_DEVIN_CLI_ALLOW_TOOLS";
+const DEVIN_CLI_ALLOW_TOOLS_ENV = "OPENCCX_DEVIN_CLI_ALLOW_TOOLS";
 
 export type DevinCliSpawn = (binary: string, args: string[], options: { cwd: string; env: Record<string, string> }) => ChildProcessWithoutNullStreams;
 
@@ -66,7 +66,7 @@ export function devinCliToolsAllowed(env: NodeJS.ProcessEnv = process.env): bool
   return raw === "1" || raw === "true" || raw === "yes";
 }
 
-export function createDevinCliAdapter(provider: OcxProviderConfig, deps?: { spawn?: DevinCliSpawn }): ProviderAdapter {
+export function createDevinCliAdapter(provider: OccxProviderConfig, deps?: { spawn?: DevinCliSpawn }): ProviderAdapter {
   const spawnChild: DevinCliSpawn = deps?.spawn
     ?? ((binary, args, options) => spawn(binary, args, {
       ...options,
@@ -92,7 +92,7 @@ export function createDevinCliAdapter(provider: OcxProviderConfig, deps?: { spaw
       yield { type: "error", message: "Devin CLI adapter uses runTurn; the fetch/parseStream path is disabled." };
     },
 
-    async runTurn(parsed: OcxParsedRequest, incoming: IncomingMeta, emit: (event: AdapterEvent) => void) {
+    async runTurn(parsed: OccxParsedRequest, incoming: IncomingMeta, emit: (event: AdapterEvent) => void) {
       if (incoming.abortSignal?.aborted) {
         emit({ type: "error", message: "Devin CLI turn was aborted before start." });
         return;
@@ -106,7 +106,7 @@ export function createDevinCliAdapter(provider: OcxProviderConfig, deps?: { spaw
       const modelId = parsed.modelId.includes("/")
         ? parsed.modelId.slice(parsed.modelId.lastIndexOf("/") + 1)
         : parsed.modelId;
-      const cwd = process.env.OPENCODEX_DEVIN_CLI_CWD?.trim() || process.cwd();
+      const cwd = process.env.OPENCCX_DEVIN_CLI_CWD?.trim() || process.cwd();
       const toolsAllowed = devinCliToolsAllowed();
 
       await new Promise<void>((resolve) => {
@@ -144,7 +144,7 @@ export function createDevinCliAdapter(provider: OcxProviderConfig, deps?: { spaw
         let sawPromptReply = false;
         let buffer = "";
         let totalBytes = 0;
-        let usage: OcxUsage | undefined;
+        let usage: OccxUsage | undefined;
         let stopReason: string | undefined;
         let stderrTail = "";
 
@@ -338,7 +338,7 @@ export function createDevinCliAdapter(provider: OcxProviderConfig, deps?: { spaw
         }
 
         void sawPromptReply;
-        send(initializeFrame(process.env.OPENCODEX_VERSION ?? "0.0.0"));
+        send(initializeFrame(process.env.OPENCCX_VERSION ?? "0.0.0"));
       });
     },
   };

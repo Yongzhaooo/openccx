@@ -16,7 +16,7 @@ import { parseCallbackInput } from "../../src/oauth/callback-server";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { findAvailablePort } from "../../src/server/ports";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 
@@ -25,7 +25,7 @@ import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src
 // runner and the login settled as "OAuth authentication failed" (run 33603770447 shard 4).
 let TEST_DIR = "";
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 function b64url(input: Buffer | string): string {
   return Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -129,11 +129,11 @@ describe("parseCallbackInput kinds", () => {
 
 describe("OAuth manual login code fallback", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     setIcaclsRunnerForTests(() => ICACLS_OK);
     setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-    TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-oauth-manual-code-"));
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    TEST_DIR = mkdtempSync(join(tmpdir(), "occx-oauth-manual-code-"));
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearLoginState("xai");
   });
 
@@ -143,8 +143,8 @@ describe("OAuth manual login code fallback", () => {
     await flushConfigDirHardeningForTests();
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (TEST_DIR && existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     TEST_DIR = "";
   });
@@ -271,7 +271,7 @@ describe("OAuth manual login code fallback", () => {
       expect(verifier).toBeTruthy();
       expect(b64url(createHash("sha256").update(verifier).digest())).toBe(challenge);
 
-      // Credential persisted under OPENCODEX_HOME.
+      // Credential persisted under OPENCCX_HOME.
       const authFile = join(TEST_DIR, "auth.json");
       expect(existsSync(authFile)).toBe(true);
       expect(readFileSync(authFile, "utf8")).toContain("refresh-1");
@@ -325,7 +325,7 @@ describe("OAuth manual login code fallback", () => {
       hostname: "127.0.0.1",
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" } },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       const post = (body: unknown) => fetch(new URL("/api/oauth/login/code", server.url), {
@@ -352,8 +352,8 @@ describe("OAuth manual login code fallback", () => {
   test("headless manual-code route is available through hub management ingress", async () => {
     const managementPort = await findAvailablePort(0, "127.0.0.1");
     const publicPort = await findAvailablePort(0, "127.0.0.1", { reservedPort: managementPort });
-    const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "hub-data-secret";
+    const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+    process.env.OPENCCX_API_AUTH_TOKEN = "hub-data-secret";
     saveConfig({
       port: 0,
       hostname: "0.0.0.0",
@@ -365,7 +365,7 @@ describe("OAuth manual login code fallback", () => {
       oauthOpenBrowser: false,
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" } },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(publicPort);
     try {
       const response = await fetch(`http://127.0.0.1:${managementPort}/api/oauth/login/code`, {
@@ -381,8 +381,8 @@ describe("OAuth manual login code fallback", () => {
       expect(((await response.json()) as { error?: string }).error).toContain("no login in progress");
     } finally {
       await server.stop(true);
-      if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-      else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
+      if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+      else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
     }
   });
 });

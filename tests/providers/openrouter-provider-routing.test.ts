@@ -12,14 +12,14 @@ import { fastPolicyForModel } from "../../src/providers/service-tier";
 import { clearKeyCooldowns, rotateProviderTransportOn429 } from "../../src/providers/key-failover";
 import { routeModel } from "../../src/router";
 import { providerManagementConfigError, safeConfigDTO } from "../../src/server/auth-cors";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-function provider(baseUrl: string, overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(baseUrl: string, overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return { adapter: "openai-chat", baseUrl, apiKey: "test-key", ...overrides };
 }
 
-function parsed(modelId: string, stream = false): OcxParsedRequest {
+function parsed(modelId: string, stream = false): OccxParsedRequest {
   return {
     modelId,
     stream,
@@ -28,13 +28,13 @@ function parsed(modelId: string, stream = false): OcxParsedRequest {
   };
 }
 
-function body(baseUrl: string, modelId: string, overrides: Partial<OcxProviderConfig> = {}, stream = false): Record<string, unknown> {
+function body(baseUrl: string, modelId: string, overrides: Partial<OccxProviderConfig> = {}, stream = false): Record<string, unknown> {
   const request = createOpenAIChatAdapter(provider(baseUrl, overrides)).buildRequest(parsed(modelId, stream));
   return JSON.parse(request.body as string) as Record<string, unknown>;
 }
 
 function passthroughBody(
-  providerConfig: OcxProviderConfig,
+  providerConfig: OccxProviderConfig,
   modelId: string,
   rawBody: Record<string, unknown> = {},
 ): Record<string, unknown> {
@@ -74,7 +74,7 @@ describe("OpenRouter configurable provider routing", () => {
 
   test("Codex-visible routed slugs resolve before exact model preferences are applied", () => {
     const nativeModelId = "anthropic/claude-sonnet-5";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openrouter",
       providers: {
@@ -143,7 +143,7 @@ describe("OpenRouter configurable provider routing", () => {
 
   test("resolves routed aliases before applying native Chat model preferences", () => {
     const nativeModelId = "anthropic/claude-sonnet-5";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openrouter",
       providers: {
@@ -172,9 +172,9 @@ describe("OpenRouter configurable provider routing", () => {
   });
 
   test("preserves provider routing after native Chat key rotation", () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-openrouter-routing-"));
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-openrouter-routing-"));
+    process.env.OPENCCX_HOME = home;
     clearKeyCooldowns("openrouter");
     const openrouter = provider("https://openrouter.ai/api/v1", {
       authMode: "key",
@@ -182,7 +182,7 @@ describe("OpenRouter configurable provider routing", () => {
       apiKeyPool: [{ id: "one", key: "key-one" }, { id: "two", key: "key-two" }],
       openRouterRouting: { only: ["anthropic"], allowFallbacks: false },
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "openrouter",
       providers: { openrouter },
@@ -199,8 +199,8 @@ describe("OpenRouter configurable provider routing", () => {
       });
     } finally {
       clearKeyCooldowns("openrouter");
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });
@@ -241,7 +241,7 @@ describe("OpenRouter provider-routing validation", () => {
     test(`rejects ${label}`, () => {
       const error = openRouterRoutingConfigError(provider(
         "https://openrouter.ai/api/v1",
-        overrides as Partial<OcxProviderConfig>,
+        overrides as Partial<OccxProviderConfig>,
       ));
       expect(error).toContain(message);
     });

@@ -35,7 +35,7 @@ function payloadBytes(value: unknown): number {
   return utf8.encode(stableJson(value)).byteLength;
 }
 
-/** A tool discovered on a connected MCP server, with its opencodex-advertised name. */
+/** A tool discovered on a connected MCP server, with its openccx-advertised name. */
 export interface McpToolHandle {
   serverName: string;
   toolName: string;
@@ -153,7 +153,7 @@ export class CursorMcpManager {
       const transport = this.options.transportFactory
         ? this.options.transportFactory(server)
         : this.createTransport(server);
-      client = new Client({ name: "opencodex", version: "1.0.0" });
+      client = new Client({ name: "openccx", version: "1.0.0" });
       await this.withTimeout(client.connect(transport), this.connectTimeoutMs, `connect ${server.serverName}`);
       const indexed = await this.indexTools(server, client);
       return { connection: { server, client }, tools: indexed.tools, bytes: indexed.bytes };

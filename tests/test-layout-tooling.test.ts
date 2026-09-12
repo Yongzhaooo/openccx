@@ -305,7 +305,7 @@ describe("membership oracle", () => {
 
 describe("move end to end", () => {
   function scratchRepo(): { root: string; cleanup(): void } {
-    const root = mkdtempSync(join(tmpdir(), "ocx-test-layout-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-test-layout-"));
     const git = (...args: string[]) => {
       const proc = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" });
       if (proc.exitCode !== 0) throw new Error(`git ${args.join(" ")}: ${proc.stderr.toString()}`);

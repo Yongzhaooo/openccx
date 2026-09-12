@@ -24,7 +24,7 @@ import {
 import { stopWinswService } from "../lib/winsw";
 import { listListenPids, reclaimListenPort, scanListenPids, type ListenPidScan } from "../server/port-reclaim";
 import { dropWindowsTcpRowsForLocalPort } from "../server/windows-tcp-drop";
-import { isOpencodexHealthz, probeHostname, proxyIdentityAt, type HealthzIdentity } from "../server/proxy-liveness";
+import { isOpenccxHealthz, probeHostname, proxyIdentityAt, type HealthzIdentity } from "../server/proxy-liveness";
 import { isServiceInstalled, isServiceViable, readServiceBackend, stopWindows } from "../service";
 import {
   type Channel,
@@ -141,7 +141,7 @@ function usesNodeLauncher(installer: Installer): boolean {
 
 /**
  * Strict bind script: exit 0 only after listen+close. Any listen error (including
- * Windows ghost-TCB failures under Bun) is busy — matches published `ocx start`
+ * Windows ghost-TCB failures under Bun) is busy — matches published `occx start`
  * probes that treat every listen error as unavailable.
  */
 function strictBindProbeScript(port: number, hostname: string): string {
@@ -183,7 +183,7 @@ function livePackageBunPath(): string | null {
 }
 
 /**
- * Port is free for post-update `ocx start` only when the runtime that will
+ * Port is free for post-update `occx start` only when the runtime that will
  * actually execute the start can bind. Prefer live package Bun; fall back to the
  * worker runtime. Do not require a separate `node` binary (Bun-only installs).
  */
@@ -212,7 +212,7 @@ async function waitForGhostListenClear(
   while (Date.now() < deadline) {
     const holders = listPids(port).filter(pid => pid !== process.pid);
     const liveHolders = holders.filter(pid => aliveFn(pid));
-    // Never SetTcpEntry while a live process still owns the port (foreign or ocx).
+    // Never SetTcpEntry while a live process still owns the port (foreign or occx).
     if (process.platform === "win32" && liveHolders.length === 0) {
       try {
         const drop = dropWindowsTcpRowsForLocalPort(port);
@@ -228,12 +228,12 @@ async function waitForGhostListenClear(
 }
 
 function packageLauncherPath(): string {
-  // This module lives at src/update/job.ts — the launcher is <pkg-root>/bin/ocx.mjs.
+  // This module lives at src/update/job.ts — the launcher is <pkg-root>/bin/occx.mjs.
   // After `npm install -g`, import.meta.url can still point at npm's renamed temp
   // tree (`@bitkyc08/.opencodex-*`). Prefer the live package path when that happens.
-  const fromMeta = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "bin", "ocx.mjs");
-  if (!/[\\/]\.opencodex-/i.test(fromMeta) && existsSync(fromMeta)) return fromMeta;
-  const live = fromMeta.replace(/[\\/]@bitkyc08[\\/]\.opencodex-[^\\/]+/i, `${sep}@bitkyc08${sep}opencodex`);
+  const fromMeta = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "bin", "occx.mjs");
+  if (!/[\\/]\.openccx-/i.test(fromMeta) && existsSync(fromMeta)) return fromMeta;
+  const live = fromMeta.replace(/[\\/]@bitkyc08[\\/]\.openccx-[^\\/]+/i, `${sep}@bitkyc08${sep}openccx`);
   if (live !== fromMeta && existsSync(live)) return live;
   return fromMeta;
 }
@@ -353,7 +353,7 @@ function withholdIfPathBearing(value: string): string {
 /**
  * Keep a command readable without persisting the launcher path it contains.
  *
- * The real npm worker command is `node /Users/<name>/.../bin/ocx.mjs update --tag latest`, so
+ * The real npm worker command is `node /Users/<name>/.../bin/occx.mjs update --tag latest`, so
  * the account name is inside it by construction. Absolute path arguments are replaced with a
  * placeholder and everything else — the binary name, the flags, the tag — is kept, which is the
  * part a reader actually needs.
@@ -375,7 +375,7 @@ function renderSafeCommand(value: string): string {
       || /^(?:npm|bun|pnpm|yarn|node)$/.test(part)
       || /^-{1,2}[\w-]+$/.test(part)
       || /^(?:install|add|update|i)$/.test(part)
-      || /^opencodex(?:@[\w.\-]+)?$/.test(part)
+      || /^openccx(?:@[\w.\-]+)?$/.test(part)
       || /^(?:latest|preview|next|beta)$/.test(part)
       || /^\d[\w.\-]*$/.test(part));
     if (allowed) return rendered.join(" ");
@@ -482,7 +482,7 @@ export function restartCommand(
     return { mode, bin, args, display: formatCommand(bin, args) };
   }
   // bun/source installs: restart via the current runtime executable + package launcher (both real
-  // .exe files), NOT the `ocx.cmd` shim. Spawning a `.cmd` shell-less throws EINVAL on Windows
+  // .exe files), NOT the `occx.cmd` shim. Spawning a `.cmd` shell-less throws EINVAL on Windows
   // Node/Bun ≥18.20/20.12 (CVE-2024-27980 hardening) — the same class the npm path (nodeBin) avoids.
   const bin = process.execPath;
   const args = svcArgs;
@@ -578,7 +578,7 @@ export function spawnGuiUpdateWorker(
       detached: true,
       stdio: "ignore",
       windowsHide: true,
-      env: { ...process.env, OCX_SERVICE: "1" },
+      env: { ...process.env, OCCX_SERVICE: "1" },
     });
   }
 
@@ -587,7 +587,7 @@ export function spawnGuiUpdateWorker(
   const psQuote = (value: string): string => `'${value.replace(/'/g, "''")}'`;
   const argumentList = buildWindowsElevatedArgumentList(args);
   const ps = [
-    `$env:OCX_SERVICE = '1'`,
+    `$env:OCCX_SERVICE = '1'`,
     `$p = Start-Process -FilePath ${psQuote(process.execPath)} -ArgumentList ${psQuote(argumentList)} -WindowStyle Hidden -PassThru`,
     `if (-not $p) { exit 1 }`,
     `Write-Output $p.Id`,
@@ -885,7 +885,7 @@ export function summarizeCommandOutput(
 }
 
 /**
- * Tear down anything that would make `ocx start` exit 1 with "already running"
+ * Tear down anything that would make `occx start` exit 1 with "already running"
  * (service wrapper respawn, stale pidfile + live /healthz) before a pinned spawn.
  */
 function preparePortForPinnedStart(
@@ -893,7 +893,7 @@ function preparePortForPinnedStart(
   port: number,
   listPids: (port: number) => number[],
   aliveFn: (pid: number) => boolean,
-  verifyOcx: (pid: number) => number | null = verifyPidIdentity,
+  verifyOccx: (pid: number) => number | null = verifyPidIdentity,
 ): void {
   stopWindowsServiceWrappersBestEffort();
   const pid = readPid();
@@ -907,7 +907,7 @@ function preparePortForPinnedStart(
   removeRuntimePort();
   for (const holder of listPids(port)) {
     if (holder === process.pid || !aliveFn(holder)) continue;
-    if (verifyOcx(holder) !== holder) {
+    if (verifyOccx(holder) !== holder) {
       updateJob(
         job,
         {},
@@ -915,7 +915,7 @@ function preparePortForPinnedStart(
       );
       continue;
     }
-    updateJob(job, {}, `Stopping live ocx listen holder PID ${holder} on port ${port} before pinned start.`);
+    updateJob(job, {}, `Stopping live occx listen holder PID ${holder} on port ${port} before pinned start.`);
     try { killProxy(holder); } catch { /* best-effort */ }
   }
   // Match reclaimListenPort: never SetTcpEntry while a live holder remains.
@@ -933,7 +933,7 @@ function spawnDetachedStart(
 ): ChildProcess {
   const cmd = restartCommand(false, installer, launcher, port);
   const env = { ...process.env };
-  delete env.OCX_SERVICE;
+  delete env.OCCX_SERVICE;
   updateJob(job, {}, `$ ${cmd.display}`);
   let stdio: "ignore" | [ "ignore", number, number ] = "ignore";
   let logFd: number | undefined;
@@ -955,7 +955,7 @@ function spawnDetachedStart(
       updateJob(job, {}, `Pinned start spawn error: ${withheldSummary(err)}`);
     } catch { /* best-effort */ }
   });
-  // Foreground `ocx start` keeps the listen process; EADDRINUSE/ghost races exit quickly
+  // Foreground `occx start` keeps the listen process; EADDRINUSE/ghost races exit quickly
   // with stdio ignored — surface that so the job log explains a silent miss.
   child.once("exit", (code, signal) => {
     if (code === 0 && !signal) return;
@@ -1029,7 +1029,7 @@ export interface RestartIo {
   /**
    * PIDs currently LISTENing on the captured port. Used to widen the post-update
    * kill allowlist beyond the pre-update PID (Windows often leaves a respawned
-   * ocx child that would otherwise be treated as a protected listener).
+   * occx child that would otherwise be treated as a protected listener).
    */
   listListenPidsFn?: (port: number) => number[];
   /**
@@ -1038,7 +1038,7 @@ export interface RestartIo {
    */
   scanListenPidsFn?: (port: number) => ListenPidScan;
   /** Identity check for listeners discovered via {@link listListenPidsFn}. */
-  verifyOcxFn?: (pid: number) => number | null;
+  verifyOccxFn?: (pid: number) => number | null;
   /** Liveness check when deciding whether a reclaim timeout still has live holders. */
   isAliveFn?: (pid: number) => boolean;
 }
@@ -1111,9 +1111,9 @@ async function restartAfterUpdate(
   const cmd = restartCommand(serviceInstalled, job.installer, launcher, port, svcArgs);
   const waitFn = io.waitForPort ?? reclaimListenPort;
   const listPids = io.listListenPidsFn ?? listListenPids;
-  const verifyOcx = io.verifyOcxFn ?? verifyPidIdentity;
+  const verifyOccx = io.verifyOccxFn ?? verifyPidIdentity;
   const aliveFn = io.isAliveFn ?? isProcessAlive;
-  // Pre-update PID plus any ocx still LISTENing on the captured port. After a
+  // Pre-update PID plus any occx still LISTENing on the captured port. After a
   // stop-first package-manager self-update Windows often leaves a respawned bun/node child
   // that is not the captured PID; treating it as protected blocks reclaim and
   // the direct-start fallback never binds.
@@ -1122,7 +1122,7 @@ async function restartAfterUpdate(
     if (oldPid != null) allow.add(oldPid);
     for (const pid of listPids(port)) {
       if (pid === process.pid) continue;
-      if (verifyOcx(pid) === pid) allow.add(pid);
+      if (verifyOccx(pid) === pid) allow.add(pid);
     }
     return [...allow];
   };
@@ -1130,18 +1130,18 @@ async function restartAfterUpdate(
     timeoutMs: RESTART_PORT_RECLAIM_MS,
     intervalMs: 100,
     scanIntervalMs: 500,
-    killOcxHolders: true,
+    killOccxHolders: true,
     // Windows scheduler wrappers can mint a *new* bun PID during the wait; keep
-    // killing every ocx listener on this port, not only the pre-wait snapshot.
-    // npm rename trees under `@bitkyc08/.opencodex-*` are classified as ocx by
-    // isOcxStartCommandLine — never kill unknown foreign claimants on this port.
-    killAllOcxOnPort: true,
+    // killing every occx listener on this port, not only the pre-wait snapshot.
+    // npm rename trees under `@bitkyc08/.opencodex-*` are classified as occx by
+    // isOccxStartCommandLine — never kill unknown foreign claimants on this port.
+    killAllOccxOnPort: true,
     onlyKillPids,
   });
 
   if (serviceInstalled) {
     // schtasks /end often leaves the hidden cmd/wscript wrapper alive; its :loop
-    // respawns `ocx start` a few seconds later and races port reclaim. End the
+    // respawns `occx start` a few seconds later and races port reclaim. End the
     // task again and best-effort kill those wrappers before we touch the socket.
     stopWindowsServiceWrappersBestEffort();
     // Stop-first update already unloaded the service; reclaim the socket, then
@@ -1149,14 +1149,14 @@ async function restartAfterUpdate(
     const preServiceAllow = reclaimKillAllowlist();
     const freed = await waitFn(port, hostname, reclaimOptsFor(preServiceAllow));
     let skipServiceInstall = false;
-    // This skip existed because refresh ran `ocx service install`, whose Windows path always
+    // This skip existed because refresh ran `occx service install`, whose Windows path always
     // registers. `service repair` normally reuses the live task and can refresh a stale
     // definition through its guarded create/elevation path, so the install-only skip no longer
     // applies and would leave the common dashboard update with stale service assets.
     //
     // Only a caller that still passes install argv keeps the old behavior.
     const refreshRegisters = (svcArgs ?? []).includes("install");
-    if ((io.platform ?? process.platform) === "win32" && process.env.OCX_SERVICE === "1" && refreshRegisters) {
+    if ((io.platform ?? process.platform) === "win32" && process.env.OCCX_SERVICE === "1" && refreshRegisters) {
       updateJob(job, {}, "Skipping service re-registration from the non-elevated update worker; falling back to a direct proxy start.");
       skipServiceInstall = true;
     }
@@ -1165,7 +1165,7 @@ async function restartAfterUpdate(
         job,
         {},
         `Port ${port} still busy after ${Math.trunc(RESTART_PORT_RECLAIM_MS / 1000)}s; refusing to hop — reinstall may fail until the port is free.`
-          + ` ${formatPortHolders(port, listPids, verifyOcx, preServiceAllow)}`,
+          + ` ${formatPortHolders(port, listPids, verifyOccx, preServiceAllow)}`,
       );
       const liveScan: ListenPidScan = io.scanListenPidsFn
         ? io.scanListenPidsFn(port)
@@ -1184,8 +1184,8 @@ async function restartAfterUpdate(
       }
     }
     if (!skipServiceInstall) {
-      const prevBake = process.env.OCX_BAKE_PORT;
-      process.env.OCX_BAKE_PORT = String(Math.trunc(port));
+      const prevBake = process.env.OCCX_BAKE_PORT;
+      process.env.OCCX_BAKE_PORT = String(Math.trunc(port));
       let serviceOk = false;
       try {
         const repairTimeoutMs = (io.platform ?? process.platform) === "win32"
@@ -1202,10 +1202,10 @@ async function restartAfterUpdate(
             updateJob(job, {}, "Service repair timed out with Task Scheduler state unknown; refusing a competing direct start.");
             throw new Error(
               "Service repair timed out with Task Scheduler state unknown; refusing a competing direct start. "
-              + "Run 'ocx service status', then 'ocx service repair' by hand.",
+              + "Run 'occx service status', then 'occx service repair' by hand.",
             );
           }
-          // The refresh that just failed was `ocx service repair` (serviceReinstallArgs).
+          // The refresh that just failed was `occx service repair` (serviceReinstallArgs).
           // It normally reuses a healthy registration, but a stale definition may have tried
           // guarded re-registration/elevation. Advising `install` here would unconditionally
           // send the user to re-registration — a UAC prompt on
@@ -1216,12 +1216,12 @@ async function restartAfterUpdate(
             job,
             {},
             `Service refresh failed (exit ${result.status ?? "?"}); falling back to a direct proxy start.`
-            + " Run 'ocx service repair' by hand to see the reason, then 'ocx service status'.",
+            + " Run 'occx service repair' by hand to see the reason, then 'occx service status'.",
           );
         }
       } finally {
-        if (prevBake === undefined) delete process.env.OCX_BAKE_PORT;
-        else process.env.OCX_BAKE_PORT = prevBake;
+        if (prevBake === undefined) delete process.env.OCCX_BAKE_PORT;
+        else process.env.OCCX_BAKE_PORT = prevBake;
       }
       if (serviceOk) {
         // Exit 0 is not enough, and neither is `viable`. Registration state cannot
@@ -1268,7 +1268,7 @@ async function restartAfterUpdate(
   if (serviceInstalled) stopWindowsServiceWrappersBestEffort();
   // Reclaim the captured port before the pinned start. Spawning `--port` while the old
   // socket is still busy is how Windows updates used to fail health checks (or hop).
-  // killAllOcxOnPort covers wrapper-respawned bun PIDs minted during the wait.
+  // killAllOccxOnPort covers wrapper-respawned bun PIDs minted during the wait.
   const directAllow = reclaimKillAllowlist();
   const freed = await waitFn(port, hostname, reclaimOptsFor(directAllow));
   if (!freed) {
@@ -1277,10 +1277,10 @@ async function restartAfterUpdate(
       job,
       {},
       `Port ${port} still busy after ${Math.trunc(RESTART_PORT_RECLAIM_MS / 1000)}s (reclaim could not free the socket).`
-        + ` ${formatPortHolders(port, listPids, verifyOcx, directAllow)}`,
+        + ` ${formatPortHolders(port, listPids, verifyOccx, directAllow)}`,
     );
     if (liveHolders.length > 0) {
-      updateJob(job, {}, `Live holder(s) remain on port ${port}; not starting on another port. Retry 'ocx start --port ${port}'.`);
+      updateJob(job, {}, `Live holder(s) remain on port ${port}; not starting on another port. Retry 'occx start --port ${port}'.`);
       return;
     }
     // Dead PIDs can still own LISTEN rows. SetTcpEntry needs elevation (rc 317 on a
@@ -1302,8 +1302,8 @@ async function restartAfterUpdate(
           job,
           {},
           `Ghost LISTEN rows on port ${port} did not clear in time. `
-            + `${formatPortHolders(port, listPids, verifyOcx, directAllow)} `
-            + `Retry 'ocx start --port ${port}'.`,
+            + `${formatPortHolders(port, listPids, verifyOccx, directAllow)} `
+            + `Retry 'occx start --port ${port}'.`,
         );
         return;
       }
@@ -1362,7 +1362,7 @@ async function restartAfterUpdate(
       killSpawnAttempt(lastChild);
       lastChild = null;
     }
-    preparePort(job, port, listPids, aliveFn, verifyOcx);
+    preparePort(job, port, listPids, aliveFn, verifyOccx);
     const ready = await waitForGhost(
       port,
       hostname,
@@ -1375,7 +1375,7 @@ async function restartAfterUpdate(
         job,
         {},
         `Port ${port} not bindable before pinned start attempt ${attempt}; `
-          + `${formatPortHolders(port, listPids, verifyOcx, directAllow)}`,
+          + `${formatPortHolders(port, listPids, verifyOccx, directAllow)}`,
       );
       continue;
     }
@@ -1404,13 +1404,13 @@ async function restartAfterUpdate(
 function formatPortHolders(
   port: number,
   listPids: (port: number) => number[],
-  verifyOcx: (pid: number) => number | null,
+  verifyOccx: (pid: number) => number | null,
   allow: number[],
 ): string {
   const allowSet = new Set(allow);
   const holders = listPids(port).map(pid => {
     const tags = [
-      verifyOcx(pid) === pid ? "ocx" : "foreign",
+      verifyOccx(pid) === pid ? "occx" : "foreign",
       allowSet.has(pid) ? "allow" : "deny",
       isProcessAlive(pid) ? "live" : "dead",
     ];
@@ -1438,13 +1438,13 @@ function stopWindowsServiceWrappersBestEffort(): void {
  * `:loop` batch, which brings the proxy back during post-update reclaim.
  *
  * This used to match the bare filenames with -like '*name*', which could stop a
- * wrapper belonging to a DIFFERENT OpenCodex home under the same account. The
+ * wrapper belonging to a DIFFERENT Openccx home under the same account. The
  * shared killer scopes to this home's canonical paths as complete tokens.
  */
 function killWindowsServiceWrapperProcesses(): void {
   killWindowsSchedulerWrappers({
-    scriptPath: join(getConfigDir(), "opencodex-service.cmd"),
-    launcherPath: join(getConfigDir(), "opencodex-service-launcher.vbs"),
+    scriptPath: join(getConfigDir(), "openccx-service.cmd"),
+    launcherPath: join(getConfigDir(), "openccx-service-launcher.vbs"),
   });
 }
 
@@ -1466,7 +1466,7 @@ function restartFailureHint(port: number, installer: Installer): string {
         ? "git pull && bun install"
         : "npm install -g --allow-scripts=bun @bitkyc08/opencodex";
   return `Update installed, but the restarted proxy did not stay healthy on port ${port}. `
-    + `Try 'ocx start --port ${port}'. `
+    + `Try 'occx start --port ${port}'. `
     + "If the update log shows bun postinstall or EPERM warnings, "
     + `reinstall with '${reinstall}'.`;
 }
@@ -1581,7 +1581,7 @@ async function defaultProbeProxyIdentity(
     });
     if (!res.ok) return null;
     const body = (await res.json().catch(() => null)) as HealthzIdentity | null;
-    if (!isOpencodexHealthz(body)) return null;
+    if (!isOpenccxHealthz(body)) return null;
     return {
       pid: typeof body?.pid === "number" ? body.pid : null,
       // Validate the shape at the boundary where the value ENTERS, not where it is logged.
@@ -1650,15 +1650,15 @@ export const npmSelfUpdateRestartEvidence = packageManagerSelfUpdateRestartEvide
 /**
  * Post-install restart for the GUI worker.
  *
- * npm and pnpm installs run `node ocx.mjs update`, which already stops the proxy and reinstalls /
+ * npm and pnpm installs run `node occx.mjs update`, which already stops the proxy and reinstalls /
  * starts the service (or falls back to a direct start). A second `service install` here
  * calls `stopWindows()` on that healthy listener, then often fails elevation from the
  * non-interactive worker — leaving the captured port (default 10100) dead until a manual
  * restart. Prefer confirming the package-manager self-update's own restart first; only re-run restart
  * when that probe fails. Bun/source installs still always take the explicit restart path.
  *
- * Probe-first applies only to service-managed npm/pnpm installs: without a service, `ocx.mjs`
- * only prints `ocx start` and never brings the proxy back, so waiting would always burn
+ * Probe-first applies only to service-managed npm/pnpm installs: without a service, `occx.mjs`
+ * only prints `occx start` and never brings the proxy back, so waiting would always burn
  * the full health timeout. Skipping also requires update-correlated evidence (PID change
  * and/or target version) so a surviving pre-update process cannot look like success.
  * After an explicit package-manager restart the same evidence is required again — health alone is
@@ -1666,7 +1666,7 @@ export const npmSelfUpdateRestartEvidence = packageManagerSelfUpdateRestartEvide
  *
  * Browser-dashboard update recovery must not require a viable Background Service: when
  * no service is installed (or reinstall leaves a non-viable/stale manager), the explicit
- * path always falls through to a direct `ocx start --port` so /healthz can recover.
+ * path always falls through to a direct `occx start --port` so /healthz can recover.
  */
 export async function finishGuiUpdateRestart(
   job: UpdateJobState,
@@ -1738,7 +1738,7 @@ export async function finishGuiUpdateRestart(
 
 /**
  * After an explicit package-manager (or identity-aware) restart, require update-correlated
- * evidence — not merely a healthy OpenCodex listener. A no-op restart or a
+ * evidence — not merely a healthy Openccx listener. A no-op restart or a
  * failed port reclaim can leave the pre-update process on the captured port;
  * `confirmRestartedProxy` alone would treat that as success.
  */
@@ -1961,7 +1961,7 @@ export async function runGuiUpdateWorker(
       const trayArgs = planWindowsTrayUpdate({ installed: trayWasInstalled, running: trayWasRunning }).installArgs;
       const tray = runLoggedCommand(job, process.execPath, [activeLauncher, ...trayArgs], 20_000);
       if (tray.status !== 0) {
-        updateJob(job, {}, "Windows tray refresh failed; run 'ocx tray install'.");
+        updateJob(job, {}, "Windows tray refresh failed; run 'occx tray install'.");
         if (trayWasRunning) runLoggedCommand(job, process.execPath, [activeLauncher, "tray", "start"], 15_000);
       }
     }

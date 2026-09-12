@@ -55,7 +55,7 @@ describe("Windows identity lookup popup fix (#1278)", () => {
     // There is now ONE value, pinned in both environments. The two-value form this
     // replaces gave a desktop 8s on the theory that only a shared runner is contended
     // enough to need 30s. A zh-CN Windows 10 host measured 3.2s (SID) and 4.6s
-    // (Add-Type LocalAppData) per spawn, so ordinary jitter breached 8s and `ocx sync`
+    // (Add-Type LocalAppData) per spawn, so ordinary jitter breached 8s and `occx sync`
     // failed with "Windows effective-account lookup timed out" — the same contention
     // the CI value existed for, on a desktop (#2914).
     //

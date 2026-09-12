@@ -16,7 +16,7 @@ import {
   setIntegrationPathTestHooks,
   setRaycastDetectTestHook,
 } from "../../src/server/management/integration-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath, repoRoot } from "../helpers/repo-root";
@@ -65,13 +65,13 @@ const routeEnv = {} as NodeJS.ProcessEnv;
  * scanner sees no literal secret while the running config still holds a
  * serializable one — without that, "no key leaked" asserts nothing.
  */
-const REAL_LOOKING_KEY = ["ocx", "live", "9f3c7a2b41d84e6fa05c8e17b3d92764"].join("_");
+const REAL_LOOKING_KEY = ["occx", "live", "9f3c7a2b41d84e6fa05c8e17b3d92764"].join("_");
 
 const MODELS_FIXTURE: ExportModel[] = [
   { namespaced: "a/m1", provider: "a", id: "m1", contextWindow: 128_000 },
 ];
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
@@ -88,13 +88,13 @@ function baseConfig(): OcxConfig {
         modelReasoningEfforts: { m1: ["minimal", "low", "high"] },
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
-let config: OcxConfig;
+let config: OccxConfig;
 
 beforeEach(() => {
-  base = mkdtempSync(join(tmpdir(), "ocx-management-integrations-"));
+  base = mkdtempSync(join(tmpdir(), "occx-management-integrations-"));
   home = join(base, "home");
   storeRoot = join(base, "store", "integrations");
   mkdirSync(home, { recursive: true });
@@ -347,7 +347,7 @@ describe("PUT /api/client-integrations/:clientId", () => {
     expect(applyBody.ok).toBe(true);
     expect(applyBody.changed).toBe(true);
     expect(typeof applyBody.opId).toBe("string");
-    expect(readFileSync(configPath, "utf8")).toContain("opencodex");
+    expect(readFileSync(configPath, "utf8")).toContain("openccx");
     expect((await (await api("/api/client-integrations/hermes")).json() as { state: string }).state).toBe("current");
 
     const disabled = await put("hermes", false);
@@ -355,7 +355,7 @@ describe("PUT /api/client-integrations/:clientId", () => {
     const disableBody = await disabled.json() as { ok: boolean; changed: boolean };
     expect(disableBody.ok).toBe(true);
     expect(disableBody.changed).toBe(true);
-    expect(readFileSync(configPath, "utf8")).not.toContain("opencodex");
+    expect(readFileSync(configPath, "utf8")).not.toContain("openccx");
 
     // Two immutable rows: the journal records history, it does not fold it.
     expect(store.listOperations("hermes").map(row => row.kind)).toEqual(["disable", "apply"]);
@@ -378,9 +378,9 @@ describe("PUT /api/client-integrations/:clientId", () => {
     expect((await put("mcode", true)).status).toBe(200);
 
     const applied = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      custom_provider: { opencodex: { models: Record<string, unknown> } };
+      custom_provider: { openccx: { models: Record<string, unknown> } };
     };
-    expect(applied.custom_provider.opencodex.models["a/m1"]).toEqual({
+    expect(applied.custom_provider.openccx.models["a/m1"]).toEqual({
       limit: { context: 128_000 },
       thinking: { effortOptions: ["minimal", "low", "high"] },
     });
@@ -392,9 +392,9 @@ describe("PUT /api/client-integrations/:clientId", () => {
     expect((await refreshed.json() as { changed: boolean }).changed).toBe(true);
 
     const afterRefresh = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      custom_provider: { opencodex: { models: Record<string, unknown> } };
+      custom_provider: { openccx: { models: Record<string, unknown> } };
     };
-    expect(afterRefresh.custom_provider.opencodex.models["a/m1"]).toEqual({
+    expect(afterRefresh.custom_provider.openccx.models["a/m1"]).toEqual({
       limit: { context: 256_000 },
       thinking: { effortOptions: ["low", "medium", "max"] },
     });
@@ -564,9 +564,9 @@ describe("refusals", () => {
     const configPath = installOmp();
     expect((await put("omp", true)).status).toBe(200);
     const edited = readFileSync(configPath, "utf8")
-      .replace("    baseUrl:", "    baseUrl: &opencodex_url")
-      .concat("settings:\n  inheritedBase: *opencodex_url\n");
-    expect(edited).toContain("    baseUrl: &opencodex_url");
+      .replace("    baseUrl:", "    baseUrl: &openccx_url")
+      .concat("settings:\n  inheritedBase: *openccx_url\n");
+    expect(edited).toContain("    baseUrl: &openccx_url");
     writeFileSync(configPath, edited);
     const journalBefore = store.listOperations("omp");
 
@@ -607,7 +607,7 @@ describe("refusals", () => {
     // asserting it, a refusal could arrive stripped of the one field that
     // tells the user which config to look at.
     expect(body.message).toBe(
-      `${configPath} changed after opencodex wrote it; disabling would discard that edit`,
+      `${configPath} changed after openccx wrote it; disabling would discard that edit`,
     );
     expect(readFileSync(configPath, "utf8")).toBe(edited);
     expect(store.listOperations()).toHaveLength(journalBefore);
@@ -1007,12 +1007,12 @@ describe("admission", () => {
      * Only a real listener can show that, so this one starts one and lets an
      * unauthenticated mutation try to reach the route.
      */
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
-    const previousAdmin = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
+    const previousAdmin = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     const serverHome = join(base, "server-home");
     mkdirSync(serverHome, { recursive: true });
-    process.env.OPENCODEX_HOME = serverHome;
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = ["admission", "secret", "fixture"].join("-");
+    process.env.OPENCCX_HOME = serverHome;
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = ["admission", "secret", "fixture"].join("-");
     installHermes();
 
     const { saveConfig } = await import("../../src/config");
@@ -1027,7 +1027,7 @@ describe("admission", () => {
         body: JSON.stringify({ enabled: true }),
       });
       expect(unauthenticated.status).toBe(401);
-      expect(await unauthenticated.json()).toEqual({ error: "opencodex admin token required" });
+      expect(await unauthenticated.json()).toEqual({ error: "openccx admin token required" });
       // Admission ran first, so the route never wrote and never journaled.
       expect(existsSync(hermesConfigPath())).toBe(false);
       expect(store.listOperations()).toHaveLength(0);
@@ -1037,7 +1037,7 @@ describe("admission", () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-opencodex-api-key": process.env.OPENCODEX_ADMIN_AUTH_TOKEN ?? "",
+          "x-openccx-api-key": process.env.OPENCCX_ADMIN_AUTH_TOKEN ?? "",
         },
         body: JSON.stringify({ enabled: true }),
       });
@@ -1048,17 +1048,17 @@ describe("admission", () => {
       const crossOrigin = await fetch(new URL("/api/client-integrations", server.url), {
         headers: {
           Origin: "http://attacker.test",
-          "x-opencodex-api-key": process.env.OPENCODEX_ADMIN_AUTH_TOKEN ?? "",
+          "x-openccx-api-key": process.env.OPENCCX_ADMIN_AUTH_TOKEN ?? "",
         },
       });
       expect(crossOrigin.status).toBe(403);
       expect(await crossOrigin.json()).toEqual({ error: "cross-origin request blocked" });
     } finally {
       await server.stop(true);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
-      if (previousAdmin === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-      else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdmin;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
+      if (previousAdmin === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+      else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdmin;
     }
   });
 
@@ -1129,14 +1129,14 @@ describe("admission", () => {
      * obtains it — from the meta tags injected into the served page — and both
      * requests go over the wire.
      */
-    const previousOpencodexHome = process.env.OPENCODEX_HOME;
-    const previousAdmin = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    const previousOpenccxHome = process.env.OPENCCX_HOME;
+    const previousAdmin = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     const serverHome = join(base, "csrf-server-home");
     mkdirSync(serverHome, { recursive: true });
-    process.env.OPENCODEX_HOME = serverHome;
+    process.env.OPENCCX_HOME = serverHome;
     // A GUI session is only issued when no admin token is configured; with one
     // set, `isApiAuthRequired` declines and there is no CSRF pair to test.
-    delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+    delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
     installHermes();
 
     const { saveConfig } = await import("../../src/config");
@@ -1157,8 +1157,8 @@ describe("admission", () => {
       const html = await page.text();
       const meta = (name: string): string =>
         new RegExp(`<meta name="${name}" content="([^"]*)">`).exec(html)?.[1] ?? "";
-      const token = meta("opencodex-session-token");
-      const csrf = meta("opencodex-session-csrf");
+      const token = meta("openccx-session-token");
+      const csrf = meta("openccx-session-csrf");
       if (!token || !csrf) {
         /*
          * No built GUI, so no page to carry the session pair. The server owns
@@ -1182,8 +1182,8 @@ describe("admission", () => {
       const guiHeaders = {
         Origin: origin,
         "Content-Type": "application/json",
-        "x-opencodex-api-key": token,
-        "x-opencodex-gui-origin": origin,
+        "x-openccx-api-key": token,
+        "x-openccx-gui-origin": origin,
       };
 
       const withoutCsrf = await fetch(target, {
@@ -1199,16 +1199,16 @@ describe("admission", () => {
       // The control: the same request WITH the CSRF token reaches the route.
       const withCsrf = await fetch(target, {
         method: "PUT",
-        headers: { ...guiHeaders, "x-opencodex-csrf-token": csrf },
+        headers: { ...guiHeaders, "x-openccx-csrf-token": csrf },
         body: JSON.stringify({ enabled: true }),
       });
       expect(withCsrf.status).toBe(200);
       expect(store.listOperations("hermes")).toHaveLength(1);
     } finally {
       await server.stop(true);
-      if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousOpencodexHome;
-      if (previousAdmin !== undefined) process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdmin;
+      if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousOpenccxHome;
+      if (previousAdmin !== undefined) process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdmin;
     }
   });
 });

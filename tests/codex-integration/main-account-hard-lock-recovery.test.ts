@@ -19,7 +19,7 @@ import * as sweeper from "../../src/lib/state-store-sweeper";
 import {
   acquireNativeMainProfileDrain, getNativeMainProfileRequestCount, resetLifecycleDrainStateForTests,
 } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const accountId = "fixture-recovery-main";
@@ -30,7 +30,7 @@ let previousHome: string | undefined;
 let previousCodexHome: string | undefined;
 let previousFetch: typeof fetch;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 10100, defaultProvider: "openai", providers: {}, codexMainAccountHardLock: true };
 }
 
@@ -80,11 +80,11 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   previousFetch = globalThis.fetch;
-  home = mkdtempSync(join(tmpdir(), "ocx-main-recovery-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-main-recovery-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
@@ -114,8 +114,8 @@ afterEach(async () => {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     removeTreeWithRetry(home);

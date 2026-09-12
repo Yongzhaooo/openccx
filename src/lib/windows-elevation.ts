@@ -232,30 +232,30 @@ export function resolveTrustedWindowsIcaclsExe(): string {
 
 /** Stable machine-readable marker for a denied `schtasks /create`. Crosses the CLI→proxy boundary. */
 export const WINDOWS_SCHTASKS_CREATE_ACCESS_DENIED_MARKER =
-  "OCX_ERROR_CODE=WINDOWS_SCHTASKS_CREATE_ACCESS_DENIED";
+  "OCCX_ERROR_CODE=WINDOWS_SCHTASKS_CREATE_ACCESS_DENIED";
 
 /**
  * Reserved elevated-scheduler protocol exit codes.
- * These are OpenCodex-owned values returned by the elevated PowerShell transaction.
+ * These are Openccx-owned values returned by the elevated PowerShell transaction.
  * They must never collide with UAC cancellation (1223).
  *
  * The elevated script never exits with raw schtasks codes — only these protocol values —
  * so the parent can classify the transaction without a user-controlled result file.
  */
-export const OCX_ELEVATED_SUCCESS = 0;
-export const OCX_ELEVATED_CREATE_FAILED = 10;
-export const OCX_ELEVATED_RUN_FAILED_ROLLED_BACK = 11;
-export const OCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED = 12;
-export const OCX_ELEVATED_PROTOCOL_FAILED = 13;
+export const OCCX_ELEVATED_SUCCESS = 0;
+export const OCCX_ELEVATED_CREATE_FAILED = 10;
+export const OCCX_ELEVATED_RUN_FAILED_ROLLED_BACK = 11;
+export const OCCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED = 12;
+export const OCCX_ELEVATED_PROTOCOL_FAILED = 13;
 /** Windows ERROR_CANCELLED — reserved for UAC denial; never emitted by the elevated script. */
-export const OCX_ELEVATED_UAC_CANCELLED = 1223;
+export const OCCX_ELEVATED_UAC_CANCELLED = 1223;
 
-export const OCX_ELEVATED_PROTOCOL_CODES = [
-  OCX_ELEVATED_SUCCESS,
-  OCX_ELEVATED_CREATE_FAILED,
-  OCX_ELEVATED_RUN_FAILED_ROLLED_BACK,
-  OCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED,
-  OCX_ELEVATED_PROTOCOL_FAILED,
+export const OCCX_ELEVATED_PROTOCOL_CODES = [
+  OCCX_ELEVATED_SUCCESS,
+  OCCX_ELEVATED_CREATE_FAILED,
+  OCCX_ELEVATED_RUN_FAILED_ROLLED_BACK,
+  OCCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED,
+  OCCX_ELEVATED_PROTOCOL_FAILED,
 ] as const;
 
 export type WindowsSchtasksOperation = "create" | "run" | "query" | "delete" | "end" | "other";
@@ -340,7 +340,7 @@ function isOwnedSchedulerCreate(args: string[]): boolean {
   const taskIndex = normalized.indexOf("/tn");
   const xmlIndex = normalized.indexOf("/xml");
   return normalized[0] === "/create"
-    && normalized[taskIndex + 1] === "opencodex-proxy"
+    && normalized[taskIndex + 1] === "openccx-proxy"
     && taskIndex > 0
     && xmlIndex > 0
     && Boolean(args[xmlIndex + 1])
@@ -397,7 +397,7 @@ export function formatWindowsSchtasksError(error: unknown, args: string[]): stri
   const guidance = [
     "Windows access denied while running Task Scheduler.",
     `Command: schtasks ${argsText}`,
-    "Approve the Windows UAC prompt to install the background service, or run `ocx service install` from an elevated PowerShell window.",
+    "Approve the Windows UAC prompt to install the background service, or run `occx service install` from an elevated PowerShell window.",
   ].join(" ");
   if (operation === "create" && ownedCreateAccessDenied) {
     return `${guidance}\n${WINDOWS_SCHTASKS_CREATE_ACCESS_DENIED_MARKER}`;
@@ -447,10 +447,10 @@ export function buildWindowsElevatedArgumentList(args: string[]): string {
 
 /** Classify an elevated-process exit code into a stable scheduler outcome. */
 export function classifyElevatedSchedulerExitCode(exitCode: number): ElevatedSchedulerOutcome {
-  if (exitCode === OCX_ELEVATED_SUCCESS) return "success";
-  if (exitCode === OCX_ELEVATED_CREATE_FAILED) return "create-failed";
-  if (exitCode === OCX_ELEVATED_RUN_FAILED_ROLLED_BACK) return "run-failed-rolled-back";
-  if (exitCode === OCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED) return "run-failed-rollback-failed";
+  if (exitCode === OCCX_ELEVATED_SUCCESS) return "success";
+  if (exitCode === OCCX_ELEVATED_CREATE_FAILED) return "create-failed";
+  if (exitCode === OCCX_ELEVATED_RUN_FAILED_ROLLED_BACK) return "run-failed-rolled-back";
+  if (exitCode === OCCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED) return "run-failed-rollback-failed";
   // Malformed / unexpected / missing-ExitCode-normalized codes fail closed.
   return "protocol-failed";
 }
@@ -598,7 +598,7 @@ export function startPowerShellCommand(commandScript: string): WindowsElevationE
       if (typeof code === "number") {
         // Only treat UAC-cancellation text as cancelled when the process did not succeed.
         if (
-          code === OCX_ELEVATED_UAC_CANCELLED
+          code === OCCX_ELEVATED_UAC_CANCELLED
           || (code !== 0 && windowsUacCancelledText(detail))
         ) {
           settle(() => reject(new WindowsElevationError(
@@ -634,10 +634,10 @@ export function runWindowsElevated(file: string, args: string[]): Promise<number
     `$p = Start-Process -FilePath ${psSingleQuote(file)}`,
     argumentList.length > 0 ? ` -ArgumentList ${psSingleQuote(argumentList)}` : "",
     " -Verb RunAs -WindowStyle Hidden -PassThru -Wait;",
-    `if ($null -eq $p) { exit ${OCX_ELEVATED_UAC_CANCELLED} }`,
+    `if ($null -eq $p) { exit ${OCCX_ELEVATED_UAC_CANCELLED} }`,
     "$null = $p.Handle;",
     // Missing ExitCode is a protocol failure for single-file elevation (not success).
-    `if ($null -eq $p.ExitCode) { exit ${OCX_ELEVATED_PROTOCOL_FAILED} }`,
+    `if ($null -eq $p.ExitCode) { exit ${OCCX_ELEVATED_PROTOCOL_FAILED} }`,
     "exit $p.ExitCode",
   ].join("");
 
@@ -678,8 +678,8 @@ export function runWindowsElevatedScheduledTaskRegistration(
       `$schtasks = ${psSingleQuote(resolveTrustedWindowsSchtasksExe())}`,
       "$currentXml = & $schtasks /query /tn $taskName /xml 2>$null | Out-String",
       "if ($LASTEXITCODE -ne 0) { throw 'Task Scheduler replacement precondition could not be read.' }",
-      "function Normalize-OcxTaskXml([string]$value) { return (($value.TrimStart([char]0xFEFF) -replace \"`r`n?\", \"`n\").Trim()) }",
-      "if ((Normalize-OcxTaskXml $currentXml) -cne (Normalize-OcxTaskXml $expectedXml)) { throw 'Task Scheduler replacement precondition changed.' }",
+      "function Normalize-OccxTaskXml([string]$value) { return (($value.TrimStart([char]0xFEFF) -replace \"`r`n?\", \"`n\").Trim()) }",
+      "if ((Normalize-OccxTaskXml $currentXml) -cne (Normalize-OccxTaskXml $expectedXml)) { throw 'Task Scheduler replacement precondition changed.' }",
     ] : []),
     `& $registerTask -TaskName $taskName -Xml $xml${replace ? " -Force" : ""} -ErrorAction Stop | Out-Null`,
   ].join("; ");
@@ -695,9 +695,9 @@ export function runWindowsElevatedScheduledTaskRegistration(
       encodedCommand,
     ]))}`,
     " -Verb RunAs -WindowStyle Hidden -PassThru -Wait;",
-    `if ($null -eq $p) { exit ${OCX_ELEVATED_UAC_CANCELLED} }`,
+    `if ($null -eq $p) { exit ${OCCX_ELEVATED_UAC_CANCELLED} }`,
     "$null = $p.Handle;",
-    `if ($null -eq $p.ExitCode) { exit ${OCX_ELEVATED_PROTOCOL_FAILED} }`,
+    `if ($null -eq $p.ExitCode) { exit ${OCCX_ELEVATED_PROTOCOL_FAILED} }`,
     "exit $p.ExitCode",
   ].join("");
 
@@ -706,7 +706,7 @@ export function runWindowsElevatedScheduledTaskRegistration(
 
 /**
  * Build the elevated (post-UAC) script: create → run → optional delete rollback.
- * Returns only OpenCodex protocol exit codes (never raw schtasks codes, never 1223).
+ * Returns only Openccx protocol exit codes (never raw schtasks codes, never 1223).
  * Does not write through any user-controlled pathname.
  */
 export function buildElevatedSchtasksCreateAndRunScript(
@@ -720,20 +720,20 @@ export function buildElevatedSchtasksCreateAndRunScript(
   const deleteList = buildWindowsElevatedArgumentList(deleteArgs);
   return [
     `$schtasks = ${psSingleQuote(schtasksPath)}`,
-    "function Invoke-OcxSchtasks([string]$ArgList) {",
+    "function Invoke-OccxSchtasks([string]$ArgList) {",
     "  $p = Start-Process -FilePath $schtasks -ArgumentList $ArgList -Wait -PassThru -WindowStyle Hidden",
     "  if ($null -eq $p) { return 1 }",
     "  $null = $p.Handle",
     "  if ($null -eq $p.ExitCode) { return 1 }",
     "  return [int]$p.ExitCode",
     "}",
-    `$createCode = Invoke-OcxSchtasks ${psSingleQuote(createList)}`,
-    `if ($createCode -ne 0) { exit ${OCX_ELEVATED_CREATE_FAILED} }`,
-    `$runCode = Invoke-OcxSchtasks ${psSingleQuote(runList)}`,
-    `if ($runCode -eq 0) { exit ${OCX_ELEVATED_SUCCESS} }`,
-    `$deleteCode = Invoke-OcxSchtasks ${psSingleQuote(deleteList)}`,
-    `if ($deleteCode -eq 0) { exit ${OCX_ELEVATED_RUN_FAILED_ROLLED_BACK} }`,
-    `exit ${OCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED}`,
+    `$createCode = Invoke-OccxSchtasks ${psSingleQuote(createList)}`,
+    `if ($createCode -ne 0) { exit ${OCCX_ELEVATED_CREATE_FAILED} }`,
+    `$runCode = Invoke-OccxSchtasks ${psSingleQuote(runList)}`,
+    `if ($runCode -eq 0) { exit ${OCCX_ELEVATED_SUCCESS} }`,
+    `$deleteCode = Invoke-OccxSchtasks ${psSingleQuote(deleteList)}`,
+    `if ($deleteCode -eq 0) { exit ${OCCX_ELEVATED_RUN_FAILED_ROLLED_BACK} }`,
+    `exit ${OCCX_ELEVATED_RUN_FAILED_ROLLBACK_FAILED}`,
   ].join("; ");
 }
 
@@ -771,9 +771,9 @@ export function startElevatedSchtasksCreateAndRun(
       inner,
     ]))}`,
     " -Verb RunAs -WindowStyle Hidden -PassThru -Wait;",
-    `if ($null -eq $p) { exit ${OCX_ELEVATED_UAC_CANCELLED} }`,
+    `if ($null -eq $p) { exit ${OCCX_ELEVATED_UAC_CANCELLED} }`,
     "$null = $p.Handle;",
-    `if ($null -eq $p.ExitCode) { exit ${OCX_ELEVATED_PROTOCOL_FAILED} }`,
+    `if ($null -eq $p.ExitCode) { exit ${OCCX_ELEVATED_PROTOCOL_FAILED} }`,
     "exit $p.ExitCode",
   ].join("");
 

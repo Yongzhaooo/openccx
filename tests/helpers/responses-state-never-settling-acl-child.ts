@@ -34,8 +34,8 @@ if (mode !== "principal" && mode !== "icacls") {
   throw new Error(`Unknown never-settling ACL mode: ${mode ?? "<missing>"}`);
 }
 
-const home = mkdtempSync(join(tmpdir(), "ocx-never-settling-acl-child-"));
-process.env.OPENCODEX_HOME = home;
+const home = mkdtempSync(join(tmpdir(), "occx-never-settling-acl-child-"));
+process.env.OPENCCX_HOME = home;
 clearResponseStateMemoryForTests();
 setPlatformForTests("win32");
 setResponseSpillAsyncAclAttemptBudgetForTests(100);

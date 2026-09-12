@@ -5,11 +5,11 @@ import { deriveJawcodeAliases, deriveProviderPresets } from "../../src/providers
 import { FREE_PROVIDER_DIRECTORY } from "../../src/providers/free-directory";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
 
-function bigmodelConfig(): OcxConfig {
+function bigmodelConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "zhipu-bigmodel",
@@ -77,7 +77,7 @@ describe("Zhipu BigModel provider", () => {
     expect(directoryIds.has("zhipu-bigmodel")).toBe(false);
 
     // A saved `glm` provider keeps its own destination, unaffected by this registry entry.
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "glm",
       providers: {

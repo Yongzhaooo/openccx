@@ -20,9 +20,9 @@ import { cursorCheckpointModelAffinityId } from "../../../src/adapters/cursor/di
 import { cursorMcpToolsEncodedSize } from "../../../src/adapters/cursor/tool-definitions";
 import { encodeCursorCallId, resetCursorCallIdProvenanceForTests } from "../../../src/adapters/cursor/call-id";
 import { parseRequest } from "../../../src/responses/parser";
-import type { OcxParsedRequest } from "../../../src/types";
+import type { OccxParsedRequest } from "../../../src/types";
 
-const base: OcxParsedRequest = {
+const base: OccxParsedRequest = {
   modelId: "cursor/auto",
   context: { messages: [] },
   stream: false,
@@ -362,8 +362,8 @@ describe("Cursor request builder", () => {
 
   test("preserves call/result identity for local escapes and opaque escape lookalikes", () => {
     resetCursorCallIdProvenanceForTests();
-    const local = encodeCursorCallId("ocxc1_");
-    const opaque = "ocxc1e_b2N4YzFlXw";
+    const local = encodeCursorCallId("occxc1_");
+    const opaque = "occxc1e_b2N4YzFlXw";
     const request = createCursorRequest({
       ...base,
       context: {
@@ -375,7 +375,7 @@ describe("Cursor request builder", () => {
     });
 
     expect(request.messages.map(message => message.content)).toEqual([
-      "[tool_result]\ncall_id: ocxc1_\nname: first\nis_error: false\noutput:\none",
+      "[tool_result]\ncall_id: occxc1_\nname: first\nis_error: false\noutput:\none",
       `[tool_result]\ncall_id: ${opaque}\nname: second\nis_error: false\noutput:\ntwo`,
     ]);
   });
@@ -716,7 +716,7 @@ describe("Cursor request builder", () => {
 
     const execDeferred = {
       name: "exec",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Run JavaScript. Discover tools with tool_search.",
       parameters: { type: "object", properties: { input: { type: "string" } } },
       freeform: true,
@@ -724,7 +724,7 @@ describe("Cursor request builder", () => {
     const execInlined = { ...execDeferred, description: `${execDeferred.description}\n${nestedCatalogText}` };
     const wait = {
       name: "wait",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Resume a running call",
       parameters: { type: "object", properties: { id: { type: "string" } } },
     };
@@ -751,14 +751,14 @@ describe("Cursor request builder", () => {
     }));
     const exec = {
       name: "exec",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Run JavaScript",
       parameters: { type: "object", properties: { input: { type: "string" } } },
       freeform: true,
     };
     const wait = {
       name: "wait",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Resume",
       parameters: { type: "object", properties: { id: { type: "string" } } },
     };
@@ -772,7 +772,7 @@ describe("Cursor request builder", () => {
     expect(cursorMcpToolsEncodedSize(budget.tools, "auto")).toBeLessThanOrEqual(CURSOR_TOOL_BYTES_LIMIT);
     expect(budget.omitted.length).toBeGreaterThan(0);
   });
-  test("pins namespaced opencodex-responses exec ahead of filler", () => {
+  test("pins namespaced openccx-responses exec ahead of filler", () => {
     const filler = Array.from({ length: 80 }, (_, index) => ({
       name: `filler_${index}`,
       namespace: "mcp__filler",
@@ -781,13 +781,13 @@ describe("Cursor request builder", () => {
     }));
     const exec = {
       name: "exec",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Run",
       parameters: { type: "object", properties: { cmd: { type: "string" } } },
     };
     const wait = {
       name: "wait",
-      namespace: "opencodex-responses",
+      namespace: "openccx-responses",
       description: "Resume",
       parameters: { type: "object", properties: { id: { type: "string" } } },
     };

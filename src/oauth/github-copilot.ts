@@ -26,12 +26,12 @@ const MIN_POLL_MS = 1000;
 const TERMINAL_OAUTH_ERROR_CODES = new Set(["invalid_grant", "access_denied", "expired_token"]);
 const IDENTITY_RETRY_DELAY_MS = 500;
 
-/** Honest OpenCodex client fingerprint; VS Code-shaped values only if API requires them later. */
+/** Honest Openccx client fingerprint; VS Code-shaped values only if API requires them later. */
 export const GITHUB_COPILOT_EDITOR_HEADERS: Readonly<Record<string, string>> = {
-  "Editor-Version": "opencodex/0.1.0",
-  "Editor-Plugin-Version": "opencodex/0.1.0",
+  "Editor-Version": "openccx/0.1.0",
+  "Editor-Plugin-Version": "openccx/0.1.0",
   "Copilot-Integration-Id": "vscode-chat",
-  "User-Agent": "opencodex",
+  "User-Agent": "openccx",
   Accept: "application/json",
 };
 
@@ -154,7 +154,7 @@ async function requestDeviceAuthorization(signal?: AbortSignal): Promise<{
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "opencodex",
+      "User-Agent": "openccx",
     },
     body: new URLSearchParams({
       client_id: GITHUB_COPILOT_OAUTH_CLIENT_ID,
@@ -199,7 +199,7 @@ async function pollGithubDeviceToken(
       headers: {
         Accept: "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "opencodex",
+        "User-Agent": "openccx",
       },
       body: new URLSearchParams({
         client_id: GITHUB_COPILOT_OAUTH_CLIENT_ID,
@@ -250,7 +250,7 @@ async function refreshGithubAccessToken(refreshToken: string, signal?: AbortSign
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "opencodex",
+      "User-Agent": "openccx",
     },
     body: new URLSearchParams({
       client_id: GITHUB_COPILOT_OAUTH_CLIENT_ID,
@@ -320,7 +320,7 @@ async function fetchGithubIdentityOnce(githubAccessToken: string, signal?: Abort
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${githubAccessToken}`,
-      "User-Agent": "opencodex",
+      "User-Agent": "openccx",
       "X-GitHub-Api-Version": "2022-11-28",
     },
     signal,

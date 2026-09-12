@@ -5,11 +5,11 @@ import { providerConfigSeed } from "../../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../../src/providers/registry";
 import { decideTier } from "../../../src/providers/fastwire";
 import { fastPolicyForModel, serviceTierSupportFromPolicy } from "../../../src/providers/service-tier";
-import type { OcxParsedRequest, TierDecision } from "../../../src/types";
+import type { OccxParsedRequest, TierDecision } from "../../../src/types";
 
 const FAST_DECISION: TierDecision = { kind: "set", value: "fast" };
 
-function parsedFor(modelId: string, reasoning?: string, decision?: TierDecision): OcxParsedRequest {
+function parsedFor(modelId: string, reasoning?: string, decision?: TierDecision): OccxParsedRequest {
   return {
     modelId,
     context: { systemPrompt: [], messages: [{ role: "user", content: "hi" }] },
@@ -17,7 +17,7 @@ function parsedFor(modelId: string, reasoning?: string, decision?: TierDecision)
       ...(reasoning ? { reasoning } : {}),
       ...(decision ? { tierDecision: decision } : {}),
     },
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 const cursorConfig = () => providerConfigSeed(getProviderRegistryEntry("cursor")!);

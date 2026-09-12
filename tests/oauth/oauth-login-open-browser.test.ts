@@ -1,6 +1,6 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { handleOauthAccountRoutes } from "../../src/server/management/oauth-account-routes";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * The login route decides whether to spawn a browser on the machine running the
@@ -21,8 +21,8 @@ function loginRequest(provider: string): Request {
   });
 }
 
-function baseConfig(): OcxConfig {
-  return { port: 0, hostname: "127.0.0.1", defaultProvider: "kimi", providers: {} } as OcxConfig;
+function baseConfig(): OccxConfig {
+  return { port: 0, hostname: "127.0.0.1", defaultProvider: "kimi", providers: {} } as OccxConfig;
 }
 
 async function startLogin(flow: { url: string; instructions?: string; deviceCode?: string }): Promise<{

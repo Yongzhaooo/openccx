@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../../src/config";
 import { startServer } from "../../../src/server";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../../helpers/isolated-codex-home";
 import { GROK_APPLY_TERMINAL_MS, runGrokApplyFlightForTests, setGrokApplyFlightTestHooks } from "../../../src/server/management/agent-settings-routes";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
@@ -21,12 +21,12 @@ let previousGrokHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousGrokHome = process.env.GROK_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-grok-mgmt-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-grok-mgmt-"));
-  grokRoot = mkdtempSync(join(tmpdir(), "ocx-grok-home-"));
-  process.env.OPENCODEX_HOME = testDir;
+  isolatedCodexHome = installIsolatedCodexHome("occx-grok-mgmt-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-grok-mgmt-"));
+  grokRoot = mkdtempSync(join(tmpdir(), "occx-grok-home-"));
+  process.env.OPENCCX_HOME = testDir;
   process.env.GROK_HOME = grokRoot;
   saveConfig({
     port: 0,
@@ -34,13 +34,13 @@ beforeEach(() => {
     providers: {
       mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, liveModels: false, models: ["test-model"] },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 });
 
 afterEach(() => {
   setGrokApplyFlightTestHooks(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousGrokHome === undefined) delete process.env.GROK_HOME;
   else process.env.GROK_HOME = previousGrokHome;
   isolatedCodexHome?.restore();

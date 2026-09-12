@@ -11,7 +11,7 @@
 import { createClineIO } from "./cline-io";
 import { parseClineDocument } from "./cline-document";
 import { ClientPathError, EXPORT_CLIENTS, opencodeProxyBaseUrl, type ExportModel, type ManagedContribution } from "../clients/config-export";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { PARSE_FAILED, loadTarget, parseConfig, type IntegrationIO } from "./config-io";
 import { SNAPSHOT_RETENTION } from "./journal";
 import { AmbiguousSelectorError, parseSegment, selectIndex, type PathSegment } from "./merge";
@@ -198,7 +198,7 @@ function recordedContribution(
 }
 
 /**
- * Prove that every protected field still matches what OpenCodex wrote.
+ * Prove that every protected field still matches what Openccx wrote.
  *
  * New records carry an operation-scoped protected fingerprint and the exact
  * paths excluded from it. Legacy records can recover only when the desired
@@ -416,7 +416,7 @@ export function classifyIntegration(input: {
 export interface IntegrationStateInput {
   clientId: IntegrationClientId;
   models: readonly ExportModel[];
-  config: OcxConfig;
+  config: OccxConfig;
   port: number;
   env?: NodeJS.ProcessEnv;
   home?: string;
@@ -429,12 +429,12 @@ export interface IntegrationStateInput {
 
 export function exportContextOf(input: {
   models: readonly ExportModel[];
-  config: OcxConfig;
+  config: OccxConfig;
   port: number;
-}): { baseUrl: string; models: readonly ExportModel[]; config: OcxConfig } {
+}): { baseUrl: string; models: readonly ExportModel[]; config: OccxConfig } {
   return {
     /*
-     * Composed through the SAME helper `ocx export` uses. Interpolating the
+     * Composed through the SAME helper `occx export` uses. Interpolating the
      * hostname by hand looked equivalent and was not: `::1` produced
      * `http://::1:10100/v1` and `::` produced `http://:::10100/v1`, neither of
      * which is a URL, and a `0.0.0.0` bind wrote a wildcard address no client

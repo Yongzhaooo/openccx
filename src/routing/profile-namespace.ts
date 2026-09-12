@@ -1,11 +1,11 @@
-import type { OcxRoutingProfileConfig } from "../types";
+import type { OccxRoutingProfileConfig } from "../types";
 
 /** Canonical public namespace reserved for routing-policy model ids. */
 export const POLICY_NAMESPACE = "policy";
 
 /** Public namespace prefixes claimed by slash-qualified routing-profile aliases. */
 export function routingProfileAliasNamespacePrefixes(
-  config: { routingProfiles?: Record<string, OcxRoutingProfileConfig> },
+  config: { routingProfiles?: Record<string, OccxRoutingProfileConfig> },
 ): string[] {
   return Object.values(config.routingProfiles ?? {}).flatMap((profile) => {
     const alias = typeof profile?.alias === "string" ? profile.alias.trim() : "";

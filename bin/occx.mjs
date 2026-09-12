@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * opencodex published-package bin launcher.
+ * openccx published-package bin launcher.
  *
  * The package source is TypeScript that runs on the Bun runtime. To let
- * global npm and pnpm installs of `@bitkyc08/opencodex` work without a separately-installed Bun,
+ * global npm and pnpm installs of `openccx` work without a separately-installed Bun,
  * we bundle the runtime via the `bun` npm dependency and exec it from this
  * Node shim. (Dev still runs `bun run src/cli/index.ts` directly via the shebang on
  * src/cli/index.ts — only the published npm/pnpm `bin` routes through here.)
@@ -40,7 +40,7 @@ import {
   isCodexCliUpdateInspectionArgv,
 } from "../src/update/codex-cli-update-launch-policy.mjs";
 
-const PKG = "@bitkyc08/opencodex";
+const PKG = "openccx";
 try {
   process.cwd();
 } catch {
@@ -54,8 +54,8 @@ const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
 const installMethod = detectInstallFromPath(here, { exists: existsSync });
 const cliPath = join(here, "..", "src", "cli", "index.ts");
-const NODE_LAUNCH_CONTEXT_ENV = "OCX_NODE_LAUNCH_CONTEXT";
-const NODE_LAUNCH_PROOF_PREFIX = "--ocx-internal-launch-proof=";
+const NODE_LAUNCH_CONTEXT_ENV = "OCCX_NODE_LAUNCH_CONTEXT";
+const NODE_LAUNCH_PROOF_PREFIX = "--occx-internal-launch-proof=";
 
 function isNodeModulesInstall() {
   return here.split(/[\\/]/).includes("node_modules");
@@ -91,8 +91,8 @@ function expandUserPath(raw) {
 }
 
 function configDir() {
-  const raw = process.env.OPENCODEX_HOME?.trim();
-  return resolve(raw ? expandUserPath(raw) : join(homedir(), ".opencodex"));
+  const raw = process.env.OPENCCX_HOME?.trim();
+  return resolve(raw ? expandUserPath(raw) : join(homedir(), ".openccx"));
 }
 
 function shouldRepairCodexShim() {
@@ -118,7 +118,7 @@ function repairCodexShimIfNeeded(launcherPath = fileURLToPath(import.meta.url)) 
     windowsHide: true,
   });
   if (res.status !== 0) {
-    console.warn(`opencodex: Codex shim repair failed (${res.status ?? "unknown exit"}). Try: ocx codex-shim install`);
+    console.warn(`openccx: Codex shim repair failed (${res.status ?? "unknown exit"}). Try: occx codex-shim install`);
   }
 }
 
@@ -164,7 +164,7 @@ function runningPnpmShimPath() {
   const invoked = process.argv[1];
   if (!invoked) return undefined;
   const name = invoked.replaceAll("\\", "/").split("/").at(-1)?.toLowerCase();
-  if (!new Set(["ocx", "opencodex", "ocx.cmd", "opencodex.cmd", "ocx.ps1", "opencodex.ps1"]).has(name ?? "")) {
+  if (!new Set(["occx", "openccx", "occx.cmd", "openccx.cmd", "occx.ps1", "openccx.ps1"]).has(name ?? "")) {
     return undefined;
   }
   return resolve(invoked);
@@ -193,7 +193,7 @@ function runPackageManagerSelfUpdate(manager) {
       },
     });
     if (!ownerResult.ok) {
-      console.error(`opencodex: ${ownerResult.reason}; aborting before stopping the proxy.`);
+      console.error(`openccx: ${ownerResult.reason}; aborting before stopping the proxy.`);
       process.exit(1);
     }
     owner = ownerResult.owner;
@@ -207,7 +207,7 @@ function runPackageManagerSelfUpdate(manager) {
     : ["install", "-g", `${PKG}@${tag}`];
   const installInvocation = managerInvocation(installArgs);
   if (!latestInvocation || !installInvocation) {
-    console.error(`opencodex: could not resolve ${manager} from a trusted absolute PATH entry; aborting before stopping the proxy.`);
+    console.error(`openccx: could not resolve ${manager} from a trusted absolute PATH entry; aborting before stopping the proxy.`);
     process.exit(1);
   }
   const latestResult = spawnSync(latestInvocation.file, latestInvocation.args, {
@@ -219,7 +219,7 @@ function runPackageManagerSelfUpdate(manager) {
   });
   const latest = latestResult.status === 0 && typeof latestResult.stdout === "string" ? latestResult.stdout.trim() : "";
 
-  console.log(`opencodex v${current} (installed via ${manager}, tag ${tag})`);
+  console.log(`openccx v${current} (installed via ${manager}, tag ${tag})`);
   if (latest && latest === current) {
     console.log(`Already on the latest ${tag} version (v${latest}).`);
     process.exit(0);
@@ -237,11 +237,11 @@ function runPackageManagerSelfUpdate(manager) {
     });
   });
   if (integrity.ok === false) {
-    console.error(`opencodex: ${integrity.reason}; aborting before stopping the proxy.`);
+    console.error(`openccx: ${integrity.reason}; aborting before stopping the proxy.`);
     process.exit(1);
   }
   if (integrity.ok === "skipped") {
-    console.warn(`opencodex: integrity pre-flight skipped: ${integrity.reason}. Proceeding best-effort.`);
+    console.warn(`openccx: integrity pre-flight skipped: ${integrity.reason}. Proceeding best-effort.`);
   } else {
     console.log(`Verified ${PKG}@${latest} integrity metadata ${integrity.integrity.slice(0, 24)}…`);
   }
@@ -249,12 +249,12 @@ function runPackageManagerSelfUpdate(manager) {
   if (manager === "npm") {
     const cachePreflight = runNpmCachePreflight();
     if (!cachePreflight.ok) {
-      console.error(`opencodex: ${npmCachePreflightFailureMessage(cachePreflight.reason)}. Aborting before stopping the proxy.`);
+      console.error(`openccx: ${npmCachePreflightFailureMessage(cachePreflight.reason)}. Aborting before stopping the proxy.`);
       process.exit(1);
     }
   }
 
-  // Remember whether a background service manages the proxy BEFORE stopping — `ocx stop`
+  // Remember whether a background service manages the proxy BEFORE stopping — `occx stop`
   // unloads it, so a successful update must refresh and restart it afterwards.
   const serviceStatePath = join(configDir(), "service-state.json");
   const serviceWasInstalled = existsSync(serviceStatePath);
@@ -356,17 +356,17 @@ function runPackageManagerSelfUpdate(manager) {
   // package path as the recovery starting point; a path returned by the pnpm transaction
   // replaces it only after the new tree and shims have been verified.
   let postUpdateLauncher = manager === "pnpm" && owner
-    ? join(owner.packagePath, "bin", "ocx.mjs")
+    ? join(owner.packagePath, "bin", "occx.mjs")
     : launcher;
   let postUpdateLauncherUsable = true;
 
   function startProxyDirectly() {
     if (!postUpdateLauncherUsable || !existsSync(postUpdateLauncher)) {
-      console.error("opencodex: cannot restart the proxy because the launcher is missing; reinstall opencodex manually.");
+      console.error("openccx: cannot restart the proxy because the launcher is missing; reinstall openccx manually.");
       return;
     }
     const env = { ...process.env };
-    delete env.OCX_SERVICE;
+    delete env.OCCX_SERVICE;
     console.log(`Attempting to restart the proxy on port ${bakePort}.`);
     const child = spawn(process.execPath, [postUpdateLauncher, "start", "--port", String(bakePort)], {
       detached: true,
@@ -375,14 +375,14 @@ function runPackageManagerSelfUpdate(manager) {
       env,
     });
     child.on("error", error => {
-      console.error(`opencodex: direct proxy restart failed: ${error.message}`);
+      console.error(`openccx: direct proxy restart failed: ${error.message}`);
     });
     child.unref();
   }
 
   function refreshBackgroundServiceOrStartDirect() {
-    const prevBake = process.env.OCX_BAKE_PORT;
-    process.env.OCX_BAKE_PORT = String(bakePort);
+    const prevBake = process.env.OCCX_BAKE_PORT;
+    process.env.OCCX_BAKE_PORT = String(bakePort);
     try {
       let svc = spawnSync(process.execPath, serviceRefreshArgs(), { stdio: "inherit", windowsHide: true });
       // `serviceWasInstalled` is inferred from service-state.json alone, which can be
@@ -427,22 +427,22 @@ function runPackageManagerSelfUpdate(manager) {
         // update never leaves the user without a running proxy.
         console.warn(
           svc.status === 0
-            ? "opencodex: service refresh left a non-viable manager — starting the proxy directly instead."
-            : "opencodex: service refresh failed — starting the proxy directly instead.",
+            ? "openccx: service refresh left a non-viable manager — starting the proxy directly instead."
+            : "openccx: service refresh failed — starting the proxy directly instead.",
         );
-        console.warn("  Run 'ocx service repair' to see why the background service could not restart.");
+        console.warn("  Run 'occx service repair' to see why the background service could not restart.");
         startProxyDirectly();
       }
     } finally {
-      if (prevBake === undefined) delete process.env.OCX_BAKE_PORT;
-      else process.env.OCX_BAKE_PORT = prevBake;
+      if (prevBake === undefined) delete process.env.OCCX_BAKE_PORT;
+      else process.env.OCCX_BAKE_PORT = prevBake;
     }
   }
 
-  // Never replace package files under a live proxy — stop it first (full `ocx stop`
+  // Never replace package files under a live proxy — stop it first (full `occx stop`
   // semantics: graceful drain, service stop, native Codex restore). Gate on the service
   // and the runtime-port record too: a service-managed or orphaned proxy can be live
-  // while ocx.pid is stale/missing.
+  // while occx.pid is stale/missing.
   if (trayBeforeUpdate.stopBeforeReplacement) {
     console.log("⏹  Handing off the Windows tray before updating...");
     try {
@@ -454,23 +454,23 @@ function runPackageManagerSelfUpdate(manager) {
         start: () => runTrayLifecycle(launcher, "start"),
       });
     } catch {
-      console.error("opencodex: could not stop the Windows tray; aborting before package replacement.");
+      console.error("openccx: could not stop the Windows tray; aborting before package replacement.");
       process.exit(1);
     }
   }
   const hasRuntimeState =
-    existsSync(join(configDir(), "ocx.pid")) || existsSync(join(configDir(), "runtime-port.json"));
+    existsSync(join(configDir(), "occx.pid")) || existsSync(join(configDir(), "runtime-port.json"));
 
   function recoverStoppedRuntimeAfterFailure() {
     if (!postUpdateLauncherUsable) {
-      console.error("opencodex: no verified active launcher remains for automatic recovery; reinstall opencodex manually.");
+      console.error("openccx: no verified active launcher remains for automatic recovery; reinstall openccx manually.");
       return;
     }
     if (serviceWasInstalled) {
-      console.warn("opencodex: update failed after stopping the proxy — restoring the previous background service.");
+      console.warn("openccx: update failed after stopping the proxy — restoring the previous background service.");
       refreshBackgroundServiceOrStartDirect();
     } else if (hasRuntimeState) {
-      console.warn("opencodex: update failed after stopping the proxy — restarting the previous version directly.");
+      console.warn("openccx: update failed after stopping the proxy — restarting the previous version directly.");
       startProxyDirectly();
     }
   }
@@ -479,14 +479,14 @@ function runPackageManagerSelfUpdate(manager) {
   // parent crashed mid-deferral the service, pid and runtime records can all be absent
   // while the shared client config still points at a proxy that is gone; installing over
   // that silently skips the recovery the receipt was written to trigger (#3008). Presence
-  // is the whole test here — the launcher cannot parse it, and `ocx stop` is what decides
+  // is the whole test here — the launcher cannot parse it, and `occx stop` is what decides
   // whether the obligation is safe to finish.
   const hasPendingTeardown = hasPendingTeardownIn(readdirSync, configDir());
   if (serviceWasInstalled || hasRuntimeState || hasPendingTeardown) {
     console.log("⏹  Stopping the running proxy before updating...");
     const stopRes = spawnSync(process.execPath, [launcher, "stop"], { stdio: "inherit", windowsHide: true });
     const stillHasRuntimeState =
-      existsSync(join(configDir(), "ocx.pid")) || existsSync(join(configDir(), "runtime-port.json"));
+      existsSync(join(configDir(), "occx.pid")) || existsSync(join(configDir(), "runtime-port.json"));
     // A history-only failure means teardown succeeded and a backup manifest is waiting for
     // review: the proxy is down and replacing package files is safe. Every other nonzero
     // status is a stop that did not finish, and a signal kill (status null) says nothing
@@ -508,18 +508,18 @@ function runPackageManagerSelfUpdate(manager) {
     if (!decision.proceed) {
       if (trayBeforeUpdate.restoreOnFailure) runTrayLifecycle(launcher, "start");
       if (decision.reason === "teardown-outstanding") {
-        console.error("opencodex: a shared teardown from an earlier stop is still outstanding and needs manual review; aborting the update.");
-        console.error("opencodex: confirm no proxy is running, run 'ocx restore', then remove the pending-teardown file in the opencodex home.");
+        console.error("openccx: a shared teardown from an earlier stop is still outstanding and needs manual review; aborting the update.");
+        console.error("openccx: confirm no proxy is running, run 'occx restore', then remove the pending-teardown file in the openccx home.");
       } else console.error(decision.reason === "proxy-unknown"
-        ? `opencodex: could not confirm the proxy on ${bakeHostname}:${bakePort} is stopped; aborting the update. Run 'ocx stop' and retry.`
-        : "opencodex: could not stop the running proxy; aborting the update. Run 'ocx stop' and retry.");
+        ? `openccx: could not confirm the proxy on ${bakeHostname}:${bakePort} is stopped; aborting the update. Run 'occx stop' and retry.`
+        : "openccx: could not stop the running proxy; aborting the update. Run 'occx stop' and retry.");
       process.exit(1);
     }
     if (historyOnlyStop || historyRestoreIncomplete()) {
       console.warn(
-        "opencodex: WARNING — Codex resume-history metadata restore is incomplete (a backup manifest remains).\n" +
+        "openccx: WARNING — Codex resume-history metadata restore is incomplete (a backup manifest remains).\n" +
         "  The DB may be busy or the manifest/target may need review; untracked routed history is intentionally unchanged.\n" +
-        "  After the update: close the Codex app, run 'ocx doctor', then run 'ocx stop' once to retry.",
+        "  After the update: close the Codex app, run 'occx doctor', then run 'occx stop' once to retry.",
       );
     }
   }
@@ -556,10 +556,10 @@ function runPackageManagerSelfUpdate(manager) {
         res = { status: 0 };
       } else if (tx.phase === "stage" || tx.phase === "verify") {
         // Live tree untouched: report and stop. Nothing to roll back.
-        console.error(`opencodex: update aborted before touching the live install (${tx.phase}): ${tx.error}`);
+        console.error(`openccx: update aborted before touching the live install (${tx.phase}): ${tx.error}`);
         res = { status: 1 };
       } else {
-        console.error(`opencodex: update failed (${tx.phase}): ${tx.error}${tx.rolledBack ? " — previous version restored." : ""}`);
+        console.error(`openccx: update failed (${tx.phase}): ${tx.error}${tx.rolledBack ? " — previous version restored." : ""}`);
         res = { status: 1 };
       }
     } else {
@@ -588,12 +588,12 @@ function runPackageManagerSelfUpdate(manager) {
         // pnpm switches the active global group and updates its shim. Continue recovery
         // through that fresh package tree, not the old group whose launcher is still
         // executing this update.
-        postUpdateLauncher = join(update.path, "bin", "ocx.mjs");
+        postUpdateLauncher = join(update.path, "bin", "occx.mjs");
         res = { status: 0 };
       } else {
-        console.error(`opencodex: ${update.error}${update.rolledBack ? "." : " Manual recovery may be required."}`);
+        console.error(`openccx: ${update.error}${update.rolledBack ? "." : " Manual recovery may be required."}`);
         postUpdateLauncherUsable = Boolean(update.activePath);
-        if (update.activePath) postUpdateLauncher = join(update.activePath, "bin", "ocx.mjs");
+        if (update.activePath) postUpdateLauncher = join(update.activePath, "bin", "occx.mjs");
         res = { status: 1 };
       }
     }
@@ -608,8 +608,8 @@ function runPackageManagerSelfUpdate(manager) {
     // An unexpected exception leaves the active package path unproven for either manager.
     // Do not run service/tray/proxy recovery through a possibly half-swapped tree.
     postUpdateLauncherUsable = false;
-    console.error(`opencodex: ${manager} update failed unexpectedly (${error?.message ?? error}). ` +
-      `The live install was not knowingly modified; run 'ocx update' again or reinstall with ${manual}.`);
+    console.error(`openccx: ${manager} update failed unexpectedly (${error?.message ?? error}). ` +
+      `The live install was not knowingly modified; run 'occx update' again or reinstall with ${manual}.`);
     res = { status: 1 };
   }
   if (res.status === 0) {
@@ -621,7 +621,7 @@ function runPackageManagerSelfUpdate(manager) {
         windowsHide: true,
       });
       if (tray.status !== 0) {
-        console.warn("opencodex: Windows tray refresh failed. Run: ocx tray install");
+        console.warn("openccx: Windows tray refresh failed. Run: occx tray install");
         if (trayBeforeUpdate.restoreOnFailure && postUpdateLauncherUsable) runTrayLifecycle(postUpdateLauncher, "start");
       }
     }
@@ -650,12 +650,12 @@ function bunBinDir() {
   return dirname(require.resolve("bun/package.json"));
 }
 
-const BUN_OVERRIDE_ENV = "OPENCODEX_BUN_PATH";
+const BUN_OVERRIDE_ENV = "OPENCCX_BUN_PATH";
 // Mirrors BUN_RUNTIME_SOURCE_ENV in src/lib/bun-runtime.ts. This launcher is plain
 // Node and runs before any TypeScript is loaded, so the name is repeated rather than
-// imported; tests/cli/ocx-launcher-source.test.ts pins the two together.
-const BUN_RUNTIME_SOURCE_ENV = "OCX_BUN_RUNTIME_SOURCE";
-const BUN_RUNTIME_PATH_ENV = "OCX_BUN_RUNTIME_PATH";
+// imported; tests/cli/occx-launcher-source.test.ts pins the two together.
+const BUN_RUNTIME_SOURCE_ENV = "OCCX_BUN_RUNTIME_SOURCE";
+const BUN_RUNTIME_PATH_ENV = "OCCX_BUN_RUNTIME_PATH";
 
 function findBunBinary(bunDir) {
   // The bundled `bun` package ships the binary as bin/bun.exe on every platform;
@@ -669,10 +669,10 @@ function findBunBinary(bunDir) {
 
 function fail(msg) {
   const reinstall = installMethod === "pnpm"
-    ? "pnpm add -g --allow-build=bun @bitkyc08/opencodex"
-    : "npm install -g --allow-scripts=bun @bitkyc08/opencodex";
+    ? "pnpm add -g --allow-build=bun openccx"
+    : "npm install -g --allow-scripts=bun openccx";
   console.error(
-    `opencodex: ${msg}\n` +
+    `openccx: ${msg}\n` +
       "The bundled Bun runtime could not be prepared. This usually means the\n" +
       "install skipped lifecycle scripts (for example npm blocked bun's postinstall\n" +
       "or pnpm did not approve bun's build) or optional dependencies. Reinstall with:\n" +
@@ -691,7 +691,7 @@ function resolveBun({ allowInstall = true } = {}) {
     const overridePath = resolve(override);
     if (isRealBunBinary(overridePath)) return { path: overridePath, source: "override" };
     console.error(
-      `opencodex: ${BUN_OVERRIDE_ENV} is missing, unreadable, or not a complete Bun binary; falling back to the bundled runtime.`,
+      `openccx: ${BUN_OVERRIDE_ENV} is missing, unreadable, or not a complete Bun binary; falling back to the bundled runtime.`,
     );
   }
 
@@ -716,20 +716,20 @@ function resolveBun({ allowInstall = true } = {}) {
   return { path: bin, source: "bundled" };
 }
 
-// `ocx update --help` prints usage and exits WITHOUT side effects. The Node launcher
+// `occx update --help` prints usage and exits WITHOUT side effects. The Node launcher
 // intercepts `update` before the Bun CLI starts, so the help short-circuit must live
 // here too — otherwise --help runs the real self-update, stops the proxy, and drops
 // in-flight routed streams (issue #168).
 const updateHelpRequested = process.argv[2] === "update" &&
   process.argv.slice(3).some(a => a === "--help" || a === "-h" || a === "help");
 if (updateHelpRequested) {
-  console.log("Usage: ocx update [--tag latest|preview]\n\nUpdate opencodex. Preview installs stay on the preview tag unless overridden.");
+  console.log("Usage: occx update [--tag latest|preview]\n\nUpdate openccx. Preview installs stay on the preview tag unless overridden.");
   process.exit(0);
 }
 
 const codexCliUpdateInspection = isCodexCliUpdateInspectionArgv(process.argv);
 if (codexCliUpdateInspection && typeof process.versions.bun === "string") {
-  console.error("opencodex: codex-cli-update inspection must use the published Node launcher.");
+  console.error("openccx: codex-cli-update inspection must use the published Node launcher.");
   process.exit(1);
 }
 
@@ -745,9 +745,9 @@ if (!codexCliUpdateInspection && installMethod === "npm" && isNodeModulesInstall
   try {
     const probe = bootRestoreProbe(resolve(here, ".."));
     if (probe.action === "restored") {
-      console.warn(`opencodex: previous update left a broken install — restored the backup from ${probe.from}.`);
+      console.warn(`openccx: previous update left a broken install — restored the backup from ${probe.from}.`);
     } else if (probe.action === "failed") {
-      console.warn(`opencodex: a backup from a failed update exists but could not be restored automatically: ${probe.error}`);
+      console.warn(`openccx: a backup from a failed update exists but could not be restored automatically: ${probe.error}`);
     }
   } catch { /* the probe must never block launch */ }
 }
@@ -763,11 +763,11 @@ const bun = bunRuntime.path;
 // port left bound, pid/runtime-port files left behind, Codex config not restored.
 //
 // Provenance seam for issue #701: THIS launcher runs under Node, which does not
-// auto-load a project `.env`/`.env.local`; the Bun child does, before any opencodex
+// auto-load a project `.env`/`.env.local`; the Bun child does, before any openccx
 // code evaluates. So this is the last point that can still tell a real shell export
 // from a working-directory dotenv value, and we record which Anthropic credential or
 // destination slots already existed. The context is paired with a random proof carried
-// in argv, which project dotenv cannot modify during an ordinary `ocx` invocation.
+// in argv, which project dotenv cannot modify during an ordinary `occx` invocation.
 // `src/cli/claude.ts` treats anything present in the Bun child but missing from this
 // list as ambient project pollution rather than user auth or destination,
 // which stopped a project dotenv from silently moving a claude.ai subscriber onto API
@@ -864,7 +864,7 @@ const clearHandlers = () => {
 
 child.on("error", err => {
   clearHandlers();
-  console.error(`opencodex: failed to launch Bun runtime: ${err.message}`);
+  console.error(`openccx: failed to launch Bun runtime: ${err.message}`);
   process.exit(1);
 });
 

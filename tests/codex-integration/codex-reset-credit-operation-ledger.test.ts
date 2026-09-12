@@ -79,17 +79,17 @@ function schemaHash(sql: string | undefined): string | undefined {
   return sql === undefined ? undefined : createHash("sha256").update(sql).digest("hex");
 }
 
-const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 let isolatedHome: string | undefined;
 
 beforeAll(() => {
-  isolatedHome = mkdtempSync(join(tmpdir(), "ocx-reset-credit-ledger-"));
-  process.env.OPENCODEX_HOME = isolatedHome;
+  isolatedHome = mkdtempSync(join(tmpdir(), "occx-reset-credit-ledger-"));
+  process.env.OPENCCX_HOME = isolatedHome;
 });
 
 afterAll(() => {
-  if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
   if (isolatedHome) {
     Bun.gc(true);
     rmSync(isolatedHome, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
@@ -97,7 +97,7 @@ afterAll(() => {
 });
 
 function databasePath(): string {
-  return join(process.env.OPENCODEX_HOME!, "config-mutation.sqlite");
+  return join(process.env.OPENCCX_HOME!, "config-mutation.sqlite");
 }
 
 function corruptFirstRecord(): void {
@@ -1184,20 +1184,20 @@ describe("Codex reset-credit operation ledger", () => {
 
   test("fails fast under cross-process mutation contention and recovers after abrupt exit", async () => {
     expect(openResetCreditOperation(GENERATION)).toMatchObject({ kind: "execute", resumed: false });
-    const readyPath = join(process.env.OPENCODEX_HOME!, "ledger-lock-ready");
+    const readyPath = join(process.env.OPENCCX_HOME!, "ledger-lock-ready");
     const child = Bun.spawn([process.execPath, "-e", `
       import { writeFileSync } from "node:fs";
       import { Database } from "bun:sqlite";
-      const database = new Database(process.env.OCX_LEDGER_DB_PATH);
+      const database = new Database(process.env.OCCX_LEDGER_DB_PATH);
       database.exec("PRAGMA busy_timeout = 0; BEGIN IMMEDIATE");
-      writeFileSync(process.env.OCX_LEDGER_READY_PATH, "ready");
+      writeFileSync(process.env.OCCX_LEDGER_READY_PATH, "ready");
       while (true) Bun.sleepSync(50);
     `], {
       cwd: repoRoot(),
       env: {
         ...process.env,
-        OCX_LEDGER_DB_PATH: databasePath(),
-        OCX_LEDGER_READY_PATH: readyPath,
+        OCCX_LEDGER_DB_PATH: databasePath(),
+        OCCX_LEDGER_READY_PATH: readyPath,
       },
       stdin: "ignore",
       stdout: "pipe",

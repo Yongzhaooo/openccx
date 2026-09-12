@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { listProviderApiKeys } from "../../src/providers/api-keys";
@@ -17,7 +17,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -25,23 +25,23 @@ function baseConfig(): OcxConfig {
     providers: {
       "opencode-go": { adapter: "openai-chat", baseUrl: "https://opencode.ai/zen/go/v1", apiKey: "key-first-000111222333" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
   clearProviderQuotaCache();
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-provider-keys-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-provider-keys-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-provider-keys-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-provider-keys-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
 });
 
 afterEach(() => {
   globalThis.fetch = originalUpstreamFetch;
   clearProviderQuotaCache();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -139,14 +139,14 @@ describe("provider API key pool", () => {
   });
 });
 
-function quotaKeyConfig(count = 2): OcxConfig {
+function quotaKeyConfig(count = 2): OccxConfig {
   return {
     defaultProvider: "openrouter",
     providers: { openrouter: {
       adapter: "openai-chat", authMode: "key", baseUrl: "https://openrouter.ai/api/v1",
       apiKey: "fixture-key-0", apiKeyPool: Array.from({ length: count }, (_, i) => ({ id: `slot-${i}`, key: `fixture-key-${i}` })),
     } },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function keyQuotaResponse(percent: number): Response {
@@ -157,7 +157,7 @@ describe("credential-scoped key quota", () => {
   test("the integrated Ollama Cloud reader supports each key without changing active configuration", async () => {
     const provider = { adapter: "openai-chat", authMode: "key" as const, baseUrl: "https://ollama.com", apiKey: "fixture-first",
       apiKeyPool: [{ id: "first", key: "fixture-first" }, { id: "second", key: "fixture-second" }] };
-    const config: OcxConfig = { port: 0, defaultProvider: "cloud-copy", providers: { "cloud-copy": provider } };
+    const config: OccxConfig = { port: 0, defaultProvider: "cloud-copy", providers: { "cloud-copy": provider } };
     const before = JSON.stringify(config);
     expect(providerApiKeyQuotaMode("cloud-copy", provider)).toBe("probe");
     globalThis.fetch = (async (input, init) => {
@@ -174,7 +174,7 @@ describe("credential-scoped key quota", () => {
 
   test("canonical Kimi keys retain the default key auth mode when authMode is omitted", async () => {
     const provider = { adapter: "openai-chat", baseUrl: "https://api.kimi.com/coding/v1", apiKey: "fixture-kimi-key" };
-    const config: OcxConfig = { port: 0, defaultProvider: "coding-alias", providers: { "coding-alias": provider } };
+    const config: OccxConfig = { port: 0, defaultProvider: "coding-alias", providers: { "coding-alias": provider } };
     expect(providerApiKeyQuotaMode("coding-alias", provider)).toBe("probe");
     let calls = 0;
     globalThis.fetch = (async (input, init) => {
@@ -273,7 +273,7 @@ describe("credential-scoped key quota", () => {
   });
 
   test("env-reference replacement cannot reuse a quota or fall back to the active key", async () => {
-    const envName = "OCX_QUOTA_KEY_FIXTURE";
+    const envName = "OCCX_QUOTA_KEY_FIXTURE";
     const previous = process.env[envName];
     const config = quotaKeyConfig(2);
     config.providers.openrouter!.apiKeyPool![1]!.key = `$${envName}`;

@@ -1,23 +1,23 @@
 /**
  * Runtime-controllable debug flags.
- * Provider debug: `ocx debug provider on|off|status|reset|logs [-f]` (or OCX_DEBUG=1 on start).
- * Usage capture: `ocx debug usage on|off|status|reset|logs [-f]` (or OPENCODEX_USAGE_DEBUG=1).
- * Injection log: `ocx debug injection on|off|status|reset` (or OCX_INJECTION_DEBUG=1) —
+ * Provider debug: `occx debug provider on|off|status|reset|logs [-f]` (or OCCX_DEBUG=1 on start).
+ * Usage capture: `occx debug usage on|off|status|reset|logs [-f]` (or OPENCCX_USAGE_DEBUG=1).
+ * Injection log: `occx debug injection on|off|status|reset` (or OCCX_INJECTION_DEBUG=1) —
  * multi-agent guidance-injection console lines, default OFF.
- * Claude inbound capture: `ocx debug claude on|off|status|reset` (or OCX_CLAUDE_DEBUG=1) —
+ * Claude inbound capture: `occx debug claude on|off|status|reset` (or OCCX_CLAUDE_DEBUG=1) —
  * allowlist-scalar ring of inbound Anthropic request metadata, default OFF.
- * `/api/debug` and `ocx debug` override env defaults without restart.
+ * `/api/debug` and `occx debug` override env defaults without restart.
  */
 
 export const DEBUG_ENV = {
-  debug: "OCX_DEBUG",
-  usage: "OPENCODEX_USAGE_DEBUG",
-  injection: "OCX_INJECTION_DEBUG",
-  claude: "OCX_CLAUDE_DEBUG",
+  debug: "OCCX_DEBUG",
+  usage: "OPENCCX_USAGE_DEBUG",
+  injection: "OCCX_INJECTION_DEBUG",
+  claude: "OCCX_CLAUDE_DEBUG",
 } as const;
 
 /** Legacy env var that still enables provider debug logging. */
-const LEGACY_DEBUG_ENV = ["OCX_DEBUG_FRAMES"] as const;
+const LEGACY_DEBUG_ENV = ["OCCX_DEBUG_FRAMES"] as const;
 
 export type DebugFlag = keyof typeof DEBUG_ENV;
 

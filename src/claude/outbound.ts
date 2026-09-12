@@ -6,7 +6,7 @@
  *    message_start. Semantic framing stays message_start ->
  *    (content_block_start -> deltas -> content_block_stop)* -> message_delta -> message_stop.
  *  - thinking blocks get thinking_delta(s), then one signature_delta containing the
- *    genuine replay signature or a bounded ocxr1 fallback envelope.
+ *    genuine replay signature or a bounded occxr1 fallback envelope.
  *  - message_delta.usage is cumulative; message_start embeds a full message snapshot.
  *  - errors: {type:"error", error:{type,message}}; may arrive mid-stream after HTTP 200.
  */
@@ -362,7 +362,7 @@ export function responsesSseToAnthropicSse(
       };
       // upstreamDerived: transient upstream statuses become overloaded_error so the
       // Anthropic-SDK client retries with backoff; proxy-internal exceptions stay
-      // api_error — a deterministic ocx bug must not be masked as retryable
+      // api_error — a deterministic occx bug must not be masked as retryable
       // (devlog/_plan/260716_claudecode_hardening/020). On win32 mid-stream socket
       // resets reach the reader catch (no failed-tail relay) and stay api_error —
       // same as today, deliberate residual.

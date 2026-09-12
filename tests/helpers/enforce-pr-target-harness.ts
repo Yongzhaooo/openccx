@@ -307,13 +307,13 @@ const DEFAULT_PR = {
     ref: "dev",
     sha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
     label: "lidge-jun:dev",
-    repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+    repo: { name: "openccx", owner: { login: "lidge-jun" } },
   },
   head: {
     ref: "feature",
     sha: "3f1c0de0a6a4d0a3f9a1b2c3d4e5f60718293a4b",
     label: "contributor:feature",
-    repo: { name: "opencodex", owner: { login: "contributor" } },
+    repo: { name: "openccx", owner: { login: "contributor" } },
   },
   user: { login: "contributor", id: 67890, type: "User" },
   labels: [] as unknown[],
@@ -1036,7 +1036,7 @@ export async function runEnforcePrTarget(
           : { pull_request: eventPr }),
       repository: {
         id: 987654321,
-        name: "opencodex",
+        name: "openccx",
         full_name: "lidge-jun/opencodex",
         default_branch: "main",
         private: false,
@@ -1071,10 +1071,10 @@ export async function runEnforcePrTarget(
     serverUrl = "https://github.com";
     graphqlUrl = "https://api.github.com/graphql";
     get repo() {
-      return { owner: "lidge-jun", repo: "opencodex" };
+      return { owner: "lidge-jun", repo: "openccx" };
     }
     get issue() {
-      return { owner: "lidge-jun", repo: "opencodex", number: eventPr.number };
+      return { owner: "lidge-jun", repo: "openccx", number: eventPr.number };
     }
   }
   const context = new Context();

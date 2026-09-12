@@ -16,17 +16,17 @@ import { contextRelayActivated } from "../../src/codex/context-compat";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { buildResponsesWsData } from "../../src/server/ws-bridge";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 // The admission path already knew WHICH key matched and threw it away. These
 // tests pin two things at once: the id now survives, and no admission decision
 // changed while it started surviving.
 
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 
-function remoteConfig(): OcxConfig {
+function remoteConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -35,13 +35,13 @@ function remoteConfig(): OcxConfig {
       test: { adapter: "openai-chat", baseUrl: "https://example.test/v1", disabled: true, models: ["gpt-test"] },
     },
     apiKeys: [
-      { id: "first-key", name: "first", key: "ocx_data_firstsecret", createdAt: "2026-07-31T00:00:00.000Z" },
-      { id: "second-key", name: "second", key: "ocx_data_secondsecret", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "first-key", name: "first", key: "occx_data_firstsecret", createdAt: "2026-07-31T00:00:00.000Z" },
+      { id: "second-key", name: "second", key: "occx_data_secondsecret", createdAt: "2026-07-31T00:00:00.000Z" },
     ],
   };
 }
 
-function loopbackConfig(): OcxConfig {
+function loopbackConfig(): OccxConfig {
   return { ...remoteConfig(), hostname: "127.0.0.1" };
 }
 
@@ -50,12 +50,12 @@ function request(headers: Record<string, string> = {}): Request {
 }
 
 beforeEach(() => {
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
 });
 
 afterEach(() => {
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
 });
 
 describe("resolveDataPlaneAdmissionSecret", () => {
@@ -63,14 +63,14 @@ describe("resolveDataPlaneAdmissionSecret", () => {
     const config = remoteConfig();
     config.apiKeys![0]!.pendingRotation = {
       id: "rotation-1",
-      key: "ocx_data_pendingsecret",
+      key: "occx_data_pendingsecret",
       createdAt: new Date(Date.now() - 1_000).toISOString(),
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     };
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_firstsecret", config)).toMatchObject({ keyId: "first-key" });
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_pendingsecret", config)).toMatchObject({ keyId: "first-key" });
+    expect(resolveDataPlaneAdmissionSecret("occx_data_firstsecret", config)).toMatchObject({ keyId: "first-key" });
+    expect(resolveDataPlaneAdmissionSecret("occx_data_pendingsecret", config)).toMatchObject({ keyId: "first-key" });
     config.apiKeys![0]!.pendingRotation!.expiresAt = new Date(Date.now() - 1).toISOString();
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_pendingsecret", config)).toBeNull();
+    expect(resolveDataPlaneAdmissionSecret("occx_data_pendingsecret", config)).toBeNull();
   });
   test("principal identity binds secret rotation while preserving promotion and transport identity", () => {
     const config = remoteConfig();
@@ -84,7 +84,7 @@ describe("resolveDataPlaneAdmissionSecret", () => {
     expect(initial).toMatch(/^[a-f0-9]{64}$/);
     expect(principal(key.key, "bearer")).toBe(initial);
     expect(principal(config.apiKeys![1]!.key)).not.toBe(initial);
-    key.pendingRotation = { id: "rotation", key: "ocx_data_new_secret",
+    key.pendingRotation = { id: "rotation", key: "occx_data_new_secret",
       createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60_000).toISOString() };
     const pending = principal(key.pendingRotation.key);
     expect(pending).not.toBe(initial);
@@ -96,7 +96,7 @@ describe("resolveDataPlaneAdmissionSecret", () => {
   });
   test("names the configured key that actually matched", () => {
     const config = remoteConfig();
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_firstsecret", config)).toEqual({
+    expect(resolveDataPlaneAdmissionSecret("occx_data_firstsecret", config)).toEqual({
       kind: "configured",
       keyId: "first-key",
       source: "dedicated",
@@ -108,7 +108,7 @@ describe("resolveDataPlaneAdmissionSecret", () => {
     const config = remoteConfig();
     // The whole point of the refactor: the id must be the matched entry's, not
     // whichever entry happens to be first.
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_secondsecret", config)).toEqual({
+    expect(resolveDataPlaneAdmissionSecret("occx_data_secondsecret", config)).toEqual({
       kind: "configured",
       keyId: "second-key",
       source: "dedicated",
@@ -117,7 +117,7 @@ describe("resolveDataPlaneAdmissionSecret", () => {
   });
 
   test("the environment token has no configured key to name", () => {
-    process.env.OPENCODEX_API_AUTH_TOKEN = "env-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "env-secret";
     expect(resolveDataPlaneAdmissionSecret("env-secret", remoteConfig())).toEqual({ kind: "environment", source: "dedicated", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
   });
 
@@ -130,14 +130,14 @@ describe("resolveDataPlaneAdmissionSecret", () => {
   });
 
   test("a key that only shares a prefix does not match", () => {
-    expect(resolveDataPlaneAdmissionSecret("ocx_data_first", remoteConfig())).toBeNull();
+    expect(resolveDataPlaneAdmissionSecret("occx_data_first", remoteConfig())).toBeNull();
   });
 });
 
 describe("no admission decision changed", () => {
   test.each([
-    ["configured key", "ocx_data_firstsecret", true],
-    ["second configured key", "ocx_data_secondsecret", true],
+    ["configured key", "occx_data_firstsecret", true],
+    ["second configured key", "occx_data_secondsecret", true],
     ["unknown token", "nope", false],
     ["empty token", "", false],
   ])("isDataPlaneAdmissionSecret agrees with the resolver for %s", (_label, token, expected) => {
@@ -148,9 +148,9 @@ describe("no admission decision changed", () => {
 
   test("the never-forward-upstream guard still recognizes a configured key", () => {
     const config = remoteConfig();
-    expect(isProxyAdmissionSecret("ocx_data_firstsecret", config)).toBe(true);
+    expect(isProxyAdmissionSecret("occx_data_firstsecret", config)).toBe(true);
     // Legacy 40-hex shape and the other proxy prefixes are unaffected.
-    expect(isProxyAdmissionSecret(`ocx_${"a".repeat(40)}`, config)).toBe(true);
+    expect(isProxyAdmissionSecret(`occx_${"a".repeat(40)}`, config)).toBe(true);
     expect(isProxyAdmissionSecret("sk-some-upstream-key", config)).toBe(false);
   });
 });
@@ -158,7 +158,7 @@ describe("no admission decision changed", () => {
 describe("the two wrappers still differ", () => {
   test("bearer admission is accepted on both paths and names its source (#1686)", () => {
     const config = remoteConfig();
-    const bearer = request({ authorization: "Bearer ocx_data_firstsecret" });
+    const bearer = request({ authorization: "Bearer occx_data_firstsecret" });
 
     // /v1/models and /v1/messages take bearer...
     expect(resolveApiAuth(bearer, config)).toEqual({ kind: "configured", keyId: "first-key", source: "bearer", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
@@ -168,9 +168,9 @@ describe("the two wrappers still differ", () => {
     // `env_key` could not reach Direct at all. It is safe ONLY because the upstream
     // credential is substituted rather than forwarded -- see materializeCodexUpstreamAuth.
     // The source is recorded so that substitution can be made conditional on it.
-    expect(resolveResponsesApiAuth(request({ authorization: "Bearer ocx_data_firstsecret" }), config))
+    expect(resolveResponsesApiAuth(request({ authorization: "Bearer occx_data_firstsecret" }), config))
       .toEqual({ kind: "configured", keyId: "first-key", source: "bearer", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
-    expect(requireResponsesApiAuth(request({ authorization: "Bearer ocx_data_firstsecret" }), config)).toBeNull();
+    expect(requireResponsesApiAuth(request({ authorization: "Bearer occx_data_firstsecret" }), config)).toBeNull();
   });
 
   test("a bearer that is NOT our secret stays unadmitted on the Responses path (#1686)", () => {
@@ -185,8 +185,8 @@ describe("the two wrappers still differ", () => {
   test("the dedicated header still wins over a bearer (#1686)", () => {
     const config = remoteConfig();
     const both = request({
-      "x-opencodex-api-key": "ocx_data_secondsecret",
-      authorization: "Bearer ocx_data_firstsecret",
+      "x-openccx-api-key": "occx_data_secondsecret",
+      authorization: "Bearer occx_data_firstsecret",
     });
     expect(resolveResponsesApiAuth(both, config))
       .toEqual({ kind: "configured", keyId: "second-key", source: "dedicated", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
@@ -194,13 +194,13 @@ describe("the two wrappers still differ", () => {
 
   test("x-api-key is accepted only by the broad path", () => {
     const config = remoteConfig();
-    expect(resolveApiAuth(request({ "x-api-key": "ocx_data_firstsecret" }), config)).not.toBeNull();
-    expect(resolveResponsesApiAuth(request({ "x-api-key": "ocx_data_firstsecret" }), config)).toBeNull();
+    expect(resolveApiAuth(request({ "x-api-key": "occx_data_firstsecret" }), config)).not.toBeNull();
+    expect(resolveResponsesApiAuth(request({ "x-api-key": "occx_data_firstsecret" }), config)).toBeNull();
   });
 
   test("the dedicated header works on both", () => {
     const config = remoteConfig();
-    const dedicated = () => request({ "x-opencodex-api-key": "ocx_data_secondsecret" });
+    const dedicated = () => request({ "x-openccx-api-key": "occx_data_secondsecret" });
     expect(resolveApiAuth(dedicated(), config)).toEqual({ kind: "configured", keyId: "second-key", source: "dedicated", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
     expect(resolveResponsesApiAuth(dedicated(), config)).toEqual({ kind: "configured", keyId: "second-key", source: "dedicated", contextPrincipalId: expect.stringMatching(/^[a-f0-9]{64}$/) });
     expect(requireResponsesApiAuth(dedicated(), config)).toBeNull();
@@ -222,18 +222,18 @@ describe("loopback binds", () => {
     // Admission is unchanged: the relay asks the identity question separately, so a caller that
     // volunteers a real key owns its sessions even here, and one that volunteers nothing does not.
     expect(resolveContextPrincipal(request(), config, admission)).toBeUndefined();
-    expect(resolveContextPrincipal(request({ "x-opencodex-api-key": "ocx_data_wrongsecret" }), config, admission)).toBeUndefined();
+    expect(resolveContextPrincipal(request({ "x-openccx-api-key": "occx_data_wrongsecret" }), config, admission)).toBeUndefined();
 
-    const first = resolveContextPrincipal(request({ "x-opencodex-api-key": "ocx_data_firstsecret" }), config, admission);
-    const bearer = resolveContextPrincipal(request({ authorization: "Bearer ocx_data_firstsecret" }), config, admission);
-    const second = resolveContextPrincipal(request({ "x-opencodex-api-key": "ocx_data_secondsecret" }), config, admission);
+    const first = resolveContextPrincipal(request({ "x-openccx-api-key": "occx_data_firstsecret" }), config, admission);
+    const bearer = resolveContextPrincipal(request({ authorization: "Bearer occx_data_firstsecret" }), config, admission);
+    const second = resolveContextPrincipal(request({ "x-openccx-api-key": "occx_data_secondsecret" }), config, admission);
     expect(first).toBeString();
     expect(bearer).toBe(first!);
     expect(second).not.toBe(first!);
   });
 
   test("the activation gate re-reads a changed config and fails closed on a bad home", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-context-gate-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-context-gate-"));
     const configPath = join(home, "config.toml");
     writeFileSync(configPath, "[features]\ncontext_management.experimental_mode = true\n");
     expect(contextRelayActivated(configPath)).toBe(true);
@@ -259,19 +259,19 @@ describe("loopback binds", () => {
 
   test("a remote bind keeps naming the principal from its own admission", () => {
     const config = remoteConfig();
-    const admission = resolveApiAuth(request({ "x-opencodex-api-key": "ocx_data_firstsecret" }), config)!;
+    const admission = resolveApiAuth(request({ "x-openccx-api-key": "occx_data_firstsecret" }), config)!;
     expect(resolveContextPrincipal(request(), config, admission))
-      .toBe(resolveContextPrincipal(request({ "x-opencodex-api-key": "ocx_data_firstsecret" }), config, admission));
+      .toBe(resolveContextPrincipal(request({ "x-openccx-api-key": "occx_data_firstsecret" }), config, admission));
     expect(resolveContextPrincipal(request(), config, undefined)).toBeUndefined();
   });
 });
 
 describe("the Responses WebSocket handshake", () => {
   test("opens for a configured key", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-admission-ws-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "admin-secret-for-ws";
+    const home = mkdtempSync(join(tmpdir(), "occx-admission-ws-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "admin-secret-for-ws";
     const config = remoteConfig();
     config.websockets = true;
     saveConfig(config);
@@ -281,7 +281,7 @@ describe("the Responses WebSocket handshake", () => {
       target.protocol = "ws:";
       const opened = await new Promise<boolean>(resolve => {
         const socket = new WebSocket(target, {
-          headers: { "X-OpenCodex-API-Key": "ocx_data_secondsecret" },
+          headers: { "X-Openccx-API-Key": "occx_data_secondsecret" },
         } as unknown as string[]);
         let settled = false;
         const finish = (value: boolean) => {
@@ -301,10 +301,10 @@ describe("the Responses WebSocket handshake", () => {
       expect(opened).toBe(true);
     } finally {
       await server.stop(true);
-      if (previousAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-      else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = previousAdminToken;
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+      else process.env.OPENCCX_ADMIN_AUTH_TOKEN = previousAdminToken;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });

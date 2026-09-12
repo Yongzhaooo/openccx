@@ -12,7 +12,7 @@ import {
 import { recordCodexUpstreamOutcome, type CodexUpstreamOutcome } from "../codex/routing";
 import { inspectChatGptDomainClaim } from "../oauth/chatgpt";
 import { ForwardAdmissionCredentialError, validateForwardAdmissionCredential, type DataPlaneAdmission } from "../server/auth-cors";
-import type { CodexAccountMode, OcxConfig, OcxProviderConfig } from "../types";
+import type { CodexAccountMode, OccxConfig, OccxProviderConfig } from "../types";
 import {
   CODEX_FORWARD_BASE_URL,
   isCanonicalOpenAiForwardProvider,
@@ -23,7 +23,7 @@ import { getProviderRegistryEntry, providerCodexAccountMode } from "./registry";
 
 export interface OpenAiForwardSidecarCandidate {
   providerName: typeof OPENAI_CODEX_PROVIDER_ID;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   accountMode: CodexAccountMode;
 }
 
@@ -48,13 +48,13 @@ export interface OpenAiImagesProviderSelection {
   forwardCandidates: OpenAiForwardSidecarCandidate[];
   keyed?: {
     providerName: string;
-    provider: OcxProviderConfig;
+    provider: OccxProviderConfig;
     apiKey: string;
   };
   error?: string;
 }
 
-export function listOpenAiForwardSidecarCandidates(config: OcxConfig): OpenAiForwardSidecarCandidate[] {
+export function listOpenAiForwardSidecarCandidates(config: OccxConfig): OpenAiForwardSidecarCandidate[] {
   const provider = config.providers[OPENAI_CODEX_PROVIDER_ID];
   if (!provider || provider.disabled === true) return [];
   // The built-in registry defaults an omitted authMode to forward. Normalize only that
@@ -98,7 +98,7 @@ function explicitSidecarAuth(incomingHeaders: Headers): ExplicitOpenAiCallerAuth
   return { authorization: incomingHeaders.get("authorization")!, chatgptAccountId: requestedAccountId };
 }
 
-export function captureExplicitOpenAiCallerAuth(incomingHeaders: Headers, config: OcxConfig): ExplicitOpenAiCallerAuth | null {
+export function captureExplicitOpenAiCallerAuth(incomingHeaders: Headers, config: OccxConfig): ExplicitOpenAiCallerAuth | null {
   const auth = explicitSidecarAuth(incomingHeaders);
   if (!auth) return null;
   try {
@@ -123,7 +123,7 @@ function directSidecarHeaders(
 export async function resolveFirstUsableOpenAiSidecar(
   candidates: readonly OpenAiForwardSidecarCandidate[],
   incomingHeaders: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   options: {
     exactAccount?: ExactOpenAiSidecarAccount;
     admission?: Pick<DataPlaneAdmission, "source">;
@@ -222,7 +222,7 @@ export async function resolveFirstUsableOpenAiSidecar(
   return undefined;
 }
 
-export function selectOpenAiImagesProvider(config: OcxConfig): OpenAiImagesProviderSelection {
+export function selectOpenAiImagesProvider(config: OccxConfig): OpenAiImagesProviderSelection {
   const selection: OpenAiImagesProviderSelection = {
     forwardCandidates: listOpenAiForwardSidecarCandidates(config),
   };
@@ -241,7 +241,7 @@ export function selectOpenAiImagesProvider(config: OcxConfig): OpenAiImagesProvi
 }
 
 /** Resolve an explicit custom Images provider, otherwise preserve the existing OpenAI fallback. */
-export function selectImagesProvider(config: OcxConfig): OpenAiImagesProviderSelection {
+export function selectImagesProvider(config: OccxConfig): OpenAiImagesProviderSelection {
   const configuredProvider = config.images?.provider;
   if (configuredProvider === undefined) return selectOpenAiImagesProvider(config);
   if (typeof configuredProvider !== "string" || !configuredProvider.trim()) {

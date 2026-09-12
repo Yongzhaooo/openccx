@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { syncModelsToCodex } from "../../src/codex/sync";
 import { MANAGED_AGENTS_TABLE_MARKER, MANAGED_SUBAGENT_DEFAULT_MARKER } from "../../src/codex/subagent-defaults";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { OrcaCodexHomeDiagnostic } from "../../src/codex/home";
 import { claimOwnedServiceHome, withOwnedServiceHomePreload } from "../helpers/owned-service-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -14,7 +14,7 @@ import { SPAWN_BUDGET_MS } from "../helpers/test-budget";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-sync-api");
 const TEST_CODEX_HOME = join(TEST_DIR, "codex");
-const TEST_OCX_HOME = join(TEST_DIR, "ocx");
+const TEST_OCCX_HOME = join(TEST_DIR, "occx");
 const TEST_HOME = join(TEST_DIR, "home");
 const repoRoot = resolveRepoRoot();
 const COMPETING_OFF_REAP_MS = 5_000;
@@ -28,7 +28,7 @@ const COMPETING_OFF_PREPARATION_MS = process.platform === "win32"
 const COMPETING_OFF_CHILD_MS = COMPETING_OFF_PREPARATION_MS + COMPETING_OFF_BOOT_MS + COMPETING_OFF_REAP_MS;
 const COMPETING_OFF_TEST_MS = COMPETING_OFF_CHILD_MS + COMPETING_OFF_REAP_MS;
 let prevCodexHome: string | undefined;
-let prevOpenCodexHome: string | undefined;
+let prevOpenccxHome: string | undefined;
 let prevHome: string | undefined;
 let prevUserProfile: string | undefined;
 let serviceManagerEnv: Record<string, string> = {};
@@ -46,10 +46,10 @@ const config = {
       models: ["fixture-model"],
     },
   },
-} as OcxConfig;
+} as OccxConfig;
 
-function claimTempHome(codexHome: string, ocxHome: string, home: string): void {
-  const fixture = claimOwnedServiceHome(codexHome, ocxHome, home);
+function claimTempHome(codexHome: string, occxHome: string, home: string): void {
+  const fixture = claimOwnedServiceHome(codexHome, occxHome, home);
   serviceManagerEnv = fixture.env;
   serviceManagerPreloadPath = fixture.preloadPath;
 }
@@ -80,27 +80,27 @@ function homeDiagnostic(overrides: Partial<OrcaCodexHomeDiagnostic> = {}): OrcaC
 describe("GUI/CLI Codex sync backend", () => {
   beforeEach(() => {
     prevCodexHome = process.env.CODEX_HOME;
-    prevOpenCodexHome = process.env.OPENCODEX_HOME;
+    prevOpenccxHome = process.env.OPENCCX_HOME;
     prevHome = process.env.HOME;
     prevUserProfile = process.env.USERPROFILE;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_CODEX_HOME, { recursive: true });
-    mkdirSync(TEST_OCX_HOME, { recursive: true });
+    mkdirSync(TEST_OCCX_HOME, { recursive: true });
     mkdirSync(TEST_HOME, { recursive: true });
     process.env.CODEX_HOME = TEST_CODEX_HOME;
-    process.env.OPENCODEX_HOME = TEST_OCX_HOME;
+    process.env.OPENCCX_HOME = TEST_OCCX_HOME;
     process.env.HOME = TEST_HOME;
     process.env.USERPROFILE = TEST_HOME;
     writeFileSync(join(TEST_CODEX_HOME, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-    writeFileSync(join(TEST_OCX_HOME, "config.json"), JSON.stringify(config));
-    claimTempHome(TEST_CODEX_HOME, TEST_OCX_HOME, TEST_HOME);
+    writeFileSync(join(TEST_OCCX_HOME, "config.json"), JSON.stringify(config));
+    claimTempHome(TEST_CODEX_HOME, TEST_OCCX_HOME, TEST_HOME);
   });
 
   afterEach(() => {
     if (prevCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = prevCodexHome;
-    if (prevOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prevOpenCodexHome;
+    if (prevOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prevOpenccxHome;
     if (prevHome === undefined) delete process.env.HOME;
     else process.env.HOME = prevHome;
     if (prevUserProfile === undefined) delete process.env.USERPROFILE;
@@ -193,8 +193,8 @@ describe("GUI/CLI Codex sync backend", () => {
 
   test("the real successful injection preflight writes no Codex artifacts", () => {
     const configPath = join(TEST_CODEX_HOME, "config.toml");
-    const profilePath = join(TEST_CODEX_HOME, "opencodex.config.toml");
-    const journalPath = join(TEST_CODEX_HOME, "opencodex-journal.json");
+    const profilePath = join(TEST_CODEX_HOME, "openccx.config.toml");
+    const journalPath = join(TEST_CODEX_HOME, "openccx-journal.json");
     const before = readFileSync(configPath, "utf8");
 
     const child = spawnSync(process.execPath, childArgs(["-e", `
@@ -207,7 +207,7 @@ describe("GUI/CLI Codex sync backend", () => {
         HOME: TEST_HOME,
         USERPROFILE: TEST_HOME,
         CODEX_HOME: TEST_CODEX_HOME,
-        OPENCODEX_HOME: TEST_OCX_HOME,
+        OPENCCX_HOME: TEST_OCCX_HOME,
       }),
       encoding: "utf8",
     });
@@ -222,7 +222,7 @@ describe("GUI/CLI Codex sync backend", () => {
   test("returns a policy skip without touching the catalog or config", async () => {
     let refreshed = false;
     let injected = false;
-    writeFileSync(join(TEST_OCX_HOME, "config.json"), JSON.stringify({
+    writeFileSync(join(TEST_OCCX_HOME, "config.json"), JSON.stringify({
       ...config,
       clientIntegrations: { codex: false },
     }));
@@ -247,7 +247,7 @@ describe("GUI/CLI Codex sync backend", () => {
     let refreshed = 0;
     let injected = false;
     let refreshOptions: unknown;
-    writeFileSync(join(TEST_OCX_HOME, "config.json"), JSON.stringify({
+    writeFileSync(join(TEST_OCCX_HOME, "config.json"), JSON.stringify({
       ...config,
       clientIntegrations: { codex: false },
     }));
@@ -290,7 +290,7 @@ describe("GUI/CLI Codex sync backend", () => {
   test("explicit sync refreshes the catalog without injecting or touching the journal for an external provider", async () => {
     let refreshed = 0;
     let injectCalls = 0;
-    const journalPath = join(TEST_CODEX_HOME, "opencodex-journal.json");
+    const journalPath = join(TEST_CODEX_HOME, "openccx-journal.json");
     const journalBytes = Buffer.from(JSON.stringify({ injectedOpenaiBaseUrl: "http://127.0.0.1:1/v1" }));
     writeFileSync(journalPath, journalBytes);
     const result = await syncModelsToCodex(10100, config, null, {
@@ -338,17 +338,17 @@ describe("GUI/CLI Codex sync backend", () => {
    * would silently address the suite's isolated home instead of the fixture.
    */
   test("a competing OFF during catalog discovery becomes the discriminated skip", async () => {
-    const raceRoot = mkdtempSync(join(tmpdir(), "ocx-sync-lost-transition-"));
+    const raceRoot = mkdtempSync(join(tmpdir(), "occx-sync-lost-transition-"));
     const raceCodexHome = join(raceRoot, ".codex");
-    const raceOcxHome = join(raceRoot, ".opencodex");
+    const raceOccxHome = join(raceRoot, ".openccx");
     const raceHome = join(raceRoot, "home");
     mkdirSync(raceCodexHome, { recursive: true });
-    mkdirSync(raceOcxHome, { recursive: true });
+    mkdirSync(raceOccxHome, { recursive: true });
     mkdirSync(raceHome, { recursive: true });
     try {
       writeFileSync(join(raceCodexHome, "config.toml"), 'model = "gpt-5"\n', "utf8");
-      writeFileSync(join(raceOcxHome, "config.json"), JSON.stringify(config));
-      claimTempHome(raceCodexHome, raceOcxHome, raceHome);
+      writeFileSync(join(raceOccxHome, "config.json"), JSON.stringify(config));
+      claimTempHome(raceCodexHome, raceOccxHome, raceHome);
       const script = [
         'const { spawnSync } = require("node:child_process");',
         'const { loadConfig } = require("./src/config");',
@@ -361,9 +361,9 @@ describe("GUI/CLI Codex sync backend", () => {
         '    refreshCodexModelCatalog: async () => {',
         '      // The provider-discovery window: a second real process persists OFF.',
         '      // This child only flips desired state; do not propagate the service-probe flag.',
-        '      const flipEnv = { ...process.env }; delete flipEnv.OCX_TEST_SERVICE_HOME_PROBE;',
+        '      const flipEnv = { ...process.env }; delete flipEnv.OCCX_TEST_SERVICE_HOME_PROBE;',
         `      const flipBudgetMs = ${COMPETING_OFF_BOOT_MS};`,
-        '      const remainingMs = Number(process.env.OCX_TEST_COMPETING_OFF_DEADLINE) - Date.now();',
+        '      const remainingMs = Number(process.env.OCCX_TEST_COMPETING_OFF_DEADLINE) - Date.now();',
         `      if (!Number.isFinite(remainingMs) || remainingMs < flipBudgetMs + ${COMPETING_OFF_REAP_MS}) {`,
         '        flipFailure = new Error("competing OFF flip not started: insufficient remaining budget " + remainingMs);',
         '        throw flipFailure;',
@@ -393,8 +393,8 @@ describe("GUI/CLI Codex sync backend", () => {
           HOME: raceHome,
           USERPROFILE: raceHome,
           CODEX_HOME: raceCodexHome,
-          OPENCODEX_HOME: raceOcxHome,
-          OCX_TEST_COMPETING_OFF_DEADLINE: String(Date.now() + COMPETING_OFF_CHILD_MS),
+          OPENCCX_HOME: raceOccxHome,
+          OCCX_TEST_COMPETING_OFF_DEADLINE: String(Date.now() + COMPETING_OFF_CHILD_MS),
         }),
         encoding: "utf8",
         timeout: COMPETING_OFF_CHILD_MS,
@@ -420,7 +420,7 @@ describe("GUI/CLI Codex sync backend", () => {
       id: "k3k3",
       targets: ["kimi/k3", "xianyu/kimi-k3"],
       reason: "incomplete_metadata" as const,
-      message: "[opencodex] Combo \"k3k3\" is omitted from the catalog because member capabilities are incomplete: kimi/k3, xianyu/kimi-k3.",
+      message: "[openccx] Combo \"k3k3\" is omitted from the catalog because member capabilities are incomplete: kimi/k3, xianyu/kimi-k3.",
     };
     const result = await syncModelsToCodex(12345, config, { log: line => logs.push(String(line)), error: line => errors.push(String(line)) }, {
       admitCodexWrite: admittedSync,
@@ -450,7 +450,7 @@ describe("GUI/CLI Codex sync backend", () => {
       id: "disjoint",
       targets: ["a/m1", "b/m2"],
       reason: "incompatible_modalities" as const,
-      message: "[opencodex] Combo \"disjoint\" is omitted from the catalog because members have no common input modalities: a/m1, b/m2.",
+      message: "[openccx] Combo \"disjoint\" is omitted from the catalog because members have no common input modalities: a/m1, b/m2.",
     };
     const result = await syncModelsToCodex(12345, config, { log: () => {}, error: line => errors.push(String(line)) }, {
       admitCodexWrite: admittedSync,
@@ -523,8 +523,8 @@ describe("GUI/CLI Codex sync backend", () => {
   });
 
   test("POST /api/sync exposes an actionable error when native defaults are ambiguous", () => {
-    const ocxHome = join(TEST_DIR, "opencodex");
-    mkdirSync(ocxHome, { recursive: true });
+    const occxHome = join(TEST_DIR, "openccx");
+    mkdirSync(occxHome, { recursive: true });
     writeFileSync(join(TEST_CODEX_HOME, "config.toml"), [
       MANAGED_AGENTS_TABLE_MARKER,
       "[agents]",
@@ -545,7 +545,7 @@ describe("GUI/CLI Codex sync backend", () => {
       console.log(JSON.stringify({ status: response.status, body: await response.json() }));
     `]), {
       cwd: resolveRepoRoot(),
-      env: childEnv({ CODEX_HOME: TEST_CODEX_HOME, OPENCODEX_HOME: ocxHome }),
+      env: childEnv({ CODEX_HOME: TEST_CODEX_HOME, OPENCCX_HOME: occxHome }),
       encoding: "utf8",
     });
 

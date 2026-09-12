@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { candidateCapabilityEvidence } from "../capability";
 import { costEvidenceForCandidate } from "../cost";
 import type { PolicyCandidateEvidence } from "../evaluator";
@@ -9,8 +9,8 @@ import { resolveCompatibilityEvidenceProvider, type CoreEvidenceOptions } from "
 
 export type RoutedProviderResolver = (
   providerName: string,
-  provider: OcxProviderConfig,
-) => OcxProviderConfig;
+  provider: OccxProviderConfig,
+) => OccxProviderConfig;
 
 /**
  * Options the core assembler needs. Provider-specific test seams (subject resolution,
@@ -29,7 +29,7 @@ export type AssemblePolicyEvidenceOptions = CoreEvidenceOptions;
  * read for all candidate subject IDs.
  */
 export function assemblePolicyCandidateEvidence(
-  config: OcxConfig,
+  config: OccxConfig,
   profile: NormalizedRoutingProfile,
   now: number,
   options: AssemblePolicyEvidenceOptions,
@@ -53,7 +53,7 @@ export function assemblePolicyCandidateEvidence(
     const key = `${candidate.provider}/${candidate.model}`;
     const compatibility = compatibilityByCandidate?.get(key);
     const provider = config.providers[candidate.provider];
-    let routed: OcxProviderConfig | undefined;
+    let routed: OccxProviderConfig | undefined;
     let routeResolutionFailed = !provider || provider.disabled === true;
     if (provider && provider.disabled !== true) {
       try {

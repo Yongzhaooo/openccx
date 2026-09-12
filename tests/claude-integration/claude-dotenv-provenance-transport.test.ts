@@ -10,19 +10,19 @@ import { repoPath } from "../helpers/repo-root";
 const PROBE_TIMEOUT_MS = 3_000;
 
 /**
- * Project dotenv can write environment variables before OpenCodex evaluates,
+ * Project dotenv can write environment variables before Openccx evaluates,
  * but it cannot add the random proof argument emitted by the plain-Node npm
  * launcher. Exercise that split through a real Bun child on every CI platform.
  */
 describe("Node launcher context transport", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-launch-context-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-launch-context-"));
   const probe = join(dir, "probe.ts");
   const moduleUrl = pathToFileURL(repoPath("src", "cli", "launcher-context.ts")).href;
   writeFileSync(
     probe,
     `import { initializeNodeLauncherContext } from ${JSON.stringify(moduleUrl)};\n`
       + "const context = initializeNodeLauncherContext();\n"
-      + "process.stdout.write(JSON.stringify({ context, args: process.argv.slice(2), contextEnv: process.env.OCX_NODE_LAUNCH_CONTEXT ?? null }));\n",
+      + "process.stdout.write(JSON.stringify({ context, args: process.argv.slice(2), contextEnv: process.env.OCCX_NODE_LAUNCH_CONTEXT ?? null }));\n",
   );
 
   afterAll(() => removeTreeWithRetry(dir));
@@ -36,9 +36,9 @@ describe("Node launcher context transport", () => {
 
   function run(args: string[], contextEnv: string | undefined) {
     const env = { ...process.env };
-    delete env.OCX_PRE_BUN_ANTHROPIC_ENV;
-    if (contextEnv === undefined) delete env.OCX_NODE_LAUNCH_CONTEXT;
-    else env.OCX_NODE_LAUNCH_CONTEXT = contextEnv;
+    delete env.OCCX_PRE_BUN_ANTHROPIC_ENV;
+    if (contextEnv === undefined) delete env.OCCX_NODE_LAUNCH_CONTEXT;
+    else env.OCCX_NODE_LAUNCH_CONTEXT = contextEnv;
     const result = spawnSync(process.execPath, [probe, ...args], {
       encoding: "utf8",
       env,
@@ -64,7 +64,7 @@ describe("Node launcher context transport", () => {
   }
 
   test("matching argv proof authenticates and consumes the parent snapshot", () => {
-    const seen = run([`--ocx-internal-launch-proof=${proof}`, "claude"], context);
+    const seen = run([`--occx-internal-launch-proof=${proof}`, "claude"], context);
     expect(seen.context?.anthropicEnvSlots).toEqual(["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL"]);
     expect(seen.args).toEqual(["claude"]);
     expect(seen.contextEnv).toBeNull();
@@ -88,14 +88,14 @@ describe("Node launcher context transport", () => {
         path: longPath,
         pathExt: ".EXE;.CMD",
         managerRoots: { FNM_DIR: "C:\\Tools\\fnm-data" },
-        configDir: "C:\\Users\\person\\.opencodex",
+        configDir: "C:\\Users\\person\\.openccx",
       },
     });
     expect(payload.length).toBeGreaterThan(2048);
-    const seen = run([`--ocx-internal-launch-proof=${proof}`, "system"], payload);
+    const seen = run([`--occx-internal-launch-proof=${proof}`, "system"], payload);
     expect(seen.context?.codexCliInspectionEnv?.path).toBe(longPath);
     expect(seen.context?.codexCliInspectionEnv?.managerRoots).toEqual({ FNM_DIR: "C:\\Tools\\fnm-data" });
-    expect(seen.context?.codexCliInspectionEnv?.configDir).toBe("C:\\Users\\person\\.opencodex");
+    expect(seen.context?.codexCliInspectionEnv?.configDir).toBe("C:\\Users\\person\\.openccx");
   });
 
   test("an unknown manager-root key invalidates the trusted context", () => {
@@ -108,17 +108,17 @@ describe("Node launcher context transport", () => {
         path: "C:\\npm",
         pathExt: ".CMD",
         managerRoots: { UNBOUNDED_ROOT: "C:\\" },
-        configDir: "C:\\Users\\person\\.opencodex",
+        configDir: "C:\\Users\\person\\.openccx",
       },
     });
-    const seen = run([`--ocx-internal-launch-proof=${proof}`, "system"], payload);
+    const seen = run([`--occx-internal-launch-proof=${proof}`, "system"], payload);
     expect(seen.context).toBeNull();
   });
 
   test("duplicate internal proofs fail closed and are removed from user argv", () => {
     const seen = run([
-      `--ocx-internal-launch-proof=${proof}`,
-      `--ocx-internal-launch-proof=${proof}`,
+      `--occx-internal-launch-proof=${proof}`,
+      `--occx-internal-launch-proof=${proof}`,
       "claude",
     ], context);
     expect(seen.context).toBeNull();

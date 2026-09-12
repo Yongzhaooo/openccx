@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { isModelTextOnly } from "../../src/vision";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
-  return { name: "test", baseUrl: "https://example.com", ...overrides } as OcxProviderConfig;
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
+  return { name: "test", baseUrl: "https://example.com", ...overrides } as OccxProviderConfig;
 }
 
 describe("isModelTextOnly (#1024)", () => {

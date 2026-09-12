@@ -1,6 +1,6 @@
 /** CL-01 deterministic protocol conformance harness types (CL-00 contract). */
 
-export const SYNTHETIC_MARKER = "ocx-lab-synthetic-v1";
+export const SYNTHETIC_MARKER = "occx-lab-synthetic-v1";
 
 export type EvidenceLayer = "protocol_conformance" | "live_route_compatibility" | "task_effectiveness";
 

@@ -19,12 +19,12 @@ import {
   setPromptTextProbeCommandForTests,
 } from "../../src/codex/prompt-text-probe";
 import type { ManagementPrincipal } from "../../src/server/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { INTERNAL_DEADLINE_MS } from "../helpers/test-budget";
 
-const MARKER = "# Auto-injected by opencodex";
-const config = { port: 10100, defaultProvider: "openai", providers: {} } as OcxConfig;
+const MARKER = "# Auto-injected by openccx";
+const config = { port: 10100, defaultProvider: "openai", providers: {} } as OccxConfig;
 const roots: string[] = [];
 
 interface Fixture {
@@ -37,15 +37,15 @@ interface Fixture {
 }
 
 function fixture(configBytes?: string, storeBytes?: string): Fixture {
-  const root = mkdtempSync(join(tmpdir(), "ocx-prompt-route-"));
-  const decoy = mkdtempSync(join(tmpdir(), "ocx-prompt-decoy-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-prompt-route-"));
+  const decoy = mkdtempSync(join(tmpdir(), "occx-prompt-decoy-"));
   roots.push(root, decoy);
   const configPath = join(root, "config.toml");
-  const storePath = join(root, "opencodex-prompt.json");
+  const storePath = join(root, "openccx-prompt.json");
   if (configBytes !== undefined) writeFileSync(configPath, configBytes, "utf8");
   if (storeBytes !== undefined) writeFileSync(storePath, storeBytes, "utf8");
   const decoyConfig = join(decoy, "config.toml");
-  const decoyStore = join(decoy, "opencodex-prompt.json");
+  const decoyStore = join(decoy, "openccx-prompt.json");
   writeFileSync(decoyConfig, "model = \"sentinel\"\n", "utf8");
   writeFileSync(decoyStore, "{\"layers\":[]}", "utf8");
   return {
@@ -53,7 +53,7 @@ function fixture(configBytes?: string, storeBytes?: string): Fixture {
     storePath,
     // Injected like the other two, so no route test can reach a developer's real
     // variant directory.
-    baseVariantDir: join(root, "opencodex-prompt-base"),
+    baseVariantDir: join(root, "openccx-prompt-base"),
     decoyConfig,
     decoyStore,
     decoyHome: decoy,
@@ -541,16 +541,16 @@ describe("020 coverage completions", () => {
   test("11. an unreadable config refuses every mutation by name", async () => {
     // chmod 000 is not honored for root, and Windows ignores the mode entirely.
     // A directory in place of the file is unreadable on every platform we ship.
-    const root = mkdtempSync(join(tmpdir(), "ocx-prompt-unreadable-"));
-    const decoy = mkdtempSync(join(tmpdir(), "ocx-prompt-decoy-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-prompt-unreadable-"));
+    const decoy = mkdtempSync(join(tmpdir(), "occx-prompt-decoy-"));
     roots.push(root, decoy);
     const configPath = join(root, "config.toml");
     mkdirSync(configPath);
     const fx: Fixture = {
       configPath,
-      storePath: join(root, "opencodex-prompt.json"),
+      storePath: join(root, "openccx-prompt.json"),
       decoyConfig: join(decoy, "config.toml"),
-      decoyStore: join(decoy, "opencodex-prompt.json"),
+      decoyStore: join(decoy, "openccx-prompt.json"),
       decoyHome: decoy,
     };
     writeFileSync(fx.decoyConfig, "model = \"sentinel\"\n", "utf8");
@@ -1005,7 +1005,7 @@ describe("020 coverage completions", () => {
       const beforeEdit = await withHeldPromptProbeClose(fx, async () => {
         await waitUntil(() => existsSync(startedPath), `${instructionFile} probe start`);
 
-        // Nothing opencodex owns has changed: no config write, no store write, so
+        // Nothing openccx owns has changed: no config write, no store write, so
         // the transaction revision and the selected base are identical here.
         writeFileSync(agentsPath, "new-agent-text", "utf8");
 
@@ -1363,7 +1363,7 @@ describe("020 coverage completions", () => {
    * the home alone — so an ancestor document it should have covered went unhashed.
    */
   test("38. a quoted project_root_markers key still selects the configured root", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-prompt-marker-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-prompt-marker-"));
     roots.push(root);
     const nestedHome = join(root, "home");
     mkdirSync(nestedHome, { recursive: true });

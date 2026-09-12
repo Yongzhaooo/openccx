@@ -880,14 +880,14 @@ describe("Responses bridge reasoning and usage parity", () => {
     expect(frames.some(f => f.event === "response.reasoning_text.delta")).toBe(false);
     const completed = frames.find(f => f.event === "response.completed")?.data.response as Record<string, unknown>;
     const output = completed.output as Record<string, unknown>[];
-    // Raw reasoning stays hidden: the text round-trips only in an ocxr1 envelope,
+    // Raw reasoning stays hidden: the text round-trips only in an occxr1 envelope,
     // never as visible summary or content.
     expect(output.map(item => item.type)).toEqual(["reasoning", "message"]);
     expect(output[0]).toMatchObject({
       type: "reasoning",
       summary: [],
     });
-    expect((output[0] as { encrypted_content?: string }).encrypted_content).toStartWith("ocxr1:");
+    expect((output[0] as { encrypted_content?: string }).encrypted_content).toStartWith("occxr1:");
     expect((output[0] as { content?: unknown }).content).toBeUndefined();
   });
 
@@ -901,7 +901,7 @@ describe("Responses bridge reasoning and usage parity", () => {
     const output = json.output as Record<string, unknown>[];
     expect(output.map(item => item.type)).toEqual(["reasoning", "message"]);
     expect(output[0]).toMatchObject({ type: "reasoning", summary: [] });
-    expect((output[0] as { encrypted_content?: string }).encrypted_content).toStartWith("ocxr1:");
+    expect((output[0] as { encrypted_content?: string }).encrypted_content).toStartWith("occxr1:");
     expect((output[0] as { content?: unknown }).content).toBeUndefined();
   });
 
@@ -986,7 +986,7 @@ describe("Responses bridge reasoning and usage parity", () => {
   test("wire keepalive keeps firing while only adapter heartbeats flow", async () => {
     // Issue #521: web-search buffers semantic events and yields invisible adapter heartbeats from
     // raw-byte progress. Those must not suppress wire keepalives, or Codex Desktop idle-timeouts
-    // (~5 min) while OCX still considers the upstream alive. The default keep-alive is the typed
+    // (~5 min) while OCCX still considers the upstream alive. The default keep-alive is the typed
     // response.heartbeat frame (codex-rs re-arms only on parsed EVENTS — 110 RCA); the grok
     // surface swaps to comment lines via heartbeatStyle.
     const heartbeatMs = 50;

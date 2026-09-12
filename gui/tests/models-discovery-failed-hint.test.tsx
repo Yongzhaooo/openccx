@@ -73,7 +73,7 @@ async function renderModelsPage(discovery: Record<string, unknown> | undefined):
     clearInterval: { configurable: true, value: () => {} },
   });
   // Expanded, or the group body that carries the hint is never rendered.
-  testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
+  testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
   const rows = [{ provider: PROVIDER, id: MODEL_ID, namespaced: `${PROVIDER}/${MODEL_ID}`, disabled: false }];
   globalThis.fetch = (async (input: string | URL | Request) => {
     const url = String(input);

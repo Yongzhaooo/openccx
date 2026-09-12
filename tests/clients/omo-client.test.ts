@@ -14,14 +14,14 @@ import {
   type PiGeneratedConfig,
 } from "../../src/clients/config-export";
 import { INTEGRATION_CLIENTS } from "../../src/integrations/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const CONFIG = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 function context(): ExportContext {
   return {
@@ -54,7 +54,7 @@ describe("omo client config", () => {
   });
 
   /**
-   * The flag has to be on BOTH paths or they drift: `build` feeds `ocx export`
+   * The flag has to be on BOTH paths or they drift: `build` feeds `occx export`
    * and `/api/client-config`, while `buildContribution` is what the writer
    * actually puts on disk when the integration is enabled or refreshed. One
    * carrying `compat` and the other not would look correct in every unit test
@@ -66,7 +66,7 @@ describe("omo client config", () => {
       .toEqual(document.providers[OPENCODE_PROVIDER_ID]);
   });
 
-  test("adds only providers.opencodex, wired to the loopback proxy", () => {
+  test("adds only providers.openccx, wired to the loopback proxy", () => {
     const document = buildClientConfig("omo", context()) as PiGeneratedConfig;
     expect(Object.keys(document)).toEqual(["providers"]);
     expect(Object.keys(document.providers)).toEqual([OPENCODE_PROVIDER_ID]);
@@ -78,14 +78,14 @@ describe("omo client config", () => {
 
   test("native JSON round-trips and never carries a credential", () => {
     const sentinel = ["sk", "live", "omo", "sentinel"].join("-");
-    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OcxConfig;
+    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OccxConfig;
     const built = buildClientConfigText("omo", { ...context(), config: withKey });
     expect(JSON.parse(built.text)).toEqual(built.document as never);
     expect(built.text).not.toContain(sentinel);
     expect(built.text).toContain(LOOPBACK_API_KEY_PLACEHOLDER);
   });
 
-  test("the contribution owns exactly the providers.opencodex path under its own id", () => {
+  test("the contribution owns exactly the providers.openccx path under its own id", () => {
     const contribution = buildClientContribution("omo", context());
     // Reusing Pi's builder must not leak Pi's id into the ownership record, or
     // the writer would stamp one client's block with the other's name.

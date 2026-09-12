@@ -3,7 +3,7 @@ import { createOllamaNativeAdapter } from "../../../src/adapters/ollama-native";
 import { ollamaNativeChatUrl } from "../../../src/adapters/ollama-native-url";
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 import type { AdapterEvent } from "../../../src/types";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 /**
  * Parser/request contract tests for the native Ollama transport.
@@ -11,7 +11,7 @@ import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
  * public adapter surface (buildRequest / parseStream / parseResponse) and plain fixtures only.
  */
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "ollama-native",
     baseUrl: "https://ollama.com/v1",
@@ -20,15 +20,15 @@ function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig
     liveModels: false,
     models: ["glm-5.3-flash"],
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
 function parsedWith(
   messages: unknown[],
   options: Record<string, unknown> = {},
   modelId = "glm-5.3-flash",
-): OcxParsedRequest {
-  return { modelId, stream: true, options, context: { messages } } as unknown as OcxParsedRequest;
+): OccxParsedRequest {
+  return { modelId, stream: true, options, context: { messages } } as unknown as OccxParsedRequest;
 }
 
 function ndjsonResponse(frames: unknown[]): Response {
@@ -457,7 +457,7 @@ describe("ollama-native — request control parity", () => {
 });
 
 describe("ollama-native — transport security", () => {
-  function headered(headers: Record<string, string>, overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+  function headered(headers: Record<string, string>, overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
     return provider({ headers, ...overrides });
   }
 

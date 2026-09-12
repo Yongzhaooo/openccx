@@ -94,7 +94,7 @@ describe("Codex SQLite home resolution", () => {
   });
 
   test("history jobs resolve the selected database and backup identity at call time", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-sqlite-home-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-sqlite-home-"));
     roots.push(root);
     const codexHome = join(root, "codex");
     const envSqliteHome = join(root, "env-sqlite");

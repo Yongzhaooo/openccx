@@ -22,7 +22,7 @@ import {
   setAntigravityAccountQuotaTransportForTests,
   setProviderQuotaBeforePublishForTests,
 } from "../../src/providers/quota";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { clearComboTargetCooldowns, coolComboTarget, pickComboTarget, pickComboTargetWithWait } from "../../src/combos";
 import { routedProviderConfig } from "../../src/router";
 import { buildOpenAIChatPassthroughRequest } from "../../src/adapters/openai-chat";
@@ -31,13 +31,13 @@ import { repoPath } from "../helpers/repo-root";
 const proxyKeys = PROXY_ENV_KEYS.flatMap(key => [key, key.toLowerCase()]);
 const originalProxyEnv = Object.fromEntries(proxyKeys.map(key => [key, process.env[key]]));
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
 
-let opencodexHome: string;
+let openccxHome: string;
 let codexHome: string;
 
-function testConfig(): OcxConfig {
+function testConfig(): OccxConfig {
   return {
     defaultProvider: "openai",
     providers: {
@@ -79,14 +79,14 @@ function testConfig(): OcxConfig {
         disabled: true,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
   for (const key of proxyKeys) delete process.env[key];
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-quota-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-quota-"));
   codexHome = mkdtempSync(join(tmpdir(), "codex-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   process.env.CODEX_HOME = codexHome;
   mkdirSync(codexHome, { recursive: true });
   writeFileSync(join(codexHome, "auth.json"), JSON.stringify({
@@ -109,11 +109,11 @@ afterEach(() => {
   clearProviderQuotaCache();
   setProviderQuotaBeforePublishForTests(null);
   setAntigravityAccountQuotaTransportForTests(null);
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  removeTreeWithRetry(opencodexHome);
+  removeTreeWithRetry(openccxHome);
   removeTreeWithRetry(codexHome);
 });
 
@@ -162,7 +162,7 @@ describe("fetchProviderQuotaReports", () => {
           codexAccountMode: "direct",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports[0]?.quota).toMatchObject({
       fiveHourPercent: 11,
@@ -200,7 +200,7 @@ describe("fetchProviderQuotaReports", () => {
     const result = await fetchProviderQuotaReports({
       defaultProvider: "anthropic",
       providers: { anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com/v1" } },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports[0]?.quota).toMatchObject({
       fiveHourPercent: 11,
@@ -364,20 +364,20 @@ describe("fetchProviderQuotaReports", () => {
     expect(seen.find(row => row.url === "https://api.kimi.com/coding/v1/usages")?.authorization).toBe("Bearer kimi-access-secret");
   });
 
-  function kimiOnlyConfig(baseUrl = "https://api.kimi.com/coding/v1"): OcxConfig {
+  function kimiOnlyConfig(baseUrl = "https://api.kimi.com/coding/v1"): OccxConfig {
     return {
       defaultProvider: "kimi",
       providers: { kimi: { adapter: "openai-chat", authMode: "oauth", baseUrl } },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
-  function a6apiOnlyConfig(baseUrl = "https://api.a6api.com/v1"): OcxConfig {
+  function a6apiOnlyConfig(baseUrl = "https://api.a6api.com/v1"): OccxConfig {
     return {
       defaultProvider: "a6api",
       providers: {
         a6api: { adapter: "openai-chat", authMode: "key", baseUrl, apiKey: "a6api-secret" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   test("A6API quota converts provider units to USD and exposes a displayable credit window", async () => {
@@ -543,7 +543,7 @@ describe("fetchProviderQuotaReports", () => {
       authMode: "key",
       baseUrl: "https://example.com/v1",
       apiKey: 42,
-    } as unknown as OcxConfig["providers"][string];
+    } as unknown as OccxConfig["providers"][string];
 
     const result = await fetchProviderQuotaReports(config, true);
 
@@ -699,16 +699,16 @@ describe("fetchProviderQuotaReports", () => {
     expect(rejectedRefresh.reports).toEqual([]);
   });
 
-  function keyQuotaConfig(name: string, baseUrl: string, apiKey = `${name}-secret`): OcxConfig {
+  function keyQuotaConfig(name: string, baseUrl: string, apiKey = `${name}-secret`): OccxConfig {
     return {
       defaultProvider: name,
       providers: {
         [name]: { adapter: "openai-chat", authMode: "key", baseUrl, apiKey },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
-  function quotaCombo(config: OcxConfig): OcxConfig {
+  function quotaCombo(config: OccxConfig): OccxConfig {
     const provider = config.defaultProvider;
     return {
       ...config,
@@ -860,7 +860,7 @@ describe("fetchProviderQuotaReports", () => {
     });
     const config = quotaCombo({ defaultProvider: "google-antigravity", providers: {
       "google-antigravity": { adapter: "google", authMode: "oauth", baseUrl: "https://daily-cloudcode-pa.googleapis.com" },
-    } } as OcxConfig);
+    } } as OccxConfig);
     config.combos!["quota-scope"]!.targets[0]!.model = "claude-sonnet-4.6";
     const report = await fetchProviderQuotaReports(config, true);
     expect(report.reports[0]?.quota.customWindows).toEqual([
@@ -880,7 +880,7 @@ describe("fetchProviderQuotaReports", () => {
     }) as typeof fetch;
     const config = quotaCombo({ defaultProvider: "anthropic", providers: {
       anthropic: { adapter: "anthropic", authMode: "oauth", baseUrl: "https://api.anthropic.com/v1" },
-    } } as OcxConfig);
+    } } as OccxConfig);
     const report = await fetchProviderQuotaReports(config, true);
     expect(report.reports[0]?.quota.fiveHourPercent).toBe(100);
     // Account selection and its exhaustion rules still decide whether this route can dispatch.
@@ -929,17 +929,17 @@ describe("fetchProviderQuotaReports", () => {
   });
 
   test("routing quota scope rejects a cached cap after an env key resolves differently", async () => {
-    const previous = process.env.OCX_TEST_ROUTING_QUOTA_KEY;
+    const previous = process.env.OCCX_TEST_ROUTING_QUOTA_KEY;
     try {
-      process.env.OCX_TEST_ROUTING_QUOTA_KEY = "first-key";
+      process.env.OCCX_TEST_ROUTING_QUOTA_KEY = "first-key";
       globalThis.fetch = (async () => Response.json({ data: { limit: 20, limit_remaining: 0 } })) as typeof fetch;
-      const config = quotaCombo(keyQuotaConfig("openrouter", "https://openrouter.ai/api/v1", "$OCX_TEST_ROUTING_QUOTA_KEY"));
+      const config = quotaCombo(keyQuotaConfig("openrouter", "https://openrouter.ai/api/v1", "$OCCX_TEST_ROUTING_QUOTA_KEY"));
       await fetchProviderQuotaReports(config, true);
-      process.env.OCX_TEST_ROUTING_QUOTA_KEY = "replacement-key";
+      process.env.OCCX_TEST_ROUTING_QUOTA_KEY = "replacement-key";
       expect(pickComboTarget(config, "quota-scope")?.target.provider).toBe("openrouter");
     } finally {
-      if (previous === undefined) delete process.env.OCX_TEST_ROUTING_QUOTA_KEY;
-      else process.env.OCX_TEST_ROUTING_QUOTA_KEY = previous;
+      if (previous === undefined) delete process.env.OCCX_TEST_ROUTING_QUOTA_KEY;
+      else process.env.OCCX_TEST_ROUTING_QUOTA_KEY = previous;
     }
   });
 
@@ -2038,7 +2038,7 @@ describe("fetchProviderQuotaReports", () => {
           apiKey: "sk-kimi-quota-secret",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports).toHaveLength(1);
     expect(result.reports[0]?.provider).toBe("kimi-code");
@@ -2067,7 +2067,7 @@ describe("fetchProviderQuotaReports", () => {
           apiKey: "sk-kimi-quota-secret",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports).toEqual([]);
     expect(seen).toEqual([]);
@@ -2087,11 +2087,11 @@ describe("fetchProviderQuotaReports", () => {
           adapter: "openai-chat",
           authMode: "key",
           baseUrl: "https://api.kimi.com/coding/v1",
-          apiKey: "${OCX_TEST_MISSING_KIMI_KEY}",
+          apiKey: "${OCCX_TEST_MISSING_KIMI_KEY}",
           apiKeyPool: [{ key: "sk-pool-other-account" }],
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     // No probe at all: attributing the pool key's quota to the active slot would lie.
     expect(result.reports).toEqual([]);
@@ -2114,7 +2114,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://api.kimi.com/coding/v1",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports).toEqual([]);
     expect(seen).toEqual([]);
@@ -2471,7 +2471,7 @@ describe("fetchProviderQuotaReports", () => {
   });
 
   test("direct mode reports main without reading or repairing the added-account store", async () => {
-    const accountStore = join(opencodexHome, "codex-accounts.json");
+    const accountStore = join(openccxHome, "codex-accounts.json");
     writeFileSync(accountStore, "invalid-added-account-store");
     const config = testConfig();
     config.providers.openai.codexAccountMode = "direct";
@@ -2505,14 +2505,14 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://api.anthropic.com/v1",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(result.reports).toEqual([]);
     expect(seen.some(url => url.includes("/v1/oauth/token"))).toBe(true);
     expect(seen.some(url => url.includes("/api/oauth/usage"))).toBe(false);
   });
 
-  function cursorOnlyConfig(): OcxConfig {
+  function cursorOnlyConfig(): OccxConfig {
     return {
       defaultProvider: "cursor",
       providers: {
@@ -2522,7 +2522,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://api2.cursor.sh",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   function declaredOversizeQuotaResponse(onCancel: () => void): Response {
@@ -2751,7 +2751,7 @@ describe("fetchProviderQuotaReports", () => {
       providers: {
         openai: full.providers.openai!,
       },
-    } as OcxConfig;
+    } as OccxConfig;
     globalThis.fetch = (async () => Response.json({
       plan_type: "plus",
       rate_limit: { secondary_window: { used_percent: 61 } },
@@ -2888,7 +2888,7 @@ describe("fetchProviderQuotaReports", () => {
     const weekly = await fetchProviderQuotaReports({
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://api.x.ai/v1" } },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
     expect(weekly.reports).toHaveLength(1);
     expect(weekly.reports[0]?.source).toBe("xai:grok-billing-credits");
     expect(weekly.reports[0]?.quota).toMatchObject({
@@ -2928,7 +2928,7 @@ describe("fetchProviderQuotaReports", () => {
     const monthly = await fetchProviderQuotaReports({
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://api.x.ai/v1" } },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
     expect(monthly.reports[0]?.source).toBe("xai:grok-billing");
     expect(monthly.reports[0]?.quota.monthlyPercent).toBe(25);
     expect(monthly.reports[0]?.quota.weeklyPercent).toBeUndefined();
@@ -2960,7 +2960,7 @@ describe("fetchProviderQuotaReports", () => {
     const result = await fetchProviderQuotaReports({
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://api.x.ai/v1" } },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
     expect(seen.some(url => url.includes("format=credits"))).toBe(false);
     expect(result.reports[0]?.source).toBe("xai:grok-billing");
     expect(result.reports[0]?.quota.monthlyPercent).toBe(25);
@@ -2989,7 +2989,7 @@ describe("fetchProviderQuotaReports", () => {
     const configB = {
       defaultProvider: "xai",
       providers: { xai: { adapter: "openai-chat", authMode: "oauth", baseUrl: "https://api.x.ai/v1" } },
-    } as OcxConfig;
+    } as OccxConfig;
 
     const a1 = fetchProviderQuotaReports(configA, false); // A inflight opens
     await fetchProviderQuotaReports(configB, false); // B must not evict A's inflight entry
@@ -3123,7 +3123,7 @@ describe("fetchProviderQuotaReports", () => {
     const disabledConfig = {
       ...cursorOnlyConfig(),
       providers: { cursor: { ...cursorOnlyConfig().providers.cursor, disabled: true } },
-    } as OcxConfig;
+    } as OccxConfig;
     const pruned = await fetchProviderQuotaReports(disabledConfig, true);
     expect(pruned.reports).toEqual([]);
   });
@@ -3200,7 +3200,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://daily-cloudcode-pa.googleapis.com",
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const result = await fetchProviderQuotaReports(config, true);
     expect(result.reports).toHaveLength(1);
@@ -3290,7 +3290,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://daily-cloudcode-pa.googleapis.com",
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const result = await fetchProviderQuotaReports(config, true);
     expect(result.reports).toHaveLength(1);
@@ -3348,7 +3348,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "http://127.0.0.1:1/",
         },
       },
-    } as unknown as OcxConfig, true);
+    } as unknown as OccxConfig, true);
 
     expect(result.reports).toHaveLength(1);
     expect(result.reports[0]!.source).toBe("google-antigravity:retrieveUserQuotaSummary");
@@ -3386,7 +3386,7 @@ describe("fetchProviderQuotaReports", () => {
           baseUrl: "https://daily-cloudcode-pa.googleapis.com",
         },
       },
-    } as unknown as OcxConfig, true);
+    } as unknown as OccxConfig, true);
 
     expect(result.reports).toEqual([]);
     // The redirect short-circuits the summary probe; the redirect target is never fetched.
@@ -3401,11 +3401,11 @@ describe("fetchProviderQuotaReports", () => {
     const publicAddress = { hostname: "daily-cloudcode-pa.googleapis.com", addresses: [{ address: "142.250.0.1", family: 4 }], privateNetwork: false };
     let plainFetchCalls: string[];
 
-    function config(baseUrl = "https://daily-cloudcode-pa.googleapis.com"): OcxConfig {
+    function config(baseUrl = "https://daily-cloudcode-pa.googleapis.com"): OccxConfig {
       return {
         defaultProvider: "google-antigravity",
         providers: { "google-antigravity": { adapter: "google", authMode: "oauth", baseUrl, allowPrivateNetwork: true } },
-      } as OcxConfig;
+      } as OccxConfig;
     }
 
     beforeEach(async () => {

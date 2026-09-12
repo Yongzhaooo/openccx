@@ -7,7 +7,7 @@ import { writeDesktop3pConfig, removeDesktop3pStandardPivot } from "../../src/cl
 import { setIntegrationEnabled } from "../../src/codex/desired-state";
 import { MANAGEMENT_JSON_BODY_MAX_BYTES } from "../../src/server/management/body";
 import type { ManagementApiDeps } from "../../src/server/management/context";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let root = "";
@@ -15,12 +15,12 @@ let library = "";
 let previousHome: string | undefined;
 let previousLibrary: string | undefined;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     providers: {},
     defaultProvider: "openai",
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function persistedIntent(): unknown {
@@ -28,7 +28,7 @@ function persistedIntent(): unknown {
   return raw.clientIntegrations?.["claude-desktop"];
 }
 
-async function dispatch(path: string, init?: RequestInit, deps: ManagementApiDeps = {}, inputConfig: OcxConfig = config()) {
+async function dispatch(path: string, init?: RequestInit, deps: ManagementApiDeps = {}, inputConfig: OccxConfig = config()) {
   const url = new URL(`http://127.0.0.1:10100${path}`);
   return handleManagementAPI(new Request(url, {
     ...init,
@@ -80,20 +80,20 @@ function oversizedTrackedBody(): {
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-desktop-toggle-"));
+  root = mkdtempSync(join(tmpdir(), "occx-desktop-toggle-"));
   library = join(root, "desktop-library");
-  previousHome = process.env.OPENCODEX_HOME;
-  previousLibrary = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_HOME = root;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = library;
+  previousHome = process.env.OPENCCX_HOME;
+  previousLibrary = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_HOME = root;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = library;
   writeFileSync(join(root, "config.json"), JSON.stringify(config()));
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousLibrary === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousLibrary === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
   removeTreeWithRetry(root);
 });
 
@@ -123,7 +123,7 @@ test("OFF on a missing or empty library is an idempotent no-op with no footprint
   // A present-but-empty directory has no owned state and stays untouched too.
   const empty = join(root, "empty-library");
   mkdirSync(empty);
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = empty;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = empty;
   const again = await toggle(false);
   expect(again.body).toMatchObject({ ok: true, changed: false, desiredEnabled: false });
   expect(existsSync(empty)).toBe(true);
@@ -133,7 +133,7 @@ test("OFF on a missing or empty library is an idempotent no-op with no footprint
 test("OFF removes an owned drifted gateway even without a saved fingerprint", async () => {
   mkdirSync(library);
   const id = "drifted-owned";
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway",
     inferenceCredentialKind: "static",
@@ -157,7 +157,7 @@ test("OFF removes an owned drifted gateway even without a saved fingerprint", as
 test("status reports leftover owned drift as not stale when the durable switch is OFF", async () => {
   mkdirSync(library);
   const id = "drifted-owned";
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway",
     inferenceCredentialKind: "static",
@@ -244,7 +244,7 @@ test("auto-apply re-reads desired state after catalog fetch and skips a concurre
   const id = "selected-owned";
   const { mkdirSync } = await import("node:fs");
   mkdirSync(library);
-  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "opencodex" }] }));
+  writeFileSync(join(library, "_meta.json"), JSON.stringify({ appliedId: id, entries: [{ id, name: "openccx" }] }));
   writeFileSync(join(library, `${id}.json`), JSON.stringify({
     inferenceProvider: "gateway", inferenceCredentialKind: "static",
     // Shape-only value: deliberately inert; never a credential.
@@ -325,7 +325,7 @@ test("POST /apply enables from a stale OFF server snapshot instead of cancelling
   expect(setIntegrationEnabled("claude-desktop", false).ok).toBe(true);
   expect(persistedIntent()).toBe(false);
   // The server object captured at startup, still carrying the OFF it booted with.
-  const staleSnapshot = { ...config(), clientIntegrations: { "claude-desktop": false } } as OcxConfig;
+  const staleSnapshot = { ...config(), clientIntegrations: { "claude-desktop": false } } as OccxConfig;
 
   let writes = 0;
   const response = await dispatch("/api/claude-desktop/apply", {
@@ -385,7 +385,7 @@ test("POST /apply leaves the reused server snapshot agreeing with disk", async (
   // request, so a stale snapshot makes the native GET report the opposite of
   // what was persisted, and lets a later whole-snapshot save undo the enable.
   expect(setIntegrationEnabled("claude-desktop", false).ok).toBe(true);
-  const staleSnapshot = { ...config(), clientIntegrations: { "claude-desktop": false } } as OcxConfig;
+  const staleSnapshot = { ...config(), clientIntegrations: { "claude-desktop": false } } as OccxConfig;
   const deps: ManagementApiDeps = {
     fetchAllModels: async () => [],
     writeDesktop3pConfig: () => ({ written: true, path: join(library, "applied.json"), fingerprint: "fingerprint" }),

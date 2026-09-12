@@ -147,7 +147,7 @@ describe("CodexAccountPickerSetting", () => {
       await flush();
     });
     const warning = host.querySelector<HTMLElement>(".codex-account-picker-feedback.is-warn");
-    expect(warning?.textContent).toContain("ocx sync");
+    expect(warning?.textContent).toContain("occx sync");
     expect(warning?.getAttribute("role")).toBe("status");
     expect(host.textContent).not.toContain("private-account-detail");
   });

@@ -1,4 +1,4 @@
-import type { CodexAccountMode, OcxConfig, OcxProviderConfig, ProviderCostOverlay } from "../types";
+import type { CodexAccountMode, OccxConfig, OccxProviderConfig, ProviderCostOverlay } from "../types";
 import { OPENAI_PROVIDER_TIER_VERSION } from "../types";
 import { openaiResponsesUrl } from "../adapters/openai-responses-url";
 import { MAX_COST4_RATE } from "../usage/expected-prices";
@@ -7,7 +7,7 @@ export { OPENAI_CODEX_PROVIDER_ID, LEGACY_OPENAI_MULTI_PROVIDER_ID, OPENAI_API_P
 
 const LEGACY_OPENAI_MULTI_PREFIX = `${LEGACY_OPENAI_MULTI_PROVIDER_ID}/`;
 
-function canonicalCodexForwardProvider(mode: CodexAccountMode): OcxProviderConfig {
+function canonicalCodexForwardProvider(mode: CodexAccountMode): OccxProviderConfig {
   return {
     adapter: "openai-responses",
     baseUrl: CODEX_FORWARD_BASE_URL,
@@ -17,7 +17,7 @@ function canonicalCodexForwardProvider(mode: CodexAccountMode): OcxProviderConfi
 }
 
 export interface OpenAiTierMigrationProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   resolvedMode: CodexAccountMode;
   warnings: string[];
@@ -33,8 +33,8 @@ export class OpenAiTierMigrationCollisionError extends Error {
 }
 
 function managedLegacyMultiOverlay(
-  provider: OcxProviderConfig,
-): Pick<OcxProviderConfig, "disabled" | "selectedModels" | "modelCosts"> | null {
+  provider: OccxProviderConfig,
+): Pick<OccxProviderConfig, "disabled" | "selectedModels" | "modelCosts"> | null {
   const allowed = new Set(["adapter", "authMode", "baseUrl", "disabled", "selectedModels", "modelCosts"]);
   if (!Object.keys(provider).every(key => allowed.has(key))) return null;
   if (!isCanonicalOpenAiForwardProvider(provider)) return null;
@@ -104,10 +104,10 @@ function rewriteLegacyOpenAiCostKeys(costs: Record<string, ProviderCostOverlay> 
 }
 
 function mergeLegacyOpenAiProviderRows(
-  openai: OcxProviderConfig | undefined,
-  legacyMulti: OcxProviderConfig | undefined,
+  openai: OccxProviderConfig | undefined,
+  legacyMulti: OccxProviderConfig | undefined,
   mode: CodexAccountMode,
-): OcxProviderConfig {
+): OccxProviderConfig {
   const selectedModels = rewriteLegacyOpenAiModelList([
     ...(openai?.selectedModels ?? []),
     ...(legacyMulti?.selectedModels ?? []),
@@ -121,7 +121,7 @@ function mergeLegacyOpenAiProviderRows(
     ...rewriteLegacyOpenAiCostKeys(openai?.modelCosts),
   };
   const hasModelCosts = Object.keys(modelCosts).length > 0;
-  const formerRows = [openai, legacyMulti].filter((row): row is OcxProviderConfig => row !== undefined);
+  const formerRows = [openai, legacyMulti].filter((row): row is OccxProviderConfig => row !== undefined);
   const disabled = formerRows.length > 0 && formerRows.every(row => row.disabled === true);
   return {
     ...canonicalCodexForwardProvider(mode),
@@ -131,7 +131,7 @@ function mergeLegacyOpenAiProviderRows(
   };
 }
 
-function hasKnownLegacyOpenAiReference(config: OcxConfig): boolean {
+function hasKnownLegacyOpenAiReference(config: OccxConfig): boolean {
   const matches = (value: unknown): boolean => typeof value === "string" && value.startsWith(LEGACY_OPENAI_MULTI_PREFIX);
   const matchesList = (value: unknown): boolean => Array.isArray(value) && value.some(matches);
   const claude = config.claudeCode;
@@ -153,7 +153,7 @@ function hasKnownLegacyOpenAiReference(config: OcxConfig): boolean {
     || config.providerContextCaps?.[LEGACY_OPENAI_MULTI_PROVIDER_ID] !== undefined;
 }
 
-function rewriteLegacyOpenAiReferences(config: OcxConfig, warnings: string[]): void {
+function rewriteLegacyOpenAiReferences(config: OccxConfig, warnings: string[]): void {
   config.disabledModels = rewriteLegacyOpenAiModelList(config.disabledModels);
   config.subagentModels = rewriteLegacyOpenAiModelList(config.subagentModels);
   if (config.injectionModel) config.injectionModel = rewriteLegacyOpenAiSelectedId(config.injectionModel);
@@ -215,7 +215,7 @@ function isKnownLegacyValuePath(path: readonly string[]): boolean {
   ]).has(joined) || /^claudeCode\.modelMap\..+$/.test(joined);
 }
 
-function unknownLegacyOpenAiWarnings(config: OcxConfig): string[] {
+function unknownLegacyOpenAiWarnings(config: OccxConfig): string[] {
   const warnings = new Set<string>();
   const visit = (value: unknown, path: string[]): void => {
     if (typeof value === "string") {
@@ -238,9 +238,9 @@ function unknownLegacyOpenAiWarnings(config: OcxConfig): string[] {
 }
 
 function resolvedOpenAiMode(
-  config: OcxConfig,
-  openai: OcxProviderConfig | undefined,
-  legacyMulti: OcxProviderConfig | undefined,
+  config: OccxConfig,
+  openai: OccxProviderConfig | undefined,
+  legacyMulti: OccxProviderConfig | undefined,
   knownLegacyReference: boolean,
 ): CodexAccountMode {
   if (openai?.codexAccountMode === "pool" || openai?.codexAccountMode === "direct") {
@@ -256,7 +256,7 @@ function resolvedOpenAiMode(
   return "pool";
 }
 
-export function projectOpenAiTierMigration(config: OcxConfig): OpenAiTierMigrationProjection {
+export function projectOpenAiTierMigration(config: OccxConfig): OpenAiTierMigrationProjection {
   const projected = structuredClone(config);
   const legacyMulti = projected.providers[LEGACY_OPENAI_MULTI_PROVIDER_ID];
   if (legacyMulti && !managedLegacyMultiOverlay(legacyMulti)) {
@@ -288,7 +288,7 @@ export function projectOpenAiTierMigration(config: OcxConfig): OpenAiTierMigrati
     ? mergeLegacyOpenAiProviderRows(openai, legacyMulti, resolvedMode)
     : undefined;
 
-  const nextProviders: Array<[string, OcxProviderConfig]> = [];
+  const nextProviders: Array<[string, OccxProviderConfig]> = [];
   let inserted = false;
   for (const [name, provider] of Object.entries(projected.providers)) {
     if (name === OPENAI_CODEX_PROVIDER_ID) {

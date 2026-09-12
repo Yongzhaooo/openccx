@@ -3,7 +3,7 @@
  *
  * A green suite proves nothing here: the guard's whole job is to THROW on a path this
  * suite must never write. So every deny case runs in a child process against a temp
- * SENTINEL home handed over via OCX_REAL_HOME, exercising the same capture path the
+ * SENTINEL home handed over via OCCX_REAL_HOME, exercising the same capture path the
  * real run uses. The only assertion that touches the developer's actual home reads a
  * hash; nothing here can write it.
  *
@@ -94,7 +94,7 @@ async function runProbe(id: string, source: string, env: Record<string, string |
   const stage = (message: string) => console.warn(`[home-guard:${id}] ${message}`);
   try {
     stage("02 probe file setup");
-    outcome.root = mkdtempSync(join(tmpdir(), "ocx-guard-probe-"));
+    outcome.root = mkdtempSync(join(tmpdir(), "occx-guard-probe-"));
     const file = join(outcome.root, "probe.ts");
     writeFileSync(file, source, "utf8");
     const childEnv: Record<string, string> = {};
@@ -181,14 +181,14 @@ function expectOwnedProbeGone(outcome: ProbeOutcome): void {
 describe("guard probe lifecycle", () => {
   test("nonzero exit retains output, reports failure and reaps the owned child", async () => {
     const failure = await probeFailure(runProbe(beginProbe("control-nonzero"), `
-      console.log("OCX_GUARD_NONZERO");
+      console.log("OCCX_GUARD_NONZERO");
       process.exitCode = 23;
     `, {}));
     expect(failure.failures).toEqual(["nonzero-exit"]);
     expect(failure.outcome.code).toBe(23);
     expect(failure.outcome.signal).toBeNull();
     expect(failure.outcome.complete).toBe(true);
-    expect(failure.outcome.stdout.trim()).toBe("OCX_GUARD_NONZERO");
+    expect(failure.outcome.stdout.trim()).toBe("OCCX_GUARD_NONZERO");
     expectOwnedProbeGone(failure.outcome);
   });
 
@@ -200,11 +200,11 @@ describe("guard probe lifecycle", () => {
         process.off("SIGTERM", stop);
       };
       process.on("SIGTERM", stop);
-      console.log("OCX_GUARD_HANG_READY");
+      console.log("OCCX_GUARD_HANG_READY");
     `, {}));
     expect(failure.failures).toContain("execution-timeout");
     expect(failure.failures).not.toContain("reap-timeout");
-    expect(failure.outcome.stdout.trim()).toBe("OCX_GUARD_HANG_READY");
+    expect(failure.outcome.stdout.trim()).toBe("OCCX_GUARD_HANG_READY");
     expect(failure.outcome.complete).toBe(true);
     // POSIX can handle TERM and exit naturally; Windows may terminate directly.
     if (process.platform !== "win32") {
@@ -217,7 +217,7 @@ describe("guard probe lifecycle", () => {
   test("exit zero with an open output pipe is incomplete, never a successful probe", async () => {
     let cancelled = false;
     const stdout = new ReadableStream<Uint8Array>({
-      start(controller) { controller.enqueue(new TextEncoder().encode("OCX_GUARD_PARTIAL\n")); },
+      start(controller) { controller.enqueue(new TextEncoder().encode("OCCX_GUARD_PARTIAL\n")); },
       cancel() { cancelled = true; },
     });
     const stderr = new ReadableStream<Uint8Array>({ start(controller) { controller.close(); } });
@@ -235,7 +235,7 @@ describe("guard probe lifecycle", () => {
       expect(failure.outcome.signal).toBeNull();
       expect(failure.outcome.reaped).toBe(true);
       expect(failure.outcome.complete).toBe(false);
-      expect(failure.outcome.stdout).toBe("OCX_GUARD_PARTIAL\n");
+      expect(failure.outcome.stdout).toBe("OCCX_GUARD_PARTIAL\n");
       expect(cancelled).toBe(true);
       expect(failure.outcome.root).toBeDefined();
       expect(existsSync(failure.outcome.root!)).toBe(false);
@@ -246,13 +246,13 @@ describe("guard probe lifecycle", () => {
 });
 
 /** A fake "real home" the guard will protect, so no deny case aims at the true one. */
-function sentinelHome(): { realHome: string; opencodexHome: string; codexHome: string } {
-  const realHome = mkdtempSync(join(tmpdir(), "ocx-sentinel-home-"));
-  const opencodexHome = join(realHome, ".opencodex");
+function sentinelHome(): { realHome: string; openccxHome: string; codexHome: string } {
+  const realHome = mkdtempSync(join(tmpdir(), "occx-sentinel-home-"));
+  const openccxHome = join(realHome, ".openccx");
   const codexHome = join(realHome, ".codex");
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   mkdirSync(codexHome, { recursive: true });
-  return { realHome, opencodexHome, codexHome };
+  return { realHome, openccxHome, codexHome };
 }
 
 describe("real-home write guard", () => {
@@ -263,7 +263,7 @@ describe("real-home write guard", () => {
  * detect the privilege once and take a visible skip rather than failing in setup.
  */
 const canSymlink = (() => {
-  const probeDir = mkdtempSync(join(tmpdir(), "ocx-home-guard-symlink-probe-"));
+  const probeDir = mkdtempSync(join(tmpdir(), "occx-home-guard-symlink-probe-"));
   try {
     symlinkSync(join(probeDir, "probe-target"), join(probeDir, "probe-link"));
     return true;
@@ -276,13 +276,13 @@ const canSymlink = (() => {
 })();
   test("armed + the protected home: all three writers throw", async () => {
     const probeId = beginProbe("01-protected-writers");
-    const { realHome, opencodexHome } = sentinelHome();
+    const { realHome, openccxHome } = sentinelHome();
     const probe = await runProbe(probeId, `
       import { saveConfig } from "${REPO_ROOT_URL}src/config";
       import { mutateStore } from "${REPO_ROOT_URL}src/oauth/store";
       import { saveCodexAccountCredential } from "${REPO_ROOT_URL}src/codex/account-store";
       const threw: string[] = [];
-      const REFUSAL = "refusing to write the real OpenCodex home";
+      const REFUSAL = "refusing to write the real Openccx home";
       try { saveConfig({ providers: {}, defaultProvider: "openai", port: 10100 } as never); }
       catch (err) { if (String(err).includes(REFUSAL)) threw.push("config"); }
       // auth.json is written by the private persist() behind mutateStore.
@@ -291,16 +291,16 @@ const canSymlink = (() => {
       try { saveCodexAccountCredential("probe", { accessToken: "x", refreshToken: "y", accountId: "probe" } as never); }
       catch (err) { if (String(err).includes(REFUSAL)) threw.push("accounts"); }
       console.log(JSON.stringify(threw));
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, OPENCODEX_HOME: opencodexHome });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, OPENCCX_HOME: openccxHome });
 
     expect(probe.stdout).toContain("config");
     expect(probe.stdout).toContain("auth");
     expect(probe.stdout).toContain("accounts");
     // Refused before any write: the guard runs ahead of mkdir/chmod, so none of the
     // three store files the writers would have created may exist.
-    expect(() => readFileSync(join(opencodexHome, "config.json"))).toThrow();
-    expect(() => readFileSync(join(opencodexHome, "auth.json"))).toThrow();
-    expect(() => readFileSync(join(opencodexHome, "codex-accounts.json"))).toThrow();
+    expect(() => readFileSync(join(openccxHome, "config.json"))).toThrow();
+    expect(() => readFileSync(join(openccxHome, "auth.json"))).toThrow();
+    expect(() => readFileSync(join(openccxHome, "codex-accounts.json"))).toThrow();
   });
 
   test("armed native credential writes reject the protected Codex home", async () => {
@@ -319,7 +319,7 @@ const canSymlink = (() => {
       } catch (err) {
         console.log(String(err).includes("refusing to write the real Codex home") ? "REFUSED" : "OTHER");
       }
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, CODEX_HOME: codexHome });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, CODEX_HOME: codexHome });
 
     expect(probe.stdout).toContain("REFUSED");
     expect(probe.stdout).not.toContain("WRITE_ALLOWED");
@@ -330,22 +330,22 @@ const canSymlink = (() => {
     // Atomic writes resolve their destination through symlinks, so a temp home whose
     // config.json points into the protected home would otherwise pass the caller's
     // dir-level check and then write the real file anyway.
-    const { realHome, opencodexHome } = sentinelHome();
-    const protectedFile = join(opencodexHome, "config.json");
+    const { realHome, openccxHome } = sentinelHome();
+    const protectedFile = join(openccxHome, "config.json");
     writeFileSync(protectedFile, '{"sentinel":true}', "utf8");
-    const dir = mkdtempSync(join(tmpdir(), "ocx-escape-home-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-escape-home-"));
     symlinkSync(protectedFile, join(dir, "config.json"));
 
     const probe = await runProbe(probeId, `
       import { saveConfig } from "${REPO_ROOT_URL}src/config";
-      const REFUSAL = "refusing to write the real OpenCodex home";
+      const REFUSAL = "refusing to write the real Openccx home";
       try {
         saveConfig({ providers: {}, defaultProvider: "openai", port: 10100 } as never);
         console.log("wrote");
       } catch (err) {
         console.log(String(err).includes(REFUSAL) ? "refused" : "other");
       }
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, OPENCODEX_HOME: dir });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, OPENCCX_HOME: dir });
 
     expect(probe.stdout).toContain("refused");
     // The protected file must be byte-for-byte untouched.
@@ -355,12 +355,12 @@ const canSymlink = (() => {
   test("armed + an unregistered temp home: writers succeed", async () => {
     const probeId = beginProbe("04-unregistered-home");
     // The 54 suites that mkdtemp their own home must keep working with no opt-in.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-plain-home-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-plain-home-"));
     const probe = await runProbe(probeId, `
       import { saveConfig } from "${REPO_ROOT_URL}src/config";
       saveConfig({ providers: {}, defaultProvider: "openai", port: 10100 } as never);
       console.log("wrote");
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: join(tmpdir(), "ocx-nonexistent-real-home"), OPENCODEX_HOME: dir });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: join(tmpdir(), "occx-nonexistent-real-home"), OPENCCX_HOME: dir });
 
     expect(probe.stdout).toContain("wrote");
     expect(JSON.parse(readFileSync(join(dir, "config.json"), "utf8")).port).toBe(10100);
@@ -371,15 +371,15 @@ const canSymlink = (() => {
     // The file does not exist yet, so resolveWriteTarget returns the literal
     // path and target === path; the guard must resolve the parent directory
     // instead of skipping (review: symlinked config dir + absent destination).
-    const { realHome, opencodexHome } = sentinelHome();
-    const dir = mkdtempSync(join(tmpdir(), "ocx-parent-escape-"));
+    const { realHome, openccxHome } = sentinelHome();
+    const dir = mkdtempSync(join(tmpdir(), "occx-parent-escape-"));
     const linkDir = join(dir, "home-link");
-    symlinkSync(opencodexHome, linkDir);
-    const modeBefore = statSync(opencodexHome).mode;
+    symlinkSync(openccxHome, linkDir);
+    const modeBefore = statSync(openccxHome).mode;
 
     const probe = await runProbe(probeId, `
       import { atomicWriteFile, writePid } from "${REPO_ROOT_URL}src/config";
-      const REFUSAL = "refusing to write the real OpenCodex home";
+      const REFUSAL = "refusing to write the real Openccx home";
       try {
         // Same escaping hazard as the Codex-home probe above: JSON.stringify the
         // path, then join in the child so no backslash reaches the source text.
@@ -394,57 +394,57 @@ const canSymlink = (() => {
       } catch (err) {
         console.log(String(err).includes(REFUSAL) ? "PID_REFUSED" : "PID_OTHER:" + String(err));
       }
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, OPENCODEX_HOME: linkDir });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, OPENCCX_HOME: linkDir });
 
     expect(probe.stdout).toContain("REFUSED");
     expect(probe.stdout).not.toContain("WRITE_SUCCEEDED");
     expect(probe.stdout).toContain("PID_REFUSED");
     expect(probe.stdout).not.toContain("PID_SUCCEEDED");
     // Nothing landed in the protected home, not even via the resolved parent.
-    expect(() => readFileSync(join(opencodexHome, "never-created.json"))).toThrow();
-    expect(() => readFileSync(join(opencodexHome, "ocx.pid"))).toThrow();
+    expect(() => readFileSync(join(openccxHome, "never-created.json"))).toThrow();
+    expect(() => readFileSync(join(openccxHome, "occx.pid"))).toThrow();
     // The protected directory's mode is untouched by the refused write.
-    expect(statSync(opencodexHome).mode).toBe(modeBefore);
+    expect(statSync(openccxHome).mode).toBe(modeBefore);
   });
 
   test("disarmed: the protected home is allowed (production stays inert)", async () => {
     const probeId = beginProbe("06-disarmed");
-    const { realHome, opencodexHome } = sentinelHome();
+    const { realHome, openccxHome } = sentinelHome();
     const probe = await runProbe(probeId, `
       import { saveConfig } from "${REPO_ROOT_URL}src/config";
       saveConfig({ providers: {}, defaultProvider: "openai", port: 10100 } as never);
       console.log("wrote");
-    `, { OCX_TEST_HOME_GUARD: undefined, OCX_REAL_HOME: realHome, OPENCODEX_HOME: opencodexHome });
+    `, { OCCX_TEST_HOME_GUARD: undefined, OCCX_REAL_HOME: realHome, OPENCCX_HOME: openccxHome });
 
     expect(probe.stdout).toContain("wrote");
   });
 
-  test("the protected path comes from OCX_REAL_HOME, not the sandboxed HOME", async () => {
+  test("the protected path comes from OCCX_REAL_HOME, not the sandboxed HOME", async () => {
     const probeId = beginProbe("07-captured-home");
     // The inversion this guards against: if the guard read homedir() after the harness
     // replaced HOME, it would protect the sandbox and leave the real home writable.
     const { realHome } = sentinelHome();
-    const decoyHome = mkdtempSync(join(tmpdir(), "ocx-decoy-home-"));
+    const decoyHome = mkdtempSync(join(tmpdir(), "occx-decoy-home-"));
     const probe = await runProbe(probeId, `
       import { protectedHomeForTests } from "${REPO_ROOT_URL}src/lib/test-home-guard";
       console.log(protectedHomeForTests());
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, HOME: decoyHome });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, HOME: decoyHome });
 
-    expect(probe.stdout).toContain(".opencodex");
-    expect(probe.stdout).not.toContain("ocx-decoy-home-");
+    expect(probe.stdout).toContain(".openccx");
+    expect(probe.stdout).not.toContain("occx-decoy-home-");
   });
 
   test.skipIf(!canSymlink)("a symlink pointing at the protected home is rejected", async () => {
     const probeId = beginProbe("08-symlink-home");
-    const { realHome, opencodexHome } = sentinelHome();
-    const linkDir = mkdtempSync(join(tmpdir(), "ocx-symlink-"));
+    const { realHome, openccxHome } = sentinelHome();
+    const linkDir = mkdtempSync(join(tmpdir(), "occx-symlink-"));
     const link = join(linkDir, "looks-like-temp");
-    symlinkSync(opencodexHome, link);
+    symlinkSync(openccxHome, link);
     const probe = await runProbe(probeId, `
       import { assertNotRealHomeUnderTest } from "${REPO_ROOT_URL}src/lib/test-home-guard";
       try { assertNotRealHomeUnderTest(${JSON.stringify(link)}); console.log("allowed"); }
       catch { console.log("rejected"); }
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome });
 
     expect(probe.stdout.trim()).toBe("rejected");
   });
@@ -458,21 +458,21 @@ const canSymlink = (() => {
     const probe = await runProbe(probeId, `
       import { assertNotRealHomeUnderTest } from "${REPO_ROOT_URL}src/lib/test-home-guard";
       const results: string[] = [];
-      for (const path of [${JSON.stringify(join(realHome, ".opencodex"))}, ${JSON.stringify(join(aliased, ".opencodex"))}]) {
+      for (const path of [${JSON.stringify(join(realHome, ".openccx"))}, ${JSON.stringify(join(aliased, ".openccx"))}]) {
         try { assertNotRealHomeUnderTest(path); results.push("allowed"); } catch { results.push("rejected"); }
       }
       console.log(JSON.stringify(results));
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome });
 
     expect(JSON.parse(probe.stdout.trim())).toEqual(["rejected", "rejected"]);
   });
 
   test("the preload sandboxes this very process", () => {
     expect(isTestHomeGuardArmed()).toBe(true);
-    expect(process.env.OCX_TEST_PRELOAD_PID).toBe(String(process.pid));
-    // OPENCODEX_HOME is redirected for this process, so ordinary resolution sandboxes.
-    expect(process.env.OPENCODEX_HOME).toBeDefined();
-    expect(process.env.OPENCODEX_HOME).not.toBe(protectedHomeForTests());
+    expect(process.env.OCCX_TEST_PRELOAD_PID).toBe(String(process.pid));
+    // OPENCCX_HOME is redirected for this process, so ordinary resolution sandboxes.
+    expect(process.env.OPENCCX_HOME).toBeDefined();
+    expect(process.env.OPENCCX_HOME).not.toBe(protectedHomeForTests());
     // `homedir()` is fixed at process START and does not follow an in-process HOME
     // reassignment, so its value depends on HOW the suite was launched:
     //   bare `bun test`  -> the real home (preload's HOME swap came too late for it)
@@ -502,7 +502,7 @@ const canSymlink = (() => {
   test("the preload arms the guard before it can throw on the run lock", async () => {
     const source = await Bun.file(new URL("../preload.ts", import.meta.url)).text();
 
-    const armAt = source.indexOf('process.env.OCX_TEST_HOME_GUARD = "1"');
+    const armAt = source.indexOf('process.env.OCCX_TEST_HOME_GUARD = "1"');
     const assertAt = source.indexOf("test home guard failed to arm");
     const lockAt = source.indexOf("await acquireTestRunLock(");
     const sandboxAt = source.indexOf("createIsolatedTestEnvironment()");
@@ -529,9 +529,9 @@ const canSymlink = (() => {
     const probe = await runProbe(probeId, `
       import { assertNotRealHomeUnderTest, isTestHomeGuardArmed } from "${REPO_ROOT_URL}src/lib/test-home-guard";
       let rejected = false;
-      try { assertNotRealHomeUnderTest(${JSON.stringify(join(realHome, ".opencodex"))}); } catch { rejected = true; }
+      try { assertNotRealHomeUnderTest(${JSON.stringify(join(realHome, ".openccx"))}); } catch { rejected = true; }
       console.log(JSON.stringify({ armed: isTestHomeGuardArmed(), rejected }));
-    `, { OCX_TEST_HOME_GUARD: "1", OCX_REAL_HOME: realHome, HOME: realHome, OPENCODEX_HOME: undefined });
+    `, { OCCX_TEST_HOME_GUARD: "1", OCCX_REAL_HOME: realHome, HOME: realHome, OPENCCX_HOME: undefined });
 
     expect(JSON.parse(probe.stdout.trim())).toEqual({ armed: true, rejected: true });
   });

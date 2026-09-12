@@ -20,11 +20,11 @@ import {
   isGenericToolUseCountDemoPrompt,
   nonEmptyShellBridgeCommandFromArgs,
 } from "../../../src/adapters/cursor/tool-definitions";
-import type { OcxTool } from "../../../src/types";
+import type { OccxTool } from "../../../src/types";
 
 describe("Cursor tool definitions", () => {
   test("converts Responses tools to Cursor request context definitions", () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "read_file",
       namespace: "mcp__fs",
       description: "Read a file",
@@ -38,20 +38,20 @@ describe("Cursor tool definitions", () => {
     expect(defs).toHaveLength(1);
     expect(defs[0]?.name).toBe("mcp__fs__read_file");
     expect(defs[0]?.toolName).toBe("mcp__fs__read_file");
-    expect(defs[0]?.providerIdentifier).toBe("opencodex-responses");
+    expect(defs[0]?.providerIdentifier).toBe("openccx-responses");
     expect(defs[0]?.description).toBe("Read a file");
     expect(toJson(ValueSchema, fromBinary(ValueSchema, defs[0]!.inputSchema))).toEqual(tool.parameters);
   });
 
   test("isolates ordinary bare client identities without renaming proxy-owned or namespaced tools", () => {
-    expect(cursorToolWireName({ name: "read" })).toBe("ocx_client_read");
-    expect(cursorToolWireName({ name: "ocx_client_read" })).toBe("ocx_client_ocx_client_read");
+    expect(cursorToolWireName({ name: "read" })).toBe("occx_client_read");
+    expect(cursorToolWireName({ name: "occx_client_read" })).toBe("occx_client_occx_client_read");
     expect(cursorToolWireName({ name: "read", namespace: "mcp__workspace" })).toBe("mcp__workspace__read");
-    const bare: OcxTool = { name: "read", description: "Read", parameters: {} };
+    const bare: OccxTool = { name: "read", description: "Read", parameters: {} };
     expect(buildCursorToolDefinitions([bare], { name: "read" }).map(tool => tool.toolName))
-      .toEqual(["ocx_client_read"]);
-    expect(buildCursorToolDefinitions([bare], { name: "ocx_client_read" }).map(tool => tool.toolName))
-      .toEqual(["ocx_client_read"]);
+      .toEqual(["occx_client_read"]);
+    expect(buildCursorToolDefinitions([bare], { name: "occx_client_read" }).map(tool => tool.toolName))
+      .toEqual(["occx_client_read"]);
 
     for (const name of [
       "exec",
@@ -68,21 +68,21 @@ describe("Cursor tool definitions", () => {
   });
 
   test("prefers a semantic tool name over a generated client wire alias", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "read", description: "Read", parameters: {} },
-      { name: "ocx_client_read", description: "Literal client-prefixed tool", parameters: {} },
+      { name: "occx_client_read", description: "Literal client-prefixed tool", parameters: {} },
     ];
 
-    expect(buildCursorToolDefinitions(tools, { name: "ocx_client_read" }).map(tool => tool.toolName))
-      .toEqual(["ocx_client_ocx_client_read"]);
-    expect(buildCursorToolDefinitions(tools, { mode: "required", allowedTools: ["ocx_client_read"] }).map(tool => tool.toolName))
-      .toEqual(["ocx_client_ocx_client_read"]);
+    expect(buildCursorToolDefinitions(tools, { name: "occx_client_read" }).map(tool => tool.toolName))
+      .toEqual(["occx_client_occx_client_read"]);
+    expect(buildCursorToolDefinitions(tools, { mode: "required", allowedTools: ["occx_client_read"] }).map(tool => tool.toolName))
+      .toEqual(["occx_client_occx_client_read"]);
     expect(buildCursorToolDefinitions(tools, { name: "read" }).map(tool => tool.toolName))
-      .toEqual(["ocx_client_read"]);
+      .toEqual(["occx_client_read"]);
   });
 
   test("advertises bare exec_command with compact native exec schema", () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "exec_command",
       description: "Run a command",
       parameters: {
@@ -107,7 +107,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("advertises bare shell_command with the same compact native exec schema", () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "shell_command",
       description: "Run a command",
       parameters: {
@@ -154,7 +154,7 @@ describe("Cursor tool definitions", () => {
       required: ["input"],
       additionalProperties: false,
     };
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "apply_patch",
       description: "Apply a patch",
       parameters: {},
@@ -168,7 +168,7 @@ describe("Cursor tool definitions", () => {
     expect(defs).toHaveLength(1);
     expect(toJson(ValueSchema, fromBinary(ValueSchema, defs[0]!.inputSchema))).toEqual(expectedSchema);
 
-    const codeModeExec: OcxTool = { name: "exec", description: "Run JavaScript", freeform: true };
+    const codeModeExec: OccxTool = { name: "exec", description: "Run JavaScript", freeform: true };
     expect(cursorToolInputSchema(codeModeExec)).toEqual(expectedSchema);
     expect(cursorToolArgNormalizeSchema(codeModeExec)).toEqual(expectedSchema);
     const execDefs = buildCursorToolDefinitions([codeModeExec]);
@@ -218,7 +218,7 @@ describe("Cursor tool definitions", () => {
 
     test("isolates per-tool descriptions including empty strings without mutating inputs or defaults", () => {
       const descriptions = ["guidance-A", "guidance-B", undefined, ""];
-      const tools: OcxTool[] = descriptions.map((description, index) => ({
+      const tools: OccxTool[] = descriptions.map((description, index) => ({
         name: `custom_${index}`,
         description: "Top-level description must not become input guidance",
         freeform: true,
@@ -248,7 +248,7 @@ describe("Cursor tool definitions", () => {
     });
 
     test("copies only input description while enforcing the canonical closed shape", () => {
-      const tool: OcxTool = {
+      const tool: OccxTool = {
         name: "custom_shape",
         description: "Custom input",
         freeform: true,
@@ -289,7 +289,7 @@ describe("Cursor tool definitions", () => {
       ["boolean description", { properties: { input: { description: false } } }],
       ["object description", { properties: { input: { description: { text: "not guidance" } } } }],
     ] as const)("uses the canonical fallback for %s", (_label, parameters) => {
-      const tool: OcxTool = { name: "custom_fallback", description: "Top-level only", freeform: true, parameters };
+      const tool: OccxTool = { name: "custom_fallback", description: "Top-level only", freeform: true, parameters };
       expect(cursorToolInputSchema(tool)).toEqual(closedSchema);
       expect(cursorToolArgNormalizeSchema(tool)).toEqual(closedSchema);
       const defs = buildCursorToolDefinitions([tool]);
@@ -301,7 +301,7 @@ describe("Cursor tool definitions", () => {
 
   test("rejects freeform tools that reuse bare shell bridge names", () => {
     for (const name of ["exec_command", "shell_command"]) {
-      const tool: OcxTool = { name, description: "Custom", parameters: {}, freeform: true };
+      const tool: OccxTool = { name, description: "Custom", parameters: {}, freeform: true };
 
       expect(() => cursorToolInputSchema(tool)).toThrow(`freeform Cursor tools cannot use reserved shell bridge name ${name}`);
       expect(() => cursorToolArgNormalizeSchema(tool)).toThrow(`freeform Cursor tools cannot use reserved shell bridge name ${name}`);
@@ -316,7 +316,7 @@ describe("Cursor tool definitions", () => {
       required: ["input"],
       additionalProperties: false,
     };
-    const namespacedFreeform: OcxTool = {
+    const namespacedFreeform: OccxTool = {
       name: "exec_command",
       namespace: "mcp__custom",
       description: "Custom",
@@ -330,11 +330,11 @@ describe("Cursor tool definitions", () => {
     expect(defs[0]?.toolName).toBe("mcp__custom__exec_command");
     expect(toJson(ValueSchema, fromBinary(ValueSchema, defs[0]!.inputSchema))).toEqual(expectedFreeformSchema);
 
-    const ordinaryFreeform: OcxTool = { name: "apply_patch", description: "Patch", parameters: {}, freeform: true };
+    const ordinaryFreeform: OccxTool = { name: "apply_patch", description: "Patch", parameters: {}, freeform: true };
     expect(cursorToolInputSchema(ordinaryFreeform)).toEqual(expectedFreeformSchema);
     expect(cursorToolArgNormalizeSchema(ordinaryFreeform)).toEqual(expectedFreeformSchema);
 
-    const ordinaryFunction: OcxTool = {
+    const ordinaryFunction: OccxTool = {
       name: "exec_command",
       description: "Run",
       parameters: { type: "object", properties: { cmd: { type: "string" } }, required: ["cmd"] },
@@ -347,7 +347,7 @@ describe("Cursor tool definitions", () => {
     // Live #399 failure: Cursor advertisement requires `cmd`, models send `cmd`, but Codex
     // shell_command validates `command` → "missing field `command`". Normalization must use the
     // Responses-side schema, not the Cursor advertisement schema.
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "shell_command",
       description: "Run a command",
       parameters: {
@@ -385,7 +385,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("preserves cmd-only exec_command schemas during Responses normalization", () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "exec_command",
       description: "Run a command",
       parameters: {
@@ -434,7 +434,7 @@ describe("Cursor tool definitions", () => {
         properties: { cmd: { type: "string" } },
         required: ["cmd"],
       },
-    } as OcxTool);
+    } as OccxTool);
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ cmd: "echo hi" }), "exec_command", execSchema)).toBe("echo hi");
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ command: "echo hi" }), "exec_command", execSchema)).toBe("echo hi");
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ cmd: "", command: "echo hi" }), "exec_command", execSchema)).toBe("echo hi");
@@ -450,7 +450,7 @@ describe("Cursor tool definitions", () => {
         properties: { command: { type: "string" } },
         required: ["command"],
       },
-    } as OcxTool);
+    } as OccxTool);
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ command: "echo hi" }), "shell_command", shellSchema)).toBe("echo hi");
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ cmd: "echo hi" }), "shell_command", shellSchema)).toBe("echo hi");
     expect(nonEmptyShellBridgeCommandFromArgs(JSON.stringify({ command: "", cmd: "echo hi" }), "shell_command", shellSchema)).toBe("echo hi");
@@ -460,7 +460,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("does not alias namespaced exec_command tools", () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "exec_command",
       namespace: "mcp__shell",
       description: "Run remote command",
@@ -496,7 +496,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("appends generic tool-use guidance only when bare exec_command is available", () => {
-    const tools: OcxTool[] = [{ name: "exec_command", description: "Run", parameters: {} }];
+    const tools: OccxTool[] = [{ name: "exec_command", description: "Run", parameters: {} }];
     const prompt = "Use any 10 tools";
 
     const hinted = appendCursorGenericToolUseHint(tools, prompt);
@@ -523,7 +523,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("filters generic tool-count demos to the Codex native exec surface", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "tool_search", description: "Search tools", parameters: {} },
       { name: "list_mcp_resources", description: "List resources", parameters: {} },
@@ -534,12 +534,12 @@ describe("Cursor tool definitions", () => {
     expect(cursorToolsForActivePrompt(tools, "Use any 10 tools including MCP resources")?.map(tool => cursorToolWireName(tool))).toEqual([
       "exec_command",
       "tool_search",
-      "ocx_client_list_mcp_resources",
+      "occx_client_list_mcp_resources",
     ]);
   });
 
   test("filters generic tool-count demos when only shell_command is available", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "shell_command", description: "Run", parameters: {} },
       { name: "tool_search", description: "Search tools", parameters: {} },
     ];
@@ -548,8 +548,8 @@ describe("Cursor tool definitions", () => {
   });
 
   test("preserves unified Desktop exec for generic tool-use without inventing shell aliases", () => {
-    for (const namespace of [undefined, "opencodex-responses"]) {
-      const tools: OcxTool[] = [
+    for (const namespace of [undefined, "openccx-responses"]) {
+      const tools: OccxTool[] = [
         {
           name: "exec",
           ...(namespace ? { namespace } : {}),
@@ -567,7 +567,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("does not erase explicit non-exec tool_choice for generic tool-count prompts", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
     ];
@@ -585,7 +585,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("applies Responses tool_choice to advertised Cursor tool definitions", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
       { name: "write_file", namespace: "mcp__fs", description: "Write", parameters: {} },
     ];
@@ -599,7 +599,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("builds concise Cursor tool guidance from advertised wire names", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
     ];
@@ -634,7 +634,7 @@ describe("Cursor tool definitions", () => {
 
     expect(note).toContain("`shell_command`");
     expect(note).toContain("`shell_command` and `exec_command` are aliases of the same bridge");
-    expect(note).toContain("mcp_opencodex-responses_shell_command");
+    expect(note).toContain("mcp_openccx-responses_shell_command");
     expect(note).toContain("NEVER attempt Cursor-native Shell, Read, Grep, List");
     expect(note).toContain("`shell_command` is the ONLY shell surface");
     expect(note).not.toContain("Never tell the user");
@@ -660,7 +660,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("adds codex-native edit guidance only when apply_patch is advertised", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "apply_patch", description: "Patch", parameters: {}, freeform: true },
     ];
@@ -678,7 +678,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("does not forbid neighboring-agent names that are actually advertised", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "Glob", description: "Find files", parameters: {} },
     ];
@@ -687,13 +687,13 @@ describe("Cursor tool definitions", () => {
     expect(note).toBeDefined();
     if (!note) throw new Error("Expected Cursor tool guidance note");
 
-    expect(note).toContain("available tool names are exactly `exec_command`, `ocx_client_Glob`");
+    expect(note).toContain("available tool names are exactly `exec_command`, `occx_client_Glob`");
     expect(note).toContain("This turn does not expose neighboring-agent tool names `Read`, `Grep`, `Bash`, `LS`");
     expect(note).not.toContain("`Read`, `Grep`, `Glob`, `Bash`, `LS`");
   });
 
   test("treats GJC lowercase read/find/bash as covering neighboring-agent names (#1992)", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "exec_command", description: "Run", parameters: {} },
       { name: "read", description: "Read a file", parameters: {} },
       { name: "find", description: "Find files", parameters: {} },
@@ -704,7 +704,7 @@ describe("Cursor tool definitions", () => {
     expect(note).toBeDefined();
     if (!note) throw new Error("Expected Cursor tool guidance note");
 
-    expect(note).toContain("available tool names are exactly `exec_command`, `ocx_client_read`, `ocx_client_find`, `ocx_client_bash`");
+    expect(note).toContain("available tool names are exactly `exec_command`, `occx_client_read`, `occx_client_find`, `occx_client_bash`");
     expect(note).toContain("This turn does not expose neighboring-agent tool names `Grep`, `LS`");
     expect(note).not.toContain("`Read`");
     expect(note).not.toContain("`Glob`");
@@ -712,7 +712,7 @@ describe("Cursor tool definitions", () => {
   });
 
   test("omits Cursor tool guidance when no tools are advertised", () => {
-    const tools: OcxTool[] = [
+    const tools: OccxTool[] = [
       { name: "read_file", namespace: "mcp__fs", description: "Read", parameters: {} },
       { name: "write_file", namespace: "mcp__fs", description: "Write", parameters: {} },
     ];
@@ -730,7 +730,7 @@ describe("Cursor tool definitions", () => {
 });
 
 describe("Cursor code mode tool guidance", () => {
-  const codeModeExec = (): OcxTool => ({
+  const codeModeExec = (): OccxTool => ({
     name: "exec",
     description: "Run JavaScript code to orchestrate tool calls. Nested tools are available on the global `tools` object.",
     parameters: {},
@@ -770,7 +770,7 @@ describe("Cursor code mode tool guidance", () => {
     // The injected text must never display the decorated form as a copyable literal.
     expect(note).toContain("no further asterisks");
     expect(note).not.toContain("*** Begin Patch ***");
-    expect(note).toContain("OpenCodex does not rewrite JavaScript inside exec");
+    expect(note).toContain("Openccx does not rewrite JavaScript inside exec");
     expect(note).toContain("Host contract for the nested helpers");
     expect(note).toContain("takes exactly one string");
     expect(note).toContain("write_stdin");
@@ -778,7 +778,7 @@ describe("Cursor code mode tool guidance", () => {
     // The flat-catalog shell-bridge guidance must NOT appear: naming a top-level
     // `exec_command` in code mode sends the model after a tool that does not exist.
     expect(note).not.toContain("is the Codex Responses shell bridge for this turn");
-    expect(note).not.toContain("mcp_opencodex-responses_shell_command");
+    expect(note).not.toContain("mcp_openccx-responses_shell_command");
     expect(note).not.toContain("For file read/search/listing, use");
   });
 

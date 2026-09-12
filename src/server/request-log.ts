@@ -13,7 +13,7 @@ import {
 } from "../lib/errors";
 import { CODEX_CONFIG_PATH, readRootTomlString } from "../codex/paths";
 import { readCodexCatalogPath } from "../codex/catalog";
-import type { AttemptTierOutcome, OcxProviderConfig, OcxUsage } from "../types";
+import type { AttemptTierOutcome, OccxProviderConfig, OccxUsage } from "../types";
 import { normalizeRouteDecisionTrace, type RouteDecisionTraceV1 } from "../routing/trace";
 import type { AdapterRequest } from "../adapters/base";
 import type { AdapterTierMetadata } from "../providers/fastwire";
@@ -103,7 +103,7 @@ export interface RequestLogContext {
   resolvedModel?: string;
   /** Internal: client-facing response metadata must not replace the physical routed model. */
   preserveResolvedModelFromRoute?: boolean;
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   usageLogInputTokens?: number;
   attempts?: PersistedUsageAttempt[];
   /** Internal mutable final attempt; omitted from RequestLogEntry/JSONL. */
@@ -132,7 +132,7 @@ export interface RequestLogContext {
   /** Recognized structured terminal code whose exact identity must survive status mapping. */
   terminalErrorCode?: typeof CYBER_POLICY_ERROR_CODE;
   /**
-   * Proxy-owned error code for a request OpenCodex terminated locally, before or instead of an
+   * Proxy-owned error code for a request Openccx terminated locally, before or instead of an
    * upstream send. Status-derived classification cannot name these: there is no upstream
    * message to classify, and the status alone would read as a provider failure.
    */
@@ -200,7 +200,7 @@ export interface RequestLogEntry {
   /** Secret-redacted upstream error reason, surfaced in /api/logs and the GUI detail modal. */
   upstreamError?: string;
   usageStatus: UsageStatus;
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   totalTokens?: number;
   attempts?: PersistedUsageAttempt[];
   /** Codex pool affinity decision for this request (diagnostics for #186). */
@@ -343,7 +343,7 @@ function normalizeRouteDecisionTraceForLog(
 
 /**
  * Seed the in-memory Logs ring buffer from usage.jsonl so GUI /api/logs survives
- * `ocx stop` / `ocx start` (process restart). Idempotent per process; no-ops when
+ * `occx stop` / `occx start` (process restart). Idempotent per process; no-ops when
  * the buffer already has live entries. Read failures are non-fatal (same as /api/usage).
  */
 export function hydrateRequestLogsFromDisk(
@@ -458,7 +458,7 @@ export function addRequestLog(entry: RequestLogEntry) {
 }
 
 export function nextRequestLogId(_timestamp = Date.now()): string {
-  return `ocx-${randomBytes(16).toString("hex")}`;
+  return `occx-${randomBytes(16).toString("hex")}`;
 }
 
 /**
@@ -682,7 +682,7 @@ export function applyResponseLogMetadata(logCtx: RequestLogContext, payload: unk
   }
 }
 
-export function usageFromResponsesPayload(usage: unknown): OcxUsage | undefined {
+export function usageFromResponsesPayload(usage: unknown): OccxUsage | undefined {
   if (!usage || typeof usage !== "object") return undefined;
   const raw = usage as {
     input_tokens?: unknown;
@@ -1168,7 +1168,7 @@ export function filteredRequestLogCount(logs: RequestLogEntry[], params: URLSear
 }
 
 interface FinalizedUsageResult {
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   status: UsageStatus;
   totalTokens?: number;
 }
@@ -1199,7 +1199,7 @@ function contextWindowForModel(adapter: string, modelId: string | undefined): nu
 
 function finalizedUsage(
   adapter: string,
-  usage: OcxUsage | undefined,
+  usage: OccxUsage | undefined,
   inputTokenEstimate: number | undefined,
   contextWindow: number | undefined,
   locallyAnswered = false,
@@ -1284,7 +1284,7 @@ export function sealRequestAttemptIdentity(
 export function recordAttemptCredentialSource(
   attempt: PersistedUsageAttempt | undefined,
   providerName: string,
-  provider: Pick<OcxProviderConfig, "authMode" | "baseUrl" | "adapter">,
+  provider: Pick<OccxProviderConfig, "authMode" | "baseUrl" | "adapter">,
   adapterName: string = provider.adapter,
 ): void {
   if (!attempt) return;
@@ -1333,7 +1333,7 @@ export function finishRequestAttempt(
   attempt: PersistedUsageAttempt,
   status: number,
   durationMs: number,
-  usage?: OcxUsage,
+  usage?: OccxUsage,
 ): PersistedUsageAttempt {
   const finalized = finalizedUsage(
     attempt.adapter,
@@ -1391,7 +1391,7 @@ export function aggregateAttemptUsage(
     (sum, usage) => sum + (usageTotalTokens(usage) ?? 0),
     0,
   );
-  const aggregate: OcxUsage = {
+  const aggregate: OccxUsage = {
     inputTokens: usages.reduce((sum, usage) => sum + usage.inputTokens, 0),
     outputTokens: usages.reduce((sum, usage) => sum + usage.outputTokens, 0),
     totalTokens,

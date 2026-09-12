@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { clearProviderQuotaCache, fetchProviderQuotaReports, providerApiKeyQuotaMode } from "../../src/providers/quota";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 // Issue #4201: the BigModel Coding Plan Responses preset is the same domestic subscription as the
 // Chat preset on a different wire, but keyQuotaReaderForProvider() admitted provider names
@@ -20,15 +20,15 @@ const CANONICAL_BASE_URL = "https://open.bigmodel.cn/api/v1";
 const MONITOR_URL = "https://open.bigmodel.cn/api/monitor/usage/quota/limit";
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-let opencodexHome: string;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+let openccxHome: string;
 
-function keyProvider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function keyProvider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return { adapter: "openai-responses", authMode: "key", baseUrl: CANONICAL_BASE_URL, apiKey: "bigmodel-secret", ...overrides };
 }
 
-function keyQuotaConfig(name: string, provider: OcxProviderConfig): OcxConfig {
-  return { defaultProvider: name, providers: { [name]: provider } } as OcxConfig;
+function keyQuotaConfig(name: string, provider: OccxProviderConfig): OccxConfig {
+  return { defaultProvider: name, providers: { [name]: provider } } as OccxConfig;
 }
 
 function quotaLimitsResponse(): Response {
@@ -44,17 +44,17 @@ function quotaLimitsResponse(): Response {
 }
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-bigmodel-responses-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-bigmodel-responses-quota-"));
+  process.env.OPENCCX_HOME = openccxHome;
   clearProviderQuotaCache();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearProviderQuotaCache();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
 });
 
 describe("BigModel Responses preset quota eligibility", () => {

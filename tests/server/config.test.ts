@@ -11,7 +11,7 @@ import {
   getPidPath,
   getRuntimePortPath,
   isValidProviderName,
-  isOcxStartCommandLine,
+  isOccxStartCommandLine,
   loadConfig,
   multiAgentGuidanceEnabled,
   parsePidFile,
@@ -23,8 +23,8 @@ import {
   removePid,
   removeRuntimePort,
   runtimeRole,
-  ocxStartProcessCacheSizeForTests,
-  setOcxStartProcessCacheForTests,
+  occxStartProcessCacheSizeForTests,
+  setOccxStartProcessCacheForTests,
   setProcessCommandLineExecForTests,
   setProcessCommandLinePlatformForTests,
   validateConfigCandidate,
@@ -57,7 +57,7 @@ let testDir = "";
  * Mirrors the probe in codex-service-manager-probe and claude-agents-inject.
  */
 const canSymlink = (() => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-config-symlink-probe-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-config-symlink-probe-"));
   try {
     symlinkSync(join(dir, "probe-target"), join(dir, "probe-link"));
     return true;
@@ -70,12 +70,12 @@ const canSymlink = (() => {
 })();
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-config-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-config-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
   if (testDir && existsSync(testDir)) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -454,7 +454,7 @@ function writeAccountNamespaceConfig(
   });
 }
 
-describe("opencodex config defaults", () => {
+describe("openccx config defaults", () => {
   test("runtime role is absent-by-default and resolves to standalone", () => {
     const defaults = getDefaultConfig();
     expect(Object.hasOwn(defaults, "runtimeRole")).toBe(false);
@@ -494,7 +494,7 @@ describe("opencodex config defaults", () => {
       runtimeRole: invalidRole,
       defaultProvider: "custom",
       providers: { custom: { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [{ id: "key-1", name: "default", key: "ocx_persisted", createdAt: "2026-08-28T00:00:00.000Z" }],
+      apiKeys: [{ id: "key-1", name: "default", key: "occx_persisted", createdAt: "2026-08-28T00:00:00.000Z" }],
     });
     const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
     try {
@@ -506,7 +506,7 @@ describe("opencodex config defaults", () => {
         port: 12345,
         defaultProvider: "custom",
         providers: { custom: { baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-        apiKeys: [expect.objectContaining({ id: "key-1", key: "ocx_persisted" })],
+        apiKeys: [expect.objectContaining({ id: "key-1", key: "occx_persisted" })],
       });
       expect(diagnostics).toMatchObject({
         source: "file",
@@ -559,7 +559,7 @@ describe("opencodex config defaults", () => {
       ok: true,
       config: { hub: { dataPublicOrigin: "https://hub.example.test:8443" } },
     });
-    // NOT `.catch`ed: silently dropping a typo would make `ocx hub invite` fall back to
+    // NOT `.catch`ed: silently dropping a typo would make `occx hub invite` fall back to
     // http://<hostname>:<port>, which is the value the operator set the field to replace.
     for (const dataPublicOrigin of [
       "ftp://hub.example.test",
@@ -614,7 +614,7 @@ describe("opencodex config defaults", () => {
       remoteGui: { allowedTailscaleUsers: ["alice@example.test"] },
       defaultProvider: "custom",
       providers: { custom: { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [{ id: "key-1", name: "default", key: "ocx_persisted", createdAt: "2026-08-28T00:00:00.000Z" }],
+      apiKeys: [{ id: "key-1", name: "default", key: "occx_persisted", createdAt: "2026-08-28T00:00:00.000Z" }],
     });
     const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
     try {
@@ -622,7 +622,7 @@ describe("opencodex config defaults", () => {
       expect(loaded.hub).toBeUndefined();
       expect(loaded.remoteGui).toEqual({ allowedTailscaleUsers: ["alice@example.test"] });
       expect(loaded.providers.custom?.apiKey).toBe("upstream-secret");
-      expect(loaded.apiKeys?.[0]?.key).toBe("ocx_persisted");
+      expect(loaded.apiKeys?.[0]?.key).toBe("occx_persisted");
       expect(readConfigDiagnostics().warnings?.join(" ")).toContain("hub.managementPublicOrigin");
       expect(warnSpy.mock.calls.flat().join(" ")).not.toContain(malformedValue);
       expect(backupNames()).toEqual([]);
@@ -650,7 +650,7 @@ describe("opencodex config defaults", () => {
       managementUrl: "https://manage.example.test:443",
       managementTransport: "direct" as const,
       selectedClients: ["codex", "claude"] as const,
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN" as const,
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN" as const,
       apiKeyId: "issued-key-id",
       tokenFingerprint: "a".repeat(64),
       protocolVersion: 1 as const,
@@ -683,12 +683,12 @@ describe("opencodex config defaults", () => {
     if (!result.ok) return;
     saveConfig(result.config);
     expect(loadConfig().client).toEqual(result.config.client);
-    expect(readFileSync(getConfigPath(), "utf8")).not.toContain("ocx_data_");
+    expect(readFileSync(getConfigPath(), "utf8")).not.toContain("occx_data_");
 
     expect(validateConfigCandidate({
       ...getDefaultConfig(),
       runtimeRole: "client",
-      client: { ...client, key: "ocx_data_forbidden" },
+      client: { ...client, key: "occx_data_forbidden" },
     })).toMatchObject({ ok: false, error: expect.stringContaining("client") });
   });
 
@@ -698,7 +698,7 @@ describe("opencodex config defaults", () => {
       managementUrl: "https://hub.example.test",
       managementTransport: "direct",
       selectedClients: ["codex"],
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: "issued-key-id",
       tokenFingerprint: "b".repeat(64),
       protocolVersion: 1,
@@ -957,7 +957,7 @@ describe("opencodex config defaults", () => {
       port: 12345,
       defaultProvider: "custom",
       providers: { custom: { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [{ id: "key-1", name: "default", key: "ocx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
+      apiKeys: [{ id: "key-1", name: "default", key: "occx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
       claudeCode: { subagentEffort: invalidEffort },
     });
 
@@ -969,7 +969,7 @@ describe("opencodex config defaults", () => {
       port: 12345,
       defaultProvider: "custom",
       providers: { custom: { baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [expect.objectContaining({ id: "key-1", key: "ocx_persisted" })],
+      apiKeys: [expect.objectContaining({ id: "key-1", key: "occx_persisted" })],
     });
     expect(diagnostics).toMatchObject({
       source: "file",
@@ -993,7 +993,7 @@ describe("opencodex config defaults", () => {
       hostname: "",
       defaultProvider: "custom",
       providers: { custom: { adapter: "openai-chat", baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [{ id: "key-1", name: "default", key: "ocx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
+      apiKeys: [{ id: "key-1", name: "default", key: "occx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
     });
 
     const config = loadConfig();
@@ -1003,7 +1003,7 @@ describe("opencodex config defaults", () => {
       port: 12345,
       defaultProvider: "custom",
       providers: { custom: { baseUrl: "https://example.test/v1", apiKey: "upstream-secret" } },
-      apiKeys: [expect.objectContaining({ id: "key-1", key: "ocx_persisted" })],
+      apiKeys: [expect.objectContaining({ id: "key-1", key: "occx_persisted" })],
     });
     expect(backupNames()).toEqual([]);
   });
@@ -1020,7 +1020,7 @@ describe("opencodex config defaults", () => {
           fastWire: null,
         },
       },
-      apiKeys: [{ id: "key-1", name: "default", key: "ocx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
+      apiKeys: [{ id: "key-1", name: "default", key: "occx_persisted", createdAt: "2026-07-28T00:00:00.000Z" }],
     });
     const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
 
@@ -1032,7 +1032,7 @@ describe("opencodex config defaults", () => {
         port: 12345,
         defaultProvider: "openai-apikey",
         providers: { "openai-apikey": { fastWire: null } },
-        apiKeys: [expect.objectContaining({ id: "key-1", key: "ocx_persisted" })],
+        apiKeys: [expect.objectContaining({ id: "key-1", key: "occx_persisted" })],
       });
       expect(diagnostics).toMatchObject({
         source: "file",
@@ -1376,7 +1376,7 @@ describe("opencodex config defaults", () => {
     }
   });
 
-  test("loads valid config from OPENCODEX_HOME", () => {
+  test("loads valid config from OPENCCX_HOME", () => {
     writeConfig({
       port: 12345,
       providers: {
@@ -1699,11 +1699,11 @@ describe("opencodex config defaults", () => {
     expect(backupNames()).toHaveLength(0);
   });
 
-  test("resolves relative OPENCODEX_HOME once to an absolute config directory", () => {
-    const parent = mkdtempSync(join(tmpdir(), "ocx-config-parent-"));
+  test("resolves relative OPENCCX_HOME once to an absolute config directory", () => {
+    const parent = mkdtempSync(join(tmpdir(), "occx-config-parent-"));
     const oldCwd = process.cwd();
     try {
-      process.env.OPENCODEX_HOME = "relative-home";
+      process.env.OPENCCX_HOME = "relative-home";
       process.chdir(parent);
       const firstPath = getConfigPath();
       const expectedConfigDir = resolve("relative-home");
@@ -1712,18 +1712,18 @@ describe("opencodex config defaults", () => {
 
       expect(firstPath).toBe(join(expectedConfigDir, "config.json"));
       expect(getConfigPath()).toBe(firstPath);
-      expect(getPidPath()).toBe(join(expectedConfigDir, "ocx.pid"));
+      expect(getPidPath()).toBe(join(expectedConfigDir, "occx.pid"));
     } finally {
       process.chdir(oldCwd);
       removeTreeWithRetry(parent);
     }
   });
 
-  test("uses the default home when OPENCODEX_HOME is unset", () => {
-    delete process.env.OPENCODEX_HOME;
+  test("uses the default home when OPENCCX_HOME is unset", () => {
+    delete process.env.OPENCCX_HOME;
 
-    expect(getConfigPath()).toBe(join(homedir(), ".opencodex", "config.json"));
-    expect(getPidPath()).toBe(join(homedir(), ".opencodex", "ocx.pid"));
+    expect(getConfigPath()).toBe(join(homedir(), ".openccx", "config.json"));
+    expect(getPidPath()).toBe(join(homedir(), ".openccx", "occx.pid"));
   });
 
   test("loads UTF-8 BOM config files written by Windows tools", () => {
@@ -1756,7 +1756,7 @@ describe("opencodex config defaults", () => {
       const backups = backupNames();
       expect(backups).toHaveLength(1);
       expect(readFileSync(join(testDir, backups[0]), "utf-8")).toBe("{ invalid json");
-      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Could not load opencodex config"));
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Could not load openccx config"));
     } finally {
       errorSpy.mockRestore();
     }
@@ -2972,19 +2972,19 @@ describe("opencodex config defaults", () => {
     expect(parsePidFile("not-json")).toBeNull();
   });
 
-  test("recognizes opencodex start command lines", () => {
-    expect(isOcxStartCommandLine('bun run src/cli.ts start')).toBe(true);
-    expect(isOcxStartCommandLine('"C:/tools/bun/bin/bun.exe" "run" "src/cli/index.ts" "start"')).toBe(true);
-    expect(isOcxStartCommandLine('bun C:/tools/bun/install/global/node_modules/@bitkyc08/opencodex/src/cli.ts start')).toBe(true);
+  test("recognizes openccx start command lines", () => {
+    expect(isOccxStartCommandLine('bun run src/cli.ts start')).toBe(true);
+    expect(isOccxStartCommandLine('"C:/tools/bun/bin/bun.exe" "run" "src/cli/index.ts" "start"')).toBe(true);
+    expect(isOccxStartCommandLine('bun C:/tools/bun/install/global/node_modules/@bitkyc08/opencodex/src/cli.ts start')).toBe(true);
     // npm's in-place rename during `npm install -g` (Windows service wrapper respawn mid-update).
-    expect(isOcxStartCommandLine(
+    expect(isOccxStartCommandLine(
       'bun C:/nvm/node_modules/@bitkyc08/.opencodex-1JejBqbZ/src/cli/index.ts start --port 10100',
     )).toBe(true);
-    expect(isOcxStartCommandLine("opencodex start")).toBe(true);
+    expect(isOccxStartCommandLine("openccx start")).toBe(true);
 
-    expect(isOcxStartCommandLine("bun run src/cli.ts status")).toBe(false);
-    expect(isOcxStartCommandLine("bun test C:/work/opencodex/tests/server/config.test.ts")).toBe(false);
-    expect(isOcxStartCommandLine("notepad.exe")).toBe(false);
+    expect(isOccxStartCommandLine("bun run src/cli.ts status")).toBe(false);
+    expect(isOccxStartCommandLine("bun test C:/work/opencodex/tests/server/config.test.ts")).toBe(false);
+    expect(isOccxStartCommandLine("notepad.exe")).toBe(false);
   });
 
   test("writes pid file as a numeric pid", () => {
@@ -3000,9 +3000,9 @@ describe("opencodex config defaults", () => {
     const previousPath = process.env.PATH;
     const probes: string[] = [];
     mkdirSync(attackerDir);
-    writeFileSync(fakePs, `#!/bin/sh\ntouch "$0.executed"\necho 'ocx start'\n`, { mode: 0o755 });
+    writeFileSync(fakePs, `#!/bin/sh\ntouch "$0.executed"\necho 'occx start'\n`, { mode: 0o755 });
 
-    setOcxStartProcessCacheForTests([]);
+    setOccxStartProcessCacheForTests([]);
     try {
       setProcessCommandLinePlatformForTests("darwin");
       setProcessCommandLineExecForTests((executable) => {
@@ -3020,11 +3020,11 @@ describe("opencodex config defaults", () => {
       setProcessCommandLinePlatformForTests(null);
       if (previousPath === undefined) delete process.env.PATH;
       else process.env.PATH = previousPath;
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
     }
 
     expect(process.env.PATH).toBe(previousPath);
-    expect(ocxStartProcessCacheSizeForTests()).toBe(0);
+    expect(occxStartProcessCacheSizeForTests()).toBe(0);
   });
 
   test("pid validation selects only trusted Windows process probes", () => {
@@ -3049,22 +3049,22 @@ describe("opencodex config defaults", () => {
       process.env.SystemRoot = attackerRoot;
       process.env.WINDIR = attackerRoot;
       writeFileSync(getPidPath(), String(process.pid), "utf-8");
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
 
       setProcessCommandLineExecForTests((executable) => {
         calls.push(executable);
-        if (executable === trustedWmic) return "CommandLine=ocx start\r\n";
+        if (executable === trustedWmic) return "CommandLine=occx start\r\n";
         throw new Error(`unexpected process probe: ${executable}`);
       });
       expect(readPid()).toBe(process.pid);
       expect(calls).toEqual([trustedWmic]);
 
       calls.length = 0;
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
       setProcessCommandLineExecForTests((executable) => {
         calls.push(executable);
         if (executable === trustedWmic) throw new Error("WMIC unavailable");
-        if (executable === trustedPowerShell) return "ocx start\n";
+        if (executable === trustedPowerShell) return "occx start\n";
         throw new Error(`unexpected process probe: ${executable}`);
       });
       expect(readPid()).toBe(process.pid);
@@ -3074,14 +3074,14 @@ describe("opencodex config defaults", () => {
       setProcessCommandLineExecForTests(null);
       setProcessCommandLinePlatformForTests(null);
       setTrustedWindowsSystemDirectoryResolverForTests(null);
-      setOcxStartProcessCacheForTests([]);
+      setOccxStartProcessCacheForTests([]);
       if (previousSystemRoot === undefined) delete process.env.SystemRoot;
       else process.env.SystemRoot = previousSystemRoot;
       if (previousWindir === undefined) delete process.env.WINDIR;
       else process.env.WINDIR = previousWindir;
     }
 
-    expect(ocxStartProcessCacheSizeForTests()).toBe(0);
+    expect(occxStartProcessCacheSizeForTests()).toBe(0);
   });
 
   test("removes pid file only when the expected pid still matches", () => {
@@ -3160,7 +3160,7 @@ describe("config.ts – Windows ACL hardening integration", () => {
     expect(observedSecret).toBe(true);
 
     const occupiedSequence = nextAtomicTempSequence() + 1;
-    const occupiedTemp = `${destination}.ocx.${process.pid}.${occupiedSequence}.tmp`;
+    const occupiedTemp = `${destination}.occx.${process.pid}.${occupiedSequence}.tmp`;
     writeFileSync(occupiedTemp, "pre-existing", { encoding: "utf8", mode: 0o644 });
     expect(() => atomicWriteFile(destination, "replacement-secret", undefined, {
       afterTempWrite: tempPath => {
@@ -3191,7 +3191,7 @@ describe("config.ts – Windows ACL hardening integration", () => {
   test("successive atomic temps for one destination are each hardened and then forgotten", () => {
     const destination = join(testDir, "atomic-secret.json");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     windowsAcl.resetHardenedStateForTests();
     windowsAcl.setPlatformForTests("win32");
     let grants = 0;
@@ -3228,7 +3228,7 @@ describe("config.ts – Windows ACL hardening integration", () => {
   test("failed residual unlink retains the exact temp memo until later cleanup", () => {
     const destination = join(testDir, "residual-secret.json");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     windowsAcl.resetHardenedStateForTests();
     windowsAcl.setPlatformForTests("win32");
     windowsAcl.setIcaclsRunnerForTests(() => ({
@@ -3426,7 +3426,7 @@ describe("config.ts – sync writer timeout keying (#840 refinement)", () => {
   test("timed-out write with a RESIDUAL temp retains both memos (fail-closed)", () => {
     const destination = join(testDir, "residual-timeout.json");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     windowsAcl.resetHardenedStateForTests();
     windowsAcl.setPlatformForTests("win32");
     windowsAcl.setIcaclsRunnerForTests(() => ({ success: false, exitCode: null, timedOut: true, stdout: "" }));
@@ -3485,8 +3485,8 @@ describe("config.ts – atomic writes preserve symlinked destinations", () => {
 
     atomicWriteFile(link, "rewritten");
 
-    expect(readdirSync(repoDir).filter(name => name.includes(".ocx."))).toEqual([]);
-    expect(readdirSync(testDir).filter(name => name.includes(".ocx."))).toEqual([]);
+    expect(readdirSync(repoDir).filter(name => name.includes(".occx."))).toEqual([]);
+    expect(readdirSync(testDir).filter(name => name.includes(".occx."))).toEqual([]);
   });
 
   test("a plain destination is unaffected", () => {
@@ -3546,8 +3546,8 @@ describe("config.ts – async atomic writes preserve symlinked destinations", ()
 
     await atomicWriteFileAsync(link, "rewritten");
 
-    expect(readdirSync(repoDir).filter(name => name.includes(".ocx."))).toEqual([]);
-    expect(readdirSync(testDir).filter(name => name.includes(".ocx."))).toEqual([]);
+    expect(readdirSync(repoDir).filter(name => name.includes(".occx."))).toEqual([]);
+    expect(readdirSync(testDir).filter(name => name.includes(".occx."))).toEqual([]);
   });
 
   test("a plain destination is unaffected", async () => {

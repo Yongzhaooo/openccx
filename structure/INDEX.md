@@ -1,4 +1,4 @@
-# opencodex Structure Index
+# openccx Structure Index
 
 This folder is the maintainer source of truth for the current system shape. Public user workflows
 belong in `docs-site/`. Development work is recorded in `devlog/` units — `_plan/` while open,
@@ -12,7 +12,7 @@ in this folder are in [`AGENTS.md`](AGENTS.md).
 
 ### Tier 1 — Foundation
 
-What opencodex is, what it owns on disk, and the invariants nothing may break.
+What openccx is, what it owns on disk, and the invariants nothing may break.
 
 | Doc | Scope |
 | --- | --- |
@@ -26,7 +26,7 @@ Persisted config, the Codex home it writes into, and the model catalog it publis
 | Doc | Scope |
 | --- | --- |
 | [`config.md`](config.md) | Persisted config schema, both injection forms, provider validation, and restore. |
-| [`codex-home.md`](codex-home.md) | CODEX_HOME resolution, the files opencodex manages there, and Codex-home diagnostics. |
+| [`codex-home.md`](codex-home.md) | CODEX_HOME resolution, the files openccx manages there, and Codex-home diagnostics. |
 | [`catalog.md`](catalog.md) | Shared Codex catalog assembly, account namespaces, pool rotation, and effort ladders. |
 | [`subagents.md`](subagents.md) | Multi-agent surface mode and subagent roster ordering. |
 

@@ -3,7 +3,7 @@
  *
  * Most clients must preserve every byte represented by their managed
  * contribution. A client that persists runtime-derived fields back into an
- * OpenCodex-owned fragment needs a narrower contract: name the exact paths it
+ * Openccx-owned fragment needs a narrower contract: name the exact paths it
  * may rewrite, then fingerprint everything else. Keeping that policy here
  * prevents a client quirk from weakening the shared classifier.
  */
@@ -53,11 +53,11 @@ function cloneFragment(fragment: ManagedFragment): ManagedFragment {
 }
 
 /**
- * Paths a client is documented to derive after OpenCodex writes its block.
+ * Paths a client is documented to derive after Openccx writes its block.
  *
  * ZCode 3.8.1 persists reasoning and output defaults for every generated
- * model. It may also fill a context default when OpenCodex intentionally
- * omitted one; an authoritative context emitted by OpenCodex remains
+ * model. It may also fill a context default when Openccx intentionally
+ * omitted one; an authoritative context emitted by Openccx remains
  * protected and is never listed here.
  */
 export function refreshablePathsOf(

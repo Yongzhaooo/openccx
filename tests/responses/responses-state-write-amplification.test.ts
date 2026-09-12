@@ -31,12 +31,12 @@ function remember(id: string, text: string): void {
 
 describe("responses-state snapshot write amplification (#2460)", () => {
   let home: string;
-  const priorHome = process.env["OPENCODEX_HOME"];
+  const priorHome = process.env["OPENCCX_HOME"];
   let snapshot: string;
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocx-state-amp-"));
-    process.env["OPENCODEX_HOME"] = home;
+    home = mkdtempSync(join(tmpdir(), "occx-state-amp-"));
+    process.env["OPENCCX_HOME"] = home;
     snapshot = join(home, "responses-state.json");
     clearResponseStateMemoryForTests();
   });
@@ -45,8 +45,8 @@ describe("responses-state snapshot write amplification (#2460)", () => {
     setResponseStateByteCapForTests(null);
     clearResponseStateForTests();
     removeTreeWithRetry(home);
-    if (priorHome === undefined) delete process.env["OPENCODEX_HOME"];
-    else process.env["OPENCODEX_HOME"] = priorHome;
+    if (priorHome === undefined) delete process.env["OPENCCX_HOME"];
+    else process.env["OPENCCX_HOME"] = priorHome;
   });
 
   /** Record the delay the store hands to setTimeout when it schedules its next write. */

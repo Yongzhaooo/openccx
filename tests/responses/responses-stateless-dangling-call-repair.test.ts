@@ -5,14 +5,14 @@
  * `local_shell_call`, or `custom_tool_call` item with no matching output item in the same
  * body 400s with "No tool output found for tool call <call_id>". A Codex thread can reach
  * that state when an interrupted tool turn records the call but not its late-arriving
- * result. ocx already repaired orphaned OUTPUTS (output without call); these tests pin the
+ * result. occx already repaired orphaned OUTPUTS (output without call); these tests pin the
  * mirrored repair: synthesize an honest placeholder output right after the orphaned call.
  */
 import { afterEach, describe, expect, test } from "bun:test";
 import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { handleResponses } from "../../src/server/responses/core";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const MODEL = "deepseek-v4-flash";
 
@@ -33,7 +33,7 @@ describe("stateless Responses wire repairs orphaned tool calls", () => {
       });
       return Response.json({ id: "resp_deepseek", object: "response", status: "completed", output: [] });
     }) as typeof fetch;
-    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OcxConfig;
+    const config = { providers: { deepseek: deepseekProvider() } } as unknown as OccxConfig;
     await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",
@@ -191,7 +191,7 @@ describe("stateless Responses wire repairs orphaned tool calls", () => {
     ]);
     const input = body.input as Array<Record<string, unknown>>;
     expect(input[0]).toMatchObject({ type: "message", role: "user" });
-    expect(JSON.stringify(input[0])).toContain("[ocx] empty tool output");
+    expect(JSON.stringify(input[0])).toContain("[occx] empty tool output");
   });
 
   test("never claims a tool ran when an orphan output is null (regression)", async () => {
@@ -200,7 +200,7 @@ describe("stateless Responses wire repairs orphaned tool calls", () => {
     ]);
     const input = body.input as Array<Record<string, unknown>>;
     expect(input[0]).toMatchObject({ type: "message", role: "user" });
-    expect(JSON.stringify(input[0])).not.toContain("[ocx] empty tool output");
+    expect(JSON.stringify(input[0])).not.toContain("[occx] empty tool output");
     expect(JSON.stringify(input[0])).not.toContain("no tool result was recorded");
   });
 
@@ -211,7 +211,7 @@ describe("stateless Responses wire repairs orphaned tool calls", () => {
     ]);
     const input = body.input as Array<Record<string, unknown>>;
     expect(input[1]).toMatchObject({ type: "function_call_output", call_id: "call_null", output: null });
-    expect(JSON.stringify(body)).not.toContain("[ocx] empty tool output");
+    expect(JSON.stringify(body)).not.toContain("[occx] empty tool output");
   });
 
   test("preserves synthetic missing-result placeholders when annotation is enabled (regression)", async () => {
@@ -221,6 +221,6 @@ describe("stateless Responses wire repairs orphaned tool calls", () => {
     const input = body.input as Array<Record<string, unknown>>;
     expect(input[1]).toMatchObject({ type: "function_call_output", call_id: "call_dangling" });
     expect(String((input[1] as { output: unknown }).output)).toContain("no tool result was recorded");
-    expect(JSON.stringify(input[1])).not.toContain("[ocx] empty tool output");
+    expect(JSON.stringify(input[1])).not.toContain("[occx] empty tool output");
   });
 });

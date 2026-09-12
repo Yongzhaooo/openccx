@@ -1,5 +1,5 @@
 /**
- * Fail-closed protection for the user's REAL OpenCodex home while tests run.
+ * Fail-closed protection for the user's REAL Openccx home while tests run.
  *
  * A management-route unit test once passed an in-memory fixture config to a handler
  * that persisted it through the process-global writer, replacing a live 41KB,
@@ -11,8 +11,8 @@
  * Two properties matter more than breadth here:
  *
  * 1. It must be INERT in production. Guessing "am I a test?" from ecosystem variables
- *    like NODE_ENV would brick `NODE_ENV=test ocx ...` for a user who did nothing
- *    wrong — worse than the bug it prevents. Arming requires OCX_TEST_HOME_GUARD=1,
+ *    like NODE_ENV would brick `NODE_ENV=test occx ...` for a user who did nothing
+ *    wrong — worse than the bug it prevents. Arming requires OCCX_TEST_HOME_GUARD=1,
  *    which only this repository's test preload sets.
  * 2. It must fail CLOSED for code nobody has written yet. So it denies ONE path — the
  *    captured production home — instead of allow-listing known-good test directories.
@@ -23,13 +23,13 @@ import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { realpathSync } from "node:fs";
 
-const GUARD_ENV = "OCX_TEST_HOME_GUARD";
+const GUARD_ENV = "OCCX_TEST_HOME_GUARD";
 /**
  * Set by `scripts/test.ts` to the ORIGINAL home before it hands the child a rewritten
  * HOME. On that path `homedir()` already points at the sandbox by the time this module
  * loads, so the true home is only knowable from this hand-off.
  */
-const REAL_HOME_ENV = "OCX_REAL_HOME";
+const REAL_HOME_ENV = "OCCX_REAL_HOME";
 
 /**
  * Resolve symlinks so two spellings of one location compare equal — macOS hands out
@@ -59,14 +59,14 @@ function canonicalize(path: string): string {
  * guard would be perfectly inverted while its tests still looked green.
  */
 const REAL_HOME = process.env[REAL_HOME_ENV]?.trim() || homedir();
-const PROTECTED_HOME = canonicalize(join(REAL_HOME, ".opencodex"));
+const PROTECTED_HOME = canonicalize(join(REAL_HOME, ".openccx"));
 const PROTECTED_CODEX_HOME = canonicalize(join(REAL_HOME, ".codex"));
 /**
  * `~/Library/LaunchAgents` needs its own entry because HOME isolation does not reach it:
  * `os.homedir()` reads the password database, not `$HOME`, so a macOS test that rewrites
  * HOME still resolves `plistPath()` to the developer's real LaunchAgents directory. The
  * launchd install tests were doing exactly that — replacing the live
- * `com.opencodex.proxy.plist` with one whose token file, log path and Bun paths all point
+ * `com.openccx.proxy.plist` with one whose token file, log path and Bun paths all point
  * into a temp sandbox, for as long as the case ran. launchd holds its own parsed copy, so
  * nothing broke until the job next restarted.
  */
@@ -92,7 +92,7 @@ export function isTestHomeGuardArmed(): boolean {
  *
  * For the caller that must FILTER the real home out of a candidate list instead of refusing
  * one write: `serviceStatePaths()` in `src/service.ts` keeps a legacy
- * `~/.opencodex/service-state.json` entry so an install made before OPENCODEX_HOME existed
+ * `~/.opencodex/service-state.json` entry so an install made before OPENCCX_HOME existed
  * can still be found, and under an armed test process that entry is the developer's live
  * record. Exported so that filter cannot drift onto a weaker comparison — `resolve()` alone
  * calls `/var/folders/...` and `/private/var/folders/...` different paths, which is exactly
@@ -104,7 +104,7 @@ export function isProtectedHomeUnderTest(dir: string): boolean {
 }
 
 /**
- * Throw when an armed test process is about to write the real OpenCodex home.
+ * Throw when an armed test process is about to write the real Openccx home.
  *
  * Call FIRST inside a writer, before any mkdir/chmod/write, so a rejected write leaves
  * nothing behind. Silent no-op when disarmed (production) or when `dir` is any other
@@ -115,8 +115,8 @@ export function assertNotRealHomeUnderTest(dir: string): void {
   if (!isTestHomeGuardArmed()) return;
   if (canonicalize(dir) !== PROTECTED_HOME) return;
   throw new Error(
-    `refusing to write the real OpenCodex home (${PROTECTED_HOME}) from a test process. `
-    + "Point OPENCODEX_HOME at a temp directory for this test, or inject persistence "
+    `refusing to write the real Openccx home (${PROTECTED_HOME}) from a test process. `
+    + "Point OPENCCX_HOME at a temp directory for this test, or inject persistence "
     + "instead of calling the global writer (see devlog 260730_codex_rs_upstream_v2_live_handoff/070).",
   );
 }

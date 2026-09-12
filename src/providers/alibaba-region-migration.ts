@@ -3,14 +3,14 @@ import { providerConfigSeed } from "./derive";
 import { rewriteProviderReferences } from "./provider-id-rewrite";
 import { PROVIDER_REGISTRY } from "./registry";
 import { codexAccountNamespaceProviderCollisionError } from "../codex/account-namespace-match";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 const BEIJING_ID = "alibaba-token-plan";
 const INTL_ID = "alibaba-token-plan-intl";
 
 /**
  * Credentials and switches the user owns directly. Everything else on the moved
- * row is registry-derived Beijing metadata (`ocx provider add` and the GUI persist
+ * row is registry-derived Beijing metadata (`occx provider add` and the GUI persist
  * it, and registry enrichment only fills absent fields) and must NOT travel to the
  * international id — carrying it would leave the intl provider serving Singapore
  * while advertising the six-model Beijing Personal Edition catalog.
@@ -27,7 +27,7 @@ const INTL_ID = "alibaba-token-plan-intl";
 const USER_OWNED_FIELDS = ["apiKey", "apiKeyPool", "disabled", "baseUrl", "allowPrivateNetwork", "liveModels", "modelCosts"] as const;
 
 export interface AlibabaRegionMigrationProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   warnings: string[];
 }
@@ -43,11 +43,11 @@ function isInternationalEndpoint(baseUrl: string): boolean {
 
 /**
  * Seed the destination from the international registry entry, then overlay only
- * what the user owns. `providerConfigSeed` is the same function `ocx provider add`
+ * what the user owns. `providerConfigSeed` is the same function `occx provider add`
  * uses, so the migrated row is indistinguishable from one the user had created
  * against the international provider directly.
  */
-function buildIntlRow(source: OcxProviderConfig): OcxProviderConfig {
+function buildIntlRow(source: OccxProviderConfig): OccxProviderConfig {
   const entry = PROVIDER_REGISTRY.find(e => e.id === INTL_ID);
   // Fail fast rather than fabricate a row: a missing registry entry means the
   // destination this migration targets no longer exists.
@@ -97,7 +97,7 @@ function buildIntlRow(source: OcxProviderConfig): OcxProviderConfig {
  * land on — because choosing which setting wins is a user decision, not a
  * migration's.
  */
-export function projectAlibabaRegionMigration(config: OcxConfig): AlibabaRegionMigrationProjection {
+export function projectAlibabaRegionMigration(config: OccxConfig): AlibabaRegionMigrationProjection {
   const beijing = config.providers[BEIJING_ID];
   const savedBaseUrl = typeof beijing?.baseUrl === "string" ? beijing.baseUrl : "";
   if (!beijing || !savedBaseUrl || !isInternationalEndpoint(savedBaseUrl)) {

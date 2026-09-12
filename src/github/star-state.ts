@@ -1,7 +1,7 @@
 /**
  * GitHub star state for the GUI sidebar star control.
  *
- * Starring goes through the user's own `gh` login — opencodex never holds a
+ * Starring goes through the user's own `gh` login — openccx never holds a
  * GitHub token of its own. That makes three states possible, and the sidebar
  * needs to tell them apart:
  *

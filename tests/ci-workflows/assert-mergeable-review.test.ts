@@ -8,7 +8,7 @@ import { repoRoot as resolveRepoRoot } from "../helpers/repo-root";
 
 const repoRoot = resolveRepoRoot();
 const gate = join(repoRoot, "scripts", "ci", "assert-mergeable-review.sh");
-const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-mergeable-review-"));
+const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-mergeable-review-"));
 const mockBin = join(fixtureRoot, "bin");
 
 const fakeGh = `#!/usr/bin/env bash

@@ -76,7 +76,7 @@ function fixedRecord(scenarioId = "responses-core.protocol.request-shape") {
 
 describe("CL-10 public evidence core contract", () => {
   test("freezes the RFC 8785/domain-separated bundle and Ed25519 vector", () => {
-    const config = configDir("ocx-cl10-core-wire-");
+    const config = configDir("occx-cl10-core-wire-");
     installFixedPublisherKey(config);
     const bundle = signPublicEvidenceBundle({
       records: [fixedRecord()],
@@ -167,7 +167,7 @@ describe("CL-10 public evidence core contract", () => {
   });
 
   test("local signing rejects artifact bytes before creating publisher state", () => {
-    const config = configDir("ocx-cl10-core-artifact-");
+    const config = configDir("occx-cl10-core-artifact-");
     const contentBase64 = Buffer.from("credential-canary-1234567890", "utf8").toString("base64");
     const artifact = {
       artifactClass: "verifier_summary",

@@ -25,12 +25,12 @@ import {
   localLoopbackInferencePorts,
   localManagementOrigin,
 } from "../../src/lib/local-destinations";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const TAILNET = "100.76.170.81";
 const PUBLIC_PORT = 10_100;
 
-function hub(extra: Partial<OcxConfig> = {}): OcxConfig {
+function hub(extra: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: PUBLIC_PORT,
     hostname: TAILNET,
@@ -38,13 +38,13 @@ function hub(extra: Partial<OcxConfig> = {}): OcxConfig {
     defaultProvider: "openai",
     providers: { openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex" } },
     ...extra,
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 /** The review's six configurations, each in the branch it is supposed to reach. */
 const CONFIGURATIONS: Array<{
   label: string;
-  config: OcxConfig;
+  config: OccxConfig;
   origin: string;
   requiresAdmissionToken: boolean;
   loopbackPorts: number[];
@@ -170,7 +170,7 @@ describe("localLoopbackInferencePorts", () => {
   }
 
   test("a loopback or wildcard bind with a ported listener owns BOTH ports", () => {
-    // This is why the set exists: `ocx claude` must not rewrite one of its own destinations
+    // This is why the set exists: `occx claude` must not rewrite one of its own destinations
     // into the other and strip the admission token minted for it.
     for (const hostname of ["127.0.0.1", "0.0.0.0"]) {
       expect({ hostname, ports: localLoopbackInferencePorts(
@@ -189,16 +189,16 @@ describe("localLoopbackInferencePorts", () => {
 
 describe("localAdmissionToken", () => {
   const config = hub({
-    apiKeys: [{ id: "k1", name: "local", key: "ocx_data_configured", createdAt: "2026-01-01T00:00:00Z" }],
-  } as unknown as Partial<OcxConfig>);
+    apiKeys: [{ id: "k1", name: "local", key: "occx_data_configured", createdAt: "2026-01-01T00:00:00Z" }],
+  } as unknown as Partial<OccxConfig>);
 
   test("the environment token wins, then the configured key", () => {
-    expect(localAdmissionToken(config, { OPENCODEX_API_AUTH_TOKEN: " ocx_data_from_env " }))
-      .toBe("ocx_data_from_env");
+    expect(localAdmissionToken(config, { OPENCCX_API_AUTH_TOKEN: " occx_data_from_env " }))
+      .toBe("occx_data_from_env");
     // An empty token file path is still a lookup that finds nothing, so the configured key wins.
-    expect(localAdmissionToken(config, { OCX_API_TOKEN_FILE: "/nonexistent/ocx-token" }))
-      .toBe("ocx_data_configured");
-    expect(localAdmissionToken(undefined, { OCX_API_TOKEN_FILE: "/nonexistent/ocx-token" }))
+    expect(localAdmissionToken(config, { OCCX_API_TOKEN_FILE: "/nonexistent/occx-token" }))
+      .toBe("occx_data_configured");
+    expect(localAdmissionToken(undefined, { OCCX_API_TOKEN_FILE: "/nonexistent/occx-token" }))
       .toBeUndefined();
   });
 
@@ -207,8 +207,8 @@ describe("localAdmissionToken", () => {
     // authority. The ladder reads the DATA-plane variable, so an admin token in the environment
     // contributes nothing even when it is the only credential present.
     expect(localAdmissionToken({ apiKeys: [] }, {
-      OPENCODEX_ADMIN_AUTH_TOKEN: `ocx_admin_${"t".repeat(43)}`,
-      OCX_API_TOKEN_FILE: "/nonexistent/ocx-token",
+      OPENCCX_ADMIN_AUTH_TOKEN: `occx_admin_${"t".repeat(43)}`,
+      OCCX_API_TOKEN_FILE: "/nonexistent/occx-token",
     })).toBeUndefined();
   });
 });
@@ -253,7 +253,7 @@ describe("localManagementOrigin", () => {
 
   test("both resolvers agree on how a bind address becomes a dialable authority", () => {
     // Management has always had the bind-address fallback; inference now has the same one. The
-    // two must not disagree about a wildcard, a trailing dot, or a bare IPv6 literal, or `ocx
+    // two must not disagree about a wildcard, a trailing dot, or a bare IPv6 literal, or `occx
     // claude` would discover state on one host and send inference to another.
     const cases: Array<[string | undefined, string]> = [
       [undefined, "http://127.0.0.1:10100"],

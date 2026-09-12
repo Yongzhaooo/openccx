@@ -8,11 +8,11 @@ import { InitialConfigPublicationError } from "../config/initialize";
 import { redactUserPath } from "../lib/redact";
 import { enrichProviderFromCatalog } from "../oauth/key-providers";
 import { deriveInitProviders } from "../providers/derive";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 class InitCancelledError extends Error {
   constructor(readonly exitCode: 1 | 130) {
-    super(exitCode === 130 ? "Setup cancelled." : "stdin reached EOF while waiting for input. Re-run `ocx init` in an interactive terminal.");
+    super(exitCode === 130 ? "Setup cancelled." : "stdin reached EOF while waiting for input. Re-run `occx init` in an interactive terminal.");
   }
 }
 
@@ -70,7 +70,7 @@ export interface InitProvider {
 }
 
 /**
- * The full CLI provider menu, derived from the canonical provider registry so `ocx init`,
+ * The full CLI provider menu, derived from the canonical provider registry so `occx init`,
  * the GUI picker, key-login catalog, OAuth seeds, and metadata aliases cannot drift.
  */
 export function buildInitProviders(): InitProvider[] {
@@ -79,7 +79,7 @@ export function buildInitProviders(): InitProvider[] {
 
 const KIND_HEADING: Record<InitKind, string> = {
   forward: "ChatGPT login",
-  oauth: "Account login (OAuth — then run: ocx login <id>)",
+  oauth: "Account login (OAuth — then run: occx login <id>)",
   key: "API key (paste a key from the provider's dashboard)",
   local: "Local servers (usually no key)",
 };
@@ -113,7 +113,7 @@ export function cleanupOpenAiTierBackupAfterInit(configPath = getConfigPath()): 
 export async function runInit(): Promise<void> {
   const initial = observeInitialConfigState();
   if (initial === "exists") {
-    console.log(`Keeping existing config at ${redactUserPath(getConfigPath())}. Use \`ocx config\` or the dashboard to update it.`);
+    console.log(`Keeping existing config at ${redactUserPath(getConfigPath())}. Use \`occx config\` or the dashboard to update it.`);
     return;
   }
   if (initial === "invalid") {
@@ -124,7 +124,7 @@ export async function runInit(): Promise<void> {
   const prompt = createPrompt();
   let configCreated = false;
   try {
-    console.log("\n🔧 opencodex (ocx) setup\n");
+    console.log("\n🔧 openccx (occx) setup\n");
 
     const providers = buildInitProviders();
     printMenu(providers);
@@ -133,7 +133,7 @@ export async function runInit(): Promise<void> {
     const idx = parseInt(choice, 10) - 1;
 
     let providerName: string;
-    let providerConfig: OcxProviderConfig;
+    let providerConfig: OccxProviderConfig;
     let oauthHint = false;
 
     if (idx >= 0 && idx < providers.length) {
@@ -197,7 +197,7 @@ export async function runInit(): Promise<void> {
     const port = parseInt(portStr, 10) || 10100;
 
     initializeProviderModelSelection(providerName, providerConfig);
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...getDefaultConfig(),
       port,
       providers: { [providerName]: providerConfig },
@@ -214,14 +214,14 @@ export async function runInit(): Promise<void> {
     }
     configCreated = true;
     // Init writes a fresh config, so a stale pre-migration backup from a previous
-    // installation would make the next `ocx start` crash on a stale-backup
+    // installation would make the next `occx start` crash on a stale-backup
     // collision (issue #257). But only a STALE backup (unparseable, or already a
     // post-migration v2 snapshot) may be deleted; a backup that still parses as a
     // valid pre-migration (v1) config is a user-intentional rollback point and is
     // preserved by renaming it out of the collision path (sol review 260722).
     cleanupOpenAiTierBackupAfterInit();
     console.log(`\n✅ Config saved to ${redactUserPath(getConfigPath())}`);
-    if (oauthHint) console.log(`🔐 Authenticate this provider with:  ocx login ${providerName}`);
+    if (oauthHint) console.log(`🔐 Authenticate this provider with:  occx login ${providerName}`);
 
     const injectAnswer = await prompt.ask("Inject into Codex config.toml? [Y/n]: ");
     prompt.throwIfCancelled();
@@ -252,7 +252,7 @@ export async function runInit(): Promise<void> {
       }
     }
 
-    console.log(`\n🚀 Setup complete! Run 'ocx start' to start the proxy.`);
+    console.log(`\n🚀 Setup complete! Run 'occx start' to start the proxy.`);
     for (const line of modelSelectionGuidance(providerName)) console.log(line);
   } catch (error) {
     if (error instanceof InitCancelledError) {

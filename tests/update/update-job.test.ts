@@ -29,18 +29,18 @@ function fakeSpawn(result: SpawnResult): typeof import("node:child_process").spa
   return (() => ({ ...result, stderr: "", pid: 1, output: [], signal: null })) as never;
 }
 
-const prevHome = process.env.OPENCODEX_HOME;
+const prevHome = process.env.OPENCCX_HOME;
 let dir: string;
 
 beforeEach(() => {
-  dir = join(tmpdir(), `ocx-update-job-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  dir = join(tmpdir(), `occx-update-job-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, { recursive: true });
-  process.env.OPENCODEX_HOME = dir;
+  process.env.OPENCCX_HOME = dir;
 });
 
 afterEach(() => {
-  if (prevHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = prevHome;
   removeTreeWithRetry(dir);
 });
 
@@ -190,7 +190,7 @@ describe("GUI update check", () => {
 
     expect(result.canUpdate).toBe(true);
     expect(result.updateAvailable).toBe(true);
-    expect(result.command).toContain("ocx.mjs update --tag latest");
+    expect(result.command).toContain("occx.mjs update --tag latest");
   });
 
   test("reports source checkouts as manual-only", () => {
@@ -371,7 +371,7 @@ describe("GUI update execution decisions", () => {
         installer: "npm",
         updateAvailable: true,
         canUpdate: true,
-        command: "npm i -g opencodex@latest",
+        command: "npm i -g openccx@latest",
         releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       }),
       integrityFn: () => ({ ok: true as const, integrity: "sha512-testfixturevalue000000000" }),
@@ -425,7 +425,7 @@ describe("GUI update execution decisions", () => {
         installer: "npm",
         updateAvailable: true,
         canUpdate: true,
-        command: "npm install -g opencodex@2.7.41",
+        command: "npm install -g openccx@2.7.41",
         releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       }),
       spawnWorkerFn: () => { throw new Error("spawn denied for Jane Doe"); },
@@ -435,7 +435,7 @@ describe("GUI update execution decisions", () => {
     expect(persisted).not.toContain("Jane Doe");
     expect(persisted).toContain("bytes withheld");
     // The command shape survives: it is rendered from validated parts, not copied.
-    expect(persisted).toContain("opencodex@2.7.41");
+    expect(persisted).toContain("openccx@2.7.41");
   });
 
   test("a renamed error cannot smuggle a name through the type field", () => {
@@ -452,7 +452,7 @@ describe("GUI update execution decisions", () => {
         installer: "npm",
         updateAvailable: true,
         canUpdate: true,
-        command: "npm install -g opencodex@2.7.41",
+        command: "npm install -g openccx@2.7.41",
         releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       }),
       spawnWorkerFn: () => { throw renamed; },
@@ -558,7 +558,7 @@ describe("GUI update execution decisions", () => {
     expect(() => startUpdateJob("latest", false, {
       checkForUpdateFn: () => ({
         currentVersion: "2.7.40", latestVersion: "2.7.41", channel: "latest", installer: "npm",
-        updateAvailable: true, canUpdate: true, command: "npm install -g opencodex@2.7.41",
+        updateAvailable: true, canUpdate: true, command: "npm install -g openccx@2.7.41",
         releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       }),
       spawnWorkerFn: () => { throw hostile; },
@@ -569,19 +569,19 @@ describe("GUI update execution decisions", () => {
   });
 
   test("npm worker uses the Node launcher update path", () => {
-    const cmd = updateExecutionCommand("npm", "preview", "/pkg/bin/ocx.mjs");
+    const cmd = updateExecutionCommand("npm", "preview", "/pkg/bin/occx.mjs");
     expect(cmd.bin).toMatch(/^node/);
-    expect(cmd.args).toEqual(["/pkg/bin/ocx.mjs", "update", "--tag", "preview"]);
+    expect(cmd.args).toEqual(["/pkg/bin/occx.mjs", "update", "--tag", "preview"]);
   });
 
   test("pnpm worker uses the Node launcher update path", () => {
-    const cmd = updateExecutionCommand("pnpm", "latest", "/pkg/bin/ocx.mjs");
+    const cmd = updateExecutionCommand("pnpm", "latest", "/pkg/bin/occx.mjs");
     expect(cmd.bin).toMatch(/^node/);
-    expect(cmd.args).toEqual(["/pkg/bin/ocx.mjs", "update", "--tag", "latest"]);
+    expect(cmd.args).toEqual(["/pkg/bin/occx.mjs", "update", "--tag", "latest"]);
   });
 
   test("pnpm GUI worker passes the verified active launcher into restart recovery", async () => {
-    const activeLauncher = "/pnpm/owner/global/v11/node_modules/@bitkyc08/opencodex/bin/ocx.mjs";
+    const activeLauncher = "/pnpm/owner/global/v11/node_modules/@bitkyc08/opencodex/bin/occx.mjs";
     let restartLauncher = "";
     let now = 0;
     await runGuiUpdateWorker("pnpm-active-launcher", "latest", true, {
@@ -592,7 +592,7 @@ describe("GUI update execution decisions", () => {
         installer: "pnpm",
         updateAvailable: true,
         canUpdate: true,
-        command: "node /old/bin/ocx.mjs update --tag latest",
+        command: "node /old/bin/occx.mjs update --tag latest",
         releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       }),
       resolvePnpmOwnerFn: () => ({
@@ -624,22 +624,22 @@ describe("GUI update execution decisions", () => {
   });
 
   test("restart command separates service and direct proxy modes", () => {
-    expect(restartCommand(true, "npm", "/pkg/bin/ocx.mjs")).toMatchObject({
+    expect(restartCommand(true, "npm", "/pkg/bin/occx.mjs")).toMatchObject({
       mode: "service",
-      args: ["/pkg/bin/ocx.mjs", "service", "repair"],
+      args: ["/pkg/bin/occx.mjs", "service", "repair"],
     });
-    expect(restartCommand(false, "npm", "/pkg/bin/ocx.mjs")).toMatchObject({
+    expect(restartCommand(false, "npm", "/pkg/bin/occx.mjs")).toMatchObject({
       mode: "proxy",
-      args: ["/pkg/bin/ocx.mjs", "start"],
+      args: ["/pkg/bin/occx.mjs", "start"],
     });
-    expect(restartCommand(true, "pnpm", "/pkg/bin/ocx.mjs")).toMatchObject({
+    expect(restartCommand(true, "pnpm", "/pkg/bin/occx.mjs")).toMatchObject({
       mode: "service",
-      args: ["/pkg/bin/ocx.mjs", "service", "repair"],
+      args: ["/pkg/bin/occx.mjs", "service", "repair"],
     });
   });
 
   test("restart recovery uses the verified active launcher for direct and service paths", async () => {
-    const activeLauncher = "/pnpm/owner/global/v11/node_modules/@bitkyc08/opencodex/bin/ocx.mjs";
+    const activeLauncher = "/pnpm/owner/global/v11/node_modules/@bitkyc08/opencodex/bin/occx.mjs";
     const directJob: UpdateJobState = {
       id: "restart-active-launcher-direct",
       status: "restarting",
@@ -723,20 +723,20 @@ describe("GUI update execution decisions", () => {
   });
 
   test("proxy restart pins --port so post-update start does not hop to an ephemeral port", () => {
-    const proxy = restartCommand(false, "npm", "/pkg/bin/ocx.mjs", 10100);
+    const proxy = restartCommand(false, "npm", "/pkg/bin/occx.mjs", 10100);
     expect(proxy.mode).toBe("proxy");
-    expect(proxy.args).toEqual(["/pkg/bin/ocx.mjs", "start", "--port", "10100"]);
+    expect(proxy.args).toEqual(["/pkg/bin/occx.mjs", "start", "--port", "10100"]);
     expect(proxy.display).toContain("start --port 10100");
-    // The service refresh takes no --port at the argv level; wrappers bake it via OCX_BAKE_PORT.
-    expect(restartCommand(true, "npm", "/pkg/bin/ocx.mjs", 10100).args).toEqual([
-      "/pkg/bin/ocx.mjs", "service", "repair",
+    // The service refresh takes no --port at the argv level; wrappers bake it via OCCX_BAKE_PORT.
+    expect(restartCommand(true, "npm", "/pkg/bin/occx.mjs", 10100).args).toEqual([
+      "/pkg/bin/occx.mjs", "service", "repair",
     ]);
   });
 
   test("restart waits on the captured pre-update port unconditionally and pins the spawn to it", async () => {
     // The stop-first update flow clears pid/runtime state before restartAfterUpdate runs,
     // so the wait must fire even with no readable pid — driven here via the io seam.
-    const waited: Array<{ port: number; hostname: string; opts?: { killOcxHolders?: boolean; onlyKillPids?: number[]; killAllOcxOnPort?: boolean } }> = [];
+    const waited: Array<{ port: number; hostname: string; opts?: { killOccxHolders?: boolean; onlyKillPids?: number[]; killAllOccxOnPort?: boolean } }> = [];
     const spawned: Array<{ port?: number }> = [];
     const job: UpdateJobState = {
       id: "restart-io",
@@ -760,9 +760,9 @@ describe("GUI update execution decisions", () => {
           port,
           hostname: hostname ?? "",
           opts: {
-            killOcxHolders: opts?.killOcxHolders,
+            killOccxHolders: opts?.killOccxHolders,
             onlyKillPids: opts?.onlyKillPids,
-            killAllOcxOnPort: (opts as { killAllOcxOnPort?: boolean } | undefined)?.killAllOcxOnPort,
+            killAllOccxOnPort: (opts as { killAllOccxOnPort?: boolean } | undefined)?.killAllOccxOnPort,
           },
         });
         return true;
@@ -774,13 +774,13 @@ describe("GUI update execution decisions", () => {
     expect(waited).toEqual([{
       port: 12345,
       hostname: "127.0.0.1",
-      opts: { killOcxHolders: true, onlyKillPids: [], killAllOcxOnPort: true },
+      opts: { killOccxHolders: true, onlyKillPids: [], killAllOccxOnPort: true },
     }]);
     expect(spawned).toEqual([{ port: 12345 }]);
   });
 
-  test("restart reclaim allowlists the trusted oldPid and kills any ocx on the port", async () => {
-    const optsSeen: Array<{ killOcxHolders?: boolean; onlyKillPids?: number[]; killAllOcxOnPort?: boolean }> = [];
+  test("restart reclaim allowlists the trusted oldPid and kills any occx on the port", async () => {
+    const optsSeen: Array<{ killOccxHolders?: boolean; onlyKillPids?: number[]; killAllOccxOnPort?: boolean }> = [];
     const job: UpdateJobState = {
       id: "restart-oldpid",
       status: "restarting",
@@ -800,21 +800,21 @@ describe("GUI update execution decisions", () => {
       listListenPidsFn: () => [],
       waitForPort: async (_port, _hostname, opts) => {
         optsSeen.push({
-          killOcxHolders: opts?.killOcxHolders,
+          killOccxHolders: opts?.killOccxHolders,
           onlyKillPids: opts?.onlyKillPids,
-          killAllOcxOnPort: (opts as { killAllOcxOnPort?: boolean } | undefined)?.killAllOcxOnPort,
+          killAllOccxOnPort: (opts as { killAllOccxOnPort?: boolean } | undefined)?.killAllOccxOnPort,
         });
         return true;
       },
       spawnStart: () => {},
     });
-    expect(optsSeen).toEqual([{ killOcxHolders: true, onlyKillPids: [4242], killAllOcxOnPort: true }]);
+    expect(optsSeen).toEqual([{ killOccxHolders: true, onlyKillPids: [4242], killAllOccxOnPort: true }]);
   });
 
-  test("restart reclaim also allowlists leftover ocx listeners on the captured port", async () => {
+  test("restart reclaim also allowlists leftover occx listeners on the captured port", async () => {
     const optsSeen: number[][] = [];
     const job: UpdateJobState = {
-      id: "restart-leftover-ocx",
+      id: "restart-leftover-occx",
       status: "restarting",
       startedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -831,7 +831,7 @@ describe("GUI update execution decisions", () => {
       serviceInstalledFn: () => false,
       // Simulate a respawned bun child that is not the pre-update PID.
       listListenPidsFn: () => [100, 200],
-      verifyOcxFn: (pid) => (pid === 100 || pid === 200 ? pid : null),
+      verifyOccxFn: (pid) => (pid === 100 || pid === 200 ? pid : null),
       waitForPort: async (_port, _hostname, opts) => {
         optsSeen.push([...(opts?.onlyKillPids ?? [])].sort((a, b) => a - b));
         return true;
@@ -900,7 +900,7 @@ describe("GUI update execution decisions", () => {
     expect(readUpdateJob(job.id)?.log.some(line => line.includes("waiting for ghost LISTEN rows to clear before pinned start"))).toBe(true);
   });
 
-  test("service restart waits on the captured port and clears OCX_BAKE_PORT after install", async () => {
+  test("service restart waits on the captured port and clears OCCX_BAKE_PORT after install", async () => {
     const waited: Array<{ port: number; hostname: string }> = [];
     const bakeDuringInstall: string[] = [];
     const job: UpdateJobState = {
@@ -917,34 +917,34 @@ describe("GUI update execution decisions", () => {
       log: [],
     };
     writeFileSync(updateJobPath(job.id), JSON.stringify(job));
-    const prev = process.env.OCX_BAKE_PORT;
-    delete process.env.OCX_BAKE_PORT;
+    const prev = process.env.OCCX_BAKE_PORT;
+    delete process.env.OCCX_BAKE_PORT;
     try {
       await restartAfterUpdateForTests(job, { port: 18765, hostname: "127.0.0.1" }, {
         serviceInstalledFn: () => true,
         serviceViableFn: () => true,
         // The service-recovery gate now asks the port before skipping the direct-start
-        // fallback. This test is about the OCX_BAKE_PORT lifecycle, not the recovery
+        // fallback. This test is about the OCCX_BAKE_PORT lifecycle, not the recovery
         // decision, so answer the probe rather than letting it reach a real socket:
         // without it the run falls through to the direct-start path, calls waitFn a
         // second time, and times out on the ghost-LISTEN wait.
         probeProxy: async () => true,
         waitForPort: async (port, hostname) => {
           waited.push({ port, hostname: hostname ?? "" });
-          expect(process.env.OCX_BAKE_PORT).toBeUndefined();
+          expect(process.env.OCCX_BAKE_PORT).toBeUndefined();
           return true;
         },
         runService: () => {
-          bakeDuringInstall.push(process.env.OCX_BAKE_PORT ?? "");
+          bakeDuringInstall.push(process.env.OCCX_BAKE_PORT ?? "");
           return { status: 0 };
         },
       });
       expect(waited).toEqual([{ port: 18765, hostname: "127.0.0.1" }]);
       expect(bakeDuringInstall).toEqual(["18765"]);
-      expect(process.env.OCX_BAKE_PORT).toBeUndefined();
+      expect(process.env.OCCX_BAKE_PORT).toBeUndefined();
     } finally {
-      if (prev === undefined) delete process.env.OCX_BAKE_PORT;
-      else process.env.OCX_BAKE_PORT = prev;
+      if (prev === undefined) delete process.env.OCCX_BAKE_PORT;
+      else process.env.OCCX_BAKE_PORT = prev;
     }
   });
 
@@ -964,8 +964,8 @@ describe("GUI update execution decisions", () => {
       log: [],
     };
     writeFileSync(updateJobPath(job.id), JSON.stringify(job));
-    const prevService = process.env.OCX_SERVICE;
-    delete process.env.OCX_SERVICE;
+    const prevService = process.env.OCCX_SERVICE;
+    delete process.env.OCCX_SERVICE;
     try {
       await restartAfterUpdateForTests(job, { port: 19999, hostname: "127.0.0.1" }, {
         serviceInstalledFn: () => true,
@@ -979,12 +979,12 @@ describe("GUI update execution decisions", () => {
       // The fallback must fire: direct proxy start instead of throwing.
       expect(spawned).toEqual([{ port: 19999 }]);
     } finally {
-      if (prevService === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prevService;
+      if (prevService === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prevService;
     }
   });
 
-  // 260804 #970: the Windows GUI update worker (OCX_SERVICE=1, never elevated) used to
+  // 260804 #970: the Windows GUI update worker (OCCX_SERVICE=1, never elevated) used to
   // skip the service refresh entirely, because it ran `service install` whose scheduler
   // path always reaches `schtasks /create`. `repair` never calls /create, so the skip's
   // reason is gone and the dashboard-triggered update — the most common Windows path —
@@ -1008,8 +1008,8 @@ describe("GUI update execution decisions", () => {
       log: [],
     };
     writeFileSync(updateJobPath(job.id), JSON.stringify(job));
-    const prevService = process.env.OCX_SERVICE;
-    process.env.OCX_SERVICE = "1";
+    const prevService = process.env.OCCX_SERVICE;
+    process.env.OCCX_SERVICE = "1";
     try {
       await restartAfterUpdateForTests(job, { port: 19998, hostname: "127.0.0.1" }, {
         platform: "win32",
@@ -1032,8 +1032,8 @@ describe("GUI update execution decisions", () => {
       expect(ranService[0]).not.toContain("install");
       expect(serviceTimeouts).toEqual([150_000]);
     } finally {
-      if (prevService === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prevService;
+      if (prevService === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prevService;
     }
   });
 
@@ -1086,8 +1086,8 @@ describe("GUI update execution decisions", () => {
       log: [],
     };
     writeFileSync(updateJobPath(job.id), JSON.stringify(job));
-    const prevService = process.env.OCX_SERVICE;
-    delete process.env.OCX_SERVICE;
+    const prevService = process.env.OCCX_SERVICE;
+    delete process.env.OCCX_SERVICE;
     try {
       await restartAfterUpdateForTests(job, { port: 19100, hostname: "127.0.0.1" }, {
         serviceInstalledFn: () => true,
@@ -1104,8 +1104,8 @@ describe("GUI update execution decisions", () => {
         line.includes("not viable") && line.includes("direct proxy start"),
       )).toBe(true);
     } finally {
-      if (prevService === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prevService;
+      if (prevService === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prevService;
     }
   });
 
@@ -1518,7 +1518,7 @@ describe("GUI update execution decisions", () => {
     const ok = await finishGuiUpdateRestart(job, { port: 10100, hostname: "127.0.0.1" }, "npm", {
       serviceInstalledFn: () => false,
       probeProxy: async () => {
-        // Only becomes healthy after the explicit restart (launcher printed `ocx start` only).
+        // Only becomes healthy after the explicit restart (launcher printed `occx start` only).
         return restartCalls > 0;
       },
       probeProxyIdentity: async () => (
@@ -1702,7 +1702,7 @@ describe("GUI update execution decisions", () => {
       channel: "latest",
       installer: "npm",
       restart: true,
-      command: "node /pkg/bin/ocx.mjs update --tag latest",
+      command: "node /pkg/bin/occx.mjs update --tag latest",
       releaseNotesUrl: "https://github.com/lidge-jun/opencodex/releases/latest",
       log: [],
     };
@@ -1807,7 +1807,7 @@ describe("immutable update target (WP160)", () => {
   });
 
   test("bun worker execution pins the resolved version through updateExecutionCommand", () => {
-    const cmd = updateExecutionCommand("bun", "latest", "/pkg/bin/ocx.mjs", "2.7.24");
+    const cmd = updateExecutionCommand("bun", "latest", "/pkg/bin/occx.mjs", "2.7.24");
     expect(cmd.bin).toBe(process.platform === "win32" ? process.execPath : "bun");
     expect(cmd.args).toEqual(["add", "-g", "@bitkyc08/opencodex@2.7.24"]);
     expect(cmd.display).toContain("@2.7.24");
@@ -1895,8 +1895,8 @@ describe("service recovery is health-gated, not viability-gated", () => {
   ): Promise<number[]> {
     const spawned: number[] = [];
     let now = 0;
-    const prevService = process.env.OCX_SERVICE;
-    delete process.env.OCX_SERVICE;
+    const prevService = process.env.OCCX_SERVICE;
+    delete process.env.OCCX_SERVICE;
     try {
       await restartAfterUpdateForTests(healthGateJob(id), { port: 18765, hostname: "127.0.0.1" }, {
         serviceInstalledFn: () => true,
@@ -1908,8 +1908,8 @@ describe("service recovery is health-gated, not viability-gated", () => {
         ...io,
       });
     } finally {
-      if (prevService === undefined) delete process.env.OCX_SERVICE;
-      else process.env.OCX_SERVICE = prevService;
+      if (prevService === undefined) delete process.env.OCCX_SERVICE;
+      else process.env.OCCX_SERVICE = prevService;
     }
     return spawned;
   }

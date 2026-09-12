@@ -1,5 +1,5 @@
 import { createRegisteredAdapter } from "../adapters/registry";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { isWirePinnedModel, MODEL_ADAPTER_OVERRIDE_ALLOWED, pinnedWireAdapter } from "../types";
 import { isCanonicalOpenAiForwardProvider } from "../providers/openai-tiers";
 import { type InboundWire, providerModelWireDefault } from "../providers/registry";
@@ -20,9 +20,9 @@ import { type InboundWire, providerModelWireDefault } from "../providers/registr
 export function resolveWireProtocolOverride(
   providerName: string,
   modelId: string,
-  providerConfig: OcxProviderConfig,
+  providerConfig: OccxProviderConfig,
   inbound: InboundWire = "responses",
-): OcxProviderConfig {
+): OccxProviderConfig {
   const pinned = pinnedWireAdapter(providerName, modelId);
   if (pinned && providerConfig.adapter !== pinned) {
     return { ...providerConfig, adapter: pinned };
@@ -49,7 +49,7 @@ export function resolveWireProtocolOverride(
 
 /** Build the provider adapter for a resolved provider config. */
 export function resolveAdapter(
-  providerConfig: OcxProviderConfig,
+  providerConfig: OccxProviderConfig,
   cacheRetention?: "none" | "short" | "long",
   providerId?: string,
 ) {

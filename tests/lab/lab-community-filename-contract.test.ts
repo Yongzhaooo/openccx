@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 function configDir(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-cl10-community-filenames-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-cl10-community-filenames-"));
   roots.push(root);
   return root;
 }

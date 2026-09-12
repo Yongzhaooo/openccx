@@ -13,10 +13,10 @@ import {
   type DesktopDisconnectReceipt, type DesktopRemoteOwner,
 } from "../../src/claude/desktop-remote-store";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const owner: DesktopRemoteOwner = { serverUrl: "https://hub.example.test", apiKeyId: "fixture-key", connectedAt: "2026-09-06T00:00:00.000Z" };
-const token = "ocx_data_store_fixture_current";
+const token = "occx_data_store_fixture_current";
 const fingerprint = serviceApiTokenFingerprint(token);
 const hash = (text: string) => serviceApiTokenFingerprint(text);
 let dir: string, library: string, previousHome: string | undefined, previousLibrary: string | undefined;
@@ -29,7 +29,7 @@ function initial(value: Record<string, unknown>, selected = "original"): void {
   atomicWriteFile(join(library, "original.json"), JSON.stringify(value));
   atomicWriteFile(join(library, "foreign.json"), JSON.stringify({ foreign: true }));
   atomicWriteFile(join(library, "_meta.json"), JSON.stringify({
-    appliedId: selected, customMetadata: "keep", entries: [{ id: "original", name: "opencodex", custom: true }, { id: "foreign", name: "Personal" }],
+    appliedId: selected, customMetadata: "keep", entries: [{ id: "original", name: "openccx", custom: true }, { id: "foreign", name: "Personal" }],
   }));
 }
 function remote(key = token) {
@@ -44,16 +44,16 @@ function apply() {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  previousLibrary = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  dir = realpathSync(mkdtempSync(join(tmpdir(), "ocx-desktop-store-")));
+  previousHome = process.env.OPENCCX_HOME;
+  previousLibrary = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  dir = realpathSync(mkdtempSync(join(tmpdir(), "occx-desktop-store-")));
   library = join(dir, "desktop");
-  process.env.OPENCODEX_HOME = join(dir, "ocx");
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = library;
+  process.env.OPENCCX_HOME = join(dir, "occx");
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = library;
   saveConfig({ port: 10100, defaultProvider: "test", providers: { test: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", allowPrivateNetwork: true, liveModels: false, models: ["fixture-model"] } }, runtimeRole: "client", client: {
     ...owner, managementUrl: owner.serverUrl, managementTransport: "direct", selectedClients: ["claude"],
-    tokenEnv: "OPENCODEX_API_AUTH_TOKEN", tokenFingerprint: fingerprint, protocolVersion: 1,
-  } } as OcxConfig);
+    tokenEnv: "OPENCCX_API_AUTH_TOKEN", tokenFingerprint: fingerprint, protocolVersion: 1,
+  } } as OccxConfig);
   writeServiceApiTokenFile(token);
   expect(readConfigDiagnostics().source).toBe("file");
   expect(loadConfig().client?.apiKeyId).toBe(owner.apiKeyId);
@@ -63,8 +63,8 @@ beforeEach(() => {
 
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = previousHome;
-  if (previousLibrary === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR; else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = previousHome;
+  if (previousLibrary === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR; else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousLibrary;
   removeTreeWithRetry(dir);
 });
 
@@ -108,7 +108,7 @@ describe("connection-owned Desktop projection store", () => {
       { runtimeRole: "client" },
       { runtimeRole: "standalone", client: {} },
     ]) {
-      atomicWriteFile(join(dir, "ocx", "config.json"), JSON.stringify(malformed));
+      atomicWriteFile(join(dir, "occx", "config.json"), JSON.stringify(malformed));
       expect(removeDesktop3pStandardPivot({ lifecycleLockDeps: deps })).toMatchObject({ ok: false, changed: false, kind: "unsafe" });
       expect(writeDesktop3pConfig(10100, [], [], undefined, "static", undefined, undefined, deps).written).toBe(false);
       expect(hash(readFileSync(join(library, "original.json"), "utf8"))).toBe(before);
@@ -119,13 +119,13 @@ describe("connection-owned Desktop projection store", () => {
   test("forged lease rejects before creating storage; unused inspect has no footprint", () => {
     expect(inspectRemoteDesktopStore(owner).kind).toBe("absent");
     expect(() => restoreRemoteDesktopStore({} as ClientLifecycleHeld, { owner, knownTokenFingerprints: [fingerprint] })).toThrow("client_lifecycle_lease_invalid");
-    expect(existsSync(join(dir, "ocx", "desktop-remote"))).toBe(false);
+    expect(existsSync(join(dir, "occx", "desktop-remote"))).toBe(false);
   });
 
   test("keeps first local baseline across apply and preserves later foreign fields/selection on restore", () => {
     initial({ ...remote("local-profile-key"), inferenceGatewayBaseUrl: "http://127.0.0.1:10100", custom: "old" });
     expect(apply().ok).toBe(true);
-    const baselinePath = join(dir, "ocx", "desktop-remote", "baseline.json");
+    const baselinePath = join(dir, "occx", "desktop-remote", "baseline.json");
     const originalBaselineHash = hash(readFileSync(baselinePath, "utf8"));
     if (process.platform !== "win32") expect(statSync(baselinePath).mode & 0o777).toBe(0o600);
     expect(apply().ok).toBe(true);
@@ -151,8 +151,8 @@ describe("connection-owned Desktop projection store", () => {
     expect(profile().inferenceProvider).toBeUndefined();
     expect(profile().custom).toBe("preserved");
     expect(read(join(library, "original.json.bak")).inferenceGatewayApiKey).toBeUndefined();
-    const baseline = readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8");
-    const state = readFileSync(join(dir, "ocx", "desktop-remote", "state.json"), "utf8");
+    const baseline = readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8");
+    const state = readFileSync(join(dir, "occx", "desktop-remote", "state.json"), "utf8");
     expect(baseline.includes(token)).toBe(false);
     expect(state.includes(token)).toBe(false);
     expect(read(join(library, "_meta.json")).appliedId).toBe("original");
@@ -161,10 +161,10 @@ describe("connection-owned Desktop projection store", () => {
   test("rotation changes only the key and keeps fallback baseline immutable", () => {
     initial(remote());
     expect(apply().ok).toBe(true);
-    const baseline = hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"));
+    const baseline = hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"));
     const before = profile(); const beforeMeta = hash(readFileSync(join(library, "_meta.json"), "utf8"));
     writeTokenBackup(fingerprint);
-    const replacementKey = "ocx_data_store_fixture_replacement";
+    const replacementKey = "occx_data_store_fixture_replacement";
     const pending = loadConfig();
     pending.client!.pendingOperation = { kind: "rotate", rotationId: "fixture-rotation", newKeyIssuedAt: owner.connectedAt, oldKeyBackupPath: serviceApiTokenBackupPath() };
     saveConfig(pending);
@@ -176,7 +176,7 @@ describe("connection-owned Desktop projection store", () => {
     delete before.inferenceGatewayApiKey; delete after.inferenceGatewayApiKey;
     expect(after).toEqual(before);
     expect(hash(readFileSync(join(library, "_meta.json"), "utf8"))).toBe(beforeMeta);
-    expect(hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baseline);
+    expect(hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baseline);
     expect(existsSync(join(library, "original.json.bak"))).toBe(false);
     replaceServiceApiTokenFile(token);
     const rollback = locked(held => replaceRemoteDesktopCredential(held, { owner, expectedTokenFingerprint: hash(replacementKey), replacementKey: token }));
@@ -191,7 +191,7 @@ describe("connection-owned Desktop projection store", () => {
     const before = hash(readFileSync(join(library, "original.json"), "utf8"));
     expect(locked(held => restoreRemoteDesktopStore(held, { owner, knownTokenFingerprints: [fingerprint] }))).toMatchObject({ ok: false, reason: "conflict" });
     expect(hash(readFileSync(join(library, "original.json"), "utf8"))).toBe(before);
-    writeFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "{}", { mode: 0o600 });
+    writeFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "{}", { mode: 0o600 });
     expect(inspectRemoteDesktopCleanup().kind).toBe("unsafe");
   });
 
@@ -204,10 +204,10 @@ describe("connection-owned Desktop projection store", () => {
     });
     try { expect(apply()).toMatchObject({ ok: false, changed: true, reason: "recovery_required" }); }
     finally { failure.mockRestore(); }
-    const baseline = hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"));
+    const baseline = hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"));
     expect(apply().ok).toBe(true);
     expect(read(join(library, "_meta.json")).appliedId).toBe("original");
-    expect(hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baseline);
+    expect(hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baseline);
   });
 
   test("direct restore retains new-target creation evidence after metadata failures", () => {
@@ -223,13 +223,13 @@ describe("connection-owned Desktop projection store", () => {
     const applyFailure = failMetadata();
     try { expect(apply()).toMatchObject({ ok: false, changed: true, reason: "recovery_required" }); }
     finally { applyFailure.mockRestore(); }
-    const statePath = join(dir, "ocx", "desktop-remote", "state.json");
+    const statePath = join(dir, "occx", "desktop-remote", "state.json");
     const interrupted = read(statePath);
     const targetId = String(interrupted.targetId);
     const targetPath = join(library, `${targetId}.json`);
     expect(existsSync(targetPath)).toBe(true);
     expect((read(join(library, "_meta.json")).entries as Array<{ id: string }>).some(entry => entry.id === targetId)).toBe(false);
-    const baselineHash = hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"));
+    const baselineHash = hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"));
     const receipt: DesktopDisconnectReceipt = { version: 1, owner, tokenFingerprint: fingerprint, keepCatalog: false, phase: "prepared" };
     locked(held => writeDesktopDisconnectReceipt(held, null, receipt));
     // A real prepared disconnect already bars reapply; recovery must use restore.
@@ -248,12 +248,12 @@ describe("connection-owned Desktop projection store", () => {
     expect(inspectRemoteDesktopStore(owner).kind).toBe("restored");
     expect(read(join(library, "_meta.json")).appliedId).toBe("foreign");
     expect(read(join(library, "_meta.json")).foreignMetadata).toBe(true);
-    expect(hash(readFileSync(join(dir, "ocx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baselineHash);
+    expect(hash(readFileSync(join(dir, "occx", "desktop-remote", "baseline.json"), "utf8"))).toBe(baselineHash);
   });
 
   test.each([false, true])("metadata capacity permits only an existing owned target (reuse=%s)", reuseOwned => {
     const entries = Array.from({ length: 256 }, (_, index) => ({
-      id: `entry-${index}`, name: reuseOwned && index === 0 ? "opencodex" : `Personal ${index}`,
+      id: `entry-${index}`, name: reuseOwned && index === 0 ? "openccx" : `Personal ${index}`,
     }));
     for (const entry of entries) writeFileSync(join(library, `${entry.id}.json`), JSON.stringify({ foreign: entry.id }));
     atomicWriteFile(join(library, "_meta.json"), JSON.stringify({ appliedId: "entry-0", entries }));
@@ -271,8 +271,8 @@ describe("connection-owned Desktop projection store", () => {
       expect(result).toMatchObject({ ok: false, changed: false, reason: "conflict" });
       expect(hash(readFileSync(join(library, "_meta.json"), "utf8"))).toBe(beforeMeta);
       expect(hash(readFileSync(join(library, "entry-0.json"), "utf8"))).toBe(beforeTarget);
-      expect(existsSync(join(dir, "ocx", "desktop-remote", "baseline.json"))).toBe(false);
-      expect(existsSync(join(dir, "ocx", "desktop-remote", "state.json"))).toBe(false);
+      expect(existsSync(join(dir, "occx", "desktop-remote", "baseline.json"))).toBe(false);
+      expect(existsSync(join(dir, "occx", "desktop-remote", "state.json"))).toBe(false);
     }
   });
 
@@ -282,14 +282,14 @@ describe("connection-owned Desktop projection store", () => {
     const otherLibrary = join(dir, "other-desktop");
     mkdirSync(otherLibrary, { recursive: true });
     atomicWriteFile(join(otherLibrary, "other.json"), JSON.stringify(remote()));
-    atomicWriteFile(join(otherLibrary, "_meta.json"), JSON.stringify({ appliedId: "other", entries: [{ id: "other", name: "opencodex" }] }));
+    atomicWriteFile(join(otherLibrary, "_meta.json"), JSON.stringify({ appliedId: "other", entries: [{ id: "other", name: "openccx" }] }));
     const config = loadConfig(); config.clientIntegrations = { "claude-desktop": false }; saveConfig(config);
     const paths = [join(library, "original.json"), join(library, "_meta.json"), join(otherLibrary, "other.json"), join(otherLibrary, "_meta.json")];
     const before = paths.map(path => hash(readFileSync(path, "utf8")));
-    const statePath = join(dir, "ocx", "desktop-remote", "state.json");
+    const statePath = join(dir, "occx", "desktop-remote", "state.json");
     const beforeState = existsSync(statePath) ? hash(readFileSync(statePath, "utf8")) : null;
     const result = removeDesktop3pStandardPivot({
-      env: { ...process.env, OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: otherLibrary },
+      env: { ...process.env, OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: otherLibrary },
       lifecycleLockDeps: { lockPath: join(dir, "locks", "mismatch.sqlite") },
     });
     expect(result).toMatchObject({ ok: false, changed: false, reason: "desktop_library_identity_changed" });
@@ -306,18 +306,18 @@ describe("connection-owned Desktop projection store", () => {
     }));
     expect(result).toMatchObject({ ok: false, changed: false, reason: "unsafe" });
     expect(hash(readFileSync(join(library, "original.json"), "utf8"))).toBe(before);
-    expect(existsSync(join(dir, "ocx", "desktop-remote", "baseline.json"))).toBe(false);
+    expect(existsSync(join(dir, "occx", "desktop-remote", "baseline.json"))).toBe(false);
   });
 
   test("unsafe metadata IDs and duplicate rows never create a baseline", () => {
     initial(remote());
     const metaPath = join(library, "_meta.json");
     const meta = read(metaPath);
-    meta.entries = [{ id: "original", name: "opencodex" }, { id: "original", name: "Other" }];
+    meta.entries = [{ id: "original", name: "openccx" }, { id: "original", name: "Other" }];
     atomicWriteFile(metaPath, JSON.stringify(meta));
     expect(apply()).toMatchObject({ ok: false, reason: "unsafe" });
-    expect(existsSync(join(dir, "ocx", "desktop-remote", "baseline.json"))).toBe(false);
-    meta.appliedId = "../escape"; meta.entries = [{ id: "../escape", name: "opencodex" }];
+    expect(existsSync(join(dir, "occx", "desktop-remote", "baseline.json"))).toBe(false);
+    meta.appliedId = "../escape"; meta.entries = [{ id: "../escape", name: "openccx" }];
     atomicWriteFile(metaPath, JSON.stringify(meta));
     expect(inspectRemoteDesktopStore(owner).kind).toBe("unsafe");
   });
@@ -352,7 +352,7 @@ describe("connection-owned Desktop projection store", () => {
     removeServiceApiTokenFileIfOwned(fingerprint);
     const config = loadConfig(); delete config.client; config.runtimeRole = "standalone"; saveConfig(config);
     expect(locked(held => finishRemoteDesktopCleanup(held, owner)).ok).toBe(true);
-    expect(existsSync(join(dir, "ocx", "desktop-remote", "baseline.json"))).toBe(false);
+    expect(existsSync(join(dir, "occx", "desktop-remote", "baseline.json"))).toBe(false);
     expect(inspectRemoteDesktopCleanup().kind).toBe("pending");
     const complete = { ...current, phase: "complete" as const };
     locked(held => writeDesktopDisconnectReceipt(held, current, complete));

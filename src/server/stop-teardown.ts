@@ -72,13 +72,13 @@ export async function performStopTeardown(url: URL, io: StopTeardownIo = {}): Pr
   if (restore.success) {
     return {
       success: false,
-      message: `Proxy stopping, native Codex restored, but the Grok fence was not removed:${grokNote} Run \`ocx restore\`.`,
+      message: `Proxy stopping, native Codex restored, but the Grok fence was not removed:${grokNote} Run \`occx restore\`.`,
       sharedTeardown: "performed",
     };
   }
   return {
     success: false,
-    message: `Proxy stopping, but native Codex restore failed: ${restore.message}. Run \`ocx restore\`.${grokNote}`,
+    message: `Proxy stopping, but native Codex restore failed: ${restore.message}. Run \`occx restore\`.${grokNote}`,
     sharedTeardown: "performed",
   };
 }

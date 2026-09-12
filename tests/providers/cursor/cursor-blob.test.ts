@@ -41,7 +41,7 @@ import {
   prepareCursorRunRequest,
 } from "../../../src/adapters/cursor/protobuf-request";
 import { estimateTokens } from "../../../src/lib/token-estimate";
-import type { OcxAssistantContentPart } from "../../../src/types";
+import type { OccxAssistantContentPart } from "../../../src/types";
 import { CursorRootEnvelopeLimitError } from "../../../src/adapters/cursor/cursor-errors";
 import { isRetryableCursorError } from "../../../src/adapters/cursor/transport-retry";
 import { encodeCursorCallId, resetCursorCallIdProvenanceForTests } from "../../../src/adapters/cursor/call-id";
@@ -675,7 +675,7 @@ describe("Cursor blob handshake", () => {
   });
 
   test("keeps exec_command guidance in the system prompt without mutating the user request", () => {
-    const prompt = "Run: echo OCX via your shell tool, report stdout.";
+    const prompt = "Run: echo OCCX via your shell tool, report stdout.";
     const bytes = encodeCursorRunRequest({
       modelId: "claude-4.6-sonnet",
       conversationId: "c1",
@@ -796,7 +796,7 @@ describe("Cursor blob handshake", () => {
 
   test("native Cursor replay preserves tool calls with results in turn steps", () => {
     resetCursorCallIdProvenanceForTests();
-    const local = encodeCursorCallId("ocxc1e_");
+    const local = encodeCursorCallId("occxc1e_");
     const bytes = encodeCursorRunRequest({
       modelId: "composer-2.5",
       conversationId: "c1",
@@ -826,8 +826,8 @@ describe("Cursor blob handshake", () => {
     const tool = step.message.value.tool;
     expect(tool.case).toBe("mcpToolCall");
     if (tool.case === "mcpToolCall") {
-      expect(tool.value.args?.toolCallId).toBe("ocxc1e_");
-      expect(tool.value.args?.toolName).toBe("ocx_client_read_file");
+      expect(tool.value.args?.toolCallId).toBe("occxc1e_");
+      expect(tool.value.args?.toolName).toBe("occx_client_read_file");
       expect(tool.value.result?.result.case).toBe("success");
       if (tool.value.result?.result.case === "success") {
         const content = tool.value.result.result.value.content[0]?.content;
@@ -842,7 +842,7 @@ describe("Cursor blob handshake", () => {
 
   test("native protobuf replay leaves an opaque escape lookalike byte-identical", () => {
     resetCursorCallIdProvenanceForTests();
-    const opaque = "ocxc1e_b2N4YzFf";
+    const opaque = "occxc1e_b2N4YzFf";
     const bytes = encodeCursorRunRequest({
       modelId: "composer-2.5",
       conversationId: "c-opaque-call-id",
@@ -2549,7 +2549,7 @@ describe("Cursor external replay envelope", () => {
       rootPromptMessagesJson: checkpointRoots,
       turns: [new Uint8Array(32).fill(8)],
     });
-    const calls: OcxAssistantContentPart[] = Array.from({ length: batch }, (_, i) => ({
+    const calls: OccxAssistantContentPart[] = Array.from({ length: batch }, (_, i) => ({
       type: "toolCall",
       id: `call_par_${i}`,
       name: "exec_command",
@@ -2860,7 +2860,7 @@ describe("Cursor external replay envelope", () => {
       rawMessages!.push({ role: "assistant", content: [{ type: "text", text: "Same line again." }], timestamp: timestamp++ });
     }
     if (parallel) {
-      const calls: OcxAssistantContentPart[] = Array.from({ length: results }, (_, i) => ({
+      const calls: OccxAssistantContentPart[] = Array.from({ length: results }, (_, i) => ({
         type: "toolCall",
         id: `call_np_${i}`,
         name: "exec_command",
@@ -3088,7 +3088,7 @@ describe("Cursor external replay envelope", () => {
       for (let r = 0; r < (armed ? 4 : 2); r++) {
         rawMessages!.push({ role: "assistant", content: [{ type: "text", text: "Same." }], timestamp: timestamp++ });
       }
-      const calls: OcxAssistantContentPart[] = Array.from({ length: results }, (_, i) => ({
+      const calls: OccxAssistantContentPart[] = Array.from({ length: results }, (_, i) => ({
         type: "toolCall",
         id: `call_slot_${i}`,
         name: "exec_command",
@@ -3293,7 +3293,7 @@ describe("Cursor external replay envelope", () => {
     // silent one still broken, because a bare tool call produces no assistant root either — so the suffix
     // has zero history roots and a different disjunct of the same condition fired. Testing one shape per
     // model class is what let the second path hide; the cross product is the point of this loop.
-    const assistantShapes: Array<{ label: string; content: OcxAssistantContentPart[] }> = [
+    const assistantShapes: Array<{ label: string; content: OccxAssistantContentPart[] }> = [
       { label: "narrated", content: [{ type: "text", text: "Reading." }, { type: "toolCall", id: "n1", name: "read_file", arguments: { path: "a.txt" } }] },
       { label: "silent", content: [{ type: "toolCall", id: "n1", name: "read_file", arguments: { path: "a.txt" } }] },
       { label: "empty-text", content: [{ type: "text", text: "" }, { type: "toolCall", id: "n1", name: "read_file", arguments: { path: "a.txt" } }] },
@@ -3432,8 +3432,8 @@ describe("Cursor external replay envelope", () => {
   });
 
   test("the run-request diagnostic reports the measured envelope, not zero", () => {
-    const previousDebug = process.env.OCX_DEBUG;
-    process.env.OCX_DEBUG = "1";
+    const previousDebug = process.env.OCCX_DEBUG;
+    process.env.OCCX_DEBUG = "1";
     resetDebugSettingsForTests();
     const lines: string[] = [];
     const originalError = console.error;
@@ -3460,7 +3460,7 @@ describe("Cursor external replay envelope", () => {
         checkpointBytes: toBinary(ConversationStateStructureSchema, checkpoint),
         continuationMode: "checkpoint",
       });
-      const runLine = lines.find(line => line.includes("[ocx:cursor:run-request]"));
+      const runLine = lines.find(line => line.includes("[occx:cursor:run-request]"));
       expect(runLine).toBeDefined();
       const payload = JSON.parse(runLine!.slice(runLine!.indexOf("{"))) as {
         rootBlobs: number;
@@ -3475,8 +3475,8 @@ describe("Cursor external replay envelope", () => {
       expect(payload.unmeasuredRoots).toBe(1);
     } finally {
       console.error = originalError;
-      if (previousDebug === undefined) delete process.env.OCX_DEBUG;
-      else process.env.OCX_DEBUG = previousDebug;
+      if (previousDebug === undefined) delete process.env.OCCX_DEBUG;
+      else process.env.OCCX_DEBUG = previousDebug;
       resetDebugSettingsForTests();
     }
   });

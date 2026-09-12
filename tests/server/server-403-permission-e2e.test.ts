@@ -8,7 +8,7 @@ import { saveConfig } from "../../src/config";
 import { classifyError } from "../../src/lib/errors";
 import { startServer } from "../../src/server";
 import { clearRequestLogsForTests } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -20,23 +20,23 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-403-e2e-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-403-e2e-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-403-e2e-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-403-e2e-"));
+  process.env.OPENCCX_HOME = testDir;
   clearRequestLogsForTests();
 });
 
 afterEach(() => {
   clearRequestLogsForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function config(baseUrl: string): OcxConfig {
+function config(baseUrl: string): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -52,7 +52,7 @@ function config(baseUrl: string): OcxConfig {
         defaultModel: "pro-model",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function runUpstreamFailure(status: 401 | 403, body: unknown): Promise<{

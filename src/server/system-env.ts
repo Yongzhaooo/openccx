@@ -5,7 +5,7 @@ import { getConfigDir } from "../config";
 import { resolveAutoContext, type AutoContextMode } from "../claude/context-windows";
 import { PROXY_MARKER } from "../claude/auth-detect";
 import { isProxyAdmissionSecret } from "./auth-cors";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { recordOwnedConfigPath } from "../lib/config-ownership";
 import { localAdmissionToken, localInferenceDestination } from "../lib/local-destinations";
 import { probeHostname } from "./proxy-liveness";
@@ -174,7 +174,7 @@ function rollbackInjectedKeys(port: number, injectedKeys: string[], tracked?: Tr
  * In-process effective model-env (default + tier slots, [1m] applied) under the shared
  * 3s bound (audit R4#3). Returns {} on timeout/failure so injection degrades safely.
  */
-async function computeEffectiveModelEnv(config: OcxConfig, auto?: AutoContextMode): Promise<{ modelEnv: Record<string, string>; windows: Record<string, number> }> {
+async function computeEffectiveModelEnv(config: OccxConfig, auto?: AutoContextMode): Promise<{ modelEnv: Record<string, string>; windows: Record<string, number> }> {
   const { boundedContextWindows, buildClaudeContextWindows, effectiveModelEnv } = await import("../claude/context-windows");
   const windows = await boundedContextWindows(async () => {
     const { gatherRoutedModels, nativeContextLimits, visibleNativeSlugs } = await import("../codex/catalog");
@@ -192,7 +192,7 @@ async function computeEffectiveModelEnv(config: OcxConfig, auto?: AutoContextMod
 
 export async function injectSystemEnv(
   port: number,
-  config: OcxConfig,
+  config: OccxConfig,
   deps: SystemEnvDeps = {},
 ): Promise<SystemEnvResult> {
   if (process.platform !== "darwin") return { injected: false, reason: "not macOS" };
@@ -222,7 +222,7 @@ export async function injectSystemEnv(
   // and with no resolvable credential there is nothing to carry either way.
   if (destination.requiresAdmissionToken && (markerMode !== "proxy" || !hostAdmissionToken)) {
     console.error(
-      `⚠ Skipping system-environment injection: ${destination.origin} requires an opencodex data-plane `
+      `⚠ Skipping system-environment injection: ${destination.origin} requires an openccx data-plane `
       + "credential that this launch cannot supply. Enable `unauthenticatedLoopbackListener` or bind the "
       + "proxy to loopback.",
     );
@@ -271,7 +271,7 @@ export async function injectSystemEnv(
       if (currentToken
         && (currentToken === PROXY_MARKER || isProxyAdmissionSecret(currentToken, config))) {
         // Subscription switch-back (devlog 260720_claude_authmode_persist): remove
-        // opencodex-owned dummy or admission tokens so a launchd-started Claude regains
+        // openccx-owned dummy or admission tokens so a launchd-started Claude regains
         // its own claude.ai OAuth. User-set tokens are never touched.
         unsetLaunchctlEnv("ANTHROPIC_AUTH_TOKEN");
         const tokenIdx = injectedKeys.indexOf("ANTHROPIC_AUTH_TOKEN");
@@ -339,7 +339,7 @@ export async function injectSystemEnv(
   return { injected: true };
 }
 
-export async function applySystemEnvToggle(config: OcxConfig, port: number): Promise<SystemEnvResult | RevertResult> {
+export async function applySystemEnvToggle(config: OccxConfig, port: number): Promise<SystemEnvResult | RevertResult> {
   if (config.claudeCode?.systemEnv === true) return injectSystemEnv(port, config);
   return revertSystemEnv();
 }

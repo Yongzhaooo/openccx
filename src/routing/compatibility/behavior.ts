@@ -1,6 +1,6 @@
 import { modelRecordValue } from "../../reasoning-effort";
 import { modelInList } from "../../types";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { PROVIDER_REGISTRY } from "../../providers/registry";
 import { fastPolicyForModel, serviceTierSupportFromPolicy } from "../../providers/service-tier";
 import { resolveProviderAuthTransport } from "../../providers/fastwire";
@@ -108,7 +108,7 @@ function nonCredentialHeaderDigest(
   return localFingerprint("nonCredentialHeaders", rows, installationSalt);
 }
 
-function effectiveOpenRouterRouting(effective: OcxProviderConfig, modelId: string) {
+function effectiveOpenRouterRouting(effective: OccxProviderConfig, modelId: string) {
   return exactOwnValue(effective.modelOpenRouterRouting, modelId) ?? effective.openRouterRouting;
 }
 
@@ -120,10 +120,10 @@ function effectiveOpenRouterRouting(effective: OcxProviderConfig, modelId: strin
  * model wire override cannot disagree with the behavior fingerprint.
  */
 export function resolveProductionBehaviorValues(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  effective: OcxProviderConfig,
+  effective: OccxProviderConfig,
   installationSalt: Uint8Array | string,
 ): LabBehaviorValues | null {
   const provider = config.providers[providerName];
@@ -273,7 +273,7 @@ export function resolveProductionBehaviorValues(
 
 export function providerInstanceKey(
   providerName: string,
-  effective: OcxProviderConfig,
+  effective: OccxProviderConfig,
 ): string {
   const baseUrl = typeof effective.baseUrl === "string" ? effective.baseUrl.trim() : "";
   const adapter = typeof effective.adapter === "string" ? effective.adapter : "";

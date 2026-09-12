@@ -635,7 +635,7 @@ export class CodexResetCreditRecoveryCoordinator {
   }
 
   static async [RESET_PROCESS_STATE_FOR_TESTS](): Promise<void> {
-    if (process.env.OCX_TEST_HOME_GUARD !== "1") {
+    if (process.env.OCCX_TEST_HOME_GUARD !== "1") {
       throw new Error("resetProcessStateForTests is available only under the repository test preload");
     }
     const flights = [...new Set([...this.allFlights, ...this.orphanedFlights])];

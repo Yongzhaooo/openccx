@@ -13,10 +13,10 @@ import type { ProviderAdapter } from "../../../src/adapters/base";
 import { clearAnthropicAccountPoolState } from "../../../src/oauth/anthropic-routing";
 import { clearGenericFailoverHealth } from "../../../src/oauth/generic-account-failover";
 import { getAccountSet, saveCredential, setActiveAccount } from "../../../src/oauth/store";
-import type { AdapterEvent, OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 let handleResponses: typeof import("../../../src/server/responses")["handleResponses"];
 let kiroBuilds: Array<{ key: string; profileArn?: string; apiRegion?: string }> = [];
@@ -39,12 +39,12 @@ function kiroContinuationEvents(phase: string): AdapterEvent[] {
   throw new Error(`unexpected phase: ${phase}`);
 }
 
-function kiroFixtureAdapter(provider: OcxProviderConfig): ProviderAdapter {
+function kiroFixtureAdapter(provider: OccxProviderConfig): ProviderAdapter {
   return {
     // Anthropic enables the bounded terminal continuation, while the provider id remains
     // Kiro so generic OAuth snapshot pairing is exercised.
     name: "anthropic",
-    buildRequest(parsed: OcxParsedRequest) {
+    buildRequest(parsed: OccxParsedRequest) {
       kiroBuilds.push({
         key: provider.apiKey ?? "",
         ...(parsed._kiroAuthContext?.profileArn
@@ -72,7 +72,7 @@ beforeAll(async () => {
   const actualResolveAdapter = actualResolver.resolveAdapter;
   mock.module("../../../src/server/adapter-resolve", () => ({
     ...actualResolver,
-    resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+    resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
       if (
         provider.adapter === "test-kiro-continuation"
         || (provider.adapter === "kiro" && provider.apiKey?.startsWith("kiro-access-"))
@@ -85,8 +85,8 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-kiro-continuation-auth-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-kiro-continuation-auth-"));
+  process.env.OPENCCX_HOME = testHome;
   kiroBuilds = [];
   clearAnthropicAccountPoolState();
   clearGenericFailoverHealth();
@@ -99,8 +99,8 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   mock.restore();
 });
 
@@ -137,7 +137,7 @@ test("Kiro continuation 429 keeps the rotated bearer and routing metadata togeth
         models: ["model"],
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 
   const phases = ["plan", "rate-limit", "complete"];
   const originalFetch = globalThis.fetch;

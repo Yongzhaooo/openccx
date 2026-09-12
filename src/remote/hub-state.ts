@@ -2,7 +2,7 @@
  * The hub-state contract shared by `GET|HEAD /v1/hub-state` and every connected client.
  *
  * Why it exists (#4236): an agent working on a connected client machine read that machine's
- * own `~/.opencodex/config.json` and `ocx status`, saw `xai ✗ not logged in`, no grok provider
+ * own `~/.opencodex/config.json` and `occx status`, saw `xai ✗ not logged in`, no grok provider
  * and five delegable models, and concluded the hub could not serve grok — while the hub had
  * xAI logged in and was serving grok all along. A client's local credential store is empty BY
  * DESIGN, so reporting it as the truth is not a cosmetic defect: it makes the client lie about
@@ -40,7 +40,7 @@ export const MAX_HUB_STATE_STRING_CHARS = 200;
 export const MAX_HUB_STATE_BYTES = 64 * 1024;
 
 /**
- * Mirrors `OcxProviderConfig.authMode` (src/types/provider.ts); default `"key"`.
+ * Mirrors `OccxProviderConfig.authMode` (src/types/provider.ts); default `"key"`.
  *
  * It is shape, not secret: it says HOW a provider authenticates, which is what lets a client
  * explain `hasCredential: false` on an `oauth` provider without claiming nothing is configured.

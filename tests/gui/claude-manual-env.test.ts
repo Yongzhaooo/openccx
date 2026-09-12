@@ -17,7 +17,7 @@ function state(overrides: Partial<ClaudeManualEnvState> = {}): ClaudeManualEnvSt
 
 test("proxy mode emits the dummy token plus the conditional host-managed flag", () => {
   const env = buildManualEnv(state({ authMode: "proxy" }));
-  expect(env).toContain("export ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+  expect(env).toContain("export ANTHROPIC_AUTH_TOKEN=openccx-proxy");
   expect(env).toContain("export ANTHROPIC_BASE_URL=http://127.0.0.1:10100");
   // Conditional form (audit R2 #1): pasting the block into a shell that already
   // exported =0 must keep the user's opt-out.

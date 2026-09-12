@@ -20,7 +20,7 @@ import {
   refreshIntegration,
   type IntegrationWriteInput,
 } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -28,9 +28,9 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  * field rather than an index so the user's own reordering cannot move it under
  * us. Plan: devlog/_plan/260904_raycast_integration/000_plan.md (WP1).
  */
-const OURS = { id: "opencodex", name: "OpenCodex" };
+const OURS = { id: "openccx", name: "Openccx" };
 const THEIRS = { id: "lmstudio", name: "LM Studio" };
-const SELECT = ["providers", "[id=opencodex]"] as const;
+const SELECT = ["providers", "[id=openccx]"] as const;
 
 function contribution(path: readonly string[], value: unknown = OURS): ManagedContribution {
   return { clientId: "raycast", fragments: [{ path, value }] };
@@ -38,7 +38,7 @@ function contribution(path: readonly string[], value: unknown = OURS): ManagedCo
 
 describe("parseSegment", () => {
   test("a selector splits into field and value; anything else is a key", () => {
-    expect(parseSegment("[id=opencodex]")).toEqual({ kind: "select", field: "id", value: "opencodex" });
+    expect(parseSegment("[id=openccx]")).toEqual({ kind: "select", field: "id", value: "openccx" });
     expect(parseSegment("[model_id=anthropic/claude-opus-5]"))
       .toEqual({ kind: "select", field: "model_id", value: "anthropic/claude-opus-5" });
     expect(parseSegment("providers")).toEqual({ kind: "key", key: "providers" });
@@ -51,12 +51,12 @@ describe("parseSegment", () => {
 
 describe("setPath with a selector", () => {
   test("replaces the matching element in place and keeps siblings and order", () => {
-    const doc = { providers: [THEIRS, { id: "opencodex", name: "old" }, { id: "other" }], keep: true };
+    const doc = { providers: [THEIRS, { id: "openccx", name: "old" }, { id: "other" }], keep: true };
     const next = setPath(doc, SELECT, OURS) as typeof doc;
     expect(next.providers).toEqual([THEIRS, OURS, { id: "other" }]);
     expect(next.keep).toBe(true);
     // The input is not mutated.
-    expect(doc.providers[1]).toEqual({ id: "opencodex", name: "old" });
+    expect(doc.providers[1]).toEqual({ id: "openccx", name: "old" });
   });
 
   test("pushes when no element matches", () => {
@@ -74,19 +74,19 @@ describe("setPath with a selector", () => {
   });
 
   test("descends into a matched element, seeding one when absent", () => {
-    const path = ["providers", "[id=opencodex]", "name"];
+    const path = ["providers", "[id=openccx]", "name"];
     expect(setPath({ providers: [THEIRS] }, path, "X"))
-      .toEqual({ providers: [THEIRS, { id: "opencodex", name: "X" }] });
+      .toEqual({ providers: [THEIRS, { id: "openccx", name: "X" }] });
     expect(setPath({ providers: [OURS, THEIRS] }, path, "X"))
-      .toEqual({ providers: [{ id: "opencodex", name: "X" }, THEIRS] });
+      .toEqual({ providers: [{ id: "openccx", name: "X" }, THEIRS] });
     // The element the selector would create is recorded, the existing array is not.
     expect(createdContainerPaths({ providers: [THEIRS] }, contribution(path, "X")))
-      .toEqual(["providers\u0000[id=opencodex]"]);
+      .toEqual(["providers\u0000[id=openccx]"]);
     expect(createdContainerPaths({ providers: [OURS] }, contribution(path, "X"))).toEqual([]);
   });
 
   test("throws AmbiguousSelectorError when two elements match", () => {
-    const doc = { providers: [OURS, THEIRS, { id: "opencodex", name: "dupe" }] };
+    const doc = { providers: [OURS, THEIRS, { id: "openccx", name: "dupe" }] };
     expect(() => setPath(doc, SELECT, OURS)).toThrow(AmbiguousSelectorError);
     expect(() => deletePath(doc, SELECT)).toThrow(AmbiguousSelectorError);
     expect(() => readPath(doc, SELECT)).toThrow(AmbiguousSelectorError);
@@ -117,15 +117,15 @@ describe("deletePath with a selector", () => {
   });
 
   test("a leaf inside a selected element is removed without touching the element", () => {
-    const path = ["providers", "[id=opencodex]", "name"];
-    const created = new Set(["providers", "providers\u0000[id=opencodex]"]);
+    const path = ["providers", "[id=openccx]", "name"];
+    const created = new Set(["providers", "providers\u0000[id=openccx]"]);
     // The seeded element keeps its selector field, so it is never empty and the prune walk
     // stops at it. No client owns a leaf inside a selected element today; when one does, it
     // decides whether a `{ id }` husk is residue worth a dedicated rule.
-    expect(deletePath({ providers: [{ id: "opencodex", name: "X" }] }, path, created).doc)
-      .toEqual({ providers: [{ id: "opencodex" }] });
-    expect(deletePath({ providers: [{ id: "opencodex", name: "X", extra: 1 }] }, path, created).doc)
-      .toEqual({ providers: [{ id: "opencodex", extra: 1 }] });
+    expect(deletePath({ providers: [{ id: "openccx", name: "X" }] }, path, created).doc)
+      .toEqual({ providers: [{ id: "openccx" }] });
+    expect(deletePath({ providers: [{ id: "openccx", name: "X", extra: 1 }] }, path, created).doc)
+      .toEqual({ providers: [{ id: "openccx", extra: 1 }] });
   });
 });
 
@@ -133,7 +133,7 @@ describe("readPath and blockedContainerPath with a selector", () => {
   test("readPath finds the element through a selector", () => {
     const doc = { providers: [THEIRS, OURS] };
     expect(readPath(doc, SELECT)).toEqual(OURS);
-    expect(readPath(doc, ["providers", "[id=opencodex]", "name"])).toBe("OpenCodex");
+    expect(readPath(doc, ["providers", "[id=openccx]", "name"])).toBe("Openccx");
     expect(readPath(doc, ["providers", "[id=missing]"])).toBeUndefined();
     expect(readPath({ providers: {} }, SELECT)).toBeUndefined();
     expect(readPath({ providers: "x" }, SELECT)).toBeUndefined();
@@ -147,43 +147,43 @@ describe("readPath and blockedContainerPath with a selector", () => {
     expect(blockedContainerPath({}, contribution(SELECT))).toBeNull();
     // Reading through a matched element continues the walk: a scalar element is blocked,
     // a record one is fine, an absent one is simply not there yet.
-    const deep = ["providers", "[id=opencodex]", "name"];
+    const deep = ["providers", "[id=openccx]", "name"];
     expect(blockedContainerPath({ providers: [OURS] }, contribution(deep, "X"))).toBeNull();
     expect(blockedContainerPath({ providers: [THEIRS] }, contribution(deep, "X"))).toBeNull();
-    expect(blockedContainerPath({ providers: [{ id: "opencodex", name: 1 }] }, contribution(["providers", "[id=opencodex]", "name", "leaf"], "X")))
-      .toEqual(["providers", "[id=opencodex]", "name"]);
+    expect(blockedContainerPath({ providers: [{ id: "openccx", name: 1 }] }, contribution(["providers", "[id=openccx]", "name", "leaf"], "X")))
+      .toEqual(["providers", "[id=openccx]", "name"]);
   });
 });
 
 describe("plain-key paths are unchanged", () => {
   test("setPath, deletePath, readPath, createdContainerPaths and blockedContainerPath behave as before", () => {
-    const path = ["providers", "opencodex", "api_key"];
-    expect(setPath({}, path, "k")).toEqual({ providers: { opencodex: { api_key: "k" } } });
-    expect(setPath({ providers: "x" }, path, "k")).toEqual({ providers: { opencodex: { api_key: "k" } } });
-    expect(setPath({ providers: [1] }, path, "k")).toEqual({ providers: { opencodex: { api_key: "k" } } });
+    const path = ["providers", "openccx", "api_key"];
+    expect(setPath({}, path, "k")).toEqual({ providers: { openccx: { api_key: "k" } } });
+    expect(setPath({ providers: "x" }, path, "k")).toEqual({ providers: { openccx: { api_key: "k" } } });
+    expect(setPath({ providers: [1] }, path, "k")).toEqual({ providers: { openccx: { api_key: "k" } } });
     expect(setPath({ providers: { other: 1 } }, path, "k"))
-      .toEqual({ providers: { other: 1, opencodex: { api_key: "k" } } });
-    expect(createdContainerPaths({}, contribution(path, "k"))).toEqual(["providers", "providers\u0000opencodex"]);
-    expect(createdContainerPaths({ providers: { other: 1 } }, contribution(path, "k"))).toEqual(["providers\u0000opencodex"]);
+      .toEqual({ providers: { other: 1, openccx: { api_key: "k" } } });
+    expect(createdContainerPaths({}, contribution(path, "k"))).toEqual(["providers", "providers\u0000openccx"]);
+    expect(createdContainerPaths({ providers: { other: 1 } }, contribution(path, "k"))).toEqual(["providers\u0000openccx"]);
 
-    const created = new Set(["providers", "providers\u0000opencodex"]);
-    expect(deletePath({ providers: { opencodex: { api_key: "k" } } }, path, created)).toEqual({ doc: {}, removed: true });
-    expect(deletePath({ providers: { opencodex: { api_key: "k" } } }, path)).toEqual({ doc: { providers: { opencodex: {} } }, removed: true });
-    expect(deletePath({ providers: { opencodex: { api_key: "k", other: 1 } }, x: 1 }, path, created))
-      .toEqual({ doc: { providers: { opencodex: { other: 1 } }, x: 1 }, removed: true });
+    const created = new Set(["providers", "providers\u0000openccx"]);
+    expect(deletePath({ providers: { openccx: { api_key: "k" } } }, path, created)).toEqual({ doc: {}, removed: true });
+    expect(deletePath({ providers: { openccx: { api_key: "k" } } }, path)).toEqual({ doc: { providers: { openccx: {} } }, removed: true });
+    expect(deletePath({ providers: { openccx: { api_key: "k", other: 1 } }, x: 1 }, path, created))
+      .toEqual({ doc: { providers: { openccx: { other: 1 } }, x: 1 }, removed: true });
     expect(deletePath({ providers: {} }, path)).toEqual({ doc: { providers: {} }, removed: false });
     expect(deletePath({ providers: [] }, path)).toEqual({ doc: { providers: [] }, removed: false });
-    expect(deletePath({ providers: { opencodex: "x" } }, path)).toEqual({ doc: { providers: { opencodex: "x" } }, removed: false });
-    expect(deletePath({ providers: { opencodex: { api_key: null } } }, path, created)).toEqual({ doc: {}, removed: true });
+    expect(deletePath({ providers: { openccx: "x" } }, path)).toEqual({ doc: { providers: { openccx: "x" } }, removed: false });
+    expect(deletePath({ providers: { openccx: { api_key: null } } }, path, created)).toEqual({ doc: {}, removed: true });
 
-    expect(readPath({ providers: { opencodex: { api_key: "k" } } }, path)).toBe("k");
+    expect(readPath({ providers: { openccx: { api_key: "k" } } }, path)).toBe("k");
     expect(readPath({ providers: [OURS] }, ["providers", "0"])).toBeUndefined();
     expect(readPath({ providers: null }, path)).toBeUndefined();
 
     expect(blockedContainerPath({ providers: ["x"] }, contribution(path, "k"))).toEqual(["providers"]);
-    expect(blockedContainerPath({ providers: { opencodex: null } }, contribution(path, "k"))).toEqual(["providers", "opencodex"]);
+    expect(blockedContainerPath({ providers: { openccx: null } }, contribution(path, "k"))).toEqual(["providers", "openccx"]);
     expect(blockedContainerPath(null, contribution(path, "k"))).toEqual([]);
-    expect(blockedContainerPath({ providers: { opencodex: {} } }, contribution(path, "k"))).toBeNull();
+    expect(blockedContainerPath({ providers: { openccx: {} } }, contribution(path, "k"))).toBeNull();
     expect(blockedContainerPath(undefined, contribution(path, "k"))).toBeNull();
   });
 });
@@ -198,17 +198,17 @@ describe("raycast writer round trip", () => {
   const MODELS: ExportModel[] = [
     { namespaced: "anthropic/claude-opus-4-8", provider: "anthropic", id: "claude-opus-4-8", contextWindow: 200_000 },
   ];
-  const CONFIG: OcxConfig = {
+  const CONFIG: OccxConfig = {
     port: 10100,
     hostname: "127.0.0.1",
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
   let home: string;
   let store: IntegrationStateStore;
 
   beforeEach(() => {
-    const base = mkdtempSync(join(tmpdir(), "ocx-integrations-merge-"));
+    const base = mkdtempSync(join(tmpdir(), "occx-integrations-merge-"));
     home = join(base, "home");
     mkdirSync(home, { recursive: true });
     store = createIntegrationStateStore(join(base, "store", "integrations"));
@@ -237,7 +237,7 @@ describe("raycast writer round trip", () => {
     expect(readIntegrationState(input())).toMatchObject({ state: "absent" });
     expect(applyIntegration(input())).toMatchObject({ ok: true, changed: true });
     const applied = Bun.YAML.parse(readFileSync(configPath, "utf8")) as { providers: Array<{ id: string }> };
-    expect(applied.providers.map(item => item.id)).toEqual(["lmstudio", "opencodex"]);
+    expect(applied.providers.map(item => item.id)).toEqual(["lmstudio", "openccx"]);
     expect(readIntegrationState(input())).toMatchObject({ state: "current" });
 
     expect(disableIntegration(input())).toMatchObject({ ok: true, changed: true });
@@ -248,10 +248,10 @@ describe("raycast writer round trip", () => {
 
   test("a providers map instead of a sequence is unsafe for status and writer alike", () => {
     const configPath = installRaycast();
-    writeFileSync(configPath, Bun.YAML.stringify({ providers: { opencodex: {} } }));
+    writeFileSync(configPath, Bun.YAML.stringify({ providers: { openccx: {} } }));
     expect(readIntegrationState(input())).toMatchObject({ state: "unsafe", reason: "blocked-container" });
     expect(applyIntegration(input())).toMatchObject({ ok: false, reason: "unsafe" });
-    expect(Bun.YAML.parse(readFileSync(configPath, "utf8"))).toEqual({ providers: { opencodex: {} } });
+    expect(Bun.YAML.parse(readFileSync(configPath, "utf8"))).toEqual({ providers: { openccx: {} } });
   });
 
   for (const recorded of [false, true]) {

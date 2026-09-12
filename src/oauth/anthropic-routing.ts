@@ -30,7 +30,7 @@ import {
   POOL_KEY_ANTHROPIC,
   seedPoolRotationAccount,
 } from "../codex/pool-rotation";
-import type { OcxAccountPoolQuotaWindow, OcxAccountPoolRotationStrategy, OcxConfig } from "../types";
+import type { OccxAccountPoolQuotaWindow, OccxAccountPoolRotationStrategy, OccxConfig } from "../types";
 import { sweepExpiredOnWrite } from "../lib/state-store-sweeper";
 import { retainedUtf8Bytes } from "../lib/admission";
 
@@ -49,8 +49,8 @@ const MAX_AFFINITY_ENTRIES = 2_000;
 const MAX_AFFINITY_COMPONENT_BYTES = 512;
 const UNKNOWN_USAGE_SCORE = 100;
 const DEFAULT_AUTO_SWITCH_THRESHOLD = 80;
-const DEFAULT_QUOTA_WINDOW: OcxAccountPoolQuotaWindow = "five-hour";
-const VALID_QUOTA_WINDOWS = new Set<OcxAccountPoolQuotaWindow>(["five-hour", "weekly", "max-utilization"]);
+const DEFAULT_QUOTA_WINDOW: OccxAccountPoolQuotaWindow = "five-hour";
+const VALID_QUOTA_WINDOWS = new Set<OccxAccountPoolQuotaWindow>(["five-hour", "weekly", "max-utilization"]);
 /** Cap same-request 429 rotations so short Retry-After cannot infinite-loop. */
 export const ANTHROPIC_POOL_MAX_FAILOVERS_PER_REQUEST = 3;
 
@@ -59,11 +59,11 @@ export interface AnthropicAccountPoolConfig {
   /** Usage % for new-session pick. Default 80. 0 = disable quota-based pick (active / affinity only). */
   autoSwitchThreshold?: number;
   /** New-session rotation strategy. Default quota (today's behaviour). */
-  strategy?: OcxAccountPoolRotationStrategy;
+  strategy?: OccxAccountPoolRotationStrategy;
   /** Successful new-session binds retained on one round-robin selection. Default 1; range 1..100. */
   stickyLimit?: number;
   /** Usage window for quota-based scoring. Default "five-hour" (today's behaviour). */
-  quotaWindow?: OcxAccountPoolQuotaWindow;
+  quotaWindow?: OccxAccountPoolQuotaWindow;
 }
 
 /**
@@ -98,35 +98,35 @@ function normalizeAffinityComponent(value: string | null | undefined): string {
   return normalized && retainedUtf8Bytes(normalized) <= MAX_AFFINITY_COMPONENT_BYTES ? normalized : "";
 }
 
-export function anthropicAccountPoolConfig(config: OcxConfig): AnthropicAccountPoolConfig {
+export function anthropicAccountPoolConfig(config: OccxConfig): AnthropicAccountPoolConfig {
   const raw = config.anthropicAccountPool;
   if (!raw || typeof raw !== "object") return {};
   return raw;
 }
 
-export function isAnthropicAccountPoolEnabled(config: OcxConfig): boolean {
+export function isAnthropicAccountPoolEnabled(config: OccxConfig): boolean {
   return anthropicAccountPoolConfig(config).enabled === true;
 }
 
-export function anthropicAutoSwitchThreshold(config: OcxConfig): number {
+export function anthropicAutoSwitchThreshold(config: OccxConfig): number {
   const value = anthropicAccountPoolConfig(config).autoSwitchThreshold;
   if (typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100) return value;
   return DEFAULT_AUTO_SWITCH_THRESHOLD;
 }
 
 /** Strict parse for management APIs — returns null instead of defaulting. */
-export function parseAccountPoolQuotaWindow(raw: unknown): OcxAccountPoolQuotaWindow | null {
-  if (typeof raw === "string" && VALID_QUOTA_WINDOWS.has(raw as OcxAccountPoolQuotaWindow)) {
-    return raw as OcxAccountPoolQuotaWindow;
+export function parseAccountPoolQuotaWindow(raw: unknown): OccxAccountPoolQuotaWindow | null {
+  if (typeof raw === "string" && VALID_QUOTA_WINDOWS.has(raw as OccxAccountPoolQuotaWindow)) {
+    return raw as OccxAccountPoolQuotaWindow;
   }
   return null;
 }
 
-export function normalizeAccountPoolQuotaWindow(raw: unknown): OcxAccountPoolQuotaWindow {
+export function normalizeAccountPoolQuotaWindow(raw: unknown): OccxAccountPoolQuotaWindow {
   return parseAccountPoolQuotaWindow(raw) ?? DEFAULT_QUOTA_WINDOW;
 }
 
-export function anthropicQuotaWindow(config: AnthropicAccountPoolConfig): OcxAccountPoolQuotaWindow {
+export function anthropicQuotaWindow(config: AnthropicAccountPoolConfig): OccxAccountPoolQuotaWindow {
   return normalizeAccountPoolQuotaWindow(config.quotaWindow);
 }
 
@@ -235,7 +235,7 @@ function exhausted5h(accountId: string): boolean {
   return fiveHourKnown(accountId) && fiveHourScore(accountId) >= 100;
 }
 
-function hasKnownUsage(config: OcxConfig, accountId: string): boolean {
+function hasKnownUsage(config: OccxConfig, accountId: string): boolean {
   const window = anthropicQuotaWindow(anthropicAccountPoolConfig(config));
   switch (window) {
     case "five-hour": return fiveHourKnown(accountId);
@@ -244,7 +244,7 @@ function hasKnownUsage(config: OcxConfig, accountId: string): boolean {
   }
 }
 
-function usageScore(config: OcxConfig, accountId: string): number {
+function usageScore(config: OccxConfig, accountId: string): number {
   const window = anthropicQuotaWindow(anthropicAccountPoolConfig(config));
   switch (window) {
     case "five-hour": return fiveHourScore(accountId);
@@ -388,7 +388,7 @@ function compareScoredAccounts(a: ScoredAccount, b: ScoredAccount): number {
   return a.score - b.score || a.fiveHourTieBreak - b.fiveHourTieBreak;
 }
 
-function pickLowestUsage(config: OcxConfig, excludeId: string | undefined, now: number): string | null {
+function pickLowestUsage(config: OccxConfig, excludeId: string | undefined, now: number): string | null {
   const window = anthropicQuotaWindow(anthropicAccountPoolConfig(config));
   const unfiltered = getEligibleAnthropicAccounts(now).filter(id => id !== excludeId);
   const available = window === "weekly" ? unfiltered.filter(id => !exhausted5h(id)) : unfiltered;
@@ -414,7 +414,7 @@ function pickLowestUsage(config: OcxConfig, excludeId: string | undefined, now: 
 
 /** Next eligible Anthropic account in stable order after `afterId` (wrapping). */
 function pickNextFillFirstAnthropicAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   afterId: string,
   eligible: string[],
 ): string | null {
@@ -446,7 +446,7 @@ function pickNextFillFirstAnthropicAccount(
 }
 
 function pickAlternateAnthropicAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   excludeId: string,
   now: number,
 ): string | null {
@@ -488,15 +488,15 @@ export interface AnthropicAccountSelection {
   reason: AnthropicAccountSelectionReason;
 }
 
-function stickyLimitForPool(config: OcxConfig): number {
+function stickyLimitForPool(config: OccxConfig): number {
   return normalizeAccountPoolStickyLimit(anthropicAccountPoolConfig(config).stickyLimit);
 }
 
-function anthropicPoolStrategy(config: OcxConfig): OcxAccountPoolRotationStrategy {
+function anthropicPoolStrategy(config: OccxConfig): OccxAccountPoolRotationStrategy {
   return normalizeAccountPoolStrategy(anthropicAccountPoolConfig(config).strategy);
 }
 
-function isActiveUnderFillFirstThreshold(config: OcxConfig, accountId: string): boolean {
+function isActiveUnderFillFirstThreshold(config: OccxConfig, accountId: string): boolean {
   const threshold = anthropicAutoSwitchThreshold(config);
   if (threshold <= 0) return true;
   const window = anthropicQuotaWindow(anthropicAccountPoolConfig(config));
@@ -510,7 +510,7 @@ function isActiveUnderFillFirstThreshold(config: OcxConfig, accountId: string): 
  * Fill-first: keep eligible active under threshold; otherwise advance to the next
  * eligible id in stable sorted order after the current active (wrapping).
  */
-function pickFillFirstAnthropicAccount(config: OcxConfig, now: number): string | null {
+function pickFillFirstAnthropicAccount(config: OccxConfig, now: number): string | null {
   const eligible = getEligibleAnthropicAccounts(now);
   if (eligible.length === 0) return null;
 
@@ -536,7 +536,7 @@ function pickFillFirstAnthropicAccount(config: OcxConfig, now: number): string |
  * to the legacy quota path (or when the strategy is quota).
  */
 function pickUnboundStrategyAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
 ): { accountId: string; reason: "round-robin" | "fill-first" } | null {
   const strategy = anthropicPoolStrategy(config);
@@ -565,7 +565,7 @@ function pickUnboundStrategyAccount(
  */
 export function resolveAnthropicAccountForSession(
   sessionKey: string | null | undefined,
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
 ): AnthropicAccountSelection {
   pruneExpiredAffinity(now);
@@ -701,7 +701,7 @@ export function clearAnthropicSessionAffinityForAccount(accountId: string): void
  * successful retry (or token resolve).
  */
 export function rotateAnthropicAccountOn429(
-  config: OcxConfig,
+  config: OccxConfig,
   failedAccountId: string,
   retryAfterHeader: string | null | undefined,
   sessionKey?: string | null,
@@ -755,7 +755,7 @@ export function rotateAnthropicAccountOn429(
 }
 
 export interface AnthropicSelectionRoutingOptions {
-  config: OcxConfig;
+  config: OccxConfig;
   sessionKey?: string | null;
   reason?: AnthropicAccountSelectionReason;
   expectedCredentialGeneration?: string;
@@ -863,7 +863,7 @@ export function formatAnthropicAccountOrdinal(accountId: string): string {
 export function formatAnthropicProviderForLog(
   providerName: string,
   accountId: string | null | undefined,
-  _config?: OcxConfig,
+  _config?: OccxConfig,
 ): string {
   if (!accountId) return providerName;
   return `${providerName}-${formatAnthropicAccountOrdinal(accountId)}`;

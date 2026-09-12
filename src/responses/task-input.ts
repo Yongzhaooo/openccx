@@ -1,4 +1,4 @@
-import type { OcxContentPart } from "../types";
+import type { OccxContentPart } from "../types";
 import { inputContentParts, isObj } from "./parser-content";
 
 type TaskInputBlock =
@@ -41,7 +41,7 @@ function hasPairingKey(item: Record<string, unknown>): boolean {
 }
 
 /** Recognize Codex external task input without repairing ordinary orphaned tool results. */
-export function externalTaskInputContent(item: unknown): string | OcxContentPart[] | undefined {
+export function externalTaskInputContent(item: unknown): string | OccxContentPart[] | undefined {
   if (!isObj(item) || item.type !== "function_call_output" || hasPairingKey(item)) return undefined;
   if (!nonBlank(item.id) || !nonBlank(item.name) || !nonBlank(item.namespace)) return undefined;
   const output = item.output;

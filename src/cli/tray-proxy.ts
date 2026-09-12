@@ -137,7 +137,7 @@ export async function runTrayProxyStart(io: TrayProxyStartIo): Promise<boolean> 
 }
 
 /**
- * Shared restart transaction for both `ocx restart` and the Windows tray.
+ * Shared restart transaction for both `occx restart` and the Windows tray.
  *
  * A live proxy restarts itself through POST /api/system/restart. That lifecycle owns
  * drain, supervisor handoff, exact replacement identity, and managed-routing

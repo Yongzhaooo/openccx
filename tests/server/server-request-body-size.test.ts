@@ -13,8 +13,8 @@ let isolatedCodexHome: IsolatedCodexHome | null = null;
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-body-size-codex-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-body-size-codex-");
 });
 
 afterEach(() => {

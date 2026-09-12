@@ -304,7 +304,7 @@ export function clearPersistedCodexRuntime(deps: ResolveCodexRuntimeDeps = {}): 
     const code = (error as NodeJS.ErrnoException | null)?.code;
     if (code === "ENOENT") return;
     console.warn(
-      `[opencodex] Could not remove the stale Codex runtime pin at ${displayCodexRuntimePath(codexRuntimeStatePath(configDir))}`
+      `[openccx] Could not remove the stale Codex runtime pin at ${displayCodexRuntimePath(codexRuntimeStatePath(configDir))}`
       + ` (${code ?? "unknown error"}). It will be re-probed until the file is removed.`,
     );
   }
@@ -325,12 +325,12 @@ function probeVersion(
   const execFile = deps.execFileSync ?? (execFileSync as unknown as RuntimeExecFile);
   // Sandbox the probe's CODEX_HOME: a real Codex CLI creates state (tmp/, logs) under
   // CODEX_HOME even for `--version`, and the probe inherits the caller's env — so a
-  // read-only `ocx status` would dirty the user's CODEX_HOME. Redirect it to a
+  // read-only `occx status` would dirty the user's CODEX_HOME. Redirect it to a
   // throwaway dir; if the sandbox cannot be created, skip the probe rather than
   // probe with the inherited env (keeps probeVersion total: it never throws).
   let probeHome: string | undefined;
   try {
-    probeHome = mkdtempSync(join(tmpdir(), "ocx-codex-probe-"));
+    probeHome = mkdtempSync(join(tmpdir(), "occx-codex-probe-"));
     const invocation = codexExecInvocation(command, ["--version"], platform, {
       env: deps.env,
       exists: deps.existsSync,
@@ -428,7 +428,7 @@ function sameRuntimeCommand(a: string, b: string): boolean {
 }
 
 /**
- * Rungs OpenCodex no longer lets the observed-runtime intersection remove, so a persisted
+ * Rungs Openccx no longer lets the observed-runtime intersection remove, so a persisted
  * diagnostic naming only these describes a policy that is gone rather than a live restriction.
  * This is the single copy of the exemption: `catalog/effort.ts` imports it for the clamp
  * predicate, and a leftover file written before the exemption must not keep warning about
@@ -567,13 +567,13 @@ function resolveCacheKey(deps: ResolveCodexRuntimeDeps): string | null {
     path: env.PATH ?? "",
     platform: deps.platform ?? process.platform,
     discover: deps.discoverAlternatives !== false,
-    home: process.env.OPENCODEX_HOME ?? "",
+    home: process.env.OPENCCX_HOME ?? "",
     persisted: persistedRuntimeCacheStamp(deps),
   });
 }
 
 /**
- * Resolve the single Codex runtime OpenCodex should use for sync, clamp, and probes.
+ * Resolve the single Codex runtime Openccx should use for sync, clamp, and probes.
  */
 export function resolveCodexRuntime(deps: ResolveCodexRuntimeDeps = {}): ResolveCodexRuntimeResult {
   const cacheKey = resolveCacheKey(deps);
@@ -711,7 +711,7 @@ export function resolveAndPersistCodexRuntime(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const persistError = redactUserPath(redactSecretString(message)).slice(0, 200);
-      console.warn(`[opencodex] Failed to persist Codex runtime selection: ${persistError}`);
+      console.warn(`[openccx] Failed to persist Codex runtime selection: ${persistError}`);
       return cloneAndDeepFreeze({ ...result, persistError });
     }
   }
@@ -737,13 +737,13 @@ export function resolveAndPersistCodexRuntime(
 
 export function formatRuntimeLogLine(runtime: ResolvedCodexRuntime): string {
   const path = displayCodexRuntimePath(runtime.command);
-  return `[opencodex] Codex runtime: ${path} (version=${runtime.version ?? "unknown"}, source=${runtime.source})`;
+  return `[openccx] Codex runtime: ${path} (version=${runtime.version ?? "unknown"}, source=${runtime.source})`;
 }
 
 export function formatClampLogLines(diagnostic: EffortClampDiagnostic): string[] {
   const efforts = diagnostic.removedEfforts.join(", ");
   return [
-    `[opencodex] Removed unsupported reasoning efforts: ${efforts}`,
-    "[opencodex] Run ocx doctor for diagnosis and recovery.",
+    `[openccx] Removed unsupported reasoning efforts: ${efforts}`,
+    "[openccx] Run occx doctor for diagnosis and recovery.",
   ];
 }

@@ -8,7 +8,7 @@ import {
   GetBlobArgsSchema,
   KvServerMessageSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { OcxMessage } from "../../../src/types";
+import type { OccxMessage } from "../../../src/types";
 
 function blobData(blobId: Uint8Array): Uint8Array {
   const reply = fromBinary(AgentClientMessageSchema, handleCursorNativeKv(create(KvServerMessageSchema, {
@@ -30,19 +30,19 @@ function rootTexts(bytes: Uint8Array): string[] {
   });
 }
 
-const REPEAT = "원격 ocx 상태를 다시 확인합니다.";
+const REPEAT = "원격 occx 상태를 다시 확인합니다.";
 
-function repeatedHistory(times: number): OcxMessage[] {
-  const messages: OcxMessage[] = [{ role: "user", content: "원격 ocx를 최신 버전으로 업데이트해봐", timestamp: 1 }];
+function repeatedHistory(times: number): OccxMessage[] {
+  const messages: OccxMessage[] = [{ role: "user", content: "원격 occx를 최신 버전으로 업데이트해봐", timestamp: 1 }];
   for (let i = 0; i < times; i++) {
-    messages.push({ role: "assistant", content: REPEAT, timestamp: 2 + i } as OcxMessage);
+    messages.push({ role: "assistant", content: REPEAT, timestamp: 2 + i } as OccxMessage);
   }
   messages.push({ role: "user", content: "계속", timestamp: 100 });
   return messages;
 }
 
-function repeatedToolHistory(times: number): OcxMessage[] {
-  const messages: OcxMessage[] = [{ role: "user", content: "熟悉一下当前项目", timestamp: 1 }];
+function repeatedToolHistory(times: number): OccxMessage[] {
+  const messages: OccxMessage[] = [{ role: "user", content: "熟悉一下当前项目", timestamp: 1 }];
   for (let i = 0; i < times; i++) {
     const callId = `call_${i}`;
     messages.push({
@@ -65,7 +65,7 @@ function repeatedToolHistory(times: number): OcxMessage[] {
   return messages;
 }
 
-function encode(messages: OcxMessage[], modelId = "grok-4.6-high") {
+function encode(messages: OccxMessage[], modelId = "grok-4.6-high") {
   return encodeCursorRunRequest({
     modelId,
     conversationId: "c_rep",
@@ -106,12 +106,12 @@ describe("cursor external-replay repetition breaker (devlog 260826 gap-9)", () =
   });
 
   test("distinct assistant entries stay untouched", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "hi", timestamp: 1 },
       { role: "assistant", content: "step one done", timestamp: 2 },
       { role: "assistant", content: "step two done", timestamp: 3 },
       { role: "user", content: "continue", timestamp: 4 },
-    ] as OcxMessage[];
+    ] as OccxMessage[];
     const texts = rootTexts(encode(messages));
     expect(texts).toContain("step one done");
     expect(texts).toContain("step two done");
@@ -119,31 +119,31 @@ describe("cursor external-replay repetition breaker (devlog 260826 gap-9)", () =
   });
 
   test("duplicates separated by a user message do not collapse", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "go", timestamp: 1 },
       { role: "assistant", content: REPEAT, timestamp: 2 },
       { role: "user", content: "again", timestamp: 3 },
       { role: "assistant", content: REPEAT, timestamp: 4 },
       { role: "user", content: "final", timestamp: 5 },
-    ] as OcxMessage[];
+    ] as OccxMessage[];
     const texts = rootTexts(encode(messages));
     expect(texts.filter(text => text === REPEAT)).toHaveLength(2);
   });
 
   test("empty user boundaries still reset repetition tracking", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "go", timestamp: 1 },
       { role: "assistant", content: REPEAT, timestamp: 2 },
       { role: "user", content: "   ", timestamp: 3 },
       { role: "assistant", content: REPEAT, timestamp: 4 },
       { role: "user", content: "final", timestamp: 5 },
-    ] as OcxMessage[];
+    ] as OccxMessage[];
     const texts = rootTexts(encode(messages));
     expect(texts.filter(text => text === REPEAT)).toHaveLength(2);
   });
 
   test("three identical tool calls with changing narration trigger a strategy change", () => {
-    const messages: OcxMessage[] = [{ role: "user", content: "find the i18n bug", timestamp: 1 }];
+    const messages: OccxMessage[] = [{ role: "user", content: "find the i18n bug", timestamp: 1 }];
     for (let i = 0; i < 3; i++) {
       const callId = `view_${i}`;
       messages.push({

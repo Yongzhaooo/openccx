@@ -1,5 +1,5 @@
 /**
- * Human rendering for `ocx usage`.
+ * Human rendering for `occx usage`.
  *
  * Kept out of `observe.ts` and away from the shared `summaryLines()` helper on
  * purpose. `summaryLines()` is a generic depth-1 flattener shared with
@@ -114,7 +114,7 @@ export function formatUsageReport(data: UsageReportInput): string[] {
     const what = [data.filter.provider && `provider "${data.filter.provider}"`, data.filter.model && `model "${data.filter.model}"`]
       .filter(Boolean).join(" and ");
     lines.push(`No usage recorded for ${terminalText(what)} in this range.`);
-    lines.push("Check the spelling against `ocx usage --json`, or widen --range.");
+    lines.push("Check the spelling against `occx usage --json`, or widen --range.");
     return lines.map(terminalText);
   }
 

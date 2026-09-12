@@ -41,7 +41,7 @@ function projectProtocolSubject(subject: ProtocolSubjectV1): PublicProtocolSubje
   if (!adapterFamily) return undefined;
   return {
     subjectKind: "protocol",
-    compatibilityVersion: subject.opencodexCompatibilityVersion,
+    compatibilityVersion: subject.openccxCompatibilityVersion,
     adapterFamily,
     inboundProtocol: subject.inboundProtocol,
     upstreamProtocol: subject.upstreamProtocol,

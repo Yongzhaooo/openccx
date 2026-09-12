@@ -29,7 +29,7 @@ import {
 import { parseHubStateBody, type HubStateDTO } from "../../src/remote/hub-state";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
 const OWNER: HubStateOwner = {
@@ -61,20 +61,20 @@ function jsonFetch(body: unknown, init: { status?: number; contentType?: string 
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-client-hub-state-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-client-hub-state-"));
+  process.env.OPENCCX_HOME = testHome;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
 
 describe("fetchHubState", () => {
   test("parses a well-formed hub response", async () => {
-    const state = await fetchHubState(OWNER.serverUrl, "ocx_data_x", { fetchImpl: jsonFetch(hubState()) });
+    const state = await fetchHubState(OWNER.serverUrl, "occx_data_x", { fetchImpl: jsonFetch(hubState()) });
     expect(state.providers[0]?.name).toBe("xai");
     expect(state.subagentModels).toEqual(["xai/grok-4.6"]);
   });
@@ -82,7 +82,7 @@ describe("fetchHubState", () => {
   test("an old hub's 404 is version skew, not a missing hub", async () => {
     // The distinct code is what lets the CLI say "upgrade the hub" instead of printing a
     // generic failure that reads like a client bug.
-    const error = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const error = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch({ error: { code: "not_found" } }, { status: 404 }),
     }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(HubClientError);
@@ -93,14 +93,14 @@ describe("fetchHubState", () => {
     [401, "hub_state_unauthorized"],
     [500, "hub_state_http_500"],
   ] as const)("status %i surfaces as %s", async (status, code) => {
-    const error = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const error = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch({ error: {} }, { status }),
     }).catch((e: unknown) => e);
     expect((error as HubClientError).code).toBe(code);
   });
 
   test("a non-JSON content type is refused without reading the body", async () => {
-    const error = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const error = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch("<html>hello</html>", { contentType: "text/html" }),
     }).catch((e: unknown) => e);
     expect((error as HubClientError).code).toBe("hub_state_content_type_invalid");
@@ -113,7 +113,7 @@ describe("fetchHubState", () => {
     ["a non-hub role", JSON.stringify({ ...hubState(), runtimeRole: "standalone" }), "hub_state_schema_invalid"],
     ["a provider row with no booleans", JSON.stringify({ ...hubState(), providers: [{ name: "x", adapter: "y" }] }), "hub_state_schema_invalid"],
   ])("%s is refused (%#)", async (_label, body, code) => {
-    const error = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const error = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch(body),
     }).catch((e: unknown) => e);
     expect((error as HubClientError).code).toBe(code);
@@ -121,21 +121,21 @@ describe("fetchHubState", () => {
 
   test("an oversized roster is refused rather than truncated", async () => {
     const body = hubState({ subagentModels: Array.from({ length: 64 }, (_, i) => `m-${i}`) });
-    const error = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const error = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch(body),
     }).catch((e: unknown) => e);
     expect((error as HubClientError).code).toBe("hub_state_schema_invalid");
   });
 
   test("the truncation flag crosses the wire, and an older hub's document still parses", async () => {
-    const flagged = await fetchHubState(OWNER.serverUrl, "ocx_data_x", {
+    const flagged = await fetchHubState(OWNER.serverUrl, "occx_data_x", {
       fetchImpl: jsonFetch(hubState({ truncated: true })),
     });
     expect(flagged.truncated).toBe(true);
     // A hub that predates the flag sends no `truncated` key. Refusing that document would turn
     // an honesty field into a compatibility break; absent reads as "nothing was dropped".
     const { truncated: _dropped, ...withoutFlag } = hubState();
-    const older = await fetchHubState(OWNER.serverUrl, "ocx_data_x", { fetchImpl: jsonFetch(withoutFlag) });
+    const older = await fetchHubState(OWNER.serverUrl, "occx_data_x", { fetchImpl: jsonFetch(withoutFlag) });
     expect(older.truncated).toBe(false);
     // A present non-boolean is still refused, like every other field in this contract.
     expect(parseHubStateBody({ ...hubState(), truncated: "yes" })).toBeNull();
@@ -144,7 +144,7 @@ describe("fetchHubState", () => {
 
 describe("hubStateFailureReason", () => {
   // Every code `fetchHubState` throws needs a sentence: this string is printed verbatim in the
-  // `ocx status` banner, and `state unavailable (hub_state_http_507)` sends an operator hunting
+  // `occx status` banner, and `state unavailable (hub_state_http_507)` sends an operator hunting
   // for a client bug when the hub has answered and said something.
   test.each([
     ["hub_state_content_type_invalid", "the hub's state response was not JSON"],
@@ -162,14 +162,14 @@ describe("hubStateFailureReason", () => {
   test("the sentences reach the resolution, not just the helper", async () => {
     const contentType = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: jsonFetch("<html>captive portal</html>", { contentType: "text/html" }),
     });
     expect(contentType.stateSource).toBe("unavailable");
     expect(contentType.reason).toBe("the hub's state response was not JSON");
     const overSized = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: jsonFetch({ error: {} }, { status: 507 }),
     });
     expect(overSized.stateSource).toBe("unavailable");
@@ -181,7 +181,7 @@ describe("resolveHubState", () => {
   test("a live read reports stateSource hub and writes an owner-stamped 0600 cache", async () => {
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: jsonFetch(hubState()),
       now: Date.parse("2026-09-11T12:00:00.000Z"),
     });
@@ -198,7 +198,7 @@ describe("resolveHubState", () => {
     writeCachedHubState(OWNER, hubState(), "2026-09-11T11:00:00.000Z");
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: (() => { throw new Error("ECONNREFUSED"); }) as unknown as typeof fetch,
       now: Date.parse("2026-09-11T12:00:00.000Z"),
     });
@@ -212,7 +212,7 @@ describe("resolveHubState", () => {
   test("with no cache an unreachable hub is unavailable, never local state", async () => {
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: (() => { throw new Error("ECONNREFUSED"); }) as unknown as typeof fetch,
     });
     expect(resolved.stateSource).toBe("unavailable");
@@ -223,7 +223,7 @@ describe("resolveHubState", () => {
   test("an old hub is unavailable with an upgrade instruction", async () => {
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: jsonFetch({ error: {} }, { status: 404 }),
     });
     expect(resolved.stateSource).toBe("unavailable");
@@ -247,7 +247,7 @@ describe("resolveHubState", () => {
     let called = false;
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       allowNetwork: false,
       fetchImpl: (() => { called = true; throw new Error("should not be called"); }) as unknown as typeof fetch,
       now: Date.parse("2026-09-11T12:00:00.000Z"),
@@ -266,7 +266,7 @@ describe("resolveHubState", () => {
     expect(readCachedHubState(OWNER)).toBeNull();
     const resolved = await resolveHubState({
       owner: OWNER,
-      token: "ocx_data_x",
+      token: "occx_data_x",
       fetchImpl: (() => { throw new Error("ECONNREFUSED"); }) as unknown as typeof fetch,
     });
     expect(resolved.stateSource).toBe("unavailable");

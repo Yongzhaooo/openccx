@@ -47,7 +47,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -61,12 +61,12 @@ afterEach(() => {
       /* ignore */
     }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function withHome<T>(fn: (home: string) => T): T {
   const home = tempHome();
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   return fn(home);
 }
 
@@ -108,7 +108,7 @@ function protocolSubject(seed = "a"): ProtocolSubjectV1 {
   return {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: "protocol-v1",
+    openccxCompatibilityVersion: "protocol-v1",
     effectiveAdapter: "openai-chat",
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-chat",
@@ -406,7 +406,7 @@ describe("CL-02 claim supersession and conflicts", () => {
       inboundProtocol: "openai-responses",
       upstreamProtocol: "openai-responses",
       surface: "responses-http",
-      opencodexCompatibilityVersion: "protocol-v1",
+      openccxCompatibilityVersion: "protocol-v1",
       behaviorFingerprint: createHashHex("bf"),
       endpointFingerprint: createHashHex("ep"),
       dependencies: [],
@@ -906,7 +906,7 @@ describe("CL-02 review regression coverage", () => {
         inboundProtocol: "openai-responses",
         upstreamProtocol: "openai-responses",
         surface: "responses-http",
-        opencodexCompatibilityVersion: "protocol-v1",
+        openccxCompatibilityVersion: "protocol-v1",
         behaviorFingerprint: createHashHex("bf"),
         endpointFingerprint: createHashHex("ep"),
         dependencies: [],
@@ -1092,7 +1092,7 @@ describe("CL-02 phase-2 review regressions", () => {
         inboundProtocol: "openai-responses",
         upstreamProtocol: "openai-responses",
         surface: "responses-http",
-        opencodexCompatibilityVersion: "protocol-v1",
+        openccxCompatibilityVersion: "protocol-v1",
         behaviorFingerprint: createHashHex("bf"),
         endpointFingerprint: createHashHex("ep"),
         dependencies: [],

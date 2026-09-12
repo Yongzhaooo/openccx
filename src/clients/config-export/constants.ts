@@ -1,9 +1,9 @@
 // Shared client export constants.
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 
 
 /** Provider key owned by this project; the only key any exporter ever emits. */
-export const OPENCODE_PROVIDER_ID = "opencodex";
+export const OPENCODE_PROVIDER_ID = "openccx";
 
 export const OPENCODE_CONFIG_SCHEMA = "https://opencode.ai/config.json";
 
@@ -12,7 +12,7 @@ export const OPENCODE_CONFIG_SCHEMA = "https://opencode.ai/config.json";
  * `{env:...}` reference, so the secret never lands on disk. opencode substitutes it at
  * load time.
  */
-export const OPENCODE_API_KEY_ENV = "OPENCODEX_OPENCODE_API_KEY";
+export const OPENCODE_API_KEY_ENV = "OPENCCX_OPENCODE_API_KEY";
 
 /** Env reference shared by apiKey and the dedicated proxy admission header. */
 export const OPENCODE_API_KEY_ENV_REF = `{env:${OPENCODE_API_KEY_ENV}}`;
@@ -21,11 +21,11 @@ export const OPENCODE_API_KEY_ENV_REF = `{env:${OPENCODE_API_KEY_ENV}}`;
  * Hermes interpolates `${VAR}` anywhere in config.yaml, so the credential stays
  * in the environment exactly as it does for OpenCode.
  */
-export const HERMES_API_KEY_ENV = "OPENCODEX_HERMES_API_KEY";
+export const HERMES_API_KEY_ENV = "OPENCCX_HERMES_API_KEY";
 export const HERMES_API_KEY_ENV_REF = `\${${HERMES_API_KEY_ENV}}`;
 
 /** OpenClaw interpolates `${UPPERCASE_VAR}` and fails closed when it is unset. */
-export const OPENCLAW_API_KEY_ENV = "OPENCODEX_OPENCLAW_API_KEY";
+export const OPENCLAW_API_KEY_ENV = "OPENCCX_OPENCLAW_API_KEY";
 export const OPENCLAW_API_KEY_ENV_REF = `\${${OPENCLAW_API_KEY_ENV}}`;
 
 /**
@@ -34,14 +34,14 @@ export const OPENCLAW_API_KEY_ENV_REF = `\${${OPENCLAW_API_KEY_ENV}}`;
  * managed block uses rather than a user secret. Pi resolves `apiKey` before
  * building its model list and hides the provider when an env reference is unset.
  */
-export const LOOPBACK_API_KEY_PLACEHOLDER = "opencodex-loopback";
+export const LOOPBACK_API_KEY_PLACEHOLDER = "openccx-loopback";
 
 /**
  * Gajae's `apiKeyEnv` is env-name-only and fail-closed. Its sibling `apiKey`
  * falls back to treating the literal text as the token when the variable is
  * unset, which would silently ship a bogus credential — so we never emit it.
  */
-export const GAJAE_API_KEY_ENV = "OPENCODEX_GAJAE_API_KEY";
+export const GAJAE_API_KEY_ENV = "OPENCCX_GAJAE_API_KEY";
 
 /** Pi's wire-dialect selector for an OpenAI-compatible endpoint. */
 export const PI_API_DIALECT = "openai-completions";
@@ -61,9 +61,9 @@ export const PI_API_DIALECT = "openai-completions";
 export const SCHEMA_REQUIRED_OUTPUT_BUDGET = 32_000;
 
 /** Deterministic loopback default for exported provider-block helpers in tests. */
-export const OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG: OcxConfig = {
+export const OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;

@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { createGoogleAdapter as createGoogleAdapterProduction } from "../../../src/adapters/google";
 import { buildResponseJSON } from "../../../src/bridge";
-import type { AdapterEvent, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createGoogleAdapter = (...args: Parameters<typeof createGoogleAdapterProduction>) =>
   withTestTranslatorBudget(createGoogleAdapterProduction(...args));
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "google",
   baseUrl: "https://generativelanguage.googleapis.com",
   apiKey: "test-key",

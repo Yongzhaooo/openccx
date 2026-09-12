@@ -1,7 +1,7 @@
 import { create, fromBinary, toBinary, toJson } from "@bufbuild/protobuf";
 import { fromJson, type JsonValue } from "@bufbuild/protobuf";
 import { ValueSchema } from "@bufbuild/protobuf/wkt";
-import type { OcxAssistantContentPart, OcxMessage, OcxToolResultMessage } from "../../types";
+import type { OccxAssistantContentPart, OccxMessage, OccxToolResultMessage } from "../../types";
 import { namespacedToolName } from "../../types";
 import type { CursorRunRequest } from "./types";
 import { decodeCursorCallId } from "./call-id";
@@ -60,7 +60,7 @@ import {
   cursorRequestHasShellAlias,
   cursorRequestUsesCodeMode,
   CURSOR_SHELL_ALIAS_SYSTEM_NOTE,
-  OCX_RESPONSES_TOOL_PROVIDER,
+  OCCX_RESPONSES_TOOL_PROVIDER,
 } from "./tool-definitions";
 
 const encoder = new TextEncoder();
@@ -203,7 +203,7 @@ function systemPromptBlobs(request: CursorRunRequest): RootBlobCandidate[] {
 }
 
 function assistantRootText(
-  message: Extract<OcxMessage, { role: "assistant" }>,
+  message: Extract<OccxMessage, { role: "assistant" }>,
   includeThinking: boolean,
 ): string {
   if (typeof message.content === "string") return message.content;
@@ -230,7 +230,7 @@ function rootPromptMessages(
    * from the slice alone silently dropped the invocation line for every checkpoint continuation,
    * which is where the defect this line prevents actually reappeared in live use.
    */
-  knownCalls?: Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>>,
+  knownCalls?: Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>>,
   /**
    * Full-history index of `rawMessages[0]` for this call. Non-zero only on the checkpoint path, where
    * only a suffix is replayed but `knownCalls` still spans full history; the positional bound needs
@@ -712,7 +712,7 @@ function rootPromptMessages(
   };
 }
 
-function contentText(message: OcxMessage): string {
+function contentText(message: OccxMessage): string {
   if (message.role === "toolResult") return toolResultToText(message);
   if (typeof message.content === "string") return message.content;
   return message.content
@@ -726,7 +726,7 @@ function contentText(message: OcxMessage): string {
     .join("\n");
 }
 
-function contentToText(content: OcxToolResultMessage["content"]): string {
+function contentToText(content: OccxToolResultMessage["content"]): string {
   if (typeof content === "string") return content;
   return content
     .map(part => {
@@ -739,7 +739,7 @@ function contentToText(content: OcxToolResultMessage["content"]): string {
 }
 
 /** History serializer. Replayed turns are text-only; never embed image bytes. */
-function historyContentText(message: OcxMessage): string {
+function historyContentText(message: OccxMessage): string {
   if (message.role === "toolResult" || typeof message.content === "string") return contentText(message);
   return message.content
     .map(part => {
@@ -757,7 +757,7 @@ const BASE64_PATTERN = /^[A-Za-z0-9+/]*={0,2}$/;
 /**
  * Decode a Codex inline image into Cursor wire bytes.
  *
- * `OcxImageContent.imageUrl` is either a `data:` URL or a remote https URL, so this cannot reuse
+ * `OccxImageContent.imageUrl` is either a `data:` URL or a remote https URL, so this cannot reuse
  * the MCP helper (which takes bare base64 plus a separate mime). It layers strict validation over
  * the shared `parseDataUrl` rather than tightening it, because Anthropic, Google, and Command Code
  * share that parser. `Buffer.from(x, "base64")` accepts many invalid strings silently, so the
@@ -806,7 +806,7 @@ type NormalizedToolResult = { text: string; isError: boolean };
  * shrinking it to fit blob admission, and decoding base64 on every attempt made that loop
  * quadratic (an audit measured ~3s for 100 images).
  */
-function decodeResultParts(message: OcxToolResultMessage): DecodedResultPart[] | undefined {
+function decodeResultParts(message: OccxToolResultMessage): DecodedResultPart[] | undefined {
   const content = message.content;
   if (typeof content === "string") return undefined;
   return content.map((part): DecodedResultPart => {
@@ -830,7 +830,7 @@ function countImages(parts: DecodedResultPart[] | undefined): number {
  * browser QA) that Codex routes through this path.
  */
 function toolResultContentItems(
-  message: OcxToolResultMessage,
+  message: OccxToolResultMessage,
   codeMode: boolean,
   decoded?: DecodedResultPart[],
   maxImages = Number.POSITIVE_INFINITY,
@@ -905,7 +905,7 @@ function toolResultContentItems(
 
 /**
  * Serialize tool-call arguments for the replayed transcript, or `undefined` when they cannot be
- * serialized at all. `OcxToolCall.arguments` is always an object, but it originates in provider
+ * serialized at all. `OccxToolCall.arguments` is always an object, but it originates in provider
  * JSON, so a cyclic or BigInt-bearing value must degrade instead of throwing inside request
  * encoding. The failure is reported as `undefined` rather than a marker string so callers can tell
  * "these two argument sets are equal" apart from "neither could be read" — collapsing both onto one
@@ -963,7 +963,7 @@ function toolCallArgumentsText(args: Record<string, unknown>): string {
  * narrating a phantom interrupt (devlog 260829 000_rca). A prose line inside the result satisfies
  * both: the invocation is visible, but there is no call-shaped template to copy.
  */
-function toolInvocationLine(call: Extract<OcxAssistantContentPart, { type: "toolCall" }>): string {
+function toolInvocationLine(call: Extract<OccxAssistantContentPart, { type: "toolCall" }>): string {
   return `invoked: ${namespacedToolName(call.namespace, call.name)} with ${toolCallArgumentsText(call.arguments)}`;
 }
 
@@ -974,7 +974,7 @@ function toolInvocationLine(call: Extract<OcxAssistantContentPart, { type: "tool
  * checkpoint site, and changing its shape would touch every one of them for data only the bound reads.
  */
 const callPositions = new WeakMap<
-  Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>>,
+  Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>>,
   Map<string, number>
 >();
 
@@ -992,10 +992,10 @@ const callPositions = new WeakMap<
  * drops legitimate pairings and re-creates the orphan #2910 fixed.
  */
 function callBefore(
-  calls: Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>> | undefined,
+  calls: Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>> | undefined,
   callId: string,
   resultIndex: number,
-): Extract<OcxAssistantContentPart, { type: "toolCall" }> | undefined {
+): Extract<OccxAssistantContentPart, { type: "toolCall" }> | undefined {
   const call = calls?.get(callId);
   if (!call || !calls) return undefined;
   const position = callPositions.get(calls)?.get(callId);
@@ -1014,8 +1014,8 @@ function callBefore(
  * binding is the one an earlier result belongs to) and drop the ambiguous id entirely once a second
  * distinct call claims it, which degrades to the honest no-invocation-line path.
  */
-function toolCallsByCallId(messages: readonly OcxMessage[]): Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>> {
-  const calls = new Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>>();
+function toolCallsByCallId(messages: readonly OccxMessage[]): Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>> {
+  const calls = new Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>>();
   const ambiguous = new Set<string>();
   const positions = new Map<string, number>();
   for (let index = 0; index < messages.length; index++) {
@@ -1059,8 +1059,8 @@ function toolCallsByCallId(messages: readonly OcxMessage[]): Map<string, Extract
  * the envelope is emitted unchanged rather than guessing.
  */
 function toolResultToText(
-  message: OcxToolResultMessage,
-  call?: Extract<OcxAssistantContentPart, { type: "toolCall" }>,
+  message: OccxToolResultMessage,
+  call?: Extract<OccxAssistantContentPart, { type: "toolCall" }>,
   codeMode = false,
 ): string {
   const normalized = normalizedToolResult(message, contentToText(message.content), codeMode);
@@ -1079,7 +1079,7 @@ function toolResultToText(
  * Shared #1920 normalization entry: pure-text results only. Image-bearing or
  * encrypted results pass through untouched (their content is not plain text).
  */
-function normalizedToolResult(message: OcxToolResultMessage, text: string, codeMode: boolean): NormalizedToolResult {
+function normalizedToolResult(message: OccxToolResultMessage, text: string, codeMode: boolean): NormalizedToolResult {
   if (message.containsEncryptedContent
     || (Array.isArray(message.content) && message.content.some(part => part.type !== "text"))) {
     return { text, isError: message.isError };
@@ -1098,7 +1098,7 @@ function normalizedToolResult(message: OcxToolResultMessage, text: string, codeM
  * normalization contract. Any image or undecodable part keeps the existing part-preserving path.
  */
 function normalizedDecodedTextResult(
-  message: OcxToolResultMessage,
+  message: OccxToolResultMessage,
   parts: DecodedResultPart[],
   codeMode: boolean,
 ): NormalizedToolResult | undefined {
@@ -1115,9 +1115,9 @@ function argBytes(value: unknown): Uint8Array {
 }
 
 function toolCallStep(
-  part: Extract<OcxAssistantContentPart, { type: "toolCall" }>,
+  part: Extract<OccxAssistantContentPart, { type: "toolCall" }>,
   requestScope: CursorBlobRequestScopeToken,
-  result?: OcxToolResultMessage,
+  result?: OccxToolResultMessage,
   codeMode = false,
 ): Uint8Array {
   const args: Record<string, Uint8Array> = {};
@@ -1137,7 +1137,7 @@ function toolCallStep(
               name: toolName,
               toolName,
               toolCallId: decodeCursorCallId(part.id),
-              providerIdentifier: OCX_RESPONSES_TOOL_PROVIDER,
+              providerIdentifier: OCCX_RESPONSES_TOOL_PROVIDER,
               args,
             }),
             ...(result ? { result: toolResultPart(result, codeMode, decodedResult, maxImages) } : {}),
@@ -1161,7 +1161,7 @@ function toolCallStep(
   return storeCursorBlob(encoded, requestScope);
 }
 
-function toolResultPart(message: OcxToolResultMessage, codeMode: boolean, decoded?: DecodedResultPart[], maxImages?: number) {
+function toolResultPart(message: OccxToolResultMessage, codeMode: boolean, decoded?: DecodedResultPart[], maxImages?: number) {
   const parts = decoded ?? decodeResultParts(message);
   const normalized = parts
     ? normalizedDecodedTextResult(message, parts, codeMode)
@@ -1177,7 +1177,7 @@ function toolResultPart(message: OcxToolResultMessage, codeMode: boolean, decode
   });
 }
 
-function assistantStep(part: OcxAssistantContentPart, requestScope: CursorBlobRequestScopeToken): Uint8Array | undefined {
+function assistantStep(part: OccxAssistantContentPart, requestScope: CursorBlobRequestScopeToken): Uint8Array | undefined {
   if (part.type === "toolCall") return toolCallStep(part, requestScope);
   if (part.type === "thinking") {
     return storeCursorBlob(toBinary(ConversationStepSchema, create(ConversationStepSchema, {
@@ -1196,7 +1196,7 @@ function assistantStep(part: OcxAssistantContentPart, requestScope: CursorBlobRe
   })), requestScope);
 }
 
-function lastActionIndex(messages: readonly OcxMessage[] | undefined): number {
+function lastActionIndex(messages: readonly OccxMessage[] | undefined): number {
   if (!messages) return -1;
   for (let i = messages.length - 1; i >= 0; i--) {
     const role = messages[i]?.role;
@@ -1212,7 +1212,7 @@ function conversationTurns(
   codeMode: boolean,
   historyMessageStart = 0,
   /** Calls indexed from the FULL history; see {@link rootPromptMessages}. */
-  knownCalls?: Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>>,
+  knownCalls?: Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>>,
   /** Full-history index of `rawMessages[0]`; see {@link rootPromptMessages}. */
   knownCallsOffset = 0,
 ): Uint8Array[] {
@@ -1225,7 +1225,7 @@ function conversationTurns(
   const turnCalls = externalModel ? (knownCalls ?? toolCallsByCallId(messages)) : undefined;
   const turns: Uint8Array[] = [];
   let current: { userMessage: Uint8Array; steps: Uint8Array[] } | undefined;
-  const pendingToolCalls = new Map<string, Extract<OcxAssistantContentPart, { type: "toolCall" }>>();
+  const pendingToolCalls = new Map<string, Extract<OccxAssistantContentPart, { type: "toolCall" }>>();
   const flush = () => {
     if (!current) return;
     for (const part of pendingToolCalls.values()) current.steps.push(toolCallStep(part, requestScope));

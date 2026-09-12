@@ -3,7 +3,7 @@ import { extname, isAbsolute, join, relative, resolve } from "node:path";
 import { browserSecurityHeaders } from "./auth-cors";
 import type { GuiSessionBootstrap } from "./gui-session";
 
-/** opencodex version, read from the packaged package.json (same source as the server bootstrap). */
+/** openccx version, read from the packaged package.json (same source as the server bootstrap). */
 const VERSION = (() => {
   try {
     return JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version as string;
@@ -68,10 +68,10 @@ function escapeHtmlAttribute(value: string): string {
 /** Shared session meta-tag block, escaped for quoted attribute interpolation. */
 function sessionBootstrapMeta(session: GuiSessionBootstrap): string {
   return [
-    `<meta name="opencodex-session-token" content="${escapeHtmlAttribute(session.token)}">`,
-    `<meta name="opencodex-session-csrf" content="${escapeHtmlAttribute(session.csrfToken)}">`,
-    `<meta name="opencodex-session-origin" content="${escapeHtmlAttribute(session.browserOrigin)}">`,
-    `<meta name="opencodex-session-server-origin" content="${escapeHtmlAttribute(session.serverOrigin)}">`,
+    `<meta name="openccx-session-token" content="${escapeHtmlAttribute(session.token)}">`,
+    `<meta name="openccx-session-csrf" content="${escapeHtmlAttribute(session.csrfToken)}">`,
+    `<meta name="openccx-session-origin" content="${escapeHtmlAttribute(session.browserOrigin)}">`,
+    `<meta name="openccx-session-server-origin" content="${escapeHtmlAttribute(session.serverOrigin)}">`,
   ].join("");
 }
 
@@ -87,7 +87,7 @@ function sessionBootstrapMeta(session: GuiSessionBootstrap): string {
  * and which the dashboard already reflects everywhere else.
  */
 function runtimeRoleMeta(runtimeRole: string): string {
-  return `<meta name="opencodex-runtime-role" content="${escapeHtmlAttribute(runtimeRole)}">`;
+  return `<meta name="openccx-runtime-role" content="${escapeHtmlAttribute(runtimeRole)}">`;
 }
 
 /**
@@ -104,7 +104,7 @@ function runtimeRoleMeta(runtimeRole: string): string {
  * already reflect.
  */
 function managementAuthRequiredMeta(required: boolean): string {
-  return `<meta name="opencodex-management-auth-required" content="${required ? "1" : "0"}">`;
+  return `<meta name="openccx-management-auth-required" content="${required ? "1" : "0"}">`;
 }
 function htmlDocumentResponse(html: string): Response {
   return new Response(html, {
@@ -181,11 +181,11 @@ export function serveGuiFile(
 export function rootFallbackPayload() {
   return {
     status: "ok",
-    service: "opencodex",
+    service: "openccx",
     version: VERSION,
     dashboard: {
       available: false,
-      reason: "GUI build not found. Run `bun run build:gui` from the opencodex repo, or use `ocx gui` from a packaged install.",
+      reason: "GUI build not found. Run `bun run build:gui` from the openccx repo, or use `occx gui` from a packaged install.",
     },
     endpoints: {
       health: "/healthz",

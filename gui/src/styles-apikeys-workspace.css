@@ -260,7 +260,7 @@
    behavior, including the client-config panel that 260731_client_config_export
    mounts into this same workspace. Scoping these to .awi-usage-panel would let
    that panel's JSON block fall back to trapping the wheel. */
-.api-example-copy-btn.ocx-tooltip,
+.api-example-copy-btn.occx-tooltip,
 .api-example-copy-btn {
   display: block;
   min-width: 0;

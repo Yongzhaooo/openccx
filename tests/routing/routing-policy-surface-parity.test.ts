@@ -7,7 +7,7 @@ import { chatCompletionsToResponsesBody } from "../../src/chat/inbound";
 import { anthropicToResponsesTranslation } from "../../src/claude/inbound";
 import { evidenceFromBody } from "../../src/routing/request-evidence";
 import type { ProviderAdapter } from "../../src/adapters/base";
-import type { AdapterEvent, OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxProviderConfig } from "../../src/types";
 import { clearRequestLogsForTests, type RequestLogContext } from "../../src/server/request-log";
 import { readUsageEntries } from "../../src/usage/log";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -113,11 +113,11 @@ describe("routing policy request evidence parity (translator-level coverage)", (
 // ---- Handler-level parity tests (via dev handler entry points) ----
 
 const actualResolver = await import("../../src/server/adapter-resolve");
-let adapterFactory: ((provider: OcxProviderConfig) => ProviderAdapter) | undefined;
+let adapterFactory: ((provider: OccxProviderConfig) => ProviderAdapter) | undefined;
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     return adapterFactory?.(provider) ?? actualResolver.resolveAdapter(provider, cacheRetention);
   },
 }));
@@ -130,7 +130,7 @@ afterEach(() => {
   adapterFactory = undefined;
 });
 
-function testConfig(): OcxConfig {
+function testConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "a",
@@ -149,10 +149,10 @@ function testConfig(): OcxConfig {
     routingProfiles: {
       daily: { candidates: [{ provider: "a", model: "m1" }] },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function minimalSuccessAdapter(provider: OcxProviderConfig): ProviderAdapter {
+function minimalSuccessAdapter(provider: OccxProviderConfig): ProviderAdapter {
   return {
     name: "test-run-turn",
     buildRequest: () => ({ url: provider.baseUrl, method: "POST", headers: {}, body: "" }),
@@ -168,9 +168,9 @@ function minimalSuccessAdapter(provider: OcxProviderConfig): ProviderAdapter {
 
 describe("routing policy request evidence parity (via dev handlers)", () => {
   test("finalized Chat and Messages policy errors retain the rejected selector", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-policy-log-"));
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-policy-log-"));
+    process.env.OPENCCX_HOME = home;
     clearRequestLogsForTests();
     try {
       for (const [wire, handler, body] of [
@@ -189,8 +189,8 @@ describe("routing policy request evidence parity (via dev handlers)", () => {
       }
     } finally {
       clearRequestLogsForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });

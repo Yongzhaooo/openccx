@@ -83,7 +83,7 @@ describe("optional shutdown hooks", () => {
 describe("lab automation scheduler teardown registration", () => {
   test("a scheduler started without dispatch deps is still stopped by shutdown", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-hook-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-hook-"));
     try {
       startLabAutomationScheduler(configDir);
       expect(isLabAutomationSchedulerRunning(configDir)).toBe(true);
@@ -104,7 +104,7 @@ describe("lab automation scheduler teardown — reviewer-reproduced cases", () =
   // unusual setup, which makes it the most likely path in production.
   test("case D: scheduler restarted by the management API after release is stopped", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-case-d-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-case-d-"));
     try {
       const release = setLabAutomationDispatchDeps({
         configDir,
@@ -124,7 +124,7 @@ describe("lab automation scheduler teardown — reviewer-reproduced cases", () =
   // Case B: an empty-deps call early-returns a no-op release without registering anything.
   test("case B: empty-deps no-op still leaves a stoppable scheduler", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-case-b-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-case-b-"));
     try {
       setLabAutomationDispatchDeps({} as never);
       startLabAutomationScheduler(configDir);
@@ -139,7 +139,7 @@ describe("lab automation scheduler teardown — reviewer-reproduced cases", () =
   // Case C: the ordinary activation path must keep working.
   test("case C: normal activation path is stopped by shutdown", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-case-c-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-case-c-"));
     try {
       setLabAutomationDispatchDeps({
         configDir,
@@ -158,7 +158,7 @@ describe("lab automation scheduler teardown — reviewer-reproduced cases", () =
   // Shutdown may run twice (drain called again, or a lease release after drain).
   test("double shutdown is safe and leaves the scheduler stopped", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-double-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-double-"));
     try {
       startLabAutomationScheduler(configDir);
       expect(() => { runOptionalShutdownHooks(); runOptionalShutdownHooks(); }).not.toThrow();
@@ -175,7 +175,7 @@ describe("lab automation scheduler teardown — reviewer-reproduced cases", () =
 describe("scheduler hook keying", () => {
   test("repeated starts do not accumulate and shutdown still stops the timer", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-idem-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-idem-"));
     try {
       startLabAutomationScheduler(configDir);
       startLabAutomationScheduler(configDir);
@@ -191,7 +191,7 @@ describe("scheduler hook keying", () => {
   // An in-process restart (service restart, test suite) must re-arm the hook.
   test("a scheduler restarted after shutdown is stoppable again", () => {
     resetOptionalShutdownHooksForTests();
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-shutdown-restart-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-shutdown-restart-"));
     try {
       startLabAutomationScheduler(configDir);
       runOptionalShutdownHooks();

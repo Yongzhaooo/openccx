@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { OcxAssistantMessage, OcxMessage, OcxParsedRequest } from "../types";
+import type { OccxAssistantMessage, OccxMessage, OccxParsedRequest } from "../types";
 
 const DELIVERED_FINAL_ANSWER_TTL_MS = 60 * 60 * 1_000;
 const DELIVERED_FINAL_ANSWER_MAX_ENTRIES = 1_024;
@@ -9,7 +9,7 @@ interface DeliveredFinalAnswerRecord {
   createdAt: number;
 }
 
-const scopesByRequest = new WeakMap<OcxParsedRequest, string>();
+const scopesByRequest = new WeakMap<OccxParsedRequest, string>();
 const deliveredFinalAnswers = new Map<string, DeliveredFinalAnswerRecord>();
 
 function pruneDeliveredFinalAnswers(at = Date.now()): void {
@@ -27,7 +27,7 @@ function textFingerprint(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
 
-function assistantText(message: OcxAssistantMessage): string | undefined {
+function assistantText(message: OccxAssistantMessage): string | undefined {
   if (message.content.some(part => part.type === "toolCall")) return undefined;
   const text = message.content
     .filter((part): part is Extract<typeof part, { type: "text" }> => part.type === "text")
@@ -58,7 +58,7 @@ function deliveredFinalAnswerText(response: unknown): string | undefined {
 }
 
 /** Bind the normalized per-conversation digest without adding proxy-private fields to the wire body. */
-export function bindTurnTerminationScope(parsed: OcxParsedRequest, scope: string | undefined): void {
+export function bindTurnTerminationScope(parsed: OccxParsedRequest, scope: string | undefined): void {
   // Only the normalized log-conversation digest may key this process-wide map. Refusing any raw
   // fallback prevents a future caller from retaining a client header or account identifier here.
   if (!scope || !/^[0-9a-f]{32}$/.test(scope)) return;
@@ -66,7 +66,7 @@ export function bindTurnTerminationScope(parsed: OcxParsedRequest, scope: string
 }
 
 /** Remember only a final-answer message the proxy actually emitted for this exact conversation. */
-export function rememberDeliveredFinalAnswer(parsed: OcxParsedRequest, response: unknown): void {
+export function rememberDeliveredFinalAnswer(parsed: OccxParsedRequest, response: unknown): void {
   const scope = scopesByRequest.get(parsed);
   if (!scope) return;
   const text = deliveredFinalAnswerText(response);
@@ -85,8 +85,8 @@ export function rememberDeliveredFinalAnswer(parsed: OcxParsedRequest, response:
  * legitimate next turn necessarily contains such a message somewhere in its history.
  */
 export function hasRecordedTrailingDeliveredFinalAnswer(
-  parsed: OcxParsedRequest,
-  messages: readonly OcxMessage[],
+  parsed: OccxParsedRequest,
+  messages: readonly OccxMessage[],
 ): boolean {
   const scope = scopesByRequest.get(parsed);
   if (!scope) return false;
@@ -96,9 +96,9 @@ export function hasRecordedTrailingDeliveredFinalAnswer(
   for (let i = messages.length - 1; i >= 0; i--) {
     const message = messages[i];
     if (message.role !== "assistant") return false;
-    const text = assistantText(message as OcxAssistantMessage);
+    const text = assistantText(message as OccxAssistantMessage);
     if (text === undefined) {
-      if ((message as OcxAssistantMessage).content.some(part => part.type === "toolCall")) return false;
+      if ((message as OccxAssistantMessage).content.some(part => part.type === "toolCall")) return false;
       continue;
     }
     return textFingerprint(text) === record.fingerprint;

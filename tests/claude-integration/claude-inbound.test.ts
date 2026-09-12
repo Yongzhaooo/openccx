@@ -2,12 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { AnthropicRequestError as LeafAnthropicRequestError } from "../../src/claude/inbound-records";
 import { repoPath } from "../helpers/repo-root";
-import { AnthropicRequestError, anthropicToResponsesBody, anthropicToResponsesTranslation, effortForThinkingBudget, extractOcxEffortDirective, resolveInboundModel } from "../../src/claude/inbound";
+import { AnthropicRequestError, anthropicToResponsesBody, anthropicToResponsesTranslation, effortForThinkingBudget, extractOccxEffortDirective, resolveInboundModel } from "../../src/claude/inbound";
 import { parseRequest } from "../../src/responses/parser";
 import { responsesRequestSchema } from "../../src/responses/schema";
 import { createResponsesPassthroughAdapter } from "../../src/adapters/openai-responses";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 // The translator returns an untyped wire body. These aliases name just the fields the
 // system-message cases assert on, so the assertions read as a contract instead of a cast.
@@ -480,7 +480,7 @@ describe("claude inbound translation", () => {
     // changes the model picker -- and acting on it would silently move a classifier turn onto a
     // provider with its own privacy and billing consequences.
     expect(resolveInboundModel("claude-opus-5", { model: "RelayA/claude-fable-5" })).toBe("claude-opus-5");
-    expect(resolveInboundModel("claude-opus-5", { model: "claude-ocx-RelayA--claude-fable-5" })).toBe("claude-opus-5");
+    expect(resolveInboundModel("claude-opus-5", { model: "claude-occx-RelayA--claude-fable-5" })).toBe("claude-opus-5");
     expect(resolveInboundModel("claude-opus-5", { model: "native/claude-opus-5" })).toBe("claude-opus-5");
 
     // 5. Malformed operator config is ignored rather than half-applied.
@@ -563,8 +563,8 @@ describe("prompt cache key provenance (devlog 130 B3)", () => {
   });
 
   test("[1m] strip works for both alias families before decode", () => {
-    // Legacy claude-ocx-* (pure decode, no registry needed).
-    expect(resolveInboundModel("claude-ocx-cursor--gpt-5.6-luna[1m]")).toBe("cursor/gpt-5.6-luna");
+    // Legacy claude-occx-* (pure decode, no registry needed).
+    expect(resolveInboundModel("claude-occx-cursor--gpt-5.6-luna[1m]")).toBe("cursor/gpt-5.6-luna");
   });
 });
 
@@ -676,34 +676,34 @@ describe("bundled-skill elision for routed models (devlog 260712 060)", () => {
   });
 });
 
-describe("ocx-route directive (devlog 072)", () => {
-  const { extractOcxRouteDirective } = require("../../src/claude/inbound") as typeof import("../../src/claude/inbound");
+describe("occx-route directive (devlog 072)", () => {
+  const { extractOccxRouteDirective } = require("../../src/claude/inbound") as typeof import("../../src/claude/inbound");
 
   test("extracts from string and block-array system; first directive wins", () => {
-    expect(extractOcxRouteDirective({ system: "intro\n<!-- ocx-route: claude-ocx-native--gpt-5.6-sol[1m] -->\nrest" }))
-      .toBe("claude-ocx-native--gpt-5.6-sol[1m]");
-    expect(extractOcxRouteDirective({
+    expect(extractOccxRouteDirective({ system: "intro\n<!-- occx-route: claude-occx-native--gpt-5.6-sol[1m] -->\nrest" }))
+      .toBe("claude-occx-native--gpt-5.6-sol[1m]");
+    expect(extractOccxRouteDirective({
       system: [
         { type: "text", text: "You are a delegated worker" },
-        { type: "text", text: "<!-- ocx-route: gemini/gemini-3-pro --> and <!-- ocx-route: other -->" },
+        { type: "text", text: "<!-- occx-route: gemini/gemini-3-pro --> and <!-- occx-route: other -->" },
       ],
     })).toBe("gemini/gemini-3-pro");
   });
 
   test("extracts only supported generated-agent effort values", () => {
-    expect(extractOcxEffortDirective({ system: "<!-- ocx-effort: max -->" })).toBe("max");
-    expect(extractOcxEffortDirective({
-      system: [{ type: "text", text: "<!-- ocx-effort: xhigh -->" }],
+    expect(extractOccxEffortDirective({ system: "<!-- occx-effort: max -->" })).toBe("max");
+    expect(extractOccxEffortDirective({
+      system: [{ type: "text", text: "<!-- occx-effort: xhigh -->" }],
     })).toBe("xhigh");
-    expect(extractOcxEffortDirective({ system: "<!-- ocx-effort: ultra -->" })).toBeNull();
+    expect(extractOccxEffortDirective({ system: "<!-- occx-effort: ultra -->" })).toBeNull();
   });
 
   test("absent or malformed directives return null", () => {
-    expect(extractOcxRouteDirective({ system: "no directive here" })).toBeNull();
-    expect(extractOcxRouteDirective({ system: [{ type: "text", text: "<!-- ocx-route: -->" }] })).toBeNull();
-    expect(extractOcxRouteDirective({})).toBeNull();
-    expect(extractOcxRouteDirective(null)).toBeNull();
-    expect(extractOcxEffortDirective(null)).toBeNull();
+    expect(extractOccxRouteDirective({ system: "no directive here" })).toBeNull();
+    expect(extractOccxRouteDirective({ system: [{ type: "text", text: "<!-- occx-route: -->" }] })).toBeNull();
+    expect(extractOccxRouteDirective({})).toBeNull();
+    expect(extractOccxRouteDirective(null)).toBeNull();
+    expect(extractOccxEffortDirective(null)).toBeNull();
   });
 });
 
@@ -787,7 +787,7 @@ describe("#3922 translated tools carry the source strict intent", () => {
       authMode: "key",
       baseUrl: "https://api.openai.com/v1",
       apiKey: "test-key",
-    } as OcxProviderConfig));
+    } as OccxProviderConfig));
 
     for (const [tool, expected] of [
       [agent(), false],

@@ -6,7 +6,7 @@ import { INTERNAL_DEADLINE_MS, SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { handleConfigCommand } from "../../src/cli/config-command";
 import { validateConfigCandidate } from "../../src/config";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   recordQuotaResetEvent,
   resetQuotaResetStoreForTests,
@@ -207,7 +207,7 @@ describe("webhook sink", () => {
 
 describe("command sink", () => {
   test("the event JSON arrives on stdin", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-cmd-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-cmd-"));
     const out = join(dir, "captured.json");
     const script = join(dir, "sink.ts");
     writeFileSync(script, [
@@ -230,7 +230,7 @@ describe("command sink", () => {
   test("a missing binary reports spawn-failed rather than throwing", async () => {
     const config = resolveQuotaResetNotify({
       enabled: true,
-      command: ["ocx-no-such-binary-a7f3", "--go"],
+      command: ["occx-no-such-binary-a7f3", "--go"],
     });
     expect(await deliverQuotaResetEvent(event(), config)).toEqual([
       { sink: "command", ok: false, reason: "spawn-failed" },
@@ -248,7 +248,7 @@ describe("command sink", () => {
 describe("sinks are independent", () => {
   test("a blocked webhook does not stop the command from running", async () => {
     // The whole point of two sinks is redundancy; one failing must not suppress the other.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-both-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-both-"));
     const out = join(dir, "ran.txt");
     const script = join(dir, "sink.ts");
     writeFileSync(script, `await Bun.write(${JSON.stringify(out)}, "ran");`);
@@ -268,7 +268,7 @@ describe("sinks are independent", () => {
 
 describe("kind filtering", () => {
   test("an excluded kind is not delivered at all", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-kind-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-kind-"));
     const out = join(dir, "should-not-exist.txt");
     const script = join(dir, "sink.ts");
     writeFileSync(script, `await Bun.write(${JSON.stringify(out)}, "ran");`);
@@ -366,11 +366,11 @@ describe("config integration", () => {
 });
 
 describe("webhookUrl is treated as a credential", () => {
-  test("ocx config show does not print it", async () => {
+  test("occx config show does not print it", async () => {
     // For Slack and Discord the URL IS the authorization: anyone holding it can post to the
     // channel. It matches none of the pre-existing secret-key patterns, so it had to be named
     // explicitly — before that, `config show` printed it and `config export` wrote it to disk.
-    const home = mkdtempSync(join(tmpdir(), "ocx-redact-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-redact-"));
     const secret = "https://hooks.slack.com/services/T00000/B00000/zzTOKENzz";
     writeFileSync(join(home, "config.json"), JSON.stringify({
       port: 10100,
@@ -381,8 +381,8 @@ describe("webhookUrl is treated as a credential", () => {
       quotaResetNotify: { enabled: true, webhookUrl: secret },
     }));
 
-    const previousHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+    const previousHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     const written: string[] = [];
     const originalLog = console.log;
     console.log = (...args: unknown[]) => { written.push(args.map(String).join(" ")); };
@@ -395,21 +395,21 @@ describe("webhookUrl is treated as a credential", () => {
       expect(output).toContain("********");
     } finally {
       console.log = originalLog;
-      if (previousHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = previousHome;
+      if (previousHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = previousHome;
     }
   });
 });
 
 describe("GET /api/quota-resets", () => {
-  function managementConfig(): OcxConfig {
+  function managementConfig(): OccxConfig {
     return {
       port: 10100,
       defaultProvider: "openai",
       providers: {
         openai: { adapter: "openai-responses", baseUrl: "https://api.openai.com/v1" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   async function get(path: string, method = "GET"): Promise<Response | null> {
@@ -423,13 +423,13 @@ describe("GET /api/quota-resets", () => {
   }
 
   test("it reports recorded events and whether detection is even on", async () => {
-    // An isolated OPENCODEX_HOME, because the event ring is PERSISTED. Without this the store
+    // An isolated OPENCCX_HOME, because the event ring is PERSISTED. Without this the store
     // hydrates from the developer's real state file and the count assertion below reflects
     // whatever that machine happens to hold — which is how this test first failed only when run
     // after the suites that write events.
-    const home = mkdtempSync(join(tmpdir(), "ocx-route-"));
-    const previousHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-route-"));
+    const previousHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     try {
       resetQuotaResetStoreForTests();
       recordQuotaResetEvent(event({ key: "codex|tag|weekly|route" }));
@@ -444,8 +444,8 @@ describe("GET /api/quota-resets", () => {
       expect(body.events).toHaveLength(1);
     } finally {
       resetQuotaResetStoreForTests();
-      if (previousHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = previousHome;
+      if (previousHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = previousHome;
     }
   });
 
@@ -465,7 +465,7 @@ describe("GET /api/quota-resets", () => {
 
 describe("activation is the single switch", () => {
   test("an absent config section installs no sink at all", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-inert-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-inert-"));
     writeFileSync(join(home, "config.json"), JSON.stringify({
       port: 10100,
       defaultProvider: "openai",
@@ -474,8 +474,8 @@ describe("activation is the single switch", () => {
       },
     }));
 
-    const previousHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+    const previousHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     try {
       resetQuotaResetNotifyCacheForTests();
       resetQuotaResetActivationForTests();
@@ -489,8 +489,8 @@ describe("activation is the single switch", () => {
       setQuotaResetSink(null);
       resetQuotaResetActivationForTests();
       resetQuotaResetNotifyCacheForTests();
-      if (previousHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = previousHome;
+      if (previousHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = previousHome;
     }
   });
 
@@ -518,7 +518,7 @@ describe("activation is the single switch", () => {
     const dispatched: string[] = [];
     let receiveTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    const home = mkdtempSync(join(tmpdir(), "ocx-live-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-live-"));
     writeFileSync(join(home, "config.json"), JSON.stringify({
       port: 10100,
       defaultProvider: "openai",
@@ -534,8 +534,8 @@ describe("activation is the single switch", () => {
       },
     }));
 
-    const previousHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+    const previousHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     try {
       globalThis.fetch = Object.assign((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
         if (input === webhookUrl) {
@@ -589,8 +589,8 @@ describe("activation is the single switch", () => {
       resetQuotaResetNotifyCacheForTests();
       clearAccountQuota();
       server.stop(true);
-      if (previousHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = previousHome;
+      if (previousHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = previousHome;
     }
   }, { timeout: SERVER_BUDGET_MS });
 });

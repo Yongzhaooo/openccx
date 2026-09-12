@@ -4,7 +4,7 @@ import {
   clearReasoningReplayCacheForTests,
   peekReasoningForCall,
 } from "../../src/responses/reasoning-replay-cache";
-import type { AdapterEvent, OcxReasoningReplayScopeRef } from "../../src/types";
+import type { AdapterEvent, OccxReasoningReplayScopeRef } from "../../src/types";
 
 /**
  * Regression for issue #950's non-streaming path: chat-completions batch
@@ -18,7 +18,7 @@ import type { AdapterEvent, OcxReasoningReplayScopeRef } from "../../src/types";
  */
 
 const REASONING = "I need to inspect files before answering.";
-const SCOPE: OcxReasoningReplayScopeRef = {
+const SCOPE: OccxReasoningReplayScopeRef = {
   clientThreadId: "thread-batch",
   current: {
     providerName: "opencode-free",
@@ -28,7 +28,7 @@ const SCOPE: OcxReasoningReplayScopeRef = {
     credentialIdentity: "key:test",
   },
 };
-const GLOBAL_SCOPE: OcxReasoningReplayScopeRef = { ...SCOPE, clientThreadId: "global" };
+const GLOBAL_SCOPE: OccxReasoningReplayScopeRef = { ...SCOPE, clientThreadId: "global" };
 
 function batchOutput(events: AdapterEvent[]): Record<string, unknown> {
   return buildResponseJSON(events, "opencode-free/deepseek-v4-flash-free", {
@@ -38,7 +38,7 @@ function batchOutput(events: AdapterEvent[]): Record<string, unknown> {
 
 async function streamFrames(
   events: AdapterEvent[],
-  replayScope: OcxReasoningReplayScopeRef | null = SCOPE,
+  replayScope: OccxReasoningReplayScopeRef | null = SCOPE,
 ): Promise<void> {
   async function* replay(list: AdapterEvent[]): AsyncGenerator<AdapterEvent> {
     for (const event of list) yield event;

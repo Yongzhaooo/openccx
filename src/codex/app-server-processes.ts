@@ -1,6 +1,6 @@
 /**
  * Detect / optionally terminate long-lived Codex app-server processes that keep an
- * in-memory model catalog after `ocx sync` rewrites on-disk files (#476).
+ * in-memory model catalog after `occx sync` rewrites on-disk files (#476).
  *
  * Matching is intentionally narrow: require `app-server` as the Codex subcommand
  * (not merely as a substring in some later argument) or `codex-code-mode-host`.
@@ -17,8 +17,8 @@ import {
 import { readCodexCatalogPath } from "./catalog/parsing";
 
 export const STALE_CODEX_APP_SERVER_HINT =
-  "If Codex still shows an older model list, restart its long-lived app-server process after sync (ocx sync --restart-codex). "
-  + "On Windows the desktop app itself may also need a full restart (ocx sync --restart-desktop-app).";
+  "If Codex still shows an older model list, restart its long-lived app-server process after sync (occx sync --restart-codex). "
+  + "On Windows the desktop app itself may also need a full restart (occx sync --restart-desktop-app).";
 
 /** Attach the shared dashboard hint only after a catalog or models_cache write. */
 export function attachStaleAppServerHint<T extends {
@@ -45,13 +45,13 @@ const CODEX_TARGET_TRIPLE_BODY = "[a-z0-9_]+-[a-z0-9_]+-[a-z0-9_]+(?:-[a-z0-9_]+
  * Also admits official target-triple basenames such as
  * `codex-x86_64-pc-windows-msvc.exe`.
  *
- * The optional `.opencodex-real` sits where `backupPathFor` actually puts it — after
+ * The optional `.openccx-real` sits where `backupPathFor` actually puts it — after
  * the stem and BEFORE the extension — and deliberately not before the triple. Written
- * the other way it admits `codex.opencodex-real-x86_64-pc-windows-msvc.exe`, a name
+ * the other way it admits `codex.openccx-real-x86_64-pc-windows-msvc.exe`, a name
  * nothing produces, and pays GetOwner for it.
  */
 export const WINDOWS_CODEX_BASENAME_CANDIDATE_RE = new RegExp(
-  `(^|[/\\\\\\s'"=])codex(-${CODEX_TARGET_TRIPLE_BODY})?([.]opencodex-real)?([.]exe|[.]cmd|[.]ps1)?['"]?(\\s|$)`,
+  `(^|[/\\\\\\s'"=])codex(-${CODEX_TARGET_TRIPLE_BODY})?([.]openccx-real)?([.]exe|[.]cmd|[.]ps1)?['"]?(\\s|$)`,
   "i",
 );
 
@@ -64,17 +64,17 @@ const CODEX_TARGET_TRIPLE_BASENAME_RE = new RegExp(
 
 /**
  * Launcher basenames a Codex app-server can be started through, including the
- * `.opencodex-real` backups the autostart shim creates.
+ * `.openccx-real` backups the autostart shim creates.
  *
  * When the shim installs, `backupPathFor` (`src/codex/shim.ts`) renames the original
- * launcher by inserting `.opencodex-real` before its extension, so a shimmed host runs
- * `~/.local/bin/codex.opencodex-real app-server`. Reported by a contributor (#2884) with
+ * launcher by inserting `.openccx-real` before its extension, so a shimmed host runs
+ * `~/.local/bin/codex.openccx-real app-server`. Reported by a contributor (#2884) with
  * `ps` output from an affected host: `--restart-codex` matched nothing and left
  * app-servers alive holding stale in-memory catalogs.
  *
  * An EXACT set, kept separate from the target-triple pattern above rather than folded
  * into it by stripping the suffix first. That shortcut is unsafe: normalising
- * `codex-report-generator-worker.opencodex-real` yields a syntactically valid triple
+ * `codex-report-generator-worker.openccx-real` yields a syntactically valid triple
  * and would make an unrelated process a kill target. A triple binary cannot be a shim
  * target anyway — Unix discovery accepts only a PATH entry named `codex`, and Windows
  * refuses a real `codex.exe` outright — so the combination is unreachable, not merely
@@ -82,16 +82,16 @@ const CODEX_TARGET_TRIPLE_BASENAME_RE = new RegExp(
  *
  * `.ps1` and `.cmd` are here because `findWindowsCodexTargets` shims both, and the
  * extensionless form because Unix discovery and the Git-Bash launcher use it. There is
- * deliberately no `.opencodex-real.exe`: Windows installation REFUSES to rename a native
+ * deliberately no `.openccx-real.exe`: Windows installation REFUSES to rename a native
  * `codex.exe`, so that backup cannot exist. Matching it looked like free breadth until a
  * review round put it plainly — this set decides what receives SIGTERM, and a name no
  * installation can produce only widens what a coincidence can hit.
  */
 const CODEX_LAUNCHER_BASENAMES = new Set([
   "codex", "codex.exe", "codex.cmd",
-  "codex.opencodex-real",
-  "codex.opencodex-real.cmd",
-  "codex.opencodex-real.ps1",
+  "codex.openccx-real",
+  "codex.openccx-real.cmd",
+  "codex.openccx-real.ps1",
 ]);
 
 /** True when a Windows CommandLine is worth paying GetOwner for (current-user scoped later). */
@@ -441,7 +441,7 @@ export function parseWindowsSnapshotOutput(output: string): ProcessSnapshot[] {
     // A candidate whose owner could not be verified — or a top-level query that
     // failed outright — makes the whole enumeration incomplete. The staleness
     // collector must not read the partial result as "nothing running".
-    if (line.trim() === "__OCX_ENUM_INCOMPLETE__") throw new Error("windows_enum_incomplete");
+    if (line.trim() === "__OCCX_ENUM_INCOMPLETE__") throw new Error("windows_enum_incomplete");
     const tab = line.indexOf("\t");
     if (tab <= 0) continue;
     const tab2 = line.indexOf("\t", tab + 1);
@@ -459,9 +459,9 @@ function windowsSnapshotPowerShellCommand(): string {
   // Newlines keep -Command as a real script (space-joined statements need ';').
   // Double-quoted format string so `t expands to a real tab.
   // Codex candidates only: basename token codex / codex.exe / codex.cmd /
-  // codex.ps1, their .opencodex-real shim backups, official target-triple
+  // codex.ps1, their .openccx-real shim backups, official target-triple
   // binaries (optional closing quote after the basename), or code-mode-host —
-  // not incidental substrings like a repo path with "opencodex".
+  // not incidental substrings like a repo path with "openccx".
   const basenameMatch = powerShellSingleQuotedIgnoreCaseMatch(WINDOWS_CODEX_BASENAME_CANDIDATE_RE.source);
   const codeModeMatch = powerShellSingleQuotedIgnoreCaseMatch(WINDOWS_CODEX_CODE_MODE_HOST_CANDIDATE_RE.source);
   return [
@@ -483,14 +483,14 @@ function windowsSnapshotPowerShellCommand(): string {
     "} | ForEach-Object {",
     "  try {",
     "    $o=Invoke-CimMethod -InputObject $_ -MethodName GetOwner -ErrorAction Stop",
-    "    if($null -eq $o -or $o.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($o.User)){\"__OCX_ENUM_INCOMPLETE__\"; return}",
+    "    if($null -eq $o -or $o.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($o.User)){\"__OCCX_ENUM_INCOMPLETE__\"; return}",
     "    $owner=if($o.Domain){\"$($o.Domain)\\$($o.User)\"}else{$o.User}",
     "    if($owner -ine $me){return}",
     "    $cmd=($_.CommandLine -replace \"`t\",\" \")",
     "    \"{0}`t{1}`t{2}\" -f $_.ProcessId, $cmd, $owner",
-    "  } catch { \"__OCX_ENUM_INCOMPLETE__\" }",
+    "  } catch { \"__OCCX_ENUM_INCOMPLETE__\" }",
     "}",
-    "} catch { \"__OCX_ENUM_INCOMPLETE__\" }",
+    "} catch { \"__OCCX_ENUM_INCOMPLETE__\" }",
   ].join("\n");
 }
 
@@ -563,8 +563,8 @@ export function formatStaleCodexAppServerWarning(
   return (
     `WARNING: ${processes.length} Codex app-server process(es) still running (PID${processes.length === 1 ? "" : "s"}: ${pids}). `
     + "Disk catalog/cache were updated, but Codex may keep showing the old model list until those processes restart. "
-    + "Re-run with `ocx sync --restart-codex` (or `ocx sync-cache --restart-codex`) to send SIGTERM only to matching app-server processes. "
-    + "On Windows the desktop app itself may also need a full restart (`ocx sync --restart-desktop-app`). "
+    + "Re-run with `occx sync --restart-codex` (or `occx sync-cache --restart-codex`) to send SIGTERM only to matching app-server processes. "
+    + "On Windows the desktop app itself may also need a full restart (`occx sync --restart-desktop-app`). "
     + "Active turns may be interrupted."
   );
 }
@@ -840,7 +840,7 @@ function sameRequestCatalogStateIdentity(
 /**
  * Compare the on-disk catalog mtime against the start time of running Codex
  * app-servers (#857): a server that started before the catalog changed keeps
- * an in-memory copy that disagrees with what ocx advertises.
+ * an in-memory copy that disagrees with what occx advertises.
  *
  * Cost note: a cold call synchronously runs the platform listing plus ONE
  * batched start-time query (hard bounds: ~5s+3s macOS, ~8s+5s Windows,
@@ -950,7 +950,7 @@ export async function collectCodexAppServerCatalogStateForRequest(
     return cached.status;
   }
   // An expired real reading is still worth handing back while the refresh runs. It
-  // cannot have been invalidated by an ocx catalog write: every such write calls
+  // cannot have been invalidated by an occx catalog write: every such write calls
   // `resetCodexAppServerCatalogStateCache`, which advances the generation and drops
   // this entry, so a generation match means no write has landed since it was taken.
   // What it can miss is an app-server that started or stopped meanwhile -- and a
@@ -1232,7 +1232,7 @@ export function afterCatalogWriteHandleAppServers(
  *
  * - It never signals anything. Killing an app-server on an unattended boot would
  *   interrupt whatever turn the user has in flight. A human typing
- *   `ocx sync --restart-codex` is consenting to that; a login is not.
+ *   `occx sync --restart-codex` is consenting to that; a login is not.
  * - It never warns about a merely-running app-server. It asks the mtime
  *   classifier whether one is actually stale, so a boot with Codex open and a
  *   current catalog stays quiet.

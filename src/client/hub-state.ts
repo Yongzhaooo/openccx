@@ -8,8 +8,8 @@
  * grok. Every failure path here therefore lands on `stateSource: "unavailable"` with a reason a
  * human can act on, and none of them reaches back into local config.
  *
- * The last good response is cached at `<OPENCODEX_HOME>/hub-state.json`, 0600, stamped with the
- * connection that produced it. The owner stamp is not decoration: after `ocx disconnect` and a
+ * The last good response is cached at `<OPENCCX_HOME>/hub-state.json`, 0600, stamped with the
+ * connection that produced it. The owner stamp is not decoration: after `occx disconnect` and a
  * reconnect to a different hub (or a key rotation that changes `apiKeyId`), a stale file would
  * otherwise be presented as this hub's state. `sameClientConnectionOwner` is the same triple
  * (`serverUrl`, `apiKeyId`, `connectedAt`) the rest of the client lifecycle compares on.
@@ -19,16 +19,16 @@ import { join } from "node:path";
 import { getConfigDir } from "../config";
 import { atomicWriteFile } from "../config/atomic-write";
 import { parseHubStateBody, type HubStateDTO } from "../remote/hub-state";
-import type { OcxClientConnectionConfig } from "../types";
+import type { OccxClientConnectionConfig } from "../types";
 import { fetchHubState, HubClientError } from "./hub-client";
 import { sameClientConnectionOwner } from "./state";
 
-/** Bound the status path: `ocx status` must answer even when the hub is gone. */
+/** Bound the status path: `occx status` must answer even when the hub is gone. */
 const DEFAULT_HUB_STATE_TIMEOUT_MS = 3_000;
 /** The cache document plus its stamp; the DTO itself is already capped by its own contract. */
 const MAX_CACHE_BYTES = 128 * 1024;
 
-export type HubStateOwner = Pick<OcxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">;
+export type HubStateOwner = Pick<OccxClientConnectionConfig, "serverUrl" | "apiKeyId" | "connectedAt">;
 
 /** Where the state came from. "unavailable" is a reportable outcome, not a fallback to local. */
 export type HubStateSource = "hub" | "cache" | "unavailable";
@@ -120,7 +120,7 @@ export function writeCachedHubState(owner: HubStateOwner, state: HubStateDTO, fe
  * left as a bare code it reads like a bug in the client.
  *
  * Every code `fetchHubState` can throw has a sentence here, including the open-ended
- * `hub_state_http_<status>` family. This reason is printed in the `ocx status` banner, and a
+ * `hub_state_http_<status>` family. This reason is printed in the `occx status` banner, and a
  * banner reading `state unavailable (hub_state_http_507)` sends the reader looking for a client
  * bug when the hub has in fact answered and said something.
  */

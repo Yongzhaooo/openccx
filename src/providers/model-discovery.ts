@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import {
   isValidModelDiscoveryModelId,
   MODEL_DISCOVERY_MAX_MODEL_ID_LENGTH,
@@ -135,7 +135,7 @@ export function providerModelDiscoverySpecError(spec: ProviderModelDiscoverySpec
 
 export function resolveProviderModelDiscovery(
   providerName: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
 ): ResolvedProviderModelDiscovery {
   // The dashboard permits a canonical preset to be saved under a different name. Recover its
   // registry-owned discovery policy by transport in that case. The destination helper is limited
@@ -237,7 +237,7 @@ export function isRegistryModelDiscoveryUrl(providerName: string, url: string): 
 /** Apply a registry-owned URL/path/query policy to the adapter's normal discovery endpoint. */
 export function resolveProviderModelDiscoveryUrl(
   providerName: string,
-  configuredProvider: Pick<OcxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OcxProviderConfig, "authMode">>,
+  configuredProvider: Pick<OccxProviderConfig, "baseUrl" | "adapter"> & Partial<Pick<OccxProviderConfig, "authMode">>,
   effectiveBaseUrl: string,
   defaultUrl: string,
 ): string {

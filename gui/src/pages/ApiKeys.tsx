@@ -111,8 +111,8 @@ export default function ApiKeys({ apiBase, active = true }: { apiBase: string; a
   const localeTag = LOCALES.find(l => l.code === locale)?.htmlLang;
   // v2: a v1 session entry has no auth matrix, and defaulting that to [] would
   // turn stale client state into an apparently authoritative empty auth table.
-  const keysCacheKey = `ocx.apikeys.list.v2:${apiBase}`;
-  const modelsCacheKey = `ocx.apikeys.models.v1:${apiBase}`;
+  const keysCacheKey = `occx.apikeys.list.v2:${apiBase}`;
+  const modelsCacheKey = `occx.apikeys.models.v1:${apiBase}`;
   const keysResourceKey = `api-keys:${apiBase}`;
   const modelsResourceKey = `api-models:${apiBase}`;
   // A cache entry is arbitrary parsed JSON. Trusting it would reintroduce exactly
@@ -443,7 +443,7 @@ export default function ApiKeys({ apiBase, active = true }: { apiBase: string; a
           "Content-Type": "application/json",
           // The one header every data-plane endpoint accepts, so a pass here
           // means something on a remote bind too.
-          "x-opencodex-api-key": newKey,
+          "x-openccx-api-key": newKey,
         },
         body: JSON.stringify(request.body),
       });
@@ -476,7 +476,7 @@ export default function ApiKeys({ apiBase, active = true }: { apiBase: string; a
       </div>
       <p className="page-sub">
         {subtitleParts[0]}
-        <code>x-opencodex-api-key</code>
+        <code>x-openccx-api-key</code>
         {subtitleParts[1]}
       </p>
 

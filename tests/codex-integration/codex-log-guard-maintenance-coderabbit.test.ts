@@ -44,7 +44,7 @@ function createLogsSchema(db: Database): void {
 }
 
 function fixture(): { codexHome: string; databasePath: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-cr-reclaim-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-cr-reclaim-"));
   roots.push(root);
   const codexHome = join(root, "codex-home");
   mkdirSync(codexHome);

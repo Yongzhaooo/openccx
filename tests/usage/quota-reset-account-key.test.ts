@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { OcxConfig } from "../../src/types/config";
+import type { OccxConfig } from "../../src/types/config";
 import { providerObservationAccountKeyForTests } from "../../src/providers/quota";
 
 describe("provider observation account key", () => {
-  function configWithKey(apiKey: string): OcxConfig {
+  function configWithKey(apiKey: string): OccxConfig {
     return {
       port: 0,
       hostname: "127.0.0.1",
@@ -16,7 +16,7 @@ describe("provider observation account key", () => {
           apiKey,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   test("two different API keys for one provider do not share an observation identity", () => {
@@ -45,7 +45,7 @@ describe("provider observation account key", () => {
       hostname: "127.0.0.1",
       defaultProvider: "ollama",
       providers: { ollama: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:11434/v1" } },
-    } as OcxConfig;
+    } as OccxConfig;
     expect(providerObservationAccountKeyForTests("ollama", config)).toContain("ollama");
   });
 });

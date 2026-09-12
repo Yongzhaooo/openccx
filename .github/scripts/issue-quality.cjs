@@ -9,7 +9,7 @@ const REPRODUCTION_ALIASES = [
   "Steps to reproduce",
   "How to reproduce",
   "What fails / what passes",
-  "Debug evidence (ocx debug provider)",
+  "Debug evidence (occx debug provider)",
   "Debug evidence",
   "Logs or error output",
   "Error output",
@@ -63,8 +63,8 @@ function normalizeEquivalentBugEvidence(issue) {
 
   if (core.extractSection(normalized, "Version") === null) {
     // Do not accept a generic dependency "Version" from Environment: the gate
-    // specifically needs the OpenCodex install version.
-    const version = extractEnvironmentField(environment, ["OpenCodex", "OpenCodex version"]);
+    // specifically needs the Openccx install version.
+    const version = extractEnvironmentField(environment, ["Openccx", "Openccx version"]);
     if (version) normalized = appendSection(normalized, "Version", version);
   }
 
@@ -153,11 +153,11 @@ function reproductionOnlyEchoesSummary(summary, reproduction) {
   const independent = independentReproductionText(summary, reproduction);
   if (!independent) return true;
 
-  const explicitOcxAction =
-    /\b(?:run|execute|invoke|retry)\s+[`'"*_~]*ocx\s+(?:sync|restore|update|doctor|start|stop|restart)\b/i.test(
+  const explicitOccxAction =
+    /\b(?:run|execute|invoke|retry)\s+[`'"*_~]*occx\s+(?:sync|restore|update|doctor|start|stop|restart)\b/i.test(
       independent,
     );
-  return !(explicitOcxAction || core.hasActionableReproductionDetail(independent));
+  return !(explicitOccxAction || core.hasActionableReproductionDetail(independent));
 }
 
 function validateIssue(issue) {

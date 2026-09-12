@@ -14,7 +14,7 @@ afterEach(() => {
 describe("Codex CLI updater zero-effect boundary", () => {
   test("direct Bun execution of the Node launcher fails before updater inspection", () => {
     const result = spawnSync(process.execPath, [
-      repoPath("bin", "ocx.mjs"),
+      repoPath("bin", "occx.mjs"),
       "system", "codex-cli-update", "check", "--json",
     ], {
       cwd: repoRoot(), encoding: "utf8", timeout: 15_000,
@@ -26,7 +26,7 @@ describe("Codex CLI updater zero-effect boundary", () => {
   });
 
   test("published Node launcher check neither executes the candidate launcher nor rewrites invalid state", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-codex-check-zero-effect-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-codex-check-zero-effect-"));
     roots.push(root);
     const launcher = join(root, process.platform === "win32" ? "codex.cmd" : "codex");
     const marker = join(root, "executed.txt");
@@ -39,11 +39,11 @@ describe("Codex CLI updater zero-effect boundary", () => {
     const statePath = join(home, "codex-shim.json");
     writeFileSync(statePath, "{broken", "utf8");
     const before = readFileSync(statePath);
-    const result = spawnSync("node", [repoPath("bin", "ocx.mjs"), "system", "codex-cli-update", "check", "--json"], {
+    const result = spawnSync("node", [repoPath("bin", "occx.mjs"), "system", "codex-cli-update", "check", "--json"], {
       cwd: repoRoot(),
       encoding: "utf8",
       timeout: 15_000,
-      env: { ...process.env, OPENCODEX_HOME: home, CODEX_CLI_PATH: launcher },
+      env: { ...process.env, OPENCCX_HOME: home, CODEX_CLI_PATH: launcher },
       windowsHide: true,
     });
     expect(result.error).toBeUndefined();
@@ -62,7 +62,7 @@ describe("Codex CLI updater zero-effect boundary", () => {
   });
 
   test("published Node launcher rejects malformed updater input before any repair or candidate command", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-codex-invalid-zero-effect-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-codex-invalid-zero-effect-"));
     roots.push(root);
     const launcher = join(root, process.platform === "win32" ? "codex.cmd" : "codex");
     const marker = join(root, "executed.txt");
@@ -76,12 +76,12 @@ describe("Codex CLI updater zero-effect boundary", () => {
     writeFileSync(statePath, "{broken", "utf8");
     const before = readFileSync(statePath);
     const result = spawnSync("node", [
-      repoPath("bin", "ocx.mjs"),
-      "--ocx-internal-launch-proof=bad",
+      repoPath("bin", "occx.mjs"),
+      "--occx-internal-launch-proof=bad",
       "system", "codex-cli-update", "invalid",
     ], {
       cwd: repoRoot(), encoding: "utf8", timeout: 15_000,
-      env: { ...process.env, OPENCODEX_HOME: home, CODEX_CLI_PATH: launcher }, windowsHide: true,
+      env: { ...process.env, OPENCCX_HOME: home, CODEX_CLI_PATH: launcher }, windowsHide: true,
     });
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(2);

@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { CodexAccount, OcxConfig } from "../types";
+import type { CodexAccount, OccxConfig } from "../types";
 import type { CodexAuthContext } from "./auth-context";
 import { MAIN_CODEX_ACCOUNT_ID } from "./main-account";
 
@@ -48,7 +48,7 @@ export function codexAccountLogLabel(account: CodexAccount): string {
 /** Effective durable label for a resolved Codex Pool account. */
 export function codexAuthContextLogLabel(
   authCtx: CodexAuthContext,
-  config: Pick<OcxConfig, "codexAccounts">,
+  config: Pick<OccxConfig, "codexAccounts">,
 ): "main" | `p${string}` | undefined {
   if (authCtx.kind !== "pool" && authCtx.kind !== "main-pool") return undefined;
   if (authCtx.accountId === MAIN_CODEX_ACCOUNT_ID) return "main";

@@ -34,11 +34,11 @@ describe("Codex shim install readiness", () => {
     expect(codexShimReadinessWarnings(ready)).toEqual([]);
     expect(codexShimReadinessWarnings({
       ...ready,
-      routingKind: "opencodex-local",
+      routingKind: "openccx-local",
     })).toEqual([]);
   });
 
-  test("warns when an external provider is not routed through OpenCodex", () => {
+  test("warns when an external provider is not routed through Openccx", () => {
     const warnings = codexShimReadinessWarnings({
       ...ready,
       routingKind: "unknown",
@@ -47,7 +47,7 @@ describe("Codex shim install readiness", () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('external model_provider "custom"');
-    expect(warnings[0]).toContain("live OpenCodex /v1 endpoint");
+    expect(warnings[0]).toContain("live Openccx /v1 endpoint");
     expect(warnings[0]).toContain('wire_api = "responses"');
 
   });
@@ -60,7 +60,7 @@ describe("Codex shim install readiness", () => {
     });
     expect(local).toHaveLength(1);
     expect(local[0]).toContain("user-owned local gateway");
-    expect(local[0]).toContain("ocx doctor");
+    expect(local[0]).toContain("occx doctor");
 
     const remote = codexShimReadinessWarnings({
       ...ready,
@@ -93,12 +93,12 @@ describe("Codex shim install readiness", () => {
   test("the install command surfaces readiness warnings without leaking the proxy URL", () => {
     if (process.platform === "win32") return;
 
-    const root = mkdtempSync(join(tmpdir(), "ocx-shim-readiness-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-shim-readiness-"));
     const codexHome = join(root, "codex-home");
-    const opencodexHome = join(root, "opencodex-home");
+    const openccxHome = join(root, "openccx-home");
     const binDir = join(root, "bin");
     mkdirSync(codexHome);
-    mkdirSync(opencodexHome);
+    mkdirSync(openccxHome);
     mkdirSync(binDir);
     try {
       writeFileSync(join(codexHome, "config.toml"), [
@@ -109,7 +109,7 @@ describe("Codex shim install readiness", () => {
         'wire_api = "responses"',
         "",
       ].join("\n"), "utf8");
-      writeFileSync(join(opencodexHome, "config.json"), `${JSON.stringify({
+      writeFileSync(join(openccxHome, "config.json"), `${JSON.stringify({
         port: 10100,
         providers: {
           openai: {
@@ -130,7 +130,7 @@ describe("Codex shim install readiness", () => {
         env: {
           ...process.env,
           CODEX_HOME: codexHome,
-          OPENCODEX_HOME: opencodexHome,
+          OPENCCX_HOME: openccxHome,
           PATH: `${binDir}:${process.env.PATH ?? ""}`,
           HTTP_PROXY: proxyUrl,
           HTTPS_PROXY: proxyUrl,
@@ -150,12 +150,12 @@ describe("Codex shim install readiness", () => {
   }, 10_000);
 
   test("keeps install advisory when the Codex config cannot be read", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-shim-unreadable-config-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-shim-unreadable-config-"));
     const codexHome = join(root, "codex-home");
-    const opencodexHome = join(root, "opencodex-home");
+    const openccxHome = join(root, "openccx-home");
     const binDir = join(root, "bin");
     mkdirSync(codexHome);
-    mkdirSync(opencodexHome);
+    mkdirSync(openccxHome);
     mkdirSync(binDir);
     try {
       mkdirSync(join(codexHome, "config.toml"));
@@ -172,7 +172,7 @@ describe("Codex shim install readiness", () => {
         env: {
           ...process.env,
           CODEX_HOME: codexHome,
-          OPENCODEX_HOME: opencodexHome,
+          OPENCCX_HOME: openccxHome,
           PATH: `${binDir}${delimiter}${process.env.PATH ?? ""}`,
         },
         encoding: "utf8",

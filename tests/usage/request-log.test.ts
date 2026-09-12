@@ -29,7 +29,7 @@ import {
 } from "../../src/server/request-log";
 import { handleResponses } from "../../src/server/responses";
 import { bridgeToResponsesSSE } from "../../src/bridge";
-import type { AdapterEvent, OcxConfig, OcxUsage } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxUsage } from "../../src/types";
 import {
   appendUsageEntry,
   normalizeUsageEntryForTest,
@@ -49,7 +49,7 @@ async function* replayAdapterEvents(events: AdapterEvent[]): AsyncGenerator<Adap
 
 function log(overrides: Partial<RequestLogEntry>): RequestLogEntry {
   return {
-    requestId: "ocx-test",
+    requestId: "occx-test",
     timestamp: 1,
     model: "gpt-test",
     provider: "openai",
@@ -62,9 +62,9 @@ function log(overrides: Partial<RequestLogEntry>): RequestLogEntry {
 
 describe("request log metadata", () => {
   test("Claude evidence is normalized before direct ring ingress and cannot be mutated afterwards", () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-claude-log-"));
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-claude-log-"));
+    process.env.OPENCCX_HOME = home;
     clearRequestLogsForTests();
     try {
       const raw = JSON.parse('{"decision":"shadow","featureCodes":["documents","unknown_beta","private-header"],"reason":"private-reason"}');
@@ -85,8 +85,8 @@ describe("request log metadata", () => {
     } finally {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });
@@ -238,7 +238,7 @@ describe("request log metadata", () => {
           baseUrl: "https://gateway.example/v1",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -263,7 +263,7 @@ describe("request log metadata", () => {
 
   test("projects explicitly empty attempts from persisted usage", () => {
     const projected = requestLogEntryFromPersistedUsage({
-      requestId: "ocx-empty-attempts",
+      requestId: "occx-empty-attempts",
       timestamp: 1,
       provider: "openai",
       model: "gpt-test",
@@ -415,21 +415,21 @@ describe("request log metadata", () => {
 
   test("addFinalRequestLog preserves firstOutputMs; unset stays absent", () => {
     const captured: RequestLogEntry[] = [];
-    addFinalRequestLog("ocx-ttft", 0, { model: "m", provider: "p", firstOutputMs: 12 }, 200, undefined, entry => captured.push(entry));
+    addFinalRequestLog("occx-ttft", 0, { model: "m", provider: "p", firstOutputMs: 12 }, 200, undefined, entry => captured.push(entry));
     expect(captured[0]?.firstOutputMs).toBe(12);
     const captured2: RequestLogEntry[] = [];
-    addFinalRequestLog("ocx-nostream", 0, { model: "m", provider: "p" }, 200, undefined, entry => captured2.push(entry));
+    addFinalRequestLog("occx-nostream", 0, { model: "m", provider: "p" }, 200, undefined, entry => captured2.push(entry));
     expect(captured2[0]).not.toHaveProperty("firstOutputMs");
   });
 
   test("persists the shadow helper source marker to usage.jsonl", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shadow-usage-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-shadow-usage-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
-      addFinalRequestLog("ocx-shadow-marker", 1, {
+      addFinalRequestLog("occx-shadow-marker", 1, {
         model: "grok-4.5",
         provider: "xai",
         requestedModel: "gpt-5.6-luna",
@@ -441,21 +441,21 @@ describe("request log metadata", () => {
       expect(getRequestLogEntries()[0]?.shadowCallRewrittenFrom).toBe("gpt-5.6-luna");
     } finally {
       clearRequestLogsForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       resetUsageReadCacheForTests();
       removeTreeWithRetry(home);
     }
   });
 
   test("persists transport finality evidence from the final request log", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-finality-usage-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-finality-usage-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
-      addFinalRequestLog("ocx-finality-persist", 1, {
+      addFinalRequestLog("occx-finality-persist", 1, {
         model: "gpt-6-astra",
         provider: "openai",
         transportPhase: "mid_stream",
@@ -467,8 +467,8 @@ describe("request log metadata", () => {
     } finally {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });
@@ -477,13 +477,13 @@ describe("request log metadata", () => {
   // persistence path must also be the SANITIZED one. A test that only ever writes a safe
   // short slug passes identically whether `sanitizeLogMetadataString` is applied or not.
   test("the shadow marker reaches usage.jsonl through the sanitizer, not raw", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shadow-unsafe-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-shadow-unsafe-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
-      addFinalRequestLog("ocx-shadow-unsafe", 1, {
+      addFinalRequestLog("occx-shadow-unsafe", 1, {
         model: "grok-4.5",
         provider: "xai",
         // A newline would let one field forge a record boundary in a line-oriented log
@@ -500,8 +500,8 @@ describe("request log metadata", () => {
       expect(getRequestLogEntries()[0]?.shadowCallRewrittenFrom).not.toContain("\n");
     } finally {
       clearRequestLogsForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       resetUsageReadCacheForTests();
       removeTreeWithRetry(home);
     }
@@ -512,14 +512,14 @@ describe("request log metadata", () => {
   // /api/logs — serving the raw value, which is the worst shape for a sanitization bug
   // because the surface you would check is the clean one.
   test("the direct addRequestLog ingress sanitizes memory and disk identically", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-shadow-ingress-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-shadow-ingress-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       clearRequestLogsForTests();
       resetUsageReadCacheForTests();
       addRequestLog({
-        requestId: "ocx-shadow-direct",
+        requestId: "occx-shadow-direct",
         timestamp: Date.now(),
         provider: "xai",
         model: "grok-4.5",
@@ -536,8 +536,8 @@ describe("request log metadata", () => {
       expect(inMemory).toBe(persisted?.shadowCallRewrittenFrom);
     } finally {
       clearRequestLogsForTests();
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       resetUsageReadCacheForTests();
       removeTreeWithRetry(home);
     }
@@ -759,7 +759,7 @@ describe("request log metadata", () => {
   test("records the Claude surface on the final log entry", () => {
     const entries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-claude",
+      "occx-test-claude",
       Date.now(),
       { model: "claude-sonnet-4-5", provider: "openai", surface: "claude" },
       200,
@@ -774,7 +774,7 @@ describe("request log metadata", () => {
   test("cursor rows: adapter drives estimated status and the input estimate fills in:0 (devlog 130 B2)", () => {
     const entries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-cursor",
+      "occx-test-cursor",
       Date.now(),
       {
         model: "gpt-5.6-luna",
@@ -796,7 +796,7 @@ describe("request log metadata", () => {
   test("accurate providers stay untouched when no input estimate is stashed", () => {
     const entries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-anthropic",
+      "occx-test-anthropic",
       Date.now(),
       {
         model: "claude-fable-5",
@@ -815,7 +815,7 @@ describe("request log metadata", () => {
   });
 
   test("generates compact request ids", () => {
-    expect(nextRequestLogId(1_700_000_000_000)).toMatch(/^ocx-[a-f0-9]{32}$/);
+    expect(nextRequestLogId(1_700_000_000_000)).toMatch(/^occx-[a-f0-9]{32}$/);
     expect(nextRequestLogId(1_700_000_000_000)).not.toBe(nextRequestLogId(1_700_000_000_000));
   });
 
@@ -850,7 +850,7 @@ describe("request log metadata", () => {
   test("final 403 logs use permission/subscription codes instead of invalid_api_key", () => {
     const entries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-403-perm",
+      "occx-test-403-perm",
       Date.now(),
       {
         model: "kimi-k2.7-code",
@@ -869,7 +869,7 @@ describe("request log metadata", () => {
 
     const subEntries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-403-sub",
+      "occx-test-403-sub",
       Date.now(),
       {
         model: "kimi-k2.7-code",
@@ -913,7 +913,7 @@ describe("request log metadata", () => {
 
   /**
    * #2704: there was no `model` clause at all, so `?model=x` was accepted and silently
-   * ignored -- every row came back, and `ocx logs --model x` looked like it had filtered.
+   * ignored -- every row came back, and `occx logs --model x` looked like it had filtered.
    * The non-matching assertion is the one that matters: an unfiltered implementation passes
    * the positive case for free.
    */
@@ -1007,7 +1007,7 @@ describe("request log metadata", () => {
         service_tier: "auto",
         status: "completed",
       }), { status: 200, headers: { "content-type": "application/json" } }),
-      "ocx-test-json",
+      "occx-test-json",
       Date.now(),
       logCtx,
       entry => entries.push(entry),
@@ -1045,7 +1045,7 @@ describe("request log metadata", () => {
         model: "anthropic/claude-sonnet-5",
         status: "completed",
       }), { status: 200, headers: { "content-type": "application/json" } }),
-      "ocx-test-routed-model",
+      "occx-test-routed-model",
       Date.now(),
       logCtx,
       entry => entries.push(entry),
@@ -1068,7 +1068,7 @@ describe("request log metadata", () => {
           output_tokens_details: { reasoning_tokens: 5 },
         },
       }), { status: 200, headers: { "content-type": "application/json" } }),
-      "ocx-test-json-usage",
+      "occx-test-json-usage",
       Date.now(),
       { model: "gpt-5.5", provider: "openai" },
       entry => entries.push(entry),
@@ -1098,7 +1098,7 @@ describe("request log metadata", () => {
         model: "gpt-5.5",
         usage: { prompt_tokens: 42, completion_tokens: 7 },
       }), { status: 200, headers: { "content-type": "application/json" } }),
-      "ocx-test-json-chat-completions",
+      "occx-test-json-chat-completions",
       Date.now(),
       { model: "gpt-5.5", provider: "chatgpt" },
       entry => entries.push(entry),
@@ -1124,7 +1124,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-sse-usage",
+      "occx-test-sse-usage",
       Date.now(),
       { model: "gpt-5.5", provider: "openai" },
       entry => entries.push(entry),
@@ -1151,7 +1151,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-kiro-sse-usage",
+      "occx-test-kiro-sse-usage",
       Date.now(),
       { model: "kiro/claude-sonnet-4.5", provider: "kiro-p9d8524" },
       entry => entries.push(entry),
@@ -1187,7 +1187,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cursor-rate-limit",
+      "occx-test-cursor-rate-limit",
       Date.now(),
       { model: "cursor/gpt-5", provider: "cursor" },
       entry => entries.push(entry),
@@ -1219,7 +1219,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cyber-policy",
+      "occx-test-cyber-policy",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1254,7 +1254,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cyber-policy-incomplete",
+      "occx-test-cyber-policy-incomplete",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1292,7 +1292,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cyber-policy-incomplete-message",
+      "occx-test-cyber-policy-incomplete-message",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1322,7 +1322,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cyber-policy-error",
+      "occx-test-cyber-policy-error",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1355,7 +1355,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cyber-policy-candidates",
+      "occx-test-cyber-policy-candidates",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1387,7 +1387,7 @@ describe("request log metadata", () => {
           controller.close();
         },
       }), { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-ordinary-failed-authority",
+      "occx-test-ordinary-failed-authority",
       Date.now(),
       { model: "gpt-5.6-sol", provider: "openai" },
       entry => entries.push(entry),
@@ -1420,7 +1420,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-web-search-client-close",
+      "occx-test-web-search-client-close",
       Date.now(),
       { model: "k3", provider: "kimi" },
       entry => entries.push(entry),
@@ -1440,7 +1440,7 @@ describe("request log metadata", () => {
   test("addFinalRequestLog remaps legacy 502 client-close messages to 499", () => {
     const entries: RequestLogEntry[] = [];
     addFinalRequestLog(
-      "ocx-test-legacy-client-close",
+      "occx-test-legacy-client-close",
       Date.now(),
       {
         model: "k3",
@@ -1518,7 +1518,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-cursor-redact",
+      "occx-test-cursor-redact",
       Date.now(),
       { model: "cursor/gpt-5", provider: "cursor" },
       entry => entries.push(entry),
@@ -1535,7 +1535,7 @@ describe("request log metadata", () => {
     const entries: RequestLogEntry[] = [];
     const response = responseWithDeferredRequestLog(
       new Response("provider says nope", { status: 400, headers: { "content-type": "text/plain" } }),
-      "ocx-test-plain-upstream-error",
+      "occx-test-plain-upstream-error",
       Date.now(),
       { model: "opencode-free/deepseek-v4-flash-free", provider: "opencode-free" },
       entry => entries.push(entry),
@@ -1558,7 +1558,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-kiro-sse-log-usage",
+      "occx-test-kiro-sse-log-usage",
       Date.now(),
       { model: "kiro/claude-sonnet-4.5", provider: "kiro-p9d8524", usageLogInputTokens: 240_000 },
       entry => entries.push(entry),
@@ -1589,7 +1589,7 @@ describe("request log metadata", () => {
     }]), "kiro/claude-opus-5");
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-kiro-context-checkpoint",
+      "occx-test-kiro-context-checkpoint",
       Date.now(),
       { model: "kiro/claude-opus-5", provider: "kiro-p9d8524", usageLogInputTokens: 200 },
       entry => entries.push(entry),
@@ -1615,7 +1615,7 @@ describe("request log metadata", () => {
     // cumulative figure exists ONLY as contextTotalTokens, so usage-log normalization has to
     // carry the field or Kiro context growth vanishes from every persisted row.
     const entries: RequestLogEntry[] = [];
-    let reportedRaw: OcxUsage | undefined;
+    let reportedRaw: OccxUsage | undefined;
     const logCtx: Partial<RequestLogContext> = {
       model: "kiro/claude-opus-5",
       provider: "kiro-p9d8524",
@@ -1649,7 +1649,7 @@ describe("request log metadata", () => {
     );
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-kiro-raw-usage-checkpoint",
+      "occx-test-kiro-raw-usage-checkpoint",
       Date.now(),
       logCtx,
       entry => entries.push(entry),
@@ -1669,9 +1669,9 @@ describe("request log metadata", () => {
     // End-to-end: the checkpoint must also survive serialization to usage.jsonl. Asserting
     // only the in-memory entry would pass even while persistence silently drops the field,
     // which is exactly how the original regression escaped review.
-    const home = mkdtempSync(join(tmpdir(), "ocx-req-log-usage-"));
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-req-log-usage-"));
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       resetUsageReadCacheForTests();
       appendUsageEntry({
@@ -1687,8 +1687,8 @@ describe("request log metadata", () => {
       const [persisted] = readUsageEntries();
       expect(persisted?.usage?.contextTotalTokens).toBe(50_000);
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       resetUsageReadCacheForTests();
       removeTreeWithRetry(home);
     }
@@ -1698,7 +1698,7 @@ describe("request log metadata", () => {
     const entries: RequestLogEntry[] = [];
     const response = responseWithDeferredRequestLog(
       new Response(null, { status: 200 }),
-      "ocx-test-kiro-fallback-log-usage",
+      "occx-test-kiro-fallback-log-usage",
       Date.now(),
       { model: "kiro/claude-opus-4.8", provider: "kiro-p442fff", usageLogInputTokens: 133_900 },
       entry => entries.push(entry),
@@ -1730,7 +1730,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-stall-timeout",
+      "occx-test-stall-timeout",
       Date.now(),
       { model: "cursor/kimi-k2.7-code", provider: "cursor" },
       entry => entries.push(entry),
@@ -1765,7 +1765,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-requested-output-limit",
+      "occx-test-requested-output-limit",
       Date.now(),
       { model: "anthropic/claude-sonnet-5", provider: "anthropic" },
       entry => entries.push(entry),
@@ -1800,7 +1800,7 @@ describe("request log metadata", () => {
     });
     const response = responseWithDeferredRequestLog(
       new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } }),
-      "ocx-test-adapter-eof",
+      "occx-test-adapter-eof",
       Date.now(),
       { model: "cursor/kimi-k2.7-code", provider: "cursor" },
       entry => entries.push(entry),
@@ -1821,7 +1821,7 @@ describe("request log metadata", () => {
 describe("request log restart hydrate", () => {
   test("persists and rehydrates transport finality evidence", () => {
     const persisted = {
-      requestId: "ocx-finality-evidence",
+      requestId: "occx-finality-evidence",
       timestamp: 1_800_000_000_000,
       provider: "openai",
       model: "gpt-6-astra",
@@ -1848,7 +1848,7 @@ describe("request log restart hydrate", () => {
 
   test("projects persisted usage rows into /api/logs entries", () => {
     const persisted: PersistedUsageEntry = {
-      requestId: "ocx-revive",
+      requestId: "occx-revive",
       timestamp: 1_800_000_000_000,
       provider: "chatgpt-pabcdef",
       model: "gpt-5.6-sol",
@@ -1871,7 +1871,7 @@ describe("request log restart hydrate", () => {
       upstreamError: "socket connection was closed unexpectedly",
     };
     expect(requestLogEntryFromPersistedUsage(persisted)).toEqual({
-      requestId: "ocx-revive",
+      requestId: "occx-revive",
       timestamp: 1_800_000_000_000,
       provider: "chatgpt-pabcdef",
       model: "gpt-5.6-sol",
@@ -1901,7 +1901,7 @@ describe("request log restart hydrate", () => {
 
     const persisted: PersistedUsageEntry[] = [
       {
-        requestId: "ocx-old",
+        requestId: "occx-old",
         timestamp: 1,
         provider: "openai",
         model: "gpt-a",
@@ -1912,7 +1912,7 @@ describe("request log restart hydrate", () => {
         totalTokens: 2,
       },
       {
-        requestId: "ocx-sticky-502",
+        requestId: "occx-sticky-502",
         timestamp: 2,
         provider: "openai",
         model: "gpt-b",
@@ -1929,9 +1929,9 @@ describe("request log restart hydrate", () => {
     ];
 
     expect(hydrateRequestLogsFromDisk(() => persisted)).toBe(2);
-    expect(getRequestLogEntries().map(e => e.requestId)).toEqual(["ocx-old", "ocx-sticky-502"]);
+    expect(getRequestLogEntries().map(e => e.requestId)).toEqual(["occx-old", "occx-sticky-502"]);
     expect(getRequestLogEntries()[1]).toMatchObject({
-      requestId: "ocx-sticky-502",
+      requestId: "occx-sticky-502",
       status: 502,
       errorCode: "upstream_server_error",
       upstreamError: "Provider unreachable",
@@ -1947,7 +1947,7 @@ describe("request log restart hydrate", () => {
   test("hydrate keeps only the newest MAX_LOG_SIZE rows from a long usage.jsonl", () => {
     clearRequestLogsForTests();
     const persisted: PersistedUsageEntry[] = Array.from({ length: 2005 }, (_, i) => ({
-      requestId: `ocx-${i}`,
+      requestId: `occx-${i}`,
       timestamp: i,
       provider: "openai",
       model: "gpt",
@@ -1957,8 +1957,8 @@ describe("request log restart hydrate", () => {
     }));
     expect(hydrateRequestLogsFromDisk(() => persisted)).toBe(2000);
     const ids = getRequestLogEntries().map(e => e.requestId);
-    expect(ids[0]).toBe("ocx-5");
-    expect(ids.at(-1)).toBe("ocx-2004");
+    expect(ids[0]).toBe("occx-5");
+    expect(ids.at(-1)).toBe("occx-2004");
   });
 
   test("hydrate swallows usage.jsonl read failures instead of crashing startup", () => {

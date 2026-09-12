@@ -13,7 +13,7 @@ import {
   parseSyntheticRowId,
 } from "../../src/server/fast-row";
 import { isDeclaredReasoningEffort } from "../../src/reasoning-effort";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 /**
  * Synthetic Fast selectors (devlog 260904_external_fast_wire/010).
@@ -24,25 +24,25 @@ import type { OcxConfig, OcxProviderConfig } from "../../src/types";
  * it, and a suffix-shape composite guard suppressed rows this feature itself publishes.
  */
 
-const OFF = { fastRows: false } as Pick<OcxConfig, "fastRows">;
-const ON = { fastRows: true } as Pick<OcxConfig, "fastRows">;
+const OFF = { fastRows: false } as Pick<OccxConfig, "fastRows">;
+const ON = { fastRows: true } as Pick<OccxConfig, "fastRows">;
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-responses",
     baseUrl: "https://fixture.example/v1",
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function configWith(providers: Record<string, OcxProviderConfig>, extra: Partial<OcxConfig> = {}): OcxConfig {
+function configWith(providers: Record<string, OccxProviderConfig>, extra: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: Object.keys(providers)[0] ?? "fixture",
     providers,
     fastRows: true,
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("fast-row grammar", () => {
@@ -241,7 +241,7 @@ describe("publication and parsing agree", () => {
     // none exists - the earlier version returned early and reported green either way.
     const config = configWith({
       openai: provider({ authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex" }),
-    }, { codexAccountNamespaces: { desktop: "@main" } } as Partial<OcxConfig>);
+    }, { codexAccountNamespaces: { desktop: "@main" } } as Partial<OccxConfig>);
     const bases = fastRowBases(config);
     expect(bases("desktop/gpt-5.6-sol")).toBe(true);
     expect(parseFastRowId("desktop/gpt-5.6-sol--fast", config, new Set(), bases))
@@ -359,12 +359,12 @@ describe("review findings from PR #3457", () => {
   });
 
   test("an ordinary Claude alias builds no inventory when only fast rows are on", () => {
-    // Codex P2: a readable Claude alias is `claude-ocx-<provider>--<model>`, so it ALWAYS
+    // Codex P2: a readable Claude alias is `claude-occx-<provider>--<model>`, so it ALWAYS
     // contains the separator. Testing only for that rebuilt the whole model inventory on
     // every Claude turn for a selector that cannot be a fast row.
     const config = configWith({ fixture: provider({ models: ["m"] }) }, { cursorEffortRows: false });
     let decoded = 0;
-    const rows = parseSyntheticRowId("claude-ocx-fixture--m", config, () => { decoded += 1; return "fixture/m"; });
+    const rows = parseSyntheticRowId("claude-occx-fixture--m", config, () => { decoded += 1; return "fixture/m"; });
     expect(rows).toEqual({ fastRow: null, effortRow: null });
     // The thunk runs once to obtain the selector; what must NOT happen is the inventory scan,
     // which is observable through the effort grammar staying inert.

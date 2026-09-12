@@ -5,23 +5,23 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { PROVIDER_INPUT_TOO_LARGE_MESSAGE } from "../../src/server/responses/context-overflow";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
-let previousOcxHome: string | undefined;
+let previousOccxHome: string | undefined;
 const upstreams: Array<ReturnType<typeof Bun.serve>> = [];
 
 beforeEach(() => {
-  previousOcxHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-context-overflow-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousOccxHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-context-overflow-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   for (const upstream of upstreams.splice(0)) upstream.stop(true);
-  if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOcxHome;
+  if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOccxHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
@@ -67,7 +67,7 @@ function freePromptCap413(onHit?: () => void): ReturnType<typeof Bun.serve> {
 function provider(
   adapter: "openai-responses" | "openai-chat" | "anthropic",
   upstream: ReturnType<typeof Bun.serve>,
-): OcxProviderConfig {
+): OccxProviderConfig {
   return {
     adapter,
     baseUrl: `${String(upstream.url).replace(/\/$/, "")}/v1`,
@@ -78,13 +78,13 @@ function provider(
   };
 }
 
-function config(providers: Record<string, OcxProviderConfig>): OcxConfig {
+function config(providers: Record<string, OccxProviderConfig>): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
     defaultProvider: Object.keys(providers)[0]!,
     providers,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(serverUrl: string, model: string, stream: boolean, input?: unknown): Promise<Response> {

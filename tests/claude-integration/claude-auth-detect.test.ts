@@ -128,7 +128,7 @@ test("claudeConfigDir follows a reassigned HOME instead of the OS user database"
 
 // Same reason for ~/.claude.json: under CLAUDE_CONFIG_DIR it is that dir's SIBLING.
 test("the default claude.json reader stays inside the overridden profile", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-authdetect-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-authdetect-"));
   writeFileSync(join(dir, ".claude.json"), JSON.stringify({
     oauthAccount: { emailAddress: "someone@example.com" },
   }));
@@ -189,9 +189,9 @@ test("defaultAuthDetectDeps binds env to the caller-supplied environment", () =>
 });
 
 // MAJOR (round-5 review): the system-env writer exports the CONFIGURED admission key
-// into ANTHROPIC_AUTH_TOKEN. Counting it would make opencodex's own output look like
+// into ANTHROPIC_AUTH_TOKEN. Counting it would make openccx's own output look like
 // proof the user can authenticate natively — the marker feedback loop, one variable over.
-test("opencodex's own admission key is not counted as user auth", () => {
+test("openccx's own admission key is not counted as user auth", () => {
   const base = {
     readClaudeJson: () => undefined,
     credentialsFileExists: () => false,
@@ -199,23 +199,23 @@ test("opencodex's own admission key is not counted as user auth", () => {
   };
   const own = detectClaudeAuth({
     ...base,
-    env: () => ({ ANTHROPIC_AUTH_TOKEN: "sk-ocx-admission" }),
-    ownTokens: ["sk-ocx-admission"],
+    env: () => ({ ANTHROPIC_AUTH_TOKEN: "sk-occx-admission" }),
+    ownTokens: ["sk-occx-admission"],
   });
   expect(own.presence).toBe("absent");
 
   // Same value in ANTHROPIC_API_KEY is ours too.
   expect(detectClaudeAuth({
     ...base,
-    env: () => ({ ANTHROPIC_API_KEY: "sk-ocx-admission" }),
-    ownTokens: ["sk-ocx-admission"],
+    env: () => ({ ANTHROPIC_API_KEY: "sk-occx-admission" }),
+    ownTokens: ["sk-occx-admission"],
   }).presence).toBe("absent");
 
   // A DIFFERENT value is genuine user auth and still counts.
   const user = detectClaudeAuth({
     ...base,
     env: () => ({ ANTHROPIC_AUTH_TOKEN: "sk-ant-user" }),
-    ownTokens: ["sk-ocx-admission"],
+    ownTokens: ["sk-occx-admission"],
   });
   expect(user.presence).toBe("present");
   expect(user.foundBy).toBe("exported-env");

@@ -3,7 +3,7 @@ import { mkdtempSync} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getAccountSet, saveCredential, setActiveAccount } from "../../src/oauth/store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   clearAccountQuotaCache,
   clearProviderQuotaCache,
@@ -19,8 +19,8 @@ import { PROXY_ENV_KEYS } from "../../src/lib/proxy-env";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-let opencodexHome: string;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+let openccxHome: string;
 
 const FIRST = { accountId: "acct-first", email: "first@example.com" };
 const SECOND = { accountId: "acct-second", email: "second@example.com" };
@@ -42,17 +42,17 @@ function usageBody(fiveHour: number, sevenDay: number): string {
 }
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-account-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-account-quota-"));
+  process.env.OPENCCX_HOME = openccxHome;
   clearAccountQuotaCache();
   clearProviderQuotaCache();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
   clearAccountQuotaCache();
   clearProviderQuotaCache();
   resetProviderQuotaReconcileStateForTests();
@@ -239,7 +239,7 @@ describe("fetchProviderAccountQuotas", () => {
       return new Response(body, { status: 200 });
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 1455,
       defaultProvider: "anthropic",
       providers: {
@@ -350,7 +350,7 @@ describe("fetchProviderAccountQuotas", () => {
       return new Response(usageBody(3, 21), { status: 200 });
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 1455,
       defaultProvider: "anthropic",
       providers: {
@@ -399,7 +399,7 @@ describe("fetchProviderAccountQuotas", () => {
       return new Response(usageBody(70, 15), { status: 200 });
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 1455,
       defaultProvider: "anthropic",
       providers: {
@@ -583,7 +583,7 @@ describe("explicit OAuth account quota readers", () => {
     let started!: () => void;
     const entered = new Promise<void>(resolve => { started = resolve; });
     globalThis.fetch = (async () => { started(); await gate; return Response.json({ planUsage: { totalPercentUsed: 90 } }); }) as typeof fetch;
-    const config = { defaultProvider: "cursor", providers: { cursor: { adapter: "cursor", authMode: "oauth", baseUrl: "https://api2.cursor.sh" } } } as OcxConfig;
+    const config = { defaultProvider: "cursor", providers: { cursor: { adapter: "cursor", authMode: "oauth", baseUrl: "https://api2.cursor.sh" } } } as OccxConfig;
     const pending = fetchProviderQuotaReports(config, true);
     await entered;
     await setActiveAccount("cursor", next.id);

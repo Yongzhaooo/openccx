@@ -8,15 +8,15 @@ import {
   type PackageTreeObservation,
 } from "../../src/lib/package-tree-integrity";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-package-tree-integrity");
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "test",
@@ -34,13 +34,13 @@ function config(): OcxConfig {
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-package-tree-integrity-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  isolatedCodexHome = installIsolatedCodexHome("occx-package-tree-integrity-");
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
@@ -201,7 +201,7 @@ describe("package tree integrity", () => {
   };
 
   test("a permission change is not a replacement", () => {
-    writeFileSync(manifest(), '{"name":"ocx","version":"1.0.0"}');
+    writeFileSync(manifest(), '{"name":"occx","version":"1.0.0"}');
     let clock = 0;
     const guard = createPackageTreeIntegrityGuard(observeAt(manifest()), () => clock);
     expect(guard.status()).toEqual({ ok: true });
@@ -212,7 +212,7 @@ describe("package tree integrity", () => {
   });
 
   test("an in-place rewrite of the same byte length is still a replacement", () => {
-    writeFileSync(manifest(), '{"name":"ocx","version":"1.0.0"}');
+    writeFileSync(manifest(), '{"name":"occx","version":"1.0.0"}');
     let clock = 0;
     const guard = createPackageTreeIntegrityGuard(observeAt(manifest()), () => clock);
     expect(guard.status()).toEqual({ ok: true });
@@ -220,19 +220,19 @@ describe("package tree integrity", () => {
     // Same length, different bytes: neither inode nor size moves, so mtime is the
     // only signal left. This is the case that would break if someone "simplified"
     // the comparison down to inode and size.
-    rewriteManifestWithDistinctMtime('{"name":"ocx","version":"9.9.9"}');
+    rewriteManifestWithDistinctMtime('{"name":"occx","version":"9.9.9"}');
     clock += 2_000;
     expect(guard.status()).toEqual({ ok: false, reason: "package_tree_replaced" });
   });
 
   test("an atomic install is still a replacement", () => {
-    writeFileSync(manifest(), '{"name":"ocx","version":"1.0.0"}');
+    writeFileSync(manifest(), '{"name":"occx","version":"1.0.0"}');
     let clock = 0;
     const guard = createPackageTreeIntegrityGuard(observeAt(manifest()), () => clock);
     expect(guard.status()).toEqual({ ok: true });
 
     // write-then-rename, which is what a package manager actually does.
-    writeFileSync(join(TEST_DIR, "package.json.new"), '{"name":"ocx","version":"1.0.0"}');
+    writeFileSync(join(TEST_DIR, "package.json.new"), '{"name":"occx","version":"1.0.0"}');
     renameSync(join(TEST_DIR, "package.json.new"), manifest());
     clock += 2_000;
     expect(guard.status()).toEqual({ ok: false, reason: "package_tree_replaced" });
@@ -250,7 +250,7 @@ describe("package tree integrity", () => {
       expect(health.headers.get("retry-after")).toBe("5");
       expect(await health.json()).toMatchObject({
         status: "restart_required",
-        service: "opencodex",
+        service: "openccx",
         error: { code: "package_tree_changed" },
       });
 

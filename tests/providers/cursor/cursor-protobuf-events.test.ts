@@ -47,7 +47,7 @@ function mcpToolCall(toolName: string, args: Record<string, string>) {
           name: toolName,
           toolName,
           toolCallId: "call_1",
-          providerIdentifier: "opencodex-responses",
+          providerIdentifier: "openccx-responses",
           args: encoded,
         }),
       }),
@@ -125,14 +125,14 @@ describe("Cursor protobuf tool-call events", () => {
 
   test("maps a provider-isolated Cursor client-tool alias back to Claude Desktop's bare tool name", () => {
     const state = createCursorProtobufEventState({
-      clientToolNames: ["ocx_client_read"],
+      clientToolNames: ["occx_client_read"],
       toolSchemas: new Map([[
-        "ocx_client_read",
+        "occx_client_read",
         { type: "object", properties: { path: { type: "string" } }, required: ["path"] },
       ]]),
-      cursorToolNameMap: new Map([["ocx_client_read", "read"]]),
+      cursorToolNameMap: new Map([["occx_client_read", "read"]]),
     });
-    const toolCall = mcpToolCall("ocx_client_read", { path: "README.md" });
+    const toolCall = mcpToolCall("occx_client_read", { path: "README.md" });
 
     expect(mapCursorProtobufServerMessage(interaction({
       case: "toolCallCompleted",
@@ -146,11 +146,11 @@ describe("Cursor protobuf tool-call events", () => {
 
   test("rejects malformed freeform arguments after restoring a provider-isolated alias", () => {
     const state = createCursorProtobufEventState({
-      clientToolNames: ["ocx_client_script"],
+      clientToolNames: ["occx_client_script"],
       freeformToolNames: ["script"],
-      cursorToolNameMap: new Map([["ocx_client_script", "script"]]),
+      cursorToolNameMap: new Map([["occx_client_script", "script"]]),
     });
-    const toolCall = mcpToolCall("ocx_client_script", { wrong_key: "not a wrapper" });
+    const toolCall = mcpToolCall("occx_client_script", { wrong_key: "not a wrapper" });
 
     expect(mapCursorProtobufServerMessage(interaction({
       case: "toolCallCompleted",
@@ -166,11 +166,11 @@ describe("Cursor protobuf tool-call events", () => {
 
   test("keeps an aliased partial freeform wrapper open for native arguments", () => {
     const state = createCursorProtobufEventState({
-      clientToolNames: ["ocx_client_script"],
+      clientToolNames: ["occx_client_script"],
       freeformToolNames: ["script"],
-      cursorToolNameMap: new Map([["ocx_client_script", "script"]]),
+      cursorToolNameMap: new Map([["occx_client_script", "script"]]),
     });
-    const toolCall = mcpToolCall("ocx_client_script", {});
+    const toolCall = mcpToolCall("occx_client_script", {});
 
     expect(mapCursorProtobufServerMessage(interaction({
       case: "toolCallStarted",
@@ -256,7 +256,7 @@ describe("Cursor protobuf tool-call events", () => {
             name: "local",
             toolName: "local",
             toolCallId: "call_local",
-            providerIdentifier: "opencodex",
+            providerIdentifier: "openccx",
           }),
         }),
       },
@@ -459,7 +459,7 @@ describe("Cursor protobuf tool-call events", () => {
       name: "apply_patch",
       toolName: "apply_patch",
       toolCallId: "call_freeform",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { input: encoder.encode(JSON.stringify("*** Begin Patch\n*** End Patch")) },
     });
     expect(mapSyntheticMcpExecToToolEvents(lateArgs, "fallback", { state })).toEqual([
@@ -518,7 +518,7 @@ describe("Cursor protobuf tool-call events", () => {
       name: "apply_patch",
       toolName: "apply_patch",
       toolCallId: "call_empty_freeform",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { input: encoder.encode(JSON.stringify("*** Begin Patch\n*** End Patch")) },
     });
     expect(mapSyntheticMcpExecToToolEvents(lateArgs, "fallback", { state })).toEqual([
@@ -573,7 +573,7 @@ describe("Cursor protobuf tool-call events", () => {
       name: "apply_patch",
       toolName: "apply_patch",
       toolCallId: "call_completion_only_freeform",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { input: encoder.encode(JSON.stringify("*** Begin Patch\n*** End Patch")) },
     });
     expect(mapSyntheticMcpExecToToolEvents(lateArgs, "fallback", { state })).toEqual([
@@ -655,7 +655,7 @@ describe("Cursor protobuf tool-call events", () => {
       name: "apply_patch",
       toolName: "apply_patch",
       toolCallId: "call_partial_freeform",
-      providerIdentifier: "opencodex-responses",
+      providerIdentifier: "openccx-responses",
       args: { input: encoder.encode(JSON.stringify("*** Begin Patch\n*** End Patch")) },
     });
     expect(mapSyntheticMcpExecToToolEvents(lateArgs, "fallback", { state })).toEqual([
@@ -808,7 +808,7 @@ describe("Cursor protobuf tool-call events", () => {
         name: "mcp__fs__read_file",
         toolName: "mcp__fs__read_file",
         toolCallId: "call_1",
-        providerIdentifier: "opencodex-responses",
+        providerIdentifier: "openccx-responses",
         args: { path: encoder.encode(JSON.stringify("late.txt")) },
       });
       expect(mapSyntheticMcpExecToToolEvents(lateArgs, "fallback", { state })).toEqual([]);
@@ -1072,9 +1072,9 @@ describe("Cursor protobuf tool-call events", () => {
 });
 
 describe("Cursor MCP display-name alias", () => {
-  test("mcp_opencodex-responses_ prefixed calls resolve to the advertised tool", () => {
+  test("mcp_openccx-responses_ prefixed calls resolve to the advertised tool", () => {
     const state = createCursorProtobufEventState({ clientToolNames: ["exec_command"] });
-    const toolCall = mcpToolCall("mcp_opencodex-responses_exec_command", { cmd: "echo ok" });
+    const toolCall = mcpToolCall("mcp_openccx-responses_exec_command", { cmd: "echo ok" });
 
     // The prefixed display name must NOT be rejected as an unknown Responses tool.
     expect(mapCursorProtobufServerMessage(interaction({
@@ -1092,7 +1092,7 @@ describe("Cursor MCP display-name alias", () => {
 
   test("unknown tools are still rejected after normalization", () => {
     const state = createCursorProtobufEventState({ clientToolNames: ["exec_command"] });
-    const toolCall = mcpToolCall("mcp_opencodex-responses_made_up_tool", { x: "1" });
+    const toolCall = mcpToolCall("mcp_openccx-responses_made_up_tool", { x: "1" });
     const events = mapCursorProtobufServerMessage(interaction({
       case: "toolCallStarted",
       value: create(ToolCallStartedUpdateSchema, { callId: "call_a2", modelCallId: "m2", toolCall }),
@@ -1192,20 +1192,20 @@ describe("textual pseudo tool-call marker normalization (#2305)", () => {
   test("display alias inside [TOOL_CALL]...[ARGS] markers folds to the wire name", () => {
     const state = createCursorProtobufEventState();
     const events = mapCursorProtobufServerMessage(
-      textDelta('[TOOL_CALL]mcp_opencodex-responses_grep[ARGS]{"pattern":"OpenCodex"}'),
+      textDelta('[TOOL_CALL]mcp_openccx-responses_grep[ARGS]{"pattern":"Openccx"}'),
       state,
     );
-    expect(events).toEqual([{ type: "text", text: '[TOOL_CALL]grep[ARGS]{"pattern":"OpenCodex"}' }]);
+    expect(events).toEqual([{ type: "text", text: '[TOOL_CALL]grep[ARGS]{"pattern":"Openccx"}' }]);
   });
 
   test("prose mentioning the display alias without markers stays untouched", () => {
     const state = createCursorProtobufEventState();
-    const prose = "You could call mcp_opencodex-responses_grep here.";
+    const prose = "You could call mcp_openccx-responses_grep here.";
     const events = mapCursorProtobufServerMessage(textDelta(prose), state);
     expect(events).toEqual([{ type: "text", text: prose }]);
   });
 
-  test("markers with a non-opencodex provider prefix are not rewritten", () => {
+  test("markers with a non-openccx provider prefix are not rewritten", () => {
     const state = createCursorProtobufEventState();
     const other = "[TOOL_CALL]mcp_other-provider_grep[ARGS]{}";
     const events = mapCursorProtobufServerMessage(textDelta(other), state);

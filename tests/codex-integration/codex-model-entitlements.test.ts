@@ -82,7 +82,7 @@ beforeEach(() => resetCodexModelEntitlementCacheForTests());
 
 describe("Codex account model entitlements", () => {
   test("keeps parsed-empty distinct from refresh failures end to end", async () => {
-    const isolated = installIsolatedCodexHome("ocx-entitlement-provenance-");
+    const isolated = installIsolatedCodexHome("occx-entitlement-provenance-");
     const accountId = "pool-provenance";
     const config = {
       codexAccounts: [{ id: accountId, email: "pool-provenance@example.test", isMain: false }],
@@ -152,7 +152,7 @@ describe("Codex account model entitlements", () => {
   });
 
   test("default entitlement status uses the same client-version cache key as resolution", async () => {
-    const isolated = installIsolatedCodexHome("ocx-entitlement-default-version-");
+    const isolated = installIsolatedCodexHome("occx-entitlement-default-version-");
     const accountId = "pool-default-version";
     const config = {
       codexAccounts: [{ id: accountId, email: "pool-default-version@example.test", isMain: false }],
@@ -477,22 +477,22 @@ describe("tri-state entitlement authority", () => {
 });
 
 describe("ensureCodexEntitlementFreshness", () => {
-  const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+  const originalOpenccxHome = process.env.OPENCCX_HOME;
   const originalCodexHome = process.env.CODEX_HOME;
   let root = "";
   let codexHome = "";
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), "ocx-entitlement-freshness-"));
+    root = mkdtempSync(join(tmpdir(), "occx-entitlement-freshness-"));
     codexHome = join(root, "codex");
     mkdirSync(codexHome, { recursive: true });
-    process.env.OPENCODEX_HOME = join(root, "opencodex");
+    process.env.OPENCCX_HOME = join(root, "openccx");
     process.env.CODEX_HOME = codexHome;
   });
 
   afterEach(() => {
-    if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+    if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = originalOpenccxHome;
     if (originalCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = originalCodexHome;
     removeTreeWithRetry(root);
@@ -1072,7 +1072,7 @@ describe("entitlement client version (#2886)", () => {
 
     expect(seen).toEqual(["0.146.0"]);
     // The wrong behavior: an entitled account classified as denying GPT-5.6 because
-    // OpenCodex under-reported its own client version.
+    // Openccx under-reported its own client version.
     expect([...availableAccountGatedNativeModels(snapshot)]).toEqual([DAYBREAK]);
     // The flagships are present in the recorded roster too; they simply no longer need to be.
     expect(snapshot.modelsByAccount.get("main")?.has(SOL)).toBe(true);

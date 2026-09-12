@@ -2,7 +2,7 @@
  * The providers guide must keep answering "which account does this login spend?".
  *
  * The question arrives from users faster than the docs answer it (#4215), and the two obvious
- * ways to answer it are both wrong. "OpenCodex never converts a subscription login into an API
+ * ways to answer it are both wrong. "Openccx never converts a subscription login into an API
  * key" is false -- orcarouter-oauth mints a user-owned sk-orca- key by design. "An API key bills
  * per token" is false too -- Z.AI GLM Coding Plan, Kimi Code, the BigModel coding plan, Command
  * Code and CodeBuddy all sell a subscription as a key. Both sentences read as obviously true,
@@ -36,13 +36,13 @@ async function billingSection(): Promise<string> {
  */
 const DUAL_MODE = [
   { label: "OpenAI / ChatGPT", login: "`openai`", key: "`openai-apikey`" },
-  { label: "Anthropic", login: "ocx login anthropic", key: "`anthropic-apikey`" },
-  { label: "xAI", login: "ocx login xai", key: '`authMode: "key"`' },
-  { label: "Kimi", login: "ocx login kimi", key: "`kimi-code`" },
-  { label: "Command Code", login: "ocx login command-code", key: "`commandcode`" },
-  { label: "GitHub Copilot", login: "ocx login github-copilot", key: '`authMode: "key"`' },
-  { label: "OrcaRouter", login: "ocx login orcarouter-oauth", key: "`orcarouter`" },
-  { label: "Meta Muse", login: "ocx login meta-muse", key: "`meta-model`" },
+  { label: "Anthropic", login: "occx login anthropic", key: "`anthropic-apikey`" },
+  { label: "xAI", login: "occx login xai", key: '`authMode: "key"`' },
+  { label: "Kimi", login: "occx login kimi", key: "`kimi-code`" },
+  { label: "Command Code", login: "occx login command-code", key: "`commandcode`" },
+  { label: "GitHub Copilot", login: "occx login github-copilot", key: '`authMode: "key"`' },
+  { label: "OrcaRouter", login: "occx login orcarouter-oauth", key: "`orcarouter`" },
+  { label: "Meta Muse", login: "occx login meta-muse", key: "`meta-model`" },
 ] as const;
 
 describe("provider billing claims", () => {

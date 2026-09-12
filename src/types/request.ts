@@ -1,9 +1,9 @@
 import type { KiroOAuthMetadata } from "../oauth/types";
-import type { OcxTool, OcxToolChoice } from "./tools";
+import type { OccxTool, OccxToolChoice } from "./tools";
 import type { TierDecision, TierObservationContext } from "./provider";
 
 /** Exact provider/credential namespace for process-local reasoning replay. */
-export interface OcxReasoningReplayIdentity {
+export interface OccxReasoningReplayIdentity {
   providerName: string;
   /** Opaque process-local digest of the exact upstream destination. */
   providerDestinationIdentity: string;
@@ -29,26 +29,26 @@ export interface OcxReasoningReplayIdentity {
  * Credential/provider rotation replaces `current` atomically without replacing
  * the holder, so late tool-call cache writes see the active physical identity.
  */
-export interface OcxReasoningReplayScopeRef {
+export interface OccxReasoningReplayScopeRef {
   /**
    * Conversation namespace for replay state. Historically this was always the Codex parent-thread
    * id; headerless Responses callers use a raw sanitized thread/Cursor/session fallback, never the
    * hashed request-log conversation id.
    */
   readonly clientThreadId: string;
-  current?: Readonly<OcxReasoningReplayIdentity>;
+  current?: Readonly<OccxReasoningReplayIdentity>;
 }
 
-export interface OcxParsedRequest {
+export interface OccxParsedRequest {
   modelId: string;
   /** Client-facing model selector retained for Anthropic routes after wire-model normalization. */
   _responseModelId?: string;
   /** Selected OpenAI API virtual-model id retained after it rewrites the upstream wire model. */
   _openAiVirtualSelectedModelId?: string;
   previousResponseId?: string;
-  context: OcxContext;
+  context: OccxContext;
   stream: boolean;
-  options: OcxRequestOptions;
+  options: OccxRequestOptions;
   _rawBody?: unknown;
   /**
    * Boundary between replayed history and this turn's newly appended input. Usually the
@@ -73,7 +73,7 @@ export interface OcxParsedRequest {
   /** Cursor-only thread owner; may be an opaque process-local Desktop session/thread identity. */
   _cursorClientThreadId?: string;
   /** Conversation/provider/account/model-bound namespace for reasoning replay state. */
-  _reasoningReplayScope?: OcxReasoningReplayScopeRef;
+  _reasoningReplayScope?: OccxReasoningReplayScopeRef;
   /**
    * Set by bindRouteReasoningReplayScope after a proven serving-identity change, or by
    * prepareOpaqueBlobRecovery after an authoritative rejection; consumers strip replayed blobs.
@@ -92,11 +92,11 @@ export interface OcxParsedRequest {
   /** Account-scoped, non-secret Kiro request metadata selected with the OAuth access token. */
   _kiroAuthContext?: Pick<KiroOAuthMetadata, "profileArn" | "apiRegion" | "ssoRegion" | "authType">;
   /** Provider-private continuation metadata resolved from the Responses previous_response_id chain. */
-  _providerContinuation?: OcxProviderContinuationState;
+  _providerContinuation?: OccxProviderContinuationState;
   /** Persisted continuation considered only after the final physical route is known. */
-  _providerContinuationCandidate?: OcxProviderContinuationState;
+  _providerContinuationCandidate?: OccxProviderContinuationState;
   /** Exact process-local route owner attached to newly persisted provider state. */
-  _providerContinuationOwner?: OcxProviderContinuationOwner;
+  _providerContinuationOwner?: OccxProviderContinuationOwner;
   /**
    * The hosted `{type:"web_search", ...}` tool config, stashed when Codex enables web search. Routed
    * (non-OpenAI) providers can't run it server-side, so the proxy re-exposes it as a function tool and
@@ -126,29 +126,29 @@ export interface OcxParsedRequest {
   _contextCompactionBoundary?: boolean;
 }
 
-export interface OcxContext {
+export interface OccxContext {
   systemPrompt?: string[];
-  messages: OcxMessage[];
-  tools?: OcxTool[];
+  messages: OccxMessage[];
+  tools?: OccxTool[];
 }
 
-export type OcxMessage =
-  | OcxUserMessage
-  | OcxAssistantMessage
-  | OcxDeveloperMessage
-  | OcxToolResultMessage;
+export type OccxMessage =
+  | OccxUserMessage
+  | OccxAssistantMessage
+  | OccxDeveloperMessage
+  | OccxToolResultMessage;
 
-export interface OcxUserMessage {
+export interface OccxUserMessage {
   role: "user";
-  content: string | OcxContentPart[];
+  content: string | OccxContentPart[];
   timestamp: number;
 }
 
-export interface OcxAssistantMessage {
+export interface OccxAssistantMessage {
   role: "assistant";
-  content: OcxAssistantContentPart[];
+  content: OccxAssistantContentPart[];
   /** Responses message phase, preserved when replaying translated provider output. */
-  phase?: OcxMessagePhase;
+  phase?: OccxMessagePhase;
   model?: string;
   timestamp: number;
   /**
@@ -159,32 +159,32 @@ export interface OcxAssistantMessage {
   kiroRedactedReasoning?: string;
 }
 
-export interface OcxDeveloperMessage {
+export interface OccxDeveloperMessage {
   role: "developer";
-  content: string | OcxContentPart[];
+  content: string | OccxContentPart[];
   timestamp: number;
 }
 
-export interface OcxToolResultMessage {
+export interface OccxToolResultMessage {
   role: "toolResult";
   toolCallId: string;
   toolName: string;
   /** MCP namespace from the originating tool call, if any. */
   toolNamespace?: string;
   /** Text, or content parts when a tool (e.g. Codex view_image) returns an image in its output. */
-  content: string | OcxContentPart[];
+  content: string | OccxContentPart[];
   /** True when the Responses result contained opaque encrypted output Kiro cannot translate. */
   containsEncryptedContent?: boolean;
   isError: boolean;
   timestamp: number;
 }
 
-export interface OcxTextContent {
+export interface OccxTextContent {
   type: "text";
   text: string;
 }
 
-export interface OcxImageContent {
+export interface OccxImageContent {
   type: "image";
   /** A `data:` URL (base64) or a remote https URL — passed through from Codex verbatim, NEVER inlined as text. */
   imageUrl: string;
@@ -192,16 +192,16 @@ export interface OcxImageContent {
   detail?: string;
 }
 
-export interface OcxVideoContent {
+export interface OccxVideoContent {
   type: "video";
   /** A base64 `data:` URL from an OpenAI-compatible `video_url` part. */
   videoUrl: string;
 }
 
 /** A user/developer message content part: text or native media. */
-export type OcxContentPart = OcxTextContent | OcxImageContent | OcxVideoContent;
+export type OccxContentPart = OccxTextContent | OccxImageContent | OccxVideoContent;
 
-export interface OcxThinkingContent {
+export interface OccxThinkingContent {
   type: "thinking";
   thinking: string;
   signature?: string;
@@ -210,7 +210,7 @@ export interface OcxThinkingContent {
   redacted?: string[];
 }
 
-export interface OcxToolCall {
+export interface OccxToolCall {
   type: "toolCall";
   id: string;
   name: string;
@@ -223,7 +223,7 @@ export interface OcxToolCall {
    * SAME part it was issued for, so this travels with the individual tool call rather than
    * being matched by name/arguments after the fact.
    */
-  providerMetadata?: OcxProviderOpaqueToolCallMetadata;
+  providerMetadata?: OccxProviderOpaqueToolCallMetadata;
   /** MCP namespace (e.g. "mcp__context7") when this call targets a namespaced tool. */
   namespace?: string;
 }
@@ -232,19 +232,19 @@ export interface OcxToolCall {
  * Opaque, provider-scoped tool-call metadata. Values are never parsed, merged, re-encoded, or
  * synthesized — they are carried verbatim or not at all.
  */
-export interface OcxProviderOpaqueToolCallMetadata {
+export interface OccxProviderOpaqueToolCallMetadata {
   google?: {
     thoughtSignature?: string;
   };
 }
 
-export type OcxAssistantContentPart = OcxTextContent | OcxThinkingContent | OcxToolCall;
-export interface OcxRequestOptions {
+export type OccxAssistantContentPart = OccxTextContent | OccxThinkingContent | OccxToolCall;
+export interface OccxRequestOptions {
   maxOutputTokens?: number;
   temperature?: number;
   topP?: number;
   stopSequences?: string[];
-  toolChoice?: OcxToolChoice;
+  toolChoice?: OccxToolChoice;
   parallelToolCalls?: boolean;
   reasoning?: string;
   hideThinkingSummary?: boolean;
@@ -273,10 +273,10 @@ export interface OcxRequestOptions {
   };
 }
 
-export type OcxMessagePhase = "commentary" | "final_answer";
+export type OccxMessagePhase = "commentary" | "final_answer";
 
 /** Non-secret, process-local owner fence for provider-private continuation state. */
-export interface OcxProviderContinuationOwner {
+export interface OccxProviderContinuationOwner {
   [field: string]: string | number;
   version: 1;
   providerName: string;
@@ -290,9 +290,9 @@ export interface OcxProviderContinuationOwner {
  * Provider-private state that must follow a locally expanded `previous_response_id` chain.
  * Kept out of public Responses output and persisted only in the bounded local continuation cache.
  */
-export interface OcxProviderContinuationState {
+export interface OccxProviderContinuationState {
   /** Proxy-authored owner metadata; stripped before provider adapters receive the state. */
-  __ocxOwner?: OcxProviderContinuationOwner;
+  __occxOwner?: OccxProviderContinuationOwner;
   cursor?: {
     [field: string]: unknown;
     conversationId?: string;
@@ -309,7 +309,7 @@ export interface OcxProviderContinuationState {
 
 export type AdapterEvent =
   | { type: "heartbeat" }
-  | { type: "text_delta"; text: string; phase?: OcxMessagePhase }
+  | { type: "text_delta"; text: string; phase?: OccxMessagePhase }
   | { type: "thinking_delta"; thinking: string }
   // Anthropic extended-thinking round-trip: signature_delta for the current thinking block, and
   // opaque redacted_thinking blocks. Both must be replayed verbatim or tool-use turns 400.
@@ -319,7 +319,7 @@ export type AdapterEvent =
   // Never rendered — it only rides the reasoning item's envelope so the next request can replay it.
   | { type: "kiro_redacted_reasoning"; data: string }
   | { type: "reasoning_raw_delta"; text: string }
-  | { type: "tool_call_start"; id: string; name: string; providerMetadata?: OcxProviderOpaqueToolCallMetadata }
+  | { type: "tool_call_start"; id: string; name: string; providerMetadata?: OccxProviderOpaqueToolCallMetadata }
   | { type: "tool_call_delta"; arguments: string }
   | { type: "tool_call_end" }
   /** Internal boundary between a guarded first pass and its one-shot continuation. */
@@ -331,31 +331,31 @@ export type AdapterEvent =
   // output_item.added(in_progress) and end → the matching output_item.done(completed|failed) under
   // the SAME output index, so the activity animates instead of flashing completed instantly.
   | { type: "web_search_call_begin"; id: string }
-  | { type: "web_search_call_end"; id: string; queries: string[]; status?: "completed" | "failed"; sources?: OcxUrlCitation[] }
+  | { type: "web_search_call_end"; id: string; queries: string[]; status?: "completed" | "failed"; sources?: OccxUrlCitation[] }
   | {
       type: "done";
-      usage?: OcxUsage;
+      usage?: OccxUsage;
       /** Native opaque compaction ciphertext returned by a Responses backend. */
       compactionEncryptedContent?: string;
       stopReason?: string;
       endTurn?: boolean;
-      providerState?: OcxProviderContinuationState;
+      providerState?: OccxProviderContinuationState;
     }
   | {
       type: "incomplete";
       reason: string;
       message?: string;
-      usage?: OcxUsage;
+      usage?: OccxUsage;
       retryable?: boolean;
       endTurn?: boolean;
-      providerState?: OcxProviderContinuationState;
+      providerState?: OccxProviderContinuationState;
     }
   // `usage` carries best-effort partial consumption when a turn dies before a clean done
   // (e.g. cursor upstream 502 mid-stream), so failed requests can log real token counts.
   | {
       type: "error";
       message: string;
-      usage?: OcxUsage;
+      usage?: OccxUsage;
       /** Authoritative upstream/proxy status when known; avoids message-based classification. */
       status?: number;
       /** Responses error type and code when the adapter has a structured provider failure. */
@@ -369,7 +369,7 @@ export type AdapterEvent =
  * as a `url_citation` annotation on the following assistant message (the desktop app's Sources chip
  * reads these; the TUI ignores annotations, so this is additive).
  */
-export interface OcxUrlCitation {
+export interface OccxUrlCitation {
   url: string;
   title?: string;
 }
@@ -383,7 +383,7 @@ export interface OcxUrlCitation {
  *   the provider reports both; reads mirror `cachedInputTokens`.
  * - `totalTokens` = inputTokens + outputTokens. Never re-add cache detail on top.
  */
-export interface OcxUsage {
+export interface OccxUsage {
   inputTokens: number;
   outputTokens: number;
   /**

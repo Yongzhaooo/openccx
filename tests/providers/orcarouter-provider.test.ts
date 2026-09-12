@@ -28,7 +28,7 @@ import {
   resolveProviderModelDiscoveryUrl,
 } from "../../src/providers/model-discovery";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { en } from "../../gui/src/i18n/en";
 import { interpolate, type TFn } from "../../gui/src/i18n/shared";
 import { formatProviderDisplayName, providerIconSrc } from "../../gui/src/provider-icons";
@@ -208,7 +208,7 @@ describe("OrcaRouter dual authentication", () => {
     expect(url.searchParams.get("callback_url")).toBe("http://127.0.0.1:51733/callback");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("state")).toBe("state-42");
-    expect(url.searchParams.get("app_name")).toBe("OpenCodex");
+    expect(url.searchParams.get("app_name")).toBe("Openccx");
     expect(url.searchParams.get("scope")).toBe("api");
 
     const credential = await flow.exchangeToken("single-use-code", "state-42", "ignored");
@@ -316,7 +316,7 @@ describe("OrcaRouter dual authentication", () => {
   });
 
   test("preserves a configured self-hosted origin when account login publishes the provider", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "orcarouter-oauth",
       providers: {
@@ -340,7 +340,7 @@ describe("OrcaRouter dual authentication", () => {
     "preserves explicit loopback private-network consent %j through login upsert",
     allowPrivateNetwork => {
       process.env.ORCAROUTER_BASE_URL = "http://127.0.0.1:9999";
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "orcarouter-oauth",
         providers: {
@@ -364,7 +364,7 @@ describe("OrcaRouter dual authentication", () => {
 
   test("does not grant loopback consent when first login creates the provider row", () => {
     process.env.ORCAROUTER_BASE_URL = "http://127.0.0.1:9999";
-    const config: OcxConfig = { port: 10100, defaultProvider: "orcarouter-oauth", providers: {} };
+    const config: OccxConfig = { port: 10100, defaultProvider: "orcarouter-oauth", providers: {} };
     upsertOAuthProvider(config, "orcarouter-oauth");
     const provider = config.providers["orcarouter-oauth"]!;
     expect(provider.baseUrl).toBe("http://127.0.0.1:9999/v1");
@@ -379,9 +379,9 @@ describe("OrcaRouter dual authentication", () => {
   });
 
   test("generation-safely marks a rejected durable key as requiring a new login", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const testHome = mkdtempSync(join(tmpdir(), "ocx-orcarouter-401-"));
-    process.env.OPENCODEX_HOME = testHome;
+    const previousHome = process.env.OPENCCX_HOME;
+    const testHome = mkdtempSync(join(tmpdir(), "occx-orcarouter-401-"));
+    process.env.OPENCCX_HOME = testHome;
     try {
       await saveCredential("orcarouter-oauth", {
         access: "sk-orca-revoked-key",
@@ -398,8 +398,8 @@ describe("OrcaRouter dual authentication", () => {
       expect(account?.needsReauth).toBe(true);
       expect(account?.credential.access).toBe("sk-orca-revoked-key");
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(testHome);
     }
   });

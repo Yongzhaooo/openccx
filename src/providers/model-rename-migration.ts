@@ -17,7 +17,7 @@
 // replacement. Everything else in the row is left alone.
 
 import { PROVIDER_REGISTRY } from "./registry";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 export interface ModelRename {
   /** Registry provider id whose saved rows may carry the retired model id. */
@@ -163,7 +163,7 @@ function dropFromRecord(value: unknown, from: string): Record<string, unknown> |
  * the new id would hide the supported model behind a toggle the user set for a
  * different model. An existing row for the new id is left untouched.
  */
-function renameDisabledModels(config: OcxConfig, rename: ModelRename): boolean {
+function renameDisabledModels(config: OccxConfig, rename: ModelRename): boolean {
   const list = config.disabledModels;
   if (!Array.isArray(list)) return false;
   const retired = `${rename.provider}/${rename.from}`;
@@ -176,7 +176,7 @@ function renameDisabledModels(config: OcxConfig, rename: ModelRename): boolean {
  * Only migrate a row that still points at the registry's own endpoint. A user who
  * repointed `baseUrl` at a different vendor owns their model ids.
  */
-function providerStillMatchesRegistry(name: string, prov: OcxProviderConfig): boolean {
+function providerStillMatchesRegistry(name: string, prov: OccxProviderConfig): boolean {
   const entry = PROVIDER_REGISTRY.find(row => row.id === name);
   if (!entry) return false;
   if (!prov.baseUrl || !entry.baseUrl) return true;
@@ -194,7 +194,7 @@ function registrySeedsTarget(rename: ModelRename): boolean {
 }
 
 export interface ModelRenameProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   warnings: string[];
 }
@@ -204,7 +204,7 @@ export interface ModelRenameProjection {
  * caller decides whether to persist.
  */
 export function projectModelRenames(
-  config: OcxConfig,
+  config: OccxConfig,
   renames: readonly ModelRename[] = MODEL_RENAMES,
 ): ModelRenameProjection {
   const warnings: string[] = [];

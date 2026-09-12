@@ -1,9 +1,9 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
-const pendingTopLevelDeletions = new WeakMap<OcxConfig, Set<string>>();
+const pendingTopLevelDeletions = new WeakMap<OccxConfig, Set<string>>();
 export const CONFIG_REBASE_PROVENANCE_KEY = "configRebaseProvenance";
 
-export function parsedConfigRebaseDeletionKeys(config: OcxConfig): Set<string> | null {
+export function parsedConfigRebaseDeletionKeys(config: OccxConfig): Set<string> | null {
   const value = config.configRebaseProvenance;
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
@@ -14,7 +14,7 @@ export function parsedConfigRebaseDeletionKeys(config: OcxConfig): Set<string> |
   return new Set(record.deletedTopLevelKeys as string[]);
 }
 
-export function configRebaseDeletionKeys(config: OcxConfig): Set<string> {
+export function configRebaseDeletionKeys(config: OccxConfig): Set<string> {
   const deleted = new Set([
     ...(parsedConfigRebaseDeletionKeys(config) ?? []),
     ...(pendingTopLevelDeletions.get(config) ?? []),
@@ -26,11 +26,11 @@ export function configRebaseDeletionKeys(config: OcxConfig): Set<string> {
   return deleted;
 }
 
-export function configHasRebaseProvenance(config: OcxConfig): boolean {
+export function configHasRebaseProvenance(config: OccxConfig): boolean {
   return parsedConfigRebaseDeletionKeys(config) !== null || pendingTopLevelDeletions.has(config);
 }
 
-export function projectConfigRebaseProvenance(config: OcxConfig): OcxConfig {
+export function projectConfigRebaseProvenance(config: OccxConfig): OccxConfig {
   const pending = pendingTopLevelDeletions.get(config);
   const parsed = parsedConfigRebaseDeletionKeys(config);
   // Preserve unknown future metadata byte-for-value. It carries no authority here.
@@ -55,7 +55,7 @@ export function projectConfigRebaseProvenance(config: OcxConfig): OcxConfig {
 }
 
 /** Delete one top-level config key and retain the writer's explicit intent for rebasing. */
-export function deleteConfigTopLevelKey<K extends keyof OcxConfig>(config: OcxConfig, key: K): void {
+export function deleteConfigTopLevelKey<K extends keyof OccxConfig>(config: OccxConfig, key: K): void {
   delete config[key];
   if (key === CONFIG_REBASE_PROVENANCE_KEY) return;
   const deleted = pendingTopLevelDeletions.get(config) ?? new Set<string>();
@@ -63,7 +63,7 @@ export function deleteConfigTopLevelKey<K extends keyof OcxConfig>(config: OcxCo
   pendingTopLevelDeletions.set(config, deleted);
 }
 
-export function clearPendingConfigTopLevelDeletions(config: OcxConfig): void {
+export function clearPendingConfigTopLevelDeletions(config: OccxConfig): void {
   pendingTopLevelDeletions.delete(config);
 }
 
@@ -75,10 +75,10 @@ export function clearPendingConfigTopLevelDeletions(config: OcxConfig): void {
  * Unrelated fields and the live object's identity/baselines are left in place.
  */
 export function captureConfigTopLevelRollback(
-  config: OcxConfig,
-  keys: readonly (keyof OcxConfig)[],
+  config: OccxConfig,
+  keys: readonly (keyof OccxConfig)[],
 ): () => void {
-  const descriptors = new Map([...new Set<keyof OcxConfig>([...keys, CONFIG_REBASE_PROVENANCE_KEY])]
+  const descriptors = new Map([...new Set<keyof OccxConfig>([...keys, CONFIG_REBASE_PROVENANCE_KEY])]
     .map(key => [key, Object.getOwnPropertyDescriptor(config, key)] as const));
   const pending = pendingTopLevelDeletions.get(config);
   const pendingBefore = pending === undefined ? undefined : new Set(pending);

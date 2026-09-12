@@ -37,7 +37,7 @@ import { getConfigPath, readConfigDiagnostics, saveConfig } from "../../src/conf
 import { routeModel } from "../../src/router";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { syncCatalogModels } from "../../src/codex/catalog";
 import { injectClaudeAgentDefs } from "../../src/claude/agents-inject";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
@@ -45,7 +45,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const VALID_COMBO = { targets: [{ provider: "a", model: "m1" }] };
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -67,7 +67,7 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
   };
 }
 
-function rrConfig(stickyLimit: number, weights: number[]): OcxConfig {
+function rrConfig(stickyLimit: number, weights: number[]): OccxConfig {
   const providers = baseConfig().providers;
   const names = ["a", "b", "c"];
   return baseConfig({
@@ -86,7 +86,7 @@ function rrConfig(stickyLimit: number, weights: number[]): OcxConfig {
   });
 }
 
-function successfulPicks(config: OcxConfig, count: number): string[] {
+function successfulPicks(config: OccxConfig, count: number): string[] {
   const combo = getCombo(config, "free")!;
   return Array.from({ length: count }, () => {
     const pick = pickComboTarget(config, "free")!;
@@ -96,16 +96,16 @@ function successfulPicks(config: OcxConfig, count: number): string[] {
 }
 
 async function withTempHome<T>(run: (dir: string) => Promise<T> | T): Promise<T> {
-  const previousHome = process.env.OPENCODEX_HOME;
+  const previousHome = process.env.OPENCCX_HOME;
   const previousClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
-  const dir = mkdtempSync(join(tmpdir(), "ocx-combos-"));
-  process.env.OPENCODEX_HOME = dir;
+  const dir = mkdtempSync(join(tmpdir(), "occx-combos-"));
+  process.env.OPENCCX_HOME = dir;
   process.env.CLAUDE_CONFIG_DIR = join(dir, "claude");
   try {
     return await run(dir);
   } finally {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousClaudeConfigDir === undefined) delete process.env.CLAUDE_CONFIG_DIR;
     else process.env.CLAUDE_CONFIG_DIR = previousClaudeConfigDir;
     removeTreeWithRetry(dir);
@@ -117,7 +117,7 @@ function writeRawConfig(config: unknown): void {
 }
 
 async function comboApi(
-  config: OcxConfig,
+  config: OccxConfig,
   method: string,
   path: string,
   body?: unknown,
@@ -133,7 +133,7 @@ async function comboApi(
   });
 }
 
-async function comboApiRaw(config: OcxConfig, method: string, path: string, body: string): Promise<Response | null> {
+async function comboApiRaw(config: OccxConfig, method: string, path: string, body: string): Promise<Response | null> {
   const req = new Request(`http://localhost${path}`, {
     method,
     headers: { "content-type": "application/json" },
@@ -289,7 +289,7 @@ describe("combo management API", () => {
       expect(explicit?.status).toBe(200);
       const explicitBody = await responseJson(explicit);
       expect(explicitBody.combo).toMatchObject({ cooldownMs: 5_000, waitForCooldownMs: 15_000 });
-      const persistedExplicit = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persistedExplicit = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persistedExplicit.combos?.timed).toMatchObject({
         cooldownMs: 5_000,
         waitForCooldownMs: 15_000,
@@ -308,7 +308,7 @@ describe("combo management API", () => {
       expect(explicitDefault?.status).toBe(200);
       expect((await responseJson(explicitDefault)).combo).toMatchObject({ cooldownMs: 60_000 });
       expect(config.combos?.["default-timed"]?.cooldownMs).toBe(60_000);
-      const persistedExplicitDefault = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persistedExplicitDefault = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persistedExplicitDefault.combos?.["default-timed"]).toMatchObject({ cooldownMs: 60_000 });
       expect(persistedExplicitDefault.combos?.["default-timed"]).not.toHaveProperty("waitForCooldownMs");
       const listedDefault = await responseJson(await comboApi(config, "GET", "/api/combos"));
@@ -322,7 +322,7 @@ describe("combo management API", () => {
         combo: { targets: [{ provider: "a", model: "m1" }] },
       });
       expect(dashboardUpdate?.status).toBe(200);
-      const persistedAfterDashboardUpdate = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persistedAfterDashboardUpdate = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persistedAfterDashboardUpdate.combos?.timed).toMatchObject({
         cooldownMs: 5_000,
         waitForCooldownMs: 15_000,
@@ -341,7 +341,7 @@ describe("combo management API", () => {
       expect(plain).toBeDefined();
       expect(plain).not.toHaveProperty("cooldownMs");
       expect(plain).not.toHaveProperty("waitForCooldownMs");
-      const persistedSparse = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persistedSparse = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       const persistedPlain = persistedSparse.combos?.plain;
       expect(persistedPlain).toBeDefined();
       expect(persistedPlain).not.toHaveProperty("cooldownMs");
@@ -383,7 +383,7 @@ describe("combo management API", () => {
       expect(timed).toMatchObject({ cooldownMs: 5_000 });
       expect(timed).not.toHaveProperty("waitForCooldownMs");
 
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.combos?.timed).toMatchObject({ cooldownMs: 5_000 });
       expect(persisted.combos?.timed).not.toHaveProperty("waitForCooldownMs");
     });
@@ -638,7 +638,7 @@ describe("combo management API", () => {
       });
       saveConfig(config);
       injectClaudeAgentDefs(config, {});
-      expect(readdirSync(join(process.env.CLAUDE_CONFIG_DIR!, "agents"))).toContain("ocx-old-public.md");
+      expect(readdirSync(join(process.env.CLAUDE_CONFIG_DIR!, "agents"))).toContain("occx-old-public.md");
       const oldCombo = getCombo(config, "old")!;
       const oldPick = pickComboTarget(config, "old")!;
       noteComboSuccess("old", oldCombo, oldPick.target);
@@ -689,7 +689,7 @@ describe("combo management API", () => {
       expect(pickComboTarget(config, "new")?.target.provider).toBe("b");
       config.combos!.old = config.combos!.new!;
       expect(pickComboTarget(config, "old")?.target.provider).toBe("b");
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.combos?.old).toBeUndefined();
       expect(persisted.combos?.new?.alias).toBe("new-public");
       expect(persisted.disabledModels).toEqual(["before", "new-public", "middle", "after"]);
@@ -725,7 +725,7 @@ describe("combo management API", () => {
       expect(response?.status).toBe(200);
       expect(config.disabledModels).toEqual(["before", "stable-public", "after"]);
       expect(config.subagentModels).toEqual(["stable-public", "another"]);
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.disabledModels).toEqual(["before", "stable-public", "after"]);
       expect(persisted.subagentModels).toEqual(["stable-public", "another"]);
     });
@@ -784,7 +784,7 @@ describe("combo management API", () => {
       expect(() => routeModel(config, "gpt-5.6-sol")).toThrow(
         "requires the canonical openai provider",
       );
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.disabledModels).toEqual(config.disabledModels);
       expect(persisted.subagentModels).toEqual(config.subagentModels);
     });
@@ -1022,7 +1022,7 @@ describe("combo management API", () => {
       expect(response?.status).toBe(200);
       expect(config.disabledModels).toEqual(["before", "combo/free", "after"]);
       expect(config.subagentModels).toEqual(["combo/free", "another"]);
-      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+      const persisted = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
       expect(persisted.disabledModels).toEqual(["before", "combo/free", "after"]);
       expect(persisted.subagentModels).toEqual(["combo/free", "another"]);
     });
@@ -1112,7 +1112,7 @@ describe("combo management API", () => {
       const codexHome = join(dir, "codex-home");
       mkdirSync(codexHome, { recursive: true });
       process.env.CODEX_HOME = codexHome;
-      const catalogPath = join(codexHome, "opencodex-catalog.json");
+      const catalogPath = join(codexHome, "openccx-catalog.json");
       writeFileSync(catalogPath, JSON.stringify({
         models: [{
           slug: "combo/free",

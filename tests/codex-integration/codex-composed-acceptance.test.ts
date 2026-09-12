@@ -91,14 +91,14 @@ function manifest(root: string): Record<string, string> {
 /** The catalog/cache artifacts an explicit side-profile sync may legitimately write while OFF. */
 function manifestWithoutCatalogArtifacts(entries: Record<string, string>): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(entries).filter(([key]) => !key.includes("opencodex-catalog") && key !== "models_cache.json"),
+    Object.entries(entries).filter(([key]) => !key.includes("openccx-catalog") && key !== "models_cache.json"),
   );
 }
 
 async function waitFor<T>(
   read: () => T | null | Promise<T | null>,
   label: string,
-  // These wait on a REAL `ocx start` child: spawn a Bun runtime, load the CLI, read config,
+  // These wait on a REAL `occx start` child: spawn a Bun runtime, load the CLI, read config,
   // bind a port, then publish runtime-port.json. On the Windows shards that exceeded 10s
   // while the child was still alive and still working — `child exit=null` with both streams
   // open, which is a slow start, not a crash. The watchdog exists to bound a hung test, not
@@ -117,9 +117,9 @@ async function waitFor<T>(
 }
 
 class Fixture {
-  readonly root = mkdtempSync(join(tmpdir(), "ocx-composed-"));
+  readonly root = mkdtempSync(join(tmpdir(), "occx-composed-"));
   readonly codex = join(this.root, "codex");
-  readonly ocx = join(this.root, "ocx");
+  readonly occx = join(this.root, "occx");
   readonly homeA = join(this.root, "home-a");
   readonly homeB = join(this.root, "home-b");
   readonly userprofileA = join(this.root, "userprofile-a");
@@ -136,7 +136,7 @@ class Fixture {
   readonly children: Array<ReturnType<typeof Bun.spawn>> = [];
 
   constructor() {
-    for (const path of [this.codex, this.ocx, this.homeA, this.homeB, this.userprofileA, this.userprofileB, this.runtime, this.provider]) {
+    for (const path of [this.codex, this.occx, this.homeA, this.homeB, this.userprofileA, this.userprofileB, this.runtime, this.provider]) {
       mkdirSync(path, { recursive: true, mode: 0o700 });
     }
     try {
@@ -174,7 +174,7 @@ class Fixture {
       if (existsSync(path)) throw new Error(`lock preflight found pre-existing case path: ${path}`);
     }
     writeFileSync(join(this.codex, "config.toml"), 'model = "gpt-5"\n');
-    const serviceHome = claimOwnedServiceHome(this.codex, this.ocx, this.homeA);
+    const serviceHome = claimOwnedServiceHome(this.codex, this.occx, this.homeA);
     this.serviceManagerEnv = serviceHome.env;
     this.serviceManagerPreloadPath = serviceHome.preloadPath;
   }
@@ -195,12 +195,12 @@ class Fixture {
       // installation on every platform instead of reporting not_installed.
       GROK_HOME: join(home, ".grok"),
       CODEX_HOME: this.codex,
-      OPENCODEX_HOME: this.ocx,
+      OPENCCX_HOME: this.occx,
       XDG_RUNTIME_DIR: this.runtime,
-      OPENCODEX_API_AUTH_TOKEN: this.dataToken,
+      OPENCCX_API_AUTH_TOKEN: this.dataToken,
       // `/api/*` is the management plane, distinct from the data-plane token.
       // A fixed fixture value avoids reading the generated credential file.
-      OPENCODEX_ADMIN_AUTH_TOKEN: this.managementToken,
+      OPENCCX_ADMIN_AUTH_TOKEN: this.managementToken,
       NO_PROXY: "127.0.0.1,localhost",
       // The env is a whitelist, so CI does not reach the child unless it is named. It must:
       // the CLI's Windows identity lookup keeps an 8s budget locally and widens on CI, and
@@ -212,7 +212,7 @@ class Fixture {
   }
 
   writeConfig(overrides: Record<string, unknown> = {}): void {
-    writeFileSync(join(this.ocx, "config.json"), JSON.stringify({
+    writeFileSync(join(this.occx, "config.json"), JSON.stringify({
       port: 0,
       hostname: "127.0.0.1",
       syncResumeHistory: false,
@@ -252,7 +252,7 @@ class Fixture {
     const child = this.spawnCli(argv, home, userprofile);
     const completed = await Promise.race([
       Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`CLI watchdog: ocx ${argv.join(" ")}`)), timeoutMs)),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`CLI watchdog: occx ${argv.join(" ")}`)), timeoutMs)),
     ]);
     const [stdout, stderr, exitCode] = completed;
     return { exitCode, stdout, stderr };
@@ -260,7 +260,7 @@ class Fixture {
 
   async start(): Promise<StartedServer> {
     const child = this.spawnCli(["start"]);
-    const runtimePath = join(this.ocx, "runtime-port.json");
+    const runtimePath = join(this.occx, "runtime-port.json");
     // Capture the child's streams while we wait. Without this, a start that dies for a
     // concrete reason — a throw, a port bind refusal, a missing artifact — surfaces only as
     // "timed out waiting for runtime-port record", which is the symptom and never the cause.
@@ -326,7 +326,7 @@ class Fixture {
     const response = await fetch(`http://127.0.0.1:${runtime.port}${path}`, {
       ...init,
       headers: {
-        "x-opencodex-api-key": this.managementToken,
+        "x-openccx-api-key": this.managementToken,
         ...(init.body ? { "content-type": "application/json" } : {}),
         ...(init.headers ?? {}),
       },
@@ -337,7 +337,7 @@ class Fixture {
 
   async cleanup(): Promise<void> {
     // Teardown must not be able to leave a child behind. A case that timed out has a live
-    // `ocx start`, and if the wait below throws — or an earlier child refuses SIGTERM — the
+    // `occx start`, and if the wait below throws — or an earlier child refuses SIGTERM — the
     // rest of this loop never runs. The survivor is then killed by Bun's between-file
     // "killed N dangling process" sweep, which on the Windows shard surfaced as the NEXT
     // case failing with exit 143: one slow case cascading into unrelated ones.
@@ -385,7 +385,7 @@ function fixture(): Fixture {
 
 afterEach(async () => {
   // One fixture's teardown failure must not strand the next fixture's children. Drain every
-  // fixture, then report. Without this, a throw here leaves live `ocx start` processes for
+  // fixture, then report. Without this, a throw here leaves live `occx start` processes for
   // Bun's between-file sweep to kill, and the next case fails with exit 143 for a reason
   // that has nothing to do with it.
   const failures: unknown[] = [];
@@ -408,7 +408,7 @@ describe("WP13 composed toggle acceptance", () => {
     try {
       // The server is now holding a config object from startup. Edit the file out of band,
       // exactly as a user editing config.json by hand would, so disk is strictly newer.
-      const configPath = join(fx.ocx, "config.json");
+      const configPath = join(fx.occx, "config.json");
       const onDisk = JSON.parse(readFileSync(configPath, "utf-8")) as Record<string, any>;
       onDisk.providers["hand-edited"] = {
         adapter: "openai-chat",
@@ -488,7 +488,7 @@ describe("WP13 composed toggle acceptance", () => {
         method: "PUT", body: JSON.stringify({ enabled: false }),
       });
       expect(disabledAgain.body).toMatchObject({ desiredEnabled: false });
-      expect(String(disabledAgain.body.message)).toContain("ocx recover-history --ocx-compaction <thread-id> --yes");
+      expect(String(disabledAgain.body.message)).toContain("occx recover-history --occx-compaction <thread-id> --yes");
     } finally {
       await fx.stop(server);
     }
@@ -528,7 +528,7 @@ describe("WP13 composed toggle acceptance", () => {
       fx.writeConfig({ clientIntegrations: { codex: false } });
       const server = await fx.start();
       try {
-        writeFileSync(join(fx.codex, "opencodex-catalog.json"), JSON.stringify({ models: [] }));
+        writeFileSync(join(fx.codex, "openccx-catalog.json"), JSON.stringify({ models: [] }));
         fx.writeConfig({ providers: { fixture: {
           adapter: "openai-chat", baseUrl: `http://127.0.0.1:${provider.port}/v1`, apiKey: "fixture-key",
           allowPrivateNetwork: true, liveModels: true,
@@ -588,14 +588,14 @@ describe("WP13 composed toggle acceptance", () => {
         account_id: "foreign-main-account",
       },
     }));
-    writeFileSync(join(fx.codex, "opencodex-catalog.json"), JSON.stringify({
+    writeFileSync(join(fx.codex, "openccx-catalog.json"), JSON.stringify({
       models: [{ slug: "foreign-sentinel" }],
     }));
     writeFileSync(join(fx.codex, "models_cache.json"), "foreign-cache-sentinel\n");
-    writeFileSync(join(fx.ocx, "service-state.json"), JSON.stringify({
+    writeFileSync(join(fx.occx, "service-state.json"), JSON.stringify({
       version: 2,
       codexHome: join(fx.root, "foreign-codex"),
-      opencodexHome: join(fx.root, "foreign-ocx"),
+      openccxHome: join(fx.root, "foreign-occx"),
       backend: "scheduler",
     }));
     const before = manifest(fx.codex);
@@ -642,11 +642,11 @@ describe("WP13 composed toggle acceptance", () => {
         account_id: "unknown-main-account",
       },
     }));
-    writeFileSync(join(fx.codex, "opencodex-catalog.json"), JSON.stringify({
+    writeFileSync(join(fx.codex, "openccx-catalog.json"), JSON.stringify({
       models: [{ slug: "unknown-sentinel" }],
     }));
     writeFileSync(join(fx.codex, "models_cache.json"), "unknown-cache-sentinel\n");
-    writeFileSync(join(fx.ocx, "service-state.json"), "{malformed-service-state\n");
+    writeFileSync(join(fx.occx, "service-state.json"), "{malformed-service-state\n");
     const before = manifest(fx.codex);
     const server = await fx.start();
     try {
@@ -681,7 +681,7 @@ describe("WP13 composed toggle acceptance", () => {
       // is a ceiling rather than a sleep the test pays for.
       env: {
         ...fx.env(fx.homeA, fx.userprofileA),
-        OCX_LOCK_CHILD_PAYLOAD: JSON.stringify({
+        OCCX_LOCK_CHILD_PAYLOAD: JSON.stringify({
           timeoutMs: 5_000,
           holdMarker: held,
           releaseMarker: release,
@@ -694,7 +694,7 @@ describe("WP13 composed toggle acceptance", () => {
     await waitFor(() => existsSync(held) ? true : null, "held coordinator lock");
     const contender = Bun.spawn([process.execPath, lockChildPath], {
       cwd: repoRoot,
-      env: { ...fx.env(fx.homeB, fx.userprofileB), OCX_LOCK_CHILD_PAYLOAD: JSON.stringify({ timeoutMs: 0 }) },
+      env: { ...fx.env(fx.homeB, fx.userprofileB), OCCX_LOCK_CHILD_PAYLOAD: JSON.stringify({ timeoutMs: 0 }) },
       stdout: "pipe", stderr: "pipe",
     });
     fx.children.push(contender);
@@ -732,7 +732,7 @@ describe("WP13 composed toggle acceptance", () => {
     const second = await fx.start();
     const secondOutput = second.stdout;
     try {
-      expect(readFileSync(join(grokHome, "config.toml"), "utf8")).not.toContain("opencodex managed block");
+      expect(readFileSync(join(grokHome, "config.toml"), "utf8")).not.toContain("openccx managed block");
     } finally {
       await fx.stop(second);
     }
@@ -746,11 +746,11 @@ describe("WP13 composed toggle acceptance", () => {
     const fx = fixture();
     fx.writeConfig({ clientIntegrations: { codex: false } });
     const original = 'model = "gpt-5"\n';
-    const injected = `${original}# Auto-injected by opencodex\nopenai_base_url = "http://127.0.0.1:45678/v1"\n`;
-    const profile = "# opencodex profile\n";
+    const injected = `${original}# Auto-injected by openccx\nopenai_base_url = "http://127.0.0.1:45678/v1"\n`;
+    const profile = "# openccx profile\n";
     writeFileSync(join(fx.codex, "config.toml"), injected);
-    writeFileSync(join(fx.codex, "opencodex.config.toml"), profile);
-    writeFileSync(join(fx.codex, "opencodex-journal.json"), JSON.stringify({
+    writeFileSync(join(fx.codex, "openccx.config.toml"), profile);
+    writeFileSync(join(fx.codex, "openccx-journal.json"), JSON.stringify({
       version: 1,
       originalConfig: Buffer.from(original).toString("base64"),
       originalProfile: null,
@@ -761,15 +761,15 @@ describe("WP13 composed toggle acceptance", () => {
     }));
     const stateDb = join(fx.codex, "state_5.sqlite");
     const rollout = join(fx.codex, "restore-rollout.jsonl");
-    writeFileSync(rollout, `${JSON.stringify({ type: "session_meta", payload: { id: "restore-1", model_provider: "opencodex", source: "cli" } })}\n`);
+    writeFileSync(rollout, `${JSON.stringify({ type: "session_meta", payload: { id: "restore-1", model_provider: "openccx", source: "cli" } })}\n`);
     const seeded = new Database(stateDb);
     seeded.exec("CREATE TABLE threads (id TEXT PRIMARY KEY, rollout_path TEXT NOT NULL, model_provider TEXT NOT NULL, source TEXT NOT NULL, first_user_message TEXT NOT NULL, has_user_event INTEGER NOT NULL)");
-    seeded.run("INSERT INTO threads VALUES ('restore-1', ?, 'opencodex', 'cli', 'hello', 1)", [rollout]);
+    seeded.run("INSERT INTO threads VALUES ('restore-1', ?, 'openccx', 'cli', 'hello', 1)", [rollout]);
     seeded.close();
     const canonicalStateDb = join(realpathSync.native(fx.codex), "state_5.sqlite");
     const normalizedDb = process.platform === "win32" ? resolve(canonicalStateDb).toLowerCase() : resolve(canonicalStateDb);
     const backupId = createHash("sha256").update(normalizedDb).digest("hex").slice(0, 16);
-    writeFileSync(join(fx.ocx, `codex-history-backup-${backupId}.json`), JSON.stringify({
+    writeFileSync(join(fx.occx, `codex-history-backup-${backupId}.json`), JSON.stringify({
       version: 1,
       stateDbPath: canonicalStateDb,
       entries: {

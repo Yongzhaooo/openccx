@@ -19,7 +19,7 @@
  * - Nous refresh tokens are SINGLE-USE: every successful refresh rotates the
  *   token, and reuse (e.g. two processes refreshing concurrently) is treated as
  *   token theft and revokes the whole session (`refresh_token_reused`).
- *   OpenCodex's refresh path persists the rotated token immediately
+ *   Openccx's refresh path persists the rotated token immediately
  *   (`mergeAccountCredential`), which is exactly the discipline the Portal
  *   expects; proactive background refresh must stay off for this provider.
  *

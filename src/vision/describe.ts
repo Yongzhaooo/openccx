@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import type { VisionReasoningEffort } from "../reasoning-effort";
 import { FORWARD_HEADERS } from "../adapters/openai-responses";
 import { signalWithTimeout, cancelBodyOnAbort } from "../lib/abort";
@@ -55,7 +55,7 @@ export async function describeImage(
   imageUrl: string,
   detail: string | undefined,
   contextText: string,
-  forwardProvider: OcxProviderConfig,
+  forwardProvider: OccxProviderConfig,
   selectedForwardHeaders: Headers,
   settings: VisionSettings,
   abortSignal?: AbortSignal,

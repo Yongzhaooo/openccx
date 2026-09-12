@@ -28,17 +28,17 @@ import {
 import { getAccountSet, saveCredential, setActiveAccount } from "../../../src/oauth/store";
 import { clearPoolRotationState } from "../../../src/codex/pool-rotation";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
 let home: string;
 
 beforeEach(() => {
   globalThis.fetch = (async () => { throw new Error("Unexpected network request in quota test"); }) as typeof fetch;
-  home = mkdtempSync(join(tmpdir(), "ocx-anthropic-ratelimit-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-anthropic-ratelimit-"));
+  process.env.OPENCCX_HOME = home;
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   clearAccountQuotaCache();
@@ -54,14 +54,14 @@ afterEach(() => {
   clearAnthropicAccountPoolState();
   clearPoolRotationState();
   // The argument-less form, deliberately: only it calls cancelPendingAccountQuotaPersist.
-  // The observer ends in a 250ms-debounced write that resolves OPENCODEX_HOME at fire time,
+  // The observer ends in a 250ms-debounced write that resolves OPENCCX_HOME at fire time,
   // so a provider-scoped clear would leave that write to land in whatever home is current a
   // quarter second later — the next test's sandbox, or the developer's real one.
   clearAccountQuotaCache();
   resetProviderQuotaReconcileStateForTests();
   forgetAnthropicFailoverQuorum();
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 
@@ -79,7 +79,7 @@ async function seed(count: number): Promise<string[]> {
   return getAccountSet("anthropic")?.accounts.map(a => a.id) ?? [];
 }
 
-function poolEnabled(): OcxConfig {
+function poolEnabled(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "anthropic",
@@ -87,7 +87,7 @@ function poolEnabled(): OcxConfig {
       anthropic: { adapter: "anthropic", baseUrl: "https://api.anthropic.com", authMode: "oauth" },
     },
     anthropicAccountPool: { enabled: true },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** A real 429 from a drained five-hour window, captured from api.anthropic.com. */

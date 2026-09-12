@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { getMainPolicyQuota } from "./quota";
 
 export const MAIN_ACCOUNT_HARD_LOCK_PERCENT = 99;
@@ -10,7 +10,7 @@ export interface MainAccountHardLockStatus {
   resetAt?: number;
 }
 
-type PolicyConfig = Pick<OcxConfig, "codexMainAccountHardLock">;
+type PolicyConfig = Pick<OccxConfig, "codexMainAccountHardLock">;
 
 function resetTimestamp(value: number | undefined): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return undefined;

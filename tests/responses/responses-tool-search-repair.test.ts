@@ -6,7 +6,7 @@ import {
 } from "../../src/responses/tool-search-compat";
 import { createRoutedToolSearchRestoreBlockRewrite } from "../../src/server/responses-tool-search-repair";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 function frame(event: string, payload: Record<string, unknown>): string {
@@ -31,7 +31,7 @@ const searchTool = {
   },
 };
 
-function fixtureConfig(): OcxConfig {
+function fixtureConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "fixture",
@@ -43,7 +43,7 @@ function fixtureConfig(): OcxConfig {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("routed Responses tool-search compatibility", () => {
@@ -112,17 +112,17 @@ describe("routed Responses tool-search compatibility", () => {
       tool_choice: { tools: Array<Record<string, unknown>> };
     };
 
-    expect(rewritten.names).toEqual(new Set(["opencodex_tool_search"]));
-    expect(body.tools[0]).toMatchObject({ type: "function", name: "opencodex_tool_search" });
+    expect(rewritten.names).toEqual(new Set(["openccx_tool_search"]));
+    expect(body.tools[0]).toMatchObject({ type: "function", name: "openccx_tool_search" });
     expect(body.tools[1]).toEqual(raw.tools[1]);
     expect(body.tool_choice.tools).toEqual([
-      { type: "function", name: "opencodex_tool_search" },
+      { type: "function", name: "openccx_tool_search" },
       { type: "function", name: "tool_search" },
     ]);
 
     const restored = JSON.parse(restoreRoutedToolSearchCallsInJson(JSON.stringify({
       output: [
-        { type: "function_call", name: "opencodex_tool_search", arguments: "{}" },
+        { type: "function_call", name: "openccx_tool_search", arguments: "{}" },
         { type: "function_call", name: "tool_search", arguments: "{}" },
       ],
     }), rewritten.names)) as { output: Array<Record<string, unknown>> };
@@ -143,7 +143,7 @@ describe("routed Responses tool-search compatibility", () => {
       tool_choice: Record<string, unknown>;
     };
 
-    expect(body.tools[0]).toMatchObject({ type: "function", name: "opencodex_tool_search" });
+    expect(body.tools[0]).toMatchObject({ type: "function", name: "openccx_tool_search" });
     expect(body.tool_choice).toEqual({ type: "function", name: "tool_search" });
     expect(rewritten.names).toEqual(new Set());
   });

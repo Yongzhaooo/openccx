@@ -2,7 +2,7 @@ import { lstatSync, readdirSync, realpathSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { ClientPathError, type ExportModel } from "../clients/config-export";
 import { assertAsideProfileBoundary, guardAsideProfileIO, listAsideProfiles, type AsideProfile } from "../clients/aside-profiles";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { type IntegrationIO } from "./config-io";
 import type { JournalEntry } from "./journal";
 import { IntegrationMutationBusyError, runIntegrationMutationFlight } from "./mutation-flight";
@@ -12,14 +12,14 @@ import type { IntegrationWriteInput, WriteOutcome } from "./writer";
 import type { IntegrationWriterLockSeams } from "./writer-lock";
 
 export interface AsideProfilesInput {
-  config: OcxConfig;
+  config: OccxConfig;
   models: readonly ExportModel[] | (() => Promise<readonly ExportModel[]>);
   port: number;
   env?: NodeJS.ProcessEnv;
   home?: string;
   store?: IntegrationStateStore;
   io?: IntegrationIO;
-  persistConfig?: (config: OcxConfig) => void | Promise<void>;
+  persistConfig?: (config: OccxConfig) => void | Promise<void>;
   lockSeams?: IntegrationWriterLockSeams;
 }
 
@@ -30,7 +30,7 @@ export class AsideProfileError extends Error {
   }
 }
 
-export type AsideProfilePolicy = NonNullable<OcxConfig["asideProfileSync"]>;
+export type AsideProfilePolicy = NonNullable<OccxConfig["asideProfileSync"]>;
 export type AsideProfileWriteOutcome = WriteOutcome & { profileId: number };
 export interface AsideProfileScope {
   profile: AsideProfile;

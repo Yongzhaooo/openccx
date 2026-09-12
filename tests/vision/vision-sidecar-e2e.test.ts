@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { parseRequest } from "../../src/responses/parser";
 import { resetVisionDescriptionCache, stripImagesInPlace } from "../../src/vision";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
@@ -25,10 +25,10 @@ let sidecar: ReturnType<typeof Bun.serve> | null = null;
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-vision-e2e-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-vision-e2e-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-vision-e2e-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-vision-e2e-"));
+  process.env.OPENCCX_HOME = testDir;
   globalThis.fetch = originalFetch;
   resetVisionDescriptionCache();
 });
@@ -39,15 +39,15 @@ afterEach(() => {
   sidecar?.stop(true);
   sidecar = null;
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
 const PNG_DATA_URL = "data:image/png;base64,aGVsbG8taW1hZ2UtYnl0ZXM=";
-const CAPTION = "A red square logo with the word OPENCODEX in white monospace text.";
+const CAPTION = "A red square logo with the word OPENCCX in white monospace text.";
 
 /** Fake ChatGPT forward backend: answers /responses with an SSE caption stream. */
 function serveSidecar(onRequest: (req: Request, bodyText: string) => void) {
@@ -175,7 +175,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
       return originalFetch(input, init);
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "textonly", openaiProviderTierVersion: 2,
       providers: {
         textonly: {
@@ -192,7 +192,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
           codexAccountMode: "direct",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -240,7 +240,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
       return originalFetch(input, init);
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "textonly", openaiProviderTierVersion: 2,
       providers: {
         textonly: {
@@ -259,7 +259,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
           codexAccountMode: "direct",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -300,7 +300,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
       return originalFetch(input, init);
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "textonly", openaiProviderTierVersion: 2,
       providers: {
         textonly: {
@@ -319,7 +319,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
           codexAccountMode: "direct",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -346,7 +346,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
   test("Responses passthrough strips images when no vision sidecar is available", async () => {
     let upstreamBody = "";
     upstream = serveResponsesUpstream(b => { upstreamBody = b; });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "textonly",
       providers: {
         textonly: {
@@ -359,7 +359,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
           noVisionModels: ["blind-model"],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -383,7 +383,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
     upstream = serveUpstream(b => { upstreamBody = b; });
     sidecar = serveSidecar(() => { sidecarHits += 1; });
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "seeing", openaiProviderTierVersion: 2,
       providers: {
         seeing: {
@@ -395,7 +395,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
         },
         openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -430,7 +430,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
     const zen = PROVIDER_REGISTRY.find(p => p.id === "opencode-zen");
     expect(zen?.noVisionModels).toContain("big-pickle");
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "zenlike", openaiProviderTierVersion: 2,
       providers: {
         // A custom provider carrying the REGISTRY's list verbatim. The built-in
@@ -446,7 +446,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
         },
         openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -472,7 +472,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
     // Measured as accepting images; classifying it would silently degrade it.
     expect(zen?.noVisionModels).not.toContain("mimo-v2.5-free");
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "zenlike", openaiProviderTierVersion: 2,
       providers: {
         zenlike: {
@@ -484,7 +484,7 @@ describe("vision sidecar fallback (issue #88, end-to-end)", () => {
         },
         openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex" },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {

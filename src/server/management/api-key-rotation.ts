@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 
 export const API_KEY_ROTATION_TTL_MS = 10 * 60_000;
 
@@ -19,7 +19,7 @@ function equalOpaqueId(left: string, right: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export function removeExpiredApiKeyRotations(config: OcxConfig, now = Date.now()): boolean {
+export function removeExpiredApiKeyRotations(config: OccxConfig, now = Date.now()): boolean {
   let changed = false;
   for (const entry of config.apiKeys ?? []) {
     if (entry.pendingRotation && Date.parse(entry.pendingRotation.expiresAt) <= now) {
@@ -31,7 +31,7 @@ export function removeExpiredApiKeyRotations(config: OcxConfig, now = Date.now()
 }
 
 export function startApiKeyRotation(
-  config: OcxConfig,
+  config: OccxConfig,
   keyId: string,
   now = Date.now(),
 ): ApiKeyRotationStart | { error: "not-found" | "already-pending" } {
@@ -40,7 +40,7 @@ export function startApiKeyRotation(
   if (entry.pendingRotation && Date.parse(entry.pendingRotation.expiresAt) > now) {
     return { error: "already-pending" };
   }
-  const key = `ocx_data_${randomBytes(20).toString("hex")}`;
+  const key = `occx_data_${randomBytes(20).toString("hex")}`;
   const rotationId = randomUUID();
   const createdAt = new Date(now).toISOString();
   const expiresAt = new Date(now + API_KEY_ROTATION_TTL_MS).toISOString();
@@ -49,7 +49,7 @@ export function startApiKeyRotation(
 }
 
 export function commitApiKeyRotation(
-  config: OcxConfig,
+  config: OccxConfig,
   keyId: string,
   rotationId: string,
   now = Date.now(),
@@ -67,7 +67,7 @@ export function commitApiKeyRotation(
   return { ok: true };
 }
 
-export function abortApiKeyRotation(config: OcxConfig, keyId: string, rotationId: string): boolean {
+export function abortApiKeyRotation(config: OccxConfig, keyId: string, rotationId: string): boolean {
   const entry = (config.apiKeys ?? []).find(candidate => candidate.id === keyId);
   if (!entry?.pendingRotation || !equalOpaqueId(entry.pendingRotation.id, rotationId)) return false;
   delete entry.pendingRotation;

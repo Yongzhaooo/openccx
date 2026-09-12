@@ -21,7 +21,7 @@ import {
 } from "../../../src/adapters/cursor/http1-bidi";
 import { createLiveCursorTransport } from "../../../src/adapters/cursor/live-transport";
 import type { CursorRunRequest, CursorServerMessage } from "../../../src/adapters/cursor/types";
-import type { OcxProviderConfig } from "../../../src/types";
+import type { OccxProviderConfig } from "../../../src/types";
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 
 interface DecodedAppend {
@@ -89,7 +89,7 @@ function hexBytes(value: string): Uint8Array {
 function cursorProvider(
   fetchImpl: typeof fetch,
   baseUrl = "https://api2.cursor.sh",
-): OcxProviderConfig & { fetch: typeof fetch } {
+): OccxProviderConfig & { fetch: typeof fetch } {
   return {
     adapter: "cursor",
     baseUrl,
@@ -404,10 +404,10 @@ describe("Cursor HTTP/1.1 compatibility transport", () => {
                   case: "mcpToolCall",
                   value: create(McpToolCallSchema, {
                     args: create(McpArgsSchema, {
-                      name: "ocx_client_get_time",
-                      toolName: "ocx_client_get_time",
+                      name: "occx_client_get_time",
+                      toolName: "occx_client_get_time",
                       toolCallId: "call_1",
-                      providerIdentifier: "opencodex-responses",
+                      providerIdentifier: "openccx-responses",
                     }),
                   }),
                 },

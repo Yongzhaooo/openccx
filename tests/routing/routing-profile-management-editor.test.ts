@@ -6,24 +6,24 @@ import { fallbackCodexAccountLogLabel } from "../../src/codex/account-label";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-profile-editor-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-profile-editor-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   // Cleanup must not be able to fail a passing test.
   //
   // One case here reads `/api/lab/catalog`, which opens the Lab projection SQLite
-  // under this OPENCODEX_HOME through a cached read connection this suite has no
+  // under this OPENCCX_HOME through a cached read connection this suite has no
   // handle on. Windows refuses to unlink an open file, so the directory is still
   // busy in a later `afterEach` -- and it stayed busy through all 50 retries of
   // `removeTreeWithRetry` (2.6s), which is a held handle rather than the release
@@ -43,7 +43,7 @@ afterEach(() => {
   }
 });
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -53,7 +53,7 @@ function baseConfig(): OcxConfig {
     },
     routingProfiles: {
       fast: {
-        alias: "ocx/fast",
+        alias: "occx/fast",
         candidates: [{ provider: "a", model: "m1" }],
       },
     },
@@ -85,7 +85,7 @@ describe("routing profile management editor API", () => {
     const response = await handleManagementAPI(req, new URL(req.url), config, deps());
     expect(response?.status).toBe(200);
     const body = await response!.json() as { profiles?: Array<{ id?: string; alias?: string | null }> };
-    expect(body.profiles?.[0]).toMatchObject({ id: "fast", alias: "ocx/fast" });
+    expect(body.profiles?.[0]).toMatchObject({ id: "fast", alias: "occx/fast" });
   });
 
   test("PUT creates a validated normalized profile and refreshes the catalog", async () => {
@@ -99,7 +99,7 @@ describe("routing profile management editor API", () => {
         id: "balanced",
         mode: "create",
         profile: {
-          alias: "ocx/balanced",
+          alias: "occx/balanced",
           candidates: [
             { provider: "a", model: "m1" },
             { provider: "b", model: "m2" },
@@ -129,11 +129,11 @@ describe("routing profile management editor API", () => {
       profile?: { alias?: string | null; optimize?: Record<string, number>; revision?: string };
     };
     expect(body.success).toBe(true);
-    expect(body.profile?.alias).toBe("ocx/balanced");
+    expect(body.profile?.alias).toBe("occx/balanced");
     expect(body.profile?.optimize).toEqual({ latency: 0.5, health: 0.25, cost: 0.25, quota: 0 });
     expect(body.profile?.revision).toMatch(/^[0-9a-f]{16}$/);
     expect(config.routingProfiles?.balanced).toMatchObject({
-      alias: "ocx/balanced",
+      alias: "occx/balanced",
       require: { tools: false, minContextWindow: 64000 },
     });
     expect(saves).toBe(1);
@@ -312,7 +312,7 @@ describe("routing profile management editor API", () => {
         id: "fast",
         mode: "update",
         profile: {
-          alias: "ocx/faster",
+          alias: "occx/faster",
           candidates: [
             { provider: "a", model: "m1" },
             { provider: "b", model: "m2" },
@@ -335,14 +335,14 @@ describe("routing profile management editor API", () => {
       profile?: { alias?: string | null; candidates?: unknown[]; revision?: string };
     };
     expect(body.success).toBe(true);
-    expect(body.profile?.alias).toBe("ocx/faster");
+    expect(body.profile?.alias).toBe("occx/faster");
     expect(body.profile?.candidates).toEqual([
       { provider: "a", model: "m1" },
       { provider: "b", model: "m2" },
     ]);
     expect(body.profile?.revision).toMatch(/^[0-9a-f]{16}$/);
     expect(config.routingProfiles?.fast).toMatchObject({
-      alias: "ocx/faster",
+      alias: "occx/faster",
       candidates: [
         { provider: "a", model: "m1" },
         { provider: "b", model: "m2" },
@@ -389,16 +389,16 @@ describe("routing profile management editor API", () => {
 
   test("PUT update migrates config references when the profile alias changes", async () => {
     const config = baseConfig();
-    config.disabledModels = ["ocx/fast"];
-    config.subagentModels = ["ocx/fast", "a/m1"];
-    config.subagentModelFallback = ["ocx/fast", "a/m1"];
-    config.injectionModel = "ocx/fast";
-    config.shadowCallIntercept = { model: "ocx/fast" };
+    config.disabledModels = ["occx/fast"];
+    config.subagentModels = ["occx/fast", "a/m1"];
+    config.subagentModelFallback = ["occx/fast", "a/m1"];
+    config.injectionModel = "occx/fast";
+    config.shadowCallIntercept = { model: "occx/fast" };
     config.claudeCode = {
       enabled: true,
-      model: "ocx/fast",
+      model: "occx/fast",
       smallFastModel: "a/m1",
-      modelMap: { "ocx/fast": "a/m1", "a/m2": "ocx/fast" },
+      modelMap: { "occx/fast": "a/m1", "a/m2": "occx/fast" },
     };
     let saves = 0;
     const req = new ManagementRequest("http://localhost/api/routing-profiles", {
@@ -414,7 +414,7 @@ describe("routing profile management editor API", () => {
           return getBody.profiles![0]!.revision;
         })()),
         profile: {
-          alias: "ocx/faster",
+          alias: "occx/faster",
           candidates: [{ provider: "a", model: "m1" }],
         },
       }),
@@ -432,14 +432,14 @@ describe("routing profile management editor API", () => {
     );
 
     expect(response?.status).toBe(200);
-    expect(config.disabledModels).toEqual(["ocx/faster"]);
-    expect(config.subagentModels).toEqual(["ocx/faster", "a/m1"]);
-    expect(config.subagentModelFallback).toEqual(["ocx/faster", "a/m1"]);
-    expect(config.injectionModel).toBe("ocx/faster");
-    expect(config.shadowCallIntercept?.model).toBe("ocx/faster");
-    expect(config.claudeCode?.model).toBe("ocx/faster");
+    expect(config.disabledModels).toEqual(["occx/faster"]);
+    expect(config.subagentModels).toEqual(["occx/faster", "a/m1"]);
+    expect(config.subagentModelFallback).toEqual(["occx/faster", "a/m1"]);
+    expect(config.injectionModel).toBe("occx/faster");
+    expect(config.shadowCallIntercept?.model).toBe("occx/faster");
+    expect(config.claudeCode?.model).toBe("occx/faster");
     expect(config.claudeCode?.smallFastModel).toBe("a/m1");
-    expect(config.claudeCode?.modelMap).toEqual({ "ocx/faster": "a/m1", "a/m2": "ocx/faster" });
+    expect(config.claudeCode?.modelMap).toEqual({ "occx/faster": "a/m1", "a/m2": "occx/faster" });
     expect(saves).toBe(1);
   });
 
@@ -449,11 +449,11 @@ describe("routing profile management editor API", () => {
     const privateEmail = "private-account@example.test";
     config.codexAccounts = [{ id: privateAccountId, email: privateEmail, isMain: false }];
     config.codexAccountNamespaces = { side: privateAccountId };
-    const disabledModels = ["ocx/fast"];
-    const subagentModels = ["ocx/fast", "a/m1"];
+    const disabledModels = ["occx/fast"];
+    const subagentModels = ["occx/fast", "a/m1"];
     config.disabledModels = disabledModels;
     config.subagentModels = subagentModels;
-    config.injectionModel = "ocx/fast";
+    config.injectionModel = "occx/fast";
     const before = structuredClone(config);
     const profiles = config.routingProfiles;
     const fastProfile = config.routingProfiles!.fast;
@@ -504,8 +504,8 @@ describe("routing profile management editor API", () => {
     config.claudeCode = {
       enabled: true,
       modelMap: {
-        "ocx/fast": "a/m1",
-        "ocx/faster": "a/m2",
+        "occx/fast": "a/m1",
+        "occx/faster": "a/m2",
       },
     };
     let saves = 0;
@@ -522,7 +522,7 @@ describe("routing profile management editor API", () => {
           return getBody.profiles![0]!.revision;
         })()),
         profile: {
-          alias: "ocx/faster",
+          alias: "occx/faster",
           candidates: [{ provider: "a", model: "m1" }],
         },
       }),
@@ -536,8 +536,8 @@ describe("routing profile management editor API", () => {
 
     expect(response?.status).toBe(409);
     expect(await response!.json()).toMatchObject({ error: { code: "alias_reference_conflict" } });
-    expect(config.routingProfiles?.fast).toMatchObject({ alias: "ocx/fast" });
-    expect(config.claudeCode?.modelMap).toEqual({ "ocx/fast": "a/m1", "ocx/faster": "a/m2" });
+    expect(config.routingProfiles?.fast).toMatchObject({ alias: "occx/fast" });
+    expect(config.claudeCode?.modelMap).toEqual({ "occx/fast": "a/m1", "occx/faster": "a/m2" });
     expect(saves).toBe(0);
   });
 

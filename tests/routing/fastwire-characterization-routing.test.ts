@@ -5,13 +5,13 @@ import type { CatalogModel, RawEntry } from "../../src/codex/catalog/parsing";
 import { candidateCapabilityEvidence } from "../../src/routing/capability";
 import { resolveProductionBehaviorValues } from "../../src/routing/compatibility/behavior";
 import { evaluatePolicyProfile } from "../../src/routing/evaluator";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 describe("FastWire characterization: routing profile service-tier evidence", () => {
   // FastWire #1886 B1 capability semantic migration: Chat caller-forward permission no longer
   // downgrades the provider/model capability seen by routing.
   test("require.serviceTier accepts supportsServiceTier=true without chatServiceTier", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://chat-no-tier.example.test/v1",
       authMode: "key",
@@ -29,7 +29,7 @@ describe("FastWire characterization: routing profile service-tier evidence", () 
           require: { serviceTier: "supported" },
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const capability = candidateCapabilityEvidence(config, "chat-no-tier", "model");
 
     expect(capability.serviceTier).toBe("supported");
@@ -51,7 +51,7 @@ describe("FastWire characterization: routing profile service-tier evidence", () 
   });
 
   test("supportsServiceTier=false remains ineligible without chatServiceTier", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://chat-no-tier.example.test/v1",
       supportsServiceTier: false,
@@ -66,7 +66,7 @@ describe("FastWire characterization: routing profile service-tier evidence", () 
           require: { serviceTier: "supported" },
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const capability = candidateCapabilityEvidence(config, "chat-no-tier", "model");
     expect(capability.serviceTier).toBe("unsupported");
     expect(evaluatePolicyProfile(config, "fast", {}, [{
@@ -78,7 +78,7 @@ describe("FastWire characterization: routing profile service-tier evidence", () 
 });
 
 describe("FastWire characterization: compatibility fingerprint projection", () => {
-  const cases: Array<{ label: string; expected: boolean; provider: OcxProviderConfig }> = [
+  const cases: Array<{ label: string; expected: boolean; provider: OccxProviderConfig }> = [
     {
       label: "supported",
       expected: true,
@@ -123,7 +123,7 @@ describe("FastWire characterization: compatibility fingerprint projection", () =
       defaultProvider: label,
       fastMode: true,
       providers: { [label]: provider },
-    } as OcxConfig;
+    } as OccxConfig;
     const values = resolveProductionBehaviorValues(
       config,
       label,
@@ -183,7 +183,7 @@ describe("FastWire characterization: catalog service-tier bytes", () => {
   ])(
     "Chat provider capability=$supportsServiceTier publishes Fast=$publishesFast without chatServiceTier",
     ({ supportsServiceTier, publishesFast }) => {
-      const provider: OcxProviderConfig = {
+      const provider: OccxProviderConfig = {
         adapter: "openai-chat",
         baseUrl: "https://chat-catalog.example.test/v1",
         supportsServiceTier,

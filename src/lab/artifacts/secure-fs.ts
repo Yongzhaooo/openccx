@@ -2,7 +2,7 @@
  * Descriptor/handle-bound, no-follow artifact I/O for the Compatibility Lab store.
  *
  * POSIX runtimes use directory-relative `dir` opens. Windows uses the same pinned
- * directory identity checks as other reviewed OpenCodex bounded readers, because
+ * directory identity checks as other reviewed Openccx bounded readers, because
  * directory-relative child opens are not durable there.
  */
 import {

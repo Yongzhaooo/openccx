@@ -9,7 +9,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 describe("cleanupOpenAiTierBackupAfterInit", () => {
   const dirs: string[] = [];
   const makeDir = () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-init-backup-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-init-backup-"));
     dirs.push(dir);
     return dir;
   };

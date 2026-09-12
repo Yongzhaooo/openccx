@@ -57,7 +57,7 @@ describe("empty-completion guard content classification", () => {
 });
 
 describe("empty-completion guard kill switch", () => {
-  test("requires top-level config opt-in and lets OCX_EMPTY_COMPLETION_RETRY=0 disable it", () => {
+  test("requires top-level config opt-in and lets OCCX_EMPTY_COMPLETION_RETRY=0 disable it", () => {
     expect(emptyCompletionRetryEnabled({}, {})).toBe(false);
     expect(emptyCompletionRetryEnabled({}, { [EMPTY_COMPLETION_RETRY_ENV]: "1" })).toBe(false);
     expect(emptyCompletionRetryEnabled({ emptyCompletionRetry: true }, {})).toBe(true);
@@ -451,7 +451,7 @@ describe("#2472 an empty turn is observable even when the retry guard is off", (
     // fabricate log records it never produced.
     const notice = emptyCompletionNotice(
       "fixture",
-      "model\r\n[opencodex] forged: injected\u001b[31m",
+      "model\r\n[openccx] forged: injected\u001b[31m",
     );
 
     expect(notice).not.toContain("\n");

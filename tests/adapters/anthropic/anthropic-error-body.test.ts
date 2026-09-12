@@ -4,7 +4,7 @@ import { createAnthropicAdapter, formatAnthropicErrorBody } from "../../../src/a
 import { parseRequest } from "../../../src/responses/parser";
 import { responseWithDeferredRequestLog, type RequestLogEntry } from "../../../src/server";
 import { runWithWebSearch as runWithWebSearchProduction, type WebSearchLoopDeps } from "../../../src/web-search/loop";
-import type { OcxProviderConfig } from "../../../src/types";
+import type { OccxProviderConfig } from "../../../src/types";
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const originalFetch = globalThis.fetch;
@@ -52,18 +52,18 @@ describe("formatAnthropicErrorBody", () => {
   });
 });
 
-const anthropicProvider: OcxProviderConfig = {
+const anthropicProvider: OccxProviderConfig = {
   adapter: "anthropic",
   baseUrl: "https://api.anthropic.com",
   authMode: "key",
   apiKey: "test-key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
-const forwardProvider: OcxProviderConfig = {
+const forwardProvider: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.test/v1",
   authMode: "forward",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 function parsed() {
   return parseRequest({
@@ -134,7 +134,7 @@ describe("anthropic adapter through the web-search bridge", () => {
     const entries: RequestLogEntry[] = [];
     const logged = responseWithDeferredRequestLog(
       response,
-      "ocx-test-anthropic-400-fidelity",
+      "occx-test-anthropic-400-fidelity",
       Date.now(),
       { model: "claude-opus-5", provider: "anthropic" },
       entry => entries.push(entry),

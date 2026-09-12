@@ -4,7 +4,7 @@ import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../.
 import { createGoogleAdapter as createGoogleAdapterProduction } from "../../src/adapters/google";
 import { createOpenAIChatAdapter as createOpenAIChatAdapterProduction } from "../../src/adapters/openai-chat";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
-import type { OcxAssistantMessage, OcxContentPart, OcxToolResultMessage } from "../../src/types";
+import type { OccxAssistantMessage, OccxContentPart, OccxToolResultMessage } from "../../src/types";
 
 const createAnthropicAdapter = (...args: Parameters<typeof createAnthropicAdapterProduction>) =>
   withTestTranslatorBudget(createAnthropicAdapterProduction(...args));
@@ -716,13 +716,13 @@ describe("anthropic tool result history repair", () => {
   describe("orphan image carriers", () => {
     const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     const httpsUrl = "https://example.test/image.png";
-    const call: OcxAssistantMessage = {
+    const call: OccxAssistantMessage = {
       role: "assistant",
       content: [{ type: "toolCall", id: "call_1", name: "view_image", arguments: {} }],
       model: "claude-sonnet",
       timestamp: 0,
     };
-    const paired: OcxToolResultMessage = {
+    const paired: OccxToolResultMessage = {
       role: "toolResult", toolCallId: "call_1", toolName: "view_image",
       content: "first", isError: false, timestamp: 0,
     };
@@ -737,11 +737,11 @@ describe("anthropic tool result history repair", () => {
       { name: "HTTPS", imageUrl: httpsUrl, wire: { type: "url", url: httpsUrl } },
     ]) {
       for (const mixed of [false, true]) {
-        const image: OcxContentPart = { type: "image", imageUrl: source.imageUrl };
-        const content: OcxContentPart[] = mixed
+        const image: OccxContentPart = { type: "image", imageUrl: source.imageUrl };
+        const content: OccxContentPart[] = mixed
           ? [{ type: "text", text: "" }, { type: "text", text: "before" }, image, { type: "text", text: "" }, { type: "text", text: "after" }]
           : [image];
-        const orphan: OcxToolResultMessage = { ...paired, toolCallId: "orphan_call", content };
+        const orphan: OccxToolResultMessage = { ...paired, toolCallId: "orphan_call", content };
         const expectedParts = mixed
           ? [{ type: "text", text: "before" }, { type: "image", source: source.wire }, { type: "text", text: "after" }]
           : [{ type: "image", source: source.wire }];

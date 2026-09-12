@@ -24,7 +24,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 let home = "";
 const cleanup: string[] = [];
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let trustedSystem32 = "";
 
 /** Records exactly what production asked for, so the allowlist is observed. */
@@ -53,45 +53,45 @@ function recorder(reply: (file: string, args: readonly string[]) => Partial<Retu
 // present. Mirror windows-elevation.test.ts: wire the resolver seam for every
 // test so the Windows chain-walk suites run anywhere.
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-probe-"));
+  home = mkdtempSync(join(tmpdir(), "occx-probe-"));
   cleanup.push(home);
   trustedSystem32 = join(home, "System32");
   mkdirSync(trustedSystem32, { recursive: true });
   writeFileSync(join(trustedSystem32, "schtasks.exe"), "");
   setTrustedWindowsSystemDirectoryResolverForTests(() => trustedSystem32);
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
 });
 afterEach(() => {
   setTrustedWindowsSystemDirectoryResolverForTests(null);
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
 });
 
-function writePlist(codexHome: string | null, opencodexHome: string | null): string {
+function writePlist(codexHome: string | null, openccxHome: string | null): string {
   const dir = join(home, "Library", "LaunchAgents");
   mkdirSync(dir, { recursive: true });
-  const path = join(dir, "com.opencodex.proxy.plist");
+  const path = join(dir, "com.openccx.proxy.plist");
   writeFileSync(path, [
     "<plist><dict><key>EnvironmentVariables</key><dict>",
     codexHome ? `<key>CODEX_HOME</key><string>${codexHome}</string>` : "",
-    opencodexHome ? `<key>OPENCODEX_HOME</key><string>${opencodexHome}</string>` : "",
+    openccxHome ? `<key>OPENCCX_HOME</key><string>${openccxHome}</string>` : "",
     "</dict></dict></plist>",
   ].join("\n"));
   return path;
 }
 
-function writeUnit(codexHome: string, opencodexHome: string): string {
+function writeUnit(codexHome: string, openccxHome: string): string {
   const dir = join(home, ".config", "systemd", "user");
   mkdirSync(dir, { recursive: true });
-  const path = join(dir, "opencodex-proxy.service");
+  const path = join(dir, "openccx-proxy.service");
   writeFileSync(path, [
     "[Service]",
     `Environment="CODEX_HOME=${codexHome}"`,
-    `Environment="OPENCODEX_HOME=${opencodexHome}"`,
+    `Environment="OPENCCX_HOME=${openccxHome}"`,
   ].join("\n"));
   return path;
 }
@@ -117,8 +117,8 @@ describe("the probe only ever asks", () => {
 
     expect(calls).toHaveLength(2);
     expect(calls.map(c => c.args[1])).toEqual([
-      "gui/501/com.opencodex.proxy",
-      "user/501/com.opencodex.proxy",
+      "gui/501/com.openccx.proxy",
+      "user/501/com.openccx.proxy",
     ]);
     for (const call of calls) {
       expect(call.file).toBe("/bin/launchctl");
@@ -185,7 +185,7 @@ describe("absence has to be proven twice", () => {
     if (result.kind !== "present") return;
     expect(result.claims[0].registration).toBe("absent");
     expect(result.claims[0].definitionPath).toBe(path);
-    expect(result.claims[0].homes).toEqual({ codexHome: "/somewhere/.codex", opencodexHome: "/somewhere/.opencodex" });
+    expect(result.claims[0].homes).toEqual({ codexHome: "/somewhere/.codex", openccxHome: "/somewhere/.opencodex" });
   });
 
   test("a registration with no definition file is unknown, not present", () => {
@@ -219,7 +219,7 @@ describe("could not ask is not an answer", () => {
 
   test("exit 112 WITH a plist staged is unknown", () => {
     mkdirSync(join(home, "Library", "LaunchAgents"), { recursive: true });
-    writeFileSync(join(home, "Library", "LaunchAgents", "com.opencodex.proxy.plist"), "<plist/>");
+    writeFileSync(join(home, "Library", "LaunchAgents", "com.openccx.proxy.plist"), "<plist/>");
     const { run } = recorder(() => ({ status: 112, stderr: "Could not find domain for user" }));
     const result = inspectServiceManagerInstallation({ run, platform: "darwin", uid: 501, home });
     // Something is staged to load and we could not see whether it did.
@@ -241,7 +241,7 @@ describe("could not ask is not an answer", () => {
   // symlinks (EPERM). Detect once so this test reports a visible skip there
   // instead of a spurious failure. Mirrors the probe in claude-agents-inject.
   const canSymlink = (() => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-symlink-probe-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-symlink-probe-"));
     try {
       symlinkSync(join(dir, "probe-target"), join(dir, "probe-link"));
       return true;
@@ -256,8 +256,8 @@ describe("could not ask is not an answer", () => {
   test.skipIf(!canSymlink)("a dangling plist symlink does not read as a clean machine", () => {
     const agents = join(home, "Library", "LaunchAgents");
     mkdirSync(agents, { recursive: true });
-    symlinkSync(join(home, "nothing-here.plist"), join(agents, "com.opencodex.proxy.plist"));
-    expect(existsSync(join(agents, "com.opencodex.proxy.plist"))).toBeFalse();
+    symlinkSync(join(home, "nothing-here.plist"), join(agents, "com.openccx.proxy.plist"));
+    expect(existsSync(join(agents, "com.openccx.proxy.plist"))).toBeFalse();
 
     const { run } = recorder(() => ({ status: 113 }));
     const result = inspectServiceManagerInstallation({ run, platform: "darwin", uid: 501, home });
@@ -278,7 +278,7 @@ describe("could not ask is not an answer", () => {
     // Amended for #2114, not deleted: the rule still holds for every non-zero exit whose
     // stderr does not prove the bus itself was unreachable. The bus-down family is handled
     // by reading the unit file instead, and is asserted separately below.
-    const { run } = recorder(() => ({ status: 1, stderr: "Job for opencodex-proxy.service failed" }));
+    const { run } = recorder(() => ({ status: 1, stderr: "Job for openccx-proxy.service failed" }));
     expect(inspectServiceManagerInstallation({ run, platform: "linux", home }).kind).toBe("unknown");
   });
 
@@ -309,7 +309,7 @@ describe("a definition that cannot supply homes is not present", () => {
     const dir = join(home, "Library", "LaunchAgents");
     mkdirSync(dir, { recursive: true });
     // A directory where the plist should be: exists, cannot be read as a file.
-    mkdirSync(join(dir, "com.opencodex.proxy.plist"));
+    mkdirSync(join(dir, "com.openccx.proxy.plist"));
     const { run } = recorder(() => ({ status: 113 }));
     expect(inspectServiceManagerInstallation({ run, platform: "darwin", uid: 501, home }).kind).toBe("unknown");
   });
@@ -326,15 +326,15 @@ describe("a definition that cannot supply homes is not present", () => {
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
     expect(result.claims[0].homes.codexHome).toBeNull();
-    expect(result.claims[0].homes.opencodexHome).toBe("/somewhere/.opencodex");
+    expect(result.claims[0].homes.openccxHome).toBe("/somewhere/.opencodex");
   });
 });
 
 describe("the Windows chain walk", () => {
   function writeWindowsTask(launcherPath: string): string {
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const path = join(dir, "opencodex-service-task.xml");
+    const path = join(dir, "openccx-service-task.xml");
     writeFileSync(path, windowsTaskXmlFor(launcherPath));
     return path;
   }
@@ -354,8 +354,8 @@ describe("the Windows chain walk", () => {
   }
 
   function writeWindowsLauncher(wrapperPath: string): string {
-    const path = join(home, ".opencodex", "opencodex-service-launcher.vbs");
-    mkdirSync(join(home, ".opencodex"), { recursive: true });
+    const path = join(home, ".openccx", "openccx-service-launcher.vbs");
+    mkdirSync(join(home, ".openccx"), { recursive: true });
     writeFileSync(path, [
       "Set shell = CreateObject(\"WScript.Shell\")",
       `shell.Run """${wrapperPath}""", 0, True`,
@@ -363,28 +363,28 @@ describe("the Windows chain walk", () => {
     return path;
   }
 
-  function writeWindowsWrapper(codexHome?: string, opencodexHome?: string): string {
-    const path = join(home, ".opencodex", "opencodex-service.cmd");
-    mkdirSync(join(home, ".opencodex"), { recursive: true });
+  function writeWindowsWrapper(codexHome?: string, openccxHome?: string): string {
+    const path = join(home, ".openccx", "openccx-service.cmd");
+    mkdirSync(join(home, ".openccx"), { recursive: true });
     const lines = ["@echo off", "setlocal"];
     if (codexHome) lines.push(`set "CODEX_HOME=${codexHome}"`);
-    if (opencodexHome) lines.push(`set "OPENCODEX_HOME=${opencodexHome}"`);
+    if (openccxHome) lines.push(`set "OPENCCX_HOME=${openccxHome}"`);
     // The tail that `buildWindowsServiceScript` emits; the probe keys wrapper
     // validity on it so an empty/unrelated wrapper cannot read as an install
     // that deliberately omitted both homes.
     lines.push(
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '>>"%OCX_SERVICE_LOG%" echo start',
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '>>"%OCCX_SERVICE_LOG%" echo start',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     );
     writeFileSync(path, lines.join("\r\n"));
     return path;
   }
 
   test("the full chain is walked and the homes are extracted", () => {
-    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     const taskXml = writeWindowsTask(launcher);
     // The registered task points at the SAME launcher as the staged definition,
@@ -400,32 +400,32 @@ describe("the Windows chain walk", () => {
     expect(result.claims[0].registration).toBe("present");
     expect(result.claims[0].homes).toEqual({
       codexHome: "C:\\Users\\ws\\.codex",
-      opencodexHome: "C:\\Users\\ws\\.opencodex",
+      openccxHome: "C:\\Users\\ws\\.openccx",
     });
     // One bounded query via the trusted System32 schtasks, nothing that mutates.
     expect(calls).toHaveLength(1);
     const schtasksPath = calls[0].file;
     expect(schtasksPath.toLowerCase().replace(/\\/g, "/")).toContain("system32/schtasks.exe");
-    expect(calls[0].args).toEqual(["/query", "/tn", "opencodex-proxy", "/xml"]);
+    expect(calls[0].args).toEqual(["/query", "/tn", "openccx-proxy", "/xml"]);
   });
 
   test("a registered task whose chain disagrees with the staged definition is unknown", () => {
-    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     // The registered task (from /query /xml) points at a COMPLETE foreign chain
     // whose homes differ from the staged on-disk definition — interrupted reinstall.
-    const foreignWrapper = join(home, ".opencodex", "foreign-wrapper.cmd");
+    const foreignWrapper = join(home, ".openccx", "foreign-wrapper.cmd");
     writeFileSync(foreignWrapper, [
       "@echo off",
       "setlocal",
       'set "CODEX_HOME=C:\\foreign\\.codex"',
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
-    const foreignLauncher = join(home, ".opencodex", "foreign-launcher.vbs");
+    const foreignLauncher = join(home, ".openccx", "foreign-launcher.vbs");
     writeFileSync(foreignLauncher, `shell.Run """${foreignWrapper}""", 0, True\r\n`);
     const registeredXml = [
       '<?xml version="1.0" encoding="UTF-16"?>',
@@ -440,18 +440,18 @@ describe("the Windows chain walk", () => {
 
   test("batch env-token homes are decoded before they are compared", () => {
     // The real builder emits `%USERPROFILE%\.codex` and doubles `%` as `%%`.
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const wrapper = join(dir, "opencodex-service.cmd");
+    const wrapper = join(dir, "openccx-service.cmd");
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
       'set "CODEX_HOME=%USERPROFILE%\\.codex"',
-      'set "OPENCODEX_HOME=%%PROFILE_VAR%%\\custom"',
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      'set "OPENCCX_HOME=%%PROFILE_VAR%%\\custom"',
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
@@ -463,22 +463,22 @@ describe("the Windows chain walk", () => {
     // %USERPROFILE% expands to the test's real home; %% stays a literal %.
     const profile = process.env.USERPROFILE ?? "";
     expect(result.claims[0].homes.codexHome).toBe(`${profile}\\.codex`);
-    expect(result.claims[0].homes.opencodexHome).toBe(`%PROFILE_VAR%\\custom`);
+    expect(result.claims[0].homes.openccxHome).toBe(`%PROFILE_VAR%\\custom`);
   });
 
   test("escaped and lowercase env tokens decode correctly with a controlled env", () => {
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const wrapper = join(dir, "opencodex-service.cmd");
+    const wrapper = join(dir, "openccx-service.cmd");
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
       'set "CODEX_HOME=%%USERPROFILE%%\\literal"',
-      'set "OPENCODEX_HOME=%userprofile%\\lower"',
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      'set "OPENCCX_HOME=%userprofile%\\lower"',
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
@@ -490,13 +490,13 @@ describe("the Windows chain walk", () => {
     // %%USERPROFILE%% is an escaped literal (stays %USERPROFILE%), while the
     // lowercase %userprofile% is a real token and expands (case-insensitive).
     expect(result.claims[0].homes.codexHome).toBe(`%USERPROFILE%\\literal`);
-    expect(result.claims[0].homes.opencodexHome).toBe(`${process.env.USERPROFILE ?? ""}\\lower`);
+    expect(result.claims[0].homes.openccxHome).toBe(`${process.env.USERPROFILE ?? ""}\\lower`);
   });
 
   test("a wrapper with :loop and rem bun is not a generated wrapper", () => {
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const wrapper = join(dir, "opencodex-service.cmd");
+    const wrapper = join(dir, "openccx-service.cmd");
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
@@ -512,29 +512,29 @@ describe("the Windows chain walk", () => {
     expect(result.kind).toBe("unknown");
   });
 
-  test("scheduler assets are located under the effective OPENCODEX_HOME", () => {
+  test("scheduler assets are located under the effective OPENCCX_HOME", () => {
     // A decoy chain in the DEFAULT <home>/.opencodex location must NOT win over
-    // the customized OPENCODEX_HOME passed as configDir.
-    const decoyWrapper = writeWindowsWrapper("C:\\decoy\\.codex", "C:\\decoy\\.opencodex");
+    // the customized OPENCCX_HOME passed as configDir.
+    const decoyWrapper = writeWindowsWrapper("C:\\decoy\\.codex", "C:\\decoy\\.openccx");
     const decoyLauncher = writeWindowsLauncher(decoyWrapper);
     writeWindowsTask(decoyLauncher);
 
-    // The real custom config dir (customized OPENCODEX_HOME) holds the actual chain.
+    // The real custom config dir (customized OPENCCX_HOME) holds the actual chain.
     const custom = join(home, "custom-home");
-    const wrapper = join(custom, "opencodex-service.cmd");
+    const wrapper = join(custom, "openccx-service.cmd");
     mkdirSync(custom, { recursive: true });
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
       'set "CODEX_HOME=C:\\custom\\.codex"',
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
-    const launcher = join(custom, "opencodex-service-launcher.vbs");
+    const launcher = join(custom, "openccx-service-launcher.vbs");
     writeFileSync(launcher, `shell.Run """${wrapper}""", 0, True\r\n`);
-    writeFileSync(join(custom, "opencodex-service-task.xml"), [
+    writeFileSync(join(custom, "openccx-service-task.xml"), [
       '<?xml version="1.0" encoding="UTF-16"?>',
       `<Arguments>/b /nologo &quot;${launcher}&quot;</Arguments>`,
     ].join("\n"));
@@ -550,9 +550,9 @@ describe("the Windows chain walk", () => {
   test("a malformed wrapper is unknown, not a deliberate omission", () => {
     // A truncated wrapper with set lines but no generated tail is NOT a
     // legitimate install that omitted the homes — it is residue.
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const wrapper = join(dir, "opencodex-service.cmd");
+    const wrapper = join(dir, "openccx-service.cmd");
     writeFileSync(wrapper, "@echo off\r\nsetlocal\r\nset \"CODEX_HOME=C:\\x\\.codex\"");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
@@ -561,13 +561,13 @@ describe("the Windows chain walk", () => {
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "nonexistent" });
     expect(result.kind).toBe("unknown");
     expect(result.kind === "unknown" && result.reason)
-      .toContain("the launcher wrapper does not look like a generated opencodex service wrapper");
+      .toContain("the launcher wrapper does not look like a generated openccx service wrapper");
   });
 
   test("an empty wrapper is unknown, not absence", () => {
-    const dir = join(home, ".opencodex");
+    const dir = join(home, ".openccx");
     mkdirSync(dir, { recursive: true });
-    const wrapper = join(dir, "opencodex-service.cmd");
+    const wrapper = join(dir, "openccx-service.cmd");
     writeFileSync(wrapper, "");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
@@ -578,7 +578,7 @@ describe("the Windows chain walk", () => {
   });
 
   test("a staged task that was never registered is present but registration=absent", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: The system cannot find the file specified." }));
@@ -599,12 +599,12 @@ describe("the Windows chain walk", () => {
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
     expect(result.claims[0].homes.codexHome).toBe("C:\\a\\.codex");
-    expect(result.claims[0].homes.opencodexHome).toBeNull();
+    expect(result.claims[0].homes.openccxHome).toBeNull();
   });
 
   test("a broken link in the chain is unknown, not absence", () => {
     // Task XML points at a launcher that does not exist.
-    const missing = join(home, ".opencodex", "no-such.vbs");
+    const missing = join(home, ".openccx", "no-such.vbs");
     writeWindowsTask(missing);
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: The system cannot find the file specified." }));
 
@@ -614,7 +614,7 @@ describe("the Windows chain walk", () => {
   });
 
   test("a UTF-16LE task XML on disk is decoded before the chain is walked", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     const xml = [
       '<?xml version="1.0" encoding="UTF-16"?>',
@@ -626,24 +626,24 @@ describe("the Windows chain walk", () => {
       "  </Actions>",
       "</Task>",
     ].join("\n");
-    writeFileSync(join(home, ".opencodex", "opencodex-service-task.xml"), Buffer.from(`\uFEFF${xml}`, "utf16le"));
+    writeFileSync(join(home, ".openccx", "openccx-service-task.xml"), Buffer.from(`\uFEFF${xml}`, "utf16le"));
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: The system cannot find the file specified." }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "nonexistent" });
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
-    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\a\\.codex", opencodexHome: "C:\\a\\.opencodex" });
+    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\a\\.codex", openccxHome: "C:\\a\\.openccx" });
   });
 
   test("a UTF-16LE VBS launcher is decoded before the chain is walked", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     // Overwrite the launcher with a UTF-16LE encoding, like the real install.
-    const launcher = join(home, ".opencodex", "opencodex-service-launcher.vbs");
+    const launcher = join(home, ".openccx", "openccx-service-launcher.vbs");
     writeFileSync(launcher, Buffer.from(
       `\uFEFF' launcher\r\nSet shell = CreateObject("WScript.Shell")\r\nshell.Run """${wrapper}""", 0, True\r\n`,
       "utf16le",
     ));
-    const xml = join(home, ".opencodex", "opencodex-service-task.xml");
+    const xml = join(home, ".openccx", "openccx-service-task.xml");
     writeFileSync(xml, [
       '<?xml version="1.0" encoding="UTF-16"?>',
       `<Arguments>/b /nologo &quot;${launcher.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}&quot;</Arguments>`,
@@ -653,7 +653,7 @@ describe("the Windows chain walk", () => {
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "nonexistent" });
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
-    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\a\\.codex", opencodexHome: "C:\\a\\.opencodex" });
+    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\a\\.codex", openccxHome: "C:\\a\\.openccx" });
   });
 
   test("a task registered but with no XML on disk is unknown", () => {
@@ -664,7 +664,7 @@ describe("the Windows chain walk", () => {
   });
 
   test("an unaskable schtasks is unknown even with a full chain", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     const { runRaw } = recorder(() => ({ status: null, spawnFailed: true, stderr: "spawn ENOENT" }));
@@ -681,7 +681,7 @@ describe("the Windows chain walk", () => {
    * would proceed into a home another process owns.
    */
   test("an access-denied schtasks response is unknown, not absent", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: Access is denied. (0x80070005)" }));
@@ -692,7 +692,7 @@ describe("the Windows chain walk", () => {
   });
 
   test("a null-status schtasks response with no stderr is unknown, not absent", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     const { runRaw } = recorder(() => ({ status: null, stderr: "" }));
@@ -702,7 +702,7 @@ describe("the Windows chain walk", () => {
   });
 
   test("a timed-out schtasks response is unknown, not absent", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     const { runRaw } = recorder(() => ({ status: null, timedOut: true }));
@@ -712,12 +712,12 @@ describe("the Windows chain walk", () => {
   });
 
   test("a registered task whose launcher is missing is unknown", () => {
-    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\Users\\ws\\.codex", "C:\\Users\\ws\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
     // The registered task points at a launcher that does not exist — the
     // registered definition cannot be trusted, so the probe fails closed.
-    const missingLauncher = join(home, ".opencodex", "no-such.vbs");
+    const missingLauncher = join(home, ".openccx", "no-such.vbs");
     const { runRaw } = recorder(() => ({ status: 0, stdout: windowsTaskXmlFor(missingLauncher) }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "nonexistent" });
@@ -725,29 +725,29 @@ describe("the Windows chain walk", () => {
     expect(result.kind === "unknown" && result.reason).toContain("launcher");
   });
 
-  function writeWinswXml(dir: string, codexHome: string, opencodexHome: string): void {
+  function writeWinswXml(dir: string, codexHome: string, openccxHome: string): void {
     // The probe resolves the winsw dir under the effective config dir
     // (default <home>/.opencodex/winsw), matching winswDir() in src/lib/winsw.ts.
-    const winswDir = join(dir, ".opencodex", "winsw");
+    const winswDir = join(dir, ".openccx", "winsw");
     mkdirSync(winswDir, { recursive: true });
     // The exe must be present for the SCM claim to be verifiable (fail-closed).
-    writeFileSync(join(winswDir, "opencodex-proxy-native.exe"), "placeholder");
-    writeFileSync(join(winswDir, "opencodex-proxy-native.xml"), [
+    writeFileSync(join(winswDir, "openccx-proxy-native.exe"), "placeholder");
+    writeFileSync(join(winswDir, "openccx-proxy-native.xml"), [
       '<?xml version="1.0" encoding="UTF-8"?>',
       "<service>",
-      "  <id>opencodex-proxy-native</id>",
+      "  <id>openccx-proxy-native</id>",
       `  <env name="CODEX_HOME" value="${codexHome}"/>`,
-      `  <env name="OPENCODEX_HOME" value="${opencodexHome}"/>`,
+      `  <env name="OPENCCX_HOME" value="${openccxHome}"/>`,
       '  <arguments>"C:\\cli\\index.ts" start --port 10100</arguments>',
       "</service>",
     ].join("\n"));
   }
 
   test("WinSW and Task Scheduler both present is a conflict", () => {
-    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.opencodex");
+    const wrapper = writeWindowsWrapper("C:\\a\\.codex", "C:\\a\\.openccx");
     const launcher = writeWindowsLauncher(wrapper);
     writeWindowsTask(launcher);
-    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.opencodex");
+    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.openccx");
     const { runRaw } = recorder(() => ({ status: 0, stdout: windowsTaskXmlFor(launcher) }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "started" });
@@ -759,34 +759,34 @@ describe("the Windows chain walk", () => {
     expect(result.claims[0].backend).toBe("winsw");
     expect(result.claims[1].backend).toBe("scheduler");
     expect(result.claims[1].registration).toBe("present");
-    expect(result.claims[1].homes).toEqual({ codexHome: "C:\\a\\.codex", opencodexHome: "C:\\a\\.opencodex" });
+    expect(result.claims[1].homes).toEqual({ codexHome: "C:\\a\\.codex", openccxHome: "C:\\a\\.openccx" });
   });
 
   test("a broken scheduler chain alongside WinSW is unknown, not a fabricated conflict", () => {
     // WinSW is installed and a scheduler task is registered, but the staged
     // scheduler chain is broken (launcher missing). The probe must not
     // fabricate a null-homes scheduler claim — it fails closed.
-    writeWindowsTask(join(home, ".opencodex", "no-such.vbs"));
-    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.opencodex");
-    const { runRaw } = recorder(() => ({ status: 0, stdout: windowsTaskXmlFor(join(home, ".opencodex", "no-such.vbs")) }));
+    writeWindowsTask(join(home, ".openccx", "no-such.vbs"));
+    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.openccx");
+    const { runRaw } = recorder(() => ({ status: 0, stdout: windowsTaskXmlFor(join(home, ".openccx", "no-such.vbs")) }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "started" });
     expect(result.kind).toBe("unknown");
   });
 
   test("WinSW homes are parsed from the XML env entries", () => {
-    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.opencodex");
+    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.openccx");
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: The system cannot find the file specified." }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "stopped" });
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
     expect(result.claims[0].backend).toBe("winsw");
-    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\winsw\\.codex", opencodexHome: "C:\\winsw\\.opencodex" });
+    expect(result.claims[0].homes).toEqual({ codexHome: "C:\\winsw\\.codex", openccxHome: "C:\\winsw\\.openccx" });
   });
 
   test("WinSW with unverifiable SCM state is unknown", () => {
-    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.opencodex");
+    writeWinswXml(home, "C:\\winsw\\.codex", "C:\\winsw\\.openccx");
     const { runRaw } = recorder(() => ({ status: 1, stderr: "ERROR: The system cannot find the file specified." }));
 
     const result = inspectServiceManagerInstallation({ platform: "win32", home, runRaw, winswStatus: () => "unknown" });
@@ -796,12 +796,12 @@ describe("the Windows chain walk", () => {
   test("WinSW XML present but exe missing is unknown (fail closed)", () => {
     // Only the XML exists (no exe): the SCM claim cannot be verified, so the
     // probe must refuse rather than report an owned WinSW backend.
-    const winswDir = join(home, ".opencodex", "winsw");
+    const winswDir = join(home, ".openccx", "winsw");
     mkdirSync(winswDir, { recursive: true });
-    writeFileSync(join(winswDir, "opencodex-proxy-native.xml"), [
+    writeFileSync(join(winswDir, "openccx-proxy-native.xml"), [
       '<?xml version="1.0" encoding="UTF-8"?>',
       "<service>",
-      "  <id>opencodex-proxy-native</id>",
+      "  <id>openccx-proxy-native</id>",
       '  <env name="CODEX_HOME" value="C:\\winsw\\.codex"/>',
       '  <arguments>"C:\\cli\\index.ts" start --port 10100</arguments>',
       "</service>",
@@ -821,33 +821,33 @@ describe("ownership refuses what it cannot prove", () => {
    */
   function own(extra: { run: ProbeRunner }) {
     const codexHome = join(home, ".codex");
-    const opencodexHome = join(home, ".opencodex");
+    const openccxHome = join(home, ".openccx");
     return {
       ...extra,
       platform: "darwin" as const,
       uid: 501,
       home,
-      statePaths: [join(opencodexHome, "service-state.json")],
-      currentHomes: { codexHome, opencodexHome },
+      statePaths: [join(openccxHome, "service-state.json")],
+      currentHomes: { codexHome, openccxHome },
     };
   }
 
-  function useHomes(): { codexHome: string; opencodexHome: string } {
+  function useHomes(): { codexHome: string; openccxHome: string } {
     const codexHome = join(home, ".codex");
-    const opencodexHome = join(home, ".opencodex");
+    const openccxHome = join(home, ".openccx");
     mkdirSync(codexHome, { recursive: true });
-    mkdirSync(opencodexHome, { recursive: true });
+    mkdirSync(openccxHome, { recursive: true });
     process.env.CODEX_HOME = codexHome;
-    process.env.OPENCODEX_HOME = opencodexHome;
-    return { codexHome, opencodexHome };
+    process.env.OPENCCX_HOME = openccxHome;
+    return { codexHome, openccxHome };
   }
 
   // The darwin ownership tests drive a launchd claim; a launchd install writes
   // a v1 state file (no `backend` field — that is Windows-only). v2 without a
   // backend would be malformed, so this writes v1.
-  function writeState(dir: string, codexHome: string, opencodexHome: string): void {
+  function writeState(dir: string, codexHome: string, openccxHome: string): void {
     writeFileSync(join(dir, "service-state.json"), JSON.stringify({
-      version: 1, codexHome, opencodexHome,
+      version: 1, codexHome, openccxHome,
     }));
   }
 
@@ -858,8 +858,8 @@ describe("ownership refuses what it cannot prove", () => {
   });
 
   test("state naming another home is foreign", () => {
-    const { opencodexHome } = useHomes();
-    writeState(opencodexHome, "/elsewhere/.codex", "/elsewhere/.opencodex");
+    const { openccxHome } = useHomes();
+    writeState(openccxHome, "/elsewhere/.codex", "/elsewhere/.opencodex");
     const { run } = recorder(() => ({ status: 113 }));
     expect(inspectNativeCodexOwnership(own({ run })).ownership).toBe("foreign");
   });
@@ -871,8 +871,8 @@ describe("ownership refuses what it cannot prove", () => {
    * half-finished operation to believe.
    */
   test("state says here, definition says elsewhere — unknown, not owned", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    writeState(opencodexHome, codexHome, opencodexHome);
+    const { codexHome, openccxHome } = useHomes();
+    writeState(openccxHome, codexHome, openccxHome);
     writePlist("/elsewhere/.codex", "/elsewhere/.opencodex");
     const { run } = recorder(() => ({ status: 113 }));
 
@@ -882,16 +882,16 @@ describe("ownership refuses what it cannot prove", () => {
   });
 
   test("state and definition agreeing is owned", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    writeState(opencodexHome, codexHome, opencodexHome);
-    writePlist(codexHome, opencodexHome);
+    const { codexHome, openccxHome } = useHomes();
+    writeState(openccxHome, codexHome, openccxHome);
+    writePlist(codexHome, openccxHome);
     const { run } = recorder(() => ({ status: 113 }));
     expect(inspectNativeCodexOwnership(own({ run })).ownership).toBe("owned");
   });
 
   test("an installed definition that no state file accounts for is unknown", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    writePlist(codexHome, opencodexHome);
+    const { codexHome, openccxHome } = useHomes();
+    writePlist(codexHome, openccxHome);
     const { run } = recorder(() => ({ status: 0, stdout: "state = running" }));
     expect(inspectNativeCodexOwnership(own({ run })).ownership).toBe("unknown");
   });
@@ -902,8 +902,8 @@ describe("ownership refuses what it cannot prove", () => {
    * unattended write.
    */
   test("a malformed state file is unknown, where the teardown helper says fine", () => {
-    const { opencodexHome } = useHomes();
-    writeFileSync(join(opencodexHome, "service-state.json"), "{ not json");
+    const { openccxHome } = useHomes();
+    writeFileSync(join(openccxHome, "service-state.json"), "{ not json");
     const { run } = recorder(() => ({ status: 113 }));
     const result = inspectNativeCodexOwnership(own({ run }));
     expect(result.ownership).toBe("unknown");
@@ -918,8 +918,8 @@ describe("ownership refuses what it cannot prove", () => {
    * the real unaskable case, and it still refuses.
    */
   test("an unaskable service manager is unknown even with clean state", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    writeState(opencodexHome, codexHome, opencodexHome);
+    const { codexHome, openccxHome } = useHomes();
+    writeState(openccxHome, codexHome, openccxHome);
     const { run } = recorder(() => ({ status: null, spawnFailed: true, stderr: "spawn EACCES" }));
     expect(inspectNativeCodexOwnership(own({ run })).ownership).toBe("unknown");
   });
@@ -941,26 +941,26 @@ describe("ownership refuses what it cannot prove", () => {
    * the manager backend does not, so ownership cannot be proven.
    */
   test("a state backend that disagrees with the installed manager is unknown", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    mkdirSync(opencodexHome, { recursive: true });
-    writeFileSync(join(opencodexHome, "service-state.json"), JSON.stringify({
-      version: 2, codexHome, opencodexHome, backend: "native",
+    const { codexHome, openccxHome } = useHomes();
+    mkdirSync(openccxHome, { recursive: true });
+    writeFileSync(join(openccxHome, "service-state.json"), JSON.stringify({
+      version: 2, codexHome, openccxHome, backend: "native",
     }));
     // A scheduler claim whose homes agree with the state.
-    const wrapper = join(opencodexHome, "opencodex-service.cmd");
+    const wrapper = join(openccxHome, "openccx-service.cmd");
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
       `set "CODEX_HOME=${codexHome}"`,
-      `set "OPENCODEX_HOME=${opencodexHome}"`,
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      `set "OPENCCX_HOME=${openccxHome}"`,
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
-    const launcher = join(opencodexHome, "opencodex-service-launcher.vbs");
+    const launcher = join(openccxHome, "openccx-service-launcher.vbs");
     writeFileSync(launcher, `shell.Run """${wrapper}""", 0, True\r\n`);
-    writeFileSync(join(opencodexHome, "opencodex-service-task.xml"), [
+    writeFileSync(join(openccxHome, "openccx-service-task.xml"), [
       '<?xml version="1.0" encoding="UTF-16"?>',
       `<Arguments>/b /nologo &quot;${launcher}&quot;</Arguments>`,
     ].join("\n"));
@@ -970,33 +970,33 @@ describe("ownership refuses what it cannot prove", () => {
       home,
       runRaw: () => ({ status: 1, stderr: Buffer.from("ERROR: The system cannot find the file specified."), stdout: Buffer.alloc(0), timedOut: false, spawnFailed: false }),
       winswStatus: () => "nonexistent",
-      statePaths: [join(opencodexHome, "service-state.json")],
-      currentHomes: { codexHome, opencodexHome },
+      statePaths: [join(openccxHome, "service-state.json")],
+      currentHomes: { codexHome, openccxHome },
     });
     expect(result.ownership).toBe("unknown");
     expect(result.reason).toContain("backend");
   });
 
   test("a state backend that agrees with the installed manager is owned", () => {
-    const { codexHome, opencodexHome } = useHomes();
-    mkdirSync(opencodexHome, { recursive: true });
-    writeFileSync(join(opencodexHome, "service-state.json"), JSON.stringify({
-      version: 2, codexHome, opencodexHome, backend: "scheduler",
+    const { codexHome, openccxHome } = useHomes();
+    mkdirSync(openccxHome, { recursive: true });
+    writeFileSync(join(openccxHome, "service-state.json"), JSON.stringify({
+      version: 2, codexHome, openccxHome, backend: "scheduler",
     }));
-    const wrapper = join(opencodexHome, "opencodex-service.cmd");
+    const wrapper = join(openccxHome, "openccx-service.cmd");
     writeFileSync(wrapper, [
       "@echo off",
       "setlocal",
       `set "CODEX_HOME=${codexHome}"`,
-      `set "OPENCODEX_HOME=${opencodexHome}"`,
-      'set "OCX_BUN=C:\\bun\\bun.exe"',
-      'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+      `set "OPENCCX_HOME=${openccxHome}"`,
+      'set "OCCX_BUN=C:\\bun\\bun.exe"',
+      'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
       ":loop",
-      '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+      '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
     ].join("\r\n"));
-    const launcher = join(opencodexHome, "opencodex-service-launcher.vbs");
+    const launcher = join(openccxHome, "openccx-service-launcher.vbs");
     writeFileSync(launcher, `shell.Run """${wrapper}""", 0, True\r\n`);
-    writeFileSync(join(opencodexHome, "opencodex-service-task.xml"), [
+    writeFileSync(join(openccxHome, "openccx-service-task.xml"), [
       '<?xml version="1.0" encoding="UTF-16"?>',
       `<Arguments>/b /nologo &quot;${launcher}&quot;</Arguments>`,
     ].join("\n"));
@@ -1006,8 +1006,8 @@ describe("ownership refuses what it cannot prove", () => {
       home,
       runRaw: () => ({ status: 1, stderr: Buffer.from("ERROR: The system cannot find the file specified."), stdout: Buffer.alloc(0), timedOut: false, spawnFailed: false }),
       winswStatus: () => "nonexistent",
-      statePaths: [join(opencodexHome, "service-state.json")],
-      currentHomes: { codexHome, opencodexHome },
+      statePaths: [join(openccxHome, "service-state.json")],
+      currentHomes: { codexHome, openccxHome },
     });
     expect(result.ownership).toBe("owned");
   });
@@ -1033,7 +1033,7 @@ describe("systemd probe: the bus is unreachable (#2114)", () => {
   });
 
   test("a unit naming THIS home is still ours, read off disk", () => {
-    const definitionPath = writeUnit(join(home, ".codex"), join(home, ".opencodex"));
+    const definitionPath = writeUnit(join(home, ".codex"), join(home, ".openccx"));
     const { run } = recorder(() => ({ status: 1, stderr: BUS_DOWN }));
 
     const result = inspectServiceManagerInstallation({ run, platform: "linux", home });
@@ -1057,14 +1057,14 @@ describe("systemd probe: the bus is unreachable (#2114)", () => {
   });
 
   test("a non-bus failure is untouched — it stays unknown", () => {
-    const { run } = recorder(() => ({ status: 1, stderr: "Job for opencodex-proxy.service failed" }));
+    const { run } = recorder(() => ({ status: 1, stderr: "Job for openccx-proxy.service failed" }));
 
     expect(inspectServiceManagerInstallation({ run, platform: "linux", home }).kind).toBe("unknown");
   });
 });
 
 /*
- * #2108: a reboot leaves native-main fenced until `ocx restart`.
+ * #2108: a reboot leaves native-main fenced until `occx restart`.
  *
  * One trigger is a timed-out `sc.exe query`. WinSW is an optional backend, and a
  * scheduler-only install has neither of its assets on disk — but a query that timed out
@@ -1090,10 +1090,10 @@ describe("WinSW probe: a timed-out query with no assets (#2108)", () => {
   });
 
   test("an unaskable query with WinSW assets present is still unknown", () => {
-    const dir = join(home, ".opencodex", "winsw");
+    const dir = join(home, ".openccx", "winsw");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "opencodex-proxy.xml"), "<service><id>opencodex-proxy</id></service>");
-    writeFileSync(join(dir, "opencodex-proxy.exe"), "MZ");
+    writeFileSync(join(dir, "openccx-proxy.xml"), "<service><id>openccx-proxy</id></service>");
+    writeFileSync(join(dir, "openccx-proxy.exe"), "MZ");
 
     const { runRaw } = recorder(() => ({ timedOut: true }));
 
@@ -1122,10 +1122,10 @@ describe("bus-down absence must mean absence everywhere systemd looks (#2114)", 
   test("a foreign unit in the other user search dir still blocks", () => {
     const dir = join(home, ".local", "share", "systemd", "user");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "opencodex-proxy.service"), [
+    writeFileSync(join(dir, "openccx-proxy.service"), [
       "[Service]",
       'Environment="CODEX_HOME=/other/.codex"',
-      'Environment="OPENCODEX_HOME=/other/.opencodex"',
+      'Environment="OPENCCX_HOME=/other/.opencodex"',
     ].join("\n"));
     const { run } = recorder(() => ({ status: 1, stderr: BUS_DOWN }));
 
@@ -1138,7 +1138,7 @@ describe("bus-down absence must mean absence everywhere systemd looks (#2114)", 
     const xdg = join(home, "xdg-config");
     const dir = join(xdg, "systemd", "user");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "opencodex-proxy.service"), '[Service]\nEnvironment="CODEX_HOME=/other/.codex"');
+    writeFileSync(join(dir, "openccx-proxy.service"), '[Service]\nEnvironment="CODEX_HOME=/other/.codex"');
     const previous = process.env.XDG_CONFIG_HOME;
     process.env.XDG_CONFIG_HOME = xdg;
     try {
@@ -1165,8 +1165,8 @@ describe("bus-down absence must mean absence everywhere systemd looks (#2114)", 
     const b = join(home, ".local", "share", "systemd", "user");
     mkdirSync(a, { recursive: true });
     mkdirSync(b, { recursive: true });
-    writeFileSync(join(a, "opencodex-proxy.service"), `[Service]\nEnvironment="CODEX_HOME=${join(home, ".codex")}"`);
-    writeFileSync(join(b, "opencodex-proxy.service"), '[Service]\nEnvironment="CODEX_HOME=/other/.codex"');
+    writeFileSync(join(a, "openccx-proxy.service"), `[Service]\nEnvironment="CODEX_HOME=${join(home, ".codex")}"`);
+    writeFileSync(join(b, "openccx-proxy.service"), '[Service]\nEnvironment="CODEX_HOME=/other/.codex"');
     const { run } = recorder(() => ({ status: 1, stderr: BUS_DOWN }));
 
     expect(inspectServiceManagerInstallation({ run, platform: "linux", home }).kind).toBe("unknown");

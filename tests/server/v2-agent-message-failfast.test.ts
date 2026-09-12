@@ -3,7 +3,7 @@ import {
   handleResponses,
   hasUnreadableEncryptedAgentTask,
 } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 
 const originalFetch = globalThis.fetch;
@@ -50,7 +50,7 @@ function agentMessage(content: Array<Record<string, unknown>>): unknown[] {
   }];
 }
 
-function routedConfig(): OcxConfig {
+function routedConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "xai",
@@ -62,10 +62,10 @@ function routedConfig(): OcxConfig {
         apiKey: "test-xai-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function nativeConfig(): OcxConfig {
+function nativeConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -77,10 +77,10 @@ function nativeConfig(): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function mixedComboConfig(): OcxConfig {
+function mixedComboConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "xai",
@@ -107,11 +107,11 @@ function mixedComboConfig(): OcxConfig {
         ],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function post(
-  config: OcxConfig,
+  config: OccxConfig,
   model: string,
   input: unknown[],
   headers: HeadersInit = {},

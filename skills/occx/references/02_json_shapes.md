@@ -5,10 +5,10 @@ live responses, not from the source.
 
 ## Two envelope styles
 
-`ocx capabilities --json` reports which style each verb uses, as `json: "payload"` or
+`occx capabilities --json` reports which style each verb uses, as `json: "payload"` or
 `json: "envelope"`.
 
-- **payload** — the management response, largely unwrapped. `ocx usage --json` returns the server
+- **payload** — the management response, largely unwrapped. `occx usage --json` returns the server
   payload untouched.
 - **envelope** — a CLI-shaped object with its own schema, usually carrying `ok: true` plus the
   fields the verb operated on.
@@ -16,7 +16,7 @@ live responses, not from the source.
 
 `--json` is accepted in any argv position.
 
-## `ocx ready --json`
+## `occx ready --json`
 
 ```json
 {"ready":true,"status":"ready","pid":1443,"port":10100}
@@ -24,19 +24,19 @@ live responses, not from the source.
 
 The cheapest liveness check. `ready: false` with no error usually means still starting.
 
-## `ocx status --json`
+## `occx status --json`
 
 Carries `schemaVersion`, then `proxy.running`, `proxy.pid`, `proxy.health.ok`, and a `dashboard`
 section. This is also where a version skew between your binary and the running proxy shows up —
 check it before trusting flags you just read about.
 
-## `ocx logs --jsonl`
+## `occx logs --jsonl`
 
 One row per line. The fields worth branching on:
 
 | Field | Meaning |
 |---|---|
-| `requestId` | pass to `ocx logs explain` |
+| `requestId` | pass to `occx logs explain` |
 | `conversationId` | groups a conversation; also printed as `conv=<id>` in human output |
 | `accountLogLabel` | which account served it (`main`, `p<hex6>`, `o<hex6>`); also printed as `acct=<label>` in human output |
 | `provider` / `model` | what actually served it |
@@ -53,15 +53,15 @@ to `requestedModel` is how you get a wrong answer about which provider served it
 `displayMetrics.cost.estimate.estimateReasons` lists why — for example `usage_estimated`,
 `cache_detail_missing`, `expected_price_overlay`.
 
-## `ocx provider list --jsonl`
+## `occx provider list --jsonl`
 
 One configured provider per line. Each object has the same fields as an item in the
-`configured` array from `ocx provider list --json`; the `registryCount` summary is omitted.
+`configured` array from `occx provider list --json`; the `registryCount` summary is omitted.
 
-## `ocx logs explain <request-id>`
+## `occx logs explain <request-id>`
 
 ```json
-{"requestId":"ocx-…","routeDecision":{"version":1,"decisionId":"…","requestedModel":"kiro/claude-opus-5",
+{"requestId":"occx-…","routeDecision":{"version":1,"decisionId":"…","requestedModel":"kiro/claude-opus-5",
  "routeKind":"explicit-provider","requirements":[],
  "candidates":[{"provider":"kiro","model":"claude-opus-5","eligible":true,"exclusions":[]}],
  "selected":{"candidateIndex":0,"provider":"kiro","model":"claude-opus-5","reason":"explicit-provider-namespace"}}}
@@ -70,7 +70,7 @@ One configured provider per line. Each object has the same fields as an item in 
 `candidates[].exclusions` is the useful part when a route surprised you: it says why each
 non-winner was rejected. `selected.reason` names the rule that decided it.
 
-## `ocx usage --json`
+## `occx usage --json`
 
 `summary`, then `providers[]`, `models[]`, `days[]`, and `accounts[]`. Costs appear as
 `estimatedCostUsd`.
@@ -82,7 +82,7 @@ Two honesty markers to respect:
 - Under `--provider` or `--model`, per-account rows are **withheld** rather than filtered, because
   account totals cannot be honestly re-partitioned by provider.
 
-## `ocx account list <provider> --json`
+## `occx account list <provider> --json`
 
 `accounts[]` with `id`, `email`, `plan`, `paused`, `selected`, `priority`, and `needsReauth`. Quota
 appears only under `--quota`.
@@ -91,7 +91,7 @@ appears only under `--quota`.
 
 ## Pool settings
 
-`ocx account strategy|sticky <provider> --json` returns pool-neutral keys:
+`occx account strategy|sticky <provider> --json` returns pool-neutral keys:
 
 ```json
 {"ok":true,"provider":"openai","strategy":"quota","stickyLimit":1}
@@ -103,7 +103,7 @@ normalizes both so you do not branch on which pool answered.
 
 The value returned is the **applied** one after server normalization, not what you sent.
 
-## `ocx storage cleanup --percent N --json` (preview)
+## `occx storage cleanup --percent N --json` (preview)
 
 ```json
 {"percent":25,"count":3,"bytes":3145728,"digest":"…","candidates":[{"relPath":"archived_sessions/….jsonl","bytes":1048576,"mtimeMs":…}]}

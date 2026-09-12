@@ -23,7 +23,7 @@ import {
 import { relaySseWithBlockRewrite } from "../../src/server/sse-payload-rewrite";
 import { handleResponses } from "../../src/server/responses";
 import { expandPreviousResponseInput } from "../../src/responses/state";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 /** One SSE event block without its blank-line delimiter. */
@@ -780,7 +780,7 @@ describe("the reported turn, end to end through handleResponses", () => {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   const requestBody = (stream: boolean) => JSON.stringify({
     model: "fixture/deepseek-v4-flash",
@@ -885,7 +885,7 @@ describe("a refused turn does not become continuation state", () => {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   const declaredTools = [
     { type: "custom", name: "exec", description: "Run JavaScript", format: { type: "grammar", syntax: "lark" } },
@@ -1104,7 +1104,7 @@ describe("real relay and continuation caller normalization (#4176 / #4181)", () 
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   test("Turn 1 stream normalizes default.view_image, and Turn 2 continuation expands normalized replay", async () => {
     const originalFetch = globalThis.fetch;
@@ -1300,7 +1300,7 @@ describe("empty and absent tool catalogs", () => {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   const xaiConfig = {
     port: 0,
@@ -1313,7 +1313,7 @@ describe("empty and absent tool catalogs", () => {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 
   const call = {
     type: "function_call",
@@ -1329,7 +1329,7 @@ describe("empty and absent tool catalogs", () => {
     tools: unknown[] | undefined,
     upstream: () => Response,
     additionalTools?: unknown[],
-    requestConfig: OcxConfig = config,
+    requestConfig: OccxConfig = config,
     history: unknown[] = [],
     model = "fixture/deepseek-v4-flash",
     previousResponseId?: string,
@@ -2233,7 +2233,7 @@ describe("xAI hosted-call authorization through handleResponses", () => {
             : {}),
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const savedFetch = globalThis.fetch;
     globalThis.fetch = (async (_input, init) => {
       if (options.observeOutbound && init?.body !== undefined) {

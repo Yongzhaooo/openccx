@@ -9,11 +9,11 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
 /**
- * Regression: `ocx start` + Ctrl-C must NOT orphan the Bun proxy.
+ * Regression: `occx start` + Ctrl-C must NOT orphan the Bun proxy.
  *
- * The bin/ocx.mjs launcher used a blocking spawnSync that did not forward signals,
+ * The bin/occx.mjs launcher used a blocking spawnSync that did not forward signals,
  * so a signal delivered only to the launcher killed it and left the Bun child
- * serving forever (port bound, ocx.pid/runtime-port.json left behind, Codex config
+ * serving forever (port bound, occx.pid/runtime-port.json left behind, Codex config
  * not restored). The launcher now forwards SIGINT/SIGTERM/SIGHUP to the child and
  * waits for its graceful shutdown.
  *
@@ -21,7 +21,7 @@ import { repoPath } from "../helpers/repo-root";
  * on PATH to exercise the real launcher.
  */
 
-const BIN_OCX = repoPath("bin", "ocx.mjs");
+const BIN_OCCX = repoPath("bin", "occx.mjs");
 const nodeAvailable = !spawnSync("node", ["--version"], { stdio: "ignore" }).error;
 const runnable = process.platform !== "win32" && nodeAvailable;
 
@@ -93,12 +93,12 @@ async function waitUntil(fn: () => Promise<boolean>, deadlineMs: number): Promis
   return false;
 }
 
-describe.skipIf(!runnable)("ocx launcher graceful shutdown", () => {
+describe.skipIf(!runnable)("occx launcher graceful shutdown", () => {
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
     test(
       `${signal} to the launcher tears down the Bun proxy and restores Codex config (no orphan)`,
       async () => {
-        const home = mkdtempSync(join(tmpdir(), "ocx-shutdown-"));
+        const home = mkdtempSync(join(tmpdir(), "occx-shutdown-"));
         tmpHomes.push(home);
         const port = await freePort();
         const identity = claimTempHome(home);
@@ -117,13 +117,13 @@ describe.skipIf(!runnable)("ocx launcher graceful shutdown", () => {
         // startup regression. Locally the same spawn is healthy in ~800ms, so a
         // 25x margin is already generous and the missing evidence was the actual
         // problem.
-        const child = spawn("node", [BIN_OCX, "start", "--port", String(port)], {
+        const child = spawn("node", [BIN_OCCX, "start", "--port", String(port)], {
           stdio: ["ignore", "pipe", "pipe"],
           env: {
             ...process.env,
             HOME: identity.homeDir,
             USERPROFILE: identity.userProfile,
-            OPENCODEX_HOME: home,
+            OPENCCX_HOME: home,
             CODEX_HOME: home,
             ...identity.serviceManagerEnv,
           },
@@ -150,11 +150,11 @@ describe.skipIf(!runnable)("ocx launcher graceful shutdown", () => {
             + ` Launcher output:\n${output.trim() || "(none)"}`,
           );
         }
-        expect(existsSync(join(home, "ocx.pid"))).toBe(true);
+        expect(existsSync(join(home, "occx.pid"))).toBe(true);
         const injected = readFileSync(codexConfig, "utf8");
-        expect(injected).toContain("# Auto-injected by opencodex");
+        expect(injected).toContain("# Auto-injected by openccx");
         expect(injected).toContain(`openai_base_url = "http://127.0.0.1:${port}/v1"`);
-        expect(injected).not.toContain("model_providers.opencodex");
+        expect(injected).not.toContain("model_providers.openccx");
 
         // 2. Signal ONLY the launcher PID (the exact orphan trigger).
         child.kill(signal);
@@ -168,9 +168,9 @@ describe.skipIf(!runnable)("ocx launcher graceful shutdown", () => {
         expect(portFreed).toBe(true);
 
         // 5. Graceful cleanup ran: pid + runtime-port removed, Codex config restored.
-        expect(existsSync(join(home, "ocx.pid"))).toBe(false);
+        expect(existsSync(join(home, "occx.pid"))).toBe(false);
         expect(existsSync(join(home, "runtime-port.json"))).toBe(false);
-        expect(readFileSync(codexConfig, "utf8")).not.toContain("opencodex");
+        expect(readFileSync(codexConfig, "utf8")).not.toContain("openccx");
       },
       STARTUP_BUDGET_MS + 40_000,
     );

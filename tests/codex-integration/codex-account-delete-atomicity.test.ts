@@ -30,14 +30,14 @@ import {
 } from "../../src/codex/quota";
 import { getConfigPath, loadConfig, saveConfig } from "../../src/config";
 import * as configModule from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-codex-account-delete-atomicity");
 const ACCOUNT_ID = "delete-atomicity";
 let previousHome: string | undefined;
 
-function seededConfig(): OcxConfig {
+function seededConfig(): OccxConfig {
   const config = loadConfig();
   config.codexAccounts = [{
     id: ACCOUNT_ID,
@@ -63,15 +63,15 @@ function seededConfig(): OcxConfig {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
 });
 

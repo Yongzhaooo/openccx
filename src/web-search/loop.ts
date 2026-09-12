@@ -1,5 +1,5 @@
 import type { AdapterRequest, IncomingMeta, ProviderAdapter } from "../adapters/base";
-import type { AdapterEvent, OcxMessage, OcxParsedRequest, OcxProviderConfig, OcxProviderOpaqueToolCallMetadata, OcxThinkingContent, OcxUsage, RateLimitRetryPolicy } from "../types";
+import type { AdapterEvent, OccxMessage, OccxParsedRequest, OccxProviderConfig, OccxProviderOpaqueToolCallMetadata, OccxThinkingContent, OccxUsage, RateLimitRetryPolicy } from "../types";
 import { namespacedToolName, toolChoiceToolPredicate } from "../types";
 import { cloneProviderOpaqueToolCallMetadata } from "../responses/provider-opaque-metadata";
 import type { AttemptRecoveryKind } from "../usage/log";
@@ -41,7 +41,7 @@ interface WebSearchCall {
    * Provider-opaque metadata from the originating part (issue #1735). Stored PER CALL so a
    * signature can never migrate to a different call when the model batches several.
    */
-  providerMetadata?: OcxProviderOpaqueToolCallMetadata;
+  providerMetadata?: OccxProviderOpaqueToolCallMetadata;
 }
 
 /**
@@ -79,7 +79,7 @@ export function scanEventsForWebSearch(events: AdapterEvent[]): {
   const passthrough: AdapterEvent[] = [];
   let hasRealToolCall = false;
   let hasMalformedToolCall = false;
-  let pending: { name: string; id: string; argsBuf: string; closed: boolean; events: AdapterEvent[]; providerMetadata?: OcxProviderOpaqueToolCallMetadata } | null = null;
+  let pending: { name: string; id: string; argsBuf: string; closed: boolean; events: AdapterEvent[]; providerMetadata?: OccxProviderOpaqueToolCallMetadata } | null = null;
   const isBlank = (value: string): boolean => value.trim().length === 0;
   const flushPending = (): void => {
     // A pending call that never saw tool_call_end is structurally malformed.
@@ -164,8 +164,8 @@ async function* replay(events: AdapterEvent[]): AsyncGenerator<AdapterEvent> {
  * the two never share a stream. Honoring a genuinely mixed stream would need per-segment state,
  * not another accumulator.
  */
-function extractIterationThinking(events: AdapterEvent[]): OcxThinkingContent[] {
-  const parts: OcxThinkingContent[] = [];
+function extractIterationThinking(events: AdapterEvent[]): OccxThinkingContent[] {
+  const parts: OccxThinkingContent[] = [];
   let thinking = "";
   let signature: string | undefined;
   let rawReasoning = "";
@@ -218,7 +218,7 @@ function normalizeQuery(q: string): string {
  * gathered this turn. Citation wording is conditional — a failed/empty search still wants an answer,
  * just without fabricated sources.
  */
-function forcedAnswerNudge(): OcxMessage {
+function forcedAnswerNudge(): OccxMessage {
   return {
     role: "developer",
     content:
@@ -251,7 +251,7 @@ class LoopError extends Error {
  * incoming metadata, and the configured search executor.
  */
 export interface WebSearchLoopDeps {
-  parsed: OcxParsedRequest;
+  parsed: OccxParsedRequest;
   adapter: ProviderAdapter;
   incomingMeta: IncomingMeta;
   /**
@@ -261,13 +261,13 @@ export interface WebSearchLoopDeps {
    */
   backend?: WebSearchBackendId;
   /** Required for the openai backend; unused (and typically undefined) for the anthropic backend. */
-  forwardProvider?: OcxProviderConfig;
+  forwardProvider?: OccxProviderConfig;
   /** Required for the anthropic backend: the stored-OAuth provider that runs web_search_20250305. */
-  anthropicSidecar?: { providerName: string; provider: OcxProviderConfig };
+  anthropicSidecar?: { providerName: string; provider: OccxProviderConfig };
   /** Required for the xai backend: the stored Grok OAuth provider (L7). */
-  xaiSidecar?: { providerName: string; provider: OcxProviderConfig };
+  xaiSidecar?: { providerName: string; provider: OccxProviderConfig };
   /** Required for the gemini backend: the stored Antigravity CCA provider (L8). */
-  geminiSidecar?: { providerName: string; provider: OcxProviderConfig };
+  geminiSidecar?: { providerName: string; provider: OccxProviderConfig };
   /** Required for the exa backend: the operator key, read from config at plan unpack (L9). */
   exaApiKey?: string;
   /** Opt-in x_search options for the xai backend. */
@@ -298,11 +298,11 @@ export interface WebSearchLoopDeps {
   /** One-shot TTFT callback: first non-empty model output observed (WP4). */
   onFirstOutput?: () => void;
   /** Raw adapter usage at the terminal event, pre wire-normalization (see bridgeToResponsesSSE onUsage). */
-  onUsage?: (usage: OcxUsage | undefined) => void;
+  onUsage?: (usage: OccxUsage | undefined) => void;
   /** Observe the exact adapter request selected for each routed-model iteration. */
   onRequestBuilt?: (request: AdapterRequest) => void;
   /** Request-scoped executor retains the core's selection binding across loop retries. */
-  fetchForRequest?: (request: AdapterRequest, parsed: OcxParsedRequest) => typeof globalThis.fetch;
+  fetchForRequest?: (request: AdapterRequest, parsed: OccxParsedRequest) => typeof globalThis.fetch;
   /** Called before each routed-model dispatch in the loop, for attempt telemetry. Same-target 429 replays pass the `rate-limit-429` recovery kind. */
   onAttemptSend?: (recovery?: AttemptRecoveryKind) => void;
   /**
@@ -346,7 +346,7 @@ export async function runWithWebSearch(deps: WebSearchLoopDeps): Promise<Respons
     ? Math.floor(deps.stallTimeoutSec * 1000)
     : 300_000;
 
-  const messages: OcxMessage[] = [...parsed.context.messages];
+  const messages: OccxMessage[] = [...parsed.context.messages];
   const loopT0 = Date.now();
   const allTools = parsed.context.tools ?? [];
   // For the forced-answer pass we drop the synthetic web_search tool so the model MUST answer from the
@@ -407,10 +407,10 @@ export async function runWithWebSearch(deps: WebSearchLoopDeps): Promise<Respons
     // ignores what the search found, which reads to the user as "the search did nothing". Nudge it
     // (iteration-locally — never mutate the shared `messages`) to actually use the gathered results.
     // Only when a REAL search ran (executedSearchCount, not empty-query/limit/repeat placeholders).
-    const iterMessages: OcxMessage[] = forceAnswer && executedSearchCount > 0
+    const iterMessages: OccxMessage[] = forceAnswer && executedSearchCount > 0
       ? [...messages, forcedAnswerNudge()]
       : messages;
-    const iterParsed: OcxParsedRequest = {
+    const iterParsed: OccxParsedRequest = {
       ...parsed, stream: true,
       context: { ...parsed.context, messages: iterMessages, tools: forceAnswer ? toolsNoWebSearch : allTools },
     };
@@ -661,7 +661,7 @@ export async function runWithWebSearch(deps: WebSearchLoopDeps): Promise<Respons
   // valid, and surface as ONE search cell carrying every attempted query. A real search (one that
   // hits the sidecar) shows the spinner WHILE the batch runs. Empty/limit/repeat placeholders never
   // emit a cell (matching the prior single-query behavior).
-  async function* runSearchCall(call: WebSearchCall, precedingThinking: OcxThinkingContent[] = []): AsyncGenerator<AdapterEvent> {
+  async function* runSearchCall(call: WebSearchCall, precedingThinking: OccxThinkingContent[] = []): AsyncGenerator<AdapterEvent> {
     const results: { query: string; outcome: SidecarOutcome }[] = [];
     let beganCell = false;
     if (call.queries.length === 0) {

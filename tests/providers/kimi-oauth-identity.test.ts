@@ -6,7 +6,7 @@ import { getCredential, listAccounts, saveCredential } from "../../src/oauth/sto
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-kimi-oauth-identity-test");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 function jwtWithClaims(claims: Record<string, unknown>): string {
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url");
@@ -111,15 +111,15 @@ describe("Kimi token-response wiring (production parseTokenPayload path)", () =>
 
 describe("Kimi multiauth via saveCredential", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(() => {
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   });
 

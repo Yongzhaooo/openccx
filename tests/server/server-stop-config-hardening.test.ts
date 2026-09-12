@@ -7,7 +7,7 @@ import { flushConfigDirHardening, flushConfigDirHardeningForTests, hardenConfigD
 import * as windowsAcl from "../../src/lib/windows-secret-acl";
 import * as nativeStartup from "../../src/codex/native-profile-startup";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -25,7 +25,7 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 const originalPlatform = process.platform;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -35,18 +35,18 @@ function config(): OcxConfig {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-stop-harden-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-stop-harden-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-stop-harden-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-stop-harden-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(config());
 });
 
 afterEach(async () => {
   Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
   await flushConfigDirHardeningForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);

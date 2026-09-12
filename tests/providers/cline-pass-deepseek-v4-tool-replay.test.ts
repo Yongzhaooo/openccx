@@ -4,7 +4,7 @@ import { createRegisteredAdapter } from "../../src/adapters/registry";
 import {
   stripClinePassDeepSeekV4ToolReplayNarration,
 } from "../../src/adapters/cline-pass-deepseek-v4-tool-replay";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 const TARGET_MODELS = [
@@ -16,9 +16,9 @@ const provider = {
   baseUrl: "https://api.cline.bot/api/v1",
   authMode: "key",
   apiKey: "test-key",
-} satisfies OcxProviderConfig;
+} satisfies OccxProviderConfig;
 
-function parsedWithHybridToolTurn(modelId: string): OcxParsedRequest {
+function parsedWithHybridToolTurn(modelId: string): OccxParsedRequest {
   return {
     modelId,
     stream: true,

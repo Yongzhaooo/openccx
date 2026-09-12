@@ -780,7 +780,7 @@ export function validatePolishedSections(
   return errors;
 }
 
-const POLISH_SYSTEM_PROMPT = `You are the release notes editor for opencodex, a universal provider proxy for OpenAI Codex and Claude Code.
+const POLISH_SYSTEM_PROMPT = `You are the release notes editor for openccx, a universal provider proxy for OpenAI Codex and Claude Code.
 Rewrite the release-notes sections below (everything before "## Changelog") in the style of OpenAI Codex release notes:
 
 - Keep the exact same markdown headings and their order.

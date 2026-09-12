@@ -18,14 +18,14 @@ test("App mounts the relay pairing form and installs only the returned shared se
     __APP_VERSION__: { configurable: true, value: "0.0.0-test" },
   });
   for (const [name, content] of [
-    ["opencodex-session-token", "ocx_session_machine"],
-    ["opencodex-session-csrf", "machine-csrf"],
-    ["opencodex-session-origin", "http://localhost"],
-    ["opencodex-session-server-origin", "http://localhost"],
+    ["openccx-session-token", "occx_session_machine"],
+    ["openccx-session-csrf", "machine-csrf"],
+    ["openccx-session-origin", "http://localhost"],
+    ["openccx-session-server-origin", "http://localhost"],
     // The server states the role in the served document. Without it this reads as
     // standalone, discovery never runs, and the relay pairing form never mounts — which
     // is exactly the behavior a plain install should get.
-    ["opencodex-runtime-role", "client"],
+    ["openccx-runtime-role", "client"],
   ]) {
     const meta = document.createElement("meta");
     meta.name = name;
@@ -35,10 +35,10 @@ test("App mounts the relay pairing form and installs only the returned shared se
 
   let pairingRequest: { method: string; body: string; headers: Headers } | null = null;
   const sessionHtml = [
-    '<meta name="opencodex-session-token" content="ocx_session_hub">',
-    '<meta name="opencodex-session-csrf" content="hub-csrf">',
-    '<meta name="opencodex-session-origin" content="http://localhost">',
-    '<meta name="opencodex-session-server-origin" content="https://hub.example.test">',
+    '<meta name="openccx-session-token" content="occx_session_hub">',
+    '<meta name="openccx-session-csrf" content="hub-csrf">',
+    '<meta name="openccx-session-origin" content="http://localhost">',
+    '<meta name="openccx-session-server-origin" content="https://hub.example.test">',
   ].join("");
   const mockFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input), "http://localhost/");
@@ -95,7 +95,7 @@ test("App mounts the relay pairing form and installs only the returned shared se
       await act(async () => { await new Promise(resolve => win.setTimeout(resolve, 10)); });
     }
     const input = container.querySelector("#connect-pairing-code") as HTMLInputElement;
-    Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")!.set!.call(input, `ocx_pair_${"a".repeat(43)}`);
+    Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value")!.set!.call(input, `occx_pair_${"a".repeat(43)}`);
     await act(async () => { input.dispatchEvent(new win.Event("input", { bubbles: true })); });
     const form = input.closest("form")!;
     await act(async () => { form.dispatchEvent(new win.Event("submit", { bubbles: true, cancelable: true })); });
@@ -105,9 +105,9 @@ test("App mounts the relay pairing form and installs only the returned shared se
       await act(async () => { await Promise.resolve(); });
     }
     expect(pairingRequest?.method).toBe("POST");
-    expect(pairingRequest?.body).toBe(JSON.stringify({ grant: `ocx_pair_${"a".repeat(43)}` }));
-    expect(pairingRequest?.headers.get("x-opencodex-machine-session")).toBe("ocx_session_machine");
-    expect(pairingRequest?.headers.get("x-opencodex-api-key")).toBeNull();
+    expect(pairingRequest?.body).toBe(JSON.stringify({ grant: `occx_pair_${"a".repeat(43)}` }));
+    expect(pairingRequest?.headers.get("x-openccx-machine-session")).toBe("occx_session_machine");
+    expect(pairingRequest?.headers.get("x-openccx-api-key")).toBeNull();
   } finally {
     await act(async () => { root.unmount(); });
     container.remove();
@@ -136,7 +136,7 @@ test("a refused pairing renders an accessible error without clearing the pasted 
   const { ConnectPairingForm } = await import("../src/connect-pairing");
   const { createRoot } = await import("react-dom/client");
   const root = createRoot(container);
-  const code = `ocx_pair_${"b".repeat(43)}`;
+  const code = `occx_pair_${"b".repeat(43)}`;
   try {
     await act(async () => {
       root.render(createElement(LanguageProvider, null, createElement(ConnectPairingForm, {

@@ -2,7 +2,7 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { CLI_COMMANDS } from "../../src/cli/registry";
 import { DISPATCH_ALIASES, DISPATCH_COMMANDS, dispatchCommand, resolveDispatchCommand, decideStartWithLiveOwner, selectDefaultGuiUrl } from "../../src/cli/dispatch";
 import type { CliDispatchDeps } from "../../src/cli/dispatch";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { runGuiCommand } from "../../src/cli/gui";
 import { isCodexAccountLoginName } from "../../src/cli/account-auth";
 import { listOAuthProviders } from "../../src/oauth";
@@ -15,7 +15,7 @@ import { getConfigDir } from "../../src/config";
 import { getAccountSet, removeCredential, saveCredential } from "../../src/oauth/store";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /** Minimal fake deps. dispatchCommand only touches deps for real command
  * runners, which these tests never invoke, so an empty object is enough. */
@@ -73,11 +73,11 @@ describe("CLI dispatch aliases", () => {
 
 describe("dispatchCommand exit codes", () => {
   test("invalid client state refuses sync before local proxy discovery", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-dispatch-client-invalid-"));
-    const previous = process.env.OPENCODEX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-dispatch-client-invalid-"));
+    const previous = process.env.OPENCCX_HOME;
     let discoveries = 0;
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(join(home, "config.json"), JSON.stringify({
         port: 10100,
         providers: {},
@@ -94,16 +94,16 @@ describe("dispatchCommand exit codes", () => {
       expect(await dispatchCommand({ kind: "command", command: "sync", args }, deps)).toBe(1);
       expect(discoveries).toBe(0);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
 
   test.each(["applied", "catalog-only", "refused"] as const)(
     "sync with no live proxy reports Aside unavailability after Codex %s without local fallback", async status => {
-      const home = mkdtempSync(join(tmpdir(), "ocx-dispatch-aside-offline-"));
-      const previous = { OPENCODEX_HOME: process.env.OPENCODEX_HOME, CODEX_HOME: process.env.CODEX_HOME };
+      const home = mkdtempSync(join(tmpdir(), "occx-dispatch-aside-offline-"));
+      const previous = { OPENCCX_HOME: process.env.OPENCCX_HOME, CODEX_HOME: process.env.CODEX_HOME };
       const syncModule = await import("../../src/codex/sync");
       const catalogModule = await import("../../src/integrations/catalog-refresh");
       const livenessModule = await import("../../src/server/proxy-liveness");
@@ -126,13 +126,13 @@ describe("dispatchCommand exit codes", () => {
       const log = spyOn(console, "log").mockImplementation((...args) => { logs.push(args.map(String).join(" ")); });
       const error = spyOn(console, "error").mockImplementation(() => {});
       try {
-        process.env.OPENCODEX_HOME = home;
+        process.env.OPENCCX_HOME = home;
         process.env.CODEX_HOME = join(home, "codex");
         mkdirSync(process.env.CODEX_HOME);
         const config = {
           port: 10100, providers: {}, defaultProvider: "openai",
           asideProfileSync: { allProfiles: true, profiles: {} },
-        } as OcxConfig;
+        } as OccxConfig;
         const configPath = join(home, "config.json");
         const before = JSON.stringify(config);
         writeFileSync(configPath, before);
@@ -156,7 +156,7 @@ describe("dispatchCommand exit codes", () => {
           expect(warnings).toHaveLength(1);
           expect(warnings[0]).toContain("Aside profiles were not refreshed:");
           expect(warnings[0]).toContain("Proxy is not running");
-          expect(warnings[0]).toContain("ocx start");
+          expect(warnings[0]).toContain("occx start");
         }
         expect(logs.join("\n")).not.toContain("integration refreshed");
         expect(readFileSync(configPath, "utf8")).toBe(before);
@@ -236,7 +236,7 @@ describe("dispatchCommand exit codes", () => {
 });
 
 /**
- * `ocx health` probed once. A proxy that has only just bound can miss a single
+ * `occx health` probed once. A proxy that has only just bound can miss a single
  * probe while its event loop is still settling startup work, so health run
  * seconds after a service restart reported "Proxy not healthy" and exited 1 for
  * a proxy that was in fact serving. The stop paths already retry this exact race
@@ -308,23 +308,23 @@ describe("start probes the configured port before shadowing it (source-level)", 
    */
   test("the live-owner decision matrix", () => {
     // Bare start: the #3106 shadow — still refused.
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: undefined, ocxService: undefined }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: undefined, occxService: undefined }))
       .toBe("refuse");
     // Explicit port equal to the live proxy's: same conflict — still refused.
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 10100, ocxService: undefined }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 10100, occxService: undefined }))
       .toBe("refuse");
     // Explicit DIFFERENT port, interactive: the sibling request this fix restores.
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 65301, ocxService: undefined }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 65301, occxService: undefined }))
       .toBe("sibling");
     // Service wrapper keeps its exact stay-out semantics on both port shapes.
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 10100, ocxService: "1" }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 10100, occxService: "1" }))
       .toBe("service-stay-out");
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 8080, ocxService: "1" }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 8080, occxService: "1" }))
       .toBe("service-stay-out");
     // Only the exact "1" sentinel is service context — "0"/"false" cannot reach stay-out.
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 8080, ocxService: "0" }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: 8080, occxService: "0" }))
       .toBe("sibling");
-    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: undefined, ocxService: "false" }))
+    expect(decideStartWithLiveOwner({ livePort: 10100, requestedPort: undefined, occxService: "false" }))
       .toBe("refuse");
   });
 
@@ -336,7 +336,7 @@ describe("start probes the configured port before shadowing it (source-level)", 
 
   test("a sibling start carries its flag into every chooseListenPort call", () => {
     // The sibling instance must not persist its explicit port into config.port: the
-    // configured-port proxy still owns this home, and `ocx service` bakes config.port.
+    // configured-port proxy still owns this home, and `occx service` bakes config.port.
     // Both call sites (initial pick and the EADDRINUSE re-pick) have to pass the flag,
     // or the re-pick path silently regains the old behavior.
     const calls = cliSource.match(/await chooseListenPort(([^)]*))/g) ?? [];
@@ -356,7 +356,7 @@ describe("start probes the configured port before shadowing it (source-level)", 
 
 describe("logout parses argv before touching the credential store", () => {
   /**
-   * `ocx logout --json` used to lowercase `--json`, pass it to removeCredential as a provider
+   * `occx logout --json` used to lowercase `--json`, pass it to removeCredential as a provider
    * name, print "Logged out of --json." and exit 0. A caller that can only see the exit code
    * got a success for an operation that removed nothing.
    *
@@ -367,7 +367,7 @@ describe("logout parses argv before touching the credential store", () => {
    * never reached rather than trusting a stubbed function.
    *
    * Safe against the developer's real store: `tests/preload.ts` sandboxes HOME and
-   * OPENCODEX_HOME for every invocation, wrapped or bare, so this writes to a temp home.
+   * OPENCCX_HOME for every invocation, wrapped or bare, so this writes to a temp home.
    */
   const authPath = (): string => join(getConfigDir(), "auth.json");
   const snapshot = (): string | null => existsSync(authPath()) ? readFileSync(authPath(), "utf8") : null;
@@ -478,7 +478,7 @@ describe("logout reports only what it actually did", () => {
    * reproduced before being fixed.
    *
    * The first was the same bug one dash shorter: the parser treated only `--*` as options, so
-   * `ocx logout -j` used `-j` as the provider name. With a `-j` key in the store -- which
+   * `occx logout -j` used `-j` as the provider name. With a `-j` key in the store -- which
    * `normalizeAuthStore` happily preserves -- that deleted a credential and exited 0.
    *
    * The second was a non-atomic read-then-remove. `getAccountSet` followed by
@@ -666,7 +666,7 @@ describe("GUI command delegation", () => {
         managementPublicOrigin: "https://hub.example.test",
         managementIngress: { enabled: true as const, port: 10102 },
       },
-    } as Pick<OcxConfig, "port" | "hostname" | "runtimeRole" | "hub">;
+    } as Pick<OccxConfig, "port" | "hostname" | "runtimeRole" | "hub">;
     const live = { hostname: "100.76.170.81", port: 10100 };
 
     expect(selectDefaultGuiUrl(hubConfig, live, hostname => hostname ?? "127.0.0.1"))
@@ -700,7 +700,7 @@ describe("GUI command delegation", () => {
         openDefaultGui: async () => 0,
         findLiveProxy: async () => ({ pid: 4242, port: 10100, source: "runtime" as const }),
       };
-      const grant = `ocx_pair_${"C".repeat(43)}`;
+      const grant = `occx_pair_${"C".repeat(43)}`;
       expect(await runGuiCommand(["pair", "--origin", "https://dashboard.example.test", "--json"], {
         ...base,
         requestPairingGrant: async () => ({
@@ -728,14 +728,14 @@ describe("GUI command delegation", () => {
 
 describe("login routes the Codex account names instead of printing the provider wall", () => {
   /**
-   * `ocx login codex` used to fall through to handleLogin, which knows only the public
+   * `occx login codex` used to fall through to handleLogin, which knows only the public
    * OAuth and API-key providers, and answered with a ~90-name usage list that never
-   * contains the word the user typed. The Codex pool is reachable (`ocx account login
+   * contains the word the user typed. The Codex pool is reachable (`occx account login
    * codex`), so the dead end was vocabulary, not capability.
    *
    * The observable proof that the routing happened is the account path's own precondition:
    * that flow runs inside the proxy, so with no live proxy it reports "Proxy is not
-   * running" and exits 1. handleLogin would have printed "Usage: ocx login <provider>"
+   * running" and exits 1. handleLogin would have printed "Usage: occx login <provider>"
    * and killed the process with process.exit(1) instead, which is also why these cases
    * cannot simply assert on a non-Codex name here.
    */
@@ -759,7 +759,7 @@ describe("login routes the Codex account names instead of printing the provider 
       const result = await runLogin([name]);
       expect(result.code, `${name} must route to the account login`).toBe(1);
       expect(result.err).toContain("Proxy is not running");
-      expect(result.err).not.toContain("Usage: ocx login <provider>");
+      expect(result.err).not.toContain("Usage: occx login <provider>");
     }
   });
 
@@ -807,7 +807,7 @@ describe("login routes the Codex account names instead of printing the provider 
 
   test("a name that is not a Codex spelling still gets the provider wall, not the account path", async () => {
     // Closes the other half of the routing claim: the predicate is the gate, so a regression
-    // that sent every 'ocx login' through the account command would print "Proxy is not
+    // that sent every 'occx login' through the account command would print "Proxy is not
     // running" here instead of the wall. handleLogin ends in process.exit, which a test
     // cannot survive, so the exit is spied and turned into a throw.
     const err: string[] = [];
@@ -822,8 +822,8 @@ describe("login routes the Codex account names instead of printing the provider 
         { ...fakeDeps, args: argv, findLiveProxy: async () => null } as unknown as CliDispatchDeps,
       )).rejects.toThrow("process.exit:1");
       const printed = err.join("\n");
-      expect(printed).toContain("Usage: ocx login <provider>");
-      expect(printed).toContain("ocx login codex");
+      expect(printed).toContain("Usage: occx login <provider>");
+      expect(printed).toContain("occx login codex");
       expect(printed).toContain("openai-apikey");
       expect(printed).not.toContain("Proxy is not running");
     } finally {
@@ -834,7 +834,7 @@ describe("login routes the Codex account names instead of printing the provider 
 
   test("the provider wall names the Codex route without joining the public OAuth surface", () => {
     const usage = loginUsageMessage();
-    expect(usage).toContain("ocx login codex");
+    expect(usage).toContain("occx login codex");
     // The wall is what the production path prints (asserted above through console.error);
     // this reads the same source so a wording regression names the field that changed.
     expect(usage).toContain("openai-apikey");
@@ -843,7 +843,7 @@ describe("login routes the Codex account names instead of printing the provider 
     expect(listOAuthProviders()).not.toContain("chatgpt");
     expect(listOAuthProviders()).not.toContain("codex");
     // The other table the routing silently shadows: if a key-login provider ever took one of
-    // these ids, 'ocx login <that id>' would become unreachable with no other failing test.
+    // these ids, 'occx login <that id>' would become unreachable with no other failing test.
     for (const name of ["openai", "codex", "chatgpt"]) expect(isKeyLoginProvider(name)).toBe(false);
     expect(isKeyLoginProvider("openai-apikey")).toBe(true);
     expect(isCodexAccountLoginName("codex")).toBe(true);
@@ -852,9 +852,9 @@ describe("login routes the Codex account names instead of printing the provider 
 
   test("the registry entry keeps documenting the Codex route", () => {
     // help.ts and registry.ts carry the only discoverability text a user sees before typing;
-    // the existing help/registry suites only require that an 'ocx login' line exists at all.
+    // the existing help/registry suites only require that an 'occx login' line exists at all.
     const details = (CLI_COMMANDS.find(entry => entry.name === "login")?.details ?? []).join(" ");
-    expect(details).toContain("ocx login codex");
+    expect(details).toContain("occx login codex");
     expect(details).toContain("openai-apikey");
   });
 });

@@ -13,7 +13,7 @@ import { isValidProviderName } from "../config/provider-name";
 import type { CliHead } from "./root";
 import type { ReadyArgs } from "./ready";
 import type { LivenessIo, LiveProxy } from "../server/proxy-liveness";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { OwnedIntegrationRefreshOutcome } from "../integrations/owned-refresh";
 import { hasHelpFlag, printSubcommandUsage, printUsage } from "./help";
 import {
@@ -30,13 +30,13 @@ import { afterCatalogWriteHandleAppServers } from "../codex/app-server-processes
 import { normalizeUpdateChannel, runGuiUpdateWorker } from "../update/job";
 import { isJsonOption, takeFlag } from "./runtime-api";
 import type { ClientConnectionState } from "../client/state";
-import { OCX_NATIVE_REPLAY_RECOVERY_NOTE } from "../responses/compaction";
+import { OCCX_NATIVE_REPLAY_RECOVERY_NOTE } from "../responses/compaction";
 
 export interface CliDispatchDeps {
   args: string[];
   command: string | undefined;
   head: CliHead;
-  loadConfig: () => OcxConfig;
+  loadConfig: () => OccxConfig;
   findLiveProxy: (io?: LivenessIo) => Promise<LiveProxy | null>;
   probeHostname: (hostname: string | undefined) => string;
   waitForProxy: (timeoutMs?: number) => Promise<LiveProxy | null>;
@@ -65,7 +65,7 @@ type CommandRunner = (deps: CliDispatchDeps) => Promise<number>;
  * a Tailscale address, while the ingress is the local authenticated dashboard.
  */
 export function selectDefaultGuiUrl(
-  config: Pick<OcxConfig, "port" | "hostname" | "runtimeRole" | "hub">,
+  config: Pick<OccxConfig, "port" | "hostname" | "runtimeRole" | "hub">,
   live: Pick<LiveProxy, "port" | "hostname"> | null,
   probeHostname: (hostname: string | undefined) => string,
 ): string {
@@ -99,7 +99,7 @@ const commandRunners: Record<string, CommandRunner> = {
     // Downtime warning lives HERE, not in handleStop: `restart`/tray-restart callers
     // re-start the proxy immediately, so warning there would contradict the next line.
     if (await deps.handleStop()) {
-      console.log("⚠️  Codex/Claude requests through the proxy will fail until it is restarted ('ocx start' or 'ocx service start').");
+      console.log("⚠️  Codex/Claude requests through the proxy will fail until it is restarted ('occx start' or 'occx service start').");
     }
     return Number(process.exitCode ?? 0);
   },
@@ -108,9 +108,9 @@ const commandRunners: Record<string, CommandRunner> = {
     const restoreJson = takeFlag(restoreArgs, "--json");
     if (restoreArgs[0] === "back") {
       // Reverse switch: re-point plain `codex` at the RUNNING proxy without touching its
-      // lifecycle — the counterpart of `ocx restore`. Start/stop triggers are unchanged;
-      // this only re-runs the same inject (config + catalog + history) `ocx start` does.
-      // takeFlag above makes `ocx restore --json back` restore-back, not eject.
+      // lifecycle — the counterpart of `occx restore`. Start/stop triggers are unchanged;
+      // this only re-runs the same inject (config + catalog + history) `occx start` does.
+      // takeFlag above makes `occx restore --json back` restore-back, not eject.
       const { skippedRestoreEnvelope } = await import("../codex/inject");
       const emitBack = (success: boolean, message: string, code: number): number => {
         if (restoreJson) console.log(JSON.stringify(skippedRestoreEnvelope(success, message)));
@@ -120,7 +120,7 @@ const commandRunners: Record<string, CommandRunner> = {
       };
       const live = await deps.findLiveProxy();
       if (!live) {
-        return emitBack(false, "No running proxy found. Run 'ocx start' — it injects opencodex automatically.", 1);
+        return emitBack(false, "No running proxy found. Run 'occx start' — it injects openccx automatically.", 1);
       }
       const desired = setIntegrationEnabled("codex", true);
       if (!desired.ok) {
@@ -141,10 +141,10 @@ const commandRunners: Record<string, CommandRunner> = {
         );
       }
       if (!synced.ok) {
-        return emitBack(false, "Plain `codex` was not switched back to opencodex. Fix the reported Codex config issue and retry.", 1);
+        return emitBack(false, "Plain `codex` was not switched back to openccx. Fix the reported Codex config issue and retry.", 1);
       }
       const target = collectOrcaCodexHomeDiagnostic();
-      return emitBack(true, `Plain \`codex\` now routes through opencodex in ${target.effectiveCodexHome} (undo with: ocx restore).`, 0);
+      return emitBack(true, `Plain \`codex\` now routes through openccx in ${target.effectiveCodexHome} (undo with: occx restore).`, 0);
     }
     const desired = setIntegrationEnabled("codex", false);
     if (!desired.ok) {
@@ -165,7 +165,7 @@ const commandRunners: Record<string, CommandRunner> = {
       const { classifyNativeRoutedResidue } = await import("../codex/native-residue");
       if (classifyNativeRoutedResidue().kind === "clean") {
         // The Codex half being a no-op says nothing about the Grok half. Returning here
-        // without stripping the fence meant `ocx restore` could report success while Grok
+        // without stripping the fence meant `occx restore` could report success while Grok
         // still pointed at a stopped proxy — and the deferred-teardown recovery path
         // (#3008) tells operators to run exactly this command before deleting a receipt,
         // so the incomplete teardown would be signed off and the obligation erased.
@@ -197,8 +197,8 @@ const commandRunners: Record<string, CommandRunner> = {
     } catch (err) {
       r = { success: false, message: err instanceof Error ? err.message : String(err) };
     }
-    // Grok BEFORE either output. The JSON path used to return here, so `ocx restore --json`
-    // (and `ocx eject --json`, the same runner) could report success while the fence still
+    // Grok BEFORE either output. The JSON path used to return here, so `occx restore --json`
+    // (and `occx eject --json`, the same runner) could report success while the fence still
     // pointed at the stopped proxy — and the deferred-teardown recovery on this branch
     // tells operators to run exactly this before deleting a receipt (#3008).
     let grokFailure: string | null = null;
@@ -232,8 +232,8 @@ const commandRunners: Record<string, CommandRunner> = {
       code = 1;
     }
     if (r.success) {
-      console.log("Codex integration is OFF and plain `codex` now runs natively. Switch back with: ocx restore back");
-      console.log(`Note: ${OCX_NATIVE_REPLAY_RECOVERY_NOTE}`);
+      console.log("Codex integration is OFF and plain `codex` now runs natively. Switch back with: occx restore back");
+      console.log(`Note: ${OCCX_NATIVE_REPLAY_RECOVERY_NOTE}`);
     } else {
       console.error("Plain `codex` was not fully restored. Inspect $CODEX_HOME/config.toml before using native Codex.");
     }
@@ -264,7 +264,7 @@ const commandRunners: Record<string, CommandRunner> = {
     // would interleave prose with JSON on one stdout -- unparseable, which is worse than the
     // ignored flag. The structured-report refactor is tracked as its own work-phase.
     if (doctorArgs.some(isJsonOption)) {
-      console.error("ocx doctor does not support --json yet. Run `ocx doctor` for the human report, or use `ocx status --json` and `ocx ready --json` for machine-readable health.");
+      console.error("occx doctor does not support --json yet. Run `occx doctor` for the human report, or use `occx status --json` and `occx ready --json` for machine-readable health.");
       return 2;
     }
     const { RECOVER_ZERO_BYTE_COORDINATOR_FLAG, runDoctor, doctorFailed } = await import("./doctor");
@@ -278,7 +278,7 @@ const commandRunners: Record<string, CommandRunner> = {
     // console.log with no checks collection, and signals its own special-flag failures
     // through process.exitCode, so honour both: an explicit exitCode wins, otherwise a
     // FAIL-level check fails the command. This is a BREAKING change for pipelines that ran
-    // `ocx doctor` and ignored the result; a diagnostic that cannot fail is worse.
+    // `occx doctor` and ignored the result; a diagnostic that cannot fail is worse.
     const explicit = Number(process.exitCode ?? 0);
     if (explicit !== 0) return explicit;
     return doctorFailed() ? 1 : 0;
@@ -294,7 +294,7 @@ const commandRunners: Record<string, CommandRunner> = {
     await reconcileClientJournalBeforeLifecycle(clientState);
     if (clientState.kind !== "disconnected") {
       console.error(clientState.kind === "connected"
-        ? "Client mode does not start a local provider proxy; use 'ocx sync'."
+        ? "Client mode does not start a local provider proxy; use 'occx sync'."
         : `Client state is ${clientState.kind}: ${clientState.reason}`);
       return 1;
     }
@@ -303,8 +303,8 @@ const commandRunners: Record<string, CommandRunner> = {
   },
   login: async deps => {
     const loginArgs = deps.args.slice(1);
-    // 'ocx login codex' is the command people type first, and until now it answered with
-    // the full provider wall because the Codex pool lives behind 'ocx account login'.
+    // 'occx login codex' is the command people type first, and until now it answered with
+    // the full provider wall because the Codex pool lives behind 'occx account login'.
     // Route the three Codex spellings to that flow instead of making the user discover
     // a second noun. Everything else stays on the local OAuth/API-key path.
     const { isCodexAccountLoginName, handleAccountAuthCommand } = await import("./account-auth");
@@ -321,7 +321,7 @@ const commandRunners: Record<string, CommandRunner> = {
   logout: async deps => {
     // Argv is parsed BEFORE any store access, which is the whole point of this shape.
     // Previously `args[1]` was taken as the provider name with no parsing, so
-    // `ocx logout --json` called removeCredential("--json"), printed "Logged out of
+    // `occx logout --json` called removeCredential("--json"), printed "Logged out of
     // --json." and exited 0 -- a silent false success, the worst outcome for a caller
     // that can only see the exit code.
     //
@@ -332,7 +332,7 @@ const commandRunners: Record<string, CommandRunner> = {
     const logoutArgs = deps.args.slice(1);
     const wantsJson = logoutArgs.includes("--json");
     // Any leading dash is an option, not a provider. Matching only `--` left the same defect
-    // one dash shorter: `ocx logout -j` treated `-j` as the provider name and, with a `-j` key
+    // one dash shorter: `occx logout -j` treated `-j` as the provider name and, with a `-j` key
     // present in the store, deleted it and exited 0.
     const isOption = (arg: string): boolean => arg.startsWith("-");
     const positionals = logoutArgs.filter(arg => !isOption(arg));
@@ -357,7 +357,7 @@ const commandRunners: Record<string, CommandRunner> = {
         : positionals.length > 1 ? "too many arguments"
         : malformedName ? `not a valid provider name: ${name}`
         : "missing provider";
-      console.error(`Usage: ocx logout <provider> [--json]  (${problem})`);
+      console.error(`Usage: occx logout <provider> [--json]  (${problem})`);
       return 2;
     }
 
@@ -436,7 +436,7 @@ const commandRunners: Record<string, CommandRunner> = {
       afterCatalogWriteHandleAppServers({ restart: restartCodex, log: console });
       if (restartDesktopApp) await handleDesktopAppRestart(console);
     }
-    // `ocx sync` is a direct CLI path; it does not call the management
+    // `occx sync` is a direct CLI path; it does not call the management
     // `/api/sync` route. Refresh already-connected file integrations here too,
     // after Codex has published the catalog that supplies its capabilities.
     if (synced.status !== "refused") {
@@ -522,13 +522,13 @@ const commandRunners: Record<string, CommandRunner> = {
     // Losing the catalog write lock to another process is a skip, not a failure:
     // serialization working as designed is the expected outcome under concurrency, and a
     // proxy startup holding the permit would otherwise make a perfectly healthy
-    // `ocx sync-cache` exit 1 and fail the pipeline that called it -- intermittently, so it
+    // `occx sync-cache` exit 1 and fail the pipeline that called it -- intermittently, so it
     // would read as a flake rather than a bug. `codex-retained-root-serialization.test.ts`
     // pins exactly that: contended lock, no cache write, exit 0.
     //
     // `desiredDisabled` is deliberately NOT part of the success test, which is the subtle
     // part. This call passes `allowWhenDesiredDisabled: true`, so the OFF gate inside the
-    // refresh never fires and the work is genuinely attempted -- an explicit `ocx sync-cache`
+    // refresh never fires and the work is genuinely attempted -- an explicit `occx sync-cache`
     // means the user asked for it regardless of the toggle. Treating OFF as automatic success
     // would report exit 0 and `skipped: true` for a refresh that actually failed.
     //
@@ -613,7 +613,7 @@ const commandRunners: Record<string, CommandRunner> = {
     const { windowsTrayCommand } = await import("../tray/windows");
     // windowsTrayCommand reports failure through process.exitCode (tray/windows.ts sets
     // it for bad usage and for a failed install/start/stop/uninstall) and returns void,
-    // so a literal 0 here made `ocx tray install` print an error and exit 0 (#2697).
+    // so a literal 0 here made `occx tray install` print an error and exit 0 (#2697).
     process.exitCode = 0;
     await windowsTrayCommand(deps.args.slice(1));
     return Number(process.exitCode ?? 0);
@@ -641,13 +641,13 @@ const commandRunners: Record<string, CommandRunner> = {
         break;
       }
       default:
-        console.error("Usage: ocx codex-shim <install|status|uninstall|remove>");
+        console.error("Usage: occx codex-shim <install|status|uninstall|remove>");
         return 1;
     }
     return 0;
   },
   update: async deps => {
-    // `ocx update --help` must print usage and exit WITHOUT side effects — running the
+    // `occx update --help` must print usage and exit WITHOUT side effects — running the
     // real self-update stops the proxy and drops in-flight routed streams (issue #168).
     if (hasHelpFlag(deps.args.slice(1))) {
       printSubcommandUsage("update");
@@ -704,7 +704,7 @@ const commandRunners: Record<string, CommandRunner> = {
     const wantsHealthJson = healthArgs.includes("--json");
     // A proxy that has only just bound can miss a single probe while its event loop
     // is still settling startup work — the same just-started race the stop paths
-    // already retry for (#764, SERVICE_STOP_LIVENESS). Without this, `ocx health`
+    // already retry for (#764, SERVICE_STOP_LIVENESS). Without this, `occx health`
     // run seconds after a service restart reports a false negative on a proxy that
     // is in fact serving.
     const live = await deps.findLiveProxy({ attempts: 3 });
@@ -733,7 +733,7 @@ const commandRunners: Record<string, CommandRunner> = {
     await handleProviderCommand(deps.args.slice(1));
     // handleProviderCommand reports failure through process.exitCode, which it sets
     // from handleProviderRuntimeCommand. Returning a literal 0 here made index.ts
-    // call process.exit(0) and erase it, so `ocx provider quota` against a stopped
+    // call process.exit(0) and erase it, so `occx provider quota` against a stopped
     // proxy printed an error and still exited 0 (#2697).
     return Number(process.exitCode ?? 0);
   },
@@ -759,7 +759,7 @@ const commandRunners: Record<string, CommandRunner> = {
   },
   route: async deps => {
     if (deps.args[1] !== "combo" && deps.args[1] !== "policy") {
-      console.error("Usage: ocx route <combo|policy> <subcommand>");
+      console.error("Usage: occx route <combo|policy> <subcommand>");
       return 2;
     }
     if (deps.args[1] === "combo") {
@@ -795,9 +795,9 @@ const commandRunners: Record<string, CommandRunner> = {
     return await handleObserveCommand([deps.command!, ...deps.args.slice(1)]);
   },
   storage: async deps => {
-    // `ocx storage` used to be a pure alias of `observe storage`, which reached only the report
+    // `occx storage` used to be a pure alias of `observe storage`, which reached only the report
     // route. wp7 gave it cleanup, trash, and policy subcommands, so it dispatches to its own
-    // module -- with `report` as the default subcommand, so a bare `ocx storage` still prints
+    // module -- with `report` as the default subcommand, so a bare `occx storage` still prints
     // the same thing it printed before.
     const { handleStorageCommand } = await import("./storage");
     return await handleStorageCommand(deps.args.slice(1));
@@ -840,7 +840,7 @@ const commandRunners: Record<string, CommandRunner> = {
       const { handleClientIntegrationCommand } = await import("./integrations");
       return await handleClientIntegrationCommand(deps.args.slice(2));
     } else {
-      console.error("Usage: ocx integration <claude|grok|client> <subcommand>");
+      console.error("Usage: occx integration <claude|grok|client> <subcommand>");
       return 2;
     }
   },
@@ -858,7 +858,7 @@ const commandRunners: Record<string, CommandRunner> = {
   },
   claude: async deps => {
     const { cmdClaude } = await import("./claude");
-    // "ocx claude desktop" → write Desktop 3P config
+    // "occx claude desktop" → write Desktop 3P config
     if (deps.args[1] === "desktop") {
       const { handleClaudeDesktopCommand } = await import("./claude-desktop");
       const exitCode = await handleClaudeDesktopCommand(deps.args.slice(2));
@@ -929,15 +929,15 @@ export type StartOwnerDecision = "refuse" | "service-stay-out" | "sibling";
 export function decideStartWithLiveOwner(input: {
   livePort: number;
   requestedPort: number | undefined;
-  ocxService: string | undefined;
+  occxService: string | undefined;
 }): StartOwnerDecision {
   const sibling = input.requestedPort !== undefined
     && input.requestedPort !== input.livePort
     // Only the exact "1" sentinel is service context — the same check syncCleanup
     // uses — so an env value like "0" or "false" cannot reach the stay-out path.
-    && input.ocxService !== "1";
+    && input.occxService !== "1";
   if (sibling) return "sibling";
-  return input.ocxService === "1" ? "service-stay-out" : "refuse";
+  return input.occxService === "1" ? "service-stay-out" : "refuse";
 }
 
 export function resolveDispatchCommand(command: string | undefined): string | undefined {
@@ -981,7 +981,7 @@ async function handleDesktopAppRestart(log: Pick<Console, "log" | "error">): Pro
     case "self_ancestry":
       log.error(
         "Refusing to restart the desktop app because this command is running inside it. "
-        + "Run 'ocx sync --restart-desktop-app' from an external terminal instead.",
+        + "Run 'occx sync --restart-desktop-app' from an external terminal instead.",
       );
       return;
     case "process_probe_failed":

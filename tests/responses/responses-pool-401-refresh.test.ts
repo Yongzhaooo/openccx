@@ -25,7 +25,7 @@ import {
 import { resetAgentTaskRecoveryState } from "../../src/server/responses/agent-task-recovery";
 import { agentTaskRecoveryCacheSnapshotForTests } from "../../src/server/responses/agent-task-recovery-cache";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   FERNET_TASK,
   codexHeaders,
@@ -48,10 +48,10 @@ const ACCOUNT_ID = "work";
 const OTHER_ACCOUNT_ID = "other";
 const originalFetch = globalThis.fetch;
 let home = "";
-let previousOcxHome: string | undefined;
+let previousOccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function config(options: { secondAccount?: boolean } = {}): OcxConfig {
+function config(options: { secondAccount?: boolean } = {}): OccxConfig {
   return {
     defaultProvider: "openai",
     activeCodexAccountId: ACCOUNT_ID,
@@ -71,7 +71,7 @@ function config(options: { secondAccount?: boolean } = {}): OcxConfig {
     codexAccounts: options.secondAccount
       ? [{ id: ACCOUNT_ID, label: "work" }, { id: OTHER_ACCOUNT_ID, label: "other" }]
       : [{ id: ACCOUNT_ID, label: "work" }],
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 const THREAD_ID = "thread-2887";
@@ -210,7 +210,7 @@ function installHarness(options: {
   return { sends, refreshes, recoveryAuths, backupAuths, backupBodies, get canonicalAliasSends() { return canonicalAliasSends; } };
 }
 
-function recoveryComboConfig(): OcxConfig {
+function recoveryComboConfig(): OccxConfig {
   const cfg = config();
   cfg.providers.backup = {
     adapter: "openai-responses",
@@ -245,7 +245,7 @@ function encryptedRecoveryComboConfig(options: {
   extraCanonical?: boolean;
   extraSpare?: boolean;
   includeBackup?: boolean;
-} = {}): OcxConfig {
+} = {}): OccxConfig {
   const cfg = recoveryComboConfig();
   cfg.agentTaskRecovery = { enabled: true };
   cfg.accountPoolStrategy = "fill-first";
@@ -300,10 +300,10 @@ function storedReplay401(authorization: string, url: URL): Response | undefined 
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-responses-pool-401-"));
-  previousOcxHome = process.env.OPENCODEX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-responses-pool-401-"));
+  previousOccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   clearAccountNeedsReauth(ACCOUNT_ID);
   clearAccountNeedsReauth(OTHER_ACCOUNT_ID);
@@ -323,8 +323,8 @@ afterEach(() => {
   clearThreadAccountMap();
   resetAgentTaskRecoveryState();
   clearResponseStateForTests();
-  if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOcxHome;
+  if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(home);
@@ -1025,7 +1025,7 @@ describe("stored pool 401 replay then encrypted combo recovery", () => {
   const assignment = "RECOVERED-POOL-PLAINTEXT-SENTINEL";
 
   async function postEncryptedCombo(
-    cfg: OcxConfig,
+    cfg: OccxConfig,
     headers: Headers,
     abortSignal?: AbortSignal,
     logCtx: RequestLogContext = { model: "", provider: "" } as RequestLogContext,

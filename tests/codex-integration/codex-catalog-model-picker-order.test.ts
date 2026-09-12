@@ -172,7 +172,7 @@ describe("modelPickerOrder (#1649)", () => {
   // Decisive regression for #1666: even when EVERY routed row is listed in modelPickerOrder in
   // reverse order (exhausting the default tier entirely), the spawn_agent candidate SET is
   // unchanged. This is the case a single display-priority band cannot satisfy; the candidate
-  // window is derived from the natural priority (opencodex_spawn_priority), not display order.
+  // window is derived from the natural priority (openccx_spawn_priority), not display order.
   test("candidate set is unchanged when all routed rows are listed in reverse order", () => {
     const sixRouted = [
       { id: "m1", provider: "jd-chat", owned_by: "jd" },

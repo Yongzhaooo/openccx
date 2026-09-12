@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../../../src/adapters/anthropic";
 import { buildResponseJSON } from "../../../src/bridge";
-import type { AdapterEvent, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createAnthropicAdapter = (...args: Parameters<typeof createAnthropicAdapterProduction>) =>
   withTestTranslatorBudget(createAnthropicAdapterProduction(...args));
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "anthropic",
   baseUrl: "https://api.anthropic.com",
   apiKey: "test-key",

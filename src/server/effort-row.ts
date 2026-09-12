@@ -10,7 +10,7 @@ import {
 } from "../reasoning-effort";
 import { knownModelIdsForProvider } from "../router";
 import { policyModelId, policyPublicModelId } from "../routing/profile";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { routedSlug } from "../providers/slug-codec";
 import { predictCursorEffort } from "./models-capabilities";
 
@@ -41,7 +41,7 @@ export function effortRowId(baseId: string, effort: string): string {
  * Exact configured/public ids that must beat the synthetic terminal-suffix grammar.
  * This is request-local because live-model cache contents can change while the server runs.
  */
-export function knownEffortRowIds(config: OcxConfig): Set<string> {
+export function knownEffortRowIds(config: OccxConfig): Set<string> {
   const ids = new Set<string>();
   for (const [providerName, provider] of Object.entries(config.providers)) {
     const known = knownModelIdsForProvider(providerName, provider, config);
@@ -77,7 +77,7 @@ export function loadDetectedCursorEffortTable(): CursorEffortTable | null {
 
 export function parseEffortRowId(
   id: string,
-  config: Pick<OcxConfig, "cursorEffortRows">,
+  config: Pick<OccxConfig, "cursorEffortRows">,
   options: EffortRowOptions = {},
 ): ParsedEffortRowId | null {
   if (config.cursorEffortRows !== true || isKnownId(options.knownIds, id)) return null;
@@ -95,7 +95,7 @@ export function parseEffortRowId(
 }
 
 /** Parse one ingress selector against the current config and installed Cursor table. */
-export function parseRequestEffortRowId(id: string, config: OcxConfig): ParsedEffortRowId | null {
+export function parseRequestEffortRowId(id: string, config: OccxConfig): ParsedEffortRowId | null {
   if (config.cursorEffortRows !== true) return null;
   // Ordinary ids carry no separator; bail before the known-id scan and install detection so
   // the flag costs nothing on the request path for models that are not effort rows.
@@ -109,7 +109,7 @@ export function parseRequestEffortRowId(id: string, config: OcxConfig): ParsedEf
 export function expandCursorEffortRow<T extends { id: string }>(
   row: T,
   efforts: readonly string[] | undefined,
-  config: Pick<OcxConfig, "cursorEffortRows">,
+  config: Pick<OccxConfig, "cursorEffortRows">,
   options: EffortRowOptions = {},
 ): T[] {
   if (config.cursorEffortRows !== true) return [row];

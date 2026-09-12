@@ -19,7 +19,7 @@ import {
   isLocalProviderReloadName,
 } from "../lib/local-provider-reload-contract";
 import { directLocalHttpFetch } from "./direct-local-http";
-import { isOpencodexHealthz, probeHostname, type HealthzIdentity, type LiveProxy } from "./proxy-liveness";
+import { isOpenccxHealthz, probeHostname, type HealthzIdentity, type LiveProxy } from "./proxy-liveness";
 
 export type LocalProviderReloadResult =
   | { kind: "reloaded" }
@@ -77,7 +77,7 @@ export async function requestBoundLocalProviderReload(
   const body = await proofResponse.json().catch(() => null) as HealthzIdentity | null;
   if (
     !proofResponse.ok
-    || !isOpencodexHealthz(body)
+    || !isOpenccxHealthz(body)
     || body?.pid !== target.pid
     || body?.port !== target.port
     || body?.providerReloadCapability !== LOCAL_PROVIDER_RELOAD_CAPABILITY_VERSION

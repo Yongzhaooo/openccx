@@ -23,7 +23,7 @@ import {
   refreshUserCostOverlays,
   resetPreservedDiskOnlyProvidersForTests,
 } from "../../src/usage/user-cost-overlays";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -57,28 +57,28 @@ function writePreVersionCustomConfig(patch: Record<string, unknown> = {}): void 
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-user-edits-"));
-  process.env.OPENCODEX_HOME = home;
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-user-edits-"));
+  process.env.OPENCCX_HOME = home;
   saveConfig({
     port: 10100,
     defaultProvider: "test",
     providers: { test: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true } },
     claudeCode: { authMode: "subscription" },
-  } as unknown as OcxConfig);
+  } as unknown as OccxConfig);
 });
 
 afterEach(() => {
   // The overlay registry is module-level; reset it so rows adopted by
   // reconcileLiveConfigFromDisk cannot leak into later tests in a
   // shared-process run.
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
-function customModel(modelId: string): NonNullable<OcxConfig["customModels"]>[number] {
+function customModel(modelId: string): NonNullable<OccxConfig["customModels"]>[number] {
   return {
     id: `custom-${modelId}`,
     provider: "test",

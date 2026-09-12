@@ -12,7 +12,7 @@ import {
 } from "../../src/usage/log";
 import { closeRequestHistoryIndex } from "../../src/routing/history/indexer";
 import { computeRoutingAnalytics } from "../../src/routing/analytics";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
@@ -32,21 +32,21 @@ function entry(
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-analytics-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-analytics-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageReadCacheForTests();
   closeRequestHistoryIndex();
 });
 
 afterEach(() => {
   closeRequestHistoryIndex();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",

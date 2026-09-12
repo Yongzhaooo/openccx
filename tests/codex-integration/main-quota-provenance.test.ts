@@ -76,10 +76,10 @@ function writeSnapshot(value: unknown): void {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-main-provenance-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-main-provenance-"));
+  process.env.OPENCCX_HOME = testDir;
   process.env.CODEX_HOME = testDir;
   clearAccountQuota();
   resetMainCodexAccountIdentityTrackingForTests();
@@ -95,8 +95,8 @@ afterEach(() => {
   clearAccountQuota();
   clearMainAccountInfoCache();
   timerSpy.mockRestore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(testDir);

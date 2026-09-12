@@ -1,4 +1,4 @@
-import type { CodexAccountMode, OcxProviderConfig } from "../types";
+import type { CodexAccountMode, OccxProviderConfig } from "../types";
 import { cloneFastWire } from "./fastwire";
 import {
   PROVIDER_REGISTRY,
@@ -19,7 +19,7 @@ export interface DerivedKeyLoginProvider {
   chatCompletionsPath?: string;
   adapter: string;
   apiKeyValidation?: "unknown";
-  apiKeyTransport?: OcxProviderConfig["apiKeyTransport"];
+  apiKeyTransport?: OccxProviderConfig["apiKeyTransport"];
   dashboardUrl: string;
   models?: string[];
   liveModels?: boolean;
@@ -35,7 +35,7 @@ export interface DerivedKeyLoginProvider {
   modelDefaultReasoningEfforts?: Record<string, string>;
   reasoningEffortMap?: Record<string, string>;
   modelReasoningEffortMap?: Record<string, Record<string, string>>;
-  reasoningWireFormat?: OcxProviderConfig["reasoningWireFormat"];
+  reasoningWireFormat?: OccxProviderConfig["reasoningWireFormat"];
   noVisionModels?: string[];
   noReasoningModels?: string[];
   noTemperatureModels?: string[];
@@ -92,7 +92,7 @@ export interface DerivedProviderPreset {
    */
   baseUrlChoices?: Array<{ id: string; label: string; baseUrl?: string }>;
   /** Immutable canonical provider config seed for the reserved canonical `openai` forward preset. */
-  provider?: OcxProviderConfig;
+  provider?: OccxProviderConfig;
 }
 
 export function listRegistryEntries(): readonly ProviderRegistryEntry[] {
@@ -129,7 +129,7 @@ function sameStringArray(left: readonly string[] | undefined, right: readonly st
 }
 
 type DirectReasoningEffortOverrides = Pick<
-  OcxProviderConfig,
+  OccxProviderConfig,
   "thinkingBudgetModels" | "modelReasoningEfforts" | "modelDefaultReasoningEfforts" | "modelReasoningEffortMap"
 >;
 
@@ -163,7 +163,7 @@ function fillFoldedModelDefault<T>(
  */
 export function applyDirectReasoningEffortContracts(
   entry: ProviderRegistryEntry,
-  prov: OcxProviderConfig,
+  prov: OccxProviderConfig,
   explicit: DirectReasoningEffortOverrides = prov,
 ): void {
   const models = entry.directReasoningEffortModels;
@@ -217,7 +217,7 @@ export function applyDirectReasoningEffortContracts(
  * The registry auth kind is preserved verbatim (including `"local"`) so fail-closed gates
  * keep distinguishing local runtimes from API-key providers after the seed round-trip.
  */
-export function providerConfigSeed(entry: ProviderRegistryEntry): OcxProviderConfig {
+export function providerConfigSeed(entry: ProviderRegistryEntry): OccxProviderConfig {
   const liveModels = registryEntrySupportsLiveModelDiscovery(entry) ? entry.liveModels : false;
   return {
     adapter: entry.adapter,
@@ -347,7 +347,7 @@ export function deriveInitProviders(): DerivedInitProvider[] {
   }));
 }
 
-export function deriveOAuthProviderConfig(id: string): OcxProviderConfig | undefined {
+export function deriveOAuthProviderConfig(id: string): OccxProviderConfig | undefined {
   const entry = PROVIDER_REGISTRY.find(row => row.id === id && row.authKind === "oauth");
   return entry ? providerConfigSeed(entry) : undefined;
 }
@@ -377,7 +377,7 @@ export function deriveProviderPresets(): DerivedProviderPreset[] {
  * that. The result is a fresh object, so saved config never aliases the registry constant.
  */
 function applyReasoningSummaryDefaults(
-  prov: OcxProviderConfig,
+  prov: OccxProviderConfig,
   defaults: Readonly<Record<string, boolean>> | undefined,
 ): void {
   if (!defaults) return;
@@ -388,7 +388,7 @@ function applyReasoningSummaryDefaults(
 }
 
 function applyServiceTierModelDefaults(
-  prov: OcxProviderConfig,
+  prov: OccxProviderConfig,
   defaults: Readonly<Record<string, boolean>> | undefined,
 ): void {
   if (!defaults) return;
@@ -400,7 +400,7 @@ function applyServiceTierModelDefaults(
 
 function serviceTierModelDefaultsFor(
   entry: ProviderRegistryEntry | undefined,
-  prov: OcxProviderConfig,
+  prov: OccxProviderConfig,
 ): Readonly<Record<string, boolean>> | undefined {
   return entry && registryModelServiceTierCapabilityApplies(entry, prov)
     ? entry.modelSupportsServiceTier
@@ -420,7 +420,7 @@ function serviceTierModelDefaultsFor(
  * across the seeded model list so an id discovered later still inherits it through the same
  * Record the hint pass already reads.
  */
-function applyVerbosityDefaults(prov: OcxProviderConfig, entry: ProviderRegistryEntry | undefined): void {
+function applyVerbosityDefaults(prov: OccxProviderConfig, entry: ProviderRegistryEntry | undefined): void {
   if (!entry) return;
   const perModel = entry.modelSupportsVerbosity;
   if (!perModel && entry.supportsVerbosity === undefined) return;
@@ -445,20 +445,20 @@ function applyVerbosityDefaults(prov: OcxProviderConfig, entry: ProviderRegistry
  * `registryEntryForProviderDestination`, which matches fixed key destinations and refuses
  * templated or overridable base URLs. A custom row keeps its own identity for everything else.
  */
-function enrichReasoningSummariesByDestination(prov: OcxProviderConfig): void {
+function enrichReasoningSummariesByDestination(prov: OccxProviderConfig): void {
   const destination = registryEntryForProviderDestination(prov);
   applyReasoningSummaryDefaults(prov, destination?.modelSupportsReasoningSummaries);
 }
 
 /** Repair the exact low-only ClinePass ladder generated by older key-login presets. */
-export function hasLegacyClinePassReasoningEfforts(name: string, prov: OcxProviderConfig): boolean {
+export function hasLegacyClinePassReasoningEfforts(name: string, prov: OccxProviderConfig): boolean {
   return name === "cline-pass"
     && prov.reasoningWireFormat === "gateway-object"
     && prov.reasoningEfforts?.length === 1
     && prov.reasoningEfforts[0] === "low";
 }
 
-export function enrichProviderFromRegistry(name: string, prov: OcxProviderConfig): void {
+export function enrichProviderFromRegistry(name: string, prov: OccxProviderConfig): void {
   const entry = PROVIDER_REGISTRY.find(row => row.id === name);
   if (!entry || !providerMatchesRegistryTransportWithStaticGuards(name, prov)) {
     // Name lookup failed, but the row may still point at a vendor route we know. #1100 was

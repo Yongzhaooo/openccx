@@ -1,11 +1,11 @@
 import { CliUsageError, printData, rejectArgs, runtimeRequest, takeFlag, takeOption, type RuntimeApiDeps } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx alias list [--json]
-  ocx alias set <provider> <alias>
-  ocx alias set <provider>/<native-model-id> <alias>
-  ocx alias rm <provider>[/<native-model-id>]
-  ocx alias defaults <on|off> [--provider <name>]`;
+  occx alias list [--json]
+  occx alias set <provider> <alias>
+  occx alias set <provider>/<native-model-id> <alias>
+  occx alias rm <provider>[/<native-model-id>]
+  occx alias defaults <on|off> [--provider <name>]`;
 
 function selector(value: string): { provider: string; model?: string } {
   const slash = value.indexOf("/");

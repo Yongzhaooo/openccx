@@ -21,23 +21,23 @@ import { MAX_COST4_RATE } from "../usage/expected-prices";
 import { isValidCost4Rate } from "../usage/user-cost-overlays";
 
 const USAGE = `Usage:
-  ocx models live [--provider <name>] [--free-only] [--json]
-  ocx models price <provider/model> [--json]
-  ocx models set-price <provider/model> --input N --output N [--cache-read N] [--cache-write N] [--json]
-  ocx models set-price <provider/model> --auto [--json]
-  ocx models edit <custom-id> [--model-id <id>] [--display-name <name|->]
+  occx models live [--provider <name>] [--free-only] [--json]
+  occx models price <provider/model> [--json]
+  occx models set-price <provider/model> --input N --output N [--cache-read N] [--cache-write N] [--json]
+  occx models set-price <provider/model> --auto [--json]
+  occx models edit <custom-id> [--model-id <id>] [--display-name <name|->]
       [--context-window <tokens|0>] [--modalities <text,image,audio|->]
       [--reasoning-efforts <none,minimal,low,medium,high,xhigh,max,ultra|->]
       [--default-reasoning-effort <level|->] [--json]
-  ocx models <enable|disable> <provider/model|native-model> [--native] [--json]
-  ocx models provider <name> <on|off> [--json]
-  ocx models selected <provider> [--set <id,id...>|--clear] [--json]
-  ocx models preset show [--provider <name>] [--json]
-  ocx models preset apply <provider> [--all] [--json]
-  ocx models new-policy [on|off] [--provider <name>] [--json]
-  ocx models new-arrivals [--json]
-  ocx models context <status|value <tokens> [--set-all]|provider <name> on [--value <tokens>]|provider <name> off|all <on|off>> [--json]
-  ocx models shadow <status|set> [model|-] [--enabled <on|off>] [--json]
+  occx models <enable|disable> <provider/model|native-model> [--native] [--json]
+  occx models provider <name> <on|off> [--json]
+  occx models selected <provider> [--set <id,id...>|--clear] [--json]
+  occx models preset show [--provider <name>] [--json]
+  occx models preset apply <provider> [--all] [--json]
+  occx models new-policy [on|off] [--provider <name>] [--json]
+  occx models new-arrivals [--json]
+  occx models context <status|value <tokens> [--set-all]|provider <name> on [--value <tokens>]|provider <name> off|all <on|off>> [--json]
+  occx models shadow <status|set> [model|-] [--enabled <on|off>] [--json]
 
 Prices are USD per 1M tokens. Omitted cache rates default to 0.
 Price selectors use the exact upstream model ID after the first slash.`;
@@ -392,7 +392,7 @@ async function context(argv: string[], deps: RuntimeApiDeps): Promise<void> {
     const state = args.shift()?.toLowerCase();
     if (!provider || (state !== "on" && state !== "off")) throw new CliUsageError("provider and on|off are required", USAGE);
     body = { provider, enabled: state === "on" };
-    // Optional explicit cap value for this provider only (`ocx models context provider
+    // Optional explicit cap value for this provider only (`occx models context provider
     // openai on --value 128000`). Mirrors the dashboard's per-provider cap picker; the
     // value never leaks to other providers.
     const value = takeIntegerOption(args, "--value", { min: 1 });

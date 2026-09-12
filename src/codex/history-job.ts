@@ -6,7 +6,7 @@
  * config and the direction its native mutation just took — and then handed down
  * as a fixed value. It is not a request field the Worker trusts, because the
  * distinctions are real: `syncResumeHistory: false` means leave history alone,
- * apply targets opencodex only in legacy mode, and legacy recovery must not
+ * apply targets openccx only in legacy mode, and legacy recovery must not
  * touch the manifest that generic restore consumes.
  *
  * Every exit is typed. A Worker that errors, dies, or overruns its watchdog
@@ -120,7 +120,7 @@ export type CodexHistoryJobOutcome =
  * `resumeHistory === false` is the user's explicit opt-out and outranks the
  * direction entirely — an apply that quietly migrated history anyway would be
  * the setting failing silently. `legacyMode` is the only case that routes
- * history TO opencodex; the ordinary apply migrates to native so a later restore
+ * history TO openccx; the ordinary apply migrates to native so a later restore
  * has nothing to undo.
  */
 /**
@@ -197,7 +197,7 @@ export function deriveCodexHistoryOperation(intent: {
 }): CodexHistoryWorkerOperation {
   if (!intent.resumeHistory) return "skip";
   if (intent.direction === "restore") return "restore-openai";
-  return intent.legacyMode ? "apply-opencodex" : "migrate-openai";
+  return intent.legacyMode ? "apply-openccx" : "migrate-openai";
 }
 
 /**
@@ -221,7 +221,7 @@ export function describeHistoryJobFailure(
     return "the history operation was skipped; no failure was recorded.";
   }
   if (outcome.kind === "converged") {
-    return "the history job reported no failure; run 'ocx doctor' if this is unexpected.";
+    return "the history job reported no failure; run 'occx doctor' if this is unexpected.";
   }
   // A busy database reaches here two ways: the lock itself was contended
   // (blocked/busy), or the lock was acquired and the worker then found SQLite
@@ -229,19 +229,19 @@ export function describeHistoryJobFailure(
   // situation and deserve the same surface-specific guidance.
   const busyText = surface === "apply"
     ? legacyMode
-      ? "the history DB is locked (Codex app/IDE open?). Close it and rerun 'ocx start'."
-      : "the history DB is locked (Codex app/IDE open?). It is retried automatically (while the proxy runs and on every 'ocx start'); to force it now, close the Codex app and run 'ocx sync'."
+      ? "the history DB is locked (Codex app/IDE open?). Close it and rerun 'occx start'."
+      : "the history DB is locked (Codex app/IDE open?). It is retried automatically (while the proxy runs and on every 'occx start'); to force it now, close the Codex app and run 'occx sync'."
     : surface === "recover-legacy"
       ? "the Codex history DB is locked (Codex app/IDE open?). Close it and rerun this command."
-      : "the Codex app appears to be holding the history database. Close Codex and run `ocx restore` again.";
-  const busyStateText = "Codex history state is busy (database, backup manifest, or rollout file); this is not enough evidence to blame the Codex app. It is retried automatically while the proxy runs; run 'ocx doctor' before forcing another attempt.";
+      : "the Codex app appears to be holding the history database. Close Codex and run `occx restore` again.";
+  const busyStateText = "Codex history state is busy (database, backup manifest, or rollout file); this is not enough evidence to blame the Codex app. It is retried automatically while the proxy runs; run 'occx doctor' before forcing another attempt.";
   if (outcome.kind === "blocked") {
     if (outcome.reason === "busy") return busyText;
     switch (outcome.reason) {
       case "unsafe-path":
-        return "opencodex refused its history lock path (unsafe coordinator namespace); this is not a Codex app lock. Run 'ocx doctor' and check the opencodex runtime directory.";
+        return "openccx refused its history lock path (unsafe coordinator namespace); this is not a Codex app lock. Run 'occx doctor' and check the openccx runtime directory.";
       case "database":
-        return "the history coordinator database is unavailable; this is not a Codex app lock. Run 'ocx doctor'.";
+        return "the history coordinator database is unavailable; this is not a Codex app lock. Run 'occx doctor'.";
       case "desired_disabled":
         return "Codex integration is disabled, so the history operation was skipped.";
       case "desired_enabled":
@@ -250,14 +250,14 @@ export function describeHistoryJobFailure(
   }
   const partiallyChanged = (outcome.rows ?? 0) > 0 || (outcome.files ?? 0) > 0;
   if (partiallyChanged && outcome.historyFailureReason === "busy") {
-    return "Codex history metadata changed but did not converge because manifest finalization remained busy; the manifest was retained for review and safe retry. Run 'ocx doctor'.";
+    return "Codex history metadata changed but did not converge because manifest finalization remained busy; the manifest was retained for review and safe retry. Run 'occx doctor'.";
   }
   if (partiallyChanged && outcome.historyFailureReason === "permission") {
-    return "Codex history metadata changed but did not converge because permission was denied while finalizing the manifest; the manifest was retained for review and safe retry. Run 'ocx doctor'.";
+    return "Codex history metadata changed but did not converge because permission was denied while finalizing the manifest; the manifest was retained for review and safe retry. Run 'occx doctor'.";
   }
   if (outcome.historyFailureReason === "busy") return busyStateText;
   if (outcome.historyFailureReason === "permission") {
-    return "permission was denied while writing Codex history; this is not a Codex app lock. Run 'ocx doctor'.";
+    return "permission was denied while writing Codex history; this is not a Codex app lock. Run 'occx doctor'.";
   }
   if (outcome.historyFailureReason === "integrity") {
     // Not every integrity stop is a retry. An ambiguous reroute means two histories
@@ -268,16 +268,16 @@ export function describeHistoryJobFailure(
       return "a Codex history entry could not be re-routed because its manifest cannot prove whether an earlier relabel was undone; nothing was changed and the manifest was kept. Resolve it manually rather than retrying.";
     }
     return partiallyChanged
-      ? "the history backup or its restore target changed after a partial restore; the manifest was retained for review and safe retry. Run 'ocx doctor'."
-      : "the history backup or its restore target failed integrity checks; no unverified provider metadata was applied. Run 'ocx doctor'.";
+      ? "the history backup or its restore target changed after a partial restore; the manifest was retained for review and safe retry. Run 'occx doctor'."
+      : "the history backup or its restore target failed integrity checks; no unverified provider metadata was applied. Run 'occx doctor'.";
   }
   switch (outcome.reason) {
     case "worker-error":
-      return `the history worker failed (${outcome.message}). Run 'ocx doctor'.`;
+      return `the history worker failed (${outcome.message}). Run 'occx doctor'.`;
     case "worker-died":
-      return "the history worker exited unexpectedly; this is not a Codex app lock. Run 'ocx doctor'.";
+      return "the history worker exited unexpectedly; this is not a Codex app lock. Run 'occx doctor'.";
     case "timeout":
-      return "the history worker timed out; this is not a Codex app lock. Run 'ocx doctor'.";
+      return "the history worker timed out; this is not a Codex app lock. Run 'occx doctor'.";
   }
 }
 
@@ -439,7 +439,7 @@ export async function runCodexHistoryJob(
       ...(request.expectedDesiredEnabled === undefined ? {} : { expectedDesiredEnabled: request.expectedDesiredEnabled }),
       env: {
         ...(process.env.CODEX_HOME ? { CODEX_HOME: process.env.CODEX_HOME } : {}),
-        ...(process.env.OPENCODEX_HOME ? { OPENCODEX_HOME: process.env.OPENCODEX_HOME } : {}),
+        ...(process.env.OPENCCX_HOME ? { OPENCCX_HOME: process.env.OPENCCX_HOME } : {}),
       },
     });
   });

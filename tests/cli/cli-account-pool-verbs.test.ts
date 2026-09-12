@@ -46,7 +46,7 @@ function capture(): { lines: string[]; errors: string[]; restore: () => void } {
   return { lines, errors, restore: () => { console.log = log; console.error = err; } };
 }
 
-describe("ocx account pause / resume", () => {
+describe("occx account pause / resume", () => {
   test("pause PUTs the shared route with paused true", async () => {
     const calls: Captured[] = [];
     const out = capture();
@@ -111,7 +111,7 @@ describe("ocx account pause / resume", () => {
   });
 });
 
-describe("ocx account pause-exhausted", () => {
+describe("occx account pause-exhausted", () => {
   test("reports which accounts were paused", async () => {
     const calls: Captured[] = [];
     const out = capture();
@@ -162,7 +162,7 @@ describe("ocx account pause-exhausted", () => {
   });
 });
 
-describe("ocx account strategy / sticky", () => {
+describe("occx account strategy / sticky", () => {
   test("a bare invocation READS and never writes", async () => {
     const calls: Captured[] = [];
     const out = capture();
@@ -228,7 +228,7 @@ describe("ocx account strategy / sticky", () => {
  * unprefixed response keys, and a MANDATORY `provider` in the write body without which it
  * answers 400 (`oauth-account-routes.ts:344`).
  */
-describe("ocx account strategy / sticky on the anthropic pool", () => {
+describe("occx account strategy / sticky on the anthropic pool", () => {
   function anthropicDeps(
     respond: (captured: Captured) => { status?: number; json: unknown },
     calls: Captured[],

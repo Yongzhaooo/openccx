@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 import type { CodexLogGuardMaintenanceDeps } from "../../src/codex/log-guard/maintenance";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -47,7 +47,7 @@ function createLogsDb(path: string): void {
 }
 
 function fixture(): { deps: CodexLogGuardMaintenanceDeps } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-api-compact-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-api-compact-"));
   roots.push(root);
   const codexHome = join(root, "codex-home");
   mkdirSync(codexHome);
@@ -63,8 +63,8 @@ function fixture(): { deps: CodexLogGuardMaintenanceDeps } {
   };
 }
 
-function config(): OcxConfig {
-  return { port: 0, defaultProvider: "openai", providers: {} } as OcxConfig;
+function config(): OccxConfig {
+  return { port: 0, defaultProvider: "openai", providers: {} } as OccxConfig;
 }
 
 async function request(path: string, deps: CodexLogGuardMaintenanceDeps): Promise<Response> {

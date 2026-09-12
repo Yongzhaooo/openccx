@@ -2,7 +2,7 @@
  * A pid that is genuinely free, probed rather than assumed.
  *
  * Several suites need a pid that stands in for a process that has exited: stale
- * `ocx.pid` records, abandoned response-state temps, doctor's reclaim paths. The
+ * `occx.pid` records, abandoned response-state temps, doctor's reclaim paths. The
  * code under test asks the kernel whether that owner is still alive, so a
  * hardcoded "dead" pid is only dead until some unrelated process happens to hold
  * it — and then the production code answers correctly, the test reads that as a

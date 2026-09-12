@@ -6,16 +6,16 @@
  * replay 400s ("Expected `thinking` or `redacted_thinking`, but found `tool_use`"). Codex round-trips
  * whatever `encrypted_content` a reasoning output item carries (include: reasoning.encrypted_content
  * is set whenever reasoning is on — codex-rs client.rs), so the proxy smuggles the real Anthropic
- * signature (and any redacted blocks) inside a transparent `ocxr1:` + base64(JSON) envelope.
+ * signature (and any redacted blocks) inside a transparent `occxr1:` + base64(JSON) envelope.
  *
- * Native OpenAI-encrypted blobs (no ocxr1 prefix) are left untouched by the decoder, and the
- * passthrough scrub strips ocxr1 envelopes before native forwarding.
+ * Native OpenAI-encrypted blobs (no occxr1 prefix) are left untouched by the decoder, and the
+ * passthrough scrub strips occxr1 envelopes before native forwarding.
  */
 
 import { createTranslatorBudget, type TranslatorBudget } from "../lib/translator-budget";
 import { jsonUtf8Bytes } from "../lib/json-byte-size";
 
-export const OCX_REASONING_PREFIX = "ocxr1:";
+export const OCCX_REASONING_PREFIX = "occxr1:";
 
 export interface ReasoningEnvelope {
   /** Anthropic thinking-block signature (signature_delta), if captured. */
@@ -45,13 +45,13 @@ export function encodeReasoningEnvelope(envelope: ReasoningEnvelope, budget?: Tr
     // callers, whose existing retained accounting must not be charged twice here.
     const reservation = activeBudget.reserveTransient(
       Math.max(
-        3 * jsonBytes + 4 * base64Bytes + 2 * OCX_REASONING_PREFIX.length,
-        8 * (OCX_REASONING_PREFIX.length + base64Bytes),
+        3 * jsonBytes + 4 * base64Bytes + 2 * OCCX_REASONING_PREFIX.length,
+        8 * (OCCX_REASONING_PREFIX.length + base64Bytes),
       ),
       { kind: "reasoning" },
     );
     try {
-      return OCX_REASONING_PREFIX + Buffer.from(JSON.stringify(envelope), "utf-8").toString("base64");
+      return OCCX_REASONING_PREFIX + Buffer.from(JSON.stringify(envelope), "utf-8").toString("base64");
     } finally {
       reservation.release();
     }
@@ -60,16 +60,16 @@ export function encodeReasoningEnvelope(envelope: ReasoningEnvelope, budget?: Tr
   }
 }
 
-/** Decode an ocxr1 envelope; returns null for native (OpenAI-encrypted) blobs or garbage. */
+/** Decode an occxr1 envelope; returns null for native (OpenAI-encrypted) blobs or garbage. */
 export function decodeReasoningEnvelope(encryptedContent: string, budget?: TranslatorBudget): ReasoningEnvelope | null {
-  if (!encryptedContent.startsWith(OCX_REASONING_PREFIX)) return null;
+  if (!encryptedContent.startsWith(OCCX_REASONING_PREFIX)) return null;
   const activeBudget = budget ?? createTranslatorBudget();
   try {
     // Also bound already-encoded replay before slicing, decoding, or parsing it.
     // Eight bytes per code unit conservatively covers the string/buffer copies.
     const reservation = activeBudget.reserveTransient(8 * encryptedContent.length, { kind: "reasoning" });
     try {
-      const parsed: unknown = JSON.parse(Buffer.from(encryptedContent.slice(OCX_REASONING_PREFIX.length), "base64").toString("utf-8"));
+      const parsed: unknown = JSON.parse(Buffer.from(encryptedContent.slice(OCCX_REASONING_PREFIX.length), "base64").toString("utf-8"));
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
       const obj = parsed as { sig?: unknown; red?: unknown };
       const envelope: ReasoningEnvelope = {};

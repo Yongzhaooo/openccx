@@ -5,7 +5,7 @@ import { deriveStartupHealth, type StartupHealth } from "../codex/autostart-heal
 import { getCodexRoutingKind } from "../codex/inject";
 import { diagnoseCodexShim } from "../codex/shim";
 import { durableBunPath } from "../lib/bun-runtime";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { truncateRetainedUtf8 } from "../lib/admission";
 
 const CACHE_TTL_MS = 30_000;
@@ -43,7 +43,7 @@ let generation = 0;
 
 export interface StartupHealthCacheDeps {
   now?: () => number;
-  probe?: (config: Pick<OcxConfig, "codexAutoStart">) => Promise<StartupHealth>;
+  probe?: (config: Pick<OccxConfig, "codexAutoStart">) => Promise<StartupHealth>;
   waitForProbe?: (
     probe: Promise<StartupHealth>,
     timeoutMs: number,
@@ -58,7 +58,7 @@ export interface StartupHealthCacheDeps {
  * the fresh, bounded diagnostic read.
  */
 export function getStartupHealthSnapshot(
-  config: Pick<OcxConfig, "codexAutoStart">,
+  config: Pick<OccxConfig, "codexAutoStart">,
   deps: StartupHealthCacheDeps = {},
 ): StartupHealth {
   const now = deps.now ?? Date.now;
@@ -86,7 +86,7 @@ export function markStartupHealthDiagnosticStale(value: StartupHealth): StartupH
   };
 }
 
-function conservativeFallback(config: Pick<OcxConfig, "codexAutoStart">): StartupHealth {
+function conservativeFallback(config: Pick<OccxConfig, "codexAutoStart">): StartupHealth {
   const shim = diagnoseCodexShim();
   return deriveStartupHealth({
     routingKind: getCodexRoutingKind(),
@@ -105,7 +105,7 @@ function conservativeFallback(config: Pick<OcxConfig, "codexAutoStart">): Startu
   });
 }
 
-function runProbe(config: Pick<OcxConfig, "codexAutoStart">): Promise<StartupHealth> {
+function runProbe(config: Pick<OccxConfig, "codexAutoStart">): Promise<StartupHealth> {
   const bun = durableBunPath();
   const cli = join(import.meta.dir, "..", "cli", "index.ts");
   return new Promise(resolve => {
@@ -146,7 +146,7 @@ function runProbe(config: Pick<OcxConfig, "codexAutoStart">): Promise<StartupHea
 }
 
 function refreshInBackground(
-  config: Pick<OcxConfig, "codexAutoStart">,
+  config: Pick<OccxConfig, "codexAutoStart">,
   deps: StartupHealthCacheDeps,
 ): void {
   if (inflight) return;
@@ -169,7 +169,7 @@ function refreshInBackground(
 
 /** Stale-while-revalidate: service-manager probes never hold open a model/UI request. */
 export async function getCachedStartupHealth(
-  config: Pick<OcxConfig, "codexAutoStart">,
+  config: Pick<OccxConfig, "codexAutoStart">,
   deps: StartupHealthCacheDeps = {},
 ): Promise<StartupHealth> {
   const now = deps.now ?? Date.now;

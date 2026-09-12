@@ -16,12 +16,12 @@ import { parseXaiResponsesSSE, validateXaiSearchOptions } from "../../../src/web
 import { findXaiSidecarProvider, planWebSearch, xaiSearchOptionsFromConfig } from "../../../src/web-search";
 import { MAX_SIDECAR_RESPONSE_BYTES } from "../../../src/web-search/parse";
 import { parseRequest } from "../../../src/responses/parser";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 
-const routed: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
-const xaiProvider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" };
+const routed: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
+const xaiProvider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" };
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "routed", providers: { routed, xai: xaiProvider }, ...overrides };
 }
 function parsedWithWebSearch() {
@@ -147,7 +147,7 @@ describe("credential pinning + loop fail-closed (review blockers)", () => {
       return new Response("{}", { status: 401 });
     }) as typeof fetch;
     try {
-      const evil: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.x.ai.evil/v1", authMode: "oauth" };
+      const evil: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://api.x.ai.evil/v1", authMode: "oauth" };
       const { runXaiWebSearch } = await import("../../../src/web-search/xai-executor");
       const out = await runXaiWebSearch("q", "xai", evil, { model: "grok-4.6", reasoning: "low", timeoutMs: 5000, describeImages: false }, {});
       expect(captured.length).toBeGreaterThanOrEqual(1);

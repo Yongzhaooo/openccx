@@ -1,4 +1,4 @@
-import { MODEL_ADAPTER_OVERRIDE_ALLOWED, type OcxConfig, type OcxProviderConfig } from "../types";
+import { MODEL_ADAPTER_OVERRIDE_ALLOWED, type OccxConfig, type OccxProviderConfig } from "../types";
 import { providerModelWireDefault } from "./registry";
 
 export const XAI_RESPONSES_OPT_IN_MODELS = ["grok-4.6", "grok-4.5"] as const;
@@ -7,7 +7,7 @@ export const XAI_RESPONSES_DEFAULT_VERSION = 1;
 export type XaiResponsesOptInState = boolean | "mixed";
 
 /** Effective Responses-inbound wire; the legacy API field name remains compatible. */
-export function xaiResponsesOptInState(provider: OcxProviderConfig): XaiResponsesOptInState {
+export function xaiResponsesOptInState(provider: OccxProviderConfig): XaiResponsesOptInState {
   const enabled = XAI_RESPONSES_OPT_IN_MODELS.map(model => {
     const configured = provider.modelAdapters?.[model];
     const wire = configured && MODEL_ADAPTER_OVERRIDE_ALLOWED.has(configured)
@@ -22,7 +22,7 @@ export function xaiResponsesOptInState(provider: OcxProviderConfig): XaiResponse
 }
 
 /** Upgrade old Chat choices once; a later explicit Chat opt-in must survive restart. */
-export function migrateXaiResponsesDefault(config: OcxConfig): boolean {
+export function migrateXaiResponsesDefault(config: OccxConfig): boolean {
   const provider = config.providers.xai;
   if (!provider || (provider.xaiResponsesDefaultVersion ?? 0) >= XAI_RESPONSES_DEFAULT_VERSION) return false;
   if (!XAI_RESPONSES_OPT_IN_MODELS.every(model =>

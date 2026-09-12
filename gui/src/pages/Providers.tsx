@@ -209,7 +209,7 @@ function useAccountSelectionEvents(
 
 export default function Providers({ apiBase }: { apiBase: string }) {
   const t = useT();
-  const configCacheKey = `ocx.providers.config.v1:${apiBase}`;
+  const configCacheKey = `occx.providers.config.v1:${apiBase}`;
   const [config, setConfig] = useState<ProvidersConfig | null>(
     () => readSessionListCache<ProvidersConfig>(configCacheKey),
   );

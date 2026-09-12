@@ -188,13 +188,13 @@ export const INTEGRATION_CLIENTS: Record<IntegrationClientId, IntegrationClientS
     id: "omp",
     configPath: (env = process.env, home = homedir()) => ompModelsConfigPath(env, home),
     detectDir: (env = process.env, home = homedir()) => ompAgentDir(env, home),
-    sourcePreservingYaml: { path: ["providers", "opencodex"] },
+    sourcePreservingYaml: { path: ["providers", "openccx"] },
   },
   hermes: {
     id: "hermes",
     configPath: (env = process.env, home = homedir()) => hermesConfigPath(env, home),
     detectDir: (env = process.env, home = homedir()) => hermesHomeDir(env, home),
-    sourcePreservingYaml: { path: ["providers", "opencodex"] },
+    sourcePreservingYaml: { path: ["providers", "openccx"] },
   },
   openclaw: {
     id: "openclaw",
@@ -218,7 +218,7 @@ export const INTEGRATION_CLIENTS: Record<IntegrationClientId, IntegrationClientS
     id: "dsh",
     configPath: (env = process.env, home = homedir()) => dshConfigPath(env, home),
     detectDir: (env = process.env, home = homedir()) => dshHomeDir(env, home),
-    sourcePreservingYaml: { path: ["llm-pi-ai", "providers", "opencodex"] },
+    sourcePreservingYaml: { path: ["llm-pi-ai", "providers", "openccx"] },
     writerLock: { suffix: ".lock" },
   },
   mcode: {
@@ -279,7 +279,7 @@ export const INTEGRATION_CLIENTS: Record<IntegrationClientId, IntegrationClientS
      *
      * No `sourcePreservingYaml`: that patcher handles block-map leaves only,
      * and our entry is a SEQUENCE item, so the file is re-rendered through
-     * `renderYaml` (block style). The `[id=opencodex]` selector keeps the user's
+     * `renderYaml` (block style). The `[id=openccx]` selector keeps the user's
      * other providers in place across that re-render.
      */
     detectDir: (env = process.env, home = homedir()) => raycastAiDir(env, home),

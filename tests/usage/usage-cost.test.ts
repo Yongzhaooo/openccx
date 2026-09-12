@@ -25,7 +25,7 @@ import {
   refreshUserCostOverlays,
   userCostOverlayVersion,
 } from "../../src/usage/user-cost-overlays";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const RATE = { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 };
 
@@ -1055,7 +1055,7 @@ describe("provider cost overlay (user-configured)", () => {
   afterEach(() => {
     // The registry is module-level; reset it even when a test fails early so
     // rows cannot leak into other files in a shared-process run.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   });
 
   test("user overlay beats the jawcode price and reads verified (not estimated)", () => {
@@ -1104,7 +1104,7 @@ describe("provider cost overlay (user-configured)", () => {
           modelCosts: { "custom-model": USER_PRICE },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     // "pabcdef" matches the Codex account-log-label pattern, so the base label
     // collapses to "blsc"; the exact provider name must still win for its own
     // configured overlay.
@@ -1125,7 +1125,7 @@ describe("provider cost overlay (user-configured)", () => {
         acme: { modelCosts: { "acme-custom-model": USER_PRICE } },
         "acme-pabcdef": { adapter: "openai-chat", baseUrl: "https://example.invalid" },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     // The literal provider exists in config.providers, so its pricing namespace
     // stays isolated even though the name matches the account-label pattern:
     // it must NOT price through acme's user overlay.
@@ -1148,7 +1148,7 @@ describe("provider cost overlay (user-configured)", () => {
           modelCosts: { "claude-opus-4-6": { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     const price = resolveMatchedPrice("acme-pabcdef", "claude-opus-4-6");
     // Operator zero is an explicit free estimate, not missing catalog metadata.
     expect(price).not.toBeNull();
@@ -1163,7 +1163,7 @@ describe("provider cost overlay (user-configured)", () => {
       providers: {
         acme: { modelCosts: { "acme-custom-model": USER_PRICE } },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     // acme-pabcdef is NOT in config.providers here — it is a generated log
     // label for an acme account, so collapsing to acme's overlay is intended.
     const price = resolveMatchedPrice("acme-pabcdef", "acme-custom-model");
@@ -1181,7 +1181,7 @@ describe("provider cost overlay (user-configured)", () => {
       providers: {
         acme: { modelCosts: { "acme-custom-model": USER_PRICE } },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     // Not configured yet → generated label → collapses to acme (memoized).
     expect(resolveMatchedPrice("acme-pabcdef", "acme-custom-model")?.source).toBe("user");
     // The provider is now configured (without an overlay): namespace isolation
@@ -1192,7 +1192,7 @@ describe("provider cost overlay (user-configured)", () => {
         acme: { modelCosts: { "acme-custom-model": USER_PRICE } },
         "acme-pabcdef": { adapter: "openai-chat", baseUrl: "https://example.invalid" },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     expect(resolveMatchedPrice("acme-pabcdef", "acme-custom-model")).toBeNull();
   });
 
@@ -1241,7 +1241,7 @@ describe("provider cost overlay (user-configured)", () => {
           },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     expect(activeUserCostOverlays()).not.toBe(before);
     expect(userCostOverlayVersion()).toBe(versionBefore + 1);
     // Default lookup path (registry-backed, memoized) picks the configured price up.
@@ -1260,12 +1260,12 @@ describe("provider cost overlay (user-configured)", () => {
           },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     const second = resolveMatchedPrice("blsc", "deepseek-v4-flash");
     expect(second?.cost4.input).toBe(0.99);
     expect(resolveMatchedPrice("blsc", "overlay-test-model")?.cost4.input).toBe(0.99);
     // Leave the registry empty for the rest of the file.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
     expect(resolveMatchedPrice("blsc", "overlay-test-model")).toBeNull();
     // Without the overlay, deepseek-v4-flash falls back to its jawcode vendor price.
     expect(resolveMatchedPrice("blsc", "deepseek-v4-flash")?.source).toBe("jawcode");
@@ -1282,7 +1282,7 @@ describe("provider cost overlay (user-configured)", () => {
           },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     refreshUserCostOverlays(config);
     const versionAfterFirst = userCostOverlayVersion();
     const rowsAfterFirst = activeUserCostOverlays();
@@ -1293,13 +1293,13 @@ describe("provider cost overlay (user-configured)", () => {
     expect(activeUserCostOverlays()).toBe(rowsAfterFirst);
     expect(resolveMatchedPrice("blsc", "deepseek-v4-flash")?.source).toBe("user");
     // Leave the registry empty for the rest of the file.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   });
 
   test("registry redacts token-shaped ids in display source but keeps raw matching and change detection", () => {
     const configWith = (provider: string, model: string) => ({
       providers: { [provider]: { modelCosts: { [model]: USER_PRICE } } },
-    }) as unknown as OcxConfig;
+    }) as unknown as OccxConfig;
     refreshUserCostOverlays(configWith("sk-provider-123", "sk-model-456"));
     const rows = activeUserCostOverlays();
     expect(rows).toHaveLength(1);
@@ -1322,7 +1322,7 @@ describe("provider cost overlay (user-configured)", () => {
     expect(userCostOverlayVersion()).toBe(versionBefore + 1);
     expect(activeUserCostOverlays()[0].provider).toBe("sk-provider-789");
     // Leave the registry empty for the rest of the file.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   });
 });
 
@@ -1335,7 +1335,7 @@ describe("Codex account pricing identity", () => {
   };
   const config = (accounts = [account], providers = {}) => ({
     providers, codexAccounts: accounts,
-  }) as unknown as OcxConfig;
+  }) as unknown as OccxConfig;
   const forms = (id: string) => [id, ...["openai", "chatgpt", "openai-multi"].map(provider => `${provider}-${id}`)];
 
   afterEach(() => refreshUserCostOverlays(config([])));

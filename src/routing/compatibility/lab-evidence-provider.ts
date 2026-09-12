@@ -11,7 +11,7 @@
  *
  * @internal registered by the Lab activation path
  */
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import type { NormalizedRoutingProfile } from "../profile";
 import {
   compatibilitySuiteKey,
@@ -81,7 +81,7 @@ function attachCompatibilityEvidence(
  * Keyed `provider/model`; a candidate absent from the map has no compatibility evidence.
  */
 export const labCompatibilityEvidenceProvider: CompatibilityEvidenceProvider = (
-  config: OcxConfig,
+  config: OccxConfig,
   profile: NormalizedRoutingProfile,
   policy: NonNullable<NormalizedRoutingProfile["compatibility"]>,
   options: CoreEvidenceOptions,

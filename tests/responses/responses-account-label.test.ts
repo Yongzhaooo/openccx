@@ -13,14 +13,14 @@ import {
 } from "../../src/codex/routing";
 import type { RequestLogContext } from "../../src/server/request-log";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { CodexWsMetadata } from "../../src/server/responses/codex-ws-metadata";
 import { applyAccountQuotaFromUpstreamHeaders } from "../../src/codex/quota";
 
 const originalFetch = globalThis.fetch;
 
-function poolConfig(accountIds: string[]): OcxConfig {
+function poolConfig(accountIds: string[]): OccxConfig {
   return {
     defaultProvider: "openai",
     activeCodexAccountId: accountIds[0],
@@ -39,7 +39,7 @@ function poolConfig(accountIds: string[]): OcxConfig {
       isMain: false,
       chatgptAccountId: `${id}_chatgpt`,
     })),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function completedResponse(id: string): Response {
@@ -69,10 +69,10 @@ function savePoolCredential(id: string): void {
 }
 
 async function withPoolHome<T>(run: (home: string) => Promise<T>): Promise<T> {
-  const home = mkdtempSync(join(tmpdir(), "ocx-responses-account-label-"));
-  const previousOpencodexHome = process.env.OPENCODEX_HOME;
+  const home = mkdtempSync(join(tmpdir(), "occx-responses-account-label-"));
+  const previousOpenccxHome = process.env.OPENCCX_HOME;
   const previousCodexHome = process.env.CODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
@@ -85,8 +85,8 @@ async function withPoolHome<T>(run: (home: string) => Promise<T>): Promise<T> {
     clearThreadAccountMap();
     clearAccountQuota();
     removeTreeWithRetry(home);
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
   }

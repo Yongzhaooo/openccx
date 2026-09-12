@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { createAnthropicAdapter } from "../../../src/adapters/anthropic";
 import { PROVIDER_REGISTRY } from "../../../src/providers/registry";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { AnthropicTokenError, refreshAnthropicToken } from "../../../src/oauth/anthropic";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-function parsed(): OcxParsedRequest {
+function parsed(): OccxParsedRequest {
   return {
     modelId: "claude-haiku-4-5",
     context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
@@ -16,7 +16,7 @@ function parsed(): OcxParsedRequest {
   };
 }
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "anthropic",
     baseUrl: "https://api.anthropic.com",
@@ -99,7 +99,7 @@ describe("anthropic provider hardening", () => {
     const adapter = createAnthropicAdapter(provider({ authMode: "oauth", apiKey: "" }));
 
     await expect(adapter.buildRequest(parsed())).rejects.toThrow(
-      "anthropic oauth token missing — run ocx login anthropic",
+      "anthropic oauth token missing — run occx login anthropic",
     );
   });
 

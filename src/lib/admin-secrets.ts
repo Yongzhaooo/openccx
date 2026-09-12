@@ -15,17 +15,17 @@ export function loadAdminTokenFromFile(configDir = getConfigDir()): string | nul
     const stat = lstatSync(path);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 512) return null;
     const token = readFileSync(path, "utf8").trim();
-    return /^ocx_admin_[A-Za-z0-9_-]{43}$/.test(token) ? token : null;
+    return /^occx_admin_[A-Za-z0-9_-]{43}$/.test(token) ? token : null;
   } catch {
     return null;
   }
 }
 
 export function configuredAdminToken(configDir = getConfigDir(), env: NodeJS.ProcessEnv = process.env): string | null {
-  return env.OPENCODEX_ADMIN_AUTH_TOKEN?.trim() || loadAdminTokenFromFile(configDir);
+  return env.OPENCCX_ADMIN_AUTH_TOKEN?.trim() || loadAdminTokenFromFile(configDir);
 }
 
-export const ADMIN_TOKEN_PREFIX = "ocx_admin_";
+export const ADMIN_TOKEN_PREFIX = "occx_admin_";
 
 function secretTextEquals(left: string, right: string): boolean {
   const a = Buffer.from(left);
@@ -34,7 +34,7 @@ function secretTextEquals(left: string, right: string): boolean {
 }
 
 /**
- * True when `token` is a management credential: minted `ocx_admin_…` shape, or
+ * True when `token` is a management credential: minted `occx_admin_…` shape, or
  * byte-equal to the configured admin token (env or admin-api-token file).
  * Used by the service write/start chokepoint and by doctor so the two cannot drift.
  */

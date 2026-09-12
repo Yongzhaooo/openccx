@@ -3,7 +3,7 @@
  *
  * Cursor ships a second desktop distribution, "Cursor Private Inference", whose agent loop
  * runs locally and calls an OpenAI-compatible gateway the user configures. That build can
- * reach opencodex on loopback. Regular Cursor cannot: its backend calls the custom base URL
+ * reach openccx on loopback. Regular Cursor cannot: its backend calls the custom base URL
  * and rejects private addresses. The two share a bundle id, data folder and URL scheme, so
  * the only reliable discriminator is `nameLong` in the app's `product.json`.
  *

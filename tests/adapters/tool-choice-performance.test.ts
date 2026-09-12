@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import type { OcxTool } from "../../src/types";
+import type { OccxTool } from "../../src/types";
 import { toolChoiceCandidates, toolChoiceToolPredicate } from "../../src/types";
 
 test("allowed_tools resolves an ambiguous bare name without replaying the candidate list", () => {
   const size = 256;
-  const backingTools: OcxTool[] = Array.from({ length: size }, (_, index) => ({
+  const backingTools: OccxTool[] = Array.from({ length: size }, (_, index) => ({
     namespace: `namespace_${index}`,
     name: "shared_name",
     description: "",
@@ -41,7 +41,7 @@ test("allowed_tools resolves an ambiguous bare name without replaying the candid
     },
   });
 
-  let filtered: OcxTool[];
+  let filtered: OccxTool[];
   try {
     const allowed = toolChoiceToolPredicate(
       { allowedTools: ["shared_name"], mode: "auto" },
@@ -58,7 +58,7 @@ test("allowed_tools resolves an ambiguous bare name without replaying the candid
 });
 
 test("public candidate lookups rebuild after a mutable caller changes its catalog", () => {
-  const tools: OcxTool[] = [{ namespace: "first", name: "shared", description: "", parameters: {} }];
+  const tools: OccxTool[] = [{ namespace: "first", name: "shared", description: "", parameters: {} }];
   const firstLookup = toolChoiceCandidates(tools, "shared");
   expect(firstLookup).toHaveLength(1);
   expect(firstLookup[0]).toBe(tools[0]);
@@ -74,7 +74,7 @@ test("public candidate lookups rebuild after a mutable caller changes its catalo
 });
 
 test("a compiled resolver fails closed when its catalog objects change", () => {
-  const tools: OcxTool[] = [{ namespace: "stable", name: "shared", description: "", parameters: {} }];
+  const tools: OccxTool[] = [{ namespace: "stable", name: "shared", description: "", parameters: {} }];
   const allowed = toolChoiceToolPredicate({ allowedTools: ["shared"], mode: "auto" }, tools);
 
   tools[0].name = "changed_after_compile";

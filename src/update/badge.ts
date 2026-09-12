@@ -9,7 +9,7 @@
  *
  * This is deliberately read-only: it must never trigger a registry refresh. The GUI
  * polls it, so a refresh-on-read would let repeated polls launch repeated manager `view`
- * helpers with no coalescing. Cache warming stays with `ocx start`
+ * helpers with no coalescing. Cache warming stays with `occx start`
  * (`triggerBackgroundRefreshIfStale` in `src/update/notify.ts`) and with the explicit
  * `/api/update/check` the user reaches by clicking the sidebar update button.
  */

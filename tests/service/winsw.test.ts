@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const entry = { bun: "C:\\OpenCodex\\bun.exe", bunRuntimeSource: "bundled" as const, cli: "C:\\Open Codex\\cli & co\\index.ts" };
+const entry = { bun: "C:\\Openccx\\bun.exe", bunRuntimeSource: "bundled" as const, cli: "C:\\Open Codex\\cli & co\\index.ts" };
 
 function winswEnvValue(xml: string, name: string): string | null {
   const match = xml.match(new RegExp(`<env name="${name}" value="([^"]*)"/>`));
@@ -42,40 +42,40 @@ describe("winsw xml", () => {
     expect(xml.toLowerCase()).not.toContain("localsystem");
   });
 
-  test("carries service env: OCX_SERVICE, token file pointer, and escaped PATH parity", () => {
+  test("carries service env: OCCX_SERVICE, token file pointer, and escaped PATH parity", () => {
     const xml = buildWinswXml(entry, env);
 
-    expect(xml).toContain('<env name="OCX_SERVICE" value="1"/>');
-    expect(xml).toContain('<env name="OCX_API_TOKEN_FILE"');
+    expect(xml).toContain('<env name="OCCX_SERVICE" value="1"/>');
+    expect(xml).toContain('<env name="OCCX_API_TOKEN_FILE"');
     expect(xml).toContain('<env name="PATH" value="C:\\bin;C:\\tools &amp; more"/>');
     expect(winswEnvValue(xml, "CODEX_SQLITE_HOME")).toBe("C:\\Users\\jun\\.codex-sqlite");
-    expect(winswEnvValue(xml, "OPENCODEX_HOME")).toBe(getConfigDir());
+    expect(winswEnvValue(xml, "OPENCCX_HOME")).toBe(getConfigDir());
     // Token VALUES never land in the XML — only file pointers / non-secret budgets.
-    expect(xml).not.toContain("OPENCODEX_API_AUTH_TOKEN");
-    expect(xml).not.toContain("OPENCODEX_ADMIN_AUTH_TOKEN");
+    expect(xml).not.toContain("OPENCCX_API_AUTH_TOKEN");
+    expect(xml).not.toContain("OPENCCX_ADMIN_AUTH_TOKEN");
   });
 
   test("carries the Bun provenance paired with the executable it baked (#848)", () => {
-    expect(buildWinswXml(entry, env)).toContain('<env name="OCX_BUN_RUNTIME_SOURCE" value="bundled"/>');
+    expect(buildWinswXml(entry, env)).toContain('<env name="OCCX_BUN_RUNTIME_SOURCE" value="bundled"/>');
     // The marker follows the entry, so an override-baked service says override.
     const overrideEntry = { ...entry, bun: "C:\\Custom\\bun.exe", bunRuntimeSource: "override" as const };
     const overrideXml = buildWinswXml(overrideEntry, env);
-    expect(overrideXml).toContain('<env name="OCX_BUN_RUNTIME_SOURCE" value="override"/>');
+    expect(overrideXml).toContain('<env name="OCCX_BUN_RUNTIME_SOURCE" value="override"/>');
     expect(overrideXml).toContain("<executable>C:\\Custom\\bun.exe</executable>");
   });
 
   test("bakes install-time ACL timeout and never embeds the admin token (#764)", () => {
     const xml = buildWinswXml(entry, {
       ...env,
-      OPENCODEX_API_AUTH_TOKEN: "api-secret-value",
-      OPENCODEX_ADMIN_AUTH_TOKEN: "admin-secret & more",
-      OPENCODEX_ACL_TIMEOUT_MS: "10000",
+      OPENCCX_API_AUTH_TOKEN: "api-secret-value",
+      OPENCCX_ADMIN_AUTH_TOKEN: "admin-secret & more",
+      OPENCCX_ACL_TIMEOUT_MS: "10000",
     });
 
-    expect(xml).toContain('<env name="OPENCODEX_ACL_TIMEOUT_MS" value="10000"/>');
-    expect(winswEnvValue(xml, "OPENCODEX_HOME")).toBe(getConfigDir());
-    expect(xml).not.toContain("OPENCODEX_ADMIN_AUTH_TOKEN");
-    expect(xml).not.toContain("OPENCODEX_API_AUTH_TOKEN");
+    expect(xml).toContain('<env name="OPENCCX_ACL_TIMEOUT_MS" value="10000"/>');
+    expect(winswEnvValue(xml, "OPENCCX_HOME")).toBe(getConfigDir());
+    expect(xml).not.toContain("OPENCCX_ADMIN_AUTH_TOKEN");
+    expect(xml).not.toContain("OPENCCX_API_AUTH_TOKEN");
     expect(xml).not.toContain("admin-secret");
     expect(xml).not.toContain("api-secret-value");
   });
@@ -83,15 +83,15 @@ describe("winsw xml", () => {
   test("escapes executable/arguments and configures restart + graceful stop", () => {
     const xml = buildWinswXml(entry, env);
 
-    expect(xml).toContain("<executable>C:\\OpenCodex\\bun.exe</executable>");
+    expect(xml).toContain("<executable>C:\\Openccx\\bun.exe</executable>");
     expect(xml).toContain("<arguments>&quot;C:\\Open Codex\\cli &amp; co\\index.ts&quot; start --port 10100</arguments>");
     expect(xml).toContain('<onfailure action="restart" delay="5 sec"/>');
     expect(xml).toContain("<stoptimeout>20 sec</stoptimeout>");
     expect(xml).toContain('<log mode="roll-by-size">');
     expect(xml).toContain(`<id>${WINSW_SERVICE_ID}</id>`);
   });
-  test("honors OCX_BAKE_PORT when building WinSW arguments", () => {
-    const xml = buildWinswXml(entry, { ...env, OCX_BAKE_PORT: "14444" });
+  test("honors OCCX_BAKE_PORT when building WinSW arguments", () => {
+    const xml = buildWinswXml(entry, { ...env, OCCX_BAKE_PORT: "14444" });
     expect(xml).toContain("start --port 14444");
   });
 });
@@ -270,15 +270,15 @@ describe("service refresh args", () => {
 });
 
 describe("app-side service token loading", () => {
-  test("loads the token from OCX_API_TOKEN_FILE only when the env token is empty", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-token-"));
+  test("loads the token from OCCX_API_TOKEN_FILE only when the env token is empty", () => {
+    const dir = mkdtempSync(join(tmpdir(), "occx-token-"));
     const file = join(dir, "service-api-token");
     writeFileSync(file, "  tok-123  \n");
     try {
-      expect(loadServiceTokenFromFile({ OCX_API_TOKEN_FILE: file })).toBe("tok-123");
-      expect(loadServiceTokenFromFile({ OCX_API_TOKEN_FILE: file, OPENCODEX_API_AUTH_TOKEN: "already" })).toBeNull();
+      expect(loadServiceTokenFromFile({ OCCX_API_TOKEN_FILE: file })).toBe("tok-123");
+      expect(loadServiceTokenFromFile({ OCCX_API_TOKEN_FILE: file, OPENCCX_API_AUTH_TOKEN: "already" })).toBeNull();
       expect(loadServiceTokenFromFile({})).toBeNull();
-      expect(loadServiceTokenFromFile({ OCX_API_TOKEN_FILE: join(dir, "missing") })).toBeNull();
+      expect(loadServiceTokenFromFile({ OCCX_API_TOKEN_FILE: join(dir, "missing") })).toBeNull();
     } finally {
       removeTreeWithRetry(dir);
     }

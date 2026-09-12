@@ -170,8 +170,8 @@ export async function loginAnthropic(
     } else if (importLocal === "only") {
       throw new Error(
         process.platform === "darwin"
-          ? "No Claude Code token found (Keychain or ~/.claude/.credentials.json). Run 'ocx login anthropic' for browser OAuth."
-          : "No Claude Code token found (~/.claude/.credentials.json). Run 'ocx login anthropic' for browser OAuth.",
+          ? "No Claude Code token found (Keychain or ~/.claude/.credentials.json). Run 'occx login anthropic' for browser OAuth."
+          : "No Claude Code token found (~/.claude/.credentials.json). Run 'occx login anthropic' for browser OAuth.",
       );
     }
   }

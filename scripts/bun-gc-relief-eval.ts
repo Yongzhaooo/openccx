@@ -16,14 +16,14 @@
  * This orchestrator reuses macos-rss-retention-harness-child.ts (the real
  * startServer proxy) and an inline SSE fixture upstream. It is NOT the locked
  * 7h retention protocol; runs are short and labeled. Smoke mode
- * (OCX_GC_EVAL_SMOKE=1) shortens durations for pipeline verification only.
+ * (OCCX_GC_EVAL_SMOKE=1) shortens durations for pipeline verification only.
  *
  * Usage: bun scripts/bun-gc-relief-eval.ts <outDir>
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const SMOKE = process.env.OCX_GC_EVAL_SMOKE === "1";
+const SMOKE = process.env.OCCX_GC_EVAL_SMOKE === "1";
 const RUNS = SMOKE ? 1 : 3;
 const LOAD_TURNS = SMOKE ? 3 : 30;
 const EVENTS = SMOKE ? 20 : 200;
@@ -115,7 +115,7 @@ type ChildHandle = {
 };
 
 async function startChild(upstreamUrl: string, dir: string): Promise<ChildHandle> {
-  const home = join(dir, "opencodex-home");
+  const home = join(dir, "openccx-home");
   const codexHome = join(dir, "codex-home");
   mkdirSync(home, { recursive: true });
   mkdirSync(codexHome, { recursive: true });
@@ -132,7 +132,7 @@ async function startChild(upstreamUrl: string, dir: string): Promise<ChildHandle
     stderr: Bun.file(join(dir, "child.stderr.log")),
     // The child installs its SIGUSR2 collector only for this evaluation, so the
     // locked 7h retention protocol can never collect mid-run.
-    env: { ...process.env, OCX_GC_EVAL: "1" },
+    env: { ...process.env, OCCX_GC_EVAL: "1" },
   });
 
   let port = 0;
@@ -205,7 +205,7 @@ async function oneTurn(base: string, label: string, turn: number): Promise<numbe
   const started = performance.now();
   const response = await fetch(base + "/v1/responses", {
     method: "POST",
-    headers: { "content-type": "application/json", "x-opencodex-api-key": "fixture-admission" },
+    headers: { "content-type": "application/json", "x-openccx-api-key": "fixture-admission" },
     body: JSON.stringify({ model: "fixture/fixture-model", input: label + "-" + turn, stream: true }),
   });
   if (response.status !== 200 || !response.body) throw new Error("HTTP " + response.status);

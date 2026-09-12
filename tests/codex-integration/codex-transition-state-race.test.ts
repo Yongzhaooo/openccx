@@ -14,7 +14,7 @@ import { pathToFileURL } from "node:url";
 
 import { Database } from "bun:sqlite";
 
-import { openCodexCoordinatorTransaction } from "../../src/codex/transition-state";
+import { openccxCoordinatorTransaction } from "../../src/codex/transition-state";
 import {
   resolveCodexCoordinatorDatabasePath,
   resolveEffectiveUserIdentity,
@@ -47,7 +47,7 @@ const transitionProbe = `
   } from ${JSON.stringify(userIdentityModuleUrl)};
   import { existsSync, realpathSync, writeFileSync } from "node:fs";
 
-  const payload = JSON.parse(process.env.OCX_TEST_PAYLOAD);
+  const payload = JSON.parse(process.env.OCCX_TEST_PAYLOAD);
   const canonicalCodexHome = realpathSync.native(payload.codexHome);
   const databasePath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
@@ -122,21 +122,21 @@ interface TransitionOutcome {
 interface Sandbox {
   root: string;
   codexHome: string;
-  opencodexHomes: [string, string];
+  openccxHomes: [string, string];
   coordinatorPath: string;
 }
 
 function createSandbox(label: string): Sandbox {
-  const root = mkdtempSync(join(tmpdir(), `ocx-transition-race-${label}-`));
+  const root = mkdtempSync(join(tmpdir(), `occx-transition-race-${label}-`));
   const codexHome = join(root, "codex");
-  const opencodexHomes: [string, string] = [join(root, "ocx-a"), join(root, "ocx-b")];
+  const openccxHomes: [string, string] = [join(root, "occx-a"), join(root, "occx-b")];
   mkdirSync(codexHome);
-  for (const path of opencodexHomes) mkdirSync(path);
+  for (const path of openccxHomes) mkdirSync(path);
   const coordinatorPath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
     realpathSync.native(codexHome),
   );
-  return { root, codexHome, opencodexHomes, coordinatorPath };
+  return { root, codexHome, openccxHomes, coordinatorPath };
 }
 
 function cleanupSandbox(sandbox: Sandbox): void {
@@ -146,13 +146,13 @@ function cleanupSandbox(sandbox: Sandbox): void {
   rmSync(sandbox.root, { recursive: true, force: true });
 }
 
-function spawnProbe(sandbox: Sandbox, opencodexHome: string, payload: Record<string, unknown>) {
+function spawnProbe(sandbox: Sandbox, openccxHome: string, payload: Record<string, unknown>) {
   return Bun.spawn([process.execPath, "--eval", transitionProbe], {
     env: {
       ...process.env,
       CODEX_HOME: sandbox.codexHome,
-      OPENCODEX_HOME: opencodexHome,
-      OCX_TEST_PAYLOAD: JSON.stringify({ ...payload, codexHome: sandbox.codexHome }),
+      OPENCCX_HOME: openccxHome,
+      OCCX_TEST_PAYLOAD: JSON.stringify({ ...payload, codexHome: sandbox.codexHome }),
     },
     stdin: "ignore",
     stdout: "pipe",
@@ -201,7 +201,7 @@ test("two real processes racing first use publish exactly one initial transition
   const retryPath = join(barrier, "retry");
   const children = ["a", "b"].map((id, index) => spawnProbe(
     sandbox,
-    sandbox.opencodexHomes[index]!,
+    sandbox.openccxHomes[index]!,
     {
       action: "race",
       id,
@@ -269,26 +269,26 @@ test("two real processes racing first use publish exactly one initial transition
   }
 }, { timeout: 4 * CHILD_TIMEOUT_MS });
 
-test("different OPENCODEX_HOME claimants advance the row under one CODEX_HOME", async () => {
+test("different OPENCCX_HOME claimants advance the row under one CODEX_HOME", async () => {
   const sandbox = createSandbox("shared-codex-home");
   try {
-    const first = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[0], {
+    const first = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[0], {
       action: "begin",
       expected: { nativeGeneration: 0, currentTxId: null },
       txId: "tx-home-a",
     }));
     expect(first.outcome?.kind).toBe("updated");
 
-    const integrations = join(sandbox.opencodexHomes[1], "integrations");
+    const integrations = join(sandbox.openccxHomes[1], "integrations");
     mkdirSync(integrations);
     writeFileSync(join(integrations, "codex.json"), JSON.stringify({
       version: 1,
       nativeGeneration: 91,
-      currentTxId: "opencodex-home-local-claimant",
-      history: { status: "pending", txId: "opencodex-home-local-claimant" },
+      currentTxId: "openccx-home-local-claimant",
+      history: { status: "pending", txId: "openccx-home-local-claimant" },
     }));
 
-    const second = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[1], {
+    const second = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[1], {
       action: "begin",
       expected: { nativeGeneration: 1, currentTxId: "tx-home-a" },
       txId: "tx-home-b",
@@ -299,7 +299,7 @@ test("different OPENCODEX_HOME claimants advance the row under one CODEX_HOME", 
       state: { nativeGeneration: 2, currentTxId: "tx-home-b" },
     });
 
-    const observed = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[0], {
+    const observed = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[0], {
       action: "read",
     }));
     expect(observed.databasePath).toBe(first.databasePath);
@@ -314,15 +314,15 @@ test("different OPENCODEX_HOME claimants advance the row under one CODEX_HOME", 
 
 test("a locked coordinator returns the exact typed busy outcome", async () => {
   const sandbox = createSandbox("busy");
-  let controller: ReturnType<typeof openCodexCoordinatorTransaction> | undefined;
+  let controller: ReturnType<typeof openccxCoordinatorTransaction> | undefined;
   try {
-    const initialized = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[0], {
+    const initialized = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[0], {
       action: "read",
     }));
     expect(initialized.outcome?.kind).toBe("ready");
 
-    controller = openCodexCoordinatorTransaction(sandbox.coordinatorPath);
-    const blocked = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[1], {
+    controller = openccxCoordinatorTransaction(sandbox.coordinatorPath);
+    const blocked = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[1], {
       action: "read",
     }));
     expect(blocked.outcome).toEqual({ kind: "unavailable", reason: "busy" });
@@ -336,7 +336,7 @@ test("an unsafe coordinator path returns the exact typed unsafe-path outcome", a
   const sandbox = createSandbox("unsafe-path");
   try {
     mkdirSync(sandbox.coordinatorPath);
-    const refused = await collectProbe(spawnProbe(sandbox, sandbox.opencodexHomes[0], {
+    const refused = await collectProbe(spawnProbe(sandbox, sandbox.openccxHomes[0], {
       action: "read",
     }));
     expect(refused.outcome).toEqual({ kind: "unavailable", reason: "unsafe-path" });

@@ -10,7 +10,7 @@ import {
 
 type Receipt = PickerOrderSaved & { catalogRefresh?: unknown };
 type Snapshot = { signature: string; identities: string; order: string[]; fixed: string[] };
-const DRAG_TYPE = "application/x-ocx-picker-order";
+const DRAG_TYPE = "application/x-occx-picker-order";
 let dragSequence = 0;
 /** Local drag identity, not a security token. Like newClientId, supports LAN HTTP. */
 function newDragToken(): string {

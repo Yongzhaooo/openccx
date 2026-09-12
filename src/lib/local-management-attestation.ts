@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
-export const LOCAL_ATTESTATION_CHALLENGE_HEADER = "x-opencodex-attestation-challenge";
-export const LOCAL_ATTESTATION_PROOF_HEADER = "x-opencodex-attestation-proof";
+export const LOCAL_ATTESTATION_CHALLENGE_HEADER = "x-openccx-attestation-challenge";
+export const LOCAL_ATTESTATION_PROOF_HEADER = "x-openccx-attestation-proof";
 
 const BASE64URL_256 = /^[A-Za-z0-9_-]{43}$/;
 
@@ -21,7 +21,7 @@ function attestationPayload(challenge: string, pid: number, port: number): strin
   if (!BASE64URL_256.test(challenge)) return null;
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
-  return `opencodex-local-management-v1\n${challenge}\n${pid}\n${port}`;
+  return `openccx-local-management-v1\n${challenge}\n${pid}\n${port}`;
 }
 
 export function createLocalAttestationProof(

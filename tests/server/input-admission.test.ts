@@ -6,24 +6,24 @@ import {
   resolveInputCeiling,
 } from "../../src/server/responses/input-admission";
 import { modelRecordValue } from "../../src/reasoning-effort";
-import type { OcxMessage, OcxParsedRequest, OcxProviderConfig, OcxTool } from "../../src/types";
+import type { OccxMessage, OccxParsedRequest, OccxProviderConfig, OccxTool } from "../../src/types";
 
-const CANONICAL_NATIVE: OcxProviderConfig = {
+const CANONICAL_NATIVE: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.com/backend-api/codex",
   authMode: "forward",
 };
 
-function request(messages: OcxMessage[], tools?: OcxTool[]): OcxParsedRequest {
+function request(messages: OccxMessage[], tools?: OccxTool[]): OccxParsedRequest {
   return {
     modelId: "test-model",
     context: { messages, ...(tools ? { tools } : {}) },
     stream: false,
     options: {},
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
-function userText(text: string): OcxMessage {
+function userText(text: string): OccxMessage {
   return { role: "user", content: text, timestamp: 0 };
 }
 
@@ -34,7 +34,7 @@ function asciiTokens(tokens: number): string {
 
 describe("resolveInputCeiling", () => {
   test("prefers the per-model window over the provider-wide one", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       contextWindow: 8_000,
@@ -45,7 +45,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("modelMaxInputTokens can only tighten the window", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       modelContextWindows: { "m": 32_000 },
@@ -55,7 +55,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("a looser modelMaxInputTokens never widens the window", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       modelContextWindows: { "m": 32_000 },
@@ -65,7 +65,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("returns null when nothing is configured", () => {
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
     expect(resolveInputCeiling(provider, "custom", "m")).toBeNull();
   });
 
@@ -76,7 +76,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("a custom provider merely NAMED openai does not inherit native limits", () => {
-    const impostor: OcxProviderConfig = {
+    const impostor: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://impostor.test/v1",
       authMode: "key",
@@ -89,7 +89,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("an explicit user window still wins over native metadata", () => {
-    const pinned: OcxProviderConfig = { ...CANONICAL_NATIVE, modelContextWindows: { "gpt-5.6-sol": 50_000 } };
+    const pinned: OccxProviderConfig = { ...CANONICAL_NATIVE, modelContextWindows: { "gpt-5.6-sol": 50_000 } };
     expect(resolveInputCeiling(pinned, "openai", "gpt-5.6-sol")).toBe(50_000);
   });
 
@@ -97,7 +97,7 @@ describe("resolveInputCeiling", () => {
     // The catalog resolves modelContextWindows through modelRecordValue, so it advertises
     // 131_072 for gpt-oss:120b off this config. A bare lookup here resolved nothing and
     // fell back to contextWindow, leaving the gate refusing turns the model can hold.
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       contextWindow: 8_000,
@@ -110,7 +110,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("an exact entry still beats the family entry", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       modelContextWindows: { "gpt-oss": 131_072, "gpt-oss:20b": 32_000 },
@@ -120,7 +120,7 @@ describe("resolveInputCeiling", () => {
   });
 
   test("a family modelMaxInputTokens tightens its tagged siblings", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       modelContextWindows: { "gpt-oss": 131_072 },
@@ -189,7 +189,7 @@ describe("estimateInputTokens", () => {
 });
 
 describe("checkInputAdmission", () => {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     adapter: "openai-chat",
     baseUrl: "https://example.test/v1",
     modelContextWindows: { "m": 10_000 },
@@ -215,7 +215,7 @@ describe("checkInputAdmission", () => {
   });
 
   test("admits everything when no ceiling resolves", () => {
-    const unknown: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
+    const unknown: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
     const result = checkInputAdmission(request([userText(asciiTokens(5_000_000))]), unknown, "custom", "m");
     expect(result.admitted).toBe(true);
     expect(result.ceiling).toBeNull();
@@ -229,7 +229,7 @@ describe("checkInputAdmission", () => {
     const record = "\uAC00" + "x".repeat(61);
     const text = record.repeat(2_033);
     const honestTokens = Math.ceil(text.length / 4);
-    const aliased: OcxProviderConfig = {
+    const aliased: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       modelContextWindows: { "m": honestTokens },

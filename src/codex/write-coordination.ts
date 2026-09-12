@@ -35,7 +35,7 @@ export interface CodexWriteCandidate {
 export interface CodexWriteEvidence {
   /** sha256 of the `config.toml` bytes this operation read as its input. */
   readonly nativeInputIdentity: string;
-  /** Digest of the persisted OpenCodex config these bytes were derived from. */
+  /** Digest of the persisted Openccx config these bytes were derived from. */
   readonly persistedIdentity: string;
   /** Generation as observed before the lock; `present:false` means no coordinator yet. */
   readonly generation: Readonly<{ present: boolean; value: number }>;

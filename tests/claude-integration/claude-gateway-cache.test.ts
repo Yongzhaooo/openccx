@@ -7,7 +7,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const dirs: string[] = [];
 function tempDir(): string {
-  const d = mkdtempSync(join(tmpdir(), "ocx-gwcache-"));
+  const d = mkdtempSync(join(tmpdir(), "occx-gwcache-"));
   dirs.push(d);
   return d;
 }
@@ -66,9 +66,9 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
       globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
         requestedUrl = String(input);
         const headers = new Headers(init?.headers);
-        expect(headers.get("x-opencodex-api-key")).toBe("env-admission");
+        expect(headers.get("x-openccx-api-key")).toBe("env-admission");
         expect(headers.get("authorization")).toBeNull();
-        return new Response(JSON.stringify({ data: [{ id: "claude-ocx-native--gpt-5.6-sol", display_name: "gpt-5.6-sol (native)" }] }), {
+        return new Response(JSON.stringify({ data: [{ id: "claude-occx-native--gpt-5.6-sol", display_name: "gpt-5.6-sol (native)" }] }), {
           headers: { "content-type": "application/json" },
         });
       }) as typeof fetch;
@@ -78,11 +78,11 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
         admissionConfig: {
           apiKeys: [{ id: "configured", name: "Configured", key: "configured-admission", createdAt: "" }],
         },
-        env: { OPENCODEX_API_AUTH_TOKEN: " env-admission " },
+        env: { OPENCCX_API_AUTH_TOKEN: " env-admission " },
       });
       expect(requestedUrl).toContain("ids=cli");
       const body = JSON.parse(readFileSync(path!, "utf8"));
-      expect(body.models[0].id).toBe("claude-ocx-native--gpt-5.6-sol");
+      expect(body.models[0].id).toBe("claude-occx-native--gpt-5.6-sol");
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -94,19 +94,19 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
     let admission = "";
     const path = await refreshGatewayModelCacheFromProxy({
       baseUrl: "https://hub.example.test",
-      admissionToken: "ocx_data_connected",
+      admissionToken: "occx_data_connected",
     }, {
       configDir: dir,
       fetchImpl: async (input, init) => {
         requestedUrl = String(input);
-        admission = new Headers(init?.headers).get("x-opencodex-api-key") ?? "";
-        return new Response(JSON.stringify({ data: [{ id: "claude-ocx-hub-model" }] }), {
+        admission = new Headers(init?.headers).get("x-openccx-api-key") ?? "";
+        return new Response(JSON.stringify({ data: [{ id: "claude-occx-hub-model" }] }), {
           headers: { "content-type": "application/json" },
         });
       },
     });
     expect(requestedUrl).toBe("https://hub.example.test/v1/models?limit=1000&ids=cli");
-    expect(admission).toBe("ocx_data_connected");
+    expect(admission).toBe("occx_data_connected");
     const body = JSON.parse(readFileSync(path!, "utf8"));
     expect(body.baseUrl).toBe("https://hub.example.test");
   });
@@ -117,7 +117,7 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
     try {
       globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
         const headers = new Headers(init?.headers);
-        expect(headers.get("x-opencodex-api-key")).toBe("configured-admission");
+        expect(headers.get("x-openccx-api-key")).toBe("configured-admission");
         return new Response(JSON.stringify({ data: [] }), {
           headers: { "content-type": "application/json" },
         });
@@ -155,7 +155,7 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
         env: {},
         fetchImpl: async input => {
           requestedUrl = String(input);
-          return new Response(JSON.stringify({ data: [{ id: "claude-ocx-native--x" }] }), {
+          return new Response(JSON.stringify({ data: [{ id: "claude-occx-native--x" }] }), {
             headers: { "content-type": "application/json" },
           });
         },
@@ -177,7 +177,7 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
     let seen: string | null = null;
     try {
       globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-        seen = new Headers(init?.headers).get("x-opencodex-api-key");
+        seen = new Headers(init?.headers).get("x-openccx-api-key");
         return new Response(JSON.stringify({ data: [] }), {
           headers: { "content-type": "application/json" },
         });
@@ -187,7 +187,7 @@ describe("Claude Code gateway-model cache pre-write (devlog 260712 030)", () => 
         admissionConfig: {
           apiKeys: [{ id: "configured", name: "Configured", key: "configured-admission", createdAt: "" }],
         },
-        env: { OCX_API_TOKEN_FILE: tokenFile },
+        env: { OCCX_API_TOKEN_FILE: tokenFile },
       });
       expect(seen).toBe("service-file-admission");
     } finally {

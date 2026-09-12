@@ -369,7 +369,7 @@ function runInWorker(opts: RequestPolicyRunOptions & { blockMs?: number }): Prom
       ...(opts.blockMs !== undefined ? { blockMs: opts.blockMs } : {}),
       env: {
         ...(process.env.CODEX_HOME ? { CODEX_HOME: process.env.CODEX_HOME } : {}),
-        ...(process.env.OPENCODEX_HOME ? { OPENCODEX_HOME: process.env.OPENCODEX_HOME } : {}),
+        ...(process.env.OPENCCX_HOME ? { OPENCCX_HOME: process.env.OPENCCX_HOME } : {}),
       },
     });
   })).catch(error => {

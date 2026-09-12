@@ -15,7 +15,7 @@ import {
 import { PROVIDER_REGISTRY, type ProviderRegistryEntry } from "../../src/providers/registry";
 import { routedSlug } from "../../src/providers/slug-codec";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { fixturePath } from "../helpers/repo-root";
 
@@ -36,7 +36,7 @@ function registryEntry(): ProviderRegistryEntry {
   return entry;
 }
 
-function providerConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function providerConfig(overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "deepinfra",

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { clearProviderQuotaCache, fetchProviderQuotaReports } from "../../src/providers/quota";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const originalFetch = globalThis.fetch;
 
-function openCodeGoConfig(baseUrl = "https://opencode.ai/zen/go/v1"): OcxConfig {
+function openCodeGoConfig(baseUrl = "https://opencode.ai/zen/go/v1"): OccxConfig {
   return {
     defaultProvider: "opencode-go",
     providers: {
@@ -15,7 +15,7 @@ function openCodeGoConfig(baseUrl = "https://opencode.ai/zen/go/v1"): OcxConfig 
         apiKey: "opencode-go-secret",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
@@ -90,7 +90,7 @@ describe("OpenCode Go provider quota", () => {
 
   // #1924: a multi-account setup points several rows at the same OpenCode Go endpoint under
   // names the registry has never heard of. Gating dispatch on the literal name `opencode-go`
-  // meant those rows had no dashboard quota panel and no `ocx provider quota --json` report,
+  // meant those rows had no dashboard quota panel and no `occx provider quota --json` report,
   // even though each one holds a working key for the same upstream.
   test("a canonical sibling row under any name is probed and reported", async () => {
     const bearers: string[] = [];
@@ -139,7 +139,7 @@ describe("OpenCode Go provider quota", () => {
           apiKey: "unrelated-secret",
         },
       },
-    } as OcxConfig, true);
+    } as OccxConfig, true);
 
     expect(fetchCalls).toBe(0);
     expect(result.reports).toEqual([]);

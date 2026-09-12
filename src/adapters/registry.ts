@@ -14,7 +14,7 @@ import { createMimoFreeAdapter } from "./mimo-free";
 import { createOpenAIChatAdapter } from "./openai-chat";
 import { createOllamaNativeAdapter } from "./ollama-native";
 import { createResponsesPassthroughAdapter } from "./openai-responses";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { createAdapterTierMetadata } from "../providers/fastwire";
 
 export type AdapterCacheRetention = "none" | "short" | "long";
@@ -51,7 +51,7 @@ export type AdapterMutationContract =
   | "codex-owned-with-gated-native-fallback";
 
 type AdapterFactory = (
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   context: AdapterFactoryContext,
 ) => ProviderAdapter;
 
@@ -73,76 +73,76 @@ export const ADAPTER_REGISTRY = {
   codebuddy: {
     wire: "codebuddy",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createCodeBuddyAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createCodeBuddyAdapter(provider),
   },
   "command-code": {
     wire: "command-code",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createCommandCodeAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createCommandCodeAdapter(provider),
   },
   "openai-chat": {
     wire: "openai-chat",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) =>
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) =>
       withClinePassDeepSeekV4ToolReplayCompatibility(createOpenAIChatAdapter(provider)),
   },
   "ollama-native": {
     wire: "ollama-native",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createOllamaNativeAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createOllamaNativeAdapter(provider),
   },
   anthropic: {
     wire: "anthropic",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, context: AdapterFactoryContext) =>
+    create: (provider: OccxProviderConfig, context: AdapterFactoryContext) =>
       createAnthropicAdapter(provider, context.cacheRetention),
   },
   "openai-responses": {
     wire: "openai-responses",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) =>
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) =>
       createResponsesPassthroughAdapter(provider),
   },
   google: {
     wire: "google",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createGoogleAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createGoogleAdapter(provider),
   },
   kiro: {
     wire: "kiro",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createKiroAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createKiroAdapter(provider),
   },
   azure: {
     contractParent: "openai-responses",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createAzureAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createAzureAdapter(provider),
   },
   "azure-openai": {
     contractParent: "openai-responses",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createAzureAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createAzureAdapter(provider),
   },
   cursor: {
     wire: "cursor",
     mutation: "codex-owned-with-gated-native-fallback",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createCursorAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createCursorAdapter(provider),
   },
   "devin-cli": {
     wire: "devin-cli",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createDevinCliAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createDevinCliAdapter(provider),
   },
   devin: {
     wire: "devin",
     mutation: "codex-owned",
-    create: (provider: OcxProviderConfig, context: AdapterFactoryContext) => createDevinAdapter(provider, context),
+    create: (provider: OccxProviderConfig, context: AdapterFactoryContext) => createDevinAdapter(provider, context),
   },
   "mimo-free": {
     contractParent: "openai-chat",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createMimoFreeAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createMimoFreeAdapter(provider),
   },
   qoder: {
     contractParent: "codebuddy",
-    create: (provider: OcxProviderConfig, _context: AdapterFactoryContext) => createQoderAdapter(provider),
+    create: (provider: OccxProviderConfig, _context: AdapterFactoryContext) => createQoderAdapter(provider),
   },
 } as const satisfies Record<string, AdapterDefinition>;
 
@@ -181,7 +181,7 @@ export function effectiveAdapterContract(adapterId: string): Readonly<{
 }
 
 export function createRegisteredAdapter(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   context: AdapterFactoryContext = {},
 ): ProviderAdapter {
   const definition = getAdapterDefinition(provider.adapter);

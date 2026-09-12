@@ -27,7 +27,7 @@ export type UninstallObservation = {
    * For a Task Scheduler backend: was the restart window verified AFTER removal?
    *
    * Deleting the registration does not prove an already-running `:loop` wrapper died —
-   * killing it is best-effort (#764). `ocx stop` polls across the window; uninstall has
+   * killing it is best-effort (#764). `occx stop` polls across the window; uninstall has
    * to do the same before it may take shared config down.
    */
   respawnWindowVerified: boolean;

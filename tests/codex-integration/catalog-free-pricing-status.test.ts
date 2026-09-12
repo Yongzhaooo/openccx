@@ -4,7 +4,7 @@ import { deriveEntry } from "../../src/codex/catalog/sync";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { listManagementModelRows } from "../../src/server/management/model-rows";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Regression coverage for #3666 — no way to filter free models in the Dashboard catalog.
@@ -105,7 +105,7 @@ describe("discovered model pricing classification (#3666)", () => {
 describe("pricingStatus on the /api/models wire (#3666)", () => {
   const PROVIDER = "pricing-wire-test";
 
-  function fixture(): OcxConfig {
+  function fixture(): OccxConfig {
     return withStubbedProviderFetch({
       port: 10100,
       modelCacheTtlMs: 0,
@@ -117,7 +117,7 @@ describe("pricingStatus on the /api/models wire (#3666)", () => {
           apiKey: "sk-test",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
   }
 
   test("a discovered free row carries the field to the management row list", async () => {

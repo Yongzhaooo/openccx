@@ -35,20 +35,20 @@ interface QuotaResetsDto {
 }
 
 const USAGE = `Usage:
-  ocx provider edit <name> [--adapter <id>] [--base-url <url>] [--default-model <id|->]
+  occx provider edit <name> [--adapter <id>] [--base-url <url>] [--default-model <id|->]
       [--auth-mode <key|forward|oauth|local|->] [--note <text|->]
       [--api-key-transport <x-api-key|bearer|->]
       [--headers <json>] [--enabled <on|off>] [--live-models <on|off>]
       [--retain-models <id,id|->]
       [--xai-chat <on|off>]
       [--allow-private-network <on|off>] [--json]
-  ocx provider test <name> [--json]
-  ocx provider quota [--refresh] [--json]
-  ocx provider resets [--limit <n>] [--json]
-  ocx provider presets [--json]
-  ocx provider account-mode <pool|direct> [--json]
-  ocx provider selected <name> [--set <model,model...>] [--clear] [--json]
-  ocx provider keychain <name> [status|store|restore] [--json]`;
+  occx provider test <name> [--json]
+  occx provider quota [--refresh] [--json]
+  occx provider resets [--limit <n>] [--json]
+  occx provider presets [--json]
+  occx provider account-mode <pool|direct> [--json]
+  occx provider selected <name> [--set <model,model...>] [--clear] [--json]
+  occx provider keychain <name> [status|store|restore] [--json]`;
 
 function cleared(value: string | undefined): string | undefined {
   return value === "-" ? "" : value;
@@ -146,7 +146,7 @@ async function quota(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   const result = await runtimeRequest<ProviderQuotasDto>(`/api/provider-quotas${refresh ? "?refresh=1" : ""}`, {}, deps);
   // `summaryLines` is a depth-1 flattener: it renders a non-scalar array as "N item(s)", which
   // collapsed the whole report to a count and made the command useless for its stated purpose
-  // (#2565). Render one line per report with the same formatter `ocx account refresh` uses.
+  // (#2565). Render one line per report with the same formatter `occx account refresh` uses.
   const reports = Array.isArray(result?.reports) ? result.reports : [];
   const lines = reports.length > 0
     ? reports.map(report => providerQuotaLine(report.provider, report))
@@ -186,7 +186,7 @@ async function resets(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   const result = await runtimeRequest<QuotaResetsDto>(`/api/quota-resets${query}`, {}, deps);
   const events = Array.isArray(result?.events) ? result.events : [];
   // One line per event, NOT summaryLines: that helper is a depth-1 flattener and renders a
-  // non-scalar array as "N item(s)", which is what made `ocx provider quota` useless in #2565.
+  // non-scalar array as "N item(s)", which is what made `occx provider quota` useless in #2565.
   const lines = events.length > 0
     ? events.map(quotaResetLine)
     // An empty list is ambiguous, so say which kind of empty it is. Without this an operator

@@ -29,23 +29,23 @@ import {
   resolveCodexCoordinatorDatabasePath,
   resolveEffectiveUserIdentity,
 } from "../../src/codex/user-identity";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { INVALID_HISTORY_BACKUP_FIXTURES, validHistoryBackupFixture } from "../helpers/codex-history-manifest-fixtures";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let coordinatorPath = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-native-residue-codex-"));
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-native-residue-opencodex-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  codexHome = mkdtempSync(join(tmpdir(), "occx-native-residue-codex-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-native-residue-openccx-"));
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   coordinatorPath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
     realpathSync.native(codexHome),
@@ -55,13 +55,13 @@ beforeEach(() => {
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   for (const suffix of ["", "-journal", "-wal", "-shm"]) {
     rmSync(`${coordinatorPath}${suffix}`, { force: true });
   }
   removeTreeWithRetry(codexHome);
-  removeTreeWithRetry(opencodexHome);
+  removeTreeWithRetry(openccxHome);
 });
 
 function pathInCodexHome(name: string): string {
@@ -90,7 +90,7 @@ function sessionMeta(id: string, modelProvider: string): string {
 }
 
 function createHistoryDatabase(
-  modelProvider: "openai" | "opencodex",
+  modelProvider: "openai" | "openccx",
   rolloutProviders: string[] = [modelProvider],
 ): void {
   writeFileSync(
@@ -122,7 +122,7 @@ function historyBackupPath(): string {
     ? resolve(databasePath).toLowerCase()
     : resolve(databasePath);
   const id = createHash("sha256").update(normalized).digest("hex").slice(0, 16);
-  return join(opencodexHome, `codex-history-backup-${id}.json`);
+  return join(openccxHome, `codex-history-backup-${id}.json`);
 }
 
 const residueFixtures: Array<{
@@ -134,7 +134,7 @@ const residueFixtures: Array<{
     name: "injected config.toml",
     surface: "config",
     arrange: () => writeFileSync(pathInCodexHome("config.toml"), [
-      "# Auto-injected by opencodex",
+      "# Auto-injected by openccx",
       'openai_base_url = "http://127.0.0.1:10100/v1"',
       "",
     ].join("\n")),
@@ -143,14 +143,14 @@ const residueFixtures: Array<{
     name: "generated profile",
     surface: "profile",
     arrange: () => writeFileSync(
-      pathInCodexHome("opencodex.config.toml"),
+      pathInCodexHome("openccx.config.toml"),
       buildProfileFile(10100, null),
     ),
   },
   {
     name: "routed catalog",
     surface: "catalog",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex-catalog.json"), routedCatalog()),
+    arrange: () => writeFileSync(pathInCodexHome("openccx-catalog.json"), routedCatalog()),
   },
   {
     name: "routed models cache",
@@ -160,7 +160,7 @@ const residueFixtures: Array<{
   {
     name: "restore journal",
     surface: "journal",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex-journal.json"), JSON.stringify({
+    arrange: () => writeFileSync(pathInCodexHome("openccx-journal.json"), JSON.stringify({
       version: 1,
       originalConfig: Buffer.from('model = "gpt-5.5"\n').toString("base64"),
       originalProfile: null,
@@ -201,7 +201,7 @@ for (const fixture of residueFixtures) {
 }
 
 test("a bare routed history row and its matching rollout are not managed residue", () => {
-  createHistoryDatabase("opencodex");
+  createHistoryDatabase("openccx");
 
   expect(classifyNativeRoutedResidue()).toEqual({ kind: "clean" });
   expect(readCodexTransitionState()).toMatchObject({
@@ -210,8 +210,8 @@ test("a bare routed history row and its matching rollout are not managed residue
   });
 });
 
-test("an OpenCodex atomic-write artifact is indeterminate", () => {
-  writeFileSync(pathInCodexHome("config.toml.ocx.123.1.tmp"), "partial");
+test("an Openccx atomic-write artifact is indeterminate", () => {
+  writeFileSync(pathInCodexHome("config.toml.occx.123.1.tmp"), "partial");
   expect(classifyNativeRoutedResidue()).toMatchObject({
     kind: "indeterminate",
     surface: "partial-write",
@@ -223,7 +223,7 @@ test("a routed catalog at the configured nested path refuses coordinator initial
   mkdirSync(pathInCodexHome("nested"));
   writeFileSync(pathInCodexHome("config.toml"), 'model_catalog_json = "nested/custom-catalog.json"\n');
   writeFileSync(catalogPath, JSON.stringify({ models: [] }));
-  const config: OcxConfig = {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "fixture",
     providers: {
@@ -328,7 +328,7 @@ const catalogPathShapes: Array<{
 
 for (const shape of catalogPathShapes) {
   test(`configured catalog classification follows the ${shape.name} path`, () => {
-    const outsideRoot = mkdtempSync(join(tmpdir(), "ocx-native-residue-catalog-outside-"));
+    const outsideRoot = mkdtempSync(join(tmpdir(), "occx-native-residue-catalog-outside-"));
     const configuredPath = shape.configuredPath(outsideRoot, randomUUID());
     const targetPath = resolve(realpathSync.native(codexHome), configuredPath);
     try {
@@ -375,7 +375,7 @@ for (const shape of productionCatalogLeafShapes) {
       `model_catalog_json = ${JSON.stringify(`nested/${configuredLeaf}`)}\n`,
     );
     writeFileSync(catalogPath, JSON.stringify({ models: [] }));
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "fixture",
       providers: {
@@ -394,7 +394,7 @@ for (const shape of productionCatalogLeafShapes) {
     };
     const routedRows = catalog.models.filter(model =>
       typeof model.description === "string"
-        && model.description.startsWith("Routed via opencodex → ")
+        && model.description.startsWith("Routed via openccx → ")
     );
 
     expect(sync).toMatchObject({ path: catalogPath, catalogWritten: true });
@@ -409,7 +409,7 @@ for (const shape of productionCatalogLeafShapes) {
 
 test("an atomic-write artifact beside the configured catalog is indeterminate", () => {
   const catalogPath = canonicalPathInCodexHome("nested/custom-catalog.json");
-  const artifactPath = `${catalogPath}.ocx.42.7.tmp`;
+  const artifactPath = `${catalogPath}.occx.42.7.tmp`;
   mkdirSync(pathInCodexHome("nested"));
   writeFileSync(pathInCodexHome("config.toml"), 'model_catalog_json = "nested/custom-catalog.json"\n');
   writeFileSync(catalogPath, JSON.stringify({ models: [] }));
@@ -424,7 +424,7 @@ test("an atomic-write artifact beside the configured catalog is indeterminate", 
 
 test("an atomic-write artifact is found before its configured target exists", () => {
   const catalogPath = canonicalPathInCodexHome("nested/pending.json");
-  const artifactPath = `${catalogPath}.ocx.42.7.tmp`;
+  const artifactPath = `${catalogPath}.occx.42.7.tmp`;
   mkdirSync(dirname(catalogPath), { recursive: true });
   writeFileSync(pathInCodexHome("config.toml"), 'model_catalog_json = "nested/pending.json"\n');
   writeFileSync(artifactPath, "partial");
@@ -480,7 +480,7 @@ test("an absent configured catalog target is indeterminate", () => {
 });
 
 test("the default catalog is still inspected when a custom catalog is configured", () => {
-  const defaultCatalogPath = canonicalPathInCodexHome("opencodex-catalog.json");
+  const defaultCatalogPath = canonicalPathInCodexHome("openccx-catalog.json");
   mkdirSync(pathInCodexHome("nested"));
   writeFileSync(pathInCodexHome("config.toml"), 'model_catalog_json = "nested/custom-catalog.json"\n');
   writeFileSync(pathInCodexHome("nested/custom-catalog.json"), JSON.stringify({ models: [] }));
@@ -495,11 +495,11 @@ test("the default catalog is still inspected when a custom catalog is configured
 
 for (const location of ["inside", "outside"] as const) {
   test(`the default catalog remains inspected with an absolute ${location} configured path`, () => {
-    const outsideRoot = mkdtempSync(join(tmpdir(), "ocx-native-residue-default-outside-"));
+    const outsideRoot = mkdtempSync(join(tmpdir(), "occx-native-residue-default-outside-"));
     const configuredPath = location === "inside"
       ? canonicalPathInCodexHome("absolute-custom.json")
       : join(outsideRoot, "absolute-custom.json");
-    const defaultCatalogPath = canonicalPathInCodexHome("opencodex-catalog.json");
+    const defaultCatalogPath = canonicalPathInCodexHome("openccx-catalog.json");
     try {
       writeFileSync(
         pathInCodexHome("config.toml"),
@@ -590,9 +590,9 @@ test("an invalid sqlite_home is indeterminate instead of selecting a fallback da
 const arbitraryComboAlias = randomUUID();
 
 test(`production-generated arbitrary bare combo alias ${arbitraryComboAlias} is routed residue`, async () => {
-  const catalogPath = canonicalPathInCodexHome("opencodex-catalog.json");
+  const catalogPath = canonicalPathInCodexHome("openccx-catalog.json");
   writeFileSync(catalogPath, JSON.stringify({ models: [] }));
-  const config: OcxConfig = {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "fixture",
     providers: {
@@ -619,7 +619,7 @@ test(`production-generated arbitrary bare combo alias ${arbitraryComboAlias} is 
   };
   const routedRows = catalog.models.filter(model =>
     typeof model.description === "string"
-      && model.description.startsWith("Routed via opencodex → ")
+      && model.description.startsWith("Routed via openccx → ")
   );
 
   expect(sync).toMatchObject({ path: catalogPath, catalogWritten: true });
@@ -627,7 +627,7 @@ test(`production-generated arbitrary bare combo alias ${arbitraryComboAlias} is 
   expect(routedRows).toEqual([
     expect.objectContaining({
       slug: arbitraryComboAlias,
-      description: "Routed via opencodex → combo (combo).",
+      description: "Routed via openccx → combo (combo).",
       owned_by: "combo",
     }),
   ]);
@@ -645,7 +645,7 @@ const arbitraryForeignSlug = `${randomUUID()}/${randomUUID()}`;
 const arbitraryForeignDescription = randomUUID();
 
 test(`arbitrary foreign row ${arbitraryForeignSlug} described as ${arbitraryForeignDescription} is indeterminate`, () => {
-  writeFileSync(pathInCodexHome("opencodex-catalog.json"), JSON.stringify({
+  writeFileSync(pathInCodexHome("openccx-catalog.json"), JSON.stringify({
     models: [{ slug: arbitraryForeignSlug, description: arbitraryForeignDescription }],
   }));
 
@@ -656,7 +656,7 @@ test(`arbitrary foreign row ${arbitraryForeignSlug} described as ${arbitraryFore
 });
 
 test("a native-tagged history row with routed latest rollout metadata refuses coordinator initialization", () => {
-  createHistoryDatabase("openai", ["openai", "opencodex"]);
+  createHistoryDatabase("openai", ["openai", "openccx"]);
 
   expect(classifyNativeRoutedResidue()).toMatchObject({
     kind: "residue",
@@ -670,7 +670,7 @@ test("a native-tagged history row with routed latest rollout metadata refuses co
 });
 
 test("routed first rollout metadata is residue even when the latest metadata is native", () => {
-  createHistoryDatabase("openai", ["opencodex", "openai"]);
+  createHistoryDatabase("openai", ["openccx", "openai"]);
 
   expect(classifyNativeRoutedResidue()).toMatchObject({
     kind: "residue",
@@ -679,11 +679,11 @@ test("routed first rollout metadata is residue even when the latest metadata is 
   });
 });
 
-test("an opencodex first rollout with invalid latest metadata is indeterminate", () => {
+test("an openccx first rollout with invalid latest metadata is indeterminate", () => {
   createHistoryDatabase("openai");
   writeFileSync(
     pathInCodexHome("rollout.jsonl"),
-    sessionMeta("thread-1", "opencodex") + "\n" + sessionMeta("thread-2", "openai") + "\n",
+    sessionMeta("thread-1", "openccx") + "\n" + sessionMeta("thread-2", "openai") + "\n",
   );
 
   expect(classifyNativeRoutedResidue()).toMatchObject({
@@ -702,7 +702,7 @@ test("a referenced rollout with native first and latest metadata is clean", () =
 
 test("a routed rollout without a trailing newline is residue", () => {
   createHistoryDatabase("openai");
-  writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "opencodex"));
+  writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "openccx"));
 
   expect(classifyNativeRoutedResidue()).toMatchObject({
     kind: "residue",
@@ -715,7 +715,7 @@ test("a routed rollout with a non-ASCII id split across the read chunk is residu
   createHistoryDatabase("openai");
   const boundary = 64 * 1024;
   const prefix = `{"timestamp":"2026-08-04T00:00:00.000Z","type":"session_meta","payload":{"description":"`;
-  const suffix = `","id":"thread-1","model_provider":"opencodex","source":"cli"}}\n`;
+  const suffix = `","id":"thread-1","model_provider":"openccx","source":"cli"}}\n`;
   const paddingLength = boundary - Buffer.byteLength(prefix) - 1; // 🚀 starts at byte 65535, straddling 64 KiB
   const content = `${prefix}${"x".repeat(paddingLength)}🚀${suffix}`;
   const emojiByteOffset = Buffer.from(content, "utf8").indexOf(Buffer.from("🚀", "utf8"));
@@ -743,7 +743,7 @@ test("an oversized referenced rollout is indeterminate without being loaded", ()
 
 test("a BOM-prefixed rollout record is indeterminate", () => {
   createHistoryDatabase("openai");
-  writeFileSync(pathInCodexHome("rollout.jsonl"), `\uFEFF${sessionMeta("thread-1", "opencodex")}\n`);
+  writeFileSync(pathInCodexHome("rollout.jsonl"), `\uFEFF${sessionMeta("thread-1", "openccx")}\n`);
 
   expect(classifyNativeRoutedResidue()).toMatchObject({
     kind: "indeterminate",
@@ -793,7 +793,7 @@ for (const fixture of [
 }
 
 test("a manifest-referenced routed rollout is residue", () => {
-  writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "opencodex") + "\n");
+  writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "openccx") + "\n");
   writeFileSync(historyBackupPath(), JSON.stringify({
     version: 1,
     stateDbPath: join(realpathSync.native(codexHome), "state_5.sqlite"),
@@ -863,7 +863,7 @@ test("history backup schema diagnostics preserve entry shape and provenance dist
 
 for (const fixture of INVALID_HISTORY_BACKUP_FIXTURES) {
   test(`a history backup with ${fixture.name} is indeterminate and not adopted`, () => {
-    writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "opencodex") + "\n");
+    writeFileSync(pathInCodexHome("rollout.jsonl"), sessionMeta("thread-1", "openccx") + "\n");
     const manifest = validHistoryBackupFixture(
       join(realpathSync.native(codexHome), "state_5.sqlite"),
       pathInCodexHome("rollout.jsonl"),
@@ -895,12 +895,12 @@ const indeterminateFixtures: Array<{
   {
     name: "malformed profile TOML",
     surface: "profile",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex.config.toml"), "[features\n"),
+    arrange: () => writeFileSync(pathInCodexHome("openccx.config.toml"), "[features\n"),
   },
   {
     name: "malformed catalog JSON",
     surface: "catalog",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex-catalog.json"), "{not-json"),
+    arrange: () => writeFileSync(pathInCodexHome("openccx-catalog.json"), "{not-json"),
   },
   {
     name: "unreadable models cache shape",
@@ -910,12 +910,12 @@ const indeterminateFixtures: Array<{
   {
     name: "malformed journal JSON",
     surface: "journal",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex-journal.json"), "{not-json"),
+    arrange: () => writeFileSync(pathInCodexHome("openccx-journal.json"), "{not-json"),
   },
   {
     name: "partial write",
     surface: "partial-write",
-    arrange: () => writeFileSync(pathInCodexHome("opencodex-catalog.json.ocx.42.7.tmp"), ""),
+    arrange: () => writeFileSync(pathInCodexHome("openccx-catalog.json.occx.42.7.tmp"), ""),
   },
   {
     name: "malformed history database",
@@ -960,10 +960,10 @@ test("an empty CODEX_HOME is clean and coordinator initialization succeeds", () 
   });
 });
 
-test("user-owned non-OpenCodex content is clean and coordinator initialization succeeds", () => {
+test("user-owned non-Openccx content is clean and coordinator initialization succeeds", () => {
   writeFileSync(pathInCodexHome("config.toml"), 'model = "gpt-5.5"\n');
   writeFileSync(pathInCodexHome("notes.txt"), "user content\n");
-  writeFileSync(pathInCodexHome("opencodex-catalog.json"), JSON.stringify({
+  writeFileSync(pathInCodexHome("openccx-catalog.json"), JSON.stringify({
     models: [{ slug: "gpt-5.5", description: "Native GPT model" }],
   }));
   writeFileSync(pathInCodexHome("models_cache.json"), JSON.stringify({
@@ -979,9 +979,9 @@ test("user-owned non-OpenCodex content is clean and coordinator initialization s
 });
 
 test("CODEX_HOME is resolved at call time", () => {
-  const secondHome = mkdtempSync(join(tmpdir(), "ocx-native-residue-second-codex-"));
+  const secondHome = mkdtempSync(join(tmpdir(), "occx-native-residue-second-codex-"));
   try {
-    writeFileSync(join(secondHome, "opencodex.config.toml"), buildProfileFile(10100, null));
+    writeFileSync(join(secondHome, "openccx.config.toml"), buildProfileFile(10100, null));
     expect(classifyNativeRoutedResidue()).toEqual({ kind: "clean" });
     process.env.CODEX_HOME = secondHome;
     expect(classifyNativeRoutedResidue()).toMatchObject({ kind: "residue", surface: "profile" });
@@ -992,7 +992,7 @@ test("CODEX_HOME is resolved at call time", () => {
 });
 
 test("a missing coordinator with only the generated profile refuses initialization", () => {
-  writeFileSync(join(codexHome, "opencodex.config.toml"), buildProfileFile(10100, null));
+  writeFileSync(join(codexHome, "openccx.config.toml"), buildProfileFile(10100, null));
 
   expect(readCodexTransitionState()).toEqual({
     kind: "legacy-ambiguous",

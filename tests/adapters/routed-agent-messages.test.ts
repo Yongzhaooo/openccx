@@ -4,9 +4,9 @@ import { normalizeRoutedAgentMessages } from "../../src/adapters/routed-agent-me
 import { parseRequest } from "../../src/responses/parser";
 import { routeModel } from "../../src/router";
 import { createTranslatorBudget } from "../../src/lib/translator-budget";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
-const base: OcxProviderConfig = { adapter: "openai-responses", baseUrl: "https://opencode.ai/zen/go/v1", authMode: "key", apiKey: "synthetic-key" };
+const base: OccxProviderConfig = { adapter: "openai-responses", baseUrl: "https://opencode.ai/zen/go/v1", authMode: "key", apiKey: "synthetic-key" };
 const body = () => ({ model: "muse-spark-1.3-contributor", input: [{ type: "agent_message", id: "amsg_test", author: "/root/reader", recipient: "/root/checker", content: [{ type: "input_text", text: "Exact assignment\nwith lines." }] }], stream: true });
 
 test("Responses converts plaintext task and peer messages without mutating replay or losing routing identities", async () => {

@@ -1,7 +1,7 @@
 /**
- * `ocx capabilities` -- the surface index an agent reads first.
+ * `occx capabilities` -- the surface index an agent reads first.
  *
- * The point of this verb is that driving `ocx` programmatically should not require
+ * The point of this verb is that driving `occx` programmatically should not require
  * parsing help text. `--json` emits the capability table with the management routes each
  * capability drives; `--route` answers the inverse question.
  */
@@ -17,7 +17,7 @@ import { takeFlag } from "./runtime-api";
 function takeValueFlag(args: string[], flag: string): string | undefined {
   // Order-independent by construction: scan for the flag anywhere in argv rather than
   // reading a fixed position. Positional flag handling is exactly why
-  // `ocx restore back --json` ignored its flag.
+  // `occx restore back --json` ignored its flag.
   const idx = args.indexOf(flag);
   if (idx === -1) return undefined;
   const value = args[idx + 1];
@@ -40,7 +40,7 @@ function renderHuman(caps: readonly Capability[], includeHead: boolean): void {
   }
   if (!includeHead) return;
   for (const head of HEAD_CAPABILITIES) {
-    console.log(`  ocx ${head.invocations[0]}`);
+    console.log(`  occx ${head.invocations[0]}`);
     console.log(`    ${head.summary}`);
   }
 }
@@ -52,7 +52,7 @@ export async function runCapabilities(argv: string[]): Promise<number> {
   const route = takeValueFlag(args, "--route");
 
   if (route !== undefined && route.length === 0) {
-    console.error("Usage: ocx capabilities --route <path>");
+    console.error("Usage: occx capabilities --route <path>");
     return 64;
   }
 

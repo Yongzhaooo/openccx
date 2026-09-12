@@ -253,19 +253,19 @@ export default function IntegrationsOverview({
     `integration-states:${apiBase}`,
     [apiBase],
     fetchStates,
-    { isEmpty: rows => rows.length === 0, enabled: active, sessionCacheKey: `ocx.integrations.states.v1:${apiBase}` },
+    { isEmpty: rows => rows.length === 0, enabled: active, sessionCacheKey: `occx.integrations.states.v1:${apiBase}` },
   );
   const historyResource = useDataSurface<IntegrationJournalRow[]>(
     `integration-journal-all:${apiBase}`,
     [apiBase],
     fetchHistory,
-    { isEmpty: rows => rows.length === 0, enabled: active, sessionCacheKey: `ocx.integrations.journal.v1:${apiBase}` },
+    { isEmpty: rows => rows.length === 0, enabled: active, sessionCacheKey: `occx.integrations.journal.v1:${apiBase}` },
   );
   const codexResource = useDataSurface(
     `integration-codex:${apiBase}`,
     [apiBase],
     fetchCodex,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.codex.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.codex.v1:${apiBase}` },
   );
   const keysResource = useDataSurface(
     `integration-keys:${apiBase}`,
@@ -273,37 +273,37 @@ export default function IntegrationsOverview({
     fetchKeyCount,
     // The loader now throws instead of resolving null, so null is not a value
     // it can produce. Leaving the old predicate would outlive its contract.
-    { isEmpty: () => false, enabled: active, sessionCacheKey: `ocx.integrations.keys.v1:${apiBase}` },
+    { isEmpty: () => false, enabled: active, sessionCacheKey: `occx.integrations.keys.v1:${apiBase}` },
   );
   const claudeResource = useDataSurface(
     `integration-claude:${apiBase}`,
     [apiBase],
     fetchClaude,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.claude.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.claude.v1:${apiBase}` },
   );
   const claudeDesktopResource = useDataSurface(
     `integration-claude-desktop:${apiBase}`,
     [apiBase],
     fetchClaudeDesktop,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.claude-desktop.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.claude-desktop.v1:${apiBase}` },
   );
   const grokResource = useDataSurface(
     `integration-grok:${apiBase}`,
     [apiBase],
     fetchGrok,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.grok.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.grok.v1:${apiBase}` },
   );
   const cursorResource = useDataSurface(
     `integration-cursor:${apiBase}`,
     [apiBase],
     fetchCursor,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.cursor.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.cursor.v1:${apiBase}` },
   );
   const nativeResource = useDataSurface<NativeStatus[] | null>(
     `integration-native:${apiBase}`,
     [apiBase],
     fetchNative,
-    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `ocx.integrations.native.v1:${apiBase}` },
+    { isEmpty: value => value === null, enabled: active, sessionCacheKey: `occx.integrations.native.v1:${apiBase}` },
   );
 
   const clients = statesResource.state.data ?? [];

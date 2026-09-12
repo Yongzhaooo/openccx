@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { ProviderAdapter } from "../../src/adapters/base";
 import { clearGenericFailoverHealth } from "../../src/oauth/generic-account-failover";
 import { getAccountSet, getCredential, saveCredential, setActiveAccount } from "../../src/oauth/store";
-import type { AdapterEvent, OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const actualResolver = await import("../../src/server/adapter-resolve");
@@ -19,7 +19,7 @@ let beforePhysicalSend: (() => Promise<void>) | undefined;
 let physicalSends = 0;
 const originalFetch = globalThis.fetch;
 
-function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter {
+function fixtureAdapter(provider: OccxProviderConfig): ProviderAdapter {
   return {
     name: "cursor",
     buildRequest: () => ({ url: provider.baseUrl, method: "POST", headers: {}, body: "" }),
@@ -46,21 +46,21 @@ function fixtureAdapter(provider: OcxProviderConfig): ProviderAdapter {
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     if (provider.adapter === "cursor" || provider.googleMode === "cloud-code-assist") return fixtureAdapter(provider);
     return actualResolveAdapter(provider, cacheRetention);
   },
 }));
 
 const { handleResponses } = await import("../../src/server/responses");
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home = "";
 
 /**
  * `enabled: undefined` is the case that matters after #2568d — the key absent entirely, which is
  * what every install that never edited its config looks like.
  */
-function config(enabled?: boolean): OcxConfig {
+function config(enabled?: boolean): OccxConfig {
   return {
     port: 0,
     defaultProvider: "cursor",
@@ -73,7 +73,7 @@ function config(enabled?: boolean): OcxConfig {
       },
     },
     ...(enabled === undefined ? {} : { oauthAccountFailover: { enabled } }),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(stream: boolean): Request {
@@ -96,8 +96,8 @@ async function seedAccounts(count: number): Promise<void> {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-adapter-event-failover-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-adapter-event-failover-"));
+  process.env.OPENCCX_HOME = home;
   clearGenericFailoverHealth();
   attempts = [];
   attemptKeys = [];
@@ -110,8 +110,8 @@ beforeEach(() => {
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearGenericFailoverHealth();
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 

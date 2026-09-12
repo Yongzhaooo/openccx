@@ -6,7 +6,7 @@ import type { LabAutomationPolicyV1, LabAutomationStateV1 } from "./types";
  * cannot accept another key. While active, scheduled planning fails closed for all
  * run keys. Its expiry covers every cooldown that was collapsed into it.
  */
-const COOLDOWN_SATURATION_KEY = "__ocx_cooldown_saturation__";
+const COOLDOWN_SATURATION_KEY = "__occx_cooldown_saturation__";
 
 function saturationActive(cooldowns: Record<string, number>, now: number): boolean {
   const until = cooldowns[COOLDOWN_SATURATION_KEY];

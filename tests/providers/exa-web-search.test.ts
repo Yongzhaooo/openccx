@@ -6,10 +6,10 @@ import { runWithWebSearch, type WebSearchLoopDeps } from "../../src/web-search/l
 import { MAX_SIDECAR_RESPONSE_BYTES } from "../../src/web-search/parse";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 import type { AdapterEvent, ProviderAdapter } from "../../src/adapters/base";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const routed: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+const routed: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://routed.test/v1", apiKey: "k" };
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return { port: 10100, defaultProvider: "routed", providers: { routed }, ...overrides };
 }
 function parsedWithWebSearch() {

@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { decodeJwtPayload, extractAccountId } from "../../oauth/chatgpt";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { boundedBodyDecodeFailure, readBoundedResponseBody } from "../../lib/bounded-body";
 import { isApiAuthRequired, isProxyAdmissionSecret } from "../auth-cors";
 import { structurallyValidFernetTokens } from "./encrypted-payload";
@@ -54,7 +54,7 @@ export type AgentTaskRecoveryResult =
   | { readonly recovered: true }
   | { readonly recovered: false; readonly reason: AgentTaskRecoveryFailureReason };
 
-export function agentTaskRecoveryConfig(config: OcxConfig): AgentTaskRecoveryOptions | null {
+export function agentTaskRecoveryConfig(config: OccxConfig): AgentTaskRecoveryOptions | null {
   const raw = config.agentTaskRecovery;
   if (!raw || raw.enabled !== true) return null;
   return {
@@ -246,12 +246,12 @@ function isNativeChatGptAccessToken(token: string): boolean {
   return !!auth && typeof auth === "object" && !Array.isArray(auth);
 }
 
-function recoveryAdmission(req: Request, config: OcxConfig): RecoveryAdmission | null {
+function recoveryAdmission(req: Request, config: OccxConfig): RecoveryAdmission | null {
   if (isApiAuthRequired(config)) return null;
   if (!CODEX_ORIGINATORS.has(req.headers.get("originator") ?? "")) return null;
   // Remote/shared proxy admission is intentionally unsupported: caller-controlled
   // Codex metadata is not strong enough to authorize use of a stored ChatGPT session.
-  if (req.headers.has("x-opencodex-api-key") || req.headers.has("x-api-key")) return null;
+  if (req.headers.has("x-openccx-api-key") || req.headers.has("x-api-key")) return null;
 
   const authorization = req.headers.get("authorization")?.trim() ?? "";
   const match = /^Bearer\s+(\S+)$/i.exec(authorization);
@@ -295,7 +295,7 @@ type RecoveryAdmissionResult =
 function admittedRecovery(
   req: Request,
   input: unknown,
-  config: OcxConfig,
+  config: OccxConfig,
   parentThreadId?: string | null,
 ): RecoveryAdmissionResult {
   const envelope = findEnvelope(input);
@@ -490,7 +490,7 @@ export async function recoverEncryptedAgentTask(
   req: Request,
   input: unknown,
   options: AgentTaskRecoveryOptions,
-  config: OcxConfig,
+  config: OccxConfig,
   context: { parentThreadId?: string | null; abortSignal?: AbortSignal } = {},
 ): Promise<boolean> {
   return (await recoverEncryptedAgentTaskWithResult(req, input, options, config, context)).recovered;
@@ -501,7 +501,7 @@ export async function recoverEncryptedAgentTaskWithResult(
   req: Request,
   input: unknown,
   options: AgentTaskRecoveryOptions,
-  config: OcxConfig,
+  config: OccxConfig,
   context: { parentThreadId?: string | null; abortSignal?: AbortSignal } = {},
 ): Promise<AgentTaskRecoveryResult> {
   // Admission is deliberately checked before cache access. A cache hit must not
@@ -535,7 +535,7 @@ export async function recoverEncryptedAgentTaskWithResult(
 export function discardEncryptedAgentTaskRecovery(
   req: Request,
   input: unknown,
-  config: OcxConfig,
+  config: OccxConfig,
   context: { parentThreadId?: string | null } = {},
 ): void {
   const admitted = admittedRecovery(req, input, config, context.parentThreadId);
@@ -548,7 +548,7 @@ export function resetAgentTaskRecoveryState(): void {
 
 /** Codex replays the original encrypted agent messages after tool calls. Reuse only an admitted cache hit. */
 export function restoreCachedEncryptedAgentTasks(
-  req: Request, input: unknown, config: OcxConfig,
+  req: Request, input: unknown, config: OccxConfig,
   context: { parentThreadId?: string | null } = {},
 ): number {
   if (!Array.isArray(input)) return 0;

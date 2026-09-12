@@ -1,9 +1,9 @@
 import {
   namespacedToolName,
   toolChoiceToolPredicate,
-  type OcxRequestOptions,
-  type OcxTool,
-  type OcxProviderConfig,
+  type OccxRequestOptions,
+  type OccxTool,
+  type OccxProviderConfig,
 } from "../types";
 import { CODE_MODE_HOST_CONTRACT_SENTENCE, CODE_MODE_RESULT_ECHO_SENTENCE } from "./exec-tool-result-normalize";
 
@@ -29,7 +29,7 @@ const NEIGHBOR_AGENT_TOOL_NAMES = ["Read", "Grep", "Glob", "Bash", "LS"] as cons
 const CODEX_UNIFIED_EXEC_TOOL_NAME = "exec";
 const CODEX_SHELL_BRIDGE_TOOL_NAMES = ["exec_command", "shell_command"] as const;
 
-export function isCodexCodeModeExecTool(tool: Pick<OcxTool, "namespace" | "name" | "freeform">): boolean {
+export function isCodexCodeModeExecTool(tool: Pick<OccxTool, "namespace" | "name" | "freeform">): boolean {
   return !tool.namespace && tool.name === CODEX_UNIFIED_EXEC_TOOL_NAME && tool.freeform === true;
 }
 
@@ -46,7 +46,7 @@ export function isCodexCodeModeExecTool(tool: Pick<OcxTool, "namespace" | "name"
  * `!tool.namespace` requirement; dropping it here made the name assert a check the body did not
  * perform.
  */
-export function isBareShellBridgeTool(tool: Pick<OcxTool, "namespace" | "name">): boolean {
+export function isBareShellBridgeTool(tool: Pick<OccxTool, "namespace" | "name">): boolean {
   return !tool.namespace && (CODEX_SHELL_BRIDGE_TOOL_NAMES as readonly string[]).includes(tool.name);
 }
 
@@ -65,7 +65,7 @@ function isOpenAIOrChatGPTHost(hostname: string): boolean {
     || hostname.endsWith(".chatgpt.com");
 }
 
-export function shouldInjectNonOpenAIToolCatalogNudge(provider: Pick<OcxProviderConfig, "baseUrl">): boolean {
+export function shouldInjectNonOpenAIToolCatalogNudge(provider: Pick<OccxProviderConfig, "baseUrl">): boolean {
   try {
     return !isOpenAIOrChatGPTHost(new URL(provider.baseUrl).hostname);
   } catch {
@@ -121,7 +121,7 @@ export function buildNonOpenAIToolCatalogNudgeFromNames(
     "Call only listed names with their listed argument keys; do not invent, translate, or rename tools.",
     "Names mentioned only in instructions, tool descriptions, argument descriptions, or nested helper APIs are not additional top-level tools.",
     verifiedCodeModeExecName
-      ? "`" + verifiedCodeModeExecName + "` is Codex code mode: its body is JavaScript evaluated in a V8 isolate. Nested helpers are called INSIDE that body as `await tools.<name>(...)`, for example `await tools.exec_command({cmd: \"ls\"})` or `await tools.codex_app__list_threads({})`. Absence from the top-level catalog or from `" + verifiedCodeModeExecName + "`'s description is not absence: deferred helpers stay callable on `tools.<name>`. Discover them from the isolate global `ALL_TOOLS`, not `tools.ALL_TOOLS`. Do not skip an available nested helper because it is omitted from the listed top-level names. " + CODE_MODE_RESULT_ECHO_SENTENCE + " Nested `tools.apply_patch(input)` is host-executed: the string must begin exactly with `*** Begin Patch` and end with `*** End Patch`, each marker line being three asterisks, one space, the two words, then end of line with no further asterisks. OpenCodex does not rewrite JavaScript inside exec, so extra asterisks on a marker line are rejected by Codex before the file is touched. " + CODE_MODE_HOST_CONTRACT_SENTENCE
+      ? "`" + verifiedCodeModeExecName + "` is Codex code mode: its body is JavaScript evaluated in a V8 isolate. Nested helpers are called INSIDE that body as `await tools.<name>(...)`, for example `await tools.exec_command({cmd: \"ls\"})` or `await tools.codex_app__list_threads({})`. Absence from the top-level catalog or from `" + verifiedCodeModeExecName + "`'s description is not absence: deferred helpers stay callable on `tools.<name>`. Discover them from the isolate global `ALL_TOOLS`, not `tools.ALL_TOOLS`. Do not skip an available nested helper because it is omitted from the listed top-level names. " + CODE_MODE_RESULT_ECHO_SENTENCE + " Nested `tools.apply_patch(input)` is host-executed: the string must begin exactly with `*** Begin Patch` and end with `*** End Patch`, each marker line being three asterisks, one space, the two words, then end of line with no further asterisks. Openccx does not rewrite JavaScript inside exec, so extra asterisks on a marker line are rejected by Codex before the file is touched. " + CODE_MODE_HOST_CONTRACT_SENTENCE
       : "If a listed tool exposes nested helpers such as a tools.* API, call the listed parent tool and use those helpers only inside that tool's input.",
     unavailableNeighborNames.length > 0
       ? "Do not use neighboring-agent tool names " + quoteNames(unavailableNeighborNames) + " unless this turn's catalog lists those exact names."
@@ -132,9 +132,9 @@ export function buildNonOpenAIToolCatalogNudgeFromNames(
 }
 
 export function buildNonOpenAIToolCatalogNudgeForTools(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
-  toWireName: (tool: Pick<OcxTool, "namespace" | "name">) => string = tool => namespacedToolName(tool.namespace, tool.name),
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
+  toWireName: (tool: Pick<OccxTool, "namespace" | "name">) => string = tool => namespacedToolName(tool.namespace, tool.name),
 ): string | undefined {
   const visible = tools?.filter(toolChoiceToolPredicate(toolChoice, tools));
   const visibleNames = visible?.map(toWireName);

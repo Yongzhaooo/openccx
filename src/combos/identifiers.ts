@@ -1,10 +1,10 @@
 import { SUPPORTED_NATIVE_OPENAI_SLUGS } from "../codex/catalog/native-models";
-import type { OcxComboConfig, OcxComboTarget, OcxConfig } from "../types";
+import type { OccxComboConfig, OccxComboTarget, OccxConfig } from "../types";
 
 export const COMBO_NAMESPACE = "combo";
 
 export function preservesPhysicalComboProvider(
-  config: Pick<OcxConfig, "providers" | "combos">,
+  config: Pick<OccxConfig, "providers" | "combos">,
 ): boolean {
   return Object.hasOwn(config.providers, COMBO_NAMESPACE)
     && Object.keys(config.combos ?? {}).length === 0;
@@ -21,7 +21,7 @@ export function isNativeAliasCombo(
     && SUPPORTED_NATIVE_OPENAI_SLUGS.has(alias);
 }
 
-export function targetKey(target: Pick<OcxComboTarget, "provider" | "model">): string {
+export function targetKey(target: Pick<OccxComboTarget, "provider" | "model">): string {
   return `${target.provider}/${target.model}`;
 }
 
@@ -68,7 +68,7 @@ export function comboDisabledModelSelectors(
  * form wins first (back-compat); otherwise an exact alias match across configured combos.
  */
 export function resolveComboId(
-  config: { combos?: Record<string, OcxComboConfig> },
+  config: { combos?: Record<string, OccxComboConfig> },
   modelId: string,
 ): string | null {
   const direct = parseComboModelId(modelId);

@@ -59,7 +59,7 @@ import {
   recordCodexUpstreamOutcome,
   resetCodexRoutingForManualSelection,
 } from "../../src/codex/routing";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 import {
   blockNativeMainStartupForUnownedServiceHome,
@@ -80,7 +80,7 @@ import { hasForwardableCodexBearer } from "../../src/server/auth-cors";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir: string;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 beforeEach(() => {
@@ -88,9 +88,9 @@ beforeEach(() => {
   // processes are covered elsewhere and can retain temp-dir handles long enough
   // to obscure those assertions under Windows isolated-test load.
   setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "" }));
-  testDir = mkdtempSync(join(tmpdir(), "ocx-auth-ctx-"));
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-auth-ctx-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = testDir;
   // Isolate the main-account credential source: testDir has no auth.json, so the main
   // account is deterministically absent (these cases test pool-only fail-closed behavior).
   previousCodexHome = process.env.CODEX_HOME;
@@ -115,13 +115,13 @@ afterEach(() => {
   __resetGuardianState();
   clearAccountNeedsReauth("pool-a");
   clearAccountNeedsReauth("pool-b");
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
 });
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "routed",
@@ -143,7 +143,7 @@ function chatgptPlanJwt(plan: string): string {
   return `${header}.${body}.sig`;
 }
 
-function guardianConfig(): OcxConfig {
+function guardianConfig(): OccxConfig {
   const cfg = config();
   cfg.defaultProvider = "openai";
   cfg.providers = {
@@ -205,7 +205,7 @@ async function occupyCodexRefreshCapacity(): Promise<{
   return { pending, release, fetches: () => fetches };
 }
 
-const forwardProvider: OcxProviderConfig = {
+const forwardProvider: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.test/backend-api/codex",
   authMode: "forward",
@@ -501,7 +501,7 @@ describe("Codex auth context", () => {
     let selectionReleases = 0;
     let claimed = false;
     await expect(resolveCodexAuthContext(
-      new Headers({ authorization: "Bearer ocx-admission" }),
+      new Headers({ authorization: "Bearer occx-admission" }),
       config(),
       "direct",
       {
@@ -536,7 +536,7 @@ describe("Codex auth context", () => {
     let claimCalls = 0;
     let selectionReleases = 0;
     await expect(resolveCodexAuthContext(
-      new Headers({ authorization: "Bearer ocx-admission" }),
+      new Headers({ authorization: "Bearer occx-admission" }),
       config(),
       "direct",
       {
@@ -566,7 +566,7 @@ describe("Codex auth context", () => {
     let claimCalls = 0;
     let selectionReleases = 0;
     await expect(resolveCodexAuthContext(
-      new Headers({ authorization: "Bearer ocx-admission" }),
+      new Headers({ authorization: "Bearer occx-admission" }),
       config(),
       "direct",
       {
@@ -594,7 +594,7 @@ describe("Codex auth context", () => {
   test("Direct admission-bearer substitution requires a turn-owned native-main claim", async () => {
     let entitlementCalls = 0;
     await expect(resolveCodexAuthContext(
-      new Headers({ authorization: "Bearer ocx-admission" }),
+      new Headers({ authorization: "Bearer occx-admission" }),
       config(),
       "direct",
       {
@@ -1118,7 +1118,7 @@ describe("Codex auth context", () => {
     try {
       expect(hasForwardableCodexBearer(inbound, cfg)).toBe(true);
       expect(hasForwardableCodexBearer(new Headers({
-        authorization: ["Bearer ocx", "data", "not-forwardable"].join("_"),
+        authorization: ["Bearer occx", "data", "not-forwardable"].join("_"),
         "chatgpt-account-id": "caller-keyring-account",
       }), cfg)).toBe(false);
       const ctx = await resolveCodexAuthContext(inbound, cfg, "pool", {
@@ -1161,7 +1161,7 @@ describe("Codex auth context", () => {
     poolWeeklyPercent: number;
     callerEntitled: boolean;
   }): Promise<{
-    cfg: OcxConfig;
+    cfg: OccxConfig;
     context: Awaited<ReturnType<typeof resolveCodexAuthContext>>;
     directEntitlementChecks: number;
   }> {
@@ -1608,7 +1608,7 @@ describe("Codex auth context", () => {
   test("an admission bearer on main substitutes the stored credential, never forwards it (#1686)", () => {
     // The caller proved admission with one of OUR secrets. That secret must never leave the
     // process, so the only acceptable outcome is the stored main credential in its place.
-    const admissionSecret = "ocx_data_localsecret";
+    const admissionSecret = "occx_data_localsecret";
     const storedCredential = liveJwt();
     writeFileSync(join(testDir, "auth.json"), JSON.stringify({
       tokens: { access_token: storedCredential, account_id: "stored_main_acc" },
@@ -1633,7 +1633,7 @@ describe("Codex auth context", () => {
     writeFileSync(join(testDir, "auth.json"), JSON.stringify({ tokens: {} }));
 
     expect(() => materializeCodexUpstreamAuth(
-      new Headers({ authorization: "Bearer ocx_data_localsecret" }),
+      new Headers({ authorization: "Bearer occx_data_localsecret" }),
       { kind: "main", accountId: null },
       { substituteMainCredential: true },
     )).toThrow(CodexMainSubstitutionUnavailableError);
@@ -2255,7 +2255,7 @@ describe("Codex auth context", () => {
 // to say who is cooled, until when, and how to escape — without leaking the raw id to a
 // possibly remote data-plane client.
 describe("cooldown error surface", () => {
-  test("native-main maintenance identifies OpenCodex instead of upstream capacity", async () => {
+  test("native-main maintenance identifies Openccx instead of upstream capacity", async () => {
     const response = codexMainProfileDrainingResponse();
 
     expect(response.status).toBe(503);
@@ -2275,7 +2275,7 @@ describe("cooldown error surface", () => {
 
     expect(message).toContain("2026-07-26T10:00:00.000Z");
     expect(message).toContain("reset-derived");
-    expect(message).toContain("ocx account clear-cooldown openai <id>");
+    expect(message).toContain("occx account clear-cooldown openai <id>");
     // Masked, never raw: /v1/* bodies can reach remote authenticated clients when the
     // proxy binds a non-loopback hostname.
     expect(message).not.toContain("acct_9f3c21");
@@ -2316,7 +2316,7 @@ describe("cooldown error surface", () => {
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBe("90");
     const body = await response.json() as { error?: { message?: string } };
-    expect(body.error?.message).toContain("ocx account clear-cooldown");
+    expect(body.error?.message).toContain("occx account clear-cooldown");
   });
 
   test("an already-elapsed cooldown still yields a valid Retry-After", () => {
@@ -2327,7 +2327,7 @@ describe("cooldown error surface", () => {
   });
 });
 
-// #2108: a Windows reboot can leave the native-main fence closed until `ocx restart`, and the
+// #2108: a Windows reboot can leave the native-main fence closed until `occx restart`, and the
 // reporter could not tell us WHICH gate reason settled because nothing ever logged it. The 503
 // message must stay byte-identical (claude-messages.ts:818 matches it to keep the fence a 503
 // instead of remapping to Anthropic 529), and headers never survive to /api/logs, so stdout is
@@ -2407,7 +2407,7 @@ test("context Direct bearer admission uses real stored-main materialization and 
   recordContextSessionOwner("principal-a", new Headers({ "session-id": "synthetic-root" }), cfg.providers.openai.baseUrl,
     { kind: "main", accountId: null }, new Headers({ authorization: `Bearer ${token}`, "chatgpt-account-id": "stored_main_acc" }), true);
   const request = () => new Request("http://localhost/v1/alpha/notes/v2/read_file", {
-    method: "POST", headers: { authorization: "Bearer ocx_data_test_admission", "openai-beta": "responses=experimental", cookie: "synthetic=private" },
+    method: "POST", headers: { authorization: "Bearer occx_data_test_admission", "openai-beta": "responses=experimental", cookie: "synthetic=private" },
     body: JSON.stringify({ context: { session_id: "synthetic-root" } }),
   });
   const originalFetch = globalThis.fetch;

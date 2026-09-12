@@ -6,7 +6,7 @@
 
 **Architecture:** Store operator labels in `providers.<provider>.modelDisplayNames`, keyed by the exact native model ID. Apply the label at the shared provider catalog hint boundary, expose the effective name and source in management rows, and mutate one label through a provider scoped API route that persists safely and converges the Codex catalog.
 
-**Tech Stack:** Bun, TypeScript, Zod, Bun test, OpenCodex management API, Astro documentation.
+**Tech Stack:** Bun, TypeScript, Zod, Bun test, Openccx management API, Astro documentation.
 
 ## Global Constraints
 
@@ -18,7 +18,7 @@
 - Invalid hand edits degrade entry by entry and must not remove the provider.
 - Management writes restore the in memory state if persistence fails.
 - Catalog convergence runs exactly once after a successful persistence.
-- Do not read or modify the user's live OpenCodex config, credentials, or Codex catalog.
+- Do not read or modify the user's live Openccx config, credentials, or Codex catalog.
 - Write every production behavior test first and observe the expected failure.
 - The core pull request and dashboard pull request remain separate.
 - Do not push or open a pull request until the user sees the verified result.
@@ -54,7 +54,7 @@
 - Test: `tests/config/config-load-degrade.test.ts`
 
 **Interfaces:**
-- Produces: `OcxProviderConfig.modelDisplayNames?: Record<string, string>`
+- Produces: `OccxProviderConfig.modelDisplayNames?: Record<string, string>`
 - Produces: `modelDisplayNamesConfigError(value: unknown, field?: string): string | null`
 - Produces: load normalization that trims valid labels and removes only invalid entries.
 
@@ -173,7 +173,7 @@ git commit -m "feat(config): add discovered model display names"
 - Test: `tests/codex-integration/codex-catalog.test.ts`
 
 **Interfaces:**
-- Consumes: `OcxProviderConfig.modelDisplayNames`
+- Consumes: `OccxProviderConfig.modelDisplayNames`
 - Produces: `configuredModelDisplayName(provider, modelId): string | undefined`
 - Produces: `applyProviderConfigHints` with operator first display precedence.
 
@@ -206,7 +206,7 @@ Add:
 
 ```ts
 export function configuredModelDisplayName(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): string | undefined {
   if (!provider.modelDisplayNames || !Object.hasOwn(provider.modelDisplayNames, modelId)) return undefined;
@@ -422,7 +422,7 @@ git commit -m "docs: explain discovered model display names"
 
 **Files:**
 - Review: every file changed by Tasks 1 through 4.
-- Do not modify: the user's installed OpenCodex configuration or catalog.
+- Do not modify: the user's installed Openccx configuration or catalog.
 
 **Interfaces:**
 - Produces: test evidence and a disposable preview for the user.

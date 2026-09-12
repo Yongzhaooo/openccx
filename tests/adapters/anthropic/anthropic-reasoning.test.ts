@@ -3,24 +3,24 @@ import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../.
 import { chatCompletionsToResponsesBody } from "../../../src/chat/inbound";
 import { parseRequest } from "../../../src/responses/parser";
 import { anthropicToResponsesBody } from "../../../src/claude/inbound";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 const createAnthropicAdapter = (...args: Parameters<typeof createAnthropicAdapterProduction>) =>
   withTestTranslatorBudget(createAnthropicAdapterProduction(...args));
 
-const provider = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", apiKey: "sk-x", authMode: "apiKey" } as unknown as OcxProviderConfig;
+const provider = { adapter: "anthropic", baseUrl: "https://api.anthropic.com", apiKey: "sk-x", authMode: "apiKey" } as unknown as OccxProviderConfig;
 
-function parsed(reasoning?: string, extraOpts: Record<string, unknown> = {}, modelId = "anthropic/claude-sonnet-4.5"): OcxParsedRequest {
+function parsed(reasoning?: string, extraOpts: Record<string, unknown> = {}, modelId = "anthropic/claude-sonnet-4.5"): OccxParsedRequest {
   return {
     modelId,
     stream: false,
     options: { ...(reasoning !== undefined ? { reasoning } : {}), ...extraOpts },
     context: { systemPrompt: ["sys"], messages: [{ role: "user", content: "hi" }] },
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
-async function bodyOf(p: OcxParsedRequest, configuredProvider = provider): Promise<Record<string, unknown>> {
+async function bodyOf(p: OccxParsedRequest, configuredProvider = provider): Promise<Record<string, unknown>> {
   const { body } = await createAnthropicAdapter(configuredProvider).buildRequest(p);
   return JSON.parse(typeof body === "string" ? body : JSON.stringify(body)) as Record<string, unknown>;
 }
@@ -506,7 +506,7 @@ describe("provider default reasoning effort (#2494)", () => {
   const withDefault = (model: string, effort: string) => ({
     ...(provider as unknown as Record<string, unknown>),
     modelDefaultReasoningEfforts: { [model]: effort },
-  } as unknown as OcxProviderConfig);
+  } as unknown as OccxProviderConfig);
 
   test("a configured default applies when the caller omits reasoning", async () => {
     const model = "anthropic/claude-sonnet-4.5";

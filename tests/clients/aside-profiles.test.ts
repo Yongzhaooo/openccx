@@ -8,7 +8,7 @@ import { getAsideProfileState, listAsideProfileStates, mutateAsideProfiles, refr
 import { asideOperationMatchesCurrent, deleteAsideOperation, findAsideOperation, listAsideOperations, restoreAsideProfile } from "../../src/integrations/aside-profile-journal";
 import { createIntegrationStateStore, type IntegrationStateStore } from "../../src/integrations/store";
 import { applyIntegration } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 describe("Aside profile desired state, ownership and history", () => {
@@ -20,8 +20,8 @@ describe("Aside profile desired state, ownership and history", () => {
   let root: string;
   let home: string;
   let store: IntegrationStateStore;
-  let config: OcxConfig;
-  let saved: OcxConfig | undefined;
+  let config: OccxConfig;
+  let saved: OccxConfig | undefined;
   let saves: number;
 
   function manifest(currentAccountId = 0, ids = [0, 1, 2]): void {
@@ -43,13 +43,13 @@ describe("Aside profile desired state, ownership and history", () => {
     return store.readRecords().aside!.opId;
   }
   function modelIds(id: number): string[] {
-    const doc = JSON.parse(readFileSync(path(id), "utf8")) as { providers?: { opencodex?: { models: Array<{ id: string }> } } };
-    return doc.providers?.opencodex?.models.map(model => model.id) ?? [];
+    const doc = JSON.parse(readFileSync(path(id), "utf8")) as { providers?: { openccx?: { models: Array<{ id: string }> } } };
+    return doc.providers?.openccx?.models.map(model => model.id) ?? [];
   }
   function bytes(): string[] { return [0, 1, 2].map(id => readFileSync(path(id), "utf8")); }
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), "ocx-aside-profiles-"));
+    root = mkdtempSync(join(tmpdir(), "occx-aside-profiles-"));
     home = join(root, "home");
     for (const id of [0, 1, 2]) {
       mkdirSync(join(home, ".aside", "u", String(id)), { recursive: true });
@@ -58,7 +58,7 @@ describe("Aside profile desired state, ownership and history", () => {
     manifest();
     store = createIntegrationStateStore(join(root, "state", "integrations"));
     config = { port: 10100, hostname: "127.0.0.1", defaultProvider: "mock",
-      providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } } } as OcxConfig;
+      providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } } } as OccxConfig;
     saved = undefined;
     saves = 0;
   });
@@ -173,7 +173,7 @@ describe("Aside profile desired state, ownership and history", () => {
   });
 
   test("foreign and malformed profiles refuse independently after desired policy is saved", async () => {
-    const foreign = JSON.stringify({ providers: { opencodex: { models: [{ id: "manual" }] } } });
+    const foreign = JSON.stringify({ providers: { openccx: { models: [{ id: "manual" }] } } });
     writeFileSync(path(1), foreign);
     writeFileSync(path(2), "{broken");
     const result = await mutateAsideProfiles(input(), { enabled: true });
@@ -263,7 +263,7 @@ describe("Aside profile desired state, ownership and history", () => {
   });
 
   test("Undo of explicit overwrite restores a foreign block and leaves its profile off", async () => {
-    const foreign = JSON.stringify({ providers: { opencodex: { models: [{ id: "user-owned" }] } } });
+    const foreign = JSON.stringify({ providers: { openccx: { models: [{ id: "user-owned" }] } } });
     writeFileSync(path(1), foreign);
     const overwritten = await mutateAsideProfiles(input(), { profileId: 1, enabled: true, overwriteConflict: true });
     const result = overwritten.results[0]!;

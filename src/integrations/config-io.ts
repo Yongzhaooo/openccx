@@ -311,9 +311,9 @@ export function defaultIntegrationIO(store: {
  *
  * `atomicWriteFile` writes a private temp file and renames it over the target. That is the right
  * shape for a secret — the replacement is atomic and the result is owner-only `0600` — but it also
- * means the surviving inode belongs to whoever runs opencodex. When the target is another product's
+ * means the surviving inode belongs to whoever runs openccx. When the target is another product's
  * configuration on a shared mount, the replace quietly takes the file away from its owner. #4197 is
- * that case: opencodex at uid 1000 replaces a DSH `settings.yaml` owned by uid 987, and DSH dies with
+ * that case: openccx at uid 1000 replaces a DSH `settings.yaml` owned by uid 987, and DSH dies with
  * `EACCES` on its next read while the restore call reports success.
  *
  * Preserving the previous uid would need a `chown` capability we usually do not have, and relaxing
@@ -348,7 +348,7 @@ export function assertIntegrationWriteOwnership(
   if (owner === undefined || owner === euid) return;
 
   throw new Error(
-    `refusing to replace ${path}: it belongs to uid ${owner} while opencodex runs as uid ${euid}. `
+    `refusing to replace ${path}: it belongs to uid ${owner} while openccx runs as uid ${euid}. `
     + "An atomic replace would transfer ownership of that file and leave its owner unable to read "
     + "its own configuration. Run both under the same user, or give each one its own copy instead "
     + "of sharing the mount.",

@@ -15,7 +15,7 @@ import { providerEditorConfigDTO, providerManagementConfigError, safeConfigDTO }
 import { handleAgentSettingsRoutes } from "../../src/server/management/agent-settings-routes";
 import { handleProviderRoutes } from "../../src/server/management/provider-routes";
 import type { ManagementContext } from "../../src/server/management/context";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -24,7 +24,7 @@ let directory: string;
 let previousHome: string | undefined;
 let codexHome: IsolatedCodexHome;
 
-function fixture(): OcxConfig {
+function fixture(): OccxConfig {
   return {
     ...getDefaultConfig(), defaultProvider: "alpha",
     providers: { alpha: {
@@ -35,7 +35,7 @@ function fixture(): OcxConfig {
   };
 }
 
-function context(config: OcxConfig, path: string, method: string, body?: unknown): ManagementContext {
+function context(config: OccxConfig, path: string, method: string, body?: unknown): ManagementContext {
   const url = new URL(`http://localhost${path}`);
   return {
     url, config, version: "fixture",
@@ -47,17 +47,17 @@ function context(config: OcxConfig, path: string, method: string, body?: unknown
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  directory = mkdtempSync(join(tmpdir(), "ocx-pinned-config-"));
-  process.env.OPENCODEX_HOME = directory;
-  codexHome = installIsolatedCodexHome("ocx-pinned-codex-");
+  previousHome = process.env.OPENCCX_HOME;
+  directory = mkdtempSync(join(tmpdir(), "occx-pinned-config-"));
+  process.env.OPENCCX_HOME = directory;
+  codexHome = installIsolatedCodexHome("occx-pinned-codex-");
   saveConfig(fixture());
 });
 
 afterEach(() => {
   codexHome.restore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(directory);
 });
 
@@ -110,10 +110,10 @@ describe("reasoning pin config boundaries", () => {
 
   test("candidate and direct writers reject invalid pins before live or disk mutation", () => {
     for (const mutation of [
-      (config: OcxConfig) => { config.modelPinnedEfforts = { model: "invalid" }; },
-      (config: OcxConfig) => { config.providers.alpha!.pinnedReasoningEffort = "invalid"; },
-      (config: OcxConfig) => { config.providers.alpha!.modelPinnedReasoningEfforts = { " ": "high" }; },
-      (config: OcxConfig) => { Reflect.set(config, "modelPinnedEfforts", null); },
+      (config: OccxConfig) => { config.modelPinnedEfforts = { model: "invalid" }; },
+      (config: OccxConfig) => { config.providers.alpha!.pinnedReasoningEffort = "invalid"; },
+      (config: OccxConfig) => { config.providers.alpha!.modelPinnedReasoningEfforts = { " ": "high" }; },
+      (config: OccxConfig) => { Reflect.set(config, "modelPinnedEfforts", null); },
     ]) {
       const config = loadConfig();
       mutation(config);

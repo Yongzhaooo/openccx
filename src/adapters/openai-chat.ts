@@ -1,5 +1,5 @@
 import type { AdapterRequest, ProviderAdapter } from "./base";
-import type { AdapterEvent, OcxAssistantMessage, OcxContentPart, OcxMessage, OcxParsedRequest, OcxProviderConfig, OcxTextContent, OcxThinkingContent, OcxToolCall, OcxUsage } from "../types";
+import type { AdapterEvent, OccxAssistantMessage, OccxContentPart, OccxMessage, OccxParsedRequest, OccxProviderConfig, OccxTextContent, OccxThinkingContent, OccxToolCall, OccxUsage } from "../types";
 import { isAllowedToolChoice, modelInList, namespacedToolName, resolveToolChoiceWireName, toolChoiceToolPredicate } from "../types";
 import { mapReasoningEffort, modelRecordValue } from "../reasoning-effort";
 import { debugProviderDiagnostic } from "../lib/debug";
@@ -81,7 +81,7 @@ const CHAT_PASSTHROUGH_FIELDS = [
   "web_search_options",
 ] as const;
 
-function openAIChatTransport(provider: OcxProviderConfig): {
+function openAIChatTransport(provider: OccxProviderConfig): {
   url: string;
   headers: Record<string, string>;
   hasCredential: boolean;
@@ -113,7 +113,7 @@ function openAIChatTransport(provider: OcxProviderConfig): {
  * centralized beside the ordinary openai-chat adapter.
  */
 export function buildOpenAIChatPassthroughRequest(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   rawBody: Record<string, unknown>,
   modelId: string,
   stream: boolean,
@@ -284,7 +284,7 @@ function safeUpstreamRequestId(metadata: unknown): string | undefined {
 
 function upstreamErrorEvent(
   error: unknown,
-  usage?: OcxUsage,
+  usage?: OccxUsage,
 ): Extract<AdapterEvent, { type: "error" }> {
   const details = error !== null && typeof error === "object" && !Array.isArray(error)
     ? error as OpenAIChatError
@@ -373,7 +373,7 @@ function reasoningDetailSegmentForWire(text: string): Record<string, unknown> {
   return { type: "reasoning.text", id: "reasoning-text-1", format: "MiniMax-response-v1", index: 0, text };
 }
 
-function invalidChoicesEvent(usage?: OcxUsage): Extract<AdapterEvent, { type: "error" }> {
+function invalidChoicesEvent(usage?: OccxUsage): Extract<AdapterEvent, { type: "error" }> {
   return {
     type: "error",
     message: "upstream response contained invalid choices",
@@ -384,7 +384,7 @@ function invalidChoicesEvent(usage?: OcxUsage): Extract<AdapterEvent, { type: "e
 function invalidToolCallsEvent(
   rawToolCalls: unknown,
   mode: "stream" | "response",
-  usage?: OcxUsage,
+  usage?: OccxUsage,
   diagnosticOverride?: InvalidToolCallDiagnostic,
 ): Extract<AdapterEvent, { type: "error" }> {
   // The streamed accumulator knows things a rescan cannot: which field on which pending call
@@ -419,7 +419,7 @@ function invalidToolCallsEvent(
  * it ourselves is worse still — the id is synthesizable because it is an opaque correlation
  * handle, but a function name is a guess at intent.
  */
-function unnamedToolCallEvent(usage?: OcxUsage): Extract<AdapterEvent, { type: "error" }> {
+function unnamedToolCallEvent(usage?: OccxUsage): Extract<AdapterEvent, { type: "error" }> {
   return {
     type: "error",
     message: "upstream streamed a tool call without a function name — cannot dispatch",
@@ -625,14 +625,14 @@ function logInvalidToolCalls(
   });
 }
 
-function developerSystemText(message: OcxMessage): string | undefined {
+function developerSystemText(message: OccxMessage): string | undefined {
   if (message.role !== "developer") return undefined;
   if (typeof message.content === "string") return message.content;
   if (message.content.some(part => part.type === "image")) return undefined;
-  return message.content.map(part => (part as OcxTextContent).text).join("");
+  return message.content.map(part => (part as OccxTextContent).text).join("");
 }
 
-function isNativeOpenAIChatTarget(provider: OcxProviderConfig): boolean {
+function isNativeOpenAIChatTarget(provider: OccxProviderConfig): boolean {
   try {
     return new URL(provider.baseUrl).hostname === "api.openai.com";
   } catch {
@@ -646,7 +646,7 @@ function isNativeOpenAIChatTarget(provider: OcxProviderConfig): boolean {
  * being flattened to the "[image]" marker the model can't actually see. Data URLs and remote https
  * URLs are both valid in image_url.url, unlike Gemini inline_data which needs base64.
  */
-function toolResultTextForWire(content: string | OcxContentPart[], annotateEmpty = false): string {
+function toolResultTextForWire(content: string | OccxContentPart[], annotateEmpty = false): string {
   // An empty content array is a present-but-empty result; `contentPartsToText` would
   // otherwise fall back to the "[image]" marker and hide the emptiness from the model.
   if (annotateEmpty && Array.isArray(content) && content.length === 0) return EMPTY_TOOL_OUTPUT_ANNOTATION;
@@ -654,7 +654,7 @@ function toolResultTextForWire(content: string | OcxContentPart[], annotateEmpty
     if (annotateEmpty && content.trim() === "") return EMPTY_TOOL_OUTPUT_ANNOTATION;
     return content;
   }
-  const text = content.filter((p) => p.type === "text").map((p) => (p as OcxTextContent).text).join("");
+  const text = content.filter((p) => p.type === "text").map((p) => (p as OccxTextContent).text).join("");
   // A whitespace-only text-part array is the array twin of a blank string; the
   // shared emptiness contract (same module as the Responses adapter) annotates it
   // instead of forwarding whitespace the model silently accepts. Image parts and
@@ -669,7 +669,7 @@ function toolResultTextForWire(content: string | OcxContentPart[], annotateEmpty
   return contentPartsToText(content);
 }
 
-function toolResultImageChatParts(content: string | OcxContentPart[]): unknown[] {
+function toolResultImageChatParts(content: string | OccxContentPart[]): unknown[] {
   if (typeof content === "string") return [];
   const parts: unknown[] = [];
   for (const p of content) {
@@ -679,7 +679,7 @@ function toolResultImageChatParts(content: string | OcxContentPart[]): unknown[]
   return parts;
 }
 
-function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderConfig): unknown[] {
+function messagesToChatFormat(parsed: OccxParsedRequest, provider: OccxProviderConfig): unknown[] {
   const out: unknown[] = [];
   const { context, options } = parsed;
   const replayCacheScope = parsed._reasoningReplayScope;
@@ -694,7 +694,7 @@ function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderCon
   const mintCallId = (): string => {
     let id = "";
     do {
-      id = `call_ocx_minted_${++mintedIdSeq}`;
+      id = `call_occx_minted_${++mintedIdSeq}`;
     } while (seenWireCallIds.has(id));
     seenWireCallIds.add(id);
     return id;
@@ -711,7 +711,7 @@ function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderCon
     out.push({
       role: "user",
       content: [
-        { type: "text", text: "[ocx] image output from the preceding tool result(s):" },
+        { type: "text", text: "[occx] image output from the preceding tool result(s):" },
         ...pendingToolResultImageParts,
       ],
     });
@@ -724,7 +724,7 @@ function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderCon
       out.push({
         role: "tool",
         tool_call_id: call.id,
-        content: `[ocx] no tool result was recorded for "${call.name}"; execution status unknown — do not treat this as success, failure, or user-provided input.`,
+        content: `[occx] no tool result was recorded for "${call.name}"; execution status unknown — do not treat this as success, failure, or user-provided input.`,
       });
     }
     pendingToolCalls = [];
@@ -758,23 +758,23 @@ function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderCon
     switch (msg.role) {
       case "user":
       case "developer": {
-        const parts = typeof msg.content === "string" ? undefined : msg.content as OcxContentPart[];
+        const parts = typeof msg.content === "string" ? undefined : msg.content as OccxContentPart[];
         const hasImages = parts?.some(p => p.type === "image") ?? false;
         let chatMsg: Record<string, unknown>;
         if (msg.role === "developer" && !hasImages) {
           if (!nativeOpenAI) break;
           const text = typeof msg.content === "string"
             ? msg.content
-            : parts!.map(p => (p as OcxTextContent).text).join("");
+            : parts!.map(p => (p as OccxTextContent).text).join("");
           chatMsg = { role: "developer", content: text };
         } else if (typeof msg.content === "string") {
           chatMsg = { role: "user", content: msg.content };
         } else if (!hasImages) {
-          chatMsg = { role: "user", content: parts!.map(p => (p as OcxTextContent).text).join("") };
+          chatMsg = { role: "user", content: parts!.map(p => (p as OccxTextContent).text).join("") };
         } else {
           const chatParts = parts!.map(p => p.type === "image"
             ? { type: "image_url", image_url: { url: p.imageUrl, ...(p.detail ? { detail: p.detail } : {}) } }
-            : { type: "text", text: (p as OcxTextContent).text });
+            : { type: "text", text: (p as OccxTextContent).text });
           chatMsg = { role: "user", content: chatParts };
         }
         if (pendingToolCalls.length > 0) deferredBarrierMessages.push(chatMsg);
@@ -782,10 +782,10 @@ function messagesToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderCon
         break;
       }
       case "assistant": {
-        const aMsg = msg as OcxAssistantMessage;
-        const textParts = aMsg.content.filter(p => p.type === "text") as OcxTextContent[];
-        const thinkingParts = aMsg.content.filter(p => p.type === "thinking") as OcxThinkingContent[];
-        const toolCalls = aMsg.content.filter(p => p.type === "toolCall") as OcxToolCall[];
+        const aMsg = msg as OccxAssistantMessage;
+        const textParts = aMsg.content.filter(p => p.type === "text") as OccxTextContent[];
+        const thinkingParts = aMsg.content.filter(p => p.type === "thinking") as OccxThinkingContent[];
+        const toolCalls = aMsg.content.filter(p => p.type === "toolCall") as OccxToolCall[];
         const chatMsg: Record<string, unknown> = { role: "assistant" };
         if (textParts.length > 0) chatMsg.content = textParts.map(p => p.text).join("");
         let reasoningContent = thinkingParts.map(p => p.thinking).join("");
@@ -1005,7 +1005,7 @@ function ensureZenRootObjectSchema(schema: unknown): Record<string, unknown> {
   return merged;
 }
 
-function shouldSanitizeZenToolParameters(provider: OcxProviderConfig): boolean {
+function shouldSanitizeZenToolParameters(provider: OccxProviderConfig): boolean {
   const baseUrl = provider.baseUrl.replace(/\/+$/, "");
   return baseUrl === "https://opencode.ai/zen/v1"
     || baseUrl === "https://opencode.ai/zen/go/v1";
@@ -1014,7 +1014,7 @@ function shouldSanitizeZenToolParameters(provider: OcxProviderConfig): boolean {
 /** Azure Model Router (and Gemini-in-the-pool) 400s Codex MCP schemas whose root is a union. */
 const AZURE_CHAT_FORBIDDEN_ROOT_KEYS = ["oneOf", "anyOf", "allOf", "enum", "const", "not"] as const;
 
-function isAzureOpenAiChatTarget(provider: OcxProviderConfig): boolean {
+function isAzureOpenAiChatTarget(provider: OccxProviderConfig): boolean {
   try {
     const host = new URL(provider.baseUrl).hostname.toLowerCase();
     return host.endsWith(".openai.azure.com")
@@ -1052,7 +1052,7 @@ const MOONSHOT_SCHEMA_HOSTNAMES = new Set([
   "api.moonshot.cn",
 ]);
 
-function isMoonshotSchemaTarget(provider: OcxProviderConfig): boolean {
+function isMoonshotSchemaTarget(provider: OccxProviderConfig): boolean {
   try {
     return MOONSHOT_SCHEMA_HOSTNAMES.has(new URL(provider.baseUrl).hostname);
   } catch {
@@ -1065,7 +1065,7 @@ const VOLCENGINE_ARK_HOSTNAMES = new Set([
   "ark.ap-southeast.volces.com",
 ]);
 
-function isVolcengineArkPaygChatTarget(provider: OcxProviderConfig): boolean {
+function isVolcengineArkPaygChatTarget(provider: OccxProviderConfig): boolean {
   try {
     const url = new URL(provider.baseUrl);
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
@@ -1075,7 +1075,7 @@ function isVolcengineArkPaygChatTarget(provider: OcxProviderConfig): boolean {
   }
 }
 
-function emptyAssistantContent(provider: OcxProviderConfig): string | { type: "text"; text: string }[] {
+function emptyAssistantContent(provider: OccxProviderConfig): string | { type: "text"; text: string }[] {
   return isVolcengineArkPaygChatTarget(provider) ? [{ type: "text", text: "" }] : "";
 }
 
@@ -1336,7 +1336,7 @@ function normalizeMoonshotToolParameters(parameters: unknown): Record<string, un
   return isXaiObjectSchema(normalized) ? normalized : rooted;
 }
 
-function toolsToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderConfig): unknown[] | undefined {
+function toolsToChatFormat(parsed: OccxParsedRequest, provider: OccxProviderConfig): unknown[] | undefined {
   if (!parsed.context.tools || parsed.context.tools.length === 0) return undefined;
   const tools = parsed.context.tools.filter(toolChoiceToolPredicate(parsed.options.toolChoice, parsed.context.tools));
   if (tools.length === 0) return undefined;
@@ -1364,7 +1364,7 @@ function toolsToChatFormat(parsed: OcxParsedRequest, provider: OcxProviderConfig
   return formatted.length > 0 ? formatted : undefined;
 }
 
-function toolsToChatFormatForProvider(parsed: OcxParsedRequest, provider: OcxProviderConfig): unknown[] | undefined {
+function toolsToChatFormatForProvider(parsed: OccxParsedRequest, provider: OccxProviderConfig): unknown[] | undefined {
   const base = toolsToChatFormat(parsed, provider);
   const azureChat = isAzureOpenAiChatTarget(provider);
   const zenChat = shouldSanitizeZenToolParameters(provider);
@@ -1387,9 +1387,9 @@ function toolsToChatFormatForProvider(parsed: OcxParsedRequest, provider: OcxPro
 }
 
 function toolChoiceToChatFormat(
-  tc: OcxParsedRequest["options"]["toolChoice"],
-  tools: OcxParsedRequest["context"]["tools"],
-  provider: OcxProviderConfig,
+  tc: OccxParsedRequest["options"]["toolChoice"],
+  tools: OccxParsedRequest["context"]["tools"],
+  provider: OccxProviderConfig,
 ): unknown {
   if (!tc) return undefined;
   if (isAllowedToolChoice(tc)) {
@@ -1403,7 +1403,7 @@ function toolChoiceToChatFormat(
   return undefined;
 }
 
-function usageFromOpenAIChat(usage: Record<string, unknown> | undefined): OcxUsage | undefined {
+function usageFromOpenAIChat(usage: Record<string, unknown> | undefined): OccxUsage | undefined {
   if (!usage) return undefined;
   const promptDetails = usage.prompt_tokens_details as Record<string, number> | undefined;
   const completionDetails = usage.completion_tokens_details as Record<string, number> | undefined;
@@ -1415,13 +1415,13 @@ function usageFromOpenAIChat(usage: Record<string, unknown> | undefined): OcxUsa
   };
 }
 
-function resolveMaxTokens(provider: OcxProviderConfig, parsed: OcxParsedRequest): number | undefined {
+function resolveMaxTokens(provider: OccxProviderConfig, parsed: OccxParsedRequest): number | undefined {
   return parsed.options.maxOutputTokens
     ?? modelRecordValue(provider.modelMaxOutputTokens, parsed.modelId)
     ?? provider.defaultMaxOutputTokens;
 }
 
-function thinkingBudgetForEffort(parsed: OcxParsedRequest, reasoningEffort: string, maxOutputTokens?: number): number | undefined {
+function thinkingBudgetForEffort(parsed: OccxParsedRequest, reasoningEffort: string, maxOutputTokens?: number): number | undefined {
   if (parsed.options.reasoning === "minimal") return 0;
   const maxBudget = maxOutputTokens ?? 32768;
   const fractions: Record<string, number> = {
@@ -1436,10 +1436,10 @@ function thinkingBudgetForEffort(parsed: OcxParsedRequest, reasoningEffort: stri
 }
 
 function canSerializeOpenAIChatServiceTier(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
   serviceTier: unknown,
-  tierDecision?: OcxParsedRequest["options"]["tierDecision"],
+  tierDecision?: OccxParsedRequest["options"]["tierDecision"],
 ): boolean {
   if (serviceTier === undefined) return false;
   if (tierDecision !== undefined) {
@@ -1455,14 +1455,14 @@ function canSerializeOpenAIChatServiceTier(
   return decision.kind === "set" || decision.kind === "forward-caller";
 }
 
-export function createOpenAIChatAdapter(provider: OcxProviderConfig): ProviderAdapter {
+export function createOpenAIChatAdapter(provider: OccxProviderConfig): ProviderAdapter {
   let lastRequestedModelId: string | undefined;
   return {
     name: "openai-chat",
 
     formatErrorBody: formatOpenAIChatErrorBody,
 
-    buildRequest(parsed: OcxParsedRequest) {
+    buildRequest(parsed: OccxParsedRequest) {
       lastRequestedModelId = parsed.modelId;
       const { url, headers, hasCredential } = openAIChatTransport(provider);
       const messages = frameAgentRouterMessages(provider.baseUrl, messagesToChatFormat(parsed, provider));
@@ -1741,7 +1741,7 @@ export function createOpenAIChatAdapter(provider: OcxProviderConfig): ProviderAd
         yield event;
         return "terminate";
       };
-      let pendingUsage: OcxUsage | undefined;
+      let pendingUsage: OccxUsage | undefined;
       let finishReason: string | undefined;
       let sawUserFacingOutput = false;
       // MiniMax-style structured reasoning: each stream chunk repeats a detail's

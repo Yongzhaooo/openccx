@@ -6,7 +6,7 @@ import {
   getAdapterDefinition,
 } from "../../src/adapters/registry";
 import { resolveAdapter } from "../../src/server/adapter-resolve";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const EXPECTED_ADAPTER_NAMES = {
@@ -27,7 +27,7 @@ const EXPECTED_ADAPTER_NAMES = {
   qoder: "qoder",
 } as const;
 
-function provider(adapter: string): OcxProviderConfig {
+function provider(adapter: string): OccxProviderConfig {
   return {
     adapter,
     // mimo-free throws for non-canonical endpoints since #1714; every other
@@ -46,10 +46,10 @@ function provider(adapter: string): OcxProviderConfig {
     authMode: "key",
     apiKey: "test-key",
     defaultMaxOutputTokens: 4096,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-const ANTHROPIC_CACHE_REQUEST: OcxParsedRequest = {
+const ANTHROPIC_CACHE_REQUEST: OccxParsedRequest = {
   modelId: "claude-haiku-4-5",
   stream: true,
   options: {},
@@ -108,7 +108,7 @@ describe("adapter registry authority", () => {
   test("rejects non-string persisted adapter ids before registry lookup", () => {
     for (const adapterId of [null, 42, ["azure"]]) {
       expect(getAdapterDefinition(adapterId)).toBeUndefined();
-      const malformed = { ...provider("anthropic"), adapter: adapterId } as unknown as OcxProviderConfig;
+      const malformed = { ...provider("anthropic"), adapter: adapterId } as unknown as OccxProviderConfig;
       expect(() => createRegisteredAdapter(malformed)).toThrow("Unknown adapter:");
     }
   });

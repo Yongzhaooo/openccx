@@ -52,26 +52,26 @@ import { setCodexAccountPriority } from "../../src/codex/account-priority";
 import { MAIN_CODEX_ACCOUNT_ID } from "../../src/codex/main-account";
 import { routeModel } from "../../src/router";
 import { consumeForInspection } from "../../src/server/relay";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 import { flushConfigDirHardeningForTests, hardenConfigDir } from "../../src/config/paths";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 
 let TEST_DIR = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
 
 function installRoutingScratchHome(): void {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-routing-"));
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-routing-"));
   // Routing cases exercise account state, not the operating system ACL implementation.
   setIcaclsRunnerForTests(() => ICACLS_OK);
   setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   process.env.CODEX_HOME = TEST_DIR;
 }
 
@@ -83,8 +83,8 @@ async function removeRoutingScratchHome(): Promise<void> {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     if (ownedDirectory) removeTreeWithRetry(ownedDirectory);
@@ -125,7 +125,7 @@ test.skipIf(process.platform !== "win32")("routing scratch cleanup waits for its
 }, STORE_BUDGET_MS);
 
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     providers: {},
     codexAccounts: [
@@ -136,7 +136,7 @@ function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     autoSwitchThreshold: 80,
     upstreamFailoverThreshold: 3,
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveTestCredential(id: string): void {
@@ -2405,12 +2405,12 @@ describe("codex account selection order", () => {
   });
 
   /** `a` is ordered above `b`; the persisted operator selection is the lower tier. */
-  function orderedConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+  function orderedConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
     return makeConfig({
       activeCodexAccountId: "b",
       codexAccountPriorities: { a: 1 },
       ...overrides,
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
   }
 
   test("an unbound request moves back up to the higher tier even when it is hotter", () => {
@@ -3278,7 +3278,7 @@ describe("codex account selection order", () => {
   });
 
   test("a manually pinned account outranks selection order", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
 
@@ -3287,7 +3287,7 @@ describe("codex account selection order", () => {
   });
 
   test("the pin is spent once the pinned account crosses the threshold", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 90);
 
@@ -3296,7 +3296,7 @@ describe("codex account selection order", () => {
   });
 
   test("a cooldown on the pinned account hands routing back to selection order", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
     recordCodexUpstreamOutcome(config, "b", 429, { retryAfter: "600" });
@@ -3308,7 +3308,7 @@ describe("codex account selection order", () => {
   // Preview cannot clear a spent pin, so it has to reach the same account by testing
   // pin liveness — the case the resolve-side release was built to converge with.
   test("preview and resolve agree while a drained pin is still stored", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 90);
 
@@ -3323,7 +3323,7 @@ describe("codex account selection order", () => {
     const config = orderedConfig({
       accountPoolStrategy: "fill-first",
       activeCodexAccountPinned: "b",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
 
@@ -3336,7 +3336,7 @@ describe("codex account selection order", () => {
     const config = orderedConfig({
       accountPoolStrategy: "fill-first",
       activeCodexAccountPinned: "a",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
     expect(resolveCodexAccountForThread(null, config)).toBe("a");
@@ -3351,7 +3351,7 @@ describe("codex account selection order", () => {
       accountPoolStrategy: "round-robin",
       accountPoolStickyLimit: 1,
       activeCodexAccountPinned: "b",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
     expect(resolveCodexAccountForThread(null, config)).toBe("b");
@@ -3365,7 +3365,7 @@ describe("codex account selection order", () => {
   });
 
   test("a pin the request never moves off survives in config", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
 
@@ -3374,7 +3374,7 @@ describe("codex account selection order", () => {
   });
 
   test("excluding the pinned account releases the pin", () => {
-    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OcxConfig>);
+    const config = orderedConfig({ activeCodexAccountPinned: "b" } as Partial<OccxConfig>);
     updateAccountQuota("a", 10);
     updateAccountQuota("b", 10);
 

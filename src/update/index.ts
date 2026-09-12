@@ -48,7 +48,7 @@ const HERE = dirname(fileURLToPath(import.meta.url)); // .../opencodex/src/updat
 export type Installer = "bun" | "npm" | "pnpm" | "source";
 export type Channel = "latest" | "preview";
 
-/** Infer how opencodex is installed from the running module's path. */
+/** Infer how openccx is installed from the running module's path. */
 export function detectInstall(): Installer {
   return detectInstallFromPath(HERE, { exists: existsSync });
 }
@@ -61,7 +61,7 @@ function runningPnpmShimPath(): string | undefined {
   const invoked = process.argv[1];
   if (!invoked) return undefined;
   const name = invoked.replaceAll("\\", "/").split("/").at(-1)?.toLowerCase();
-  if (!new Set(["ocx", "opencodex", "ocx.cmd", "opencodex.cmd", "ocx.ps1", "opencodex.ps1"]).has(name ?? "")) {
+  if (!new Set(["occx", "openccx", "occx.cmd", "openccx.cmd", "occx.ps1", "openccx.ps1"]).has(name ?? "")) {
     return undefined;
   }
   return resolve(invoked);
@@ -139,7 +139,7 @@ export function resolvePnpmActiveLauncher(owner: PnpmGlobalOwner): string | null
       globalBinDir: owner.globalBinDir,
     },
   );
-  return active.ok ? join(active.path, "bin", "ocx.mjs") : null;
+  return active.ok ? join(active.path, "bin", "occx.mjs") : null;
 }
 
 export function currentVersion(): string {
@@ -219,12 +219,12 @@ function updateSpawnTarget(bin: string, args: readonly string[]): SpawnTarget | 
 }
 
 /**
- * The GUI update worker sets OCX_SERVICE=1 and has stdio ignored — inheriting that for
+ * The GUI update worker sets OCCX_SERVICE=1 and has stdio ignored — inheriting that for
  * Background package-manager children can open stacked visible consoles on Windows.
  * Pipe instead and relay bounded output after the child exits. (Ported from PR #167.)
  */
 function updateChildStdio(): "inherit" | "pipe" {
-  if (process.env.OCX_SERVICE === "1") return "pipe";
+  if (process.env.OCCX_SERVICE === "1") return "pipe";
   if (typeof process.stdout.isTTY === "boolean" && !process.stdout.isTTY) return "pipe";
   return "inherit";
 }
@@ -265,7 +265,7 @@ export function latestVersion(
   return r.status === 0 && typeof r.stdout === "string" ? (r.stdout.trim() || null) : null;
 }
 
-/** The global-install command opencodex would run to update on this channel. */
+/** The global-install command openccx would run to update on this channel. */
 export function updateCommand(installer: Installer, tag: Channel, resolvedVersion?: string | null): { bin: string; args: string[] } {
   // Immutable target: when the registry resolved a concrete version, install exactly
   // that version — the dist-tag can move between resolution and install (TOCTOU).
@@ -321,7 +321,7 @@ export function checkUpdatePackageIntegrity(
 }
 
 /**
- * `ocx update` fallback for source checkouts and Bun global installs. npm and pnpm global installs
+ * `occx update` fallback for source checkouts and Bun global installs. npm and pnpm global installs
  * are updated in the Node bin launcher before Bun starts, so Windows does not replace the running
  * Bun binary.
  */
@@ -329,7 +329,7 @@ export async function runUpdate(): Promise<void> {
   const installer = detectInstall();
   const current = currentVersion();
   const tag = updateTag(current);
-  console.log(`opencodex v${current} (installed via ${installer}, tag ${tag})`);
+  console.log(`openccx v${current} (installed via ${installer}, tag ${tag})`);
 
   if (installer === "source") {
     console.log("Running from a source checkout — update with:  git pull && bun install");
@@ -378,7 +378,7 @@ export async function runUpdate(): Promise<void> {
     process.exit(1);
   }
 
-  // Remember whether a background service manages the proxy BEFORE stopping — `ocx stop`
+  // Remember whether a background service manages the proxy BEFORE stopping — `occx stop`
   // unloads it, so a successful update must repair/restart it afterwards.
   let serviceWasInstalled = false;
   try {
@@ -424,13 +424,13 @@ export async function runUpdate(): Promise<void> {
   // Never replace package files under a live proxy: the running server dynamic-imports
   // modules after startup, so an in-place update leaves it executing mixed old/new code.
   // Gate on the service and the runtime-port record too, not just the pid file — a
-  // service-managed or orphaned proxy can be live while ocx.pid is stale/missing.
+  // service-managed or orphaned proxy can be live while occx.pid is stale/missing.
   //
   // An outstanding pending-teardown receipt is a fourth reason to run the stop. After a
   // parent crashed mid-deferral all three of the other signals can be absent while the
   // shared client config still points at a proxy that is gone; installing over that
   // silently skips the recovery the receipt was written to trigger (#3008).
-  // Full `ocx stop` semantics (drain, service stop, restore).
+  // Full `occx stop` semantics (drain, service stop, restore).
   let stopAttempted = false;
   if (serviceWasInstalled || readPid() || readRuntimePort() || pendingTeardownOutstanding()) {
     stopAttempted = true;
@@ -466,11 +466,11 @@ export async function runUpdate(): Promise<void> {
       }
       if (decision.reason === "teardown-outstanding") {
         console.error("⚠️  A shared teardown from an earlier stop is still outstanding and needs manual review; aborting the update.");
-        console.error("    Confirm no proxy is running, run 'ocx restore', then remove the pending-teardown file in your opencodex home.");
+        console.error("    Confirm no proxy is running, run 'occx restore', then remove the pending-teardown file in your openccx home.");
       } else {
         console.error(decision.reason === "proxy-unknown"
-          ? `⚠️  Could not confirm the proxy on ${capturedListen.hostname}:${capturedListen.port} is stopped; aborting the update. Run 'ocx stop' and retry.`
-          : "⚠️  Could not stop the running proxy; aborting the update. Run 'ocx stop' and retry.");
+          ? `⚠️  Could not confirm the proxy on ${capturedListen.hostname}:${capturedListen.port} is stopped; aborting the update. Run 'occx stop' and retry.`
+          : "⚠️  Could not stop the running proxy; aborting the update. Run 'occx stop' and retry.");
       }
       process.exit(1);
     }
@@ -478,7 +478,7 @@ export async function runUpdate(): Promise<void> {
       console.warn(
         "⚠️  Codex resume-history metadata restore is incomplete (a backup manifest remains).\n" +
         "    The DB may be busy or the manifest/target may need review; untracked routed history is intentionally unchanged.\n" +
-        "    After the update: close the Codex app, run 'ocx doctor', then run 'ocx stop' once to retry.",
+        "    After the update: close the Codex app, run 'occx doctor', then run 'occx stop' once to retry.",
       );
     }
   }
@@ -489,12 +489,12 @@ export async function runUpdate(): Promise<void> {
   // Every post-update action below receives this path. For pnpm it is replaced only
   // by a path returned after tree+shim verification; on rollback, activePath is
   // likewise returned only after the old group has been verified again.
-  let postUpdateLauncher = join(packageRoot(), "bin", "ocx.mjs");
+  let postUpdateLauncher = join(packageRoot(), "bin", "occx.mjs");
   // The pnpm owner preflight has verified this package tree and global group. Keep that exact
   // package path as the recovery starting point; the path returned by the update transaction
   // replaces it only after post-update tree+shim verification succeeds.
   if (installer === "pnpm" && owner) {
-    postUpdateLauncher = join(owner.packagePath, "bin", "ocx.mjs");
+    postUpdateLauncher = join(owner.packagePath, "bin", "occx.mjs");
   }
   let postUpdateLauncherUsable = true;
   let r: {
@@ -532,12 +532,12 @@ export async function runUpdate(): Promise<void> {
       };
     }
     if (update.ok) {
-      postUpdateLauncher = join(update.path, "bin", "ocx.mjs");
+      postUpdateLauncher = join(update.path, "bin", "occx.mjs");
       postUpdateLauncherUsable = true;
       r = { status: 0, signal: null, stdout: "", stderr: "" };
     } else {
       postUpdateLauncherUsable = Boolean(update.activePath);
-      if (update.activePath) postUpdateLauncher = join(update.activePath, "bin", "ocx.mjs");
+      if (update.activePath) postUpdateLauncher = join(update.activePath, "bin", "occx.mjs");
       console.error(`⚠️  ${update.error}${update.rolledBack ? "." : " Manual recovery may be required."}`);
       r = { status: 1, signal: null, stdout: "", stderr: "" };
     }
@@ -563,10 +563,10 @@ export async function runUpdate(): Promise<void> {
           stdio: "inherit",
           windowsHide: true,
         });
-        if (shim.status !== 0) console.warn("⚠️  Shim repair skipped: run 'ocx codex-shim install'.");
+        if (shim.status !== 0) console.warn("⚠️  Shim repair skipped: run 'occx codex-shim install'.");
       }
     } catch {
-      console.warn("⚠️  Shim repair skipped; run 'ocx codex-shim install'.");
+      console.warn("⚠️  Shim repair skipped; run 'occx codex-shim install'.");
     }
     if (trayWasInstalled) {
       const trayArgs = planWindowsTrayUpdate({ installed: trayWasInstalled, running: trayWasRunning }).installArgs;
@@ -574,7 +574,7 @@ export async function runUpdate(): Promise<void> {
       if (tray.status === 0) {
         console.log("🔧 Refreshed Windows tray startup paths.");
       } else {
-        console.warn("⚠️  Windows tray refresh failed. Run 'ocx tray install'.");
+        console.warn("⚠️  Windows tray refresh failed. Run 'occx tray install'.");
         if (trayWasRunning) spawnSync(process.execPath, [postUpdateLauncher, "tray", "start"], { stdio: "ignore", windowsHide: true });
       }
     }
@@ -589,14 +589,14 @@ export async function runUpdate(): Promise<void> {
         timeoutMs: 30_000,
         intervalMs: 100,
         scanIntervalMs: 500,
-        killOcxHolders: capturedListen.oldPid != null,
+        killOccxHolders: capturedListen.oldPid != null,
         onlyKillPids: capturedListen.oldPid != null ? [capturedListen.oldPid] : [],
       });
       if (!freed) {
         console.warn(`⚠️  Port ${capturedListen.port} still busy after 30s; repairing service with pinned --port ${capturedListen.port} anyway (refusing to hop).`);
       }
-      const prevBake = process.env.OCX_BAKE_PORT;
-      process.env.OCX_BAKE_PORT = String(capturedListen.port);
+      const prevBake = process.env.OCCX_BAKE_PORT;
+      process.env.OCCX_BAKE_PORT = String(capturedListen.port);
       try {
         const svcStdio = updateChildStdio();
         const svc = spawnSync(process.execPath, [postUpdateLauncher, ...serviceReinstallArgs()], {
@@ -628,8 +628,8 @@ export async function runUpdate(): Promise<void> {
                 : "⚠️  Service refresh failed and the captured port is still busy; not starting on another port.",
             );
             console.warn(process.platform === "win32"
-              ? `   Run 'ocx service repair', then 'ocx start --port ${capturedListen.port}'.`
-              : `   Run 'ocx service repair' to see the reason, then 'ocx start --port ${capturedListen.port}'.`);
+              ? `   Run 'occx service repair', then 'occx start --port ${capturedListen.port}'.`
+              : `   Run 'occx service repair' to see the reason, then 'occx start --port ${capturedListen.port}'.`);
           } else {
             console.warn(
               serviceRefreshed
@@ -637,13 +637,13 @@ export async function runUpdate(): Promise<void> {
                 : "⚠️  Service refresh failed — starting the proxy directly instead.",
             );
             // Elevation is a Windows-only remedy; elsewhere the refresh fails for
-            // reasons `ocx service repair` reports directly (since it now verifies
+            // reasons `occx service repair` reports directly (since it now verifies
             // the service actually serves).
             console.warn(process.platform === "win32"
-              ? "   Run 'ocx service repair' to refresh the background service."
-              : "   Run 'ocx service repair' to refresh the background service and see why it failed.");
+              ? "   Run 'occx service repair' to refresh the background service."
+              : "   Run 'occx service repair' to refresh the background service and see why it failed.");
             const env = { ...process.env };
-            delete env.OCX_SERVICE;
+            delete env.OCCX_SERVICE;
             const child = spawn(process.execPath, [postUpdateLauncher, "start", "--port", String(capturedListen.port)], {
               detached: true,
               stdio: "ignore",
@@ -655,8 +655,8 @@ export async function runUpdate(): Promise<void> {
           }
         }
       } finally {
-        if (prevBake === undefined) delete process.env.OCX_BAKE_PORT;
-        else process.env.OCX_BAKE_PORT = prevBake;
+        if (prevBake === undefined) delete process.env.OCCX_BAKE_PORT;
+        else process.env.OCCX_BAKE_PORT = prevBake;
       }
     } else {
       console.log(`Restart the proxy:  ${launcherStartHint(postUpdateLauncher, capturedListen.port)}`);
@@ -670,10 +670,10 @@ export async function runUpdate(): Promise<void> {
         stdio: "inherit",
         windowsHide: true,
       });
-      if (service.status !== 0) console.warn("⚠️  Previous background service could not be restored; run 'ocx service repair'.");
+      if (service.status !== 0) console.warn("⚠️  Previous background service could not be restored; run 'occx service repair'.");
     } else if (stopAttempted && postUpdateLauncherUsable) {
       const env = { ...process.env };
-      delete env.OCX_SERVICE;
+      delete env.OCCX_SERVICE;
       const child = spawn(process.execPath, [postUpdateLauncher, "start", "--port", String(capturedListen.port)], {
         detached: true,
         stdio: "ignore",
@@ -682,7 +682,7 @@ export async function runUpdate(): Promise<void> {
       });
       child.unref();
     } else if (stopAttempted) {
-      console.error("opencodex: no verified active launcher remains for automatic recovery; reinstall opencodex manually.");
+      console.error("openccx: no verified active launcher remains for automatic recovery; reinstall openccx manually.");
     }
     console.error(`\n⚠️  Update failed (${bin} exit ${r.status ?? "?"}). Try manually:  ${bin} ${cmdArgs.join(" ")}`);
     process.exit(1);

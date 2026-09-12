@@ -13,7 +13,7 @@ import {
 } from "../../src/routing/health";
 import { evaluatePolicyProfile } from "../../src/routing/evaluator";
 import { NoEligiblePolicyCandidateError, routeModel } from "../../src/router";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
@@ -38,9 +38,9 @@ function row(
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-health-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-health-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageReadCacheForTests();
   clearHealthHistoryCacheForTests();
   closeRequestHistoryIndex();
@@ -48,12 +48,12 @@ beforeEach(() => {
 
 afterEach(() => {
   closeRequestHistoryIndex();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function config(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function config(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",

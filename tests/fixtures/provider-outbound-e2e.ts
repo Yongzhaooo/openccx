@@ -5,7 +5,7 @@ import { fetchProviderModels } from "../../src/codex/catalog/provider-fetch";
 import { providerOutboundGet } from "../../src/lib/provider-outbound";
 import { PROXY_ENV_KEYS } from "../../src/lib/proxy-env";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 
 const proxyKeys = PROXY_ENV_KEYS.flatMap(key => [key, key.toLowerCase()]);
@@ -22,7 +22,7 @@ async function close(server: ReturnType<typeof createServer>): Promise<void> {
   await new Promise<void>(resolve => server.close(() => resolve()));
 }
 
-async function probe(config: OcxConfig, name: string): Promise<Record<string, unknown>> {
+async function probe(config: OccxConfig, name: string): Promise<Record<string, unknown>> {
   saveConfig(config);
   const request = new Request(`http://127.0.0.1/api/providers/test?name=${name}`, { method: "POST" });
   const response = await handleManagementAPI(request, new URL(request.url), config, {});
@@ -80,7 +80,7 @@ try {
         apiKey: "sk-x",
       },
     },
-  } as OcxConfig, "proxied");
+  } as OccxConfig, "proxied");
 
   const proxyModels = await fetchProviderModels("proxy-discovery-e2e", {
     baseUrl: "http://proxy-models.invalid/v1",
@@ -110,7 +110,7 @@ try {
         allowPrivateNetwork: true,
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
   process.env.NO_PROXY = "localhost,127.0.0.1,::1,[::1]";
   process.env.no_proxy = "localhost,127.0.0.1,::1,[::1]";
   const managementNoProxy = await probe(localConfig, "local");

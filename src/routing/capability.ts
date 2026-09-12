@@ -10,7 +10,7 @@
  * how that affects eligibility.
  */
 
-import { modelInList, type OcxConfig, type OcxProviderConfig } from "../types";
+import { modelInList, type OccxConfig, type OccxProviderConfig } from "../types";
 import { isCanonicalOpenAiForwardProvider, OPENAI_CODEX_PROVIDER_ID } from "../providers/openai-tiers";
 import { serviceTierSupportForModel } from "../providers/service-tier";
 import { PROVIDER_REGISTRY } from "../providers/registry";
@@ -53,7 +53,7 @@ function cachedCatalogModels(): CatalogModelRow[] {
     const catalog = readCatalog(path);
     const models = catalog?.models;
     if (!Array.isArray(models)) return [];
-    // Read ONLY `opencodex_capability_provenance` (written by
+    // Read ONLY `openccx_capability_provenance` (written by
     // applyCatalogModelMetadata). The row's own `context_window` and
     // `input_modalities` always exist because ensureStrictCatalogFields fills them
     // with compatibility defaults for Codex's strict parser, so reading them would
@@ -62,7 +62,7 @@ function cachedCatalogModels(): CatalogModelRow[] {
     // provenance contributes nothing.
     const rows = models.flatMap((model): CatalogModelRow[] => {
       if (typeof model !== "object" || model === null) return [];
-      const provenance = (model as Record<string, unknown>).opencodex_capability_provenance;
+      const provenance = (model as Record<string, unknown>).openccx_capability_provenance;
       if (typeof provenance !== "object" || provenance === null) return [];
       const source = provenance as Record<string, unknown>;
       if (typeof source.provider !== "string" || typeof source.model_id !== "string") return [];
@@ -154,10 +154,10 @@ function localRemoteEvidence(baseUrl: string | undefined): Pick<RouteCapabilityE
  * registry defaults; name-only registry fallbacks must not override that authority.
  */
 export function candidateCapabilityEvidence(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  resolvedProvider?: OcxProviderConfig,
+  resolvedProvider?: OccxProviderConfig,
 ): RouteCapabilityEvidence {
   const provider = resolvedProvider ?? config.providers[providerName];
   const registryEntry = resolvedProvider === undefined

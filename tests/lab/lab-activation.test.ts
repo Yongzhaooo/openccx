@@ -21,10 +21,10 @@ import {
   resetServerResourceOwnershipForTests,
 } from "../../src/lib/server-resource-ownership";
 import { hasPassiveRouteLinker, resetPassiveRouteLinkerForTests } from "../../src/server/passive-route-linker";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 function scratch(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-activation-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-activation-"));
   mkdirSync(join(dir, "lab"), { recursive: true });
   return dir;
 }
@@ -40,12 +40,12 @@ function writeEnabledAutomationConfig(dir: string): void {
   }));
 }
 
-function profileConfig(): OcxConfig {
-  return { providers: {}, routingProfiles: { p: { candidates: [] } } } as unknown as OcxConfig;
+function profileConfig(): OccxConfig {
+  return { providers: {}, routingProfiles: { p: { candidates: [] } } } as unknown as OccxConfig;
 }
 
 const withProfile = profileConfig();
-const bare = { providers: {} } as unknown as OcxConfig;
+const bare = { providers: {} } as unknown as OccxConfig;
 
 describe("lab activation gate", () => {
   // Slots are process-global, so a sibling test file that registered one directly would
@@ -236,11 +236,11 @@ describe("R3-1 a profile-less dry-run registers no slot", () => {
   let homeDir = "";
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
+    previousHome = process.env.OPENCCX_HOME;
     homeDir = scratch();
     // getConfigDir() reads this, and the route calls it rather than taking a directory, so
     // the env var is the only seam that keeps this case off the real config directory.
-    process.env.OPENCODEX_HOME = homeDir;
+    process.env.OPENCCX_HOME = homeDir;
     resetLabActivationForTests();
     resetServerResourceOwnershipForTests();
     resetCompatibilityEvidenceProviderForTests();
@@ -248,8 +248,8 @@ describe("R3-1 a profile-less dry-run registers no slot", () => {
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
   });
 
   test("an unknown profile on an install with no profiles fills neither slot", async () => {
@@ -261,7 +261,7 @@ describe("R3-1 a profile-less dry-run registers no slot", () => {
       defaultProvider: "a",
       providers: { a: { adapter: "openai-responses", baseUrl: "https://a.example/v1", apiKey: "secret", models: ["m1"] } },
       routingProfiles: {},
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const req = new ManagementRequest("http://localhost/api/routing-profiles/dry-run", {
       method: "POST",
@@ -296,7 +296,7 @@ describe("R3-1 a profile-less dry-run registers no slot", () => {
       defaultProvider: "a",
       providers: { a: { adapter: "openai-responses", baseUrl: "https://a.example/v1", apiKey: "secret", models: ["m1"] } },
       routingProfiles: { compat: { candidates: [{ provider: "a", model: "m1" }] } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const req = new ManagementRequest("http://localhost/api/routing-profiles/dry-run", {
       method: "POST",

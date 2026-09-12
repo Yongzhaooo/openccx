@@ -18,23 +18,23 @@ import { classifyTransportFailureKind } from "../../src/lib/upstream-reachabilit
 import { fetchWithResetRetry, fetchWithTransientRetry } from "../../src/lib/upstream-retry";
 import { saveCodexAccountCredential } from "../../src/codex/account-store";
 import { getConfigPath } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { existsSync, mkdirSync} from "node:fs";
 import { join } from "node:path";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-issue-914-test");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     providers: {},
     codexAccounts: [],
     activeCodexAccountId: undefined,
     autoSwitchThreshold: 80,
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveTestCredential(id: string): void {
@@ -46,7 +46,7 @@ function saveTestCredential(id: string): void {
   });
 }
 
-function makeTwoAccountConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeTwoAccountConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   for (const id of ["a", "b"]) saveTestCredential(id);
   return makeConfig({
     activeCodexAccountId: "a",
@@ -56,11 +56,11 @@ function makeTwoAccountConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   process.env.CODEX_HOME = TEST_DIR;
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
@@ -68,8 +68,8 @@ beforeEach(() => {
 });
 
 function restoreEnv(): void {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(TEST_DIR);

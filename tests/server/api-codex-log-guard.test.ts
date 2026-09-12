@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -50,8 +50,8 @@ function makeLogsDb(path: string): void {
   }
 }
 
-function config(): OcxConfig {
-  return { port: 0, defaultProvider: "openai", providers: {} } as OcxConfig;
+function config(): OccxConfig {
+  return { port: 0, defaultProvider: "openai", providers: {} } as OccxConfig;
 }
 
 afterEach(() => {
@@ -62,7 +62,7 @@ afterEach(() => {
 
 describe("Codex Log Guard management API", () => {
   test("GET /api/storage/codex-logs returns privacy-safe read-only diagnostics", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-api-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-api-"));
     roots.push(root);
     const codexHome = join(root, "codex-home");
     const sqliteHome = join(root, "sqlite-home");
@@ -88,7 +88,7 @@ describe("Codex Log Guard management API", () => {
   });
 
   test("GET /api/storage carries path-safe diagnostics without folding external SQLite into CODEX_HOME totals", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-storage-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-storage-"));
     roots.push(root);
     const codexHome = join(root, "codex-home");
     const sqliteHome = join(root, "sqlite-home");
@@ -121,7 +121,7 @@ describe("Codex Log Guard management API", () => {
   });
 
   test("inspection failures return a stable message without leaking the config path", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-api-error-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-api-error-"));
     roots.push(root);
     const codexHome = join(root, "private-codex-home");
     mkdirSync(codexHome);

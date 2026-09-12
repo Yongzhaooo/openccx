@@ -14,7 +14,7 @@ import {
 } from "../../src/oauth/login-cli";
 import { startServer } from "../../src/server";
 import { createLocalAttestationSecret } from "../../src/lib/local-management-attestation";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -27,7 +27,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function keyModeXaiConfig(port = 0): OcxConfig {
+function keyModeXaiConfig(port = 0): OccxConfig {
   return {
     port,
     hostname: "127.0.0.1",
@@ -41,20 +41,20 @@ function keyModeXaiConfig(port = 0): OcxConfig {
         apiKeyPool: [{ id: "livekey01", key: "live-update-sentinel-key" }],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-oauth-live-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-oauth-live-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-oauth-live-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-oauth-live-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(keyModeXaiConfig());
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -63,7 +63,7 @@ afterEach(() => {
 describe("CLI OAuth live-update credential preservation", () => {
   test("Antigravity login emits the new active account's bearer and project without proactive preference", async () => {
     const providerName = "google-antigravity";
-    const cfg: OcxConfig = {
+    const cfg: OccxConfig = {
       port: 0,
       hostname: "127.0.0.1",
       defaultProvider: providerName,
@@ -242,7 +242,7 @@ describe("CLI OAuth live-update credential preservation", () => {
       expect(pool.activeId).toBeTruthy();
       expect(pool.keys.some(entry => entry.active)).toBe(true);
 
-      const disk = JSON.parse(readFileSync(join(testDir, "config.json"), "utf-8")) as OcxConfig;
+      const disk = JSON.parse(readFileSync(join(testDir, "config.json"), "utf-8")) as OccxConfig;
       expect(disk.providers.xai!.authMode).toBe("key");
       expect(disk.providers.xai!.apiKey).toBe("live-update-sentinel-key");
       expect(disk.providers.xai!.apiKeyPool?.some(entry => entry.key === "live-update-sentinel-key")).toBe(true);

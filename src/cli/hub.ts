@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxConnectedClientId } from "../types";
+import type { OccxConfig, OccxConnectedClientId } from "../types";
 import { canonicalGuiBrowserOrigin, canonicalHttpOrigin } from "../lib/gui-pair-capability";
 import { findLiveProxy, probeHostname, type LiveProxy } from "../server/proxy-liveness";
 import {
@@ -9,14 +9,14 @@ import {
 import type { RuntimeApiDeps } from "./runtime-api";
 
 export const HUB_USAGE =
-  "ocx hub invite [--json] [--data-url <origin>] [--management-url <origin>] [--clients codex,claude]";
+  "occx hub invite [--json] [--data-url <origin>] [--management-url <origin>] [--clients codex,claude]";
 
 const PAIRING_WARNING = "Pairing codes are secret, single-use, and expire quickly. Do not save them.";
 
 /**
  * The default browser origin a connecting machine presents.
  *
- * `ocx connect --pairing-code-stdin` exchanges the code with `Origin:` set by `localGuiOrigin()`
+ * `occx connect --pairing-code-stdin` exchanges the code with `Origin:` set by `localGuiOrigin()`
  * in `src/client/connect.ts` — `http://localhost:<that machine's configured port>`, which on a
  * fresh client is the default 10100. The hub cannot observe the other machine's port, so the
  * grant is bound to this origin unless `corsAllowOrigins` names a different loopback one.
@@ -24,7 +24,7 @@ const PAIRING_WARNING = "Pairing codes are secret, single-use, and expire quickl
 const DEFAULT_CLIENT_BROWSER_ORIGIN = "http://localhost:10100";
 
 export interface HubCommandDeps extends RuntimeApiDeps {
-  loadConfig: () => OcxConfig;
+  loadConfig: () => OccxConfig;
   findLiveProxy?: () => Promise<LiveProxy | null>;
   requestPairingGrant?: (
     target: LiveProxy,
@@ -87,11 +87,11 @@ export function parseHubInviteArgs(args: string[]): HubInviteOptions | null {
   return options;
 }
 
-export function parseInviteClients(raw: string | undefined): OcxConnectedClientId[] | null {
+export function parseInviteClients(raw: string | undefined): OccxConnectedClientId[] | null {
   if (raw === undefined) return [];
   const values = raw.split(",").map(value => value.trim()).filter(Boolean);
   if (values.length < 1 || values.some(value => value !== "codex" && value !== "claude")) return null;
-  return values as OcxConnectedClientId[];
+  return values as OccxConnectedClientId[];
 }
 
 /**
@@ -100,10 +100,10 @@ export function parseInviteClients(raw: string | undefined): OcxConnectedClientI
  * `createGuiPairingGrant` accepts only `hub.managementPublicOrigin` itself or an entry of
  * `corsAllowOrigins`, so this picks from exactly that set rather than guessing: the default
  * client origin when it is admitted, otherwise the first admitted loopback origin. A hub whose
- * allow-list names no loopback origin cannot pair a remote `ocx connect` at all, and saying so
+ * allow-list names no loopback origin cannot pair a remote `occx connect` at all, and saying so
  * here is better than minting a code the exchange will reject.
  */
-export function selectInviteBrowserOrigin(config: OcxConfig): string | null {
+export function selectInviteBrowserOrigin(config: OccxConfig): string | null {
   const allowed = [
     canonicalGuiBrowserOrigin(config.hub?.managementPublicOrigin ?? ""),
     ...(config.corsAllowOrigins ?? []).map(value => canonicalGuiBrowserOrigin(value)),
@@ -119,37 +119,37 @@ export function derivedHubDataOrigin(hostname: string | undefined, port: number)
 }
 
 /**
- * The `ocx config set` lines that will actually work on THIS config.
+ * The `occx config set` lines that will actually work on THIS config.
  *
  * `setPath` in `src/cli/config-command.ts` walks only parents that already exist, so
- * `ocx config set hub.<field> …` exits with `config parent path not found: hub` on a config
+ * `occx config set hub.<field> …` exits with `config parent path not found: hub` on a config
  * that has no `hub` object yet — which is exactly the config that needs the advice. Create the
  * parent first, the way `guides/remote-hub.md` does, and only when it is actually missing, so
  * the operator can paste the lines verbatim either way.
  */
 export function configSetHubLines(
-  config: Pick<OcxConfig, "hub">,
+  config: Pick<OccxConfig, "hub">,
   field: "managementPublicOrigin" | "dataPublicOrigin",
   example: string,
 ): string[] {
-  const set = `ocx config set hub.${field} '${JSON.stringify(example)}'`;
-  return config.hub ? [set] : ["ocx config set hub '{}'", set];
+  const set = `occx config set hub.${field} '${JSON.stringify(example)}'`;
+  return config.hub ? [set] : ["occx config set hub '{}'", set];
 }
 
 /**
  * A `corsAllowOrigins` line that ADDS an origin instead of replacing the list.
  *
- * `ocx config set corsAllowOrigins '[…]'` overwrites the array, so printing a one-element
+ * `occx config set corsAllowOrigins '[…]'` overwrites the array, so printing a one-element
  * literal tells an operator with an existing allow-list to delete it. The already-configured
  * entries are known here, so the suggested value carries them.
  */
 export function appendCorsAllowOriginsCommand(
-  config: Pick<OcxConfig, "corsAllowOrigins">,
+  config: Pick<OccxConfig, "corsAllowOrigins">,
   origin: string,
 ): string {
   const current = config.corsAllowOrigins ?? [];
   const next = current.includes(origin) ? current : [...current, origin];
-  return `ocx config set corsAllowOrigins '${JSON.stringify(next)}'`;
+  return `occx config set corsAllowOrigins '${JSON.stringify(next)}'`;
 }
 
 export type HubDataOriginResolution =
@@ -196,7 +196,7 @@ function bindAddressPhrase(bindHostname: string): string {
  * What an operator has to know about the origin the grant actually got bound to.
  *
  * `selectInviteBrowserOrigin` falls back to the first admitted loopback origin when
- * `http://localhost:10100` is not admitted, and a remote `ocx connect` sends
+ * `http://localhost:10100` is not admitted, and a remote `occx connect` sends
  * `Origin: http://localhost:<its own configured port>` — so a grant bound to anything else is
  * refused at the exchange and the single-use code is spent with nothing printed to explain it.
  * Always stating the bound origin, and naming the port the client needs when it differs, is the
@@ -204,7 +204,7 @@ function bindAddressPhrase(bindHostname: string): string {
  */
 export function inviteBoundOriginNotes(
   browserOrigin: string,
-  config: Pick<OcxConfig, "corsAllowOrigins">,
+  config: Pick<OccxConfig, "corsAllowOrigins">,
 ): string[] {
   const notes = [`Bound browser origin: ${browserOrigin} — the connecting machine must present exactly this.`];
   if (browserOrigin === DEFAULT_CLIENT_BROWSER_ORIGIN) return notes;
@@ -212,7 +212,7 @@ export function inviteBoundOriginNotes(
   const port = parsed.port || (parsed.protocol === "https:" ? "443" : "80");
   notes.push(
     `That is NOT ${DEFAULT_CLIENT_BROWSER_ORIGIN}, which is what an unconfigured client sends: the other machine `
-      + `must already be running on port ${port} ('ocx config set port ${port}' there) before it runs the line `
+      + `must already be running on port ${port} ('occx config set port ${port}' there) before it runs the line `
       + "below, or the hub refuses the exchange and the code is spent.",
   );
   notes.push(
@@ -226,10 +226,10 @@ export function hubInviteCommand(
   code: string,
   dataUrl: string,
   managementUrl: string,
-  clients: OcxConnectedClientId[],
+  clients: OccxConnectedClientId[],
 ): string {
   const clientsFlag = clients.length > 0 ? ` --clients ${clients.join(",")}` : "";
-  return `echo '${code}' | ocx connect ${dataUrl} --management-url ${managementUrl}${clientsFlag} --pairing-code-stdin`;
+  return `echo '${code}' | occx connect ${dataUrl} --management-url ${managementUrl}${clientsFlag} --pairing-code-stdin`;
 }
 
 async function runInvite(args: string[], deps: HubCommandDeps): Promise<number> {
@@ -246,8 +246,8 @@ async function runInvite(args: string[], deps: HubCommandDeps): Promise<number> 
   const config = deps.loadConfig();
   if (config.runtimeRole !== "hub") {
     console.error(
-      `ocx hub invite runs on a hub; this machine's runtimeRole is "${config.runtimeRole ?? "standalone"}". `
-        + "A client machine runs 'ocx connect' with the code its hub printed.",
+      `occx hub invite runs on a hub; this machine's runtimeRole is "${config.runtimeRole ?? "standalone"}". `
+        + "A client machine runs 'occx connect' with the code its hub printed.",
     );
     return 1;
   }
@@ -291,18 +291,18 @@ async function runInvite(args: string[], deps: HubCommandDeps): Promise<number> 
   }
   const browserOrigin = selectInviteBrowserOrigin(config);
   if (!browserOrigin) {
-    // `ocx config set corsAllowOrigins` REPLACES the array, so the suggested value carries the
+    // `occx config set corsAllowOrigins` REPLACES the array, so the suggested value carries the
     // entries this hub already has -- a one-element literal would tell the operator to drop them.
     console.error(
       "No loopback browser origin is admitted for pairing. Add the connecting machine's local origin "
-        + "(this keeps the entries already configured; 'ocx config get corsAllowOrigins' shows them): "
+        + "(this keeps the entries already configured; 'occx config get corsAllowOrigins' shows them): "
         + appendCorsAllowOriginsCommand(config, DEFAULT_CLIENT_BROWSER_ORIGIN),
     );
     return 1;
   }
   const target = await (deps.findLiveProxy ?? findLiveProxy)();
   if (!target) {
-    console.error("No running attested OpenCodex hub was found. Check 'ocx service status', then 'ocx service repair'.");
+    console.error("No running attested Openccx hub was found. Check 'occx service status', then 'occx service repair'.");
     return 1;
   }
   const resolved = resolveHubDataOrigin(
@@ -321,7 +321,7 @@ async function runInvite(args: string[], deps: HubCommandDeps): Promise<number> 
     for (const line of configSetHubLines(config, "dataPublicOrigin", "https://hub.tailnet.ts.net:8443")) {
       console.error(`  ${line}`);
     }
-    console.error("  ...or, for this invite only: ocx hub invite --data-url https://hub.tailnet.ts.net:8443");
+    console.error("  ...or, for this invite only: occx hub invite --data-url https://hub.tailnet.ts.net:8443");
     return 1;
   }
   const dataUrl = resolved.dataUrl;

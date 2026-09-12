@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { bridgeToResponsesSSE, buildResponseJSON } from "../../../src/bridge";
 import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../../../src/adapters/anthropic";
 import { parseRequest } from "../../../src/responses/parser";
-import { encodeReasoningEnvelope, decodeReasoningEnvelope, OCX_REASONING_PREFIX } from "../../../src/responses/reasoning-envelope";
-import type { AdapterEvent, OcxProviderConfig, OcxThinkingContent } from "../../../src/types";
+import { encodeReasoningEnvelope, decodeReasoningEnvelope, OCCX_REASONING_PREFIX } from "../../../src/responses/reasoning-envelope";
+import type { AdapterEvent, OccxProviderConfig, OccxThinkingContent } from "../../../src/types";
 import { createTestTranslatorBudget, withTestTranslatorBudget } from "../../helpers/translator-budget";
 
 import { anthropicToResponsesBody } from "../../../src/claude/inbound";
@@ -14,7 +14,7 @@ import { sanitizeReasoningInputContent } from "../../../src/adapters/openai-resp
 const createAnthropicAdapter = (...args: Parameters<typeof createAnthropicAdapterProduction>) =>
   withTestTranslatorBudget(createAnthropicAdapterProduction(...args));
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "anthropic",
   baseUrl: "https://api.anthropic.com",
   apiKey: "sk-test",
@@ -96,7 +96,7 @@ describe("anthropic thinking-signature capture", () => {
   });
 });
 
-describe("bridge ocxr1 envelope emission", () => {
+describe("bridge occxr1 envelope emission", () => {
   const baseEvents: AdapterEvent[] = [
     { type: "thinking_delta", thinking: "hidden chain" },
     { type: "thinking_signature", signature: "RealSig1234567890==" },
@@ -153,8 +153,8 @@ describe("bridge ocxr1 envelope emission", () => {
   });
 });
 
-describe("parser ocxr1 decode + anthropic replay", () => {
-  test("reasoning input with ocxr1 envelope restores the real signature", async () => {
+describe("parser occxr1 decode + anthropic replay", () => {
+  test("reasoning input with occxr1 envelope restores the real signature", async () => {
     const encrypted = encodeReasoningEnvelope({ sig: "RealSig1234567890==", red: ["RED1"] });
     const parsed = parseRequest({
       model: "anthropic/claude-x",
@@ -166,7 +166,7 @@ describe("parser ocxr1 decode + anthropic replay", () => {
     });
     const assistant = parsed.context.messages.find(m => m.role === "assistant");
     expect(assistant).toBeDefined();
-    const thinking = (assistant as unknown as { content: OcxThinkingContent[] }).content.find(p => p.type === "thinking");
+    const thinking = (assistant as unknown as { content: OccxThinkingContent[] }).content.find(p => p.type === "thinking");
     expect(thinking?.signature).toBe("RealSig1234567890==");
     expect(thinking?.redacted).toEqual(["RED1"]);
   });
@@ -215,11 +215,11 @@ describe("parser ocxr1 decode + anthropic replay", () => {
       ],
     });
     const assistant = parsed.context.messages.find(m => m.role === "assistant");
-    const thinking = (assistant as unknown as { content: OcxThinkingContent[] }).content.find(p => p.type === "thinking");
+    const thinking = (assistant as unknown as { content: OccxThinkingContent[] }).content.find(p => p.type === "thinking");
     expect(thinking?.thinking).toBe("the hidden signed text");
   });
 
-  test("native (non-ocxr1) encrypted_content keeps the placeholder signature", async () => {
+  test("native (non-occxr1) encrypted_content keeps the placeholder signature", async () => {
     const parsed = parseRequest({
       model: "anthropic/claude-x",
       input: [
@@ -229,7 +229,7 @@ describe("parser ocxr1 decode + anthropic replay", () => {
       ],
     });
     const assistant = parsed.context.messages.find(m => m.role === "assistant");
-    const thinking = (assistant as unknown as { content: OcxThinkingContent[] }).content.find(p => p.type === "thinking");
+    const thinking = (assistant as unknown as { content: OccxThinkingContent[] }).content.find(p => p.type === "thinking");
     // placeholder JSON.stringify signature — adapter's validity gate rejects it on replay
     expect(thinking?.signature?.startsWith("{")).toBe(true);
   });
@@ -282,7 +282,7 @@ describe("parser ocxr1 decode + anthropic replay", () => {
       ],
     });
     const parsedAssistant = parsed.context.messages.find(message => message.role === "assistant") as {
-      content: OcxThinkingContent[];
+      content: OccxThinkingContent[];
     };
     const parsedThinking = parsedAssistant.content.filter(part => part.type === "thinking");
 
@@ -312,8 +312,8 @@ describe("parser ocxr1 decode + anthropic replay", () => {
   });
 });
 
-describe("passthrough scrub of ocxr1 envelopes", () => {
-  test("sanitize strips ocxr1 encrypted_content even with empty content", async () => {
+describe("passthrough scrub of occxr1 envelopes", () => {
+  test("sanitize strips occxr1 encrypted_content even with empty content", async () => {
     const { createResponsesPassthroughAdapter } = await import("../../../src/adapters/openai-responses");
     const adapter = withTestTranslatorBudget(createResponsesPassthroughAdapter({
       adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward",
@@ -322,12 +322,12 @@ describe("passthrough scrub of ocxr1 envelopes", () => {
     const body = {
       model: "gpt-5.5",
       input: [
-        { type: "reasoning", id: "rs_1", summary: [], encrypted_content: OCX_REASONING_PREFIX + Buffer.from(JSON.stringify({ sig: "RealSig1234567890==" })).toString("base64") },
+        { type: "reasoning", id: "rs_1", summary: [], encrypted_content: OCCX_REASONING_PREFIX + Buffer.from(JSON.stringify({ sig: "RealSig1234567890==" })).toString("base64") },
       ],
     };
-    // Build the outgoing request the adapter would send; the ocxr1 envelope must be stripped.
+    // Build the outgoing request the adapter would send; the occxr1 envelope must be stripped.
     const req = await adapter.buildRequest(parseRequest(body));
-    expect(req.body ?? "").not.toContain(OCX_REASONING_PREFIX);
+    expect(req.body ?? "").not.toContain(OCCX_REASONING_PREFIX);
     expect(req.body ?? "").toContain('"rs_1"'); // reasoning item itself survives
   });
 });
@@ -497,7 +497,7 @@ describe("Claude / Responses / intended Anthropic replay fidelity", () => {
     for (const output of [request.body as string, JSON.stringify(sanitizeReasoningInputContent(body))]) {
       expect(output).not.toContain(empty.signature);
       expect(output).not.toContain(before.data);
-      expect(output).not.toContain("ocxr1:");
+      expect(output).not.toContain("occxr1:");
     }
     expect(parseRequest({ model: "m", input: [{ type: "reasoning", summary: [], encrypted_content: "native-opaque" }] }).context.messages).toEqual([]);
   });

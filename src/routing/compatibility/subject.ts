@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import type { InboundWire } from "../../providers/registry";
 import { subjectIdForSubject } from "../../lab/digest";
 import { buildRouteSubjectV1 } from "../../lab/subject/route-subject";
@@ -13,7 +13,7 @@ import {
   surfaceForProtocols,
   upstreamProtocolForAdapter,
 } from "./behavior";
-import { readOpenCodexCompatibilityVersion } from "./version";
+import { readOpenccxCompatibilityVersion } from "./version";
 import type { RoutingCompatibilityEvidenceLayer } from "./types";
 
 const POLICY_INBOUND_WIRE: InboundWire = "responses";
@@ -58,10 +58,10 @@ function destinationSnapshotFromBaseUrl(baseUrl: string, fingerprint: string): L
  * projection reads/rebuilds, ledger replay, or Lab-state creation.
  */
 export function resolveCompatibilitySubjectsForInboundWire(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   inboundWire: InboundWire,
   configDir?: string,
 ): ResolvedPolicyCompatibilitySubjects {
@@ -92,7 +92,7 @@ export function resolveCompatibilitySubjectsForInboundWire(
   } catch {
     installationSalt = null;
   }
-  const compatibilityVersion = readOpenCodexCompatibilityVersion();
+  const compatibilityVersion = readOpenccxCompatibilityVersion();
   if (!installationSalt || !compatibilityVersion) return { subjectIds };
 
   const endpointFp = endpointFingerprintFromBaseUrl(baseUrl, installationSalt);
@@ -117,7 +117,7 @@ export function resolveCompatibilitySubjectsForInboundWire(
     upstreamProtocol,
     surface,
     baseUrl,
-    opencodexCompatibilityVersion: compatibilityVersion,
+    openccxCompatibilityVersion: compatibilityVersion,
     behaviorValues,
     dependencies: [],
   };
@@ -141,10 +141,10 @@ export function resolveCompatibilitySubjectsForInboundWire(
  * CL-06 policy evaluation is a Responses-surface lookup and remains unchanged.
  */
 export function resolvePolicyCompatibilitySubjects(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   configDir?: string,
 ): ResolvedPolicyCompatibilitySubjects {
   return resolveCompatibilitySubjectsForInboundWire(
@@ -159,10 +159,10 @@ export function resolvePolicyCompatibilitySubjects(
 
 /** Build exact RouteSubjectV1 identity for a policy candidate without network I/O. */
 export function resolvePolicyRouteSubject(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   configDir?: string,
 ): ResolvedPolicyRouteSubject | null {
   return resolvePolicyCompatibilitySubjects(config, providerName, modelId, routed, configDir).route ?? null;
@@ -173,10 +173,10 @@ export function resolvePolicyRouteSubject(
  * inbound wire. Returns null when no existing Lab salt/identity can be read.
  */
 export function resolveProductionRouteSubject(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   modelId: string,
-  routed: OcxProviderConfig,
+  routed: OccxProviderConfig,
   inboundWire: InboundWire,
   configDir?: string,
 ): ResolvedPolicyRouteSubject | null {

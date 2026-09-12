@@ -20,7 +20,7 @@ import { UpstreamRetryEvidenceError } from "../../src/lib/upstream-retry";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import type { DataPlaneAdmission } from "../../src/server/auth-cors";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const accountId = "reserve-dispatch-workspace";
@@ -35,7 +35,7 @@ let usageReads: number;
 let inferenceSends: number;
 let inference: () => Response | Promise<Response>;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 0, defaultProvider: "custom", codexDesktopAuthless: true, codexMainAccountHardLock: true,
     providers: { custom: {
@@ -62,10 +62,10 @@ async function authorize() {
 }
 
 beforeEach(() => {
-  oldHome = process.env.OPENCODEX_HOME;
+  oldHome = process.env.OPENCCX_HOME;
   oldCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-reserve-dispatch-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-reserve-dispatch-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
@@ -116,8 +116,8 @@ afterEach(async () => {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = oldHome;
+    if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = oldHome;
     if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = oldCodexHome;
     removeTreeWithRetry(home);
@@ -267,7 +267,7 @@ describe("Reserve dispatch-time permission", () => {
   test("unguarded unrelated transport remains unchanged", async () => {
     const { ctx, cfg } = await authorize();
     expect(createCodexReserveDispatchGuard(ctx, cfg, "gpt-5.6-luna", loopbackAdmission)).toBeUndefined();
-    const provider: OcxProviderConfig & { fetch: typeof fetch } = {
+    const provider: OccxProviderConfig & { fetch: typeof fetch } = {
       adapter: "openai-responses", authMode: "key", baseUrl: "https://independent.example.test/v1",
       fetch: Object.assign(async () => new Response("keyed-ok"), { preconnect() {} }),
     };

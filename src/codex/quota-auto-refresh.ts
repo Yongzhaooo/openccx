@@ -3,7 +3,7 @@ import { captureConfigGeneration, registerStateSweepAfterTick } from "../lib/sta
 import { isCanonicalOpenAiForwardProvider, OPENAI_CODEX_PROVIDER_ID } from "../providers/openai-tiers";
 import { normalizeResetAt } from "../providers/quota-wire";
 import { providerCodexAccountMode } from "../providers/registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { isSelectableCodexPoolAccount } from "./account-id";
 import { reconcileMainCodexAccountRuntimeState } from "./account-lifecycle";
 import { isCodexAccountPaused } from "./account-pause";
@@ -39,11 +39,11 @@ export interface CodexQuotaAutoRefreshStatus {
 
 export interface CodexQuotaAutoRefreshRunDeps {
   getQuota?: (accountId: string) => StoredAccountQuota | null;
-  refreshQuota?: (config: OcxConfig, accountId: string) => Promise<void>;
+  refreshQuota?: (config: OccxConfig, accountId: string) => Promise<void>;
   /** Only false means skipped; existing void callbacks still report a successful warmup. */
-  warmAccount?: (config: OcxConfig, accountId: string) => Promise<void | false>;
+  warmAccount?: (config: OccxConfig, accountId: string) => Promise<void | false>;
   persistCompleted?: (
-    config: OcxConfig,
+    config: OccxConfig,
     accountId: string,
     completed: CodexQuotaAutoRefreshWindows,
   ) => boolean;
@@ -53,7 +53,7 @@ let inFlight: Promise<void> | null = null;
 
 /** Report upstream window availability separately from persisted spending intent. */
 export function codexQuotaAutoRefreshStatus(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   quota: StoredAccountQuota | null,
 ): CodexQuotaAutoRefreshStatus {
@@ -69,7 +69,7 @@ export function codexQuotaAutoRefreshStatus(
 
 /** Select retained, enabled boundaries newer than both durable and in-memory completions. */
 export function dueCodexQuotaAutoRefreshWindows(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   quota: StoredAccountQuota | null,
   now: number,
@@ -103,7 +103,7 @@ export function dueCodexQuotaAutoRefreshWindows(
 }
 
 /** Retain the earliest uncompleted observation, including across process restarts. */
-function rememberWindows(config: OcxConfig, accountId: string, quota: StoredAccountQuota | null): void {
+function rememberWindows(config: OccxConfig, accountId: string, quota: StoredAccountQuota | null): void {
   const saved = config.codexQuotaAutoRefresh?.[accountId];
   if (!saved) return;
   const completed = completedByAccount.get(accountId);
@@ -148,20 +148,20 @@ function rememberWindows(config: OcxConfig, accountId: string, quota: StoredAcco
 }
 
 /** Load metadata recovery only when an opted-in account actually needs a probe. */
-async function refreshQuota(config: OcxConfig, accountId: string): Promise<void> {
+async function refreshQuota(config: OccxConfig, accountId: string): Promise<void> {
   const { refreshCodexQuotaForActivation } = await import("./auth-api");
   await refreshCodexQuotaForActivation(config, accountId);
 }
 
 /** Keep billable main-account work behind the current pause, reauth and hard-lock policy. */
-function mainWarmupRestricted(config: OcxConfig): boolean {
+function mainWarmupRestricted(config: OccxConfig): boolean {
   return isMainAccountHardLocked(config)
     || isCodexAccountPaused(config, MAIN_CODEX_ACCOUNT_ID)
     || isAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID);
 }
 
 /** Warm the exact account and fence quota/reauth publication to the dispatched credential. */
-async function warmAccount(config: OcxConfig, accountId: string): Promise<void | false> {
+async function warmAccount(config: OccxConfig, accountId: string): Promise<void | false> {
   const writerGeneration = captureConfigGeneration();
   if (accountId !== MAIN_CODEX_ACCOUNT_ID) {
     if (readCodexAccountRecord(accountId)?.codexValidationPending) return false;
@@ -229,7 +229,7 @@ async function warmAccount(config: OcxConfig, accountId: string): Promise<void |
 
 /** Patch completion markers without replacing concurrent account-setting changes. */
 function persistCompleted(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   completed: CodexQuotaAutoRefreshWindows,
 ): boolean {
@@ -255,7 +255,7 @@ function persistCompleted(
 
 /** Retry failed marker persistence without sending another billable warmup. */
 function retryPendingMarkers(
-  config: OcxConfig,
+  config: OccxConfig,
   persist: NonNullable<CodexQuotaAutoRefreshRunDeps["persistCompleted"]>,
 ): void {
   for (const [accountId, completed] of completedByAccount) {
@@ -271,7 +271,7 @@ function retryPendingMarkers(
 
 /** Coalesce sweeps, refresh stale metadata and activate due accounts with bounded concurrency. */
 export async function runCodexQuotaAutoRefresh(
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
   deps: CodexQuotaAutoRefreshRunDeps = {},
 ): Promise<void> {
@@ -340,7 +340,7 @@ export async function runCodexQuotaAutoRefresh(
 }
 
 /** Attach activation to the shared minute sweep and return its owner-scoped cleanup. */
-export function registerCodexQuotaAutoRefreshWorker(config: OcxConfig): () => void {
+export function registerCodexQuotaAutoRefreshWorker(config: OccxConfig): () => void {
   return registerStateSweepAfterTick({
     name: "codex-quota-auto-refresh",
     afterTick: () => { void runCodexQuotaAutoRefresh(config); },

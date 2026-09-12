@@ -1,29 +1,29 @@
 import { expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Route contract for devlog/_fin/260803_integrations_toggle_all/011.
  *
- * The toggle writes one field of opencodex's own config, so there is nothing to
+ * The toggle writes one field of openccx's own config, so there is nothing to
  * snapshot and nothing to journal — turning it back on is the undo. What DOES
  * need proving is that it agrees with the older `PUT /api/claude-code` about the
  * block's invariants, not merely about the flag.
  */
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, providers: [], ...overrides } as OcxConfig;
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, providers: [], ...overrides } as OccxConfig;
 }
 
 /**
  * `saveConfigPreservingClaudeCode` is injected as a no-op spy on purpose: the
- * production function writes the developer's real OPENCODEX_HOME, and
+ * production function writes the developer's real OPENCCX_HOME, and
  * ManagementApiDeps carries this seam precisely so a fixture config cannot
  * overwrite it (src/server/management/context.ts).
  */
-function dispatch(config: OcxConfig, path: string, init?: RequestInit) {
+function dispatch(config: OccxConfig, path: string, init?: RequestInit) {
   const url = new URL(`http://127.0.0.1:10100${path}`);
-  const saved: OcxConfig[] = [];
+  const saved: OccxConfig[] = [];
   const response = handleManagementAPI(
     new Request(url, { ...init, headers: { Host: url.host, ...(init?.headers ?? {}) } }),
     url,
@@ -33,7 +33,7 @@ function dispatch(config: OcxConfig, path: string, init?: RequestInit) {
   return { response, saved };
 }
 
-async function put(config: OcxConfig, enabled: boolean) {
+async function put(config: OccxConfig, enabled: boolean) {
   const { response, saved } = dispatch(config, "/api/native-integrations/claude", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -186,19 +186,19 @@ test("a held REAL config transaction refuses 409 config_busy, and release lets a
    * BEGIN IMMEDIATE` the lock itself uses (src/config.ts:1771), so the route's
    * own acquisition fails with SQLITE_BUSY exactly as cross-process contention
    * would. The route runs the REAL saveConfigPreservingClaudeCode — no seam —
-   * against a fixture OPENCODEX_HOME.
+   * against a fixture OPENCCX_HOME.
    */
   const { Database } = await import("bun:sqlite");
   const { mkdtempSync, rmSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
-  const fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-lock-"));
-  const previousHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = fixtureRoot;
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "occx-lock-"));
+  const previousHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = fixtureRoot;
   const holder = new Database(join(fixtureRoot, "config-mutation.sqlite"), { create: true });
   try {
     holder.exec("PRAGMA busy_timeout = 0; BEGIN IMMEDIATE");
-    const putReal = (config: OcxConfig) => {
+    const putReal = (config: OccxConfig) => {
       const url = new URL("http://127.0.0.1:10100/api/native-integrations/claude");
       return handleManagementAPI(
         new Request(url, {
@@ -234,8 +234,8 @@ test("a held REAL config transaction refuses 409 config_busy, and release lets a
   } finally {
     try { holder.exec("ROLLBACK"); } catch { /* already closed */ }
     try { holder.close(); } catch { /* already closed */ }
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     rmSync(fixtureRoot, { recursive: true, force: true });
   }
 });

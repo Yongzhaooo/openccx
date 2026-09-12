@@ -13,14 +13,14 @@ import { setDraining } from "../../src/server/lifecycle";
 import { startServer } from "../../src/server";
 import { readDisplaySafeErrorText } from "../../src/server/responses/core";
 import { formatPassthroughUpstreamError } from "../../src/server/responses/passthrough-error";
-import type { OcxConfig, OcxParsedRequest } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-const previousOcxDebug = process.env.OCX_DEBUG;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+const previousOccxDebug = process.env.OCCX_DEBUG;
 const originalGlobalFetch = globalThis.fetch;
 const TEST_DIR = join(import.meta.dir, ".tmp-issue-452-empty-503");
 let isolatedCodexHome: IsolatedCodexHome | null = null;
@@ -39,7 +39,7 @@ function redirectCanonicalCodexTo(baseUrl: string): void {
 }
 
 beforeEach(() => {
-  isolatedCodexHome = installIsolatedCodexHome("ocx-issue-452-");
+  isolatedCodexHome = installIsolatedCodexHome("occx-issue-452-");
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
   setDraining(false);
@@ -48,12 +48,12 @@ beforeEach(() => {
 afterEach(() => {
   globalThis.fetch = originalGlobalFetch;
   setDraining(false);
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  if (previousOcxDebug === undefined) delete process.env.OCX_DEBUG;
-  else process.env.OCX_DEBUG = previousOcxDebug;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  if (previousOccxDebug === undefined) delete process.env.OCCX_DEBUG;
+  else process.env.OCCX_DEBUG = previousOccxDebug;
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
   isolatedCodexHome?.restore();
@@ -192,8 +192,8 @@ async function withPoolPassthrough(
 ): Promise<void> {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  process.env.OPENCCX_HOME = TEST_DIR;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
   clearAccountQuota();
@@ -224,7 +224,7 @@ async function withPoolPassthrough(
       { id: "pool-a", email: "pool-a@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   saveCodexAccountCredential("pool-a", {
     accessToken: "pool-a-token",
     refreshToken: "pool-a-refresh",
@@ -351,8 +351,8 @@ describe("drain 503 JSON (#452)", () => {
   test("POST /v1/responses while draining returns JSON error body", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({
       port: 0,
       defaultProvider: "xiaomi",
@@ -364,7 +364,7 @@ describe("drain 503 JSON (#452)", () => {
           defaultModel: "mimo-v2.5-pro",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -387,8 +387,8 @@ describe("drain 503 JSON (#452)", () => {
 });
 
 describe("openai-chat provider debug (#452)", () => {
-  test("buildRequest emits debugProviderDiagnostic when OCX_DEBUG=1", () => {
-    process.env.OCX_DEBUG = "1";
+  test("buildRequest emits debugProviderDiagnostic when OCCX_DEBUG=1", () => {
+    process.env.OCCX_DEBUG = "1";
     resetDebugLogBufferForTests();
     const adapter = createOpenAIChatAdapter({
       adapter: "openai-chat",
@@ -403,17 +403,17 @@ describe("openai-chat provider debug (#452)", () => {
         tools: [{ type: "function", name: "shell_command", description: "run", parameters: { type: "object" } }],
       },
       options: {},
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
     adapter.buildRequest(parsed);
     const lines = getDebugLogEntries().map(e => e.line);
-    expect(lines.some(line => line.includes("[ocx:openai-chat:request]"))).toBe(true);
+    expect(lines.some(line => line.includes("[occx:openai-chat:request]"))).toBe(true);
     expect(lines.join("\n")).toContain('"host":"api.xiaomimimo.com"');
     expect(lines.join("\n")).not.toContain("sk-secret-xiaomi-key");
     expect(lines.join("\n")).not.toContain("/v1/chat/completions");
   });
 
   test("tenant-scoped baseUrl logs host only — account id never appears", () => {
-    process.env.OCX_DEBUG = "1";
+    process.env.OCCX_DEBUG = "1";
     resetDebugLogBufferForTests();
     const accountId = "cf-account-abc123secret";
     const adapter = createOpenAIChatAdapter({
@@ -428,10 +428,10 @@ describe("openai-chat provider debug (#452)", () => {
         messages: [{ role: "user", content: [{ type: "text", text: "hi" }] }],
       },
       options: {},
-    } as unknown as OcxParsedRequest;
+    } as unknown as OccxParsedRequest;
     adapter.buildRequest(parsed);
     const joined = getDebugLogEntries().map(e => e.line).join("\n");
-    expect(joined).toContain("[ocx:openai-chat:request]");
+    expect(joined).toContain("[occx:openai-chat:request]");
     expect(joined).toContain('"host":"api.cloudflare.com"');
     expect(joined).not.toContain(accountId);
     expect(joined).not.toContain("/accounts/");

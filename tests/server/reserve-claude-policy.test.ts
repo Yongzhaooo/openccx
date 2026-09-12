@@ -17,7 +17,7 @@ import { isNativeMainTrafficBlocked, waitForNativeMainStartupGate } from "../../
 import { startServer } from "../../src/server";
 import { resetLifecycleDrainStateForTests } from "../../src/server/lifecycle";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { ownedServiceHomeInspection } from "../helpers/owned-service-home-inspection";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -43,16 +43,16 @@ function clearState(): void {
 
 /** Independent primary-loopback fixture: /v1/messages is not allowed on the secondary listener. */
 async function claudePolicyFixture() {
-  const names = ["OPENCODEX_HOME", "CODEX_HOME", "OPENCODEX_API_AUTH_TOKEN", "OPENCODEX_ADMIN_AUTH_TOKEN"] as const;
+  const names = ["OPENCCX_HOME", "CODEX_HOME", "OPENCCX_API_AUTH_TOKEN", "OPENCCX_ADMIN_AUTH_TOKEN"] as const;
   const oldEnv = names.map(name => [name, process.env[name]] as const);
-  const root = mkdtempSync(join(tmpdir(), "ocx-reserve-claude-policy-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-reserve-claude-policy-"));
   const codexHome = join(root, "codex");
-  const configHome = join(root, "ocx");
+  const configHome = join(root, "occx");
   mkdirSync(codexHome); mkdirSync(configHome);
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = configHome;
-  process.env.OPENCODEX_API_AUTH_TOKEN = "ocx_data_claude_policy_fixture";
-  process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "claude-policy-admin-fixture";
+  process.env.OPENCCX_HOME = configHome;
+  process.env.OPENCCX_API_AUTH_TOKEN = "occx_data_claude_policy_fixture";
+  process.env.OPENCCX_ADMIN_AUTH_TOKEN = "claude-policy-admin-fixture";
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
   setAsyncIcaclsRunnerForTests(async () => aclOk);
@@ -69,8 +69,8 @@ async function claudePolicyFixture() {
   const entered = deferred();
   const release = deferred();
   const abort = new AbortController();
-  let liveConfig: OcxConfig | undefined;
-  let replayConfig: OcxConfig | undefined;
+  let liveConfig: OccxConfig | undefined;
+  let replayConfig: OccxConfig | undefined;
   let policy: authContext.CodexAuthPolicyConfig | undefined;
   let receivedAdmission: string | undefined;
   let server: ReturnType<typeof startServer> | undefined;

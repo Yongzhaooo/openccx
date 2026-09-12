@@ -102,7 +102,7 @@ beforeEach(() => {
   requests = [];
   journalRows = [];
   mountCount += 1;
-  apiBase = `http://ocx-test-${mountCount}.invalid`;
+  apiBase = `http://occx-test-${mountCount}.invalid`;
   stateResponse = () => json(status());
   putResponse = () => json({ ok: true, clientId: "hermes", changed: true, state: "absent", message: "disabled" });
   codexRoutingResponse = () => json({ routingInjected: false, status: "native", recommendedCommand: null });
@@ -232,7 +232,7 @@ async function remountClient(client: "hermes" | "dsh" = "hermes"): Promise<void>
     root = null;
   }
   mountCount += 1;
-  apiBase = `http://ocx-test-${mountCount}.invalid`;
+  apiBase = `http://occx-test-${mountCount}.invalid`;
   await mountClient(true, client);
 }
 
@@ -248,7 +248,7 @@ test("the DSH surface uses localized ownership semantics and its own API route",
   // form; the full product name still lives on the API Keys page (api.clientConfig.clientDsh).
   expect(text).toContain("DSH");
   expect(text).not.toContain("DeepSeek Harness (DSH)");
-  expect(text).toContain("llm-pi-ai.providers.opencodex");
+  expect(text).toContain("llm-pi-ai.providers.openccx");
   expect(text).toContain("hot reload");
   expect(text).toContain("default model");
   expect(text).toContain("deepseek-official");
@@ -384,7 +384,7 @@ test("a foreign edit and an unowned block get different dialog copy", async () =
   await act(async () => { buttonByText("Replace")!.click(); });
   // The user's own edit is what is discarded, and the copy has to say so.
   expect(container.querySelector(".integration-consequence-dialog")!.textContent)
-    .toContain("Your edit inside the opencodex block");
+    .toContain("Your edit inside the openccx block");
 
   stateResponse = () => json(status({ state: "conflict", reason: "unowned-key" }));
   await remountClient();
@@ -558,7 +558,7 @@ test("a refusal routes by reason, not by the state it happened in", async () => 
 
   const text = container.textContent ?? "";
   expect(text).toContain("disk full");
-  expect(text).not.toContain("changed after opencodex wrote it");
+  expect(text).not.toContain("changed after openccx wrote it");
 });
 
 test("a hidden panel makes no request at all", async () => {

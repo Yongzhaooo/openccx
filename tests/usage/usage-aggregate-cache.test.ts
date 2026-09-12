@@ -18,7 +18,7 @@ import {
   usageAggregateRetainedStats,
   type UsageAggregateResult,
 } from "../../src/server/management/usage-aggregate-cache";
-import type { OcxConfig } from "../../src/types/config";
+import type { OccxConfig } from "../../src/types/config";
 import { resetUsageReadCacheForTests, type PersistedUsageEntry } from "../../src/usage/log";
 import * as usageLedgerScannerModule from "../../src/usage/ledger-scanner";
 import { refreshUserCostOverlays } from "../../src/usage/user-cost-overlays";
@@ -58,13 +58,13 @@ function requests(result: UsageAggregateResult): number {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-usage-aggregate-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-usage-aggregate-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageAggregateCacheForTests();
   resetUsageReadCacheForTests();
   resetAppOwnedMemoryForTests();
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
 });
 
 afterEach(() => {
@@ -72,9 +72,9 @@ afterEach(() => {
   resetUsageAggregateCacheForTests();
   resetUsageReadCacheForTests();
   resetAppOwnedMemoryForTests();
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) rmSync(testDir, { recursive: true, force: true });
 });
 
@@ -169,7 +169,7 @@ describe("retained usage aggregate cache", () => {
     expect(appended.accumulator.snapshotWindow.end).toBe(NOW + 1);
     refreshUserCostOverlays({ providers: { openai: { modelCosts: {
       "gpt-5.5": { input: 1, output: 2, cacheRead: 0.1, cacheWrite: 0.2 },
-    } } } } as unknown as OcxConfig);
+    } } } } as unknown as OccxConfig);
     const rebuilt = await getFilteredUsageAggregate({}, window);
     expect(rebuilt.update).toBe("rebuild");
     expect(rebuilt.accumulator.summarize("today", NOW)).toMatchObject({
@@ -249,7 +249,7 @@ describe("retained usage aggregate cache", () => {
             },
           },
         },
-      } as unknown as OcxConfig);
+      } as unknown as OccxConfig);
       const refreshed = await getFilteredUsageAggregate({ provider: "openai" });
 
       expect(scans).toBe(2);

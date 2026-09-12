@@ -24,7 +24,7 @@ function debugSettingsKey(apiBase: string): string {
 
 export default function Debug({ apiBase, embedded, active = true }: { apiBase: string; embedded?: boolean; active?: boolean }) {
   const { t } = useI18n();
-  const settingsCacheKey = `ocx.debug.settings.v1:${apiBase}`;
+  const settingsCacheKey = `occx.debug.settings.v1:${apiBase}`;
   const cachedSettings = readSessionListCache<DebugSettings>(settingsCacheKey);
   const debugResourceKey = debugSettingsKey(apiBase);
   const [debugBusy, setDebugBusy] = useState(false);

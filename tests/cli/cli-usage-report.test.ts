@@ -1,5 +1,5 @@
 /**
- * `ocx usage` human rendering and query construction.
+ * `occx usage` human rendering and query construction.
  *
  * The command used to print its payload through the shared depth-1 flattener,
  * which renders arrays as "N item(s)" — so every per-model and per-provider
@@ -167,7 +167,7 @@ describe("formatUsageReport", () => {
   });
 });
 
-describe("ocx usage command", () => {
+describe("occx usage command", () => {
   test("duplicate, inline and stray custom-bound arguments do not echo credential-shaped values", async () => {
     const secret = "sk-" + "a".repeat(40);
     const errors: string[] = [];
@@ -311,11 +311,11 @@ describe("ocx usage command", () => {
 });
 
 /**
- * #2704: `ocx logs` could not filter by conversation at all, even though the server route
+ * #2704: `occx logs` could not filter by conversation at all, even though the server route
  * had accepted `conversationId` for a long time. The URL is asserted rather than the output,
  * because a command that prints plausible rows while sending no filter is the failure mode.
  */
-describe("ocx logs --conversation", () => {
+describe("occx logs --conversation", () => {
   const rows = [{ timestamp: "t0", status: 200, provider: "xai", model: "grok-4.6", durationMs: 12, conversationId: "conv-7" }];
 
   test("both spellings build the same conversationId query", async () => {
@@ -345,7 +345,7 @@ describe("ocx logs --conversation", () => {
   });
 });
 
-describe("ocx logs --follow output contract", () => {
+describe("occx logs --follow output contract", () => {
   test("--follow --json names the conflict without implying that follow enables JSONL", async () => {
     const errors: string[] = [];
     const originalError = console.error;

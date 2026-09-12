@@ -5,13 +5,13 @@ import {
   preserveOpenAiTierRollbackSnapshot,
   saveConfig,
 } from "../config";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { projectOpenAiTierMigration } from "./openai-tiers";
 
 export interface OpenAiTierStartupDeps {
   project: typeof projectOpenAiTierMigration;
   backup: () => void;
-  save: (config: OcxConfig) => void;
+  save: (config: OccxConfig) => void;
   preserveRollback?: (error: OpenAiTierBackupCollisionError) => void;
 }
 
@@ -38,9 +38,9 @@ const DEFAULT_DEPS: OpenAiTierStartupDeps = {
 };
 
 export function runOpenAiTierStartupMigration(
-  config: OcxConfig,
+  config: OccxConfig,
   deps: OpenAiTierStartupDeps = DEFAULT_DEPS,
-): OcxConfig {
+): OccxConfig {
   const projection = deps.project(config);
   if (!projection.changed) return projection.config;
   try {

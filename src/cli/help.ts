@@ -6,10 +6,10 @@ import { findCommand } from "./registry";
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 
 /**
- * Version of the `ocx` bundle this process is running from.
+ * Version of the `occx` bundle this process is running from.
  *
  * Exported so `status`/`doctor` can compare it against the version the live proxy reports,
- * which is how a stale `ocx` earlier on PATH becomes visible (#2701). Returns `"unknown"`
+ * which is how a stale `occx` earlier on PATH becomes visible (#2701). Returns `"unknown"`
  * rather than throwing; callers must treat that as "cannot compare", not as a mismatch.
  */
 export function packageVersion(): string {
@@ -19,90 +19,90 @@ export function packageVersion(): string {
 }
 
 export function printVersion(): void {
-  console.log(`opencodex ${packageVersion()}`);
+  console.log(`openccx ${packageVersion()}`);
 }
 
 export function printUsage(): void {
-  console.log(`opencodex (ocx) — Universal provider proxy for Codex
+  console.log(`openccx (occx) — Universal provider proxy for Codex
 
 Usage:
-  ocx setup                   Interactive setup (alias: init)
-  ocx start [--port <port>]   Start the proxy server (auto-syncs models to Codex)
-  ocx stop                    Stop the proxy AND restore native Codex (plain codex works again)
-  ocx restore                 Restore native Codex without stopping (alias: eject)
-  ocx restore back            Re-point codex at the running proxy (undo restore)
-  ocx recover-history --legacy-openai --yes
-                               Force all user-message opencodex rows to OpenAI (legacy recovery)
-  ocx recover-history --ocx-compaction <thread-id> --yes
-                               Back up and make one ocx1-compacted thread replayable by native Codex
-  ocx uninstall               Remove service/shim/config and restore native Codex (alias: remove)
-  ocx service [sub]           Run as a background service (default: install/update/start)
-  ocx codex-shim <sub>        Auto-start proxy when \`codex\` launches (install|status|uninstall|remove)
-  ocx tray <sub>              Windows status tray (install|start|stop|status|uninstall)
-  ocx ensure                  Ensure the proxy is running and Codex config/cache are current
-  ocx connect <url>           Connect this machine to a remote OpenCodex hub (credential via stdin)
-  ocx disconnect              Restore local state and clear the hub connection
-  ocx sync [--restart-codex]  Fetch models from providers and inject into Codex config
-  ocx sync-cache [--restart-codex]
+  occx setup                   Interactive setup (alias: init)
+  occx start [--port <port>]   Start the proxy server (auto-syncs models to Codex)
+  occx stop                    Stop the proxy AND restore native Codex (plain codex works again)
+  occx restore                 Restore native Codex without stopping (alias: eject)
+  occx restore back            Re-point codex at the running proxy (undo restore)
+  occx recover-history --legacy-openai --yes
+                               Force all user-message openccx rows to OpenAI (legacy recovery)
+  occx recover-history --occx-compaction <thread-id> --yes
+                               Back up and make one occx1-compacted thread replayable by native Codex
+  occx uninstall               Remove service/shim/config and restore native Codex (alias: remove)
+  occx service [sub]           Run as a background service (default: install/update/start)
+  occx codex-shim <sub>        Auto-start proxy when \`codex\` launches (install|status|uninstall|remove)
+  occx tray <sub>              Windows status tray (install|start|stop|status|uninstall)
+  occx ensure                  Ensure the proxy is running and Codex config/cache are current
+  occx connect <url>           Connect this machine to a remote Openccx hub (credential via stdin)
+  occx disconnect              Restore local state and clear the hub connection
+  occx sync [--restart-codex]  Fetch models from providers and inject into Codex config
+  occx sync-cache [--restart-codex]
                               Refresh Codex's model cache from the active catalog
-  ocx status                  Check proxy server status (on a hub: one block with its ports and token source)
-  ocx doctor                  Diagnose environment/network issues (WSL, proxy, ChatGPT reachability)
-  ocx doctor --reclaim-response-temps
+  occx status                  Check proxy server status (on a hub: one block with its ports and token source)
+  occx doctor                  Diagnose environment/network issues (WSL, proxy, ChatGPT reachability)
+  occx doctor --reclaim-response-temps
                               Reclaim abandoned response-state temp files (works without a running proxy)
-  ocx doctor --recover-zero-byte-coordinator --yes
+  occx doctor --recover-zero-byte-coordinator --yes
                               Back up a proven zero-byte Codex coordinator after stopping the proxy
-  ocx debug <scope>           provider/usage/injection/claude on|off|status|reset
-  ocx login <provider>        OAuth or API-key provider login (ocx login codex for Codex/ChatGPT)
-  ocx logout <provider>       Remove a stored OAuth login
-  ocx gui [pair --origin <browser-origin> [--json]]
+  occx debug <scope>           provider/usage/injection/claude on|off|status|reset
+  occx login <provider>        OAuth or API-key provider login (occx login codex for Codex/ChatGPT)
+  occx logout <provider>       Remove a stored OAuth login
+  occx gui [pair --origin <browser-origin> [--json]]
                               Open the dashboard or create a single-use remote pairing grant
-  ocx hub invite [--json]     Print a ready-to-run \`ocx connect\` line for one more machine
-                              (hub only; see \`ocx help hub\` for the one-port topology)
-  ocx update [--tag <tag>]    Update opencodex (keeps preview installs on @preview)
-  ocx restart                  Stop and restart the proxy
-  ocx v2 <sub>                multi_agent_v2 surface (status|on|off|mode|keep-native-v1|threads|mode-hint)
-  ocx health [--json]          Check proxy health (exit 0=healthy, 1=not)
-  ocx capabilities [--json]    List declared capabilities and the API routes they drive
-  ocx ready [--json] [--wait [--timeout <s>]]  Check post-sync readiness (exit 0 only when ready)
-  ocx provider <sub>          Providers, connectivity, quota, and selected models
-  ocx account <sub>           Accounts, login/reauth, key pools, and quota controls
-  ocx models <sub>            Live/custom models, visibility, context, and shadow calls
-  ocx alias <sub>             Short names for providers and models (list, set, rm, defaults)
-  ocx combo <sub>             Combo routing strategies and failover
-  ocx agent <sub>             Subagents, injection, effort caps, and sidecars
-  ocx effort [sub]            Inspect and configure reasoning effort caps and defaults
-  ocx observe <sub>           Logs, usage, storage, memory, and debug data
-  ocx inspect <sub>           Effective config, catalog, analytics, pacing, client-config
-  ocx route <sub>             Routing features (combo, policy)
-  ocx logs [filters]          Alias of ocx observe logs
-  ocx usage [--range <today|1d|7d|30d|all>] [--provider <name>] [--model <id>]
-                              Token and estimated-cost report (alias of ocx observe usage)
-  ocx storage <sub>           Storage report, cleanup, trash, and the cleanup policy
-  ocx memory [--json]         Alias of ocx observe memory
-  ocx api-key <sub>           Alias of ocx access key
-  ocx access <sub>            External API keys and endpoint information
-  ocx export --client <id>    Print a client config wired to the running proxy (15 clients)
-  ocx integration client <sub> Enable, disable, inspect or roll back a client integration
-  ocx grok <sub>              Grok Build model selection and apply
-  ocx system <sub>            Runtime settings, startup, sync, OpenCodex updates, and Codex CLI inspection
-  ocx config <sub>            Validated configuration show/get/set/import/export
-  ocx lab <sub>               Read-only Compatibility Lab projection inspection
-  ocx claude [args...]        Launch Claude Code wired to the proxy (model discovery on)
-  ocx claude desktop [sub]    Manage and apply Claude Desktop's four-family profile
-  ocx opencode [args...]      Launch opencode wired to the proxy (runtime provider config)
-  ocx mcode [args...]         Launch MiniMax Code through its managed provider
-  ocx mmx text <sub> [args]   Launch MiniMax CLI text through the proxy
-  ocx zcode [sub]             Connect ZCode to the proxy (managed provider)
-  ocx help [command]          Show help
-  ocx --version | -v          Print version
+  occx hub invite [--json]     Print a ready-to-run \`occx connect\` line for one more machine
+                              (hub only; see \`occx help hub\` for the one-port topology)
+  occx update [--tag <tag>]    Update openccx (keeps preview installs on @preview)
+  occx restart                  Stop and restart the proxy
+  occx v2 <sub>                multi_agent_v2 surface (status|on|off|mode|keep-native-v1|threads|mode-hint)
+  occx health [--json]          Check proxy health (exit 0=healthy, 1=not)
+  occx capabilities [--json]    List declared capabilities and the API routes they drive
+  occx ready [--json] [--wait [--timeout <s>]]  Check post-sync readiness (exit 0 only when ready)
+  occx provider <sub>          Providers, connectivity, quota, and selected models
+  occx account <sub>           Accounts, login/reauth, key pools, and quota controls
+  occx models <sub>            Live/custom models, visibility, context, and shadow calls
+  occx alias <sub>             Short names for providers and models (list, set, rm, defaults)
+  occx combo <sub>             Combo routing strategies and failover
+  occx agent <sub>             Subagents, injection, effort caps, and sidecars
+  occx effort [sub]            Inspect and configure reasoning effort caps and defaults
+  occx observe <sub>           Logs, usage, storage, memory, and debug data
+  occx inspect <sub>           Effective config, catalog, analytics, pacing, client-config
+  occx route <sub>             Routing features (combo, policy)
+  occx logs [filters]          Alias of occx observe logs
+  occx usage [--range <today|1d|7d|30d|all>] [--provider <name>] [--model <id>]
+                              Token and estimated-cost report (alias of occx observe usage)
+  occx storage <sub>           Storage report, cleanup, trash, and the cleanup policy
+  occx memory [--json]         Alias of occx observe memory
+  occx api-key <sub>           Alias of occx access key
+  occx access <sub>            External API keys and endpoint information
+  occx export --client <id>    Print a client config wired to the running proxy (15 clients)
+  occx integration client <sub> Enable, disable, inspect or roll back a client integration
+  occx grok <sub>              Grok Build model selection and apply
+  occx system <sub>            Runtime settings, startup, sync, Openccx updates, and Codex CLI inspection
+  occx config <sub>            Validated configuration show/get/set/import/export
+  occx lab <sub>               Read-only Compatibility Lab projection inspection
+  occx claude [args...]        Launch Claude Code wired to the proxy (model discovery on)
+  occx claude desktop [sub]    Manage and apply Claude Desktop's four-family profile
+  occx opencode [args...]      Launch opencode wired to the proxy (runtime provider config)
+  occx mcode [args...]         Launch MiniMax Code through its managed provider
+  occx mmx text <sub> [args]   Launch MiniMax CLI text through the proxy
+  occx zcode [sub]             Connect ZCode to the proxy (managed provider)
+  occx help [command]          Show help
+  occx --version | -v          Print version
 
 Examples:
-  ocx init                    Set up provider and inject into Codex
-  ocx start                   Start on default port (10100)
-  ocx start --port 8080       Start on custom port
-  ocx help service            Show service command help
-  ocx help hub                Explain the hub topology, token file, and invites
-  ocx sync                    Sync available models to Codex`);
+  occx init                    Set up provider and inject into Codex
+  occx start                   Start on default port (10100)
+  occx start --port 8080       Start on custom port
+  occx help service            Show service command help
+  occx help hub                Explain the hub topology, token file, and invites
+  occx sync                    Sync available models to Codex`);
 }
 
 export function hasHelpFlag(values: string[]): boolean {

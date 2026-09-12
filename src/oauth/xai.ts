@@ -17,7 +17,7 @@ const JITTER_DELAY_CAP_MS = 2_000;
 const XAI_TRUSTED_AUTH_HOSTS = new Set(["auth.x.ai", "accounts.x.ai"]);
 
 export const XAI_LOCAL_CLI_DETACH_WARNING =
-  "[oauth:xai] Grok CLI credential was stale; refreshed into OpenCodex ownership. Grok CLI may require login again.";
+  "[oauth:xai] Grok CLI credential was stale; refreshed into Openccx ownership. Grok CLI may require login again.";
 
 interface XaiDiscovery {
   authorizationEndpoint: string;
@@ -359,7 +359,7 @@ export async function loginXai(
         }
       }
     } else if (importLocal === "only") {
-      throw new Error("No Grok CLI token found at ~/.grok/auth.json. Run 'ocx login xai' for browser OAuth.");
+      throw new Error("No Grok CLI token found at ~/.grok/auth.json. Run 'occx login xai' for browser OAuth.");
     }
   }
 

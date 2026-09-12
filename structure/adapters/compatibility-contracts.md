@@ -25,8 +25,8 @@ evidence before they can be added.
 | Disposition | Meaning |
 | --- | --- |
 | `passthrough` | The relevant semantic value reaches the upstream representation unchanged. |
-| `translated` | OpenCodex deliberately represents the feature differently while preserving its purpose. |
-| `degraded` | OpenCodex keeps useful information but cannot preserve the complete original semantics. |
+| `translated` | Openccx deliberately represents the feature differently while preserving its purpose. |
+| `degraded` | Openccx keeps useful information but cannot preserve the complete original semantics. |
 | `unsupported` | The feature is removed or rejected for the exact declared subject. |
 
 `translated`, `degraded`, and `unsupported` claims require a concrete limitation. Every fixture
@@ -36,7 +36,7 @@ after the relevant assertion is deleted.
 ## Runtime boundary
 
 Compatibility manifests are passive data. The Responses request path, router, and server startup do
-not import them. A future `ocx compatibility explain` or GUI reader may load the catalog on demand,
+not import them. A future `occx compatibility explain` or GUI reader may load the catalog on demand,
 but adding a manifest must not activate Compatibility Lab or alter dispatch behavior.
 
 ## Canonical forward continuation extensions

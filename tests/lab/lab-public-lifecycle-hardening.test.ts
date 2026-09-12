@@ -99,7 +99,7 @@ function addLivePrivateStages(dir: string, count: number): void {
 
 describe("CL-10 public lifecycle hardening", () => {
   test("exclusive private publication never exposes a partial final file", () => {
-    const root = configDir("ocx-cl10-atomic-");
+    const root = configDir("occx-cl10-atomic-");
     const finalPath = join(root, "object.json");
     const bytes = Buffer.from('{"ok":true}', "utf8");
 
@@ -114,8 +114,8 @@ describe("CL-10 public lifecycle hardening", () => {
   });
 
   test("private staging files do not consume the bounded community object quota", () => {
-    const publisher = configDir("ocx-cl10-stage-publisher-");
-    const consumer = configDir("ocx-cl10-stage-consumer-");
+    const publisher = configDir("occx-cl10-stage-publisher-");
+    const consumer = configDir("occx-cl10-stage-consumer-");
     addLivePrivateStages(labCommunityDir(consumer), 512);
 
     const bundle = signedBundle(publisher);
@@ -130,8 +130,8 @@ describe("CL-10 public lifecycle hardening", () => {
   });
 
   test("durable origin provenance purges local community copies even after export and key corruption", () => {
-    const local = configDir("ocx-cl10-origin-local-");
-    const thirdParty = configDir("ocx-cl10-origin-third-party-");
+    const local = configDir("occx-cl10-origin-local-");
+    const thirdParty = configDir("occx-cl10-origin-third-party-");
     const localBundle = signedBundle(local);
     const thirdPartyBundle = signedBundle(thirdParty, "2026-08-13");
 
@@ -170,7 +170,7 @@ describe("CL-10 public lifecycle hardening", () => {
   });
 
   test("locally-originated hardlinked community path is removed without deleting its peer", () => {
-    const local = configDir("ocx-cl10-unsafe-community-purge-");
+    const local = configDir("occx-cl10-unsafe-community-purge-");
     const localBundle = signedBundle(local);
     writePublicEvidenceBundle(localBundle, local);
     recordLocalPublicOrigin({
@@ -192,8 +192,8 @@ describe("CL-10 public lifecycle hardening", () => {
   });
 
   test("duplicate-key revocation JSON is rejected before persistence", () => {
-    const publisher = configDir("ocx-cl10-dup-rev-publisher-");
-    const consumer = configDir("ocx-cl10-dup-rev-consumer-");
+    const publisher = configDir("occx-cl10-dup-rev-publisher-");
+    const consumer = configDir("occx-cl10-dup-rev-consumer-");
     const bundle = signedBundle(publisher);
     importCommunityEvidenceBundle(bundle, consumer);
     const revocation = createPublicEvidenceRevocation({

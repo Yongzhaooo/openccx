@@ -10,7 +10,7 @@ import { delimiter, join } from "node:path";
  * adapter and one parser (§十三).
  */
 export interface CodingAgentProviderProfile {
-  /** Canonical OpenCodex provider id this profile serves. */
+  /** Canonical Openccx provider id this profile serves. */
   providerId: string;
   /** Vendor family; selects the arg/env builder in the family adapter. */
   family: "codebuddy" | "qoder";

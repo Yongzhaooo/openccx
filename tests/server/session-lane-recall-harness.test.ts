@@ -15,7 +15,7 @@ import {
 } from "../../src/server/lifecycle";
 import { sessionLaneIdFromRequest } from "../../src/server/request-log-conversation";
 import { startServer } from "../../src/server";
-import type { AdapterEvent, OcxConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -153,10 +153,10 @@ async function runRecallWave(sessionCount: 32 | 64) {
 describe("#820 concurrent tool-recall session harness", () => {
   test("the HTTP boundary admits a reconnect while the same logical session is settling", async () => {
     resetLifecycleDrainStateForTests();
-    const previousHome = process.env.OPENCODEX_HOME;
+    const previousHome = process.env.OPENCCX_HOME;
     const originalFetch = globalThis.fetch;
-    const home = mkdtempSync(join(tmpdir(), "ocx-session-lane-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-session-lane-"));
+    process.env.OPENCCX_HOME = home;
     let markUpstreamStarted!: () => void;
     const upstreamStarted = new Promise<void>(resolve => { markUpstreamStarted = resolve; });
     let finishUpstream!: () => void;
@@ -190,7 +190,7 @@ describe("#820 concurrent tool-recall session harness", () => {
           apiKey: "test-key",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const headers = new Headers({ "content-type": "application/json", session_id: "recall-session" });
     const held = tryAdmitTurn(sessionLaneIdFromRequest(headers));
     const server = startServer(0);
@@ -225,8 +225,8 @@ describe("#820 concurrent tool-recall session harness", () => {
       held?.release();
       await server.stop(true);
       globalThis.fetch = originalFetch;
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });

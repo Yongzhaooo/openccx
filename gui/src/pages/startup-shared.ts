@@ -6,7 +6,7 @@ export type StartupInstallAction = "install-service" | "install-shim";
 
 export interface StartupHealthData {
   status: StartupStatus;
-  routingKind: "native" | "opencodex-local" | "custom-local" | "custom-remote" | "unknown";
+  routingKind: "native" | "openccx-local" | "custom-local" | "custom-remote" | "unknown";
   routingInjected: boolean;
   localRoutingDependency: boolean;
   autostartEnabled: boolean;

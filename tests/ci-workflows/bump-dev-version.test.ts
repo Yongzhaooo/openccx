@@ -44,7 +44,7 @@ async function runVersionLineCli(args: string[], stdin = "") {
 }
 
 function tempPackageJson(version: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bump-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bump-"));
   const path = join(dir, "package.json");
   // Two neighbouring keys and specific spacing on purpose: the CLI rewrites only the
   // version line, and this fixture is what proves the rest stays byte-identical.

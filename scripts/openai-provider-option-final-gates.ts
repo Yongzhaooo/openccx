@@ -67,7 +67,7 @@ const staleContractPattern = [
 ].join("|");
 
 export function finalGatePlan(root: string, evidenceDir: string, unitRoot = dirname(evidenceDir)): GateSpec[] {
-  const env = { ...process.env, OCX_EVIDENCE_DIR: evidenceDir } as Record<string, string>;
+  const env = { ...process.env, OCCX_EVIDENCE_DIR: evidenceDir } as Record<string, string>;
   const unitPath = relative(root, unitRoot);
   return [
     { name: "openai-provider-option-e2e", command: ["bun", "test", "tests/adapters/openai/openai-provider-option-e2e.test.ts"], cwd: root, env },

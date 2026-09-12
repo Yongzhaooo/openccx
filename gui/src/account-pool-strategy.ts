@@ -6,7 +6,7 @@ export const ACCOUNT_POOL_STRATEGIES: readonly AccountPoolStrategy[] = [
   "fill-first",
 ] as const;
 
-/** Which cached usage bar the `quota` strategy scores. Mirrors `OcxAccountPoolQuotaWindow`. */
+/** Which cached usage bar the `quota` strategy scores. Mirrors `OccxAccountPoolQuotaWindow`. */
 export type AccountPoolQuotaWindow = "five-hour" | "weekly" | "max-utilization";
 
 export const ACCOUNT_POOL_QUOTA_WINDOWS: readonly AccountPoolQuotaWindow[] = [

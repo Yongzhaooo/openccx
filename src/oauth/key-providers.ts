@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { deriveKeyLoginMap, enrichProviderFromRegistry, type DerivedKeyLoginProvider } from "../providers/derive";
 import { resolveProviderModelDiscoveryUrl } from "../providers/model-discovery";
 
@@ -28,7 +28,7 @@ export const KEY_LOGIN_PROVIDERS: Record<string, KeyLoginProvider> = deriveKeyLo
  * would keep getting upstream 400s with no way to know why. Catalog gathering enriches a
  * detached runtime clone, so the defaults still apply where they matter.
  */
-export function enrichProviderFromCatalog(name: string, prov: OcxProviderConfig): void {
+export function enrichProviderFromCatalog(name: string, prov: OccxProviderConfig): void {
   const hadOwnSummaries = Object.hasOwn(prov, "modelSupportsReasoningSummaries");
   const submittedSummaries = prov.modelSupportsReasoningSummaries;
   const hadOwnVerbosity = Object.hasOwn(prov, "modelSupportsVerbosity");
@@ -108,7 +108,7 @@ export async function validateApiKey(
       return "unknown";
     }
 
-    const configuredProvider: OcxProviderConfig = {
+    const configuredProvider: OccxProviderConfig = {
       adapter: provider.adapter,
       baseUrl: provider.baseUrl,
       authMode: "key",

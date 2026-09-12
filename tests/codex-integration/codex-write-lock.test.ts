@@ -78,7 +78,7 @@ function publishing<T>(value: T) {
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-write-lock-"));
+  root = mkdtempSync(join(tmpdir(), "occx-write-lock-"));
   cleanup.push(root);
   codexHome = join(root, ".codex");
   mkdirSync(codexHome, { recursive: true });
@@ -286,7 +286,7 @@ describe("two real processes contend for one lock", () => {
 
   function spawnChild(payload: Record<string, unknown>) {
     return Bun.spawn(["bun", childPath], {
-      env: { ...process.env, CODEX_HOME: codexHome, OCX_LOCK_CHILD_PAYLOAD: JSON.stringify(payload) },
+      env: { ...process.env, CODEX_HOME: codexHome, OCCX_LOCK_CHILD_PAYLOAD: JSON.stringify(payload) },
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -299,7 +299,7 @@ describe("two real processes contend for one lock", () => {
         ...process.env,
         CODEX_HOME: codexHome,
         ...env,
-        OCX_LOCK_CHILD_PAYLOAD: JSON.stringify(payload),
+        OCCX_LOCK_CHILD_PAYLOAD: JSON.stringify(payload),
       },
       stdout: "pipe",
       stderr: "pipe",

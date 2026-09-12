@@ -198,7 +198,7 @@ describe("i18n locale contracts", () => {
       Object.defineProperty(globalThis, "localStorage", {
         value: {
           getItem: (key: string) =>
-            key === "ocx-lang" ? storedLocale : null,
+            key === "occx-lang" ? storedLocale : null,
           setItem: (_key: string, value: string) => {
             storedLocale = value;
           },

@@ -28,7 +28,7 @@ import {
   tapAnthropicSseForLog,
 } from "../../src/server/claude-messages";
 import { estimateTokens } from "../../src/lib/token-estimate";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
@@ -53,20 +53,20 @@ let isolatedCodexHome: IsolatedCodexHome | null = null;
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-claude-endpoint-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-claude-endpoint-"));
-  process.env.OPENCODEX_HOME = testDir;
-  previousDesktopConfigDir = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(testDir, "claude-desktop");
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-claude-endpoint-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-claude-endpoint-"));
+  process.env.OPENCCX_HOME = testDir;
+  previousDesktopConfigDir = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(testDir, "claude-desktop");
   globalThis.fetch = originalFetch;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDesktopConfigDir === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopConfigDir;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDesktopConfigDir === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopConfigDir;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   globalThis.fetch = originalFetch;
@@ -101,7 +101,7 @@ function mockChatUpstreamCapturing() {
   return { server, captured, urls };
 }
 
-function mockConfig(baseUrl: string, claudeCode?: OcxConfig["claudeCode"]): OcxConfig {
+function mockConfig(baseUrl: string, claudeCode?: OccxConfig["claudeCode"]): OccxConfig {
   return {
     port: 0,
     defaultProvider: "mock",
@@ -109,7 +109,7 @@ function mockConfig(baseUrl: string, claudeCode?: OcxConfig["claudeCode"]): OcxC
       mock: { adapter: "openai-chat", baseUrl, apiKey: "k", allowPrivateNetwork: true },
     },
     ...(claudeCode ? { claudeCode } : {}),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 test("POST /v1/messages?beta=true streams an Anthropic-shaped turn end to end", async () => {
@@ -269,8 +269,8 @@ test("native generated-agent passthrough preserves legacy thinking", async () =>
         model: "claude-haiku-4-5",
         max_tokens: 16,
         system: [
-          { type: "text", text: "<!-- ocx-route: claude-haiku-4-5 -->" },
-          { type: "text", text: "<!-- ocx-effort: max -->" },
+          { type: "text", text: "<!-- occx-route: claude-haiku-4-5 -->" },
+          { type: "text", text: "<!-- occx-effort: max -->" },
         ],
         thinking: { type: "enabled", budget_tokens: 31999 },
         messages: [{ role: "user", content: "hi" }],
@@ -580,7 +580,7 @@ test("A5: non-stream bounded read classifies stall and overflow, passes clean bo
 });
 
 test("A6: body-guard config normalization — 0 disables, negatives fall back, sub-second clamps to 1s", () => {
-  const guardFor = (claudeCode: OcxConfig["claudeCode"]) =>
+  const guardFor = (claudeCode: OccxConfig["claudeCode"]) =>
     resolvePassthroughBodyGuard(mockConfig("http://127.0.0.1:1/v1", claudeCode));
   expect(guardFor({ bodyStallSec: 0, bodyMaxBytes: 0 })).toMatchObject({ stallMs: 0, maxBytes: 0 });
   expect(guardFor({ bodyStallSec: -5, bodyMaxBytes: -1 })).toMatchObject({ stallMs: 90_000, maxBytes: 64 * 1024 * 1024 });
@@ -679,7 +679,7 @@ test("native openai-responses route carries prompt_cache_key + synthesized sessi
     providers: {
       native: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/messages", server.url), {
@@ -741,7 +741,7 @@ test("native openai-responses Claude route logs cyber terminals as 400 cyber_pol
         allowPrivateNetwork: true,
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/messages", server.url), {
@@ -802,7 +802,7 @@ test("custom forward openai-responses route never receives the main ChatGPT cred
         modelAdapters: { "gpt-test": "openai-responses" },
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/messages", server.url), {
@@ -865,7 +865,7 @@ test("shadow-call rerouting cannot carry the main ChatGPT credential to a custom
       model: "custom/gpt-test",
       sourceModels: ["gpt-5.6-luna"],
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   try {
     const response = await fetch(new URL("/v1/messages", server.url), {
@@ -988,7 +988,7 @@ test("Claude replay owns optional main enrichment while routed work survives dra
       codexAccounts: [],
       activeCodexAccountId: "__main__",
       autoSwitchThreshold: 0,
-    } as OcxConfig);
+    } as OccxConfig);
     server = startServer(0, { inspectNativeCodexOwnership });
     await waitForNativeMainStartupGate();
     recoveryHomeId = nativeMainStartupGateSnapshot().homeId ?? "claude-main-recovery-home";
@@ -1015,7 +1015,7 @@ test("routed Claude requests give OpenAI sidecars main auth without leaking it t
   const mainAccessToken = "main-chatgpt-access";
   const mainAccountId = "main-chatgpt-account";
   const imageBytes = "aGVsbG8taW1hZ2UtYnl0ZXM=";
-  const visionCaption = "A red OPENCODEX logo on a white background.";
+  const visionCaption = "A red OPENCCX logo on a white background.";
   const sidecarCalls: Array<{ headers: Headers; body: Record<string, any>; kind: "vision" | "web-search" }> = [];
   const routedCalls: Array<{ authorization: string | null; body: Record<string, any> }> = [];
 
@@ -1027,7 +1027,7 @@ test("routed Claude requests give OpenAI sidecars main auth without leaking it t
         ? "web-search"
         : "vision";
       sidecarCalls.push({ headers: new Headers(req.headers), body, kind });
-      const text = kind === "vision" ? visionCaption : "OpenCodex search results are available.";
+      const text = kind === "vision" ? visionCaption : "Openccx search results are available.";
       return new Response([
         `event: response.output_text.delta\ndata: ${JSON.stringify({ type: "response.output_text.delta", delta: text })}\n\n`,
         `event: response.completed\ndata: ${JSON.stringify({ type: "response.completed", response: { status: "completed" } })}\n\n`,
@@ -1044,7 +1044,7 @@ test("routed Claude requests give OpenAI sidecars main auth without leaking it t
         && body.tools.some((tool: Record<string, any>) => tool.function?.name === "web_search");
       const frames = choosesWebSearch
         ? [
-            { choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "call_search", function: { name: "web_search", arguments: '{"query":"latest opencodex"}' } }] } }] },
+            { choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "call_search", function: { name: "web_search", arguments: '{"query":"latest openccx"}' } }] } }] },
             { choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }] },
           ]
         : [
@@ -1079,7 +1079,7 @@ test("routed Claude requests give OpenAI sidecars main auth without leaking it t
     },
     webSearchSidecar: { backend: "openai" },
     visionSidecar: { backend: "openai" },
-  } as OcxConfig;
+  } as OccxConfig;
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const requestUrl = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     const url = new URL(requestUrl);
@@ -1102,7 +1102,7 @@ test("routed Claude requests give OpenAI sidecars main auth without leaking it t
     messages: [{
       role: "user",
       content: [
-        { type: "text", text: "Search for OpenCodex and inspect this logo." },
+        { type: "text", text: "Search for Openccx and inspect this logo." },
         { type: "image", source: { type: "base64", media_type: "image/png", data: imageBytes } },
       ],
     }],
@@ -1578,7 +1578,7 @@ test("compatibility survives management toggles and rejects Desktop source featu
     clearRequestLogsForTests();
     const response = await postMessages(server.url.toString(), {
       model: "claude-opus-4-8-20260201", max_tokens: 16,
-      system: [{ type: "text", text: "<!-- ocx-effort: max -->" }],
+      system: [{ type: "text", text: "<!-- occx-effort: max -->" }],
       messages: [{ role: "assistant", content: [{ type: "thinking", thinking: "fixture", signature: "opaque-fixture" }] },
         { role: "user", content: "continue" }],
     });
@@ -1602,7 +1602,7 @@ test("shadow captures source thinking settings before an effort directive remove
     clearRequestLogsForTests();
     const response = await postMessages(server.url.toString(), {
       model: "mock/test-model", max_tokens: 64, stream: true, thinking: { type: "disabled" },
-      system: [{ type: "text", text: "<!-- ocx-route: mock/test-model -->\n<!-- ocx-effort: max -->" }],
+      system: [{ type: "text", text: "<!-- occx-route: mock/test-model -->\n<!-- occx-effort: max -->" }],
       messages: [{ role: "user", content: [{ type: "document", source: { type: "text", media_type: "text/plain", data: "fixture" } }] }],
     });
     expect(response.status).toBe(200);
@@ -1659,8 +1659,8 @@ test("generated agent effort directive restores exact xhigh and max after Claude
         max_tokens: 32000,
         stream: true,
         system: [
-          { type: "text", text: "<!-- ocx-route: claude-ocx-mock--test-model -->" },
-          { type: "text", text: `<!-- ocx-effort: ${effort} -->` },
+          { type: "text", text: "<!-- occx-route: claude-occx-mock--test-model -->" },
+          { type: "text", text: `<!-- occx-effort: ${effort} -->` },
         ],
         thinking: { type: "enabled", budget_tokens: 31999 },
         messages: [{ role: "user", content: "hi" }],
@@ -1705,7 +1705,7 @@ test("generated agent effort directive preserves routed Anthropic structured out
         allowPrivateNetwork: true,
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   const schema = {
     type: "object",
@@ -1719,8 +1719,8 @@ test("generated agent effort directive preserves routed Anthropic structured out
       max_tokens: 32000,
       stream: true,
       system: [
-        { type: "text", text: "<!-- ocx-route: claude-ocx-mock-anthropic--claude-sonnet-5 -->" },
-        { type: "text", text: "<!-- ocx-effort: max -->" },
+        { type: "text", text: "<!-- occx-route: claude-occx-mock-anthropic--claude-sonnet-5 -->" },
+        { type: "text", text: "<!-- occx-effort: max -->" },
       ],
       thinking: { type: "enabled", budget_tokens: 31999 },
       output_config: {
@@ -1844,7 +1844,7 @@ for (const { fallbacks, fastRows } of [
           classifierModel: "fallback/model-classifier",
         } : {}),
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const server = startServer(0);
     try {
       for (const registryState of ["cold", "prior-success", "degraded-empty"] as const) {
@@ -1930,7 +1930,7 @@ test(`registered Desktop IDs and exact overrides reach intended routes (fastRows
       },
       classifierModel: "fallback/model-fallback",
     },
-  } as OcxConfig);
+  } as OccxConfig);
   buildDesktop3pRegistry([], [{ provider: "selected", id: "model-selected" }], managedDesktopProfile);
   const server = startServer(0);
   try {

@@ -138,7 +138,7 @@ function kiroCliDbPath(): string {
 }
 
 function kiroCliRecoveryPath(): string {
-  return `${kiroCliDbPath()}.opencodex-recovery`;
+  return `${kiroCliDbPath()}.openccx-recovery`;
 }
 
 function rewriteKiroCliRecoveryOwner(ownerPid: number): void {
@@ -384,7 +384,7 @@ describe("kiro oauth — import-first", () => {
     const abandoned = await loginKiro({}, { forceLogin: true, cliRunner: firstRunner });
     expect(abandoned.access).toBe("aoa-abandoned");
     expect(existsSync(kiroCliRecoveryPath())).toBe(true);
-    const liveTransactionFiles = ["", "-wal", "-shm", "-journal", ".opencodex-recovery"]
+    const liveTransactionFiles = ["", "-wal", "-shm", "-journal", ".openccx-recovery"]
       .map(suffix => readFileSync(`${kiroCliDbPath()}${suffix}`));
 
     let liveOwnerRunnerCalled = false;
@@ -400,7 +400,7 @@ describe("kiro oauth — import-first", () => {
     expect((liveOwnerFailure as Error).message).toContain(kiroCliRecoveryPath());
     expect(liveOwnerRunnerCalled).toBe(false);
     expect(existsSync(kiroCliRecoveryPath())).toBe(true);
-    expect(["", "-wal", "-shm", "-journal", ".opencodex-recovery"]
+    expect(["", "-wal", "-shm", "-journal", ".openccx-recovery"]
       .map((suffix, index) => readFileSync(`${kiroCliDbPath()}${suffix}`).equals(liveTransactionFiles[index]!)))
       .toEqual([true, true, true, true, true]);
 
@@ -957,7 +957,7 @@ describe("kiro oauth — import-first", () => {
   });
 
   test("legacy stored credential without kiro metadata does not borrow the local CLI region", async () => {
-    // A legacy OCX account predates account-scoped metadata. The local CLI is signed into a
+    // A legacy OCCX account predates account-scoped metadata. The local CLI is signed into a
     // different account in another region; refresh must not route through that region.
     seedKiroCliDb({
       access_token: "aoa-other-cli",

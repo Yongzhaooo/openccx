@@ -9,30 +9,30 @@ import { saveConfig } from "../../src/config";
 import { OAUTH_PROVIDERS } from "../../src/oauth";
 import { saveCredential } from "../../src/oauth/store";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { withRegistryDiscovery } from "../helpers/provider-registry-discovery";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const TEST_DIR = join(tmpdir(), "ocx-conn-test");
-const previousHome = process.env.OPENCODEX_HOME;
+const TEST_DIR = join(tmpdir(), "occx-conn-test");
+const previousHome = process.env.OPENCCX_HOME;
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
 });
 
 afterEach(() => {
   setFetchCursorUsableModelsForTests(null);
   setFetchQoderModelsForTests(null);
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(TEST_DIR);
 });
 
-function baseConfig(providers: OcxConfig["providers"]): OcxConfig {
+function baseConfig(providers: OccxConfig["providers"]): OccxConfig {
   if (globalThis.fetch !== originalFetch) {
     for (const provider of Object.values(providers)) {
       (provider as typeof provider & { fetch?: typeof fetch }).fetch = globalThis.fetch;
@@ -43,12 +43,12 @@ function baseConfig(providers: OcxConfig["providers"]): OcxConfig {
     hostname: "127.0.0.1",
     defaultProvider: Object.keys(providers)[0]!,
     providers,
-  } as OcxConfig;
+  } as OccxConfig;
   saveConfig(config);
   return config;
 }
 
-async function probe(config: OcxConfig, name: string): Promise<{ status: number; body: Record<string, unknown> }> {
+async function probe(config: OccxConfig, name: string): Promise<{ status: number; body: Record<string, unknown> }> {
   const req = new Request(`http://127.0.0.1/api/providers/test?name=${name}`, { method: "POST" });
   const res = await handleManagementAPI(req, new URL(req.url), config, {});
   if (!res) throw new Error("handler returned no response");

@@ -8,7 +8,7 @@ import {
 } from "../../src/codex/catalog";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { CatalogGatherBusyError } from "../../src/codex/catalog/provider-fetch";
 
 const originalFetch = globalThis.fetch;
@@ -40,7 +40,7 @@ describe("gatherRoutedModels single-flight", () => {
       });
     }) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "slow",
       providers: {
@@ -71,7 +71,7 @@ describe("gatherRoutedModels single-flight", () => {
         headers: { "content-type": "application/json" },
       })) as typeof fetch;
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -134,7 +134,7 @@ describe("gatherRoutedModels single-flight", () => {
       });
     }) as typeof fetch;
 
-    const configA: OcxConfig = {
+    const configA: OccxConfig = {
       port: 10100,
       defaultProvider: "a",
       providers: {
@@ -145,7 +145,7 @@ describe("gatherRoutedModels single-flight", () => {
         },
       },
     };
-    const configB: OcxConfig = {
+    const configB: OccxConfig = {
       port: 10100,
       defaultProvider: "b",
       providers: {
@@ -184,7 +184,7 @@ describe("gatherRoutedModels single-flight", () => {
       });
     }) as typeof fetch;
 
-    const config = (liveModels?: true): OcxConfig => ({
+    const config = (liveModels?: true): OccxConfig => ({
       port: 10100,
       defaultProvider: "alibaba-token-plan",
       providers: {
@@ -215,7 +215,7 @@ describe("gatherRoutedModels single-flight", () => {
         headers: { "content-type": "application/json" },
       })) as typeof fetch;
 
-    const mk = (comboId: string, provider: string, baseUrl: string): OcxConfig => ({
+    const mk = (comboId: string, provider: string, baseUrl: string): OccxConfig => ({
       port: 10100,
       defaultProvider: provider,
       providers: {
@@ -267,14 +267,14 @@ describe("gatherRoutedModels single-flight", () => {
       liveModels: false as const,
     };
     // liveModels:false uses configured models — still fingerprints context hints.
-    const configA: OcxConfig = {
+    const configA: OccxConfig = {
       port: 10100,
       defaultProvider: "p",
       providers: {
         p: { ...baseProv, models: ["m1"], modelContextWindows: { m1: 100_000 } },
       },
     };
-    const configB: OcxConfig = {
+    const configB: OccxConfig = {
       port: 10100,
       defaultProvider: "p",
       providers: {
@@ -304,7 +304,7 @@ describe("gatherRoutedModels single-flight", () => {
       );
     }) as typeof fetch;
 
-    const base: OcxConfig = {
+    const base: OccxConfig = {
       port: 10100,
       defaultProvider: "p",
       providers: {
@@ -315,7 +315,7 @@ describe("gatherRoutedModels single-flight", () => {
         },
       },
     };
-    const withSel: OcxConfig = {
+    const withSel: OccxConfig = {
       ...base,
       providers: {
         p: {
@@ -355,7 +355,7 @@ describe("gatherRoutedModels single-flight", () => {
       );
     }) as typeof fetch;
 
-    const base: OcxConfig = {
+    const base: OccxConfig = {
       port: 10100,
       defaultProvider: "p",
       providers: {
@@ -366,7 +366,7 @@ describe("gatherRoutedModels single-flight", () => {
         },
       },
     };
-    const withDisabled: OcxConfig = {
+    const withDisabled: OccxConfig = {
       ...base,
       disabledModels: ["p/drop-me"],
     };
@@ -395,7 +395,7 @@ describe("gatherRoutedModels single-flight", () => {
         headers: { "content-type": "application/json" },
       });
     }) as typeof fetch;
-    const configs = Array.from({ length: 9 }, (_, index): OcxConfig => ({
+    const configs = Array.from({ length: 9 }, (_, index): OccxConfig => ({
       port: 10100,
       defaultProvider: `p${index}`,
       providers: {

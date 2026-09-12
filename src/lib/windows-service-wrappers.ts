@@ -10,7 +10,7 @@
  * than a second careful implementation: the updater received the #1589 argv
  * cleanup that service.ts missed, and service.ts received the canonical-path
  * scoping the updater missed. One of those gaps could force-terminate a wrapper
- * belonging to a DIFFERENT OpenCodex home.
+ * belonging to a DIFFERENT Openccx home.
  *
  * Matching is scoped to the CANONICAL paths of one installation, never a bare
  * filename, and the path must appear as a COMPLETE command-line token

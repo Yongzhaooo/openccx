@@ -36,7 +36,7 @@ import { handleResponses } from "../../src/server/responses";
 import { resetAgentTaskRecoveryState } from "../../src/server/responses/agent-task-recovery";
 import { isEagerRelaySseResponse } from "../../src/server/relay";
 import type { ActiveTurnLease } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { RequestLogContext } from "../../src/server/request-log";
 import type { ResponsesTerminalStatus } from "../../src/bridge";
 import {
@@ -51,14 +51,14 @@ setDefaultTimeout(30_000);
 const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
 let testDir: string;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-subagent-hr-"));
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-subagent-hr-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  process.env.OPENCODEX_HOME = testDir;
+  process.env.OPENCCX_HOME = testDir;
   process.env.CODEX_HOME = testDir;
   clearThreadAccountMap();
   clearCodexUpstreamHealth();
@@ -81,8 +81,8 @@ afterEach(() => {
   resetSubagentModelFallbackStateForTests();
   setMainAccountPlan(null);
   removeTreeWithRetry(testDir);
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
 });
@@ -131,7 +131,7 @@ function spawnHeaders(extra: HeadersInit = {}): Headers {
   });
 }
 
-function poolNativePlusRoutedConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function poolNativePlusRoutedConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -162,7 +162,7 @@ function poolNativePlusRoutedConfig(overrides: Partial<OcxConfig> = {}): OcxConf
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "pool_acc" },
     ],
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function installPoolCredential(accountId: string, chatgptAccountId: string, now: number): void {
@@ -266,7 +266,7 @@ function mockSseUpstream(sseBody: string, capture?: { urls: string[] }): void {
 }
 
 async function postSpawn(
-  config: OcxConfig,
+  config: OccxConfig,
   body: Record<string, unknown>,
   options: Parameters<typeof handleResponses>[3] = {},
   logCtx: RequestLogContext = { model: "", provider: "" },
@@ -285,7 +285,7 @@ async function postSpawn(
 }
 
 async function postDirectCodex(
-  config: OcxConfig,
+  config: OccxConfig,
   body: Record<string, unknown>,
   options: Parameters<typeof handleResponses>[3] = {},
   headers: HeadersInit = {},
@@ -477,7 +477,7 @@ describe("subagent fallback without primary auth cooldown failure", () => {
     const now = 1_800_000_000_000;
     Date.now = () => now;
     installPoolCredential("pool-a", "pool_acc", now);
-    const cfg: OcxConfig = {
+    const cfg: OccxConfig = {
       port: 0,
       defaultProvider: "xai",
       activeCodexAccountId: "pool-a",
@@ -1181,7 +1181,7 @@ describe("native fallback account preview", () => {
     );
 
     expect(response.status).toBe(503);
-    expect(await response.text()).toContain("OpenCodex local native-main profile maintenance is active");
+    expect(await response.text()).toContain("Openccx local native-main profile maintenance is active");
     expect(mainExclusions).toEqual([true, true]);
     expect(selectionReleases).toBe(2);
     expect(claimCalls).toBe(1);
@@ -1230,7 +1230,7 @@ describe("native fallback account preview", () => {
     );
 
     expect(response.status).toBe(503);
-    expect(await response.text()).toContain("OpenCodex local native-main profile maintenance is active");
+    expect(await response.text()).toContain("Openccx local native-main profile maintenance is active");
     expect(selectionReleases).toBe(2);
     expect(claimCalls).toBe(1);
     expect(fetchCalls).toBe(0);
@@ -1751,7 +1751,7 @@ describe("native fallback account preview", () => {
 describe("account-gated retry entitlement boundary", () => {
   const model = "gpt-daybreak-blue-latest";
 
-  function retryConfig(secondAccount = false): OcxConfig {
+  function retryConfig(secondAccount = false): OccxConfig {
     // Keep account selection local to this boundary test. Without known quota, auth performs a
     // WHAM prime whose fetch is unrelated to the credential-bearing send count asserted below.
     updateAccountQuota("pool-a", 10, undefined, 20);

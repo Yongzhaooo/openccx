@@ -16,7 +16,7 @@ import {
   restoreIntegration,
   type IntegrationWriteInput,
 } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -42,15 +42,15 @@ const MODELS: ExportModel[] = [
   { namespaced: "openai/gpt-5.5", provider: "openai", id: "gpt-5.5", contextWindow: 400_000 },
 ];
 
-const CONFIG: OcxConfig = {
+const CONFIG: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 beforeEach(() => {
-  const base = mkdtempSync(join(tmpdir(), "ocx-integrations-writer-"));
+  const base = mkdtempSync(join(tmpdir(), "occx-integrations-writer-"));
   home = join(base, "home");
   storeRoot = join(base, "store", "integrations");
   mkdirSync(home, { recursive: true });
@@ -181,7 +181,7 @@ describe("apply", () => {
     if (result.ok) expect(result.changed).toBe(true);
 
     const text = readFileSync(configPath, "utf8");
-    expect(Bun.YAML.parse(text)).toMatchObject({ providers: { opencodex: { api_mode: "chat_completions" } } });
+    expect(Bun.YAML.parse(text)).toMatchObject({ providers: { openccx: { api_mode: "chat_completions" } } });
     const rows = store.listOperations("hermes");
     expect(rows).toHaveLength(1);
     expect(rows[0]!.kind).toBe("apply");
@@ -210,21 +210,21 @@ describe("apply", () => {
     expect(applyIntegration(request).ok).toBe(true);
 
     const doc = JSON.parse(readFileSync(configPath, "utf8")) as {
-      provider: { opencodex: { models: Record<string, Record<string, unknown>> } };
+      provider: { openccx: { models: Record<string, Record<string, unknown>> } };
       providers: {
-        opencodex: { models: Record<string, { variants?: Array<{ id: string }> }> };
+        openccx: { models: Record<string, { variants?: Array<{ id: string }> }> };
       };
     };
-    expect(doc.providers.opencodex.models["opencode-go/glm-5.3"]!.variants!.map(v => v.id))
+    expect(doc.providers.openccx.models["opencode-go/glm-5.3"]!.variants!.map(v => v.id))
       .toEqual(["low", "high", "max"]);
     // The legacy block stays variant-free, and a model without a ladder gets no key at all.
-    expect(doc.provider.opencodex.models["opencode-go/glm-5.3"]).not.toHaveProperty("variants");
-    expect(doc.providers.opencodex.models["openai/gpt-5.5"]!.variants).toBeUndefined();
+    expect(doc.provider.openccx.models["opencode-go/glm-5.3"]).not.toHaveProperty("variants");
+    expect(doc.providers.openccx.models["openai/gpt-5.5"]!.variants).toBeUndefined();
 
     expect(readIntegrationState(request)).toMatchObject({ state: "current" });
     expect(applyIntegration(request).ok).toBe(true);
     const after = JSON.parse(readFileSync(configPath, "utf8")) as typeof doc;
-    expect(after.providers.opencodex.models["opencode-go/glm-5.3"]!.variants!.map(v => v.id))
+    expect(after.providers.openccx.models["opencode-go/glm-5.3"]!.variants!.map(v => v.id))
       .toEqual(["low", "high", "max"]);
   });
 
@@ -242,19 +242,19 @@ describe("apply", () => {
     // fingerprints computed from exactly that state — a record whose fingerprints disagree
     // with its own fragments is a foreign edit, which is a different (and correct) refusal.
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
-      provider: { opencodex: unknown };
+      provider: { openccx: unknown };
     };
     delete (document as Record<string, unknown>).providers;
     const legacyText = `${JSON.stringify(document, null, 2)}\n`;
     writeFileSync(configPath, legacyText);
 
     const legacy = { ...store.readRecords().opencode! };
-    legacy.fragmentPaths = [["provider", "opencodex"]];
+    legacy.fragmentPaths = [["provider", "openccx"]];
     legacy.createdContainers = ["provider"];
     legacy.fileFingerprint = fingerprint(legacyText);
     legacy.blockFingerprint = fingerprint(canonicalContribution({
       clientId: "opencode",
-      fragments: [{ path: ["provider", "opencodex"], value: document.provider.opencodex }],
+      fragments: [{ path: ["provider", "openccx"], value: document.provider.openccx }],
     }));
     store.putRecord(legacy);
 
@@ -264,8 +264,8 @@ describe("apply", () => {
     const migrated = JSON.parse(readFileSync(configPath, "utf8")) as Record<string, unknown>;
     expect(migrated.providers).toBeDefined();
     expect(store.readRecords().opencode!.fragmentPaths).toEqual([
-      ["provider", "opencodex"],
-      ["providers", "opencodex"],
+      ["provider", "openccx"],
+      ["providers", "openccx"],
     ]);
 
     // Disabling has to take both fragments with it, including the container we created.
@@ -328,7 +328,7 @@ describe("apply", () => {
     const after = JSON.parse(readFileSync(configPath, "utf8")) as Record<string, unknown>;
     expect((after.providers as Record<string, unknown>).mine).toEqual({ baseUrl: "http://user.invalid/v1" });
     // The block a fresh apply would write, not merely "something is there".
-    expect((after.providers as Record<string, unknown>).opencodex).toMatchObject({
+    expect((after.providers as Record<string, unknown>).openccx).toMatchObject({
       baseUrl: "http://127.0.0.1:10100/v1",
     });
 
@@ -352,10 +352,10 @@ describe("apply", () => {
     expect(record.semanticBlockFingerprint).toMatch(/^[0-9a-f]{16}$/);
     expect(record.semanticProtectedBlockFingerprint).toMatch(/^[0-9a-f]{16}$/);
     expect(record.refreshablePaths).toContainEqual([
-      "provider", "opencodex", "models", "mystery/model", "limit", "context",
+      "provider", "openccx", "models", "mystery/model", "limit", "context",
     ]);
     expect(record.refreshablePaths).not.toContainEqual([
-      "provider", "opencodex", "models", "anthropic/claude-opus-4-8", "limit", "context",
+      "provider", "openccx", "models", "anthropic/claude-opus-4-8", "limit", "context",
     ]);
 
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
@@ -364,7 +364,7 @@ describe("apply", () => {
         options: Record<string, unknown>;
       }>;
     };
-    const provider = document.provider.opencodex!;
+    const provider = document.provider.openccx!;
     const authoritative = provider.models["anthropic/claude-opus-4-8"]!;
     authoritative.reasoning = { enabled: true, variants: ["off", "high"] };
     (authoritative.limit as Record<string, unknown>).output = 64_000;
@@ -381,9 +381,9 @@ describe("apply", () => {
     if (refreshed.ok) expect(refreshed.changed).toBe(true);
 
     const after = JSON.parse(readFileSync(configPath, "utf8")) as typeof document;
-    expect(after.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.reasoning).toBeUndefined();
-    expect((after.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.limit as Record<string, unknown>).output).toBeUndefined();
-    expect(after.provider.opencodex!.models["mystery/model"]!.limit).toBeUndefined();
+    expect(after.provider.openccx!.models["anthropic/claude-opus-4-8"]!.reasoning).toBeUndefined();
+    expect((after.provider.openccx!.models["anthropic/claude-opus-4-8"]!.limit as Record<string, unknown>).output).toBeUndefined();
+    expect(after.provider.openccx!.models["mystery/model"]!.limit).toBeUndefined();
   });
 
   test("ZCode on a hub writes and recognizes the unauthenticated loopback listener (#3306)", () => {
@@ -404,8 +404,8 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { options: { apiKey: string; baseURL: string } }>;
     };
-    expect(document.provider.opencodex!.options).toMatchObject({
-      apiKey: "opencodex-loopback",
+    expect(document.provider.openccx!.options).toMatchObject({
+      apiKey: "openccx-loopback",
       baseURL: "http://127.0.0.1:10102/v1",
     });
     expect(readIntegrationState(request)).toMatchObject({ state: "current" });
@@ -423,11 +423,11 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    document.provider.opencodex!.models["mystery/model"]!.limit = {
+    document.provider.openccx!.models["mystery/model"]!.limit = {
       context: 128_000,
       output: 32_000,
     };
-    document.provider.opencodex!.models["mystery/model"]!.reasoning = { enabled: false };
+    document.provider.openccx!.models["mystery/model"]!.reasoning = { enabled: false };
     const reordered = reverseJsonObjectKeys(document);
     writeFileSync(configPath, `${JSON.stringify(reordered, null, 2)}\n`);
 
@@ -451,7 +451,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    document.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.reasoning = {
+    document.provider.openccx!.models["anthropic/claude-opus-4-8"]!.reasoning = {
       enabled: true,
     };
     writeFileSync(
@@ -476,7 +476,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    document.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
+    document.provider.openccx!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     expect(readIntegrationState(request).state).toBe("stale");
@@ -491,7 +491,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    document.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
+    document.provider.openccx!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     const changedCatalog = input({
@@ -502,7 +502,7 @@ describe("apply", () => {
     const result = applyIntegration(changedCatalog);
     expect(result.ok).toBe(true);
     const after = JSON.parse(readFileSync(configPath, "utf8")) as typeof document;
-    expect(after.provider.opencodex!.models["new/model"]).toBeDefined();
+    expect(after.provider.openccx!.models["new/model"]).toBeDefined();
   });
 
   test("a legacy ZCode record fails closed when derived drift overlaps catalog drift (#2389)", () => {
@@ -518,7 +518,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    document.provider.opencodex!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
+    document.provider.openccx!.models["anthropic/claude-opus-4-8"]!.reasoning = { enabled: true };
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     const changedCatalog = input({
@@ -539,7 +539,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { options: Record<string, unknown> }>;
     };
-    document.provider.opencodex!.options.baseURL = "http://user-edited.invalid/v1";
+    document.provider.openccx!.options.baseURL = "http://user-edited.invalid/v1";
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     const status = readIntegrationState(request);
@@ -561,8 +561,8 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { kind: string }>;
     };
-    expect(document.provider.opencodex!.kind).toBe("openai");
-    document.provider.opencodex!.kind = "openai-compatible";
+    expect(document.provider.openccx!.kind).toBe("openai");
+    document.provider.openccx!.kind = "openai-compatible";
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     const status = readIntegrationState(request);
@@ -577,7 +577,7 @@ describe("apply", () => {
     const request = input({ clientId: "zcode" });
     expect(applyIntegration(request).ok).toBe(true);
 
-    const refreshablePaths = [["provider", "opencodex", "options", "baseURL"]] as const;
+    const refreshablePaths = [["provider", "openccx", "options", "baseURL"]] as const;
     const contribution = buildClientContribution("zcode", exportContextOf(request));
     store.putRecord({
       ...store.readRecords().zcode!,
@@ -588,7 +588,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { options: Record<string, unknown> }>;
     };
-    document.provider.opencodex!.options.baseURL = "http://user-edited.invalid/v1";
+    document.provider.openccx!.options.baseURL = "http://user-edited.invalid/v1";
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     expect(readIntegrationState(request)).toMatchObject({
@@ -597,7 +597,7 @@ describe("apply", () => {
     });
   });
 
-  test("ZCode cannot rewrite an authoritative OpenCodex context limit (#2389)", () => {
+  test("ZCode cannot rewrite an authoritative Openccx context limit (#2389)", () => {
     const configPath = installZcode();
     const request = input({ clientId: "zcode" });
     expect(applyIntegration(request).ok).toBe(true);
@@ -605,7 +605,7 @@ describe("apply", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       provider: Record<string, { models: Record<string, Record<string, unknown>> }>;
     };
-    const model = document.provider.opencodex!.models["anthropic/claude-opus-4-8"]!;
+    const model = document.provider.openccx!.models["anthropic/claude-opus-4-8"]!;
     (model.limit as Record<string, unknown>).context = 1;
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
@@ -625,7 +625,7 @@ describe("apply", () => {
 
     const after = JSON.parse(readFileSync(configPath, "utf8")) as Record<string, unknown>;
     expect((after.providers as Record<string, unknown>).mine).toEqual({ baseUrl: "http://user.invalid/v1" });
-    expect((after.providers as Record<string, unknown>).opencodex).toBeUndefined();
+    expect((after.providers as Record<string, unknown>).openccx).toBeUndefined();
   });
 
   test("json apply refuses when a sibling number cannot round-trip", () => {
@@ -696,7 +696,7 @@ describe("apply", () => {
     expect(text).toContain("18014398509481984");
     const after = JSON.parse(text) as Record<string, unknown>;
     expect(after.quota).toBe(2 ** 54);
-    expect((after.providers as Record<string, unknown> | undefined)?.opencodex).toBeUndefined();
+    expect((after.providers as Record<string, unknown> | undefined)?.openccx).toBeUndefined();
   });
 
   test("json disable also refuses when a sibling number cannot round-trip", () => {
@@ -739,7 +739,7 @@ describe("apply", () => {
       mkdirSync(spec.detectDir(TEST_ENV, home), { recursive: true });
       const result = applyIntegration(input({
         clientId,
-        config: { ...CONFIG, hostname: "0.0.0.0" } as OcxConfig,
+        config: { ...CONFIG, hostname: "0.0.0.0" } as OccxConfig,
       }));
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -807,7 +807,7 @@ describe("disable", () => {
     mkdirSync(join(home, ".kimi-code"), { recursive: true });
     const configPath = join(home, ".kimi-code", "config.toml");
     // A user's own entry that merely looks like ours must survive.
-    writeFileSync(configPath, '[models."opencodex/mine"]\nprovider = "elsewhere"\n');
+    writeFileSync(configPath, '[models."openccx/mine"]\nprovider = "elsewhere"\n');
     expect(applyIntegration(input({ clientId: "kimi" })).ok).toBe(true);
 
     const applied = Bun.TOML.parse(readFileSync(configPath, "utf8")) as { models: Record<string, unknown> };
@@ -815,7 +815,7 @@ describe("disable", () => {
 
     expect(disableIntegration(input({ clientId: "kimi" })).ok).toBe(true);
     const after = Bun.TOML.parse(readFileSync(configPath, "utf8")) as { models?: Record<string, unknown> };
-    expect(after.models).toEqual({ "opencodex/mine": { provider: "elsewhere" } });
+    expect(after.models).toEqual({ "openccx/mine": { provider: "elsewhere" } });
   });
 });
 
@@ -848,7 +848,7 @@ describe("OMP source preservation", () => {
     expect(applied).toContain("  freebuff: # keep provider comment\n");
     expect(applied).toContain("    api: openai-completions # keep inline comment\n");
 
-    // This edit happens after OpenCodex recorded its file fingerprint. OMP's
+    // This edit happens after Openccx recorded its file fingerprint. OMP's
     // source patcher must preserve it while refreshing only our stale block.
     const externallyEdited = applied.replace("# user header", "# user header edited later");
     writeFileSync(configPath, externallyEdited);
@@ -889,9 +889,9 @@ describe("OMP source preservation", () => {
     const configPath = installOmp();
     expect(applyIntegration(input({ clientId: "omp" })).ok).toBe(true);
     const edited = readFileSync(configPath, "utf8")
-      .replace("    baseUrl:", "    baseUrl: &opencodex_url")
-      .concat("settings:\n  inheritedBase: *opencodex_url\n");
-    expect(edited).toContain("    baseUrl: &opencodex_url");
+      .replace("    baseUrl:", "    baseUrl: &openccx_url")
+      .concat("settings:\n  inheritedBase: *openccx_url\n");
+    expect(edited).toContain("    baseUrl: &openccx_url");
     writeFileSync(configPath, edited);
 
     const journalBefore = store.listOperations("omp");
@@ -936,9 +936,9 @@ describe("DSH source preservation", () => {
     }];
     expect(applyIntegration(input({ clientId: "dsh", models: refreshedModels })).ok).toBe(true);
     const refreshed = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      "llm-pi-ai": { providers: { opencodex: { models: Array<{ id: string }> } } };
+      "llm-pi-ai": { providers: { openccx: { models: Array<{ id: string }> } } };
     };
-    expect(refreshed["llm-pi-ai"].providers.opencodex.models.map(model => model.id))
+    expect(refreshed["llm-pi-ai"].providers.openccx.models.map(model => model.id))
       .toContain("openai/gpt-5.6");
     expect(disableIntegration(input({ clientId: "dsh", models: refreshedModels })).ok).toBe(true);
     expect(readFileSync(configPath, "utf8")).toBe(
@@ -1007,8 +1007,8 @@ describe("DSH source preservation", () => {
     expect(applyIntegration(input({ clientId: "dsh" })).ok).toBe(true);
     const applied = readFileSync(configPath, "utf8");
     const edited = applied.replace(
-      "    opencodex:\n",
-      "    user-provider:\n      api: openai-completions # keep\n    opencodex:\n",
+      "    openccx:\n",
+      "    user-provider:\n      api: openai-completions # keep\n    openccx:\n",
     );
     writeFileSync(configPath, edited);
     expect(disableIntegration(input({ clientId: "dsh" })).ok).toBe(true);
@@ -1041,7 +1041,7 @@ describe("Hermes source preservation", () => {
     expect(applyIntegration(input({ clientId: "hermes" })).ok).toBe(true);
     const applied = readFileSync(configPath, "utf8");
     expect(applied).toContain("commandcode-oauth:");
-    expect(applied).toContain("opencodex:");
+    expect(applied).toContain("openccx:");
     expect(applied).toContain("# keep provider comment");
     expect(applied).toContain("default: meituan/LongCat-2.0:free");
 
@@ -1132,7 +1132,7 @@ describe("nothing leaks", () => {
     const secret = ["sk", "live", "should", "never", "appear"].join("-");
     const configPath = installHermes();
     applyIntegration(input({
-      config: { ...CONFIG, apiKeys: [{ key: secret }] } as unknown as OcxConfig,
+      config: { ...CONFIG, apiKeys: [{ key: secret }] } as unknown as OccxConfig,
     }));
     expect(readFileSync(configPath, "utf8")).not.toContain(secret);
   });
@@ -1279,7 +1279,7 @@ describe("overwriting a conflict on purpose", () => {
   test("replaces a block we did not write, and the original is restorable", () => {
     const configPath = installHermes();
     // A block occupying our exact paths that we never wrote: unowned-key.
-    writeFileSync(configPath, "providers:\n  opencodex:\n    api: http://someone-else.invalid\n    note: hand written\n");
+    writeFileSync(configPath, "providers:\n  openccx:\n    api: http://someone-else.invalid\n    note: hand written\n");
     const before = readFileSync(configPath, "utf8");
 
     // The default still refuses, which is what makes the opt-in meaningful.
@@ -1333,13 +1333,13 @@ describe("overwriting a conflict on purpose", () => {
      * later disable -- so disable has to return the file to a clean absence.
      */
     expect(disableIntegration(input()).ok).toBe(true);
-    expect(readFileSync(configPath, "utf8")).not.toContain("opencodex");
+    expect(readFileSync(configPath, "utf8")).not.toContain("openccx");
   });
 
   test("leaves the user's own containers standing after a forced apply is disabled", () => {
     const configPath = installHermes();
     // The user already owns `providers`, and something they wrote sits in our slot.
-    writeFileSync(configPath, "providers:\n  mine:\n    api: http://user.invalid\n  opencodex:\n    api: http://squatter.invalid\n");
+    writeFileSync(configPath, "providers:\n  mine:\n    api: http://user.invalid\n  openccx:\n    api: http://squatter.invalid\n");
 
     expect(overwriteIntegration(input()).ok).toBe(true);
     expect(disableIntegration(input()).ok).toBe(true);
@@ -1349,7 +1349,7 @@ describe("overwriting a conflict on purpose", () => {
     // destruction after the one the user actually authorized.
     expect(doc.providers).toBeDefined();
     expect((doc.providers as Record<string, unknown>).mine).toEqual({ api: "http://user.invalid" });
-    expect((doc.providers as Record<string, unknown>).opencodex).toBeUndefined();
+    expect((doc.providers as Record<string, unknown>).openccx).toBeUndefined();
   });
 
   test("still refuses an unsafe document, where a snapshot is not a licence", () => {
@@ -1410,14 +1410,14 @@ describe("overwriting a conflict on purpose", () => {
     const document = JSON.parse(readFileSync(configPath, "utf8")) as {
       providers: Record<string, Record<string, unknown>>;
     };
-    document.providers["opencodex-legacy"] = { api: "http://legacy.invalid" };
+    document.providers["openccx-legacy"] = { api: "http://legacy.invalid" };
     // An edit inside a fragment we DO own is what makes this a foreign-edit
     // conflict rather than ordinary drift.
-    document.providers.opencodex!.options = { baseURL: "http://user-edited.invalid" };
+    document.providers.openccx!.options = { baseURL: "http://user-edited.invalid" };
     writeFileSync(configPath, `${JSON.stringify(document, null, 2)}\n`);
 
     const record = { ...store.readRecords().opencode! };
-    record.fragmentPaths = [...record.fragmentPaths, ["providers", "opencodex-legacy"]];
+    record.fragmentPaths = [...record.fragmentPaths, ["providers", "openccx-legacy"]];
     store.putRecord(record);
     expect(readIntegrationState(request)).toMatchObject({ state: "conflict", reason: "foreign-edit" });
 
@@ -1426,9 +1426,9 @@ describe("overwriting a conflict on purpose", () => {
     const after = JSON.parse(readFileSync(configPath, "utf8")) as {
       providers: Record<string, unknown>;
     };
-    expect(after.providers["opencodex-legacy"]).toBeUndefined();
-    expect(after.providers.opencodex).toBeDefined();
-    expect(store.readRecords().opencode!.fragmentPaths).not.toContainEqual(["providers", "opencodex-legacy"]);
+    expect(after.providers["openccx-legacy"]).toBeUndefined();
+    expect(after.providers.openccx).toBeDefined();
+    expect(store.readRecords().opencode!.fragmentPaths).not.toContainEqual(["providers", "openccx-legacy"]);
   });
 });
 
@@ -1439,7 +1439,7 @@ describe("integration write ownership guard (#4197)", () => {
     expect(() => assertIntegrationWriteOwnership(target, {
       effectiveUid: () => 1000,
       ownerUid: () => 987,
-    })).toThrow(/belongs to uid 987 while opencodex runs as uid 1000/);
+    })).toThrow(/belongs to uid 987 while openccx runs as uid 1000/);
   });
 
   test("names the path and both uids so the operator can act on it", () => {

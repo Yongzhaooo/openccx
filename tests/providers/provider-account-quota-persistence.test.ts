@@ -10,7 +10,7 @@ import {
 import type { ProviderQuota } from "../../src/providers/quota-types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let home: string;
 const FILE = "provider-account-quota-cache.json";
 const KEY = "kiro\u0000acct-a";
@@ -18,14 +18,14 @@ const KEY = "kiro\u0000acct-a";
 const settle = () => new Promise(resolve => setTimeout(resolve, 400));
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-quota-persist-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-quota-persist-"));
+  process.env.OPENCCX_HOME = home;
 });
 
 afterEach(() => {
   cancelPendingAccountQuotaPersist();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 

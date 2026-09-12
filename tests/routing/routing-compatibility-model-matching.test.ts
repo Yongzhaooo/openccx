@@ -10,14 +10,14 @@ import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
 import { buildBehaviorFingerprintV1 } from "../../src/lab/subject/behavior-fingerprint";
 import { resolveOpenRouterRouting } from "../../src/providers/openrouter-routing";
 import { modelRecordValue } from "../../src/reasoning-effort";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 // ollama-cloud ships `gpt-oss:120b` verbatim (src/providers/registry.ts) and the same
 // registry row lists the bare `gpt-oss` in noVisionModels, i.e. the bare-prefix form is
 // the documented, intended way to write these lists.
 const MODEL = "gpt-oss:120b";
 
-const effective: OcxProviderConfig = {
+const effective: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://ollama.com/v1",
   apiKey: "sk-test",
@@ -29,13 +29,13 @@ const effective: OcxProviderConfig = {
   autoToolChoiceOnlyModels: ["gpt-oss"],
 };
 
-const config = { providers: { "ollama-cloud": effective } } as unknown as OcxConfig;
+const config = { providers: { "ollama-cloud": effective } } as unknown as OccxConfig;
 
 const values = () =>
   resolveProductionBehaviorValues(config, "ollama-cloud", MODEL, effective, "salt")!;
 
 function wire(): Record<string, unknown> {
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: MODEL,
     context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
     stream: false,
@@ -80,7 +80,7 @@ describe("behavior report must agree with the wire the adapter actually builds",
 // per-model override maps, which the runtime reads through modelRecordValue: own
 // properties, then the pre-colon family, then a case-folded key.
 
-const OVERRIDES: OcxProviderConfig = {
+const OVERRIDES: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://ollama.com/v1",
   apiKey: "sk-test",
@@ -89,14 +89,14 @@ const OVERRIDES: OcxProviderConfig = {
   modelContextWindows: { "GPT-OSS": 55_555 },
 };
 
-const overrideConfig = { providers: { "ollama-cloud": OVERRIDES } } as unknown as OcxConfig;
+const overrideConfig = { providers: { "ollama-cloud": OVERRIDES } } as unknown as OccxConfig;
 
 const overrideValues = (modelId: string) =>
   resolveProductionBehaviorValues(overrideConfig, "ollama-cloud", modelId, OVERRIDES, "salt")!;
 
 describe("behavior report reads per-model overrides the way the runtime does", () => {
   test("the adapter really applies the bare-family override to the :tag model (ground truth)", () => {
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: MODEL,
       context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
       stream: false,
@@ -148,16 +148,16 @@ describe("a prototype-shaped model id resolves to no override", () => {
 // the type calls the first "Exact-model hosted tools" (`src/types.ts:1584`). Sending
 // these through modelRecordValue would be the divergence above with the sign flipped:
 // the report would claim an override applies that the adapter will never apply.
-const EXACT_ONLY: OcxProviderConfig = {
+const EXACT_ONLY: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://openrouter.ai/api/v1",
   apiKey: "sk-test",
   authMode: "key",
   modelPreferHostedTools: { "gpt-oss": ["image_generation"] },
   modelOpenRouterRouting: { "gpt-oss": { order: ["fireworks"] } },
-} as unknown as OcxProviderConfig;
+} as unknown as OccxProviderConfig;
 
-const exactConfig = { providers: { "ollama-cloud": EXACT_ONLY } } as unknown as OcxConfig;
+const exactConfig = { providers: { "ollama-cloud": EXACT_ONLY } } as unknown as OccxConfig;
 
 const exactValues = (modelId: string) =>
   resolveProductionBehaviorValues(exactConfig, "ollama-cloud", modelId, EXACT_ONLY, "salt")!;

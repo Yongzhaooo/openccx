@@ -6,7 +6,7 @@ import { atomicWriteFile, expandUserPath, getConfigDir, websocketsEnabled } from
 import { CODEX_CONFIG_PATH, CODEX_MODELS_CACHE_PATH, DEFAULT_CATALOG_PATH, readRootTomlString, resolveCodexConfigPath } from "../paths";
 import { clearModelCache, DEFAULT_MODEL_CACHE_TTL_MS, getFreshCached, getStaleCached, isModelsFetchCoolingDown, markModelsFetchFailure, setCached } from "../model-cache";
 import { buildModelsRequest, resolveModelsAuthToken } from "../../oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { modelInList } from "../../types";
 import { CODEX_REASONING_LEVELS, codexEffortRank, configuredReasoningEfforts, modelRecordValue, sanitizeCodexReasoningEfforts } from "../../reasoning-effort";
 import { getModelMetadata, getModelMetadataCaseInsensitive, listModelMetadata, resolveMetadataProvider } from "../../generated/model-metadata";
@@ -77,7 +77,7 @@ export function nativeEffortClamp(slug: string, effort: string | undefined): str
 
 export function shouldApplyNativeEffortClamp(
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   requestedModelId: string,
 ): boolean {
   return !requestedModelId.includes("/")
@@ -211,7 +211,7 @@ function stampCapabilityProvenance(entry: RawEntry, model: CatalogModel): void {
     ? model.inputModalities
     : (Array.isArray(meta?.input) && meta.input.length > 0 ? meta.input : undefined);
 
-  entry.opencodex_capability_provenance = {
+  entry.openccx_capability_provenance = {
     provider: model.provider,
     model_id: model.id,
     ...(contextWindow !== undefined ? { context_window: contextWindow } : {}),
@@ -524,21 +524,21 @@ export function clampCatalogModelsToCodexSupport(models: RawEntry[], deps: Bundl
       runtimeVersion = resolved.runtime.version;
       process.stderr.write(`${formatRuntimeLogLine(resolved.runtime)}\n`);
       if (resolved.persistError) {
-        console.warn(`[opencodex] Codex runtime selection could not be persisted; a later sync may pick a different binary.`);
+        console.warn(`[openccx] Codex runtime selection could not be persisted; a later sync may pick a different binary.`);
       }
       if (
         resolved.replacedConfigured
         && resolved.replacedConfigured.from.command !== resolved.runtime.command
       ) {
-        console.warn(`[opencodex] Preferred Codex runtime is unavailable.`);
+        console.warn(`[openccx] Preferred Codex runtime is unavailable.`);
         console.warn(
-          `[opencodex] Falling back from ${displayCodexRuntimePath(resolved.replacedConfigured.from.command)} to ${displayCodexRuntimePath(runtimePath)}.`,
+          `[openccx] Falling back from ${displayCodexRuntimePath(resolved.replacedConfigured.from.command)} to ${displayCodexRuntimePath(runtimePath)}.`,
         );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const redacted = redactUserPath(redactSecretString(message)).slice(0, 200);
-      console.warn(`[opencodex] Codex runtime resolve failed during catalog clamp: ${redacted}`);
+      console.warn(`[openccx] Codex runtime resolve failed during catalog clamp: ${redacted}`);
     }
   }
 

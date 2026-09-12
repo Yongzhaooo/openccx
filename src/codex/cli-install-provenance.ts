@@ -713,7 +713,7 @@ export async function inspectCodexCliInstall(
       evidence: Object.freeze(["canonical_path", "version_manager_path"]),
     });
   }
-  if (/codex[.]opencodex-real(?:[.](?:cmd|bat|exe))?$/i.test(pathTools(platform).basename(candidatePath))) {
+  if (/codex[.]openccx-real(?:[.](?:cmd|bat|exe))?$/i.test(pathTools(platform).basename(candidatePath))) {
     return freezeReport({
       ...unknownReport("shim_state_unknown", candidate, { location }),
       shim: shimReport(shim),

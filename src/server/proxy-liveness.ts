@@ -5,7 +5,7 @@
  * a proxy that started on a fallback port was invisible (duplicate starts, Codex synced
  * back to a dead port), and a foreign app answering 200 on the configured port counted
  * as "our proxy". Liveness now (1) prefers the pid + runtime-port record and (2) requires
- * the /healthz body to identify as opencodex.
+ * the /healthz body to identify as openccx.
  *
  * Lives outside cli.ts (which dispatches argv at module top level) so tests can import it.
  */
@@ -73,7 +73,7 @@ export interface LiveProxy {
   /**
    * Version the live proxy reported on `/healthz`, when it reported one.
    *
-   * Carried so a stale `ocx` on PATH can be detected without a second request: the
+   * Carried so a stale `occx` on PATH can be detected without a second request: the
    * identity probe already parsed and validated this body. Absent for a legacy proxy whose
    * healthz body predates the field.
    */
@@ -86,7 +86,7 @@ export interface LiveProxy {
  *
  * The wildcard test is `isWildcardHostname`, not a list of spellings. This function used to
  * know exactly three (`0.0.0.0`, `::`, `[::]`) while the bind-scope predicate knew every
- * all-zero form, so `ocx` composed `http://0.0.0.0.:10100` or `http://*:10100` — unreachable
+ * all-zero form, so `occx` composed `http://0.0.0.0.:10100` or `http://*:10100` — unreachable
  * URLs — for a config the server itself treated as a wildcard bind. One predicate, both sides.
  */
 export function probeHostname(hostname: string | undefined): string {
@@ -97,14 +97,14 @@ export function probeHostname(hostname: string | undefined): string {
 }
 
 /**
- * True when a /healthz body identifies an opencodex proxy. Accepts the explicit
- * `service: "opencodex"` marker, plus the legacy `{status, version, uptime}` trio so a
- * still-running pre-identity proxy (e.g. right after `ocx update`) is not mistaken for a
+ * True when a /healthz body identifies an openccx proxy. Accepts the explicit
+ * `service: "openccx"` marker, plus the legacy `{status, version, uptime}` trio so a
+ * still-running pre-identity proxy (e.g. right after `occx update`) is not mistaken for a
  * foreign server and shadow-started over.
  */
-export function isOpencodexHealthz(body: HealthzIdentity | null): boolean {
+export function isOpenccxHealthz(body: HealthzIdentity | null): boolean {
   if (!body) return false;
-  if (body.service === "opencodex") return true;
+  if (body.service === "openccx") return true;
   if (body.service !== undefined) return false;
   return body.status === "ok" && typeof body.version === "string" && typeof body.uptime === "number";
 }
@@ -134,7 +134,7 @@ export async function proxyIdentityAt(
       });
       if (!res.ok) return null;
       const body = (await res.json().catch(() => null)) as HealthzIdentity | null;
-      if (!isOpencodexHealthz(body)) return null;
+      if (!isOpenccxHealthz(body)) return null;
       const pid = typeof body?.pid === "number" ? body.pid : null;
       if (opts.expectedPid !== undefined && pid !== null && pid !== opts.expectedPid) return null;
       // Guarded the same way `pid` is: a non-string version is absent, not coerced.
@@ -256,7 +256,7 @@ export async function findLiveProxy(io: LivenessIo = {}): Promise<LiveProxy | nu
 //
 //  - HTTP 200 is required for status="ready"; HTTP 503 is required for pending
 //    or failed. Any other HTTP/body-status pairing is an invalid contract.
-//  - body.service must be exactly "opencodex".
+//  - body.service must be exactly "openccx".
 //  - body.version must be a non-empty string.
 //  - body.uptime must be a finite nonnegative number.
 //  - body.pid must be a positive integer; when `expectedPid` is supplied it must
@@ -277,7 +277,7 @@ interface ReadyzBody {
   port?: unknown;
   status?: unknown;
   // Remote protocol metadata is intentionally additive here. Ordinary
-  // readiness remains compatible with legacy standalone servers; `ocx connect`
+  // readiness remains compatible with legacy standalone servers; `occx connect`
   // validates these fields separately in src/remote/protocol.ts.
   protocol?: unknown;
   minimumClientProtocol?: unknown;
@@ -315,7 +315,7 @@ export function validateReadyzBody(
 ): ReadinessProbeResult | null {
   if (!body || typeof body !== "object") return null;
   const b = body as ReadyzBody;
-  if (b.service !== "opencodex") return null;
+  if (b.service !== "openccx") return null;
   if (typeof b.version !== "string" || b.version.length === 0) return null;
   if (typeof b.uptime !== "number" || !Number.isFinite(b.uptime) || b.uptime < 0) return null;
   if (typeof b.pid !== "number" || !Number.isInteger(b.pid) || b.pid <= 0) return null;

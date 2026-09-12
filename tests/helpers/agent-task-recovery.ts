@@ -1,6 +1,6 @@
 import { handleResponses } from "../../src/server/responses";
 import type { TranslatorBudget } from "../../src/lib/translator-budget";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 export const originalFetch = globalThis.fetch;
 
@@ -57,8 +57,8 @@ export function agentMessage(content: Array<Record<string, unknown>>): unknown[]
 }
 
 export function routedConfig(
-  recovery: OcxConfig["agentTaskRecovery"] | null = { enabled: true },
-): OcxConfig {
+  recovery: OccxConfig["agentTaskRecovery"] | null = { enabled: true },
+): OccxConfig {
   const config = {
     port: 0,
     defaultProvider: "xai",
@@ -76,7 +76,7 @@ export function routedConfig(
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
   if (recovery !== null) config.agentTaskRecovery = recovery;
   return config;
 }
@@ -142,7 +142,7 @@ export function providerResponse(): Response {
 }
 
 export async function post(
-  config: OcxConfig,
+  config: OccxConfig,
   model: string,
   input: unknown[],
   headers: HeadersInit = {},

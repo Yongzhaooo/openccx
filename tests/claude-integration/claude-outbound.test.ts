@@ -171,14 +171,14 @@ describe("claude outbound SSE", () => {
     const spacedBudget = createTestTranslatorBudget();
     const spaced = await collectEvents(responsesSseToAnthropicSse(
       streamFrom(frames.map(f => sse(f.name, f.data)).join("")),
-      "claude-ocx-test",
+      "claude-occx-test",
       { translatorBudget: spacedBudget },
     ));
 
     const unspacedBudget = createTestTranslatorBudget();
     const unspaced = await collectEvents(responsesSseToAnthropicSse(
       streamFrom(frames.map(f => unspacedSse(f.name, f.data)).join("")),
-      "claude-ocx-test",
+      "claude-occx-test",
       { translatorBudget: unspacedBudget },
     ));
 
@@ -215,7 +215,7 @@ describe("claude outbound SSE", () => {
       sse("response.completed", { response: { status: "completed", usage: { input_tokens: 120, output_tokens: 30, input_tokens_details: { cached_tokens: 100, cache_write_tokens: 5 } } } }),
     ].join("");
 
-    const events = await collectEvents(responsesSseToAnthropicSse(streamFrom(upstream), "claude-ocx-test"));
+    const events = await collectEvents(responsesSseToAnthropicSse(streamFrom(upstream), "claude-occx-test"));
     const names = events.map(e => e.name);
     expect(names).toEqual([
       "message_start", "ping",
@@ -228,7 +228,7 @@ describe("claude outbound SSE", () => {
 
     const start = events[0].data;
     expect(start.type).toBe("message_start");
-    expect(start.message).toMatchObject({ type: "message", role: "assistant", content: [], model: "claude-ocx-test", stop_reason: null });
+    expect(start.message).toMatchObject({ type: "message", role: "assistant", content: [], model: "claude-occx-test", stop_reason: null });
 
     // thinking block: index 0, thinking_delta then synthetic signature_delta before stop
     expect(events[2].data.content_block).toEqual({ type: "thinking", thinking: "", signature: "" });
@@ -953,9 +953,9 @@ describe("claude outbound non-stream + helpers", () => {
         { type: "function_call", id: "f", call_id: "toolu_1", name: "Read", arguments: "{\"a\":1}" },
       ],
       usage: { input_tokens: 10, output_tokens: 4 },
-    }, "claude-ocx-x") as any;
+    }, "claude-occx-x") as any;
     expect(msg.type).toBe("message");
-    expect(msg.model).toBe("claude-ocx-x");
+    expect(msg.model).toBe("claude-occx-x");
     expect(msg.stop_reason).toBe("tool_use");
     expect(msg.content[0]).toMatchObject({ type: "thinking", thinking: "think" });
     expect(msg.content[1]).toEqual({ type: "text", text: "hi" });
@@ -1086,7 +1086,7 @@ describe("claude outbound web_search translation", () => {
         { type: "message", id: "m", role: "assistant", content: [{ type: "output_text", text: "done" }] },
       ],
       usage: { input_tokens: 5, output_tokens: 1 },
-    }, "claude-ocx-x") as Record<string, any>;
+    }, "claude-occx-x") as Record<string, any>;
     expect(msg.stop_reason).toBe("end_turn");
     expect(msg.content[0]).toEqual({ type: "server_tool_use", id: "ws_1", name: "web_search", input: { query: "latest bun release" } });
     expect(msg.content[1]).toMatchObject({ type: "web_search_tool_result", tool_use_id: "ws_1" });
@@ -1177,7 +1177,7 @@ describe("sanitizeWebSearchInput (#381)", () => {
         }),
       }],
       usage: { input_tokens: 3, output_tokens: 1 },
-    }, "claude-ocx-native--gpt-5.6-sol") as Record<string, any>;
+    }, "claude-occx-native--gpt-5.6-sol") as Record<string, any>;
     expect(msg.stop_reason).toBe("tool_use");
     expect(msg.content[0]).toEqual({
       type: "tool_use",
@@ -1417,7 +1417,7 @@ describe("deferred Claude thinking order", () => {
         { type: "redacted_thinking", data: "done-red" },
         { type: "thinking", thinking: "A", signature: "done-signature" },
       ] : [
-        { type: "thinking", thinking: "A", signature: "ocxr1:eyJ0eHQiOiJBIn0=" },
+        { type: "thinking", thinking: "A", signature: "occxr1:eyJ0eHQiOiJBIn0=" },
         { type: "redacted_thinking", data: "done-red" },
         { type: "thinking", thinking: "", signature: "done-signature" },
       ]);
@@ -1436,7 +1436,7 @@ describe("deferred Claude thinking order", () => {
         sse("response.completed", { response: { status: "completed" } }),
       ]), "m", { pingIntervalMs: 0 }), "m");
       expect(message.content).toEqual([
-        { type: "thinking", thinking: "A", signature: "ocxr1:eyJ0eHQiOiJBIn0=" },
+        { type: "thinking", thinking: "A", signature: "occxr1:eyJ0eHQiOiJBIn0=" },
         { type: "redacted_thinking", data: "second-red" },
         { type: "thinking", thinking: "B", signature: "second-signature" },
       ]);
@@ -1566,7 +1566,7 @@ describe("deferred Claude thinking order", () => {
       send("response.output_text.delta", { delta: "live-1" });
       expect(await next()).toMatchObject({ type: "content_block_start", index: 0, content_block: { type: "thinking" } });
       expect(await next()).toEqual({ type: "content_block_delta", index: 0, delta: { type: "thinking_delta", thinking: "A" } });
-      expect(await next()).toEqual({ type: "content_block_delta", index: 0, delta: { type: "signature_delta", signature: "ocxr1:eyJ0eHQiOiJBIn0=" } });
+      expect(await next()).toEqual({ type: "content_block_delta", index: 0, delta: { type: "signature_delta", signature: "occxr1:eyJ0eHQiOiJBIn0=" } });
       expect(await next()).toEqual({ type: "content_block_stop", index: 0 });
       expect(await next()).toMatchObject({ type: "content_block_start", index: 1, content_block: { type: "text" } });
       expect(await next()).toEqual({ type: "content_block_delta", index: 1, delta: { type: "text_delta", text: "live-1" } });

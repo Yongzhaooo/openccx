@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import { handleManagementAPI, type ManagementApiDeps } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { startupHealthFixture } from "../helpers/startup-health";
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",

@@ -1,4 +1,4 @@
-/** Declaration for the plain-ESM liveness probe shared with `bin/ocx.mjs`. */
+/** Declaration for the plain-ESM liveness probe shared with `bin/occx.mjs`. */
 export declare function probeProxyLiveness(
   port: number,
   hostname?: string,

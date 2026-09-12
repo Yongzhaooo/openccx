@@ -1,9 +1,9 @@
 import { mutatePersistedConfig } from "../config";
 import { migrateXaiResponsesDefault } from "../providers/xai-responses-opt-in";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /** Rebase the one-time wire upgrade before initializing any live config consumers. */
-export function migrateStartupXaiResponses(config: OcxConfig): OcxConfig {
+export function migrateStartupXaiResponses(config: OccxConfig): OccxConfig {
   const projection = { ...config };
   if (!migrateXaiResponsesDefault(projection)) return config;
   try {

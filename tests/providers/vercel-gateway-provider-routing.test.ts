@@ -7,13 +7,13 @@ import {
 import { fastPolicyForModel } from "../../src/providers/service-tier";
 import { routeModel } from "../../src/router";
 import { safeConfigDTO, providerManagementConfigError } from "../../src/server/auth-cors";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
-function provider(baseUrl: string, overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(baseUrl: string, overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return { adapter: "openai-chat", baseUrl, apiKey: "test-key", ...overrides };
 }
 
-function parsed(modelId: string, stream = false): OcxParsedRequest {
+function parsed(modelId: string, stream = false): OccxParsedRequest {
   return {
     modelId,
     stream,
@@ -22,13 +22,13 @@ function parsed(modelId: string, stream = false): OcxParsedRequest {
   };
 }
 
-function body(baseUrl: string, modelId: string, overrides: Partial<OcxProviderConfig> = {}, stream = false): Record<string, unknown> {
+function body(baseUrl: string, modelId: string, overrides: Partial<OccxProviderConfig> = {}, stream = false): Record<string, unknown> {
   const request = createOpenAIChatAdapter(provider(baseUrl, overrides)).buildRequest(parsed(modelId, stream));
   return JSON.parse(request.body as string) as Record<string, unknown>;
 }
 
 function passthroughBody(
-  providerConfig: OcxProviderConfig,
+  providerConfig: OccxProviderConfig,
   modelId: string,
   rawBody: Record<string, unknown> = {},
 ): Record<string, unknown> {
@@ -67,7 +67,7 @@ describe("Vercel AI Gateway configurable provider routing (#1406)", () => {
       order: ["novita", "deepinfra"],
       sort: "ttft" as const,
     };
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "vercel-ai-gateway",
       providers: {
@@ -136,7 +136,7 @@ describe("Vercel AI Gateway configurable provider routing (#1406)", () => {
   });
 
   test("safeConfigDTO preserves vercelGatewayRouting and modelVercelGatewayRouting", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       providers: {
         "vercel-ai-gateway": provider("https://ai-gateway.vercel.sh/v1", {
           vercelGatewayRouting: { sort: "ttft" },
@@ -145,7 +145,7 @@ describe("Vercel AI Gateway configurable provider routing (#1406)", () => {
           },
         }),
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const dto = safeConfigDTO(config) as { providers: Record<string, Record<string, unknown>> };
     expect(dto.providers["vercel-ai-gateway"].vercelGatewayRouting).toEqual({ sort: "ttft" });
     expect(dto.providers["vercel-ai-gateway"].modelVercelGatewayRouting).toEqual({
@@ -180,7 +180,7 @@ describe("Vercel AI Gateway configurable provider routing (#1406)", () => {
   ])("config validation rejects %s", (_, override, expected) => {
     const error = vercelGatewayRoutingConfigError(provider(
       "https://ai-gateway.vercel.sh/v1",
-      override as Partial<OcxProviderConfig>,
+      override as Partial<OccxProviderConfig>,
     ));
     expect(error).not.toBeNull();
     expect(error).toContain(expected);

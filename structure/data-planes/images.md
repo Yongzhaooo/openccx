@@ -23,7 +23,7 @@ separately billed generation.
 
 On non-loopback binds, data-plane authentication and origin policy cover both Images routes. An
 explicit keyed Images provider accepts the proxy admission secret as either an OpenAI-style bearer
-or `x-opencodex-api-key` because the provider key replaces caller authorization before fetch. The
+or `x-openccx-api-key` because the provider key replaces caller authorization before fetch. The
 ChatGPT forward path still requires the dedicated header so its upstream bearer remains distinct.
 The keyed path never enters `handleResponses`, so `src/server/images.ts` repeats
 `selectProactiveApiKeyTransport` inside the keyed branch and rebuilds Authorization from the

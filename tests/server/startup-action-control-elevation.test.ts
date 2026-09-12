@@ -150,7 +150,7 @@ describe("startup install elevation retry", () => {
   });
 
   test("does not elevate for asset-write access denied", async () => {
-    failCli("EACCES: permission denied, open 'C:\\Users\\x\\.opencodex\\opencodex-service.cmd'");
+    failCli("EACCES: permission denied, open 'C:\\Users\\x\\.openccx\\openccx-service.cmd'");
     await expect(runStartupInstallAction("install-service")).rejects.toThrow(/EACCES/);
     expect(finalizeMock).not.toHaveBeenCalled();
   });

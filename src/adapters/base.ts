@@ -1,4 +1,4 @@
-import type { AdapterEvent, OcxParsedRequest } from "../types";
+import type { AdapterEvent, OccxParsedRequest } from "../types";
 import type { TranslatorBudget } from "../lib/translator-budget";
 import type { AdapterTierMetadata } from "../providers/fastwire";
 
@@ -35,7 +35,7 @@ export interface ProviderAdapter {
    * (e.g. Vertex AI ADC token) return a Promise. Sync adapters return the object directly; callers
    * must `await` the result (awaiting a non-Promise is a no-op).
    */
-  buildRequest(parsed: OcxParsedRequest, incoming: IncomingMeta): AdapterRequest | Promise<AdapterRequest>;
+  buildRequest(parsed: OccxParsedRequest, incoming: IncomingMeta): AdapterRequest | Promise<AdapterRequest>;
 
   /**
    * Decide, BEFORE any request is built or sent, that this turn has nothing to ask upstream.
@@ -50,7 +50,7 @@ export interface ProviderAdapter {
    * Only for turns whose input already contains the answer — see the Kiro adapter, where replayed
    * history ending in a delivered final answer has nothing left to complete.
    */
-  localTerminal?(parsed: OcxParsedRequest): AdapterLocalTerminal | undefined;
+  localTerminal?(parsed: OccxParsedRequest): AdapterLocalTerminal | undefined;
 
   fetchResponse?(request: AdapterRequest, ctx?: AdapterFetchContext): Promise<Response>;
 
@@ -69,13 +69,13 @@ export interface ProviderAdapter {
     tierMetadata?: AdapterTierMetadata,
   ): Promise<AdapterEvent[]>;
   runTurn?(
-    parsed: OcxParsedRequest,
+    parsed: OccxParsedRequest,
     incoming: IncomingMeta,
     emit: (event: AdapterEvent) => void,
   ): Promise<void>;
 
   /** Exact no-field observation for runTurn adapters, which expose no AdapterRequest object. */
-  tierLogForRunTurn?(parsed: OcxParsedRequest): AdapterTierMetadata | undefined;
+  tierLogForRunTurn?(parsed: OccxParsedRequest): AdapterTierMetadata | undefined;
 }
 
 export interface AdapterRequest {

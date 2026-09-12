@@ -2,7 +2,7 @@
 import { SCHEMA_REQUIRED_OUTPUT_BUDGET } from "./constants";
 import { expandFastExportModels } from "./fast-models";
 import type { OpencodeCatalogModel, ExportModel, ExportClientId, ManagedContribution } from "./contracts";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { shouldInjectApiAuthHeader } from "../../codex/inject";
 
 
@@ -41,7 +41,7 @@ export function outputBudgetFor(context: number): number {
  * declared is unknown, and `text` is the honest floor — every routed model takes
  * prompts. A model declaring `["audio"]` and nothing else is incompatible with a
  * text|image client, and rewriting it to `["text"]` would advertise a capability
- * it does not have. That input is reachable three ways: `ocx models add
+ * it does not have. That input is reachable three ways: `occx models add
  * --modalities audio`, `/api/custom-models`, and provider discovery.
  *
  * So unknown falls back to text and incompatible returns null, which drops the
@@ -76,7 +76,7 @@ export function inputModalitiesForClient(
  * Input modalities opencode's model schema accepts (opencode.ai/config.json, both
  * `modalities.input` and `modalities.output`). Wider than our internal `text | image | audio`
  * vocabulary, so unlike Pi and Gajae this filter can only drop a value no current ingress
- * produces: `/api/custom-models`, `ocx models add` and the catalog writer all normalize to
+ * produces: `/api/custom-models`, `occx models add` and the catalog writer all normalize to
  * the internal three. It exists so a future ingress cannot do to opencode what `audio` did
  * to Gajae, whose loader rejected the whole config file over one out-of-enum value.
  */
@@ -131,8 +131,8 @@ export function normalizeExportModels(models: readonly ExportModel[]): ExportMod
 }
 
 /** Extra headers a non-loopback bind needs, or nothing on loopback. */
-export function proxyAdmissionHeaders(config: OcxConfig | undefined, envRef: string): Record<string, string> | undefined {
-  return shouldInjectApiAuthHeader(config) ? { "x-opencodex-api-key": envRef } : undefined;
+export function proxyAdmissionHeaders(config: OccxConfig | undefined, envRef: string): Record<string, string> | undefined {
+  return shouldInjectApiAuthHeader(config) ? { "x-openccx-api-key": envRef } : undefined;
 }
 
 /** One fragment at `path`, built from this client's own document. */

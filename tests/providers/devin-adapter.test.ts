@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { createDevinAdapter, mapOcxMessagesToDevin, mapOcxToolsToDevin } from "../../src/adapters/devin";
+import { createDevinAdapter, mapOccxMessagesToDevin, mapOccxToolsToDevin } from "../../src/adapters/devin";
 import { sanitizeToolDescriptionForCognitionForTests } from "../../src/adapters/devin/cloud-direct/chat";
 import { DEVIN_MODEL_CONTEXT_WINDOWS, DEVIN_STATIC_MODELS, collapseDevinModelUid } from "../../src/adapters/devin/live-models";
 import { parseCatalogBuffer } from "../../src/adapters/devin/cloud-direct/catalog";
 import { encodeMessage, encodeString, encodeVarintField } from "../../src/adapters/devin/cloud-direct/wire";
 import { OAUTH_PROVIDERS } from "../../src/oauth";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
-import type { OcxParsedRequest } from "../../src/types";
+import type { OccxParsedRequest } from "../../src/types";
 
 describe("devin adapter", () => {
   test("is registered as an oauth provider and adapter", () => {
@@ -19,7 +19,7 @@ describe("devin adapter", () => {
   });
 
   test("maps user/assistant/tool history and tools", () => {
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "swe-1-7",
       stream: true,
       context: {
@@ -40,13 +40,13 @@ describe("devin adapter", () => {
       },
       options: {},
     };
-    const history = mapOcxMessagesToDevin(parsed);
+    const history = mapOccxMessagesToDevin(parsed);
     expect(history[0]).toEqual({ role: "system", content: "be brief" });
     expect(history[1]).toEqual({ role: "user", content: "hi" });
     expect(history[2]?.role).toBe("assistant");
     expect(history[2]?.tool_calls?.[0]?.id).toBe("c1");
     expect(history[3]).toEqual({ role: "tool", content: "ok", tool_call_id: "c1" });
-    expect(mapOcxToolsToDevin(parsed.context.tools)?.[0]?.name).toBe("lookup");
+    expect(mapOccxToolsToDevin(parsed.context.tools)?.[0]?.name).toBe("lookup");
   });
 
   test("collapseDevinModelUid strips effort suffixes to base ids", () => {

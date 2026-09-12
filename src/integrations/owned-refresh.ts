@@ -1,13 +1,13 @@
 /**
- * Refresh a file integration only when OpenCodex already owns its block.
+ * Refresh a file integration only when Openccx already owns its block.
  *
- * This is the safe bridge between an implicit operation such as `ocx sync`
+ * This is the safe bridge between an implicit operation such as `occx sync`
  * and the explicit integration writer. An implicit sync may update a block
  * the user previously enabled, but it must never claim an unowned block,
  * recreate one the user removed, or overwrite edits made after our write.
  */
 import type { ExportModel } from "../clients/config-export";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { IntegrationIO } from "./config-io";
 import type { IntegrationClientId } from "./registry";
 import { runIntegrationMutationFlight } from "./mutation-flight";
@@ -19,9 +19,9 @@ import {
 
 export interface OwnedIntegrationRefreshInput {
   clientId: IntegrationClientId;
-  /** Lazy in `ocx sync`, so an unowned client does not even load the catalog. */
+  /** Lazy in `occx sync`, so an unowned client does not even load the catalog. */
   models: readonly ExportModel[] | (() => Promise<readonly ExportModel[]>);
-  config: OcxConfig;
+  config: OccxConfig;
   port: number;
   env?: NodeJS.ProcessEnv;
   home?: string;
@@ -44,7 +44,7 @@ export interface OwnedIntegrationRefreshOutcome {
 }
 
 /**
- * Returns `null` when the client has never been connected by OpenCodex.
+ * Returns `null` when the client has never been connected by Openccx.
  * Callers use that distinction to report "left alone" rather than "skipped".
  */
 export async function refreshOwnedIntegration(

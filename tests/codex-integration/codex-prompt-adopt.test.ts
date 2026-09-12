@@ -19,14 +19,14 @@ import {
 } from "../../src/codex/prompt-layers";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const MARKER = "# Auto-injected by opencodex";
+const MARKER = "# Auto-injected by openccx";
 const roots: string[] = [];
 
 function fixture(config: string, store?: string) {
-  const root = mkdtempSync(join(tmpdir(), "ocx-prompt-adopt-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-prompt-adopt-"));
   roots.push(root);
   const configPath = join(root, "config.toml");
-  const storePath = join(root, "opencodex-prompt.json");
+  const storePath = join(root, "openccx-prompt.json");
   writeFileSync(configPath, config, "utf8");
   if (store !== undefined) writeFileSync(storePath, store, "utf8");
   return { root, configPath, storePath };

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { getDebugLogEntries, resetDebugLogBufferForTests } from "../../src/lib/debug-log-buffer";
 import { resetDebugSettingsForTests, setDebugSettings } from "../../src/lib/debug-settings";
 import { waitForNativeMainStartupGate } from "../../src/codex/native-profile-startup";
@@ -21,9 +21,9 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  */
 
 const originalFetch = globalThis.fetch;
-const previousOcxHome = process.env.OPENCODEX_HOME;
+const previousOccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
 
 /**
  * Start the proxy with ownership scoped to THIS fixture's homes.
@@ -69,11 +69,11 @@ async function startSettledFixtureServer(): Promise<ReturnType<typeof startServe
   return server;
 }
 
-let ocxHome = "";
+let occxHome = "";
 let codexHome = "";
 let upstreamAuth: Array<string | null> = [];
 
-const ADMISSION_SECRET = "ocx_data_envkeysecret";
+const ADMISSION_SECRET = "occx_data_envkeysecret";
 
 /** A JWT whose `exp` is far in the future, so the stored main token reads as live. */
 function liveJwt(): string {
@@ -81,7 +81,7 @@ function liveJwt(): string {
   return `header.${payload}.signature`;
 }
 
-function directConfig(): OcxConfig {
+function directConfig(): OccxConfig {
   return {
     port: 0,
     // Remote bind, so admission is actually required rather than loopback-waived.
@@ -100,7 +100,7 @@ function directConfig(): OcxConfig {
     apiKeys: [
       { id: "env-key", name: "env_key", key: ADMISSION_SECRET, createdAt: "2026-08-16T00:00:00.000Z" },
     ],
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function writeStoredMain(accessToken: string): void {
@@ -111,11 +111,11 @@ function writeStoredMain(accessToken: string): void {
 }
 
 beforeEach(() => {
-  ocxHome = mkdtempSync(join(tmpdir(), "ocx-1686-home-"));
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-1686-codex-"));
-  process.env.OPENCODEX_HOME = ocxHome;
+  occxHome = mkdtempSync(join(tmpdir(), "occx-1686-home-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-1686-codex-"));
+  process.env.OPENCCX_HOME = occxHome;
   process.env.CODEX_HOME = codexHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
   upstreamAuth = [];
@@ -135,15 +135,15 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   resetDebugSettingsForTests();
   resetDebugLogBufferForTests();
-  if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOcxHome;
+  if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (ocxHome) removeTreeWithRetry(ocxHome);
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (occxHome) removeTreeWithRetry(occxHome);
   if (codexHome) removeTreeWithRetry(codexHome);
-  ocxHome = "";
+  occxHome = "";
   codexHome = "";
 });
 
@@ -182,9 +182,9 @@ describe("#1686 env_key bearer admission reaches Direct with substitution", () =
       expect(upstreamAuth.join("|")).not.toContain(ADMISSION_SECRET);
       const affinityLine = getDebugLogEntries()
         .map(entry => entry.line)
-        .find(line => line.startsWith("[ocx:codex:affinity] "));
+        .find(line => line.startsWith("[occx:codex:affinity] "));
       expect(affinityLine).toBeDefined();
-      expect(JSON.parse(affinityLine!.slice("[ocx:codex:affinity] ".length))).toMatchObject({
+      expect(JSON.parse(affinityLine!.slice("[occx:codex:affinity] ".length))).toMatchObject({
         authKind: "main",
         accountMode: "direct",
         credentialSubstituted: true,

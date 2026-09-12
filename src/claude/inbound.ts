@@ -5,20 +5,20 @@
  *  - translate-and-replay: the produced body MUST pass the real responsesRequestSchema
  *    parse so routing/OAuth/pool/failover are inherited unchanged.
  *  - thinking/redacted_thinking replay is preserved in Responses reasoning items;
- *    signatures and redacted payloads travel in bounded ocxr1 envelopes.
+ *    signatures and redacted payloads travel in bounded occxr1 envelopes.
  *  - thinking.budget_tokens is NEVER forwarded raw; it maps to an effort tier.
  *  - top_k is accepted and silently dropped (no Responses equivalent, CCR parity).
  */
-import type { OcxClaudeCodeConfig } from "../types";
+import type { OccxClaudeCodeConfig } from "../types";
 import { createHash } from "node:crypto";
 
 export { AnthropicRequestError, DesktopModelMappingUnavailableError } from "./inbound-records";
-export { resolveInboundModel, effortForThinkingBudget, effortFromOutputConfig, extractOcxRouteDirective, extractOcxEffortDirective } from "./inbound-model-options";
+export { resolveInboundModel, effortForThinkingBudget, effortFromOutputConfig, extractOccxRouteDirective, extractOccxEffortDirective } from "./inbound-model-options";
 import { AnthropicRequestError, isRec, type Rec } from "./inbound-records";
 import { resolveInboundModel, effortForThinkingBudget, effortFromOutputConfig, formatFromOutputConfig } from "./inbound-model-options";
 import { systemToInstructions, toolsToResponses, toolChoiceToResponses } from "./inbound-content-options";
 import { stabilizeClaudeInstructionsForPromptCache } from "./inbound-cache-stabilize";
-import { decodeReasoningEnvelope, encodeReasoningEnvelope, OCX_REASONING_PREFIX } from "../responses/reasoning-envelope";
+import { decodeReasoningEnvelope, encodeReasoningEnvelope, OCCX_REASONING_PREFIX } from "../responses/reasoning-envelope";
 import { createTranslatorBudget, type TranslatorBudget } from "../lib/translator-budget";
 
 
@@ -83,7 +83,7 @@ function pushUserMessage(input: Rec[], blocks: Rec[]): void {
 export const DEFAULT_BLOCKED_SKILLS = ["claude-api"];
 
 /** Shared effective policy for proxy elision and generated routed-agent guards. */
-export function effectiveBlockedSkillNames(cc?: Pick<OcxClaudeCodeConfig, "blockedSkills">): string[] {
+export function effectiveBlockedSkillNames(cc?: Pick<OccxClaudeCodeConfig, "blockedSkills">): string[] {
   const names = cc?.blockedSkills ?? DEFAULT_BLOCKED_SKILLS;
   return [...new Set(names
     .filter((name): name is string => typeof name === "string")
@@ -118,15 +118,15 @@ function maybeElideSkillText(text: string, names: readonly string[]): string {
   const firstLineEnd = text.indexOf("\n");
   const dir = text.slice(SKILL_TEXT_MARKER.length, firstLineEnd === -1 ? text.length : firstLineEnd).trim();
   // Windows clients send `C:\Users\...\claude-api`; normalize separators before
-  // basenaming (repo precedent: src/codex/inject.ts isOpencodexCatalogPath).
+  // basenaming (repo precedent: src/codex/inject.ts isOpenccxCatalogPath).
   const base = dir.replace(/\\/g, "/").split("/").filter(Boolean).pop()?.toLowerCase() ?? "";
   if (!names.includes(base)) return text;
-  return `[opencodex] '${base}' skill document bundle (${text.length} chars) elided for routed models `
+  return `[openccx] '${base}' skill document bundle (${text.length} chars) elided for routed models `
     + "(claudeCode.blockedSkills). The skill is loaded; answer from general knowledge instead of citing the bundle.";
 }
 
 function skillElisionStub(callId: string): string {
-  return "[opencodex] Skill document bundle elided for routed models (claudeCode.blockedSkills). "
+  return "[openccx] Skill document bundle elided for routed models (claudeCode.blockedSkills). "
     + `The skill loaded, but its reference documents were removed to save context (call ${callId}). `
     + "Answer from general knowledge instead of citing the bundle.";
 }
@@ -248,12 +248,12 @@ function assistantMessageToItems(content: unknown, input: Rec[], budget: Transla
         flush();
         const thinking = typeof raw.thinking === "string" ? raw.thinking : "";
         const signature = typeof raw.signature === "string" ? raw.signature : "";
-        if (signature.startsWith(OCX_REASONING_PREFIX)) {
+        if (signature.startsWith(OCCX_REASONING_PREFIX)) {
           const owned = decodeReasoningEnvelope(signature, budget);
-          if (!owned) throw new AnthropicRequestError("malformed ocxr1 reasoning signature");
-          if (Object.hasOwn(owned, "sig")) throw new AnthropicRequestError("OpenCodex reasoning continuity cannot be replayed as an Anthropic signature");
+          if (!owned) throw new AnthropicRequestError("malformed occxr1 reasoning signature");
+          if (Object.hasOwn(owned, "sig")) throw new AnthropicRequestError("Openccx reasoning continuity cannot be replayed as an Anthropic signature");
         }
-        const encrypted = signature.length === 0 ? undefined : signature.startsWith(OCX_REASONING_PREFIX) ? signature : encodeReasoningEnvelope({ sig: signature }, budget);
+        const encrypted = signature.length === 0 ? undefined : signature.startsWith(OCCX_REASONING_PREFIX) ? signature : encodeReasoningEnvelope({ sig: signature }, budget);
         if (encrypted) budget.chargeRetained(2 * encrypted.length, { kind: "reasoning" });
         if (thinking.length === 0 && !encrypted) break;
         input.push({ type: "reasoning", id: `rs_${crypto.randomUUID().replace(/-/g, "")}`, summary: thinking.length > 0 ? [{ type: "summary_text", text: thinking }] : [], ...(encrypted ? { encrypted_content: encrypted } : {}) });
@@ -301,7 +301,7 @@ export interface ClaudeInboundTranslation {
  */
 export function anthropicToResponsesBody(
   raw: unknown,
-  cc?: OcxClaudeCodeConfig,
+  cc?: OccxClaudeCodeConfig,
 ): Rec {
   return anthropicToResponsesTranslation(raw, cc).body;
 }
@@ -313,7 +313,7 @@ export function anthropicToResponsesBody(
  */
 export function anthropicToResponsesTranslation(
   raw: unknown,
-  cc?: OcxClaudeCodeConfig,
+  cc?: OccxClaudeCodeConfig,
   budget?: TranslatorBudget,
 ): ClaudeInboundTranslation {
   const activeBudget = budget ?? createTranslatorBudget();
@@ -326,7 +326,7 @@ export function anthropicToResponsesTranslation(
 
 function translateAnthropicRequest(
   raw: unknown,
-  cc: OcxClaudeCodeConfig | undefined,
+  cc: OccxClaudeCodeConfig | undefined,
   budget: TranslatorBudget,
 ): ClaudeInboundTranslation {
   if (!isRec(raw)) throw new AnthropicRequestError("request body must be a JSON object");

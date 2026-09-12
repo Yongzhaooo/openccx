@@ -148,8 +148,8 @@ export default function ProviderWorkspaceShell({
   } | null>(null);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsLoadFailed, setModelsLoadFailed] = useState(false);
-  const quotasCacheKey = `ocx.providers.quotas.v1:${apiBase}`;
-  const usageCacheKey = `ocx.providers.usage.v2:${apiBase}`;
+  const quotasCacheKey = `occx.providers.quotas.v1:${apiBase}`;
+  const usageCacheKey = `occx.providers.usage.v2:${apiBase}`;
   const [usageTotals, setUsageTotals] = useState<Record<string, ProviderUsageTotals>>(() => (
     readSessionListCache<{ totals: Record<string, ProviderUsageTotals> }>(usageCacheKey)?.totals ?? {}
   ));

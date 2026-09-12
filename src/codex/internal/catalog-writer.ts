@@ -141,7 +141,7 @@ function publishCatalogBackup(
   const io = suppliedIo ?? defaultBackupWriteIO(prepared.path);
   const target = io.resolveTarget(prepared.path);
   if (!suppliedIo) mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
-  const tempPath = `${target}.ocx.${process.pid}.backup.${++backupTempSequence}.tmp`;
+  const tempPath = `${target}.occx.${process.pid}.backup.${++backupTempSequence}.tmp`;
   let hardened = false;
 
   try {

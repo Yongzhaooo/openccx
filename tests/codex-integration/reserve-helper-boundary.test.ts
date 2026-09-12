@@ -6,20 +6,20 @@ import { planWebSearch } from "../../src/web-search";
 import * as sidecarAuth from "../../src/sidecar/auth";
 import { parseRequest } from "../../src/responses/parser";
 import { handleSearch } from "../../src/server/search";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import type { DataPlaneAdmission } from "../../src/server/auth-cors";
 
-const forward: OcxProviderConfig = {
+const forward: OccxProviderConfig = {
   adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex",
 };
-const routed: OcxProviderConfig = {
+const routed: OccxProviderConfig = {
   adapter: "openai-chat", baseUrl: "https://fixture.example.test/v1", noVisionModels: ["blind"],
 };
 const headers = new Headers({ authorization: "Bearer fixture-helper-token" });
 const loopbackAdmission = { kind: "loopback", source: "loopback" } as const;
 const sidecar = { providerName: "openai" as const, provider: forward, accountMode: "direct" as const,
   authContext: { kind: "main" as const, accountId: null }, headers };
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 0, defaultProvider: "openai", providers: { openai: forward }, codexDesktopAuthless: true,
     codexAccountPickerEnabled: true, codexAccountNamespaces: { personal: "@main" },
     visionSidecar: { backend: "openai", model: "gpt-reserve" },

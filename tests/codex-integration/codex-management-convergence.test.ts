@@ -6,9 +6,9 @@ import {
   projectCatalogOnlyOutcome,
 } from "../../src/codex/management-convergence";
 import type { CatalogDisposition } from "../../src/codex/convergence-types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 10100, providers: {}, defaultProvider: "openai" };
 }
 

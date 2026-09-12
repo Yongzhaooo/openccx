@@ -376,7 +376,7 @@ export function normalizeAuthStoreBuffer(buffer: Uint8Array | null): AuthStoreBu
 }
 
 /**
- * Observe-only auth store read for diagnostics (`ocx doctor` / status).
+ * Observe-only auth store read for diagnostics (`occx doctor` / status).
  * Does not chmod paths or backup invalid JSON — corrupt files are treated as empty.
  */
 export function peekAuthStore(): AuthStore {
@@ -426,7 +426,7 @@ export function createOAuthRefreshIntentLock(provider:string,accountId:string,ov
 
 /**
  * One-time downgrade safety net: the first time we persist the NEW shape over a file that
- * still contains legacy single-credential entries, keep a pristine copy. An older opencodex
+ * still contains legacy single-credential entries, keep a pristine copy. An older openccx
  * would silently drop the new shape (normalizeCredential -> null) and then persist an empty
  * store, destroying refresh tokens; the backup makes that recoverable.
  */

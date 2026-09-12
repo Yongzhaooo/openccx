@@ -22,7 +22,7 @@ import {
 } from "../../src/codex/catalog/provider-fetch";
 import { clearModelCache } from "../../src/codex/model-cache";
 import { getAuthRefreshIntentPath } from "../../src/oauth/store";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 interface FileSnapshot {
@@ -33,12 +33,12 @@ interface FileSnapshot {
 }
 
 const originalHome = process.env.HOME;
-const originalOpencodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 const originalCodexHome = process.env.CODEX_HOME;
 const originalKimiRefresh = OAUTH_PROVIDERS.kimi!.refresh;
 
 let root: string;
-let opencodexHome: string;
+let openccxHome: string;
 
 function authStoreBytes(expires: number): Buffer {
   return Buffer.from(JSON.stringify({
@@ -76,7 +76,7 @@ function expectFileUnchanged(path: string, before: FileSnapshot): void {
   });
 }
 
-function liveKimiProvider(onFetch: () => void): OcxProviderConfig {
+function liveKimiProvider(onFetch: () => void): OccxProviderConfig {
   return {
     ...structuredClone(OAUTH_PROVIDERS.kimi!.providerConfig),
     liveModels: true,
@@ -99,7 +99,7 @@ async function runCatalogGather(
   outcomes: CatalogGatherProviderAuthOutcome[];
   modelOutcomes: CatalogGatherProviderModelOutcome[];
 }> {
-  const config: OcxConfig = { providers: { kimi: liveKimiProvider(onFetch) } };
+  const config: OccxConfig = { providers: { kimi: liveKimiProvider(onFetch) } };
   const outcomes: CatalogGatherProviderAuthOutcome[] = [];
   const modelOutcomes: CatalogGatherProviderModelOutcome[] = [];
   const rows = await gatherRoutedModelsForCatalogGather(
@@ -111,11 +111,11 @@ async function runCatalogGather(
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-catalog-auth-observe-"));
-  opencodexHome = join(root, "opencodex");
-  mkdirSync(opencodexHome, { recursive: true, mode: 0o700 });
+  root = mkdtempSync(join(tmpdir(), "occx-catalog-auth-observe-"));
+  openccxHome = join(root, "openccx");
+  mkdirSync(openccxHome, { recursive: true, mode: 0o700 });
   process.env.HOME = join(root, "home");
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   process.env.CODEX_HOME = join(root, "codex");
   clearModelCache();
 });
@@ -125,8 +125,8 @@ afterEach(() => {
   clearModelCache();
   if (originalHome === undefined) delete process.env.HOME;
   else process.env.HOME = originalHome;
-  if (originalOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpencodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
   if (originalCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = originalCodexHome;
   removeTreeWithRetry(root);
@@ -135,7 +135,7 @@ afterEach(() => {
 describe("catalog gather OAuth observation", () => {
   test("expired active token stays typed and gather does not refresh or touch the auth store", async () => {
     const now = Date.now();
-    const authPath = join(opencodexHome, "auth.json");
+    const authPath = join(openccxHome, "auth.json");
     writeFileSync(authPath, authStoreBytes(now - 1), { mode: 0o600 });
     chmodSync(authPath, 0o644);
 
@@ -145,7 +145,7 @@ describe("catalog gather OAuth observation", () => {
 
     const authBefore = snapshotFile(authPath);
     const intentBefore = snapshotFile(intentPath);
-    const listingBefore = readdirSync(opencodexHome).sort();
+    const listingBefore = readdirSync(openccxHome).sort();
     const observedBuffer = readFileSync(authPath);
     let refreshCalls = 0;
     let outboundCalls = 0;
@@ -167,16 +167,16 @@ describe("catalog gather OAuth observation", () => {
     expect(modelOutcomes).toEqual([{ provider: "kimi", state: "degraded" }]);
     expectFileUnchanged(authPath, authBefore);
     expectFileUnchanged(intentPath, intentBefore);
-    expect(readdirSync(opencodexHome).sort()).toEqual(listingBefore);
-    expect(readdirSync(opencodexHome).some(name => name.startsWith("auth.json.invalid-"))).toBe(false);
+    expect(readdirSync(openccxHome).sort()).toEqual(listingBefore);
+    expect(readdirSync(openccxHome).some(name => name.startsWith("auth.json.invalid-"))).toBe(false);
     expect(existsSync(`${authPath}.pre-multiauth`)).toBe(false);
   });
 
   test("unparseable auth-store bytes are typed malformed and never backed up or rewritten", async () => {
-    const authPath = join(opencodexHome, "auth.json");
+    const authPath = join(openccxHome, "auth.json");
     writeFileSync(authPath, "{unparseable\n", { mode: 0o644 });
     const before = snapshotFile(authPath);
-    const listingBefore = readdirSync(opencodexHome).sort();
+    const listingBefore = readdirSync(openccxHome).sort();
     const observedBuffer = readFileSync(authPath);
     let refreshCalls = 0;
     let outboundCalls = 0;
@@ -197,17 +197,17 @@ describe("catalog gather OAuth observation", () => {
     expect(refreshCalls).toBe(0);
     expect(outboundCalls).toBe(0);
     expectFileUnchanged(authPath, before);
-    expect(readdirSync(opencodexHome).sort()).toEqual(listingBefore);
-    expect(readdirSync(opencodexHome).some(name => name.startsWith("auth.json.invalid-"))).toBe(false);
+    expect(readdirSync(openccxHome).sort()).toEqual(listingBefore);
+    expect(readdirSync(openccxHome).some(name => name.startsWith("auth.json.invalid-"))).toBe(false);
     expect(existsSync(`${authPath}.pre-multiauth`)).toBe(false);
   });
 
   test("available observed token permits live discovery without entering refresh", async () => {
     const now = Date.now();
-    const authPath = join(opencodexHome, "auth.json");
+    const authPath = join(openccxHome, "auth.json");
     writeFileSync(authPath, authStoreBytes(now + 3_600_000), { mode: 0o644 });
     const before = snapshotFile(authPath);
-    const listingBefore = readdirSync(opencodexHome).sort();
+    const listingBefore = readdirSync(openccxHome).sort();
     const observedBuffer = readFileSync(authPath);
     let refreshCalls = 0;
     let outboundCalls = 0;
@@ -228,6 +228,6 @@ describe("catalog gather OAuth observation", () => {
     expect(refreshCalls).toBe(0);
     expect(outboundCalls).toBe(1);
     expectFileUnchanged(authPath, before);
-    expect(readdirSync(opencodexHome).sort()).toEqual(listingBefore);
+    expect(readdirSync(openccxHome).sort()).toEqual(listingBefore);
   });
 });

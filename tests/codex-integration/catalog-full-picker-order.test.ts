@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, saveConfig } from "../../src/config";
 import { SUBAGENT_MODELS_VERSION } from "../../src/config/subagent-models";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { captureCatalogAdmissionSnapshot } from "../../src/codex/catalog-admission";
 import { convergeCodexCatalog } from "../../src/codex/convergence";
 import { loadBundledCodexCatalog, resetCatalogRuntimeStateForTests, syncCatalogModels } from "../../src/codex/catalog";
@@ -174,7 +174,7 @@ describe("picker ordering through production catalog writers", () => {
   const ids = ["ordering-a", "ordering-b", "ordering-c", "ordering-d", "ordering-e", "ordering-f"];
   const slugs = ids.map(id => routedSlug("opencode-go", id));
   const configuredEfforts = ["high", "xhigh"];
-  const envKeys = ["CODEX_HOME", "OPENCODEX_HOME", "CODEX_CLI_PATH"] as const;
+  const envKeys = ["CODEX_HOME", "OPENCCX_HOME", "CODEX_CLI_PATH"] as const;
   let previousEnv: Array<string | undefined>;
   let previousFetch: typeof fetch;
   let root: string;
@@ -218,13 +218,13 @@ describe("picker ordering through production catalog writers", () => {
   beforeEach(() => {
     previousEnv = envKeys.map(key => process.env[key]);
     previousFetch = globalThis.fetch;
-    root = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-picker-writers-")));
+    root = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-picker-writers-")));
     codexHome = join(root, "codex");
-    const opencodexHome = join(root, "ocx");
+    const openccxHome = join(root, "occx");
     mkdirSync(codexHome);
-    mkdirSync(opencodexHome);
+    mkdirSync(openccxHome);
     process.env.CODEX_HOME = codexHome;
-    process.env.OPENCODEX_HOME = opencodexHome;
+    process.env.OPENCCX_HOME = openccxHome;
     catalogPath = join(codexHome, "custom-catalog.json");
     writeFileSync(join(codexHome, "config.toml"),
       'model_catalog_json = "custom-catalog.json"\n[features]\nmulti_agent_v2 = true\n');
@@ -264,7 +264,7 @@ describe("picker ordering through production catalog writers", () => {
     }
   });
 
-  function config(featured = slugs.slice(0, 5), order: string[] = []): OcxConfig {
+  function config(featured = slugs.slice(0, 5), order: string[] = []): OccxConfig {
     return {
       port: 10100,
       defaultProvider: "opencode-go",
@@ -284,7 +284,7 @@ describe("picker ordering through production catalog writers", () => {
     };
   }
 
-  async function writeCatalog(writer: "convergence" | "retained", next: OcxConfig, degraded = false): Promise<RawEntry[]> {
+  async function writeCatalog(writer: "convergence" | "retained", next: OccxConfig, degraded = false): Promise<RawEntry[]> {
     assertRuntimeIdentity();
     const requestedRoster = [...next.subagentModels!];
     saveConfig(next);
@@ -440,7 +440,7 @@ test("public catalog wrapper applies saved full order while preserving guidance 
   const ordered = build(order);
   expect(ordered.toSorted((a, b) => Number(a.priority) - Number(b.priority)).map(row => row.slug)).toEqual(order);
   expect(effectiveSubagentRoster(featured, "v1", ordered)).toEqual(effectiveSubagentRoster(featured, "v1", natural));
-  // Independently mirror the upstream description's visible-priority window, not the OCX helper.
+  // Independently mirror the upstream description's visible-priority window, not the OCCX helper.
   const nativeDescription = ordered.toSorted((a, b) => Number(a.priority) - Number(b.priority))
     .filter(row => row.visibility === "list").slice(0, 5).map(row => row.slug);
   expect(nativeDescription).toEqual(["gpt-5.5", "p/f", "p/e", "p/d", "p/c"]);

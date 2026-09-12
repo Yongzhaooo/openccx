@@ -20,7 +20,7 @@ import { buildCatalogEntries, resetCatalogRuntimeStateForTests } from "../../src
 import { clearModelCache, setCached } from "../../src/codex/model-cache";
 import { getModelMetadata } from "../../src/generated/model-metadata";
 import type { RawEntry } from "../../src/codex/catalog";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 beforeEach(() => {
   clearModelCache();
@@ -30,12 +30,12 @@ afterEach(() => {
   clearModelCache();
 });
 
-function zenmuxConfig(): OcxConfig {
+function zenmuxConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "zenmux",
     providers: {
-      // Bare persisted config, like `ocx init` writes: registry seeds backfill the rest.
+      // Bare persisted config, like `occx init` writes: registry seeds backfill the rest.
       zenmux: { adapter: "openai-chat", baseUrl: "https://zenmux.ai/api/v1", apiKey: "k" },
     },
   };
@@ -136,7 +136,7 @@ describe("routeModel decode (proxy layer)", () => {
   });
 
   test("registry model-keyed hint maps seed the decode union (nvidia, no static models list)", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "nvidia",
       providers: {
@@ -150,7 +150,7 @@ describe("routeModel decode (proxy layer)", () => {
   });
 
   test("defaultModel encoded fallback routes to the native id", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "other",
       providers: {
@@ -163,7 +163,7 @@ describe("routeModel decode (proxy layer)", () => {
   });
 
   test("models-list encoded fallback routes to the native id", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "other",
       providers: {
@@ -374,7 +374,7 @@ describe("#2491 one selection resolver reports what it actually matched", () => 
    * A native id may be self-namespaced: provider "acme" publishing `acme/turbo`. Its literal
    * spelling is indistinguishable from the provider-qualified form of a sibling `turbo`, so
    * treating every `<provider>/…` selection as qualified made the published row unreachable
-   * and, worse, silently redirected the selection onto the sibling. `ocx models remove` reads
+   * and, worse, silently redirected the selection onto the sibling. `occx models remove` reads
    * its match from this resolver, so the redirect targets a destructive command.
    */
   test("a self-namespaced native id wins over the provider-qualified reading", () => {

@@ -39,7 +39,7 @@ function saveManifest(root: string, manifest: Manifest): void {
 
 /** A synthetic tree that passes every check, so each negative case isolates one rule. */
 function scaffold(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-structure-ssot-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-structure-ssot-"));
   scratch.push(root);
   write(root, "src/alpha/keep.ts", "export const keep = 1;\n");
   write(root, "tests/alpha/alpha.test.ts", "// Holds INV-A-01\nexport {};\n");

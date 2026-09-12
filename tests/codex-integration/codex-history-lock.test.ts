@@ -68,7 +68,7 @@ async function waitForPath(path: string, timeoutMs = INTERNAL_DEADLINE_MS): Prom
 }
 
 test("H excludes a second process across the whole history unit", async () => {
-  const sandbox = makeSandbox("ocx-history-lock-");
+  const sandbox = makeSandbox("occx-history-lock-");
   const ready = join(sandbox.root, "held");
   const release = join(sandbox.root, "release");
 
@@ -113,7 +113,7 @@ test("H excludes a second process across the whole history unit", async () => {
 }, SPAWN_BUDGET_MS);
 
 test("a permit is refused once its acquisition released, and for a foreign state database", () => {
-  const sandbox = makeSandbox("ocx-history-permit-");
+  const sandbox = makeSandbox("occx-history-permit-");
   const other = join(sandbox.codexHome, "other_state.sqlite");
 
   let leaked!: HistoryWritePermit;
@@ -139,7 +139,7 @@ test("a permit is refused once its acquisition released, and for a foreign state
 });
 
 test("a permit is revoked even when the callback throws", () => {
-  const sandbox = makeSandbox("ocx-history-throw-");
+  const sandbox = makeSandbox("occx-history-throw-");
   let leaked!: HistoryWritePermit;
 
   expect(() => withHistoryWriteSerialization(sandbox.codexHome, sandbox.stateDb, permit => {
@@ -157,7 +157,7 @@ test("a permit is revoked even when the callback throws", () => {
 });
 
 test("two different state databases under one home do not exclude each other", () => {
-  const sandbox = makeSandbox("ocx-history-sibling-");
+  const sandbox = makeSandbox("occx-history-sibling-");
   const second = join(sandbox.codexHome, "second_state.sqlite");
   writeFileSync(second, "");
 

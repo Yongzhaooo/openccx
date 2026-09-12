@@ -28,14 +28,14 @@ import {
 import { getAccountSet, markAccountNeedsReauth, removeAccount, saveCredential } from "../../src/oauth/store";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home: string;
 let readSpy: ReturnType<typeof spyOn> | undefined;
 let authReadsBefore = 0;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-quorum-cache-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-quorum-cache-"));
+  process.env.OPENCCX_HOME = home;
   // Pass-through spy (no mockImplementation): records calls, the real read still happens.
   readSpy = spyOn(fs, "readFileSync");
   clearAnthropicAccountPoolState();
@@ -47,8 +47,8 @@ afterEach(() => {
   readSpy = undefined;
   clearAnthropicAccountPoolState();
   forgetAnthropicFailoverQuorum();
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 

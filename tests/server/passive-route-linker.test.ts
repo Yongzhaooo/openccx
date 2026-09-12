@@ -5,10 +5,10 @@ import {
   hasPassiveRouteLinker,
   resetPassiveRouteLinkerForTests,
 } from "../../src/server/passive-route-linker";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-const config = {} as OcxConfig;
-const routed = { baseUrl: "https://example.test" } as OcxProviderConfig;
+const config = {} as OccxConfig;
+const routed = { baseUrl: "https://example.test" } as OccxProviderConfig;
 
 describe("passive route linker slot", () => {
   beforeEach(() => resetPassiveRouteLinkerForTests());

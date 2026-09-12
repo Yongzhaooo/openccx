@@ -72,10 +72,10 @@ function captureEnvelopes(captured: NativeEnvelopeSnapshot[]): (path: string) =>
 }
 
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), "ocx-native-profile-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-native-profile-"));
   roots.push(root);
   const codexHome = join(root, "codex");
-  const configDir = join(root, "opencodex");
+  const configDir = join(root, "openccx");
   mkdirSync(codexHome, { recursive: true });
   mkdirSync(configDir, { recursive: true });
   writeFileSync(join(codexHome, "config.toml"), 'cli_auth_credentials_store = "file"\n');
@@ -300,9 +300,9 @@ describe("native main profile transactions", () => {
     }
   }, SPAWN_BUDGET_MS);
 
-  test("the same canonical CODEX_HOME serializes different OpenCodex config roots", async () => {
+  test("the same canonical CODEX_HOME serializes different Openccx config roots", async () => {
     const f = fixture();
-    const secondConfigDir = join(f.root, "opencodex-second");
+    const secondConfigDir = join(f.root, "openccx-second");
     mkdirSync(secondConfigDir, { recursive: true });
     const ready = join(f.root, "canonical-home-ready");
     const release = join(f.root, "canonical-home-release");
@@ -327,13 +327,13 @@ describe("native main profile transactions", () => {
     }
   }, SPAWN_BUDGET_MS);
 
-  test("shares one vault while preventing another OPENCODEX_HOME from finishing or cancelling a stage", async () => {
+  test("shares one vault while preventing another OPENCCX_HOME from finishing or cancelling a stage", async () => {
     const f = fixture();
     const first = new NativeProfileManager(f.options);
     await first.register("personal");
     const stage = await first.prepareStage();
     writeFileSync(join(stage.stagingCodexHome, "auth.json"), f.target, { mode: 0o600 });
-    const secondConfigDir = join(f.root, "opencodex-second");
+    const secondConfigDir = join(f.root, "openccx-second");
     mkdirSync(secondConfigDir, { mode: 0o700 });
     const second = new NativeProfileManager({ ...f.options, configDir: secondConfigDir });
 
@@ -352,9 +352,9 @@ describe("native main profile transactions", () => {
     expect((await second.list()).profiles.map(profile => profile.label).sort()).toEqual(["personal", "work"]);
   });
 
-  test("shares journal quarantine and manual recovery state across OPENCODEX_HOME roots", async () => {
+  test("shares journal quarantine and manual recovery state across OPENCCX_HOME roots", async () => {
     const f = await enrolledFixture();
-    const secondConfigDir = join(f.root, "opencodex-second");
+    const secondConfigDir = join(f.root, "openccx-second");
     mkdirSync(secondConfigDir, { mode: 0o700 });
     const second = new NativeProfileManager({ ...f.options, configDir: secondConfigDir });
     const originalAuth = readFileSync(f.manager.context.authPath, "utf8");
@@ -1234,7 +1234,7 @@ describe("native main profile transactions", () => {
 
     expect(caught).toBeInstanceOf(NativeProfileError);
     expect((caught as NativeProfileError).code).toBe("RECOVERY_REQUIRED");
-    expect((caught as NativeProfileError).message).toContain("ocx account main recover");
+    expect((caught as NativeProfileError).message).toContain("occx account main recover");
     expect(readFileSync(f.manager.context.authPath, "utf8")).toBe(authBefore);
     expect(readFileSync(f.manager.context.vaultPath, "utf8")).toBe(vaultBefore);
     expect(readFileSync(f.manager.context.journalPath, "utf8")).toBe(journalBefore);

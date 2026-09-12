@@ -19,7 +19,7 @@ import { catalogHasRoutedEntries, parseCatalogJson } from "./catalog/parsing";
 import { codexHistoryBackupId, validateCodexHistoryBackupManifest } from "./history-manifest";
 import {
   hasInjectedCodexRouting,
-  OCX_SECTION_MARKER,
+  OCCX_SECTION_MARKER,
   providerTableString,
   rootTomlString,
 } from "./injected-marker";
@@ -77,8 +77,8 @@ const CONFIG_FILE_NAME = basename(CODEX_CONFIG_PATH);
 const PROFILE_FILE_NAME = basename(CODEX_PROFILE_PATH);
 const CATALOG_FILE_NAME = basename(DEFAULT_CATALOG_PATH);
 const MODELS_CACHE_FILE_NAME = basename(CODEX_MODELS_CACHE_PATH);
-const JOURNAL_FILE_NAME = "opencodex-journal.json";
-const ROUTED_CATALOG_DESCRIPTION_PREFIX = "Routed via opencodex → ";
+const JOURNAL_FILE_NAME = "openccx-journal.json";
+const ROUTED_CATALOG_DESCRIPTION_PREFIX = "Routed via openccx → ";
 const MAX_ROLLOUT_INSPECTION_BYTES = 64 * 1024 * 1024;
 const ROLLOUT_READ_CHUNK_BYTES = 64 * 1024;
 
@@ -223,7 +223,7 @@ function classifyToml(
   const result = classify(read.content);
   if (result === "residue") return { kind: "residue", surface, path: read.path };
   if (result === "indeterminate") {
-    return indeterminate(surface, read.path, "OpenCodex-shaped TOML does not match a complete routed grammar");
+    return indeterminate(surface, read.path, "Openccx-shaped TOML does not match a complete routed grammar");
   }
   return { kind: "clean" };
 }
@@ -309,14 +309,14 @@ function inspectConfig(codexHome: string, path: string): ConfigObservation {
   if (hasInjectedCodexRouting(read.content)) {
     classification = { kind: "residue", surface: "config", path: read.path };
   } else {
-    const hasMarker = read.content.includes(OCX_SECTION_MARKER);
+    const hasMarker = read.content.includes(OCCX_SECTION_MARKER);
     const provider = rootTomlString(read.content, "model_provider");
-    const providerBaseUrl = providerTableString(read.content, "opencodex", "base_url");
-    if (hasMarker || provider === "opencodex" || providerBaseUrl !== null) {
+    const providerBaseUrl = providerTableString(read.content, "openccx", "base_url");
+    if (hasMarker || provider === "openccx" || providerBaseUrl !== null) {
       classification = indeterminate(
         "config",
         read.path,
-        "OpenCodex-shaped TOML does not match a complete routed grammar",
+        "Openccx-shaped TOML does not match a complete routed grammar",
       );
     }
   }
@@ -325,16 +325,16 @@ function inspectConfig(codexHome: string, path: string): ConfigObservation {
 
 function classifyProfile(path: string): NativeRoutedResidueResult {
   return classifyToml("profile", path, content => {
-    const generatedFallback = content.startsWith("# OpenCodex proxy fallback config (Design B)")
+    const generatedFallback = content.startsWith("# Openccx proxy fallback config (Design B)")
       && rootTomlString(content, "openai_base_url") !== null;
-    const generatedNamedProfile = content.startsWith("# OpenCodex proxy profile — use with:")
+    const generatedNamedProfile = content.startsWith("# Openccx proxy profile — use with:")
       && hasInjectedCodexRouting(content);
     if (generatedFallback || generatedNamedProfile) return "residue";
     return "indeterminate";
   });
 }
 
-function isOcxRoutedCatalogEntry(entry: Record<string, unknown>): boolean {
+function isOccxRoutedCatalogEntry(entry: Record<string, unknown>): boolean {
   return typeof entry.description === "string"
     && entry.description.startsWith(ROUTED_CATALOG_DESCRIPTION_PREFIX);
 }
@@ -353,11 +353,11 @@ function classifyCatalogLike(
   if (read.kind === "indeterminate") return indeterminate(surface, path, read.reason);
   const catalog = parseCatalogJson(read.content);
   if (!catalog) return indeterminate(surface, path, "malformed catalog JSON");
-  if ((catalog.models ?? []).some(isOcxRoutedCatalogEntry)) {
+  if ((catalog.models ?? []).some(isOccxRoutedCatalogEntry)) {
     return { kind: "residue", surface, path: read.path };
   }
   if (catalogHasRoutedEntries(catalog)) {
-    return indeterminate(surface, read.path, "routed catalog rows lack the OpenCodex authorship signature");
+    return indeterminate(surface, read.path, "routed catalog rows lack the Openccx authorship signature");
   }
   return { kind: "clean" };
 }
@@ -411,9 +411,9 @@ function classifyPartialWrites(targetPaths: string[]): NativeRoutedResidueResult
       return indeterminate("partial-write", target.path, errorReason(error));
     }
     for (const name of names) {
-      const match = /^(.*)\.ocx\.\d+\.\d+\.tmp$/.exec(name);
+      const match = /^(.*)\.occx\.\d+\.\d+\.tmp$/.exec(name);
       if (match?.[1] && target.names.has(match[1])) {
-        return indeterminate("partial-write", join(target.path, name), "OpenCodex atomic-write artifact is still present");
+        return indeterminate("partial-write", join(target.path, name), "Openccx atomic-write artifact is still present");
       }
     }
   }
@@ -509,7 +509,7 @@ function classifyReferencedRollout(
   if (!first || !latest) {
     return indeterminate(surface, resolved.path, "referenced rollout has no session_meta metadata");
   }
-  let hasOpenCodexProvider = false;
+  let hasOpenccxProvider = false;
   for (const [position, payload] of [["first", first], ["latest", latest]] as const) {
     if (payload.id !== reference.id) {
       return indeterminate(surface, resolved.path, `${position} session_meta does not identify the referenced thread`);
@@ -517,9 +517,9 @@ function classifyReferencedRollout(
     if (typeof payload.model_provider !== "string" || !payload.model_provider) {
       return indeterminate(surface, resolved.path, `${position} session_meta has no provider metadata`);
     }
-    hasOpenCodexProvider = hasOpenCodexProvider || payload.model_provider === "opencodex";
+    hasOpenccxProvider = hasOpenccxProvider || payload.model_provider === "openccx";
   }
-  return hasOpenCodexProvider
+  return hasOpenccxProvider
     ? { kind: "residue", surface, path: resolved.path }
     : { kind: "clean" };
 }
@@ -566,14 +566,14 @@ function classifyHistoryDatabase(path: string): NativeRoutedResidueResult {
         return indeterminate("history", resolved.path, "history row has no provider metadata");
       }
     }
-    // A bare opencodex row is not proof that OpenCodex owns a reversible transition: it may
+    // A bare openccx row is not proof that Openccx owns a reversible transition: it may
     // belong to any routed provider and has no native target without the backup manifest.
     // Keep detecting interrupted metadata on native rows, but let the manifest classifier
     // below be the authority for provenance-backed routed rows.
     const rollouts = classifyReferencedRollouts(
       "history",
       rows
-        .filter(row => row.model_provider !== "opencodex")
+        .filter(row => row.model_provider !== "openccx")
         .map(row => ({ id: row.id, path: row.rollout_path })),
     );
     if (rollouts.kind !== "clean") return rollouts;
@@ -630,7 +630,7 @@ function classifyHistoryBackup(path: string, stateDatabasePath: string): NativeR
     : { kind: "clean" };
 }
 
-/** Read-only, fail-closed observation of every OpenCodex-routed Codex surface. */
+/** Read-only, fail-closed observation of every Openccx-routed Codex surface. */
 export function classifyNativeRoutedResidue(): NativeRoutedResidueResult {
   let codexHome: string;
   try {

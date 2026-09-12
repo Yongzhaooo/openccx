@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import type { ProviderAdapter } from "../../src/adapters/base";
 
 /**
@@ -24,7 +24,7 @@ import type { ProviderAdapter } from "../../src/adapters/base";
  * / planWebSearch fork (core.ts ~L1516).
  */
 
-const PREV_HOME = process.env.OPENCODEX_HOME;
+const PREV_HOME = process.env.OPENCCX_HOME;
 
 // --- Activation spies, flipped by the stubbed runners ---
 let imageBridgeRun = false;
@@ -41,12 +41,12 @@ let mockWsPlan: unknown = undefined;
 let handleResponses: typeof import("../../src/server/responses")["handleResponses"];
 
 beforeAll(async () => {
-  process.env.OPENCODEX_HOME = join(tmpdir(), "ocx-test-" + randomUUID());
+  process.env.OPENCCX_HOME = join(tmpdir(), "occx-test-" + randomUUID());
 
   const actualResolver = await import("../../src/server/adapter-resolve");
   mock.module("../../src/server/adapter-resolve", () => ({
     ...actualResolver,
-    resolveAdapter(provider: OcxProviderConfig) {
+    resolveAdapter(provider: OccxProviderConfig) {
       const base = {
         name: "test",
         buildRequest: async () => ({ url: provider.baseUrl, method: "POST", headers: {}, body: "" }),
@@ -112,13 +112,13 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  if (PREV_HOME === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = PREV_HOME;
+  if (PREV_HOME === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = PREV_HOME;
   mock.restore();
 });
 
 /** Routed (non-OpenAI) keyed provider + an xAI provider with an API key so the real planImageBridge returns a plan. */
-function makeConfig(): OcxConfig {
+function makeConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "fixture",
@@ -127,7 +127,7 @@ function makeConfig(): OcxConfig {
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", apiKey: "xai-test-token" },
     },
     images: { bridgeEnabled: true },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function post(stream: boolean, tools: unknown[], toolChoice?: unknown): Promise<Response> {

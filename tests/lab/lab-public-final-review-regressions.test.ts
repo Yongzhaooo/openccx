@@ -70,7 +70,7 @@ function bundle(config: string, day = "2026-08-12") {
 }
 
 test("raw community import restores provenance for an exact own-publisher bundle", () => {
-  const home = configDir("ocx-cl10-raw-own-import-");
+  const home = configDir("occx-cl10-raw-own-import-");
   const own = bundle(home);
   expect(listLocalPublicOrigins(home)).toEqual([]);
 
@@ -82,7 +82,7 @@ test("raw community import restores provenance for an exact own-publisher bundle
 });
 
 test("purge provenance salvage does not truncate valid markers at the operational quota", () => {
-  const home = configDir("ocx-cl10-purge-origin-overflow-");
+  const home = configDir("occx-cl10-purge-origin-overflow-");
   ensureLabDirs(home);
   const dir = labPublicOriginDir(home);
 
@@ -102,7 +102,7 @@ test("purge provenance salvage does not truncate valid markers at the operationa
 test.skipIf(process.platform === "win32")(
   "export purge keeps failing closed on retry until POSIX deletion durability is established",
   () => {
-    const home = configDir("ocx-cl10-export-delete-durability-");
+    const home = configDir("occx-cl10-export-delete-durability-");
     const own = bundle(home);
     writePublicEvidenceBundle(own, home);
 

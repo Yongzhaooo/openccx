@@ -1,6 +1,6 @@
-import { namespacedToolName, toolChoiceAliases, type OcxRequestOptions, type OcxTool } from "../../types";
+import { namespacedToolName, toolChoiceAliases, type OccxRequestOptions, type OccxTool } from "../../types";
 
-export const OCX_RESPONSES_TOOL_PROVIDER = "opencodex-responses";
+export const OCCX_RESPONSES_TOOL_PROVIDER = "openccx-responses";
 export const CODEX_EXEC_COMMAND_TOOL = "exec_command";
 export const CODEX_SHELL_COMMAND_TOOL = "shell_command";
 /** Codex Desktop unified-exec client tool. Companion of `wait`; not an `exec_command` schema alias. */
@@ -37,7 +37,7 @@ export function resolveShellBridgeAliasKey<T>(
   return undefined;
 }
 
-export function cursorToolChoiceAliases(tool: Pick<OcxTool, "namespace" | "name">): string[] {
+export function cursorToolChoiceAliases(tool: Pick<OccxTool, "namespace" | "name">): string[] {
   const aliases = new Set(toolChoiceAliases(tool));
   if (isBareCodexShellBridgeTool(tool)) {
     for (const alias of CODEX_SHELL_BRIDGE_TOOL_NAMES) aliases.add(alias);
@@ -46,7 +46,7 @@ export function cursorToolChoiceAliases(tool: Pick<OcxTool, "namespace" | "name"
 }
 
 function catalogHasBareCodexShellBridge(
-  catalog: readonly Pick<OcxTool, "namespace" | "name">[],
+  catalog: readonly Pick<OccxTool, "namespace" | "name">[],
 ): boolean {
   return catalog.some(isBareCodexShellBridgeTool);
 }
@@ -59,9 +59,9 @@ function catalogHasBareCodexShellBridge(
  * Explicit wire names (`mcp__remote__exec_command`) always match the namespaced tool.
  */
 function cursorToolChoiceMatches(
-  tool: Pick<OcxTool, "namespace" | "name">,
+  tool: Pick<OccxTool, "namespace" | "name">,
   choiceName: string,
-  catalog: readonly Pick<OcxTool, "namespace" | "name">[],
+  catalog: readonly Pick<OccxTool, "namespace" | "name">[],
 ): boolean {
   if (isCodexShellBridgeToolName(choiceName)) {
     if (catalogHasBareCodexShellBridge(catalog)) {
@@ -75,12 +75,12 @@ function cursorToolChoiceMatches(
     && !catalog.some(candidate => candidate.name === choiceName);
 }
 
-export function isBareCodexShellBridgeTool(tool: Pick<OcxTool, "namespace" | "name">): boolean {
+export function isBareCodexShellBridgeTool(tool: Pick<OccxTool, "namespace" | "name">): boolean {
   return !tool.namespace && isCodexShellBridgeToolName(tool.name);
 }
 
 function isCursorResponsesProvider(namespace: string | undefined): boolean {
-  return !namespace || namespace === OCX_RESPONSES_TOOL_PROVIDER;
+  return !namespace || namespace === OCCX_RESPONSES_TOOL_PROVIDER;
 }
 
 const CURSOR_EXECUTION_PATH_TOOL_NAMES = [
@@ -90,13 +90,13 @@ const CURSOR_EXECUTION_PATH_TOOL_NAMES = [
 ] as const;
 
 /** True for the Codex execution path that must survive Cursor transport truncation. */
-export function isCursorExecutionPathTool(tool: Pick<OcxTool, "namespace" | "name">): boolean {
+export function isCursorExecutionPathTool(tool: Pick<OccxTool, "namespace" | "name">): boolean {
   return isCursorResponsesProvider(tool.namespace)
     && (CURSOR_EXECUTION_PATH_TOOL_NAMES as readonly string[]).includes(tool.name);
 }
 
 /** `wait` only resumes a yielded exec cell; it is unusable without an execution-path tool. */
-export function isCursorWaitTool(tool: Pick<OcxTool, "namespace" | "name">): boolean {
+export function isCursorWaitTool(tool: Pick<OccxTool, "namespace" | "name">): boolean {
   return isCursorResponsesProvider(tool.namespace) && tool.name === CODEX_WAIT_TOOL;
 }
 
@@ -105,7 +105,7 @@ export function isCursorWaitTool(tool: Pick<OcxTool, "namespace" | "name">): boo
  * evaluated in a V8 isolate, not a shell command string.
  */
 export function isCursorCodeModeExecTool(
-  tool: Pick<OcxTool, "namespace" | "name" | "freeform">,
+  tool: Pick<OccxTool, "namespace" | "name" | "freeform">,
 ): boolean {
   return isCursorResponsesProvider(tool.namespace)
     && tool.name === CODEX_UNIFIED_EXEC_TOOL
@@ -124,8 +124,8 @@ export function isCursorCodeModeExecTool(
  * is not Node, \`apply_patch\` rejected because it too is only a nested helper here).
  */
 export function cursorRequestUsesCodeMode(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): boolean {
   const catalog = tools ?? [];
   const visible = catalog.filter(tool => cursorToolAllowedByChoice(tool, toolChoice, catalog));
@@ -133,23 +133,23 @@ export function cursorRequestUsesCodeMode(
 }
 
 /** @deprecated Prefer isBareCodexShellBridgeTool; kept for older call sites/tests. */
-export function isBareCodexExecCommandTool(tool: Pick<OcxTool, "namespace" | "name">): boolean {
+export function isBareCodexExecCommandTool(tool: Pick<OccxTool, "namespace" | "name">): boolean {
   return isBareCodexShellBridgeTool(tool);
 }
 
-export function cursorRequestHasShellAlias(tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined): boolean {
+export function cursorRequestHasShellAlias(tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined): boolean {
   return tools?.some(isBareCodexExecCommandTool) ?? false;
 }
 
 export function cursorRequestHasExecutionPath(
-  tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined,
+  tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined,
 ): boolean {
   return tools?.some(isCursorExecutionPathTool) ?? false;
 }
 
 export function cursorRequestAdvertisesApplyPatch(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): boolean {
   const catalog = tools ?? [];
   return catalog.some(tool => !tool.namespace && tool.name === CODEX_APPLY_PATCH_TOOL && tool.freeform === true && cursorToolAllowedByChoice(tool, toolChoice, catalog));
@@ -161,12 +161,12 @@ export function isCursorStructuredEditToolName(name: string): boolean {
 
 /** Internal provenance gate for synthetic edits after prompt filtering and catalog budgeting. */
 export function isCursorSyntheticStructuredEditTool(
-  tool: Pick<OcxTool, "namespace" | "name" | "cursorStructuredEdit">,
+  tool: Pick<OccxTool, "namespace" | "name" | "cursorStructuredEdit">,
 ): boolean {
   return !tool.namespace && tool.cursorStructuredEdit === true && isCursorStructuredEditToolName(tool.name);
 }
 
-const CURSOR_CLIENT_TOOL_WIRE_PREFIX = "ocx_client_";
+const CURSOR_CLIENT_TOOL_WIRE_PREFIX = "occx_client_";
 const CURSOR_PROXY_OWNED_BARE_TOOL_NAMES = new Set([
   CODEX_UNIFIED_EXEC_TOOL,
   CODEX_WAIT_TOOL,
@@ -180,13 +180,13 @@ const CURSOR_PROXY_OWNED_BARE_TOOL_NAMES = new Set([
 
 /** Avoid collisions with Cursor's private bare-tool namespace. */
 function isCursorBareClientToolWireAliased(
-  tool: Pick<OcxTool, "namespace" | "name">,
+  tool: Pick<OccxTool, "namespace" | "name">,
 ): boolean {
   return !tool.namespace
     && !CURSOR_PROXY_OWNED_BARE_TOOL_NAMES.has(tool.name);
 }
 
-export function cursorToolWireName(tool: Pick<OcxTool, "namespace" | "name">): string {
+export function cursorToolWireName(tool: Pick<OccxTool, "namespace" | "name">): string {
   if (isCursorBareClientToolWireAliased(tool)) {
     return `${CURSOR_CLIENT_TOOL_WIRE_PREFIX}${tool.name}`;
   }
@@ -202,11 +202,11 @@ export function clientSemanticToolNameFromCursorWire(name: string): string {
 /**
  * Cursor's harness shows MCP tools to the model as `mcp_<providerIdentifier>_<toolName>`; models
  * sometimes call that display name verbatim instead of the advertised short name (live 20:41/21:00
- * sessions: `mcp_opencodex-responses_exec_command` / `mcp_opencodex-responses_shell_command`).
+ * sessions: `mcp_openccx-responses_exec_command` / `mcp_openccx-responses_shell_command`).
  * Fold the display prefix back to the advertised wire name, and treat `shell_command` /
  * `exec_command` as the same Codex shell bridge, so alias thrash does not become "tool not found".
  */
-const CURSOR_MCP_DISPLAY_PREFIX = `mcp_${OCX_RESPONSES_TOOL_PROVIDER}_`;
+const CURSOR_MCP_DISPLAY_PREFIX = `mcp_${OCCX_RESPONSES_TOOL_PROVIDER}_`;
 
 export function normalizeCursorWireName(name: string): string {
   return name.startsWith(CURSOR_MCP_DISPLAY_PREFIX) ? name.slice(CURSOR_MCP_DISPLAY_PREFIX.length) : name;
@@ -218,7 +218,7 @@ export function normalizeCursorWireName(name: string): string {
  * (Pi) parse that text and then cannot dispatch the undeclared display name. Rewrite the
  * display alias to the advertised wire name ONLY inside the marker pair — prose that
  * merely mentions the alias stays untouched, and the scope guard is the exact
- * `mcp_${OCX_RESPONSES_TOOL_PROVIDER}_` prefix, never generic `mcp_`.
+ * `mcp_${OCCX_RESPONSES_TOOL_PROVIDER}_` prefix, never generic `mcp_`.
  * Known limit (recorded in devlog 230): a marker split across two streaming deltas is
  * not rewritten; tail-buffering is deferred until a live trace shows split markers.
  */
@@ -239,9 +239,9 @@ export function responsesToolNameFromCursorWire(name: string, cursorToolNameMap?
 }
 
 export function cursorToolAllowedByChoice(
-  tool: Pick<OcxTool, "namespace" | "name">,
-  toolChoice: OcxRequestOptions["toolChoice"] | undefined,
-  catalog: readonly Pick<OcxTool, "namespace" | "name">[] = [tool],
+  tool: Pick<OccxTool, "namespace" | "name">,
+  toolChoice: OccxRequestOptions["toolChoice"] | undefined,
+  catalog: readonly Pick<OccxTool, "namespace" | "name">[] = [tool],
 ): boolean {
   if (!toolChoice || toolChoice === "auto" || toolChoice === "required") return true;
   if (toolChoice === "none") return false;

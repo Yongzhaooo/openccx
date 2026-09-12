@@ -9,7 +9,7 @@
  * codepoints literally, so the user sees "citeturn1view0turn1view1" in the answer and in
  * the saved transcript (#3150).
  *
- * OpenCodex neither produces nor understands this grammar — it arrives as ordinary
+ * Openccx neither produces nor understands this grammar — it arrives as ordinary
  * assistant text from a ChatGPT-derived backend (GitHub Copilot in the report). The proxy
  * is the last place that can remove it before a client that cannot render it.
  *

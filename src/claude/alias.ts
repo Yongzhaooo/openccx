@@ -3,15 +3,15 @@
  *
  * Claude Code's /model picker only lists discovery entries whose id literally
  * begins with `claude` or `anthropic`, so routed models are exposed as
- * `claude-ocx-<provider>--<model>` with an honest display_name. Aliases must be
+ * `claude-occx-<provider>--<model>` with an honest display_name. Aliases must be
  * deterministic, reversible, and STABLE across releases (picker selections
  * persist to Claude Code's settings.json `model` field).
  *
  * Versioned prefixes:
- *  - `claude-ocx-` (v1) — legacy / plain model ids with no `/` or `~`. Decode
+ *  - `claude-occx-` (v1) — legacy / plain model ids with no `/` or `~`. Decode
  *    is literal (no escape expansion), so a persisted model id that literally
  *    contained the two-char sequences `~s` / `~t` keeps resolving.
- *  - `claude-ocx2-` (v2) — used whenever the model id needs escape encoding
+ *  - `claude-occx2-` (v2) — used whenever the model id needs escape encoding
  *    (`/` → `~s`, `~` → `~t`). Decode expands those escapes. New slash/tilde
  *    models always mint v2 so they cannot collide with v1 literals.
  *
@@ -19,7 +19,7 @@
  *  - providers containing `--` or `/` are not aliased (split boundary safety);
  *  - model ids MAY contain `/` or `~` — minted under the v2 prefix with escapes
  *    (e.g. openrouter `anthropic/claude-opus-4-8` →
- *    `claude-ocx2-openrouter--anthropic~sclaude-opus-4-8`);
+ *    `claude-occx2-openrouter--anthropic~sclaude-opus-4-8`);
  *  - model ids MAY contain `--` (resolve splits on the FIRST `--` only);
  *  - native OpenAI slugs use the pseudo-provider `native` and resolve back to
  *    the bare slug; a real provider named "native" is therefore never aliased.
@@ -28,9 +28,9 @@
 import { desktop3pAlias } from "./desktop-3p";
 
 /** Legacy / plain readable prefix (literal model portion on decode). */
-export const CLAUDE_ALIAS_PREFIX_V1 = "claude-ocx-";
+export const CLAUDE_ALIAS_PREFIX_V1 = "claude-occx-";
 /** Escape-encoded readable prefix (`~s`/`~t` expanded on decode). */
-export const CLAUDE_ALIAS_PREFIX_V2 = "claude-ocx2-";
+export const CLAUDE_ALIAS_PREFIX_V2 = "claude-occx2-";
 /**
  * Current write prefix for plain (unescaped) model ids.
  * Escape-needing models mint {@link CLAUDE_ALIAS_PREFIX_V2} instead.
@@ -110,7 +110,7 @@ export function aliasForNative(slug: string): string | null {
  * routed -> "<provider>/<model>", native -> bare slug. Null when not an alias.
  */
 export function resolveAlias(id: string): string | null {
-  // Check v2 before v1 for clarity (prefixes are disjoint: ocx2 vs ocx-).
+  // Check v2 before v1 for clarity (prefixes are disjoint: occx2 vs occx-).
   if (id.startsWith(CLAUDE_ALIAS_PREFIX_V2)) {
     const parts = splitAlias(id, CLAUDE_ALIAS_PREFIX_V2);
     if (!parts) return null;
@@ -131,7 +131,7 @@ export function resolveAlias(id: string): string | null {
 /**
  * Claude Code (CLI) surface alias — devlog 050 + audit 051 #2.
  *
- * The readable `claude-ocx*` form when representable; otherwise the desktop-3p
+ * The readable `claude-occx*` form when representable; otherwise the desktop-3p
  * hash so the model still appears in discovery (collisions follow the same
  * first-wins policy as the desktop registry — audit 051 #1). Real Anthropic
  * models pass through unchanged (they must keep hitting the sk-ant passthrough).

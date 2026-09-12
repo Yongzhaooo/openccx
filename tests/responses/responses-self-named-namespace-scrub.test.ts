@@ -10,12 +10,12 @@
 import { afterEach, expect, test } from "bun:test";
 import { handleResponses } from "../../src/server/responses";
 import { scrubSelfNamedToolCallNamespace } from "../../src/server/responses-self-named-namespace-scrub";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-function forwardConfig(): OcxConfig {
+function forwardConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -27,7 +27,7 @@ function forwardConfig(): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 const requestBody = {

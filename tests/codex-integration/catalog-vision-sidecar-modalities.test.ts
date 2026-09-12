@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { applyProviderConfigHints, gatherRoutedModels } from "../../src/codex/catalog";
 import { clearModelCache } from "../../src/codex/model-cache";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { deriveComboCatalogModel } from "../../src/codex/catalog";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { enrichProviderFromRegistry } from "../../src/providers/derive";
@@ -9,7 +9,7 @@ import { CURSOR_NO_VISION_MODELS, CURSOR_STATIC_MODELS } from "../../src/adapter
 import { modelInList } from "../../src/types";
 import type { CatalogModel } from "../../src/types";
 
-const base: OcxProviderConfig = {
+const base: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://opencode.ai/zen/go/v1",
   noVisionModels: ["glm-5.2"],
@@ -43,7 +43,7 @@ describe("vision-sidecar catalog modalities", () => {
   });
 
   test("explicit modelInputModalities config still wins as the base, plus image", () => {
-    const prov: OcxProviderConfig = { ...base, modelInputModalities: { "glm-5.2": ["text"] } };
+    const prov: OccxProviderConfig = { ...base, modelInputModalities: { "glm-5.2": ["text"] } };
     const hinted = applyProviderConfigHints("opencode-go", prov, { id: "glm-5.2", provider: "opencode-go" });
     expect(hinted.inputModalities).toEqual(["text", "image"]);
   });
@@ -53,7 +53,7 @@ describe("vision-sidecar catalog modalities", () => {
     // modelInputModalities declaration exactly like a noVisionModels entry, but the catalog hint
     // pass only checked noVisionModels — so sidecar-covered models stayed advertised text-only
     // and the Codex app blocked image paste before the sidecar could run.
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.example/v1",
       modelInputModalities: { "deepseek-chat": ["text"] },
@@ -63,7 +63,7 @@ describe("vision-sidecar catalog modalities", () => {
   });
 
   test("modelInputModalities declaring image stays untouched (no duplication)", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.example/v1",
       modelInputModalities: { "glm-5.3": ["text", "image"] },
@@ -73,7 +73,7 @@ describe("vision-sidecar catalog modalities", () => {
   });
 
   test("audio-only modelInputModalities do not advertise image", () => {
-    const prov: OcxProviderConfig = {
+    const prov: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.example/v1",
       modelInputModalities: { "audio-model": ["audio"] },
@@ -93,7 +93,7 @@ describe("vision-sidecar catalog modalities", () => {
   });
 
   test("MiMo token-plan sends only the Pro model through the sidecar (#1927)", () => {
-    const canonical: OcxProviderConfig = {
+    const canonical: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://token-plan-cn.xiaomimimo.com/v1",
       authMode: "key",
@@ -109,7 +109,7 @@ describe("vision-sidecar catalog modalities", () => {
       provider: "mimo",
     }).inputModalities).toBeUndefined();
 
-    const customDestination: OcxProviderConfig = {
+    const customDestination: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://mimo-compatible.example/v1",
       authMode: "key",
@@ -356,7 +356,7 @@ describe("vision-capable provider models feed combo modalities", () => {
       adapter: "openai-chat",
       baseUrl: "https://api.x.ai/v1",
       modelInputModalities: { "grok-4.3": ["text"] },
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     enrichProviderFromRegistry("xai", prov);
     // The user's explicit narrowing still wins.
     expect(prov.modelInputModalities?.["grok-4.3"]).toEqual(["text"]);

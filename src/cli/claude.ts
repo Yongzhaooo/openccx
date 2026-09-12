@@ -1,11 +1,11 @@
 /**
- * `ocx claude [claude args...]` — launch Claude Code through the local proxy,
+ * `occx claude [claude args...]` — launch Claude Code through the local proxy,
  * or natively when Claude routing is explicitly disabled.
  *
  * Mirrors `ccr code` UX (devlog/260711_claude_inbound/020, 003 E1/E2/E5/G1):
  * ensures the proxy is running, injects the Anthropic env slots, then execs the
  * `claude` CLI with stdio inherited. User-exported env wins except when a stale
- * loopback opencodex base URL points at a different proxy port.
+ * loopback openccx base URL points at a different proxy port.
  */
 import { spawn } from "node:child_process";
 import { loadConfig } from "../config";
@@ -16,7 +16,7 @@ import { claudeConfigDir, refreshGatewayModelCacheFromProxy } from "../claude/ga
 import { commandInvocation } from "../lib/win-exec";
 import { isProxyAdmissionSecret } from "../server/auth-cors";
 import { findLiveProxy } from "../server/proxy-liveness";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { configuredAdminToken } from "../lib/admin-secrets";
 import { localAdmissionToken, localInferenceDestination, localLoopbackInferencePorts, localManagementOrigin } from "../lib/local-destinations";
 import { PROXY_MARKER, ownAdmissionTokens, defaultAuthDetectDeps, detectClaudeAuth, type AuthDetectDeps } from "../claude/auth-detect";
@@ -64,8 +64,8 @@ function deleteUntrustedAnthropicSlots(env: ClaudeLaunchEnv, deps: ClaudeEnvDeps
     const value = env[name];
     if (value !== undefined && value !== "" && !exported.has(name)) delete env[name];
   }
-  delete env.OCX_PRE_BUN_ANTHROPIC_ENV;
-  delete env.OCX_NODE_LAUNCH_CONTEXT;
+  delete env.OCCX_PRE_BUN_ANTHROPIC_ENV;
+  delete env.OCCX_NODE_LAUNCH_CONTEXT;
 }
 
 /**
@@ -156,10 +156,10 @@ function targetsClaudeRoutingTarget(value: string | undefined, target: ClaudeRou
  * token vars triggers Claude Code's auth-conflict warning, 003 E1), and never
  * preserves Anthropic variables proven to exist in the parent Node launcher,
  * apart from stale loopback ANTHROPIC_BASE_URL values owned by a previous
- * opencodex launch. Unproven ambient values fail closed as project dotenv.
+ * openccx launch. Unproven ambient values fail closed as project dotenv.
  */
 export function buildClaudeEnv(
-  config: OcxConfig,
+  config: OccxConfig,
   portOrTarget: number | ClaudeRoutingTarget,
   base: ClaudeLaunchEnv,
   contextWindows: Record<string, number> = {},
@@ -181,7 +181,7 @@ export function buildClaudeEnv(
   // Step 1 — strip OUR OWN dummy from the inherited environment before anything reads
   // or writes the token slot. setDefault below preserves any non-empty value, so a
   // stale marker left in place would suppress the admission key and then be removed,
-  // leaving the child with no token at all (audit R2-1). It is opencodex state, never
+  // leaving the child with no token at all (audit R2-1). It is openccx state, never
   // user auth, so dropping it unconditionally is safe.
   if (env.ANTHROPIC_AUTH_TOKEN?.trim() === PROXY_MARKER) delete env.ANTHROPIC_AUTH_TOKEN;
   // Step 1b — drop Anthropic credentials AND destinations that Bun may have synthesized
@@ -201,7 +201,7 @@ export function buildClaudeEnv(
   //
   // Direct `bun src/cli/index.ts` therefore loses ambient Anthropic values. That is a
   // real cost to a documented entry point, and the escape hatch is the launcher: run
-  // through `ocx` (the published bin) and genuine shell exports are preserved by proof.
+  // through `occx` (the published bin) and genuine shell exports are preserved by proof.
   deleteUntrustedAnthropicSlots(env, deps);
   const setDefault = (name: string, value: string | undefined) => {
     if (value === undefined || value.length === 0) return;
@@ -225,7 +225,7 @@ export function buildClaudeEnv(
         && !ownLocalPorts.includes(effectivePort)
         && parsed.origin !== managedBaseUrl) {
         const replacement = managedBaseUrl;
-        console.error(`⚠ Replacing stale opencodex ANTHROPIC_BASE_URL ${parsed.origin} with ${replacement}.`);
+        console.error(`⚠ Replacing stale openccx ANTHROPIC_BASE_URL ${parsed.origin} with ${replacement}.`);
         env.ANTHROPIC_BASE_URL = replacement;
         // The credentials in this environment were paired with the destination we just
         // replaced. An admission secret minted by that other proxy is not valid here, and
@@ -251,7 +251,7 @@ export function buildClaudeEnv(
   // admission key or dummy marker (see server/claude-messages.ts).
   // A bind that demands admission needs a credential the machine can actually present, which
   // is wider than `config.apiKeys`: the service installs its data-plane secret as
-  // `OPENCODEX_API_AUTH_TOKEN` / the hardened token file, and that is the ladder the Codex
+  // `OPENCCX_API_AUTH_TOKEN` / the hardened token file, and that is the ladder the Codex
   // provider table already uses. Never the admin token (reviewer constraint on #4236).
   const hostAdmissionToken = destination?.requiresAdmissionToken === true
     ? localAdmissionToken(config)
@@ -315,7 +315,7 @@ export function buildClaudeEnv(
     const carried = env.ANTHROPIC_AUTH_TOKEN?.trim();
     if (!hasUserApiKey && (!carried || carried === PROXY_MARKER)) {
       console.error(
-        `⚠ ${managedBaseUrl} requires an opencodex data-plane credential and this launch carries none — `
+        `⚠ ${managedBaseUrl} requires an openccx data-plane credential and this launch carries none — `
         + "requests will be refused. Enable `unauthenticatedLoopbackListener` or bind the proxy to loopback.",
       );
     }
@@ -342,13 +342,13 @@ export function buildClaudeEnv(
   // this flag in the spawn env, Claude Code strips provider-managed vars
   // (ANTHROPIC_BASE_URL/AUTH_TOKEN/API_KEY, model slots) from settings-sourced
   // env (managedEnv.ts), so a leftover cc-switch/CCR ~/.claude/settings.json
-  // env block cannot silently hijack proxy routing away from opencodex.
+  // env block cannot silently hijack proxy routing away from openccx.
   // setDefault: an explicit user export (e.g. =0, isEnvTruthy-false) still wins.
   // Intentional contract change: settings.env model slots are also stripped in
-  // ocx claude runs — use the top-level settings "model" field or opt out.
+  // occx claude runs — use the top-level settings "model" field or opt out.
   // Claude Code 2.1.206+ also treats this as a host-auth assertion. Injecting it
   // without a host token makes a valid claude.ai subscription look logged out,
-  // so the guard is only safe when opencodex actually owns authentication.
+  // so the guard is only safe when openccx actually owns authentication.
   if (hostOwnsAuthentication) {
     setDefault("CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST", "1");
   }
@@ -394,7 +394,7 @@ export function buildClaudeEnv(
  * This is the MANAGEMENT destination, not the inference one (#4236): `/api/claude-code` is
  * never served by the unauthenticated loopback listener, so it resolves through
  * `localManagementOrigin` — a hub's loopback management ingress when it has one, otherwise the
- * public bind — and keeps sending the local admin token. `enabled: false` is how `ocx claude`
+ * public bind — and keeps sending the local admin token. `enabled: false` is how `occx claude`
  * decides to launch natively, so a wrong destination here silently downgrades every launch.
  */
 export interface ClaudeCodeLiveState {
@@ -402,11 +402,11 @@ export interface ClaudeCodeLiveState {
   enabled?: boolean;
 }
 
-export async function fetchClaudeCodeState(config: OcxConfig, port: number, timeoutMs = 3_000): Promise<ClaudeCodeLiveState> {
+export async function fetchClaudeCodeState(config: OccxConfig, port: number, timeoutMs = 3_000): Promise<ClaudeCodeLiveState> {
   try {
     const headers = new Headers();
     const token = configuredAdminToken();
-    if (token) headers.set("x-opencodex-api-key", token);
+    if (token) headers.set("x-openccx-api-key", token);
     const res = await fetch(`${localManagementOrigin(config, port)}/api/claude-code`, {
       headers,
       signal: AbortSignal.timeout(timeoutMs),
@@ -423,7 +423,7 @@ export async function fetchClaudeCodeState(config: OcxConfig, port: number, time
   }
 }
 
-export async function fetchClaudeContextWindows(config: OcxConfig, port: number, timeoutMs = 3_000): Promise<Record<string, number>> {
+export async function fetchClaudeContextWindows(config: OccxConfig, port: number, timeoutMs = 3_000): Promise<Record<string, number>> {
   return (await fetchClaudeCodeState(config, port, timeoutMs)).contextWindows;
 }
 
@@ -470,7 +470,7 @@ export async function ensureProxyForClaude(deps: ClaudeProxyEnsureDeps = {}): Pr
   // is still settling startup work — the same just-started race the stop paths
   // already retry for (#764, SERVICE_STOP_LIVENESS). Only the attempts budget is
   // borrowed here; the probe timeout remains DEFAULT_PROBE_TIMEOUT_MS (750 ms).
-  // Without this, `ocx claude` can spawn a second proxy while the first is serving.
+  // Without this, `occx claude` can spawn a second proxy while the first is serving.
   const live = await (deps.findLiveProxy ?? findLiveProxy)({ attempts: 3 });
   if (live) return live.port;
   const cfgPort = loadConfig().port;
@@ -479,7 +479,7 @@ export async function ensureProxyForClaude(deps: ClaudeProxyEnsureDeps = {}): Pr
     detached: true,
     stdio: "ignore",
     windowsHide: true,
-    env: withProcessRuntimeProvenance({ ...process.env, OCX_SERVICE: "1" }),
+    env: withProcessRuntimeProvenance({ ...process.env, OCCX_SERVICE: "1" }),
   });
   child.unref();
   const deadline = Date.now() + 8_000;
@@ -492,10 +492,10 @@ export async function ensureProxyForClaude(deps: ClaudeProxyEnsureDeps = {}): Pr
 }
 
 export const CLAUDE_NATIVE_ROUTING_OFF =
-  "ℹ️ Claude Code routing is disabled in OpenCodex. Launching Claude Code natively. Enable Claude routing to use the proxy again.";
+  "ℹ️ Claude Code routing is disabled in Openccx. Launching Claude Code natively. Enable Claude routing to use the proxy again.";
 
 export const CLAUDE_NATIVE_LIVE_DISABLED =
-  "ℹ️ The running OpenCodex proxy has Claude Code routing disabled. Launching Claude Code natively. Restart the service after enabling routing.";
+  "ℹ️ The running Openccx proxy has Claude Code routing disabled. Launching Claude Code natively. Restart the service after enabling routing.";
 
 export type ClaudeLaunchPlan =
   | { kind: "routed" }
@@ -573,7 +573,7 @@ export function isProxyOnlyModelId(value: string, providerNames: readonly string
 }
 
 export function buildNativeClaudeEnv(
-  config: OcxConfig,
+  config: OccxConfig,
   base: ClaudeLaunchEnv,
   deps: ClaudeEnvDeps = {},
 ): ClaudeLaunchEnv {
@@ -659,7 +659,7 @@ export function shouldAllowRootSkipPermissions(
 
 export function rootSkipPermissionsNotice(env: ClaudeLaunchEnv): string {
   if (env.IS_SANDBOX === "1") {
-    return "⚠ Root --dangerously-skip-permissions requested: OpenCodex set IS_SANDBOX=1 to bypass Claude Code's root guard. OpenCodex did not create an OS sandbox; prefer running as a non-root user.";
+    return "⚠ Root --dangerously-skip-permissions requested: Openccx set IS_SANDBOX=1 to bypass Claude Code's root guard. Openccx did not create an OS sandbox; prefer running as a non-root user.";
   }
   return `⚠ Root --dangerously-skip-permissions requested: preserving user IS_SANDBOX=${env.IS_SANDBOX}; Claude Code's root guard remains in control.`;
 }
@@ -750,10 +750,10 @@ export async function cmdClaude(args: string[]): Promise<number> {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`⚠ Gateway model cache could not be refreshed: ${message}`);
   }
-  // Sync roster agents (devlog 070): subagentModels + self -> ~/.claude/agents/ocx-*.md.
+  // Sync roster agents (devlog 070): subagentModels + self -> ~/.claude/agents/occx-*.md.
   //
   // This used to run only when `route` was a number — i.e. never on a connected client, where
-  // `route` is a ClaudeRoutingTarget (#4236). So `~/.claude/agents/ocx-*.md` on a client stayed
+  // `route` is a ClaudeRoutingTarget (#4236). So `~/.claude/agents/occx-*.md` on a client stayed
   // whatever a previous standalone run had left, and the five delegable agents an operator saw
   // were a frozen snapshot of a machine that no longer does the routing. Nothing in the output
   // said so; the roster simply looked like the answer.
@@ -773,7 +773,7 @@ export async function cmdClaude(args: string[]): Promise<number> {
   return spawnClaude(args, env);
 }
 
-async function launchNativeClaude(config: OcxConfig, args: string[], notice: string): Promise<number> {
+async function launchNativeClaude(config: OccxConfig, args: string[], notice: string): Promise<number> {
   console.error(notice);
   const providerNames = Object.keys(config.providers);
   const override = nativeModelOverride(

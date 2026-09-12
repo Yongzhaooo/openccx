@@ -1,6 +1,6 @@
 import type {
-  OcxProviderContinuationOwner,
-  OcxReasoningReplayIdentity,
+  OccxProviderContinuationOwner,
+  OccxReasoningReplayIdentity,
 } from "../types";
 
 const bounded = (value: unknown, max: number): value is string =>
@@ -44,7 +44,7 @@ export function mergeProviderContinuationPayload(
 /** Validate proxy-authored continuation ownership before trusting persisted state. */
 export function isValidProviderContinuationOwner(
   value: unknown,
-): value is OcxProviderContinuationOwner {
+): value is OccxProviderContinuationOwner {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const owner = value as Record<string, unknown>;
   return owner.version === 1
@@ -59,10 +59,10 @@ export function isValidProviderContinuationOwner(
 
 /** Reuse the exact process-local route identity already established for reasoning replay. */
 export function providerContinuationOwnerFromReplayIdentity(
-  identity: Readonly<OcxReasoningReplayIdentity> | undefined,
-): OcxProviderContinuationOwner | undefined {
+  identity: Readonly<OccxReasoningReplayIdentity> | undefined,
+): OccxProviderContinuationOwner | undefined {
   if (!identity) return undefined;
-  const owner: OcxProviderContinuationOwner = {
+  const owner: OccxProviderContinuationOwner = {
     version: 1,
     providerName: identity.providerName,
     providerDestinationIdentity: identity.providerDestinationIdentity,
@@ -74,8 +74,8 @@ export function providerContinuationOwnerFromReplayIdentity(
 }
 
 export function sameProviderContinuationOwner(
-  left: OcxProviderContinuationOwner,
-  right: OcxProviderContinuationOwner,
+  left: OccxProviderContinuationOwner,
+  right: OccxProviderContinuationOwner,
 ): boolean {
   return left.version === right.version
     && left.providerName === right.providerName
@@ -86,7 +86,7 @@ export function sameProviderContinuationOwner(
 }
 
 /** Cursor hashes this non-secret namespace with the client thread id. */
-export function providerContinuationRouteScope(owner: OcxProviderContinuationOwner): string {
+export function providerContinuationRouteScope(owner: OccxProviderContinuationOwner): string {
   return JSON.stringify([
     "provider-continuation-v1",
     owner.providerName,

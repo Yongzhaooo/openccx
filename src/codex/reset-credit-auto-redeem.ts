@@ -5,7 +5,7 @@ import { ConfigMutationLockError, withConfigMutationLockSync } from "../config";
 import { atomicWriteFile } from "../config/atomic-write";
 import { getConfigDir } from "../config/paths";
 import { registerOptionalShutdownHook } from "../lib/optional-shutdown-hooks";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 /**
  * Opt-in auto-redemption of a Codex reset credit shortly before it expires (#822).
@@ -28,7 +28,7 @@ export const DEFAULT_LEAD_TIME_MINUTES = 10;
 export const MIN_LEAD_TIME_MINUTES = 1;
 export const MAX_LEAD_TIME_MINUTES = 60;
 
-export function resolveResetCreditAutoRedeemSettings(config: Pick<OcxConfig, "resetCreditAutoRedeem">): ResetCreditAutoRedeemSettings {
+export function resolveResetCreditAutoRedeemSettings(config: Pick<OccxConfig, "resetCreditAutoRedeem">): ResetCreditAutoRedeemSettings {
   const raw = config.resetCreditAutoRedeem;
   if (!raw || raw.enabled !== true) return { enabled: false, leadTimeMinutes: DEFAULT_LEAD_TIME_MINUTES };
   const lead = typeof raw.leadTimeMinutes === "number" && Number.isInteger(raw.leadTimeMinutes)
@@ -113,7 +113,7 @@ export interface AutoRedeemDeps {
   now?: () => number;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
-  /** Callers sharing an overridden journal must also share the OPENCODEX_HOME mutation coordinator. */
+  /** Callers sharing an overridden journal must also share the OPENCCX_HOME mutation coordinator. */
   journalFile?: string;
   log?: (line: string) => void;
   /** Upper bound on one sleep so a laptop sleep or clock jump re-checks rather than trusting a stale plan. */
@@ -190,12 +190,12 @@ export function createResetCreditAutoRedeemer(deps: AutoRedeemDeps): ResetCredit
       schedule(idleRecheckMs);
       return { kind: "skipped", reason: "credit-gone" };
     }
-    log(`[opencodex] reset-credit auto-redeem: dispatching for account ${accountKey} (credit expires ${plan.expiresAt})`);
+    log(`[openccx] reset-credit auto-redeem: dispatching for account ${accountKey} (credit expires ${plan.expiresAt})`);
     let result: { code: string };
     try {
       result = await deps.consume(entry.redeemRequestId);
     } catch (error) {
-      log(`[opencodex] reset-credit auto-redeem: consume uncertain for account ${accountKey}; will retry with the same request id`);
+      log(`[openccx] reset-credit auto-redeem: consume uncertain for account ${accountKey}; will retry with the same request id`);
       schedule(60_000);
       return { kind: "ambiguous", redeemRequestId: entry.redeemRequestId };
     }
@@ -218,7 +218,7 @@ export function createResetCreditAutoRedeemer(deps: AutoRedeemDeps): ResetCredit
       retryJournal(error);
       return { kind: "error", message: error instanceof Error ? error.message : "journal settlement failed" };
     }
-    log(`[opencodex] reset-credit auto-redeem: upstream answered ${result.code} for account ${accountKey}`);
+    log(`[openccx] reset-credit auto-redeem: upstream answered ${result.code} for account ${accountKey}`);
     schedule(idleRecheckMs);
     return { kind: "dispatched", code: result.code, redeemRequestId: entry.redeemRequestId };
   };
@@ -265,7 +265,7 @@ export function createResetCreditAutoRedeemer(deps: AutoRedeemDeps): ResetCredit
  * install never constructs the timer.
  */
 export function activateResetCreditAutoRedeem(
-  config: OcxConfig,
+  config: OccxConfig,
   wham: Pick<AutoRedeemDeps, "inspect" | "consume" | "accountId">,
 ): ResetCreditAutoRedeemer {
   const redeemer = createResetCreditAutoRedeemer({

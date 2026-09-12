@@ -9,7 +9,7 @@ import {
   resetCodexModelEntitlementCacheForTests,
   seedCodexModelEntitlementsForTests,
 } from "../../src/codex/model-entitlements";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -19,21 +19,21 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  */
 
 function tempHome(): string {
-  return mkdtempSync(join(tmpdir(), "ocx-desktop-ctx-"));
+  return mkdtempSync(join(tmpdir(), "occx-desktop-ctx-"));
 }
 
 const config = {
   port: 10100,
   defaultProvider: "openai",
   providers: {},
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 test("buildClaudeDesktopState gives native rows their real context window", async () => {
   // Sol/Terra/Luna are account-gated; this test is about window metadata, so confirm them.
   seedCodexModelEntitlementsForTests("main", ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"]);
   const home = tempHome();
-  const prev = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = home;
+  const prev = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = home;
   try {
     const state = await buildClaudeDesktopState(config);
     const sol = state.models.find(m => m.route === "native/gpt-5.6-sol");
@@ -48,8 +48,8 @@ test("buildClaudeDesktopState gives native rows their real context window", asyn
       if (expected !== undefined) expect(row?.contextWindow).toBe(expected);
     }
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
+    if (prev === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
     removeTreeWithRetry(home);
     resetCodexModelEntitlementCacheForTests();
   }

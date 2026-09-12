@@ -12,18 +12,18 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx system [status] [--json]
-  ocx system settings [--auto-start <on|off>] [--stream-mode <auto|legacy-tee|eager-relay>]
+  occx system [status] [--json]
+  occx system settings [--auto-start <on|off>] [--stream-mode <auto|legacy-tee|eager-relay>]
       [--desktop-authless <on|off>] [--client-compaction <on|off>] [--json]
-  ocx system startup <health|install-service|install-shim> [--json]
-  ocx system diagnostics [--json]
-  ocx system sync [--json]
-  ocx system codex-app-server [--json]
-  ocx system codex-restart --yes [--json]
-  ocx system codex-cli-update check [--json]
-  ocx system update check [--channel <latest|preview>] [--json]
-  ocx system update run [--channel <latest|preview>] [--restart <on|off>] --yes [--json]
-  ocx system update status <job-id> [--json]
+  occx system startup <health|install-service|install-shim> [--json]
+  occx system diagnostics [--json]
+  occx system sync [--json]
+  occx system codex-app-server [--json]
+  occx system codex-restart --yes [--json]
+  occx system codex-cli-update check [--json]
+  occx system update check [--channel <latest|preview>] [--json]
+  occx system update run [--channel <latest|preview>] [--restart <on|off>] --yes [--json]
+  occx system update status <job-id> [--json]
 
 --client-compaction favors native replay portability for future compactions while
 keeping OpenCodeX routing active; the configured provider may process summaries

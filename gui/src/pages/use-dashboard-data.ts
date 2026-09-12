@@ -51,11 +51,11 @@ import {
   useModalDialog,
 } from "./dashboard-shared";
 
-const CONTROLS_CACHE_PREFIX = "ocx.dash.controls.v1:";
-const OVERVIEW_CACHE_PREFIX = "ocx.dash.overview.v1:";
-const USAGE_CACHE_PREFIX = "ocx.dash.usage30d.v1:";
-const STARTUP_CACHE_PREFIX = "ocx.dash.startup.v1:";
-const MA_MODE_CACHE_PREFIX = "ocx.dash.maMode.v1:";
+const CONTROLS_CACHE_PREFIX = "occx.dash.controls.v1:";
+const OVERVIEW_CACHE_PREFIX = "occx.dash.overview.v1:";
+const USAGE_CACHE_PREFIX = "occx.dash.usage30d.v1:";
+const STARTUP_CACHE_PREFIX = "occx.dash.startup.v1:";
+const MA_MODE_CACHE_PREFIX = "occx.dash.maMode.v1:";
 
 type CachedControls = {
   settings?: SettingsData | null;

@@ -31,7 +31,7 @@ import {
 import { isInjectionDebugEnabled } from "../../lib/debug-settings";
 import { injectionDebugLog } from "../../lib/injection-debug-log";
 import { dottedToolName, modelInList, namespacedToolName, toolChoiceToolPredicate } from "../../types";
-import type { AdapterEvent, OcxConfig, OcxParsedRequest, OcxProviderConfig, OcxProviderContinuationState, OcxUsage } from "../../types";
+import type { AdapterEvent, OccxConfig, OccxParsedRequest, OccxProviderConfig, OccxProviderContinuationState, OccxUsage } from "../../types";
 import {
   forceRefreshOAuthAccessSnapshot,
   getOAuthCredentialApiBaseUrl,
@@ -104,7 +104,7 @@ import type { EffectiveSubagentModel, EffectiveSubagentRoster, SpawnAgentSurface
 import type { TranslatorBudget } from "../../lib/translator-budget";
 
 
-export function buildToolBridgeMaps(parsed: OcxParsedRequest, budget?: TranslatorBudget): {
+export function buildToolBridgeMaps(parsed: OccxParsedRequest, budget?: TranslatorBudget): {
   toolNsMap: Map<string, { namespace: string; name: string; freeform?: true }>;
   declaredToolNames: Set<string>;
   /** Declared parameter schema per request-visible tool name (#1611 integer repair). */
@@ -236,16 +236,16 @@ export function buildToolBridgeMaps(parsed: OcxParsedRequest, budget?: Translato
 
 export const PROACTIVE_MULTI_AGENT_MODE_TEXT = MULTI_AGENT_MODE_HINT_RECOMMENDATION.text;
 
-const OPENCODEX_SUBAGENT_GUIDANCE_OPEN_TAG = "<opencodex_subagent_guidance>";
-const OPENCODEX_SUBAGENT_GUIDANCE_CLOSE_TAG = "</opencodex_subagent_guidance>";
+const OPENCCX_SUBAGENT_GUIDANCE_OPEN_TAG = "<openccx_subagent_guidance>";
+const OPENCCX_SUBAGENT_GUIDANCE_CLOSE_TAG = "</opencodex_subagent_guidance>";
 
-export function isV1CollabSurface(parsed: OcxParsedRequest): boolean {
+export function isV1CollabSurface(parsed: OccxParsedRequest): boolean {
   return collabSurface(parsed) === "v1";
 }
 
 
 
-export function collabSurface(parsed: OcxParsedRequest): "v1" | "v2" | null {
+export function collabSurface(parsed: OccxParsedRequest): "v1" | "v2" | null {
   let namespacedSpawn = false;
   let flatSpawn = false;
   let v1Only = false;
@@ -294,7 +294,7 @@ export interface MultiAgentGuidanceDeps {
 async function defaultCollectCatalogState(): Promise<{ state: "fresh" | "stale" | "not_running" | "unknown" }> {
   // Explicit override for tests and diagnostics: process state is global and
   // would otherwise leak the host machine's app-server into hermetic tests.
-  const override = process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE;
+  const override = process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE;
   if (override === "fresh" || override === "stale" || override === "not_running" || override === "unknown") {
     return { state: override };
   }
@@ -323,7 +323,7 @@ export async function resolveEffectiveSubagentRoster(
  * Re-applying the override is cheap and idempotent: it is the same function the writer uses,
  * so a fresh catalog is unchanged and a stale one is repaired in memory rather than silently
  * believed. It does not rewrite the file — the row on disk stays whatever the last sync wrote,
- * and `ocx sync` remains what refreshes it.
+ * and `occx sync` remains what refreshes it.
  */
 async function freshSubagentCatalogEntries(): Promise<RawEntry[]> {
   const { readCatalog, readCodexCatalogPath, nativeContextLimits } = await import("../../codex/catalog");
@@ -357,7 +357,7 @@ async function createRequestScopedSubagentRosterResolver(): Promise<NonNullable<
 
 
 export async function multiAgentGuidanceText(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   options: MultiAgentGuidanceOptions = {},
   deps: MultiAgentGuidanceDeps = {},
 ): Promise<string | null> {
@@ -392,7 +392,7 @@ export async function multiAgentGuidanceText(
     // Emitting "do not set model or reasoning_effort overrides" off that global
     // observation prohibits options the active `spawn_agent` tool legitimately
     // advertises, for a request we cannot attribute to the stale process. The
-    // safe behaviour is to withhold OpenCodex's own disk-derived claims —
+    // safe behaviour is to withhold Openccx's own disk-derived claims —
     // preferred model, roster, fallback, custom guidance — and stay silent about
     // overrides, leaving the active tool schema authoritative.
     //
@@ -455,21 +455,21 @@ export async function multiAgentGuidanceText(
         : soleBarePreferred;
 
     if (isInjectionDebugEnabled() && effective.excluded.length > 0) {
-      injectionDebugLog(`[opencodex] multi-agent guidance excluded: ${effective.excluded
+      injectionDebugLog(`[openccx] multi-agent guidance excluded: ${effective.excluded
         .map(item => `${item.configured}:${item.reason}`)
         .join(", ")}`);
     }
-    const fallbackGuidance = subagentFallbackGuidanceText({ subagentModelFallback } as OcxConfig);
+    const fallbackGuidance = subagentFallbackGuidanceText({ subagentModelFallback } as OccxConfig);
     if (!injectionModel && roster === "" && fallbackGuidance === "") return null;
     if (injectionPrompt) {
       // Bare ids must resolve to a unique/current-route candidate. Preserve the legacy raw
       // fallback only for explicit routed/account-qualified ids.
       const promptModel = preferred?.model
         ?? (injectionModel?.includes("/") ? injectionModel : undefined);
-      return `${OPENCODEX_SUBAGENT_GUIDANCE_OPEN_TAG}${applyInjectionPlaceholders(injectionPrompt, promptModel, injectionEffort, roster, fallbackGuidance)}${OPENCODEX_SUBAGENT_GUIDANCE_CLOSE_TAG}`;
+      return `${OPENCCX_SUBAGENT_GUIDANCE_OPEN_TAG}${applyInjectionPlaceholders(injectionPrompt, promptModel, injectionEffort, roster, fallbackGuidance)}${OPENCCX_SUBAGENT_GUIDANCE_CLOSE_TAG}`;
     }
     if (!preferred && roster === "" && fallbackGuidance === "") return null;
-    let text = "OpenCodex sub-agent routing metadata for this collaboration surface. "
+    let text = "Openccx sub-agent routing metadata for this collaboration surface. "
       + "This metadata does not override Codex delegation or model-selection rules.";
     if (preferred) {
       text += ` Preferred sub-agent: model "${preferred.model}"`
@@ -482,7 +482,7 @@ export async function multiAgentGuidanceText(
       // Roster is the only unbounded part — drop it before breaking the budget.
       text = text.slice(0, text.length - roster.length);
     }
-    return `${OPENCODEX_SUBAGENT_GUIDANCE_OPEN_TAG}${text}${OPENCODEX_SUBAGENT_GUIDANCE_CLOSE_TAG}`;
+    return `${OPENCCX_SUBAGENT_GUIDANCE_OPEN_TAG}${text}${OPENCCX_SUBAGENT_GUIDANCE_CLOSE_TAG}`;
   }
 
   const effort = parsed.options.reasoning;
@@ -539,13 +539,13 @@ function isGeneratedDeveloperItem(item: unknown, text: string): boolean {
   return generatedDeveloperText(item) === text;
 }
 
-function generatedGuidanceFamily(text: string): "multi_agent_mode" | "opencodex_subagent_guidance" | undefined {
+function generatedGuidanceFamily(text: string): "multi_agent_mode" | "openccx_subagent_guidance" | undefined {
   if (text.startsWith("<multi_agent_mode>") && text.endsWith("</multi_agent_mode>")) {
     return "multi_agent_mode";
   }
-  if (text.startsWith(OPENCODEX_SUBAGENT_GUIDANCE_OPEN_TAG)
-      && text.endsWith(OPENCODEX_SUBAGENT_GUIDANCE_CLOSE_TAG)) {
-    return "opencodex_subagent_guidance";
+  if (text.startsWith(OPENCCX_SUBAGENT_GUIDANCE_OPEN_TAG)
+      && text.endsWith(OPENCCX_SUBAGENT_GUIDANCE_CLOSE_TAG)) {
+    return "openccx_subagent_guidance";
   }
   return undefined;
 }
@@ -580,7 +580,7 @@ function statefulRawInsertionIndex(items: readonly unknown[], replayPrefixLen: n
     : items.length;
 }
 
-export function injectDeveloperMessage(parsed: OcxParsedRequest, text: string): void {
+export function injectDeveloperMessage(parsed: OccxParsedRequest, text: string): void {
   const raw = parsed._rawBody as { input?: unknown } | undefined;
   const rawInput = raw && Array.isArray(raw.input) ? raw.input : undefined;
   const replayPrefixLen = rawInput

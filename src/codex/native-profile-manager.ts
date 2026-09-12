@@ -326,17 +326,17 @@ export class NativeProfileManager {
         candidate = new Database(this.context.lockPath, { create: true });
         const claim = this.uuid();
         candidate.exec("PRAGMA busy_timeout = 0; BEGIN IMMEDIATE");
-        candidate.exec("CREATE TABLE IF NOT EXISTS ocx_native_profile_lock (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), claim TEXT NOT NULL)");
-        candidate.query("INSERT INTO ocx_native_profile_lock (singleton, claim) VALUES (1, ?) ON CONFLICT(singleton) DO UPDATE SET claim = excluded.claim").run(claim);
+        candidate.exec("CREATE TABLE IF NOT EXISTS occx_native_profile_lock (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), claim TEXT NOT NULL)");
+        candidate.query("INSERT INTO occx_native_profile_lock (singleton, claim) VALUES (1, ?) ON CONFLICT(singleton) DO UPDATE SET claim = excluded.claim").run(claim);
         candidate.exec("COMMIT");
         candidate.exec("BEGIN IMMEDIATE");
-        const candidateClaim = candidate.query("SELECT claim FROM ocx_native_profile_lock WHERE singleton = 1").get() as { claim?: unknown } | null;
+        const candidateClaim = candidate.query("SELECT claim FROM occx_native_profile_lock WHERE singleton = 1").get() as { claim?: unknown } | null;
         let verifier: Database | undefined;
         let pathClaim: { claim?: unknown } | null = null;
         try {
           this.assertStableProfileLockFile(candidateFile);
           verifier = new Database(this.context.lockPath, { readonly: true });
-          pathClaim = verifier.query("SELECT claim FROM ocx_native_profile_lock WHERE singleton = 1").get() as { claim?: unknown } | null;
+          pathClaim = verifier.query("SELECT claim FROM occx_native_profile_lock WHERE singleton = 1").get() as { claim?: unknown } | null;
         } finally {
           try { verifier?.close(); } catch { /* mismatch below is authoritative */ }
         }
@@ -521,7 +521,7 @@ export class NativeProfileManager {
     if (probeNativeProfileRecoveryState(this.context) === "none") return;
     throw new NativeProfileError(
       "RECOVERY_REQUIRED",
-      "A native-profile recovery journal is pending. Run `ocx account main recover` or `ocx account main recover --rollback --yes` before registering or adding profiles.",
+      "A native-profile recovery journal is pending. Run `occx account main recover` or `occx account main recover --rollback --yes` before registering or adding profiles.",
       409,
     );
   }
@@ -543,7 +543,7 @@ export class NativeProfileManager {
     if (nativeIdentityHash(key.key, envelope.accountId) !== active.identityHash) {
       throw new NativeProfileError(
         "ACTIVE_PROFILE_MISMATCH",
-        "The physical native login changed outside OpenCodex; recover or register the expected login before continuing.",
+        "The physical native login changed outside Openccx; recover or register the expected login before continuing.",
         409,
       );
     }
@@ -677,10 +677,10 @@ export class NativeProfileManager {
       if (requireRoot) throw new NativeProfileError("STAGING_NOT_FOUND", "The native-login staging root is missing.", 404);
       return;
     }
-    const configDir = assertSafeDirectory(this.context.configDir, "The OpenCodex configuration root");
+    const configDir = assertSafeDirectory(this.context.configDir, "The Openccx configuration root");
     const stagingBase = dirname(this.context.stagingRoot);
     if (!samePath(stagingBase, join(configDir, "native-main-profile-staging"))) {
-      throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The native-login staging root escaped OPENCODEX_HOME.", 409);
+      throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The native-login staging root escaped OPENCCX_HOME.", 409);
     }
     if (!existsSync(stagingBase)) {
       if (requireRoot) throw new NativeProfileError("STAGING_NOT_FOUND", "The native-login staging root is missing.", 404);
@@ -688,7 +688,7 @@ export class NativeProfileManager {
     }
     const canonicalBase = assertSafeDirectory(stagingBase, "The native-login staging namespace");
     if (!samePath(dirname(this.context.stagingRoot), canonicalBase)) {
-      throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The native-login staging root is not contained by OPENCODEX_HOME.", 409);
+      throw new NativeProfileError("PROFILE_STORAGE_UNSAFE", "The native-login staging root is not contained by OPENCCX_HOME.", 409);
     }
     if (!existsSync(this.context.stagingRoot)) {
       if (requireRoot) throw new NativeProfileError("STAGING_NOT_FOUND", "The native-login staging root is missing.", 404);

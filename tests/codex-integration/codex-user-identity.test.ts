@@ -30,7 +30,7 @@ const identityProbe = `
   } from ${JSON.stringify(userIdentityModuleUrl)};
   import { realpathSync } from "node:fs";
 
-  const canonicalCodexHome = realpathSync.native(process.env.OCX_TEST_CANONICAL_CODEX_HOME);
+  const canonicalCodexHome = realpathSync.native(process.env.OCCX_TEST_CANONICAL_CODEX_HOME);
   const identity = resolveEffectiveUserIdentity();
   const databasePath = resolveCodexCoordinatorDatabasePath(identity, canonicalCodexHome);
   process.stdout.write(JSON.stringify({ identity, databasePath }));
@@ -69,14 +69,14 @@ async function runIdentityProbe(
 
 beforeEach(() => {
   previousHome = process.env.HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-user-identity-codex-home-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-user-identity-codex-home-"));
 });
 
 test("samePathIdentity is case-insensitive on Windows and exact elsewhere", () => {
-  const winPath = "C:\\Users\\Alice\\AppData\\Local\\OpenCodex\\Runtime\\v1\\S-1-5-21\\history-write-locks\\abc.sqlite";
+  const winPath = "C:\\Users\\Alice\\AppData\\Local\\Openccx\\Runtime\\v1\\S-1-5-21\\history-write-locks\\abc.sqlite";
   expect(samePathIdentity(winPath, winPath.toLowerCase(), "win32")).toBe(true);
   expect(samePathIdentity(winPath, winPath.toLowerCase(), "linux")).toBe(false);
-  expect(samePathIdentity(winPath, "D:\\Users\\Alice\\AppData\\Local\\OpenCodex\\Runtime\\v1\\S-1-5-21\\history-write-locks\\abc.sqlite", "win32")).toBe(false);
+  expect(samePathIdentity(winPath, "D:\\Users\\Alice\\AppData\\Local\\Openccx\\Runtime\\v1\\S-1-5-21\\history-write-locks\\abc.sqlite", "win32")).toBe(false);
   expect(samePathIdentity("/tmp/a/b.sqlite", "/tmp/a/b.sqlite", "linux")).toBe(true);
   expect(samePathIdentity("/tmp/a/b.sqlite", "/tmp/A/b.sqlite", "linux")).toBe(false);
 });
@@ -87,7 +87,7 @@ test("the coordinator namespace probe is read-only", () => {
   const uid = 2_147_483_647;
   const probe = probeCodexCoordinatorNamespace({ platform: "posix", uid });
   expect(probe.status).toBe("missing");
-  const root = join(realpathSync.native("/tmp"), `opencodex-runtime-v1-${uid}`);
+  const root = join(realpathSync.native("/tmp"), `openccx-runtime-v1-${uid}`);
   expect(existsSync(root)).toBe(false);
 });
 
@@ -139,7 +139,7 @@ test("the effective-user runtime root is an absolute canonical private namespace
   expect(entry.isSymbolicLink()).toBe(false);
   expect(parse(runtimeRoot).ext).not.toBe(".sqlite");
   if (identity.platform === "posix") {
-    expect(parse(runtimeRoot).base).toBe(`opencodex-runtime-v1-${identity.uid}`);
+    expect(parse(runtimeRoot).base).toBe(`openccx-runtime-v1-${identity.uid}`);
     expect(entry.uid).toBe(identity.uid);
     expect(entry.mode & 0o777).toBe(0o700);
   } else {
@@ -156,7 +156,7 @@ test("the effective-user runtime root is an absolute canonical private namespace
 test("real processes resolve one identity and coordinator path across every home/runtime environment", async () => {
   const canonicalHome = realpathSync.native(codexHome);
   const environmentRoots = ["a", "b"].map(label => {
-    const root = mkdtempSync(join(tmpdir(), `ocx-user-identity-env-${label}-`));
+    const root = mkdtempSync(join(tmpdir(), `occx-user-identity-env-${label}-`));
     const paths = {
       home: join(root, "home"),
       userProfile: join(root, "profile"),
@@ -165,7 +165,7 @@ test("real processes resolve one identity and coordinator path across every home
       xdgRuntime: join(root, "runtime"),
       temp: join(root, "temp"),
       codexHome: join(root, "ambient-codex"),
-      opencodexHome: join(root, "ambient-opencodex"),
+      openccxHome: join(root, "ambient-openccx"),
       workingDirectory: join(root, "working-directory"),
     };
     for (const path of Object.values(paths)) mkdirSync(path, { recursive: true });
@@ -198,8 +198,8 @@ test("real processes resolve one identity and coordinator path across every home
         TMP: paths.temp,
         LOCALAPPDATA: paths.temp,
         CODEX_HOME: paths.codexHome,
-        OPENCODEX_HOME: paths.opencodexHome,
-        OCX_TEST_CANONICAL_CODEX_HOME: canonicalHome,
+        OPENCCX_HOME: paths.openccxHome,
+        OCCX_TEST_CANONICAL_CODEX_HOME: canonicalHome,
         ...accountEnvironment,
       }, paths.workingDirectory);
     }));

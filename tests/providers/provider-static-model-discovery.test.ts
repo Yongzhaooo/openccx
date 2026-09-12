@@ -8,9 +8,9 @@ import {
   registryEntrySupportsLiveModelDiscovery,
 } from "../../src/providers/static-model-discovery";
 import { routedProviderConfig } from "../../src/router";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
-function provider(overrides: Partial<OcxProviderConfig>): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig>): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://example.com/v1",

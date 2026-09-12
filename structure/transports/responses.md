@@ -167,7 +167,7 @@ composition root or Lab code. Recall retains routing identity only, never accoun
 > Decision record: [ADR-0038](../decisions/ADR-0038-responses-http-sse.md)
 
 A replayed compaction item carries an `encrypted_content` blob only its minting backend can decode,
-and the client replays it on every later turn. The proxy's own `ocx1:` envelopes are transparent
+and the client replays it on every later turn. The proxy's own `occx1:` envelopes are transparent
 base64, so they always lower to plain user messages. A native blob is relayed only when there is no
 known serving-identity mismatch and the destination is known to decode native blobs — the canonical
 ChatGPT forward surface, the official OpenAI API, or a provider with the explicit
@@ -217,13 +217,13 @@ The Z.AI coding plan gets the same shape for a different reason. Its registry ro
 destination, so `routedProviderConfig()` already rewrites a config written against the retired
 Chat endpoint (`/api/coding/paas/v4`, `openai-chat`) onto Responses at `https://api.z.ai` on every
 request. Startup persists that same canonical pair to the `zai` row once and records
-`zaiResponsesDefaultVersion`, so the dashboard, `ocx doctor` and direct config readers stop showing
+`zaiResponsesDefaultVersion`, so the dashboard, `occx doctor` and direct config readers stop showing
 an endpoint the runtime never uses and the per-boot discarded-base-URL warning stops. The rewrite is
 behavior-preserving because it only touches a row the router canonicalizes anyway; Chat stays
 reachable per model through `modelAdapters`. A custom-named provider at the retired endpoint is not
 migrated — the router leaves its wire alone, and `destinationAliases` already supplies its metadata.
 
-The dashboard's Chat Completions switch and `ocx provider edit xai --xai-chat on|off` share the
+The dashboard's Chat Completions switch and `occx provider edit xai --xai-chat on|off` share the
 existing `modelAdapters` lane. On writes Chat for both models; off writes Responses. Unrelated
 overrides remain intact. The legacy PATCH field `xaiResponsesOptIn` retains its direction:
 true selects Responses, false now writes explicit Chat rather than deleting entries. Its derived
@@ -250,7 +250,7 @@ input", "The first line of the patch must be", "The last line of the patch must 
 import in exec"), the native routed Responses, Kiro, and Cursor result paths append a one-line
 recovery hint naming the broken rule; flat shell bridges and foreign MCP namespaces are never
 annotated, Responses and Kiro additionally require the request's verified code-mode catalog, Cursor
-matches the exact `exec` name under its `opencodex-responses` provider without catalog context, and
+matches the exact `exec` name under its `openccx-responses` provider without catalog context, and
 Cursor's error classification and Kiro's whitespace and failed-wrapper grouping are unchanged. Both
 halves live in `src/adapters/exec-tool-result-normalize.ts`
 so the pre-call and post-hoc wording cannot drift. This guidance and annotation change rewrites

@@ -7,7 +7,7 @@ import { grokFenceEndpointDrift, readGrokStatus } from "../../../src/grok/status
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 function tempGrokHome(): { root: string; grokHome: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-grok-status-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-grok-status-"));
   const grokHome = join(root, ".grok");
   mkdirSync(grokHome);
   return { root, grokHome };
@@ -81,18 +81,18 @@ describe("readGrokStatus", () => {
   });
 
   // A fence written by the old per-model shape (before model_providers migration) carries
-  // base_url on each [model.*] table and has no [model_providers.opencodex] block.
+  // base_url on each [model.*] table and has no [model_providers.openccx] block.
   test("falls back to per-model base_url for a legacy-shape fence", () => {
     const { root, grokHome } = tempGrokHome();
     try {
       const legacy = [
-        "# >>> opencodex managed block — do not edit (removed by `ocx stop`) >>>",
-        "[model.ocx-gpt-5-6-sol]",
+        "# >>> openccx managed block — do not edit (removed by `occx stop`) >>>",
+        "[model.occx-gpt-5-6-sol]",
         'model = "gpt-5.6-sol"',
         'base_url = "http://127.0.0.1:10190/v1"',
         'api_backend = "responses"',
-        'api_key = "opencodex-loopback"',
-        "# <<< opencodex managed block <<<",
+        'api_key = "openccx-loopback"',
+        "# <<< openccx managed block <<<",
       ].join("\n");
       writeFileSync(join(grokHome, "config.toml"), legacy, "utf8");
 
@@ -109,7 +109,7 @@ describe("readGrokStatus", () => {
 /**
  * 2026-07-27 field report: the fence named 127.0.0.1:4179 while the proxy listened on
  * 10100. Grok retried the refused connection 15 times per turn entirely on its own side,
- * so no request — and therefore no log line — ever reached opencodex. The context window
+ * so no request — and therefore no log line — ever reached openccx. The context window
  * still read correctly, because the stale entry carried it. Nothing in the product said
  * why, which is what this check exists to fix.
  */
@@ -130,7 +130,7 @@ describe("Grok fence endpoint drift", () => {
   });
 
   /**
-   * The unauthenticated loopback listener makes "the port we listen on" a SET (#4236). `ocx
+   * The unauthenticated loopback listener makes "the port we listen on" a SET (#4236). `occx
    * sync` writes the LISTENER's port into the fence, so comparing against the public port alone
    * warned every hub operator that their freshly synced, working config pointed at a closed
    * port — and told them to run the command that had just written it.

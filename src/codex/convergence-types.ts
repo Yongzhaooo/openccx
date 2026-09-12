@@ -13,7 +13,7 @@
  * `ConvergeCodex` implementation. Every phase must typecheck and preserve
  * behavior at its own commit, which a runtime placeholder here would break.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { ProviderModelDiscoveryFilter } from "../providers/registry";
 
 /**
@@ -459,7 +459,7 @@ export interface CatalogGatherAuthorityIdentity {
   /** Process-local keyed HMAC over every component below; never a raw content hash. */
   readonly authorityId: string;
   readonly admittedConfig: Readonly<{
-    /** Opaque WeakMap identity of the exact resident Readonly<OcxConfig> reference. */
+    /** Opaque WeakMap identity of the exact resident Readonly<OccxConfig> reference. */
     readonly referenceIdentity: string;
     readonly generation: ConfigGeneration;
     /** Keyed HMAC of the exact canonical config snapshot, including secret-bearing fields. */
@@ -511,7 +511,7 @@ export interface CatalogSourceEvidence {
 
 /** The shared WP8b/WP9 snapshot; it authorizes catalog work only. */
 export interface CatalogAdmissionSnapshot {
-  config: Readonly<OcxConfig>;
+  config: Readonly<OccxConfig>;
   generation: ConfigGeneration;
   /** Exact retained-reference/generation/snapshot identity used by gather authority. */
   readonly configIdentity: CatalogGatherAuthorityIdentity["admittedConfig"];
@@ -525,7 +525,7 @@ export interface CatalogAdmissionSnapshot {
 }
 
 export interface AdmissionSnapshot {
-  config: Readonly<OcxConfig>;
+  config: Readonly<OccxConfig>;
   configDigest: string;
   intent: "on" | "off";
   /**
@@ -538,7 +538,7 @@ export interface AdmissionSnapshot {
   externalProvider: string | null;
   canonicalTargets: Readonly<{
     codexHome: string;
-    opencodexHome: string;
+    openccxHome: string;
     config: string;
     profile: string;
     catalog: string;

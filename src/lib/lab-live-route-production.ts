@@ -14,7 +14,7 @@ import {
   OAuthLoginRequiredError,
   UnsupportedOAuthProviderError,
 } from "../oauth";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { createCredentialLease } from "../lab/live/credential-lease";
 import {
   liveUpstreamRequestPath,
@@ -31,12 +31,12 @@ const CREDENTIAL_HEADER = /(authorization|api[-_]?key|token|secret|credential|co
 
 export interface ProductionLabRouteExecutorDeps {
   configDir?: string;
-  loadConfig: () => OcxConfig;
+  loadConfig: () => OccxConfig;
 }
 
 async function buildLabProviderAuthHeaders(
   routeContext: LabRouteContext,
-  config: OcxConfig,
+  config: OccxConfig,
 ): Promise<Record<string, string>> {
   const provider = config.providers?.[routeContext.providerId];
   if (!provider || provider.disabled === true) {

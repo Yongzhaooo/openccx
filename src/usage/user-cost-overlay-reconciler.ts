@@ -1,7 +1,7 @@
 /**
  * Cross-process reconciliation for user cost overlays.
  *
- * `refreshUserCostOverlays` is process-local by design: `ocx config set`
+ * `refreshUserCostOverlays` is process-local by design: `occx config set`
  * executes `saveConfig()` in the CLI process, and a direct `config.json` edit
  * runs no in-process code at all. A running proxy therefore keeps its previous
  * `activeUserCostOverlays()`/version until restart or another in-process
@@ -21,7 +21,7 @@
 import { statSync } from "node:fs";
 
 import { getConfigPath, readConfigDiagnostics } from "../config";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import {
   refreshPreservedProviderOwner,
   refreshUserCostOverlays,
@@ -35,7 +35,7 @@ export const USER_COST_OVERLAY_RECONCILE_INTERVAL_MS = 5_000;
 
 let reconcileTimer: ReturnType<typeof setInterval> | null = null;
 let reconcileTimerMs = 0;
-const owners = new Map<symbol, OcxConfig | null>();
+const owners = new Map<symbol, OccxConfig | null>();
 const ownerIntervals = new Map<symbol, number>();
 let lastStamp: { mtimeMs: number; size: number; ctimeMs: number; ino: number } | null = null;
 let invalidReconcileCount = 0;
@@ -55,9 +55,9 @@ function configStamp(): { mtimeMs: number; size: number; ctimeMs: number; ino: n
 }
 
 /** Registered live configs plus an optional one-shot config, deduped by object identity. */
-function liveConfigsForPreservation(extra?: OcxConfig | null): OcxConfig[] {
-  const liveConfigs: OcxConfig[] = [];
-  const seen = new Set<OcxConfig>();
+function liveConfigsForPreservation(extra?: OccxConfig | null): OccxConfig[] {
+  const liveConfigs: OccxConfig[] = [];
+  const seen = new Set<OccxConfig>();
   if (extra) {
     seen.add(extra);
     liveConfigs.push(extra);
@@ -76,7 +76,7 @@ function liveConfigsForPreservation(extra?: OcxConfig | null): OcxConfig[] {
  * (they would change the routing surface); their overlays still become active
  * because the registry below is refreshed from the disk config.
  */
-function adoptDiskModelCosts(live: OcxConfig, disk: OcxConfig): void {
+function adoptDiskModelCosts(live: OccxConfig, disk: OccxConfig): void {
   if (!live.providers || !disk.providers) return;
   for (const [name, diskProvider] of Object.entries(disk.providers)) {
     const liveProvider = live.providers[name];
@@ -100,8 +100,8 @@ function adoptDiskModelCosts(live: OcxConfig, disk: OcxConfig): void {
  * writer that lacks it would otherwise erase it. Rows every live config owns
  * need no protection because every writer carries them from its own config.
  */
-function rememberDiskOnlyProviders(liveConfigs: readonly OcxConfig[], disk: OcxConfig): void {
-  const preserved: Record<string, OcxProviderConfig> = {};
+function rememberDiskOnlyProviders(liveConfigs: readonly OccxConfig[], disk: OccxConfig): void {
+  const preserved: Record<string, OccxProviderConfig> = {};
   if (disk.providers && liveConfigs.length > 0) {
     for (const [name, provider] of Object.entries(disk.providers)) {
       if (!provider) continue;
@@ -144,7 +144,7 @@ function recomputePreservedDiskOnlyProviders(): void {
  * Returns `false` (and leaves the registry untouched) when the file is missing
  * or invalid, so a transient bad write cannot wipe display-only prices.
  */
-export function reconcileUserCostOverlaysFromDisk(liveConfig?: OcxConfig | null): boolean {
+export function reconcileUserCostOverlaysFromDisk(liveConfig?: OccxConfig | null): boolean {
   const diagnostics = readConfigDiagnostics();
   if (diagnostics.source !== "file") return false;
   const disk = diagnostics.config;
@@ -245,7 +245,7 @@ function syncReconcileTimer(): void {
  * `stop()` releases it.
  */
 export function startUserCostOverlayReconciler(
-  options: { intervalMs?: number; liveConfig?: OcxConfig | null } = {},
+  options: { intervalMs?: number; liveConfig?: OccxConfig | null } = {},
 ): { stop(): void } {
   const token = Symbol("user-cost-overlay-reconciler");
   const liveConfig = options.liveConfig ?? null;

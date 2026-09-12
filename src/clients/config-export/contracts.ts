@@ -1,9 +1,9 @@
 // Shared client export contracts.
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import type { ConfigFormat } from "../../integrations/serialize";
 
 /**
- * One entry opencodex owns inside a client's config: the JSON path to it and
+ * One entry openccx owns inside a client's config: the JSON path to it and
  * the value we put there.
  *
  * A path list rather than a single provider key because ownership is not
@@ -16,7 +16,7 @@ export interface ManagedFragment {
   value: unknown;
 }
 
-/** Everything opencodex contributes to one client's config, as one unit. */
+/** Everything openccx contributes to one client's config, as one unit. */
 export interface ManagedContribution {
   clientId: ExportClientId;
   fragments: readonly ManagedFragment[];
@@ -41,7 +41,7 @@ export interface OpencodeCatalogModel {
   /**
    * Declared input modalities, carried verbatim from `/api/models`. Serialized as opencode's
    * per-model `attachment` + `modalities`, because opencode gates attachments CLIENT-side:
-   * without them every `opencodex` model is text-only in its picker and an image never
+   * without them every `openccx` model is text-only in its picker and an image never
    * reaches the proxy or the vision sidecar (#4286).
    */
   inputModalities?: readonly string[];
@@ -83,9 +83,9 @@ export interface ExportContext {
   models: readonly ExportModel[];
   /**
    * Live proxy config. Only the OpenCode path reads it: a non-loopback bind moves
-   * admission from `apiKey` to the `x-opencodex-api-key` header.
+   * admission from `apiKey` to the `x-openccx-api-key` header.
    */
-  config?: OcxConfig;
+  config?: OccxConfig;
 }
 
 export type ExportClientId =
@@ -129,7 +129,7 @@ export interface ExportClientSpec {
    */
   summarize: (document: unknown) => { modelCount: number; modelsWithoutLimits: number };
   /**
-   * The fragments opencodex owns inside this client's config. Only the builder
+   * The fragments openccx owns inside this client's config. Only the builder
    * knows where a client keeps our entries, so ownership paths originate here
    * rather than being re-derived by the writer.
    */
@@ -138,7 +138,7 @@ export interface ExportClientSpec {
    * True when the generated integration deliberately supports loopback only.
    *
    * `/v1/chat/completions` rejects bearer credentials and requires the
-   * dedicated `x-opencodex-api-key` header (AUTH_MATRIX in
+   * dedicated `x-openccx-api-key` header (AUTH_MATRIX in
    * src/server/auth-cors.ts). If this exporter cannot safely emit that header,
    * it refuses a remote bind rather than generating a config that 401s. Same
    * reasoning as the Grok managed block's non-loopback refusal.

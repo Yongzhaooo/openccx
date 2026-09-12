@@ -7,15 +7,15 @@ obvious-sounding command does *not* exist, that is called out rather than left a
 Preflight for all of them:
 
 ```bash
-ocx ready --json     # {"ready":true,"status":"ready","pid":…,"port":…}
-ocx status --json    # confirm proxy.running and no version skew
+occx ready --json     # {"ready":true,"status":"ready","pid":…,"port":…}
+occx status --json    # confirm proxy.running and no version skew
 ```
 
 ## 1. Audit the account pool and pause an exhausted account
 
 ```bash
-ocx account list openai --json --quota
-ocx account pause openai <account-id> --json
+occx account list openai --json --quota
+occx account pause openai <account-id> --json
 ```
 
 Read `accounts[]`; each row carries `id`, `paused`, `selected`, and — only under `--quota` — the
@@ -30,7 +30,7 @@ and if it was active a fallback is chosen. The CLI prints this on stderr.
 To pause everything that is spent in one call:
 
 ```bash
-ocx account pause-exhausted openai --json
+occx account pause-exhausted openai --json
 ```
 
 Read `pausedAccountIds`, but also `failedAccountCount`: that route refreshes quota per account and
@@ -40,9 +40,9 @@ not the same as "not exhausted".
 ## 2. Change pool strategy and sticky limit
 
 ```bash
-ocx account strategy openai --json          # read
-ocx account strategy openai round-robin --json
-ocx account sticky openai 5 --json
+occx account strategy openai --json          # read
+occx account strategy openai round-robin --json
+occx account sticky openai 5 --json
 ```
 
 A bare invocation reads and never writes. The response echoes the **applied** value, not the one
@@ -51,7 +51,7 @@ you sent, because the server normalizes — compare them if you care whether you
 Both pools have these settings, and the same verbs steer both:
 
 ```bash
-ocx account strategy anthropic --json
+occx account strategy anthropic --json
 ```
 
 `--json` uses pool-neutral keys (`strategy`, `stickyLimit`) for both, so you do not branch on which
@@ -63,11 +63,11 @@ returns a `reason` you can read.
 ## 3. Trace one conversation end to end
 
 ```bash
-ocx logs --conversation <conversation-id> --jsonl
-ocx logs explain <request-id>
+occx logs --conversation <conversation-id> --jsonl
+occx logs explain <request-id>
 ```
 
-**There is no `ocx request-history` command.** `ocx logs explain <request-id>` is the route-decision
+**There is no `occx request-history` command.** `occx logs explain <request-id>` is the route-decision
 view; it returns `routeDecision` with `routeKind`, every `candidates[]` entry with its `eligible`
 flag and `exclusions`, and `selected` naming the winner and the `reason` it won.
 
@@ -81,7 +81,7 @@ actually served it, not only the one requested.
 ## 4. Attribute spend per account
 
 ```bash
-ocx usage --range 7d --json
+occx usage --range 7d --json
 ```
 
 Read `accounts[]`. Two things to respect:
@@ -92,7 +92,7 @@ Read `accounts[]`. Two things to respect:
 For the per-REQUEST view of the same identity, filter the log by the account label:
 
 ```bash
-ocx logs --account p3f9a1 --jsonl
+occx logs --account p3f9a1 --jsonl
 ```
 
 The label is the stable non-PII digest the proxy already persists — `main` and `p<hex6>` for Codex
@@ -109,7 +109,7 @@ log rows tells you why (for example `usage_estimated`, `expected_price_overlay`)
 ## 5. Prepare an access-key rotation without exposing the new key
 
 ```bash
-ocx access key list --json
+occx access key list --json
 ```
 
 Creating a key or starting a rotation returns a one-time plaintext credential in both text and
@@ -126,19 +126,19 @@ approval for that exact revocation remains valid; do not ask again for the same 
 For an in-place rotation, commit the pending replacement on the same ID:
 
 ```bash
-ocx access key rotate commit <id> <rotation-id> --json
+occx access key rotate commit <id> <rotation-id> --json
 ```
 
 For a separately created replacement, remove only the old ID:
 
 ```bash
-ocx access key remove <old-id> --yes --json
+occx access key remove <old-id> --yes --json
 ```
 
 After the command succeeds, inspect the matching result:
 
 ```bash
-ocx access key list --json
+occx access key list --json
 ```
 
 For an in-place rotation, the same ID remains and `pendingRotation` disappears. For a separately
@@ -149,7 +149,7 @@ positional, not `--id`, and refuses without `--yes`.
 To cancel a pending rotation, with authority to discard the replacement:
 
 ```bash
-ocx access key rotate abort <id> <rotation-id> --json
+occx access key rotate abort <id> <rotation-id> --json
 ```
 
 Abort retains the old credential and removes the pending replacement. Re-list to inspect pending
@@ -168,11 +168,11 @@ exist for them — do not attribute usage to either.
 ## 6. Add a provider, test it, make it default
 
 ```bash
-ocx provider list --json
-ocx provider list --jsonl                   # one configured provider per line
-ocx provider add <name> --json                # registry providers auto-configure by name
-ocx provider test <name> --json
-ocx provider set-default <name> --json
+occx provider list --json
+occx provider list --jsonl                   # one configured provider per line
+occx provider add <name> --json                # registry providers auto-configure by name
+occx provider test <name> --json
+occx provider set-default <name> --json
 ```
 
 The promote verb is `set-default`, not `default`. A custom provider not in the registry also needs
@@ -184,9 +184,9 @@ that answers `list` is not necessarily one that answers a request.
 ## 7. Diagnose "management API is unreachable"
 
 ```bash
-ocx ready --json     # is it up at all?
-ocx status --json    # is it the build you think, on the port you think?
-ocx doctor           # what is structurally wrong (human; `--json` is refused with exit 2)
+occx ready --json     # is it up at all?
+occx status --json    # is it the build you think, on the port you think?
+occx doctor           # what is structurally wrong (human; `--json` is refused with exit 2)
 ```
 
 In that order. `ready` false with `doctor` clean usually means it is still starting; `ready` true
@@ -202,22 +202,22 @@ A credential-conflict reason is the case where retrying is pointless — the ins
 ## 8. Preview, then run, a storage cleanup
 
 ```bash
-ocx storage report --json
-ocx storage cleanup --percent 25 --json      # PREVIEW: deletes nothing, exits 0
+occx storage report --json
+occx storage cleanup --percent 25 --json      # PREVIEW: deletes nothing, exits 0
 ```
 
 Read `count`, `bytes`, and `candidates[]`. **Report those to the user and get approval before**
 adding `--yes`:
 
 ```bash
-ocx storage cleanup --percent 25 --mode quarantine --yes --json
+occx storage cleanup --percent 25 --mode quarantine --yes --json
 ```
 
 `quarantine` is recoverable:
 
 ```bash
-ocx storage trash list --json
-ocx storage trash restore <entry-id> --yes --json
+occx storage trash list --json
+occx storage trash restore <entry-id> --yes --json
 ```
 
 `--mode permanent` is not recoverable. There is no undo, no trash entry, and no confirmation prompt
@@ -232,7 +232,7 @@ and rejects a stale one with 409. So the two invocations agree about what is bei
 you can conclude from it.
 
 ```bash
-ocx account list meta-muse --json --quota
+occx account list meta-muse --json --quota
 ```
 
 Each row's `quota` carries the 5-hour and weekly windows plus `updatedAt`. **Read `updatedAt`, not
@@ -241,7 +241,7 @@ response and is cached, so it is as old as the last streaming turn through this 
 hours or days.
 
 ```bash
-ocx account refresh meta-muse
+occx account refresh meta-muse
 ```
 
 This reports that there is nothing to refresh, and that is correct rather than a failure. A fresh
@@ -256,18 +256,18 @@ Two absences are also expected and are not defects:
 - A turn that goes through request translation rather than passthrough reports no usage, so a
   client on a translated wire will never move this number.
 
-`ocx provider test meta-muse` answers `applicable: false` with reason `static_catalog`. The
+`occx provider test meta-muse` answers `applicable: false` with reason `static_catalog`. The
 provider sets `liveModels: false` deliberately — its authenticated roster includes image and voice
 models this Responses-agent provider cannot drive — so the absence of a live probe is a design
 decision, not a broken connection.
 
 ## 10. Invite one more machine onto a hub
 
-Run on the **hub**. This is the whole flow; do not assemble an `ocx connect` line by hand.
+Run on the **hub**. This is the whole flow; do not assemble an `occx connect` line by hand.
 
 ```bash
-ocx status                 # read the Hub: block first -- origins, listener, token source
-ocx hub invite --json
+occx status                 # read the Hub: block first -- origins, listener, token source
+occx hub invite --json
 ```
 
 `--json` gives `{ code, expiresAt, dataUrl, managementUrl, command }` on stdout. Hand the
@@ -283,9 +283,9 @@ be running on that port or the exchange is refused and the code is spent.
 Three refusals are normal and none of them burns a code:
 
 - `No loopback browser origin is admitted for pairing` — run the
-  `ocx config set corsAllowOrigins '["http://localhost:10100"]'` line the error prints, as
+  `occx config set corsAllowOrigins '["http://localhost:10100"]'` line the error prints, as
   printed (it preserves the hub's existing entries) and with the **joining** machine's proxy
-  port. Grants are origin-bound and `ocx connect` presents its own `http://localhost:<port>`.
+  port. Grants are origin-bound and `occx connect` presents its own `http://localhost:<port>`.
 - A data origin that would be this machine's own loopback — the bind is loopback-only or a
   wildcard and `hub.dataPublicOrigin` is unset, so there is nothing honest to advertise. Set
   `hub.dataPublicOrigin`, or pass `--data-url` for one invite. Do not work around it by
@@ -293,21 +293,21 @@ Three refusals are normal and none of them burns a code:
 - A rejected `--management-url` — on `invite` that flag confirms
   `hub.managementPublicOrigin` rather than overriding it. Drop the flag, or change the config.
 
-Full context: [05_remote_hub.md](05_remote_hub.md#inviting-a-machine-ocx-hub-invite).
+Full context: [05_remote_hub.md](05_remote_hub.md#inviting-a-machine-occx-hub-invite).
 
 ## Aside profiles
 
-These commands and the Aside refresh in `ocx sync` require a compatible running ocx proxy.
+These commands and the Aside refresh in `occx sync` require a compatible running occx proxy.
 There is no local profile-file fallback when the server is unavailable or too old. Follow
 the [proxy upgrade, restart, and retry sequence](https://opencodex.me/guides/integrations/#aside-profile-controls),
 then fully quit and reopen Aside after its profile files update successfully.
 
 ```bash
-ocx integration client status --client aside --json
-ocx integration client enable --client aside
-ocx integration client disable --client aside --profile 1
-ocx integration client history --client aside --profile 1
-ocx integration client restore --client aside --profile 1 --op <opId>
+occx integration client status --client aside --json
+occx integration client enable --client aside
+occx integration client disable --client aside --profile 1
+occx integration client history --client aside --profile 1
+occx integration client restore --client aside --profile 1 --op <opId>
 ```
 
 Read `profiles[]` to find numeric profile IDs. No profile selector means a bulk toggle; an

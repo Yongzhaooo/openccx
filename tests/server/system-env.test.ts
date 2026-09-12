@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:
 import * as childProcess from "node:child_process";
 import * as fs from "node:fs";
 import { repoPath } from "../helpers/repo-root";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import {
   cleanStaleSystemEnv,
   getShellEnvFilePath,
@@ -23,7 +23,7 @@ const baseConfig = {
   providers: {},
   defaultProvider: "test",
   claudeCode: { systemEnv: true },
-} satisfies OcxConfig;
+} satisfies OccxConfig;
 
 let execSpy: ReturnType<typeof spyOn>;
 let execFileSpy: ReturnType<typeof spyOn>;
@@ -97,7 +97,7 @@ describe("system environment injection", () => {
     expect(commands).toContain("launchctl setenv ANTHROPIC_BASE_URL http://127.0.0.1:4567");
     expect(commands).toContain("launchctl setenv CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY 1");
     // Writes include the shell env file and the tracking file (agent-def syncing
-    // may add owned ocx-*.md writes — devlog 070; count is no longer fixed).
+    // may add owned occx-*.md writes — devlog 070; count is no longer fixed).
     const writePaths = writeSpy.mock.calls.map(call => String(call[0]));
     expect(writePaths.some(p => p.includes("claude-env.sh"))).toBe(true);
     expect(writePaths.some(p => p.includes("system-env-port"))).toBe(true);
@@ -148,7 +148,7 @@ describe("system environment injection", () => {
   });
 
   test("injectSystemEnv includes the first configured API key", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...baseConfig,
       claudeCode: { systemEnv: true, authMode: "proxy" },
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret-token", createdAt: "2026-07-11T00:00:00.000Z" }],
@@ -159,7 +159,7 @@ describe("system environment injection", () => {
   });
 
   test("injectSystemEnv passes API keys with special characters as one argument", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...baseConfig,
       claudeCode: { systemEnv: true, authMode: "proxy" },
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret token'quoted", createdAt: "2026-07-11T00:00:00.000Z" }],
@@ -173,7 +173,7 @@ describe("system environment injection", () => {
   });
 
   test("subscription mode leaves configured proxy keys out of launch environments", async () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...baseConfig,
       claudeCode: { systemEnv: true, authMode: "subscription" },
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret-token", createdAt: "2026-07-11T00:00:00.000Z" }],
@@ -190,7 +190,7 @@ describe("system environment injection", () => {
     const previousAuthToken = process.env.ANTHROPIC_AUTH_TOKEN;
     process.env.ANTHROPIC_API_KEY = "sk-ant-dotenv-test";
     process.env.ANTHROPIC_AUTH_TOKEN = "dotenv-token-test";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...baseConfig,
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret-token", createdAt: "2026-07-11T00:00:00.000Z" }],
     };
@@ -220,7 +220,7 @@ describe("system environment injection", () => {
   test("proof-bound parent Anthropic key selects subscription and remains untouched", async () => {
     const previousApiKey = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = "sk-ant-parent-test";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       ...baseConfig,
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret-token", createdAt: "2026-07-11T00:00:00.000Z" }],
     };
@@ -232,7 +232,7 @@ describe("system environment injection", () => {
 
     try {
       expect(await injectSystemEnv(4567, config, {
-        // Simulates a genuine parent export captured by bin/ocx.mjs before Bun starts.
+        // Simulates a genuine parent export captured by bin/occx.mjs before Bun starts.
         preBunAnthropicSlots: ["ANTHROPIC_API_KEY"],
         authDetect: authAbsent,
       })).toEqual({ injected: true });
@@ -248,7 +248,7 @@ describe("system environment injection", () => {
   });
 
   // Subscription switch-back cleanup (devlog 260720_claude_authmode_persist, audit R1 #1):
-  // re-injecting without proxy mode must unset an opencodex-owned auth token.
+  // re-injecting without proxy mode must unset an openccx-owned auth token.
   function trackingWithToken(port = 4567, keys: string[] = ["ANTHROPIC_BASE_URL", "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY", "ANTHROPIC_AUTH_TOKEN"]): string {
     return JSON.stringify({ pid: 123, port, injectedAt: "2026-07-11T00:00:00.000Z", injectedKeys: keys });
   }
@@ -260,7 +260,7 @@ describe("system environment injection", () => {
   test("re-inject after switching back to subscription unsets the owned dummy token", async () => {
     trackingFile = trackingWithToken();
     launchctlBaseUrl = "http://127.0.0.1:4567";
-    mockAuthTokenGetenv("opencodex-proxy");
+    mockAuthTokenGetenv("openccx-proxy");
 
     // EXPLICIT subscription, not auto: this asserts the switch-back strip, and under
     // auto the resolver would read the real machine's Claude auth and could legitimately
@@ -268,7 +268,7 @@ describe("system environment injection", () => {
     const subscription = {
       ...baseConfig,
       claudeCode: { systemEnv: true, authMode: "subscription" },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     expect(await injectSystemEnv(4567, subscription)).toEqual({ injected: true });
     expect(execFileSpy).toHaveBeenCalledWith("/bin/launchctl", ["unsetenv", "ANTHROPIC_AUTH_TOKEN"]);
     expect(JSON.parse(trackingFile!).injectedKeys).not.toContain("ANTHROPIC_AUTH_TOKEN");
@@ -282,14 +282,14 @@ describe("system environment injection", () => {
       ...baseConfig,
       claudeCode: { systemEnv: true, authMode: "subscription" },
       apiKeys: [{ id: "key-1", name: "Primary", key: "secret-token", createdAt: "2026-07-11T00:00:00.000Z" }],
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     expect(await injectSystemEnv(4567, subscription)).toEqual({ injected: true });
     expect(execFileSpy).toHaveBeenCalledWith("/bin/launchctl", ["unsetenv", "ANTHROPIC_AUTH_TOKEN"]);
     expect(JSON.parse(trackingFile!).injectedKeys).not.toContain("ANTHROPIC_AUTH_TOKEN");
   });
 
-  test("re-inject preserves a tracked token whose value is not the opencodex dummy", async () => {
+  test("re-inject preserves a tracked token whose value is not the openccx dummy", async () => {
     trackingFile = trackingWithToken();
     launchctlBaseUrl = "http://127.0.0.1:4567";
     mockAuthTokenGetenv("sk-user-real-token");
@@ -300,10 +300,10 @@ describe("system environment injection", () => {
 
   test("re-inject preserves an untracked dummy-valued token it does not own", async () => {
     // Ownership guard independent of the value guard (audit R2 #1): the launchd domain
-    // carries "opencodex-proxy" but WE never injected it (not in injectedKeys).
+    // carries "openccx-proxy" but WE never injected it (not in injectedKeys).
     trackingFile = trackingWithToken(4567, ["ANTHROPIC_BASE_URL", "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"]);
     launchctlBaseUrl = "http://127.0.0.1:4567";
-    mockAuthTokenGetenv("opencodex-proxy");
+    mockAuthTokenGetenv("openccx-proxy");
 
     expect(await injectSystemEnv(4567, baseConfig)).toEqual({ injected: true });
     expect(launchctlCommands()).not.toContain("launchctl unsetenv ANTHROPIC_AUTH_TOKEN");
@@ -323,16 +323,16 @@ describe("system environment injection", () => {
  * could never fire.
  */
 describe("system environment local destination", () => {
-  const hubConfig = (listener?: { enabled: boolean; port?: number }): OcxConfig => ({
+  const hubConfig = (listener?: { enabled: boolean; port?: number }): OccxConfig => ({
     ...baseConfig,
-    // Pinned rather than detected: the bind-address branch only injects when opencodex owns
+    // Pinned rather than detected: the bind-address branch only injects when openccx owns
     // authentication, so an ambient subscription on the test host would hide the case.
     claudeCode: { systemEnv: true, authMode: "proxy" },
     hostname: "100.76.170.81",
     runtimeRole: "hub",
-    apiKeys: [{ id: "k1", name: "local", key: "ocx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
+    apiKeys: [{ id: "k1", name: "local", key: "occx_data_this_proxy_key", createdAt: "2026-01-01T00:00:00Z" }],
     ...(listener ? { unauthenticatedLoopbackListener: listener } : {}),
-  } as OcxConfig);
+  } as OccxConfig);
 
   function shellEnvBody(): string {
     const write = writeSpy.mock.calls.find(call => String(call[0]).includes("claude-env.sh"));
@@ -358,9 +358,9 @@ describe("system environment local destination", () => {
     expect(await injectSystemEnv(4567, hubConfig())).toEqual({ injected: true });
     const commands = launchctlCommands();
     expect(commands).toContain("launchctl setenv ANTHROPIC_BASE_URL http://100.76.170.81:4567");
-    expect(commands).toContain("launchctl setenv ANTHROPIC_AUTH_TOKEN ocx_data_this_proxy_key");
+    expect(commands).toContain("launchctl setenv ANTHROPIC_AUTH_TOKEN occx_data_this_proxy_key");
     expect(shellEnvBody()).toContain("export ANTHROPIC_BASE_URL='http://100.76.170.81:4567'");
-    expect(shellEnvBody()).toContain("export ANTHROPIC_AUTH_TOKEN='ocx_data_this_proxy_key'");
+    expect(shellEnvBody()).toContain("export ANTHROPIC_AUTH_TOKEN='occx_data_this_proxy_key'");
     expect(JSON.parse(trackingFile!)).toMatchObject({
       port: 4567,
       bindHost: "100.76.170.81",
@@ -371,7 +371,7 @@ describe("system environment local destination", () => {
   test("a destination that demands a credential nobody can supply is not injected at all", async () => {
     // The launchd domain is machine-wide: a base URL that 401s every plain `claude` on the box
     // is worse than no injection, so this degrades with a reason instead.
-    const noCredential = { ...hubConfig(), apiKeys: [] } as OcxConfig;
+    const noCredential = { ...hubConfig(), apiKeys: [] } as OccxConfig;
     expect(await injectSystemEnv(4567, noCredential))
       .toEqual({ injected: false, reason: "local inference requires a data-plane credential" });
     expect(launchctlCommands().some(command => command.includes("setenv ANTHROPIC_BASE_URL"))).toBe(false);
@@ -537,7 +537,7 @@ describe("systemEnv lever keys (devlog 136 B6)", () => {
   const leverConfig = {
     ...baseConfig,
     claudeCode: { systemEnv: true, maxContextTokens: 1_000_000, alwaysEnableEffort: true },
-  } satisfies OcxConfig;
+  } satisfies OccxConfig;
 
   function capturedWrites(): Array<{ path: string; data: string }> {
     const writes: Array<{ path: string; data: string }> = [];
@@ -622,7 +622,7 @@ describe("systemEnv lever keys (devlog 136 B6)", () => {
     const tierConfig = {
       ...baseConfig,
       claudeCode: { systemEnv: true, tierModels: { opus: "cursor/gpt-5.6-luna", sonnet: "mock/small" } },
-    } satisfies OcxConfig;
+    } satisfies OccxConfig;
     expect(await injectSystemEnv(4096, tierConfig)).toEqual({ injected: true });
     const setCalls = launchctlCommands();
     expect(setCalls.some(c => c.startsWith("launchctl setenv ANTHROPIC_DEFAULT_OPUS_MODEL"))).toBe(true);

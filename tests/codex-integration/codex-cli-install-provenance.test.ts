@@ -73,7 +73,7 @@ describe("Codex CLI install provenance", () => {
       const report = await inspectCodexCliInstall({
         ...deps,
         platform: "win32",
-        configDir: "\\\\server\\share\\opencodex",
+        configDir: "\\\\server\\share\\openccx",
         env: { CODEX_CLI_PATH: command, PATH: "\\\\server\\share", PATHEXT: ".CMD" },
       });
       expect(report.candidateAvailable).toBe(true);
@@ -113,7 +113,7 @@ describe("Codex CLI install provenance", () => {
     const report = await inspectCodexCliInstall({
       ...noFilesystemDeps(() => { calls += 1; }),
       platform: "win32",
-      configDir: "C:\\OpenCodex",
+      configDir: "C:\\Openccx",
       env: { PATH: "C:\\Tools" },
     });
     expect(report.candidateAvailable).toBe(false);
@@ -209,7 +209,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("proves a configured POSIX npm symlink and redacts paths", async () => {
-    const prefix = tempRoot("ocx-codex-posix-npm-");
+    const prefix = tempRoot("occx-codex-posix-npm-");
     const { launcher } = createPosixNpmGlobal(prefix);
     const report = await inspectCodexCliInstall({
       platform: process.platform,
@@ -231,7 +231,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform !== "linux")("does not mistake a flatpak path component for an app bundle", async () => {
-    const prefix = join(tempRoot("ocx-codex-flatpak-component-"), "flatpak", "tools");
+    const prefix = join(tempRoot("occx-codex-flatpak-component-"), "flatpak", "tools");
     const { launcher } = createPosixNpmGlobal(prefix);
     const report = await inspectCodexCliInstall({
       platform: "linux",
@@ -250,7 +250,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform !== "linux")("does not mistake a Scoop path component for a version manager", async () => {
-    const prefix = join(tempRoot("ocx-codex-scoop-component-"), "scoop", "apps", "tools");
+    const prefix = join(tempRoot("occx-codex-scoop-component-"), "scoop", "apps", "tools");
     const { launcher } = createPosixNpmGlobal(prefix);
     const report = await inspectCodexCliInstall({
       platform: "linux",
@@ -269,7 +269,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("proves a POSIX npm global through a symlinked prefix", async () => {
-    const prefix = tempRoot("ocx-codex-posix-prefix-");
+    const prefix = tempRoot("occx-codex-posix-prefix-");
     const { launcher: physicalLauncher } = createPosixNpmGlobal(prefix);
     const alias = `${prefix}-alias`;
     roots.push(alias);
@@ -287,7 +287,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("does not adopt a project-local POSIX node_modules layout", async () => {
-    const prefix = tempRoot("ocx-codex-posix-project-");
+    const prefix = tempRoot("occx-codex-posix-project-");
     const launcher = join(prefix, "bin", "codex");
     const packageRoot = join(prefix, "node_modules", "@openai", "codex");
     const entrypoint = join(packageRoot, "bin", "codex.js");
@@ -327,7 +327,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("fails closed on literal or relative POSIX PATH shadowing", async () => {
-    const prefix = tempRoot("ocx-codex-posix-path-");
+    const prefix = tempRoot("occx-codex-posix-path-");
     createPosixNpmGlobal(prefix);
     for (const path of [`${join(prefix, "bin")} `, `relative:${join(prefix, "bin")}`]) {
       const report = await inspectCodexCliInstall({
@@ -340,7 +340,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("rejects a manifest entrypoint redirected outside its package root", async () => {
-    const prefix = tempRoot("ocx-codex-external-entry-");
+    const prefix = tempRoot("occx-codex-external-entry-");
     const packageRoot = join(prefix, "lib", "node_modules", "@openai", "codex");
     const launcher = join(prefix, "bin", "codex");
     const outside = join(prefix, "outside-bin");
@@ -399,7 +399,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("does not classify a manager-looking symlink that resolves outside its root", async () => {
-    const root = tempRoot("ocx-codex-manager-escape-");
+    const root = tempRoot("occx-codex-manager-escape-");
     const managerRoot = join(root, ".nvm");
     const launcher = join(managerRoot, "bin", "codex");
     const outside = join(root, "outside", "codex");
@@ -419,7 +419,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("persisted and environment npm candidates remain unattested", async () => {
-    const root = tempRoot("ocx-codex-unattested-");
+    const root = tempRoot("occx-codex-unattested-");
     const { launcher } = createPosixNpmGlobal(root);
     writeFileSync(join(root, "codex-runtime.json"), `${JSON.stringify({
       version: 1,
@@ -481,7 +481,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("rejects a symbolic-link persisted-state file before reading", async () => {
-    const root = tempRoot("ocx-codex-state-link-");
+    const root = tempRoot("occx-codex-state-link-");
     let reads = 0;
     const report = await inspectCodexCliInstall({
       platform: process.platform,
@@ -495,7 +495,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("a POSIX version-manager candidate remains report-only", async () => {
-    const root = tempRoot("ocx-codex-posix-fnm-");
+    const root = tempRoot("occx-codex-posix-fnm-");
     const launcher = join(root, ".fnm", "codex");
     mkdirSync(join(root, ".fnm"), { recursive: true });
     writeFileSync(launcher, "#!/bin/sh\nexit 0\n", "utf8");
@@ -510,7 +510,7 @@ describe("Codex CLI install provenance", () => {
   });
 
   test.skipIf(process.platform === "win32")("the real POSIX shim inspector keeps wrapper and backing candidates report-only", async () => {
-    const root = tempRoot("ocx-codex-shim-deferred-");
+    const root = tempRoot("occx-codex-shim-deferred-");
     const wrapper = join(root, "codex");
     const backing = join(root, "codex.real");
     writeFileSync(wrapper, buildUnixCodexShim(

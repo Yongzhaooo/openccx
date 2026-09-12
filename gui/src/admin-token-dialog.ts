@@ -1,7 +1,7 @@
 import { DICTS, getActiveLocale, type Locale } from "./i18n/shared";
 
-const ADMIN_TOKEN_DIALOG_ID = "opencodex-admin-token-dialog";
-const ADMIN_TOKEN_USERNAME = "OpenCodex";
+const ADMIN_TOKEN_DIALOG_ID = "openccx-admin-token-dialog";
+const ADMIN_TOKEN_USERNAME = "Openccx";
 const ADMIN_TOKEN_DOCS_URL = "https://opencodex.me/guides/web-dashboard/#finding-the-admin-token";
 
 export type AdminTokenValidation = "accepted" | "rejected" | "unavailable";
@@ -9,7 +9,7 @@ export type AdminTokenVerifier = (token: string) => Promise<AdminTokenValidation
 
 /**
  * Ask for the management credential with a real sign-in form so browsers and
- * password managers can offer save/autofill. OpenCodex itself still keeps the
+ * password managers can offer save/autofill. Openccx itself still keeps the
  * submitted token in memory only; persistence remains entirely browser-owned.
  */
 export function promptForAdminToken(

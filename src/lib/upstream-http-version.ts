@@ -1,4 +1,4 @@
-import type { OcxProviderConfig, UpstreamHttpVersion } from "../types";
+import type { OccxProviderConfig, UpstreamHttpVersion } from "../types";
 
 /** True when a provider explicitly selected the HTTP/1.1 compatibility path. */
 export function isPinnedHttp1(version: UpstreamHttpVersion | undefined): boolean {
@@ -51,7 +51,7 @@ export function withUpstreamHttpVersionValue(
 export function withUpstreamHttpVersion(
   input: Parameters<typeof globalThis.fetch>[0],
   init: RequestInit | undefined,
-  provider: Pick<OcxProviderConfig, "upstreamHttpVersion">,
+  provider: Pick<OccxProviderConfig, "upstreamHttpVersion">,
 ): RequestInit | undefined {
   return withUpstreamHttpVersionValue(input, init, provider.upstreamHttpVersion);
 }

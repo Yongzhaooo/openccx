@@ -6,17 +6,17 @@
  * recycle to reclaim RSS, not a teardown.
  *
  * Respawn policy (matches real supervisor configs in src/service.ts):
- * - Supervised child (`OCX_SERVICE=1` + viable service): exit(1) so
+ * - Supervised child (`OCCX_SERVICE=1` + viable service): exit(1) so
  *   failure-only supervisors (systemd Restart=on-failure, WinSW onfailure,
  *   Task Scheduler ERRORLEVEL loop) bring the proxy back.
- * - Otherwise: detached `ocx start --port <live>` (bypasses ensure's
+ * - Otherwise: detached `occx start --port <live>` (bypasses ensure's
  *   codexAutoStart gate), mark recycle so exit cleanup keeps injection, exit(0).
  *   Installed-but-stale/missing service assets are NOT treated as supervised —
  *   exit(1) would leave the proxy dead with `Service: installed, stale or missing
  *   service assets` and a /healthz timeout.
  * - If detached spawn fails (sync throw or pre-start `error`): exit(1) without
  *   markRecycling — after drain the listen socket is already closed, so a latch
- *   reset cannot recover serving. Clear inherited `OCX_SERVICE` so exit cleanup
+ *   reset cannot recover serving. Clear inherited `OCCX_SERVICE` so exit cleanup
  *   can restore Codex/Grok fences when a stale service marker has no viable
  *   supervisor. Log only a stable errno code — never the raw message
  *   (paths in ENOENT often include the OS username).
@@ -149,7 +149,7 @@ function resolveListenPort(): number | undefined {
 }
 
 function isSupervisedServiceChild(io: SystemRestartIo = {}): boolean {
-  if (process.env.OCX_SERVICE !== "1") return false;
+  if (process.env.OCCX_SERVICE !== "1") return false;
   // Presence is not enough: stale/missing service assets report installed but will not
   // respawn after exit(1). Dashboard status/recovery must fall through to detached start.
   return (io.isServiceViable ?? isServiceViable)();
@@ -226,7 +226,7 @@ function spawnDetachedStart(
     let child: ReturnType<typeof spawn>;
     try {
       const env: NodeJS.ProcessEnv = { ...process.env };
-      delete env.OCX_SERVICE;
+      delete env.OCCX_SERVICE;
       child = spawn(process.execPath, launchArgs, {
         detached: true,
         stdio: "ignore",
@@ -299,7 +299,7 @@ async function completeDeferredParentExitHandoff(
     console.warn(
       `Drain-and-restart ${phase} spawn failed (${spawnFailureCode(err)}); exiting without replacement`,
     );
-    delete process.env.OCX_SERVICE;
+    delete process.env.OCCX_SERVICE;
     exitProcess(1);
     return;
   }
@@ -417,7 +417,7 @@ export function acceptSystemRestart(io: SystemRestartIo = restartIo): {
         // Listen socket is already stopped; do not markRecycling — no child to inherit fences.
         // No replacement inherited the routing. Clear a stale service marker so
         // this unsupervised parent restores clients after the failed handoff.
-        delete process.env.OCX_SERVICE;
+        delete process.env.OCCX_SERVICE;
         exitProcess(1);
         return;
       }

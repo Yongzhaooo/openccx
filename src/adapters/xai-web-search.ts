@@ -1,4 +1,4 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { isXaiResponsesDestination } from "../providers/xai-transport";
 
 const CODEX_WEB_SEARCH_TOOL = "web_search";
@@ -159,7 +159,7 @@ function hasToolType(tools: unknown, type: string): boolean {
  */
 export function normalizeXaiResponsesWebSearch(
   body: unknown,
-  provider: Pick<OcxProviderConfig, "baseUrl">,
+  provider: Pick<OccxProviderConfig, "baseUrl">,
 ): unknown {
   if (!isXaiResponsesDestination(provider) || !isPlainObject(body)) return body;
 
@@ -208,7 +208,7 @@ function isLiveWebSearchTool(tool: unknown): boolean {
  */
 export function injectXaiResponsesXSearch(
   body: unknown,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "xaiResponsesXSearch">,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "xaiResponsesXSearch">,
   replayPrefixLength?: number,
 ): unknown {
   if (

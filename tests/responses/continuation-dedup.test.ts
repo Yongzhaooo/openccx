@@ -25,17 +25,17 @@ let home: string;
 let priorHome: string | undefined;
 
 beforeEach(() => {
-  priorHome = process.env["OPENCODEX_HOME"];
-  home = mkdtempSync(join(tmpdir(), "ocx-dedup-"));
-  process.env["OPENCODEX_HOME"] = home;
+  priorHome = process.env["OPENCCX_HOME"];
+  home = mkdtempSync(join(tmpdir(), "occx-dedup-"));
+  process.env["OPENCCX_HOME"] = home;
   clearResponseStateForTests();
 });
 
 afterEach(() => {
   clearResponseStateForTests();
   removeTreeWithRetry(home);
-  if (priorHome === undefined) delete process.env["OPENCODEX_HOME"];
-  else process.env["OPENCODEX_HOME"] = priorHome;
+  if (priorHome === undefined) delete process.env["OPENCCX_HOME"];
+  else process.env["OPENCCX_HOME"] = priorHome;
 });
 
 /** A completed response whose output carries a provider-issued id. */

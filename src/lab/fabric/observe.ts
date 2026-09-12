@@ -78,7 +78,7 @@ const PATH_SUMMARY_KINDS = new Set(["unchanged", "modified", "added", "deleted",
 const USAGE_KEYS = ["inputBytes", "outputBytes", "patchOperations", "filesTouched", "artifactBytes", "elapsedMs", "inactiveMs"] as const;
 const LIMIT_KEYS = Object.keys(FABRIC_LIMITS) as Array<keyof FabricLimitsV1>;
 const FAILURE_KEYS = new Set(["class", "code", "retryable", "attribution"]);
-const FAILURE_ATTRIBUTIONS = new Set(["opencodex", "route", "environment", "harness"]);
+const FAILURE_ATTRIBUTIONS = new Set(["openccx", "route", "environment", "harness"]);
 
 /** Require a non-null plain object or throw a harness-class FabricTaskError. */
 function assertPlainObject(value: unknown, label: string): Record<string, unknown> {

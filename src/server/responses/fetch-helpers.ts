@@ -5,7 +5,7 @@ import {
   shouldUseCodexWsUpstream,
   type BunRuntimeGateInput,
 } from "./ws-upstream";
-import type { OcxProviderConfig } from "../../types";
+import type { OccxProviderConfig } from "../../types";
 import type { WsData } from "../ws-bridge";
 import { waitForProviderRequestSlot } from "../../providers/request-pacing";
 import { withUpstreamHttpVersion } from "../../lib/upstream-http-version";
@@ -66,11 +66,11 @@ export interface ProviderFetchOptions {
 }
 
 export function providerFetch(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   runtime: BunRuntimeGateInput = currentBunRuntimeIdentity(),
   options: ProviderFetchOptions = {},
 ): ProviderFetch {
-  const base = (provider as OcxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? globalThis.fetch;
+  const base = (provider as OccxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? globalThis.fetch;
   const preconnect = (...args: Parameters<typeof globalThis.fetch.preconnect>): void => {
     base.preconnect?.(...args);
   };

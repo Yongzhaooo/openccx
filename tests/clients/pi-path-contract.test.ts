@@ -13,7 +13,7 @@ import { INTEGRATION_CLIENTS } from "../../src/integrations/registry";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 function withTempHome(run: (home: string) => void): void {
-  const home = mkdtempSync(join(tmpdir(), "opencodex-pi-home-"));
+  const home = mkdtempSync(join(tmpdir(), "openccx-pi-home-"));
   try {
     run(home);
   } finally {

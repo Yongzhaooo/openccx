@@ -15,17 +15,17 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoRoot } from "../helpers/repo-root";
 import { pathToFileURL } from "node:url";
 
-const prevHome = process.env.OPENCODEX_HOME;
+const prevHome = process.env.OPENCCX_HOME;
 let dir: string;
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "ocx-version-"));
-  process.env.OPENCODEX_HOME = dir;
+  dir = mkdtempSync(join(tmpdir(), "occx-version-"));
+  process.env.OPENCCX_HOME = dir;
 });
 
 afterEach(() => {
-  if (prevHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = prevHome;
   try { removeTreeWithRetry(dir); } catch { /* ignore */ }
 });
 
@@ -147,7 +147,7 @@ describe("cli wiring", () => {
   test.skipIf(process.platform === "win32")(
     "interactiveGuardOk safely evaluates without throwing when cwd is unlinked", () => {
     const origCwd = process.cwd();
-    const tempDir = mkdtempSync(join(tmpdir(), "ocx-unlinked-cwd-"));
+    const tempDir = mkdtempSync(join(tmpdir(), "occx-unlinked-cwd-"));
     process.chdir(tempDir);
     removeTreeWithRetry(tempDir);
     try {

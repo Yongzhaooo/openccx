@@ -10,7 +10,7 @@ import {
 } from "../server/local-provider-reload-client";
 import { isPublicOAuthProvider, listOAuthProviders, runLogin } from "./index";
 import { KEY_LOGIN_PROVIDERS, isKeyLoginProvider, validateApiKey, type KeyLoginProvider } from "./key-providers";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { configuredAdminToken } from "../lib/admin-secrets";
 import { codexAccountNamespaceProviderCollisionError } from "../codex/account-namespace-match";
 
@@ -22,7 +22,7 @@ const LIVE_RELOAD_PROVIDERS = new Set<string>([
 export function runningProxyUpdateHeaders(): Headers {
   const headers = new Headers({ "Content-Type": "application/json" });
   const adminToken = configuredAdminToken();
-  if (adminToken) headers.set("X-OpenCodex-API-Key", adminToken);
+  if (adminToken) headers.set("X-Openccx-API-Key", adminToken);
   return headers;
 }
 
@@ -61,7 +61,7 @@ export function warnIfLiveReloadSkipped(result: LocalProviderReloadResult | null
   console.warn(
     `\n⚠️  A proxy is running but could not reload this provider (${result.reason}).`
     + `\n   The credential is saved to disk; the running proxy keeps using the previous one.`
-    + `\n   Restart it to pick this up: ocx restart`,
+    + `\n   Restart it to pick this up: occx restart`,
   );
 }
 
@@ -76,8 +76,8 @@ export function warnIfLiveReloadSkipped(result: LocalProviderReloadResult | null
  * that used to be their only pointer to it.
  */
 export function loginUsageMessage(): string {
-  return `Usage: ocx login <provider>\n`
-    + `  Codex / ChatGPT: ocx login codex   (account pool, needs a running proxy; 'chatgpt' and\n`
+  return `Usage: occx login <provider>\n`
+    + `  Codex / ChatGPT: occx login codex   (account pool, needs a running proxy; 'chatgpt' and\n`
     + `                   'openai' are the same route. An OpenAI platform key is 'openai-apikey'.)\n`
     + `  OAuth login:   ${listOAuthProviders().join(", ")}\n`
     + `  API-key login: ${Object.keys(KEY_LOGIN_PROVIDERS).join(", ")}`;
@@ -108,12 +108,12 @@ async function handleOAuthLogin(name: string): Promise<void> {
     rl.close();
   }
   const reload = await notifyRunningProxyAfterOAuthLogin(name);
-  console.log(`\n✅ Logged in to ${name}. Try: ocx sync`);
+  console.log(`\n✅ Logged in to ${name}. Try: occx sync`);
   for (const line of modelSelectionGuidance(name)) console.log(line);
   warnIfLiveReloadSkipped(reload);
 }
 
-export function providerConfigFromKeyLoginProvider(def: KeyLoginProvider, key: string, baseUrlOverride?: string): OcxProviderConfig {
+export function providerConfigFromKeyLoginProvider(def: KeyLoginProvider, key: string, baseUrlOverride?: string): OccxProviderConfig {
   return {
     adapter: def.adapter,
     baseUrl: baseUrlOverride ?? def.baseUrl,
@@ -150,9 +150,9 @@ export function providerConfigFromKeyLoginProvider(def: KeyLoginProvider, key: s
  * key must not silently revert Logs/Usage estimates to catalog prices.
  */
 export function mergeKeyLoginProviderRow(
-  provider: OcxProviderConfig,
-  existing: OcxProviderConfig | undefined,
-): OcxProviderConfig {
+  provider: OccxProviderConfig,
+  existing: OccxProviderConfig | undefined,
+): OccxProviderConfig {
   return {
     ...provider,
     ...(existing?.modelCosts !== undefined ? { modelCosts: existing.modelCosts } : {}),
@@ -167,11 +167,11 @@ export function mergeKeyLoginProviderRow(
  * Returns the merged row that was persisted and notified.
  */
 export async function commitKeyLoginProvider(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   onLiveReload?: (result: LocalProviderReloadResult | null) => void,
-): Promise<OcxProviderConfig> {
+): Promise<OccxProviderConfig> {
   const mergedProvider = mergeKeyLoginProviderRow(provider, config.providers[name]);
   initializeProviderModelSelection(name, mergedProvider, config.providers[name], config);
   config.providers[name] = mergedProvider;
@@ -228,7 +228,7 @@ async function handleKeyLogin(name: string): Promise<void> {
   }
   let reload: LocalProviderReloadResult | null = null;
   await commitKeyLoginProvider(config, name, provider, result => { reload = result; });
-  console.log(`✅ ${def.label} added. Try: ocx sync`);
+  console.log(`✅ ${def.label} added. Try: occx sync`);
   for (const line of modelSelectionGuidance(name)) console.log(line);
   warnIfLiveReloadSkipped(reload);
 }

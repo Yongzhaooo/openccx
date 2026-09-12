@@ -10,7 +10,7 @@
  * output_item.added (skeleton-first) and fills in later. Never throws — returns `{error}` so
  * the caller injects a graceful tool result.
  */
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { getValidAccessToken, publicOAuthAuthenticationErrorMessage } from "../oauth";
 import { applyUpstreamRecoveryInit, fetchWithResetRetry } from "../lib/upstream-retry";
 import { cancelBodyOnAbort, signalWithTimeout } from "../lib/abort";
@@ -63,7 +63,7 @@ function isRec(v: unknown): v is Record<string, unknown> {
 export async function runXaiWebSearch(
   query: string,
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   settings: SidecarSettings,
   options: XaiSearchOptions = {},
   abortSignal?: AbortSignal,
@@ -116,7 +116,7 @@ export async function runXaiWebSearch(
     if (!res.ok) {
       const t = await res.text().catch(() => "");
       detachBodyGuard();
-      const entitlement = res.status === 401 || res.status === 403 ? " (Grok OAuth entitlement — re-run ocx login xai?)" : "";
+      const entitlement = res.status === 401 || res.status === 403 ? " (Grok OAuth entitlement — re-run occx login xai?)" : "";
       return { text: "", sources: [], error: `xai sidecar HTTP ${res.status}${entitlement}: ${redactSecretString(t.slice(0, 200))}` };
     }
     try {

@@ -180,7 +180,7 @@ function headingAnchors(body: string): Set<string> {
 
 export function renderIndex(manifest: Manifest): string {
   const lines: string[] = [];
-  lines.push("# opencodex Structure Index");
+  lines.push("# openccx Structure Index");
   lines.push("");
   lines.push("This folder is the maintainer source of truth for the current system shape. Public user workflows");
   lines.push("belong in " + BT + "docs-site/" + BT + ". Development work is recorded in " + BT + "devlog/" + BT + " units — " + BT + "_plan/" + BT + " while open,");

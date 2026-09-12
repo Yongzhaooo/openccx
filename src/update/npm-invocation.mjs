@@ -14,7 +14,7 @@ function escapeCmdCommand(command) {
 
 /**
  * Whether a PATH entry *is* the current directory. The hijack this guards against is
- * cmd.exe resolving a bare `npm` out of the directory opencodex was launched from, so
+ * cmd.exe resolving a bare `npm` out of the directory openccx was launched from, so
  * only that exact directory has to be skipped — every candidate we hand to spawn is an
  * absolute path, which is what actually defeats the implicit cwd-first search.
  *

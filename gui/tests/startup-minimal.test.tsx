@@ -21,13 +21,13 @@ let root: Root | null = null;
 function health(status: "protected" | "at-risk") {
   const safe = status === "protected";
   return {
-    status, routingKind: "opencodex-local", routingInjected: true, localRoutingDependency: true,
+    status, routingKind: "openccx-local", routingInjected: true, localRoutingDependency: true,
     autostartEnabled: safe, rebootSafe: safe, protection: safe ? "service" : "none",
     serviceInstalled: safe, serviceViable: safe, serviceEnabled: safe, serviceRunning: safe,
     serviceStale: false, serviceConflict: false, serviceSupported: true,
     shimInstalled: safe, shimHealthy: safe, shimCoverage: safe ? "full" : "none", platform: "darwin",
-    recommendedCommand: "ocx service install", diagnosticStale: false,
-    commands: { installService: "ocx service install", repairService: "ocx service repair", installShim: "ocx shim install", restoreNative: "ocx restore" },
+    recommendedCommand: "occx service install", diagnosticStale: false,
+    commands: { installService: "occx service install", repairService: "occx service repair", installShim: "occx shim install", restoreNative: "occx restore" },
   };
 }
 
@@ -84,13 +84,13 @@ test("protected: hero carries the state line and the sentence; no stat grid, no 
   const hero = container.querySelector(".startup-hero")!;
   expect(hero.querySelector(".startup-state-line")?.textContent).toContain("·");
   // The old subtitle is a visible sentence inside the hero, not a title attribute.
-  expect(hero.textContent).toContain("Verify that Codex can reach opencodex");
+  expect(hero.textContent).toContain("Verify that Codex can reach openccx");
   expect(container.querySelector('[title*="Verify that Codex"]')).toBeNull();
   const details = container.querySelector<HTMLDetailsElement>("details.startup-recovery-details")!;
   expect(details).not.toBeNull();
   expect(details.open).toBe(false);
   // Commands are still there, one click away.
-  expect(details.textContent).toContain("ocx shim install");
+  expect(details.textContent).toContain("occx shim install");
 });
 
 test("at-risk: recovery details open by default", async () => {

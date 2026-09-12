@@ -1,8 +1,8 @@
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 export { lookupLocalJsonPointer } from "./xai-schema-analysis";
 import { isSchemaObject, lookupLocalJsonPointer, xaiSchemasArePairwiseDisjoint } from "./xai-schema-analysis";
 
-export function isXaiSchemaTarget(provider: Pick<OcxProviderConfig, "baseUrl">): boolean {
+export function isXaiSchemaTarget(provider: Pick<OccxProviderConfig, "baseUrl">): boolean {
   try {
     // Public api.x.ai accepts native root object unions. Only the Grok CLI proxy
     // 400s on a root oneOf/anyOf, so flattening/omitting is scoped to that host.

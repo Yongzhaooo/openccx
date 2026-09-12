@@ -45,9 +45,9 @@ function errorMessages(error: unknown): string[] {
 }
 
 async function runScenario(scenario: Scenario): Promise<Record<string, unknown>> {
-  const home = mkdtempSync(join(tmpdir(), "ocx-shutdown-budget-child-"));
-  const priorHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  const home = mkdtempSync(join(tmpdir(), "occx-shutdown-budget-child-"));
+  const priorHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = home;
   clearResponseStateMemoryForTests();
   try {
     setPlatformForTests("win32");
@@ -120,8 +120,8 @@ async function runScenario(scenario: Scenario): Promise<Record<string, unknown>>
     setResponseStateByteCapForTests(null);
     clearResponseStateForTests();
     removeTreeWithRetry(home);
-    if (priorHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = priorHome;
+    if (priorHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = priorHome;
   }
 }
 

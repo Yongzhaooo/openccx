@@ -4,10 +4,10 @@ import { unusedProxyWarningLines } from "../../src/cli/status";
 import { classifyCodexRouting, hasInjectedCodexRouting } from "../../src/codex/inject";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { getCachedStartupHealth, getStartupHealthSnapshot, invalidateStartupHealthCache, markStartupHealthDiagnosticStale } from "../../src/server/startup-health-cache";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const base = {
-  routingKind: "opencodex-local" as const,
+  routingKind: "openccx-local" as const,
   autostartEnabled: true,
   serviceInstalled: false,
   serviceViable: false,
@@ -28,10 +28,10 @@ describe("Codex startup health", () => {
       status: "at-risk",
       rebootSafe: false,
       protection: "none",
-      recommendedCommand: "ocx service install",
+      recommendedCommand: "occx service install",
     });
     expect(startupHealthSummary(health)).toContain("AT RISK");
-    expect(startupHealthSummary(health)).toContain("ocx service install");
+    expect(startupHealthSummary(health)).toContain("occx service install");
   });
 
   // 260804 #970 follow-up: an already-REGISTERED service is refreshed in place. `install`
@@ -47,20 +47,20 @@ describe("Codex startup health", () => {
     ]) {
       const health = deriveStartupHealth({ ...base, ...broken });
       expect(health.status).toBe("at-risk");
-      expect(health.recommendedCommand).toBe("ocx service repair");
-      expect(startupHealthSummary(health)).toContain("ocx service repair");
+      expect(health.recommendedCommand).toBe("occx service repair");
+      expect(startupHealthSummary(health)).toContain("occx service repair");
     }
   });
 
   test("a genuinely absent service still gets the registering command", () => {
     const health = deriveStartupHealth({ ...base, serviceInstalled: false });
-    expect(health.recommendedCommand).toBe("ocx service install");
+    expect(health.recommendedCommand).toBe("occx service install");
   });
 
   test("a conflicting service needs uninstall-then-install, not repair", () => {
     // repairService() refuses a conflict outright — two managers must be torn down first.
     const health = deriveStartupHealth({ ...base, serviceInstalled: true, serviceConflict: true });
-    expect(health.recommendedCommand).toBe("ocx service install");
+    expect(health.recommendedCommand).toBe("occx service install");
   });
 
   test("treats a background service as restart protection", () => {
@@ -88,13 +88,13 @@ describe("Codex startup health", () => {
   // value while a probe is revalidating. Asserting status/protection alone missed it.
   test("the stale-cache path keeps repair for an installed service", () => {
     const installed = deriveStartupHealth({ ...base, serviceInstalled: true, serviceViable: true, serviceEnabled: true, serviceRunning: true });
-    expect(markStartupHealthDiagnosticStale(installed).recommendedCommand).toBe("ocx service repair");
+    expect(markStartupHealthDiagnosticStale(installed).recommendedCommand).toBe("occx service repair");
 
     const absent = deriveStartupHealth({ ...base, serviceInstalled: false, serviceViable: true, serviceEnabled: true, serviceRunning: true });
-    expect(markStartupHealthDiagnosticStale(absent).recommendedCommand).toBe("ocx service install");
+    expect(markStartupHealthDiagnosticStale(absent).recommendedCommand).toBe("occx service install");
 
     const conflict = deriveStartupHealth({ ...base, serviceInstalled: true, serviceConflict: true, serviceViable: true, serviceEnabled: true, serviceRunning: true });
-    expect(markStartupHealthDiagnosticStale(conflict).recommendedCommand).toBe("ocx service install");
+    expect(markStartupHealthDiagnosticStale(conflict).recommendedCommand).toBe("occx service install");
   });
 
   test("classifies a healthy Windows shim as CLI-only rather than Desktop-safe", () => {
@@ -106,20 +106,20 @@ describe("Codex startup health", () => {
     expect(deriveStartupHealth({ ...base, autostartEnabled: false, shimInstalled: true, shimHealthy: true }).status).toBe("at-risk");
   });
 
-  test("native routing has no opencodex restart dependency", () => {
+  test("native routing has no openccx restart dependency", () => {
     const health = deriveStartupHealth({ ...base, routingKind: "native" });
     expect(health).toMatchObject({ status: "native", rebootSafe: true, protection: "none" });
   });
 
   test("recognizes marker-owned and legacy routing without claiming user overrides", () => {
     expect(hasInjectedCodexRouting([
-      '# Auto-injected by opencodex',
+      '# Auto-injected by openccx',
       'openai_base_url = "http://127.0.0.1:10100/v1"',
       "[features]",
     ].join("\n"))).toBe(true);
     expect(hasInjectedCodexRouting([
-      'model_provider = "opencodex"',
-      "[model_providers.opencodex]",
+      'model_provider = "openccx"',
+      "[model_providers.openccx]",
       'base_url = "http://127.0.0.1:10100/v1"',
     ].join("\n"))).toBe(true);
     expect(hasInjectedCodexRouting('openai_base_url = "http://127.0.0.1:10100/v1"')).toBe(false);
@@ -144,19 +144,19 @@ describe("Codex startup health", () => {
     expect(classifyCodexRouting('model_provider = "openai"')).toBe("native");
     expect(classifyCodexRouting([
       "[features]",
-      'model_provider = "opencodex"',
-      "[model_providers.opencodex]",
+      'model_provider = "openccx"',
+      "[model_providers.openccx]",
       'base_url = "http://127.0.0.1:10100/v1"',
     ].join("\n"))).toBe("native");
     expect(classifyCodexRouting([
-      'model_provider = "opencodex"',
-      "[model_providers.opencodex]",
+      'model_provider = "openccx"',
+      "[model_providers.openccx]",
       'base_url = "https://gateway.example/v1"',
-    ].join("\n"))).toBe("opencodex-local");
+    ].join("\n"))).toBe("openccx-local");
     expect(classifyCodexRouting([
-      "# Auto-injected by opencodex",
+      "# Auto-injected by openccx",
       'openai_base_url = "http://192.168.1.10:10100/v1"',
-    ].join("\n"))).toBe("opencodex-local");
+    ].join("\n"))).toBe("openccx-local");
   });
 
   test("fails closed for installed-but-broken services and custom local gateways", () => {
@@ -170,13 +170,13 @@ describe("Codex startup health", () => {
       routingInjected: false,
       localRoutingDependency: true,
       protection: "none",
-      recommendedCommand: "ocx restore",
+      recommendedCommand: "occx restore",
     });
     expect(deriveStartupHealth({ ...base, routingKind: "custom-local", serviceInstalled: true, serviceViable: true, serviceEnabled: true, serviceRunning: true })).toMatchObject({
       status: "at-risk",
       rebootSafe: false,
       protection: "none",
-      recommendedCommand: "ocx restore",
+      recommendedCommand: "occx restore",
     });
     expect(deriveStartupHealth({ ...base, routingKind: "custom-remote" })).toMatchObject({
       status: "native",
@@ -186,11 +186,11 @@ describe("Codex startup health", () => {
       status: "at-risk",
       rebootSafe: false,
       protection: "none",
-      recommendedCommand: "ocx restore",
+      recommendedCommand: "occx restore",
     });
     const custom = deriveStartupHealth({ ...base, routingKind: "custom-local" });
-    expect(startupHealthSummary(custom)).toContain("run 'ocx restore'");
-    expect(startupHealthSummary(custom)).not.toContain("ocx service install");
+    expect(startupHealthSummary(custom)).toContain("run 'occx restore'");
+    expect(startupHealthSummary(custom)).not.toContain("occx service install");
   });
 
   test("exposes fresh secret-free startup health across cache expiry", async () => {
@@ -207,13 +207,13 @@ describe("Codex startup health", () => {
         });
       },
     };
-    const readStartupHealth = (config: Pick<OcxConfig, "codexAutoStart">) =>
+    const readStartupHealth = (config: Pick<OccxConfig, "codexAutoStart">) =>
       getCachedStartupHealth(config, cacheDeps);
     const url = new URL("http://localhost/api/startup-health");
     const responsePromise = handleManagementAPI(
       new Request(url),
       url,
-      { port: 10100, providers: {}, defaultProvider: "openai", codexAutoStart: true } as OcxConfig,
+      { port: 10100, providers: {}, defaultProvider: "openai", codexAutoStart: true } as OccxConfig,
       { getCachedStartupHealth: readStartupHealth },
     );
     const response = await responsePromise;
@@ -227,10 +227,10 @@ describe("Codex startup health", () => {
     expect(body.routingKind).toBe("native");
     expect(probeCalls).toBe(1);
     expect(body.commands).toEqual({
-      installService: "ocx service install",
-      repairService: "ocx service repair",
-      installShim: "ocx codex-shim install",
-      restoreNative: "ocx restore",
+      installService: "occx service install",
+      repairService: "occx service repair",
+      installShim: "occx codex-shim install",
+      restoreNative: "occx restore",
     });
 
     const serialized = JSON.stringify(body).toLowerCase();
@@ -242,7 +242,7 @@ describe("Codex startup health", () => {
     const refreshed = await handleManagementAPI(
       new Request(url),
       url,
-      { port: 10100, providers: {}, defaultProvider: "openai", codexAutoStart: true } as OcxConfig,
+      { port: 10100, providers: {}, defaultProvider: "openai", codexAutoStart: true } as OccxConfig,
       { getCachedStartupHealth: readStartupHealth },
     );
     const refreshedBody = await refreshed!.json() as Record<string, unknown>;
@@ -373,11 +373,11 @@ describe("routing visibility (#2411)", () => {
       serviceViable: true,
       shimInstalled: true,
       shimHealthy: true,
-    }))).toBe("routing=opencodex-local, service=viable, shim=healthy");
+    }))).toBe("routing=openccx-local, service=viable, shim=healthy");
     expect(formatStartupRoutingDetail(deriveStartupHealth({ ...base, serviceInstalled: true })))
-      .toBe("routing=opencodex-local, service=installed-but-unhealthy, shim=absent");
+      .toBe("routing=openccx-local, service=installed-but-unhealthy, shim=absent");
     expect(formatStartupRoutingDetail(deriveStartupHealth({ ...base, shimInstalled: true })))
-      .toBe("routing=opencodex-local, service=absent, shim=stale");
+      .toBe("routing=openccx-local, service=absent, shim=stale");
   });
 
   // A healthy proxy paired with native routing is the state #2411 reports: the
@@ -389,7 +389,7 @@ describe("routing visibility (#2411)", () => {
     expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "native" }).length).toBeGreaterThan(0);
     expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "native" }).join(" ")).toContain("unused");
     expect(unusedProxyWarningLines({ proxyUp: false, routingKind: "native" })).toEqual([]);
-    expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "opencodex-local" })).toEqual([]);
+    expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "openccx-local" })).toEqual([]);
     expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "custom-remote" })).toEqual([]);
     expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "custom-local" })).toEqual([]);
     expect(unusedProxyWarningLines({ proxyUp: true, routingKind: "unknown" })).toEqual([]);

@@ -11,7 +11,7 @@ import { jsonUtf8Bytes } from "../lib/json-byte-size";
 import { sseFieldValue } from "../lib/sse-decoder";
 import { enforceAnthropicImageLimits, sniffImageDimensions } from "../adapters/anthropic-image-guard";
 import { normalizeAnthropicImages } from "../adapters/anthropic-image-normalize";
-import { AnthropicRequestError, DesktopModelMappingUnavailableError, anthropicToResponsesTranslation, extractOcxEffortDirective, extractOcxRouteDirective, resolveInboundModel, type ClaudeCacheKeySource } from "../claude/inbound";
+import { AnthropicRequestError, DesktopModelMappingUnavailableError, anthropicToResponsesTranslation, extractOccxEffortDirective, extractOccxRouteDirective, resolveInboundModel, type ClaudeCacheKeySource } from "../claude/inbound";
 import { isKnownDesktop3pModelId, resolveDesktop3pAlias } from "../claude/desktop-3p";
 import { resolveAlias, claudeCodeNativeAlias } from "../claude/alias";
 import { recordDesktopRequest } from "../claude/desktop-health";
@@ -32,7 +32,7 @@ import { estimateTokens } from "../lib/token-estimate";
 import { NoEligiblePolicyCandidateError, UnknownRoutingPolicyError, routeModel } from "../router";
 import { evidenceFromBody } from "../routing/request-evidence";
 import { resolveWireProtocolOverride } from "./adapter-resolve";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { readJsonRequestBody, resolveInboundBodyLimitBytes } from "./request-decompress";
 import { addFinalRequestLog, httpStatusForRequestLogTerminal, recordFirstOutput, type RequestLogContext, type RequestLogEntry } from "./request-log";
 import {
@@ -80,7 +80,7 @@ type Rec = Record<string, unknown>;
  * a Desktop 3P alias is a HASH registered WITHOUT the marker, so an exact lookup can never
  * resolve a synthetic one.
  */
-function decodeClaudeFastSelector(raw: string, cc?: OcxConfig["claudeCode"]): string {
+function decodeClaudeFastSelector(raw: string, cc?: OccxConfig["claudeCode"]): string {
   const model = stripOneMillionMarker(raw);
   const exact = resolveInboundModel(model, cc);
   if (!model.endsWith("--fast")) return exact;
@@ -96,7 +96,7 @@ function decodeClaudeFastSelector(raw: string, cc?: OcxConfig["claudeCode"]): st
 }
 
 /** Restore the reversible Fable picker alias before Anthropic passthrough checks. */
-function decodeFablePickerAlias(raw: string, cc?: OcxConfig["claudeCode"]): string {
+function decodeFablePickerAlias(raw: string, cc?: OccxConfig["claudeCode"]): string {
   const decoded = resolveInboundModel(raw, cc);
   if (!decoded.startsWith("claude-fable-")) return raw;
   return claudeCodeNativeAlias(decoded) === raw ? decoded : raw;
@@ -113,7 +113,7 @@ function desktopMappingUnavailableResponse(error: DesktopModelMappingUnavailable
 }
 
 /** Resolve Claude-only sidecar overrides without mutating the shared server config. */
-export function buildClaudeReplayConfig(config: OcxConfig): OcxConfig {
+export function buildClaudeReplayConfig(config: OccxConfig): OccxConfig {
   return {
     ...config,
     webSearchSidecar: {
@@ -127,7 +127,7 @@ export function buildClaudeReplayConfig(config: OcxConfig): OcxConfig {
   };
 }
 
-function claudeInboundDisabled(config: OcxConfig): Response | null {
+function claudeInboundDisabled(config: OccxConfig): Response | null {
   if (config.claudeCode?.enabled === false) {
     return anthropicErrorResponse(403, "Claude inbound is disabled (GUI: Claude ON toggle / config.claudeCode.enabled)", "permission_error");
   }
@@ -154,7 +154,7 @@ async function readAnthropicBody(req: Request, budget: TranslatorBudget, maxByte
 const PASSTHROUGH_STRIP_HEADERS = new Set([
   "connection", "keep-alive", "transfer-encoding", "upgrade", "te", "trailer",
   "proxy-authenticate", "proxy-authorization", "host", "content-length",
-  "accept-encoding", "x-opencodex-api-key", "origin",
+  "accept-encoding", "x-openccx-api-key", "origin",
 ]);
 
 function singleCredentialToken(name: "authorization" | "x-api-key", value: string | null): string | null {
@@ -170,7 +170,7 @@ function singleCredentialToken(name: "authorization" | "x-api-key", value: strin
   return raw;
 }
 
-function hasAnthropicNativeCredential(req: Request, config: OcxConfig): boolean {
+function hasAnthropicNativeCredential(req: Request, config: OccxConfig): boolean {
   const bearer = singleCredentialToken("authorization", req.headers.get("authorization"));
   const apiKey = singleCredentialToken("x-api-key", req.headers.get("x-api-key"));
   return (!!bearer && bearer.startsWith("sk-ant-") && !isProxyAdmissionSecret(bearer, config))
@@ -179,7 +179,7 @@ function hasAnthropicNativeCredential(req: Request, config: OcxConfig): boolean 
 
 function wantsNativePassthrough(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   requestPolicy: RequestPolicyView,
   model: unknown,
 ): model is string {
@@ -189,7 +189,7 @@ function wantsNativePassthrough(
   // therefore requires the dedicated admission header even though the routed Messages surface
   // keeps accepting all three legacy admission forms.
   if (isApiAuthRequired(requestPolicy)) {
-    const dedicated = req.headers.get("x-opencodex-api-key")?.trim() ?? "";
+    const dedicated = req.headers.get("x-openccx-api-key")?.trim() ?? "";
     if (!isDataPlaneAdmissionSecret(dedicated, config)) return false;
   }
   if (!hasAnthropicNativeCredential(req, config)) return false;
@@ -197,7 +197,7 @@ function wantsNativePassthrough(
   return resolveInboundModel(model, config.claudeCode) === model;
 }
 
-function shouldForwardNativeHeader(name: string, value: string, config: OcxConfig): boolean {
+function shouldForwardNativeHeader(name: string, value: string, config: OccxConfig): boolean {
   const lowerName = name.toLowerCase();
   if (PASSTHROUGH_STRIP_HEADERS.has(lowerName)) return false;
   if (lowerName !== "authorization" && lowerName !== "x-api-key") return true;
@@ -211,14 +211,14 @@ function uuidFromHex(hex32: string): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
-function anthropicUsageToOcx(usage: Rec | undefined): { inputTokens: number; outputTokens: number; cachedInputTokens?: number; cacheReadInputTokens?: number; cacheCreationInputTokens?: number } | undefined {
+function anthropicUsageToOccx(usage: Rec | undefined): { inputTokens: number; outputTokens: number; cachedInputTokens?: number; cacheReadInputTokens?: number; cacheCreationInputTokens?: number } | undefined {
   if (!usage) return undefined;
   const num = (v: unknown) => typeof v === "number" ? v : 0;
   const hasCache = usage.cache_read_input_tokens !== undefined || usage.cache_creation_input_tokens !== undefined;
   const read = num(usage.cache_read_input_tokens);
   const write = num(usage.cache_creation_input_tokens);
   // Anthropic input_tokens excludes cache read/write; normalize to the canonical
-  // inclusive convention (types.ts OcxUsage / devlog 070). cached = READS only.
+  // inclusive convention (types.ts OccxUsage / devlog 070). cached = READS only.
   return {
     inputTokens: num(usage.input_tokens) + read + write,
     outputTokens: num(usage.output_tokens),
@@ -289,7 +289,7 @@ export function tapAnthropicSseForLog(
   let tapController: ReadableStreamDefaultController<Uint8Array> | undefined;
 
   const recordUsage = () => {
-    logCtx.usage = anthropicUsageToOcx(Object.keys(usageAcc).length > 0 ? usageAcc : undefined);
+    logCtx.usage = anthropicUsageToOccx(Object.keys(usageAcc).length > 0 ? usageAcc : undefined);
   };
   const failBody = (closeReason: "body_stall" | "body_overflow", errType: string, message: string) => {
     if (settled) return;
@@ -395,7 +395,7 @@ export function tapAnthropicSseForLog(
 
 async function anthropicNativePassthrough(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   logIds: { requestId: string; start: number } | undefined,
   body: Rec,
@@ -477,7 +477,7 @@ async function anthropicNativePassthrough(
   if (upstream.ok) {
     try {
       const parsed = JSON.parse(text) as { usage?: Rec };
-      if (isRec(parsed?.usage)) logCtx.usage = anthropicUsageToOcx(parsed.usage);
+      if (isRec(parsed?.usage)) logCtx.usage = anthropicUsageToOccx(parsed.usage);
     } catch { /* count_tokens etc. */ }
   }
   finalize(upstream.status, { closeReason: "non_stream" });
@@ -496,7 +496,7 @@ const DEFAULT_BODY_MAX_BYTES = 64 * 1024 * 1024;
  * Policy: exactly 0 disables; finite positive values are honored (stall clamped to
  * min 1s); negative/non-finite/absent values fall back to the defaults.
  */
-export function resolvePassthroughBodyGuard(config: OcxConfig, reqSignal?: AbortSignal): PassthroughBodyGuard {
+export function resolvePassthroughBodyGuard(config: OccxConfig, reqSignal?: AbortSignal): PassthroughBodyGuard {
   const rawSec = config.claudeCode?.bodyStallSec;
   const stallSec = rawSec === 0
     ? 0
@@ -620,7 +620,7 @@ export async function fetchWithHeaderDeadline(
 
 export async function handleClaudeMessages(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   logIds?: { requestId: string; start: number; turnAdmissionLease?: AdmissionLease; admission?: DataPlaneAdmission },
   requestPolicy: RequestPolicyView = config,
@@ -645,7 +645,7 @@ export async function handleClaudeMessages(
  */
 async function handleClaudeMessagesWithBudget(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   translatorBudget: TranslatorBudget,
   logIds?: { requestId: string; start: number; turnAdmissionLease?: AdmissionLease; admission?: DataPlaneAdmission },
@@ -673,15 +673,15 @@ async function handleClaudeMessagesWithBudget(
     if (isRec(anthropicBody) && typeof anthropicBody.model === "string") {
       anthropicBody.model = stripOneMillionMarker(anthropicBody.model);
     }
-    // ocx-route override (devlog 072): injected agent bodies pin their model via a
+    // occx-route override (devlog 072): injected agent bodies pin their model via a
     // system-prompt directive because 2.1.207 ignores custom ids in agent
     // frontmatter. Must run BEFORE the native-passthrough branch — the CLI sends
     // these subagent turns under a fallback claude model id.
     if (isRec(anthropicBody)) {
-      const routeOverride = extractOcxRouteDirective(anthropicBody);
+      const routeOverride = extractOccxRouteDirective(anthropicBody);
       if (routeOverride && typeof anthropicBody.model === "string") {
         anthropicBody.model = stripOneMillionMarker(routeOverride);
-        effortOverride = extractOcxEffortDirective(anthropicBody);
+        effortOverride = extractOccxEffortDirective(anthropicBody);
       }
     }
     if (isRec(anthropicBody) && typeof anthropicBody.model === "string") {
@@ -689,9 +689,9 @@ async function handleClaudeMessagesWithBudget(
     }
     if (isRec(anthropicBody) && typeof anthropicBody.model === "string") {
       requestedModel = anthropicBody.model;
-      // Decode for Fast only. A Claude alias is `claude-ocx-<provider>--<model>`, so it
+      // Decode for Fast only. A Claude alias is `claude-occx-<provider>--<model>`, so it
       // already uses `--` as its own separator: stripping the marker off the RAW alias would
-      // turn `claude-ocx-p--foo--fast` into `claude-ocx-p--foo` and route a DIFFERENT model.
+      // turn `claude-occx-p--foo--fast` into `claude-occx-p--foo` and route a DIFFERENT model.
       // Effort parsing keeps the raw selector, so its behaviour is untouched.
       ({ fastRow, effortRow } = parseSyntheticRowId(
         requestedModel,
@@ -844,7 +844,7 @@ async function handleClaudeMessagesWithBudget(
   const headers = new Headers({ "content-type": "application/json" });
   let trustedClaudeMainAuth: { authorization: string; chatgptAccountId?: string } | undefined;
   for (const name of FORWARD_HEADERS) {
-    // The caller's bearer is the proxy admission token (ocx claude placeholder), never a
+    // The caller's bearer is the proxy admission token (occx claude placeholder), never a
     // ChatGPT credential — forwarding it upstream turns into {"detail":"Unauthorized"}.
     if (name === "authorization") continue;
     const value = req.headers.get(name);
@@ -1146,7 +1146,7 @@ export function estimateClaudeRequestTokens(
 
 export async function handleClaudeCountTokens(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   requestPolicy: RequestPolicyView = config,
 ): Promise<Response> {
   const disabled = claudeInboundDisabled(config);
@@ -1176,8 +1176,8 @@ export async function handleClaudeCountTokens(
       model = stripped;
       raw.model = model;
     }
-    // ocx-route override (devlog 072): keep count_tokens consistent with messages.
-    const countRoute = extractOcxRouteDirective(raw);
+    // occx-route override (devlog 072): keep count_tokens consistent with messages.
+    const countRoute = extractOccxRouteDirective(raw);
     if (countRoute) {
       model = stripOneMillionMarker(countRoute);
       raw.model = model;

@@ -9,7 +9,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { hasOwnProvider } from "../config";
 import { isRateLimitOrQuotaFailureMessage } from "../lib/errors";
-import type { OcxParsedRequest, OcxConfig } from "../types";
+import type { OccxParsedRequest, OccxConfig } from "../types";
 import { slugsEquivalent } from "../providers/slug-codec";
 import { CODEX_HOME, getCodexHome } from "./paths";
 import { CODEX_UNKNOWN_USAGE_SCORE, getAccountQuota } from "./quota";
@@ -49,7 +49,7 @@ export const DEFAULT_SUBAGENT_MODEL_FALLBACK_POLL_MS = 60_000;
 
 const CODEX_FORWARD_ORIGIN = new URL(CODEX_FORWARD_BASE_URL).origin.toLowerCase();
 
-type SubagentQuotaPrimeFn = (config: OcxConfig, reason: string) => Promise<void>;
+type SubagentQuotaPrimeFn = (config: OccxConfig, reason: string) => Promise<void>;
 /** Side-effect-free Pool account preview for one resolved fallback candidate. */
 export type SubagentPoolAccountPreview = (
   modelId: string | undefined,
@@ -73,7 +73,7 @@ const modelHealth = new Map<string, ModelHealth>();
 const quotaPrimedAt = new Map<string, number>();
 const knownProviderIdSet = new Set(PROVIDER_REGISTRY.map(entry => entry.id.toLowerCase()));
 
-function tryRouteFallbackModel(config: OcxConfig, model: string): RouteResult | null {
+function tryRouteFallbackModel(config: OccxConfig, model: string): RouteResult | null {
   try {
     return routeModel(config, model);
   } catch {
@@ -90,7 +90,7 @@ function healthKey(model: string, accountId: string | null, poolScoped: boolean)
   return `${scopedAccountId ?? "none"}::${model.toLowerCase()}`;
 }
 
-function isDisabledFallbackModel(model: string, config: OcxConfig): boolean {
+function isDisabledFallbackModel(model: string, config: OccxConfig): boolean {
   const disabled = config.disabledModels ?? [];
   if (disabled.length === 0) return false;
   if (!model.includes("/")) {
@@ -109,7 +109,7 @@ function isDisabledFallbackModel(model: string, config: OcxConfig): boolean {
   return disabled.some(stored => stored === model || slugEquals(stored, provider, modelId));
 }
 
-function pollIntervalMs(config: OcxConfig): number {
+function pollIntervalMs(config: OccxConfig): number {
   const configured = config.subagentModelFallbackPollMs;
   if (typeof configured !== "number" || !Number.isFinite(configured) || configured < 1_000) {
     return DEFAULT_SUBAGENT_MODEL_FALLBACK_POLL_MS;
@@ -128,7 +128,7 @@ function fallbackChainKey(model: string, namespaces: unknown): string {
 
 function normalizedChain(
   primary: string,
-  config: OcxConfig,
+  config: OccxConfig,
   extra: readonly string[] = [],
   trailing: readonly string[] = [],
 ): string[] {
@@ -151,13 +151,13 @@ function normalizedChain(
 
 export function buildSubagentModelChain(
   primary: string,
-  config: OcxConfig,
+  config: OccxConfig,
   extraFallback: readonly string[] = [],
 ): string[] {
   return normalizedChain(primary, config, extraFallback);
 }
 
-function quotaThreshold(config: OcxConfig): number {
+function quotaThreshold(config: OccxConfig): number {
   const threshold = config.autoSwitchThreshold ?? 80;
   return threshold > 0 ? threshold : Number.POSITIVE_INFINITY;
 }
@@ -168,7 +168,7 @@ function quotaThreshold(config: OcxConfig): number {
  * move the cursor in memory only, so reading the raw field would check quota
  * against an account this request is not going to touch.
  */
-function activeCodexAccountId(config: OcxConfig): string | null {
+function activeCodexAccountId(config: OccxConfig): string | null {
   return getEffectiveActiveCodexAccountId(config) ?? null;
 }
 
@@ -178,7 +178,7 @@ function activeCodexAccountId(config: OcxConfig): string | null {
  * substitute `activeCodexAccountId` (that active id may itself be unusable).
  */
 function resolvePoolFallbackAccountId(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
 ): string | null {
   if (typeof accountId === "string") return accountId;
@@ -188,7 +188,7 @@ function resolvePoolFallbackAccountId(
 
 function resolveRouteFallbackAccountId(
   route: RouteResult | null,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
   poolAccountPreview?: SubagentPoolAccountPreview,
@@ -201,7 +201,7 @@ function resolveRouteFallbackAccountId(
   return resolvePoolFallbackAccountId(config, accountId);
 }
 
-function isRoutableFallbackModel(model: string, config: OcxConfig): boolean {
+function isRoutableFallbackModel(model: string, config: OccxConfig): boolean {
   const slash = model.indexOf("/");
   if (slash > 0) {
     if (codexAccountNamespaceForModel(config.codexAccountNamespaces, model)) return true;
@@ -219,7 +219,7 @@ function isRoutableFallbackModel(model: string, config: OcxConfig): boolean {
 
 export function isNativeModelQuotaExhausted(
   model: string,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
 ): boolean {
@@ -238,7 +238,7 @@ export function isNativeModelQuotaExhausted(
 
 export function isModelHealthBlocked(
   model: string,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
 ): boolean {
@@ -256,7 +256,7 @@ export function isModelHealthBlocked(
 
 export function isSubagentModelUnavailable(
   model: string,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
   accountUsabilityOptions?: CodexAccountUsabilityOptions,
@@ -356,7 +356,7 @@ export function isSubagentModelUnavailable(
 
 export function selectAvailableSubagentModel(
   primary: string,
-  config: OcxConfig,
+  config: OccxConfig,
   extraFallback: readonly string[] = [],
   accountId?: string | null,
   now = Date.now(),
@@ -405,7 +405,7 @@ export function selectAvailableSubagentModel(
 export function noteSubagentModelFailure(
   model: string,
   message: string,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
   ttlMs?: number,
@@ -461,7 +461,7 @@ export function getSubagentQuotaPrimeStateForTests(): {
   };
 }
 
-function rewriteParsedModel(parsed: OcxParsedRequest, model: string): void {
+function rewriteParsedModel(parsed: OccxParsedRequest, model: string): void {
   parsed.modelId = model;
   if (parsed._rawBody && typeof parsed._rawBody === "object") {
     (parsed._rawBody as { model?: string }).model = model;
@@ -525,14 +525,14 @@ export function resolveAgentModelFallbackForPrimary(
   return merged;
 }
 
-function subagentQuotaPrimeBlockedByHostCircuit(config: OcxConfig): boolean {
+function subagentQuotaPrimeBlockedByHostCircuit(config: OccxConfig): boolean {
   if (normalizeUpstreamHostCircuitThreshold(config.upstreamHostCircuitThreshold) === 0) return false;
   const key = upstreamHostHealthKey(OPENAI_CODEX_PROVIDER_ID, CODEX_FORWARD_ORIGIN);
   return getUpstreamHostHealth(key)?.cooldownUntil !== undefined;
 }
 
 /**
- * Per-primary-model fallback chains from opencodex config (#1190).
+ * Per-primary-model fallback chains from openccx config (#1190).
  *
  * Storing `model_fallback` inside `$CODEX_HOME/agents/*.toml` makes Codex >= 0.146
  * reject the whole role file as an unknown field. The config-keyed map is the
@@ -541,7 +541,7 @@ function subagentQuotaPrimeBlockedByHostCircuit(config: OcxConfig): boolean {
  */
 export function resolveConfiguredModelFallbackForPrimary(
   primary: string,
-  config: OcxConfig,
+  config: OccxConfig,
 ): string[] {
   const byModel = config.subagentModelFallbackByModel;
   if (!byModel || typeof byModel !== "object") return [];
@@ -571,7 +571,7 @@ export function resolveConfiguredModelFallbackForPrimary(
  * same origin before the request's final host admission check.
  */
 export function maybePrimeSubagentQuota(
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
   options: { nativeMainReadsForbidden?: boolean } = {},
 ): Promise<void> {
@@ -606,7 +606,7 @@ export function recordSubagentQuotaFailureForThreadSpawn(
   headers: Headers,
   model: string,
   message: string | number,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
 ): void {
@@ -615,9 +615,9 @@ export function recordSubagentQuotaFailureForThreadSpawn(
 }
 
 export function applySubagentModelFallback(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   headers: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   accountId?: string | null,
   now = Date.now(),
   nativeFallbackOnly = false,
@@ -656,8 +656,8 @@ export function applySubagentModelFallback(
 
 /** Resolve the effective fallback chain once for one logical spawn request. */
 export function resolveSubagentFallbackChain(
-  parsed: OcxParsedRequest,
-  config: OcxConfig,
+  parsed: OccxParsedRequest,
+  config: OccxConfig,
 ): readonly string[] | null {
   const tomlRoleFallback = resolveAgentModelFallbackForPrimary(
     parsed.modelId,
@@ -675,7 +675,7 @@ export function resolveSubagentFallbackChain(
 /** Whether the effective fallback chain crosses an account-gated native Pool model. */
 export function subagentFallbackNeedsModelEntitlements(
   fallbackChain: readonly string[] | null,
-  config: OcxConfig,
+  config: OccxConfig,
 ): boolean {
   return fallbackChain?.some((candidate) => {
     const route = tryRouteFallbackModel(config, candidate);
@@ -685,11 +685,11 @@ export function subagentFallbackNeedsModelEntitlements(
   }) === true;
 }
 
-export function subagentFallbackGuidanceText(config: OcxConfig): string {
+export function subagentFallbackGuidanceText(config: OccxConfig): string {
   const chain = config.subagentModelFallback ?? [];
   if (chain.length === 0) return "";
   const quoted = chain.map(model => `"${model}"`).join(", ");
-  return ` Subagent model fallback chain (priority order): ${quoted}. When the primary model is quota-exhausted, opencodex rewrites thread_spawn requests to the next available model automatically.`;
+  return ` Subagent model fallback chain (priority order): ${quoted}. When the primary model is quota-exhausted, openccx rewrites thread_spawn requests to the next available model automatically.`;
 }
 
 const TOML_MODEL_FALLBACK_KEY = /^\s*(?:model_fallback|"model_fallback"|'model_fallback')\s*=/;
@@ -918,7 +918,7 @@ export function listCodexAgentRoles(codexHome = CODEX_HOME): string[] {
 }
 
 /** True when a new quota prime should start (no success within the poll interval). */
-export function shouldPrimeSubagentQuota(config: OcxConfig, now = Date.now()): boolean {
+export function shouldPrimeSubagentQuota(config: OccxConfig, now = Date.now()): boolean {
   const last = quotaPrimedAt.get("global") ?? 0;
   return now - last >= pollIntervalMs(config);
 }

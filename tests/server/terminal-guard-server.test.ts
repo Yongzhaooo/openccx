@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { clearKeyCooldowns } from "../../src/providers/key-failover";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const config = {
@@ -18,7 +18,7 @@ const config = {
       apiKey: "sk-test",
     },
   },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 /** Build an Anthropic SSE response from raw frames. */
 function anthropicSse(body: string): Response {
@@ -64,7 +64,7 @@ const chatContinuationTurn = [
   "data: [DONE]\n\n",
 ].join("");
 
-function openAiChatConfig(terminalContinuationGuard?: boolean): OcxConfig {
+function openAiChatConfig(terminalContinuationGuard?: boolean): OccxConfig {
   return {
     port: 0,
     defaultProvider: "glm-gw",
@@ -78,7 +78,7 @@ function openAiChatConfig(terminalContinuationGuard?: boolean): OcxConfig {
         ...(terminalContinuationGuard !== undefined ? { terminalContinuationGuard } : {}),
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("server terminal guard integration", () => {
@@ -134,7 +134,7 @@ describe("server terminal guard integration", () => {
           retryOn429: { attempts: 1, intervalMs: 120, respectRetryAfter: false },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let sends = 0;
     const requestBodies: string[] = [];
     globalThis.fetch = (async (_input, init) => {
@@ -172,9 +172,9 @@ describe("server terminal guard integration", () => {
   });
 
   test("terminal-guard continuation retry budget stays per request across key failover", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-terminal-guard-failover-"));
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-terminal-guard-failover-"));
+    process.env.OPENCCX_HOME = home;
     clearKeyCooldowns("claude-se");
     const budgetConfig = {
       ...config,
@@ -190,7 +190,7 @@ describe("server terminal guard integration", () => {
           retryOn429: { attempts: 1, intervalMs: 120, respectRetryAfter: false },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let sends = 0;
     globalThis.fetch = (async (_input, init) => {
       sends += 1;
@@ -222,8 +222,8 @@ describe("server terminal guard integration", () => {
       expect(sends).toBe(4);
     } finally {
       clearKeyCooldowns("claude-se");
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });
@@ -239,7 +239,7 @@ describe("server terminal guard integration", () => {
           retryOn429: { attempts: 1, intervalMs: 120, respectRetryAfter: false },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let sends = 0;
     globalThis.fetch = (async () => {
       sends += 1;
@@ -326,7 +326,7 @@ describe("server terminal guard integration", () => {
           retryOn429: { attempts: 3, intervalMs: 30_000, respectRetryAfter: false },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let sends = 0;
     globalThis.fetch = (async () => {
       sends += 1;
@@ -375,7 +375,7 @@ describe("server terminal guard integration", () => {
           retryOn429: { attempts: 1, intervalMs: 1_500, respectRetryAfter: false },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     let sends = 0;
     globalThis.fetch = (async () => {
       sends += 1;
@@ -501,7 +501,7 @@ describe("server terminal guard integration", () => {
           targets: [{ provider: "glm-gw", model: "glm-5.2" }],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     let sends = 0;
     globalThis.fetch = (async () => {
       sends += 1;

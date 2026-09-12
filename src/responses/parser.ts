@@ -1,15 +1,15 @@
 import type {
-  OcxAssistantMessage,
-  OcxContentPart,
-  OcxContext,
-  OcxMessage,
-  OcxParsedRequest,
-  OcxRequestOptions,
-  OcxTextContent,
-  OcxThinkingContent,
-  OcxTool,
-  OcxToolCall,
-  OcxReasoningReplayScopeRef,
+  OccxAssistantMessage,
+  OccxContentPart,
+  OccxContext,
+  OccxMessage,
+  OccxParsedRequest,
+  OccxRequestOptions,
+  OccxTextContent,
+  OccxThinkingContent,
+  OccxTool,
+  OccxToolCall,
+  OccxReasoningReplayScopeRef,
 } from "../types";
 import { createToolChoiceResolver, namespacedToolName } from "../types";
 import { responsesRequestSchema } from "./schema";
@@ -36,7 +36,7 @@ import { externalTaskInputContent } from "./task-input";
  */
 function replayThoughtSignatureMetadata(
   callId: string,
-  scope: OcxReasoningReplayScopeRef | undefined,
+  scope: OccxReasoningReplayScopeRef | undefined,
 ): { google: { thoughtSignature: string } } | undefined {
   const signature = lookupReplayThoughtSignature(callId, scope);
   return signature ? { google: { thoughtSignature: signature } } : undefined;
@@ -44,16 +44,16 @@ function replayThoughtSignatureMetadata(
 
 
 
-function ensureAssistantPlaceholder(messages: OcxMessage[], modelId: string, now: number): OcxAssistantMessage {
+function ensureAssistantPlaceholder(messages: OccxMessage[], modelId: string, now: number): OccxAssistantMessage {
   const last = messages[messages.length - 1];
   if (last && last.role === "assistant") return last;
-  const placeholder: OcxAssistantMessage = { role: "assistant", content: [], model: modelId, timestamp: now };
+  const placeholder: OccxAssistantMessage = { role: "assistant", content: [], model: modelId, timestamp: now };
   messages.push(placeholder);
   return placeholder;
 }
 
 
-function findToolById(messages: OcxMessage[], callId: string): { name: string; namespace?: string } {
+function findToolById(messages: OccxMessage[], callId: string): { name: string; namespace?: string } {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
     if (m.role !== "assistant") continue;
@@ -73,9 +73,9 @@ function findToolById(messages: OcxMessage[], callId: string): { name: string; n
  * (issue #950).
  */
 function attachPendingReasoningToCallOwner(
-  messages: OcxMessage[],
+  messages: OccxMessage[],
   callId: string,
-  pendingReasoning: Array<{ part: OcxThinkingContent; envelopeSigned: boolean }>,
+  pendingReasoning: Array<{ part: OccxThinkingContent; envelopeSigned: boolean }>,
 ): void {
   if (pendingReasoning.length === 0 || !callId) return;
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -97,8 +97,8 @@ const REASONING_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "
 
 export function parseRequest(
   body: unknown,
-  parseOptions?: { replayCacheScope?: OcxReasoningReplayScopeRef },
-): OcxParsedRequest {
+  parseOptions?: { replayCacheScope?: OccxReasoningReplayScopeRef },
+): OccxParsedRequest {
   const replayCacheScope = parseOptions?.replayCacheScope;
   const replayedInputPrefixLength = previousResponseReplayPrefixLength(body);
   const parsed = responsesRequestSchema.safeParse(body);
@@ -107,18 +107,18 @@ export function parseRequest(
   }
   const data = parsed.data;
   const now = Date.now();
-  const messages: OcxMessage[] = [];
+  const messages: OccxMessage[] = [];
   // Built before the item loop: a custom_tool_call echoed back in `input` needs the
   // namespace from the request's own tool catalog to survive the round trip.
   const customToolNamespacesByName = customToolNamespaces(data.tools);
   const systemPrompt: string[] = [];
   // Responses reasoning siblings belong to the following assistant, including across call items.
   // Keep them off the message list until that assistant arrives; turn boundaries clear the array.
-  const pendingReasoning: Array<{ part: OcxThinkingContent; envelopeSigned: boolean }> = [];
+  const pendingReasoning: Array<{ part: OccxThinkingContent; envelopeSigned: boolean }> = [];
   // Assistant placeholder that first folds any pending reasoning into the same turn (official
   // grok-build preserves reasoning across call items; Anthropic replay requires thinking to
   // precede tool_use inside one assistant message).
-  const assistantHolderWithReasoning = (): OcxAssistantMessage => {
+  const assistantHolderWithReasoning = (): OccxAssistantMessage => {
     const holder = ensureAssistantPlaceholder(messages, data.model, now);
     if (pendingReasoning.length > 0) {
       holder.content.push(...pendingReasoning.map(entry => entry.part));
@@ -193,7 +193,7 @@ export function parseRequest(
       }
 
       if (isCompactionItemType(effectiveType)) {
-        // A stored summary from a previous compaction. Decode our ocx1 envelope into plain text so
+        // A stored summary from a previous compaction. Decode our occx1 envelope into plain text so
         // the routed model keeps the compacted context; real OpenAI-encrypted blobs degrade to a note.
         // `context_compaction` (encrypted_content optional) is codex-rs's local-compaction marker;
         // with no payload it is a pure marker (the summary follows as its own user message), so it
@@ -295,10 +295,10 @@ export function parseRequest(
           continue;
         }
 
-        // Native/non-ocxr1 encrypted-only reasoning is opaque here. Do not create a detached
+        // Native/non-occxr1 encrypted-only reasoning is opaque here. Do not create a detached
         // assistant turn or invent replayable plaintext/signatures from the encrypted payload.
         if (thinkingText.length > 0 || envelope?.sig || envelope?.red?.length) {
-          const part: OcxThinkingContent = {
+          const part: OccxThinkingContent = {
             type: "thinking",
             thinking: thinkingText,
             signature: envelope?.sig ?? JSON.stringify(reasoning),
@@ -338,7 +338,7 @@ export function parseRequest(
         // reserved for Gemini/Antigravity opaque thought tokens; forwarding item ids as
         // thoughtSignature 400s Antigravity (Base64 / TYPE_BYTES). Continuity for CCA comes from
         // the in-process replay cache (and any already-real signature stored on the tool call).
-        const toolCall: OcxToolCall = {
+        const toolCall: OccxToolCall = {
           type: "toolCall", id: call.call_id, name: call.name, arguments: args,
           ...(call.namespace ? { namespace: call.namespace } : {}),
         };
@@ -362,7 +362,7 @@ export function parseRequest(
         // carries only the bare name, so without this the round trip loses it and adapters
         // replay the call as an unnamespaced tool the provider may not expose.
         const customNamespace = customToolNamespacesByName.get(call.name);
-        const toolCall: OcxToolCall = {
+        const toolCall: OccxToolCall = {
           type: "toolCall", id: call.call_id, name: call.name,
           arguments: { input: call.input ?? "" },
           customWireName: call.name,
@@ -486,7 +486,7 @@ export function parseRequest(
   const declaredTools = buildTools(data.tools as unknown[] | undefined) ?? [];
   const loadedTools = buildTools(loadedToolSpecs) ?? [];
   const loadedToolNames = new Set(loadedTools.map(t => namespacedToolName(t.namespace, t.name)));
-  const wireOwners = new Map<string, OcxTool>();
+  const wireOwners = new Map<string, OccxTool>();
   for (const tool of [...declaredTools, ...loadedTools]) {
     const wireName = namespacedToolName(tool.namespace, tool.name);
     const previous = wireOwners.get(wireName);
@@ -506,13 +506,13 @@ export function parseRequest(
     .map(t => loadedToolNames.has(namespacedToolName(t.namespace, t.name))
       ? { ...t, loadedFromToolSearch: true }
       : t);
-  const context: OcxContext = {
+  const context: OccxContext = {
     ...(systemPrompt.length > 0 ? { systemPrompt } : {}),
     messages,
     ...(mergedTools.length > 0 ? { tools: mergedTools } : {}),
   };
 
-  const options: OcxRequestOptions = {};
+  const options: OccxRequestOptions = {};
   if (data.max_output_tokens !== undefined) options.maxOutputTokens = data.max_output_tokens;
   if (data.temperature !== undefined) options.temperature = data.temperature;
   if (data.top_p !== undefined) options.topP = data.top_p;

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { mergeKeyLoginProviderRow, providerConfigFromKeyLoginProvider } from "../../src/oauth/login-cli";
 import { KEY_LOGIN_PROVIDERS } from "../../src/oauth/key-providers";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 describe("key login preserves user-configured price overlays", () => {
   test("rotating the API key carries modelCosts onto the replacement row", () => {
     const replacement = providerConfigFromKeyLoginProvider(KEY_LOGIN_PROVIDERS.umans, "sk-rotated");
-    const existing: OcxProviderConfig = {
+    const existing: OccxProviderConfig = {
       adapter: "anthropic",
       baseUrl: "https://api.code.umans.ai",
       apiKey: "sk-old",
@@ -27,7 +27,7 @@ describe("key login preserves user-configured price overlays", () => {
 
   test("an explicit empty overlay is preserved instead of being dropped", () => {
     const replacement = providerConfigFromKeyLoginProvider(KEY_LOGIN_PROVIDERS.umans, "sk-another");
-    const existing: OcxProviderConfig = {
+    const existing: OccxProviderConfig = {
       adapter: "anthropic",
       baseUrl: "https://api.code.umans.ai",
       apiKey: "sk-old",
@@ -39,7 +39,7 @@ describe("key login preserves user-configured price overlays", () => {
 
   test("the merge returns a fresh row so the proxy notify cannot diverge from disk", () => {
     const replacement = providerConfigFromKeyLoginProvider(KEY_LOGIN_PROVIDERS.umans, "sk-fresh");
-    const existing: OcxProviderConfig = {
+    const existing: OccxProviderConfig = {
       adapter: "anthropic",
       baseUrl: "https://api.code.umans.ai",
       apiKey: "sk-old",

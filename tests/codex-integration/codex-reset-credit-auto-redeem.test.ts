@@ -57,13 +57,13 @@ function harness(opts: { credits: () => ResetCredit[]; enabled?: () => boolean; 
 let dir = "";
 let oldHome: string | undefined;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "ocx-auto-redeem-"));
-  oldHome = process.env.OPENCODEX_HOME;
-  process.env.OPENCODEX_HOME = dir;
+  dir = mkdtempSync(join(tmpdir(), "occx-auto-redeem-"));
+  oldHome = process.env.OPENCCX_HOME;
+  process.env.OPENCCX_HOME = dir;
 });
 afterEach(() => {
-  if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = oldHome;
+  if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = oldHome;
   removeTreeWithRetry(dir);
 });
 
@@ -359,7 +359,7 @@ describe("reset-credit auto-redeemer runtime (#822)", () => {
       `;
       const child = Bun.spawn([process.execPath, "-e", source], {
         cwd: repoPath(),
-        env: { ...process.env, OPENCODEX_HOME: dir },
+        env: { ...process.env, OPENCCX_HOME: dir },
         stdin: "ignore", stdout: "pipe", stderr: "pipe",
       });
       const output = { stdout: "", stderr: "" };

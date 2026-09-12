@@ -175,7 +175,7 @@ describe("zh-TW language switch on the real GUI surface", () => {
     expect(navLabels()).not.toContain("Subagents");
     expect(navLabels()).not.toContain("Integrations");
 
-    expect(localStorage.getItem("ocx-lang")).toBe("zh-TW");
+    expect(localStorage.getItem("occx-lang")).toBe("zh-TW");
     expect(testWindow.document.documentElement.lang).toBe("zh-TW");
   });
 
@@ -185,7 +185,7 @@ describe("zh-TW language switch on the real GUI surface", () => {
     await choose(["中文"]);
     expect(navLabels()).toContain("仪表盘");
     expect(navLabels()).toContain("子代理");
-    expect(localStorage.getItem("ocx-lang")).toBe("zh");
+    expect(localStorage.getItem("occx-lang")).toBe("zh");
   });
 
   test("teardown restores the original global property descriptors", async () => {
@@ -229,14 +229,14 @@ describe("French language switch on the real GUI surface", () => {
       "Stockage",
       "Intégrations",
     ]);
-    expect(localStorage.getItem("ocx-lang")).toBe("fr");
+    expect(localStorage.getItem("occx-lang")).toBe("fr");
     expect(testWindow.document.documentElement.lang).toBe("fr");
 
     await choose(["English"]);
 
     expect(navLabels()).toContain("Dashboard");
     expect(navLabels()).toContain("Providers");
-    expect(localStorage.getItem("ocx-lang")).toBe("en");
+    expect(localStorage.getItem("occx-lang")).toBe("en");
     expect(testWindow.document.documentElement.lang).toBe("en");
 
     await teardownDom();

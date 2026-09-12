@@ -1,10 +1,10 @@
 import type {
   AdapterEvent,
-  OcxMessagePhase,
-  OcxProviderContinuationState,
-  OcxProviderOpaqueToolCallMetadata,
-  OcxReasoningReplayScopeRef,
-  OcxUsage,
+  OccxMessagePhase,
+  OccxProviderContinuationState,
+  OccxProviderOpaqueToolCallMetadata,
+  OccxReasoningReplayScopeRef,
+  OccxUsage,
 } from "./types";
 import { coerceIntegerToolArguments } from "./lib/tool-argument-integers";
 import {
@@ -13,7 +13,7 @@ import {
   cyberPolicyErrorType,
   CYBER_POLICY_ERROR_CODE,
   isCyberPolicyCode,
-  type OcxErrorPayload,
+  type OccxErrorPayload,
 } from "./lib/errors";
 import { redactSecretString } from "./lib/redact";
 import { mayBecomePatchEnvelope, repairFreeformToolInput } from "./responses/apply-patch-envelope";
@@ -63,7 +63,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function responsesUsage(usage: OcxUsage | undefined): Record<string, unknown> {
+function responsesUsage(usage: OccxUsage | undefined): Record<string, unknown> {
   // input_tokens_details / output_tokens_details are ALWAYS emitted (zero defaults):
   // strict Responses clients deserialize them as required fields — grok-build's pinned
   // async-openai fork (rev 95b52ebd, response_usage.rs) has non-Option InputTokenDetails/
@@ -127,7 +127,7 @@ function responsesUsage(usage: OcxUsage | undefined): Record<string, unknown> {
   return out;
 }
 
-function responseError(status: number, type: string, message: string): OcxErrorPayload {
+function responseError(status: number, type: string, message: string): OccxErrorPayload {
   return classifyError(status, type, message);
 }
 
@@ -149,7 +149,7 @@ function toolCallArgumentsUsable(args: string): boolean {
   }
 }
 
-function adapterFailureFromEvent(event: Extract<AdapterEvent, { type: "error" }>): { httpStatus: number; error: OcxErrorPayload } {
+function adapterFailureFromEvent(event: Extract<AdapterEvent, { type: "error" }>): { httpStatus: number; error: OccxErrorPayload } {
   const message = redactSecretString(event.message);
   if (event.status === undefined && event.errorType === undefined && event.code === undefined) {
     return adapterFailureFromMessage(message);
@@ -218,14 +218,14 @@ export function bridgeToResponsesSSE(
     hideThinkingSummary?: boolean;
     /**
      * Remote compaction v2 turn: accumulate all assistant text and, on done, emit ONE synthetic
-     * `{type:"compaction", encrypted_content:"ocx1:"+base64(text)}` output item before
+     * `{type:"compaction", encrypted_content:"occx1:"+base64(text)}` output item before
      * response.completed — codex-rs collect_compaction_output requires exactly one.
      */
     compaction?: boolean;
     /** One-shot: first non-empty text/thinking/raw-reasoning delta observed (WP4 TTFT). */
     onFirstOutput?: () => void;
     onTerminal?: (status: ResponsesTerminalStatus) => void;
-    onCompletedResponse?: (response: Record<string, unknown>, providerState?: OcxProviderContinuationState) => void;
+    onCompletedResponse?: (response: Record<string, unknown>, providerState?: OccxProviderContinuationState) => void;
     /**
      * Raw adapter-reported usage at the terminal event, BEFORE wire normalization.
      * responsesUsage() always emits token-detail objects with zero defaults for strict
@@ -234,7 +234,7 @@ export function bridgeToResponsesSSE(
      * (cache_detail_missing would be silently suppressed). Callers set logCtx.usage
      * from this callback instead of re-parsing the bridged SSE.
      */
-    onUsage?: (usage: OcxUsage | undefined) => void;
+    onUsage?: (usage: OccxUsage | undefined) => void;
     /** Request-visible tool names. When present, an upstream call outside this set fails closed. */
     declaredToolNames?: ReadonlySet<string>;
     /** Declared parameter schema per tool name; repairs integral-float integer args (#1611). */
@@ -255,7 +255,7 @@ export function bridgeToResponsesSSE(
      * Provider call ids are not globally unique; scoping by thread keeps one
      * conversation's reasoning out of another's continuations.
      */
-    replayCacheScope?: OcxReasoningReplayScopeRef;
+    replayCacheScope?: OccxReasoningReplayScopeRef;
     /**
      * Test seam for the wire/stall beat loop. Production omits this and uses the
      * global timers; injecting here must not change scheduling semantics.
@@ -459,7 +459,7 @@ export function bridgeToResponsesSSE(
       });
 
       const heartbeatFrame = options?.heartbeatStyle === "comment"
-        ? encoder.encode(': opencodex heartbeat\n\n')
+        ? encoder.encode(': openccx heartbeat\n\n')
         : encoder.encode('event: response.heartbeat\ndata: {"type":"response.heartbeat"}\n\n');
       let stallTicks = 0;
       const stallSec = resolveStallTimeoutSec(options?.stallTimeoutSec);
@@ -471,13 +471,13 @@ export function bridgeToResponsesSSE(
         text: string;
         textBytes: number;
         citationFilter: CitationMarkerFilter;
-        phase?: OcxMessagePhase;
+        phase?: OccxMessagePhase;
       } | null = null;
       let currentReasoning: { itemId: string; outputIndex: number; text: string; textBytes: number } | null = null;
       let currentRawReasoning: { itemId: string; outputIndex: number; text: string; textBytes: number } | null = null;
       // Anthropic extended-thinking round-trip state: the signature signs the CURRENT thinking
       // block; redacted blocks are opaque payloads replayed verbatim. Attached to the reasoning
-      // item as an ocxr1 encrypted_content envelope on close. hiddenThinkingText collects the
+      // item as an occxr1 encrypted_content envelope on close. hiddenThinkingText collects the
       // suppressed text under hideThinkingSummary so the signed text still round-trips.
       let pendingSignature: string | undefined;
       let pendingSignatureBytes = 0;
@@ -518,7 +518,7 @@ export function bridgeToResponsesSSE(
       };
       // hideThinkingSummary for RAW reasoning (openai-chat reasoning_content, kiro tags): no
       // visible reasoning item is emitted — the app renders nothing, so tool cells keep grouping
-      // like native models — but the text still round-trips in a txt-only ocxr1 envelope so
+      // like native models — but the text still round-trips in a txt-only occxr1 envelope so
       // preserveReasoningContentModels replay (GLM interleaved thinking) keeps working. Direct
       // encodeReasoningEnvelope: takeReasoningEnvelope's sig/red guard would drop txt-only.
       let hiddenRawReasoningText = "";
@@ -573,7 +573,7 @@ export function bridgeToResponsesSSE(
       // synthetic compaction item's payload on done.
       let compactionText = "";
       let compactionTextBytes = 0;
-      let currentToolCall: { itemId: string; outputIndex: number; callId: string; name: string; args: string; argsBytes: number; namespace?: string; freeform?: boolean; toolSearch?: boolean; inputEmitted?: string; codeModeHelperName?: string; providerMetadata?: OcxProviderOpaqueToolCallMetadata } | null = null;
+      let currentToolCall: { itemId: string; outputIndex: number; callId: string; name: string; args: string; argsBytes: number; namespace?: string; freeform?: boolean; toolSearch?: boolean; inputEmitted?: string; codeModeHelperName?: string; providerMetadata?: OccxProviderOpaqueToolCallMetadata } | null = null;
       // Open native web-search cell (between begin and end). Holds the output index allocated on
       // begin so the matching done reuses it; closed as `failed` if the stream terminates early.
       let currentWebSearch: { itemId: string; eventId: string; outputIndex: number } | null = null;
@@ -600,7 +600,7 @@ export function bridgeToResponsesSSE(
         return anns;
       };
 
-      const closeCurrentMessage = (inferredPhase?: OcxMessagePhase) => {
+      const closeCurrentMessage = (inferredPhase?: OccxMessagePhase) => {
         if (!currentMsg) return;
         // Release anything the citation filter was holding for this message, then strip the
         // accumulated text: closeCurrentMessage re-sends it in output_text.done and
@@ -1607,12 +1607,12 @@ function buildResponseJSONWithBudget(
     toolSearchToolNames?: Set<string>;
     /** Remote compaction v2 turn — append one synthetic compaction output item (see bridgeToResponsesSSE). */
     compaction?: boolean;
-    onProviderState?: (state: OcxProviderContinuationState) => void;
+    onProviderState?: (state: OccxProviderContinuationState) => void;
     /** Raw adapter-reported usage before wire normalization (see bridgeToResponsesSSE onUsage). */
-    onUsage?: (usage: OcxUsage | undefined) => void;
+    onUsage?: (usage: OccxUsage | undefined) => void;
     translatorBudget?: TranslatorBudget;
     /** Conversation identity for the reasoning replay cache (issue #950). */
-    replayCacheScope?: OcxReasoningReplayScopeRef;
+    replayCacheScope?: OccxReasoningReplayScopeRef;
   },
 ): Record<string, unknown> {
   const responseId = `resp_${uuid()}`;
@@ -1656,7 +1656,7 @@ function buildResponseJSONWithBudget(
     reservation?.commitRetained();
     if (replacedBytes > 0) budget?.releaseRetained(replacedBytes, { kind });
   };
-  let usage: OcxUsage | undefined;
+  let usage: OccxUsage | undefined;
   let errorEvent: Extract<AdapterEvent, { type: "error" }> | undefined;
   let incompleteEvent: Extract<AdapterEvent, { type: "incomplete" }> | undefined;
   let endTurn: boolean | undefined;
@@ -1676,7 +1676,7 @@ function buildResponseJSONWithBudget(
 
   let currentText = "";
   let currentTextBytes = 0;
-  let currentTextPhase: OcxMessagePhase | undefined;
+  let currentTextPhase: OccxMessagePhase | undefined;
   let currentSummaryReasoning = "";
   let currentSummaryReasoningBytes = 0;
   let currentRawReasoning = "";
@@ -1697,7 +1697,7 @@ function buildResponseJSONWithBudget(
   let currentToolCallName = "";
   let currentToolCallCodeModeHelperName: string | undefined;
   let currentToolCallArgs = "";
-  let currentToolCallProviderMetadata: OcxProviderOpaqueToolCallMetadata | undefined;
+  let currentToolCallProviderMetadata: OccxProviderOpaqueToolCallMetadata | undefined;
   let currentToolCallArgsBytes = 0;
   // Web-search citations awaiting the next assistant message (attached as url_citation annotations).
   let pendingWebSources: { url: string; title?: string }[] = [];
@@ -1717,7 +1717,7 @@ function buildResponseJSONWithBudget(
     try { const o = JSON.parse(args); return o && typeof o === "object" ? o : {}; } catch { return {}; }
   };
 
-  const flushText = (inferredPhase?: OcxMessagePhase) => {
+  const flushText = (inferredPhase?: OccxMessagePhase) => {
     if (!currentText) return;
     const phase = currentTextPhase ?? inferredPhase;
     // ChatGPT-backend citation markers arrive as literal private-use characters that the

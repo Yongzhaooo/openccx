@@ -38,7 +38,7 @@ that measurement; older Claude, deepseek, minimax, glm, and qwen entries adverti
 fields at all. The handling below keys off the wire field, not the model id, so any model that
 sends `redactedContent` round-trips.
 
-- The blob rides the existing `ocxr1:` envelope as `krc` (`src/responses/reasoning-envelope.ts`) on
+- The blob rides the existing `occxr1:` envelope as `krc` (`src/responses/reasoning-envelope.ts`) on
   an envelope-only reasoning item — `summary: []`, no text deltas — so it stays invisible in the
   Codex app while round-tripping, exactly like the hidden-thinking path.
 - **Pairing is backwards.** Kiro emits `reasoningContentEvent` at the END of an assistant turn,
@@ -46,7 +46,7 @@ sends `redactedContent` round-trips.
   closed, so the parser attaches it to the PRECEDING assistant message rather than folding it into
   the following turn like ordinary reasoning (`src/responses/parser.ts`). With no assistant turn to
   own it, the blob is dropped rather than mis-paired.
-- The blob lives on `OcxAssistantMessage.kiroRedactedReasoning`, not on a thinking content part, so
+- The blob lives on `OccxAssistantMessage.kiroRedactedReasoning`, not on a thinking content part, so
   no other adapter replays provider-private state if the conversation switches providers.
 
 Kiro reports context pressure in its own `contextUsageEvent`, which is the authoritative source. On

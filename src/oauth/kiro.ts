@@ -5,7 +5,7 @@
  * asks kiro-cli to switch identities in its supported browser flow, then imports that fresh session.
  *
  * Ported from jawcode packages/ai/src/providers/kiro.ts (readKiroCliSqlite, refreshKiroDesktopToken).
- * profileArn/region/client registration are persisted per OCX account so switching the account pool
+ * profileArn/region/client registration are persisted per OCCX account so switching the account pool
  * never combines one account's access token with another account's local Kiro profile metadata.
  */
 import type { KiroOAuthMetadata, OAuthController, OAuthCredentials } from "./types";
@@ -105,7 +105,7 @@ function logoutKiroCliBestEffort(): void {
   }
 }
 
-/** Settle the external CLI side of a forced login after OCX credential persistence resolves. */
+/** Settle the external CLI side of a forced login after OCCX credential persistence resolves. */
 export function settleKiroLoginTransaction(credential: OAuthCredentials, persisted: boolean): void {
   const snapshot = pendingKiroLoginTransactions.get(credential);
   const emptyPrior = pendingKiroEmptyPriorSessions.has(credential);
@@ -239,7 +239,7 @@ export function environmentKiroRoutingMetadata(): Pick<KiroOAuthMetadata, "profi
 
 /**
  * Before Add-account switches the external CLI identity, bind any matching legacy identity-less
- * OCX row to the current CLI session. Unmatched identity-less rows are left alone here so a
+ * OCCX row to the current CLI session. Unmatched identity-less rows are left alone here so a
  * cancelled browser login cannot destroy the only stored credential; after a successful add they
  * remain selectable but cannot borrow the new CLI identity (and reauth refuses identity-less slots).
  */
@@ -350,7 +350,7 @@ export async function loginKiro(ctrl: OAuthController, options: KiroLoginOptions
     const inspected = inspectKiroCliSessionSnapshot();
     if (inspected.blocked) {
       throw new Error(
-        "Kiro CLI session could not be backed up, so OCX will not sign it out. " +
+        "Kiro CLI session could not be backed up, so OCCX will not sign it out. " +
           "Repair or remove the unreadable kiro-cli credential database " +
           "(usually `~/.local/share/kiro-cli/data.sqlite3` or " +
           "`~/Library/Application Support/kiro-cli/data.sqlite3`, or " +
@@ -373,7 +373,7 @@ export async function loginKiro(ctrl: OAuthController, options: KiroLoginOptions
       const credential = await oauthCredentialFromImported(fresh, runner, ctrl.signal);
       throwIfKiroLoginCancelled(ctrl.signal);
       if (!credential.accountId && !credential.email) {
-        throw new Error("Kiro login completed but OCX could not determine a stable account identity.");
+        throw new Error("Kiro login completed but OCCX could not determine a stable account identity.");
       }
       if (previousSession) pendingKiroLoginTransactions.set(credential, previousSession);
       else pendingKiroEmptyPriorSessions.add(credential);
@@ -570,7 +570,7 @@ async function refreshAwsSsoOidcToken(
     // belongs to whichever account kiro-cli is currently signed into.
     if (local?.refresh === refresh) metadata = metadataFromImported(local);
   }
-  // A stored OCX account with no usable `kiro` metadata must still refresh account-scoped: falling
+  // A stored OCCX account with no usable `kiro` metadata must still refresh account-scoped: falling
   // through to `resolveKiroRegion(undefined)` would read KIRO_REGION or the local CLI import and
   // borrow an unrelated account's region after a switch. Environment/manual credentials may still
   // honor explicit KIRO_* routing; other stored accounts pin an empty marker (default region).
@@ -613,7 +613,7 @@ function matchingRotatedKiroCliCredential(
     if (!local.refresh || local.refresh === refresh) return undefined;
     return local;
   } catch {
-    // An unrelated or malformed local store must not block the stored OCX account.
+    // An unrelated or malformed local store must not block the stored OCCX account.
     return undefined;
   }
 }

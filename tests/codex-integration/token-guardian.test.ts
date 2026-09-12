@@ -7,7 +7,7 @@ import { getConfigPath } from "../../src/config";
 import { flushConfigDirHardening } from "../../src/config/paths";
 import { markCodexAccountValidated, readCodexAccountRecord, saveCodexAccountCredential } from "../../src/codex/account-store";
 import { __resetGuardianState, guardianSweep } from "../../src/oauth/token-guardian";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import {
   acquireNativeMainProfileDrain,
   getNativeMainProfileRequestCount,
@@ -16,7 +16,7 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const origHome = process.env.HOME;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 const origCodexHome = process.env.CODEX_HOME;
 const origFetch = globalThis.fetch;
 const WARMUP_INPUT = [{ type: "message", role: "user", content: [{ type: "input_text", text: "hi" }] }];
@@ -24,14 +24,14 @@ let tmp: string;
 
 // kimi refresh is a single token POST (no OAuth discovery hop), so a blanket 200 mock exercises the
 // real getValidAccessToken → refreshKimiToken → saveCredential path cleanly.
-function kimiProvider(refreshPolicy?: OcxProviderConfig["refreshPolicy"]): OcxProviderConfig {
+function kimiProvider(refreshPolicy?: OccxProviderConfig["refreshPolicy"]): OccxProviderConfig {
   return { adapter: "openai-chat", baseUrl: "https://api.moonshot.ai/v1", authMode: "oauth", ...(refreshPolicy ? { refreshPolicy } : {}) };
 }
 
-function writeConfig(partial: Partial<OcxConfig>): void {
+function writeConfig(partial: Partial<OccxConfig>): void {
   const providers = partial.providers ?? { kimi: kimiProvider() };
   const defaultProvider = partial.defaultProvider ?? Object.keys(providers)[0] ?? "kimi";
-  const cfg: OcxConfig = { port: 10100, ...partial, providers, defaultProvider };
+  const cfg: OccxConfig = { port: 10100, ...partial, providers, defaultProvider };
   writeFileSync(getConfigPath(), JSON.stringify(cfg, null, 2));
 }
 
@@ -40,19 +40,19 @@ beforeEach(() => {
   tmp = join(tmpdir(), `token-guardian-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(tmp, { recursive: true });
   process.env.HOME = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
   process.env.CODEX_HOME = join(tmp, "codex");
-  mkdirSync(join(tmp, "ocx"), { recursive: true });
+  mkdirSync(join(tmp, "occx"), { recursive: true });
   mkdirSync(join(tmp, "codex"), { recursive: true });
   __resetGuardianState();
 });
 
 afterEach(async () => {
   // Optional Windows ACL work can outlive credential writes and keep this home open.
-  await flushConfigDirHardening(join(tmp, "ocx"));
+  await flushConfigDirHardening(join(tmp, "occx"));
   resetLifecycleDrainStateForTests();
   if (origHome === undefined) delete process.env.HOME; else process.env.HOME = origHome;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = origOccxHome;
   if (origCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = origCodexHome;
   globalThis.fetch = origFetch;
   removeTreeWithRetry(tmp);
@@ -335,7 +335,7 @@ describe("token guardian", () => {
   });
 
   test("direct mode warms main only and never enumerates the added-account store", async () => {
-    const accountStore = join(tmp, "ocx", "codex-accounts.json");
+    const accountStore = join(tmp, "occx", "codex-accounts.json");
     writeFileSync(accountStore, "invalid-added-store");
     writeFileSync(join(tmp, "codex", "auth.json"), JSON.stringify({
       tokens: { access_token: "main-access", account_id: "main-chatgpt-id" },

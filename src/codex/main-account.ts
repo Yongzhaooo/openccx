@@ -243,14 +243,14 @@ async function resolveMainAccountToken(
   const lockKey = refreshGrantFingerprintForToken(initial.refreshToken);
   // Two locks, because they guard two different things that live in two different
   // homes. `withCodexRefreshFileLock` is keyed on the grant fingerprint and lives
-  // under OPENCODEX_HOME; it serializes refreshes of the SAME grant within one
+  // under OPENCCX_HOME; it serializes refreshes of the SAME grant within one
   // install. The file being rewritten is `auth.json` under CODEX_HOME, which every
-  // OpenCodex install on the machine shares no matter what its own home is -- so two
-  // proxies with distinct OPENCODEX_HOMEs took two unrelated fingerprint locks and
+  // Openccx install on the machine shares no matter what its own home is -- so two
+  // proxies with distinct OPENCCX_HOMEs took two unrelated fingerprint locks and
   // refreshed the one credential concurrently (#2999).
   //
   // The outer claim is the CODEX_HOME coordination the other native-main paths
-  // already use (`.opencodex-native-main.claim.sqlite`), so this needs no new
+  // already use (`.openccx-native-main.claim.sqlite`), so this needs no new
   // primitive and no FFI. Order is claim (machine-wide) then fingerprint lock
   // (per-grant), never the reverse: two processes holding different fingerprint
   // locks and then reaching for the same claim would deadlock.

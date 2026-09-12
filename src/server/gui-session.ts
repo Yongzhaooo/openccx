@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { canonicalGuiBrowserOrigin } from "../lib/gui-pair-capability";
 import {
   isAllowedManagementOrigin,
@@ -100,7 +100,7 @@ function canonicalHttpOrigin(value: unknown): string | null {
   }
 }
 
-export function isRemoteGuiBrowserOriginAllowed(browserOrigin: string, config: OcxConfig): boolean {
+export function isRemoteGuiBrowserOriginAllowed(browserOrigin: string, config: OccxConfig): boolean {
   const canonical = canonicalGuiBrowserOrigin(browserOrigin);
   if (!canonical || canonical !== browserOrigin) return false;
   const publicOrigin = canonicalHttpOrigin(config.hub?.managementPublicOrigin);
@@ -136,7 +136,7 @@ function mintSession(
   evictOldestSession(state);
   let token: string;
   do {
-    token = `ocx_session_${randomBytes(32).toString("base64url")}`;
+    token = `occx_session_${randomBytes(32).toString("base64url")}`;
   } while (state.sessions.has(token));
   const session: GuiSessionRecord = {
     serverOrigin,
@@ -157,7 +157,7 @@ function mintSession(
   };
 }
 
-function tailscaleLoginAllowed(req: Request, config: OcxConfig): boolean {
+function tailscaleLoginAllowed(req: Request, config: OccxConfig): boolean {
   const login = req.headers.get("Tailscale-User-Login");
   if (!login) return false;
   return (config.remoteGui?.allowedTailscaleUsers ?? []).some(user => user === login);
@@ -165,7 +165,7 @@ function tailscaleLoginAllowed(req: Request, config: OcxConfig): boolean {
 
 export function issueGuiSession(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   context: GuiSessionRequestContext = { trustedTailscaleIngress: false },
 ): GuiSessionBootstrap | null {
@@ -255,7 +255,7 @@ function consumeGrantRateSlot(state: GuiSessionState, now: number): void {
 
 export function createGuiPairingGrant(
   browserOrigin: string,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   now = Date.now(),
 ): { grant: string; browserOrigin: string; serverOrigin: string; expiresAt: number } {
@@ -274,7 +274,7 @@ export function createGuiPairingGrant(
   let grant: string;
   let digest: string;
   do {
-    grant = `ocx_pair_${randomBytes(32).toString("base64url")}`;
+    grant = `occx_pair_${randomBytes(32).toString("base64url")}`;
     digest = pairingGrantDigest(grant);
   } while (state.pairingGrants.has(digest));
   const expiresAt = now + GUI_PAIRING_GRANT_TTL_MS;
@@ -286,26 +286,26 @@ function strictPairingGrantBody(body: unknown): string | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   const record = body as Record<string, unknown>;
   if (Object.keys(record).length !== 1 || typeof record.grant !== "string") return null;
-  return /^ocx_pair_[A-Za-z0-9_-]{43}$/.test(record.grant) ? record.grant : null;
+  return /^occx_pair_[A-Za-z0-9_-]{43}$/.test(record.grant) ? record.grant : null;
 }
 
 function hasAlternateCredential(req: Request): boolean {
   return req.headers.has("authorization")
-    || req.headers.has("x-opencodex-api-key")
+    || req.headers.has("x-openccx-api-key")
     || req.headers.has("x-api-key");
 }
 
 export function consumeGuiPairingGrant(
   req: Request,
   body: unknown,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   now?: number,
 ): GuiSessionBootstrap | null;
 export function consumeGuiPairingGrant(
   req: Request,
   body: unknown,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   now: number,
   attemptContext: PairingAttemptContext,
@@ -313,7 +313,7 @@ export function consumeGuiPairingGrant(
 export function consumeGuiPairingGrant(
   req: Request,
   body: unknown,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   now = Date.now(),
   attemptContext?: PairingAttemptContext,
@@ -399,7 +399,7 @@ function isPairingTransportPermitted(origin: string): boolean {
 }
 
 function requestCredential(req: Request): string | null {
-  return req.headers.get("x-opencodex-api-key")?.trim()
+  return req.headers.get("x-openccx-api-key")?.trim()
     || req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
     || null;
 }
@@ -416,7 +416,7 @@ function findSession(
 
 export function authorizeGuiSessionRequest(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   state: GuiSessionState,
   now = Date.now(),
 ): GuiSessionAdmission {
@@ -432,7 +432,7 @@ export function authorizeGuiSessionRequest(
   if (managementRequestOrigin(req, config) !== session.serverOrigin) {
     return { ok: false, reason: "server-origin" };
   }
-  const claimedBrowserOrigin = req.headers.get("x-opencodex-gui-origin");
+  const claimedBrowserOrigin = req.headers.get("x-openccx-gui-origin");
   const browserOrigin = req.headers.get("Origin");
   const safeMethod = req.method === "GET" || req.method === "HEAD";
   if (
@@ -441,7 +441,7 @@ export function authorizeGuiSessionRequest(
     || (!safeMethod && browserOrigin !== session.browserOrigin)
   ) return { ok: false, reason: "browser-origin" };
   if (!safeMethod) {
-    const csrf = req.headers.get("x-opencodex-csrf-token")?.trim();
+    const csrf = req.headers.get("x-openccx-csrf-token")?.trim();
     if (!csrf || !equalSecret(csrf, session.csrfToken)) return { ok: false, reason: "csrf" };
   }
   if (session.issuance !== "loopback") session.expiresAt = now + REMOTE_GUI_SESSION_TTL_MS;

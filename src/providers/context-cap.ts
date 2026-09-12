@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { deleteConfigTopLevelKey } from "../config/rebase-provenance";
 
 export const DEFAULT_PROVIDER_CONTEXT_CAP = 350_000;
@@ -7,12 +7,12 @@ function isValidContextCap(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
 
-export function providerContextCap(config: Pick<OcxConfig, "providerContextCaps">, provider: string): number | undefined {
+export function providerContextCap(config: Pick<OccxConfig, "providerContextCaps">, provider: string): number | undefined {
   const value = config.providerContextCaps?.[provider];
   return isValidContextCap(value) ? value : undefined;
 }
 
-export function providerContextCaps(config: Pick<OcxConfig, "providerContextCaps">): Record<string, number> {
+export function providerContextCaps(config: Pick<OccxConfig, "providerContextCaps">): Record<string, number> {
   const caps = config.providerContextCaps;
   if (!caps || typeof caps !== "object" || Array.isArray(caps)) return {};
   const out: Record<string, number> = {};
@@ -38,17 +38,17 @@ export function resolveUnknownRoutedContextWindow(cap: number | undefined): numb
 }
 
 /** Effective global cap value: explicit config value, else the built-in default. */
-export function globalContextCapValue(config: Pick<OcxConfig, "contextCapValue">): number {
+export function globalContextCapValue(config: Pick<OccxConfig, "contextCapValue">): number {
   const value = config.contextCapValue;
   return isValidContextCap(value) ? Math.floor(value) : DEFAULT_PROVIDER_CONTEXT_CAP;
 }
 
 /** Active caps win over remembered values from an earlier switch-off. */
-export function selectedProviderContextCaps(config: Pick<OcxConfig, "providerContextCaps" | "providerContextCapValues">): Record<string, number> {
+export function selectedProviderContextCaps(config: Pick<OccxConfig, "providerContextCaps" | "providerContextCapValues">): Record<string, number> {
   return { ...providerContextCaps({ providerContextCaps: config.providerContextCapValues }), ...providerContextCaps(config) };
 }
 
-export function setProviderContextCap(config: OcxConfig, provider: string, enabled: boolean, value?: number): void {
+export function setProviderContextCap(config: OccxConfig, provider: string, enabled: boolean, value?: number): void {
   const next = providerContextCaps(config);
   const selected = selectedProviderContextCaps(config);
   if (enabled) {
@@ -68,7 +68,7 @@ export function setProviderContextCap(config: OcxConfig, provider: string, enabl
  * Re-points every already-enabled provider only when `applyToAll` is true (the dashboard's
  * "apply to every routed provider" toggle); otherwise each provider keeps its own cap value.
  */
-export function setGlobalContextCapValue(config: OcxConfig, value: number, applyToAll: boolean): void {
+export function setGlobalContextCapValue(config: OccxConfig, value: number, applyToAll: boolean): void {
   if (!isValidContextCap(value)) return;
   const next = Math.floor(value);
   config.contextCapValue = next;
@@ -82,7 +82,7 @@ export function setGlobalContextCapValue(config: OcxConfig, value: number, apply
 }
 
 /** Enable the cap for every named provider at the current value, or clear all caps. */
-export function setAllProviderContextCaps(config: OcxConfig, providerNames: string[], enabled: boolean): void {
+export function setAllProviderContextCaps(config: OccxConfig, providerNames: string[], enabled: boolean): void {
   const selected = selectedProviderContextCaps(config);
   if (!enabled) {
     if (Object.keys(selected).length > 0) config.providerContextCapValues = selected;
@@ -98,7 +98,7 @@ export function setAllProviderContextCaps(config: OcxConfig, providerNames: stri
 }
 
 /** Provider removal clears both the active limit and its remembered selection. */
-export function forgetProviderContextCap(config: OcxConfig, provider: string): void {
+export function forgetProviderContextCap(config: OccxConfig, provider: string): void {
   setProviderContextCap(config, provider, false);
   const values = { ...config.providerContextCapValues };
   delete values[provider];

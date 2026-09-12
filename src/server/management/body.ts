@@ -1,4 +1,4 @@
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 import { jsonResponse } from "../auth-cors";
 import {
   DecompressedBodyTooLargeError,
@@ -20,7 +20,7 @@ export function readOptionalManagementJsonBody<T = unknown>(req: Request): Promi
 export function managementBodyTooLargeResponse(
   error: unknown,
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
 ): Response | null {
   return error instanceof DecompressedBodyTooLargeError
     ? jsonResponse({ error: "request body too large" }, 413, req, config)

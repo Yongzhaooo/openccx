@@ -12,9 +12,9 @@
  * Layout (siblings, never children — a child would travel WITH the live rename and the
  * live dir cannot move into its own subtree):
  *   <scopeDir>/opencodex                      live package
- *   <scopeDir>/.ocx-staging-<ts>/             npm --prefix root (contains node_modules/...)
- *   <scopeDir>/.ocx-backup-<ts>/opencodex     previous live tree during/after the swap
- *   <scopeDir>/.ocx-recovery.json             double-fault marker with a one-line restore
+ *   <scopeDir>/.occx-staging-<ts>/             npm --prefix root (contains node_modules/...)
+ *   <scopeDir>/.occx-backup-<ts>/opencodex     previous live tree during/after the swap
+ *   <scopeDir>/.occx-recovery.json             double-fault marker with a one-line restore
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -109,12 +109,12 @@ function verifyTreeWithDependencyLookup(packageDir, expectedVersion, dependencyD
   if (expectedVersion && pkg.version !== expectedVersion) {
     failures.push("package.json version " + pkg.version + " != expected " + expectedVersion);
   }
-  const launcher = join(packageDir, "bin", "ocx.mjs");
+  const launcher = join(packageDir, "bin", "occx.mjs");
   try {
     const st = statSync(launcher);
-    if (!st.isFile() || st.size < 1024) failures.push("bin/ocx.mjs missing or truncated");
+    if (!st.isFile() || st.size < 1024) failures.push("bin/occx.mjs missing or truncated");
   } catch {
-    failures.push("bin/ocx.mjs absent");
+    failures.push("bin/occx.mjs absent");
   }
   // The bundled Bun binary is the load-bearing artifact: without it the launcher exits
   // before serving anything, and a boot probe that called this tree healthy would reap
@@ -197,7 +197,7 @@ function renameWithRetry(rename, from, to, attempts = 5) {
 }
 
 function recoveryMarkerPath(scopeDir) {
-  return join(scopeDir, ".ocx-recovery.json");
+  return join(scopeDir, ".occx-recovery.json");
 }
 
 /** Startup probe: restore a backup when the live tree is broken (D4 power-loss rows). */
@@ -206,14 +206,14 @@ export function bootRestoreProbe(packageDir, deps = {}) {
   const scopeDir = dirname(packageDir);
   let backups = [];
   try {
-    backups = readdirSync(scopeDir).filter(name => name.startsWith(".ocx-backup-")).sort();
+    backups = readdirSync(scopeDir).filter(name => name.startsWith(".occx-backup-")).sort();
   } catch {
     return { action: "none" };
   }
   if (backups.length === 0) return { action: "none" };
   const liveOk = existsSync(join(packageDir, "package.json"))
     && verifyInstallTree(packageDir).ok;
-  const newestBackup = join(scopeDir, backups[backups.length - 1], "opencodex");
+  const newestBackup = join(scopeDir, backups[backups.length - 1], "openccx");
   if (liveOk) {
     // Live is healthy: the backups are leftovers from a completed swap. Reap them.
     for (const name of backups) {
@@ -247,7 +247,7 @@ export function transactionalNpmUpdate({
 }) {
   const rename = deps.rename ?? renameSync;
   const scopeDir = dirname(packageDir);
-  const stageRoot = join(scopeDir, stampedName(".ocx-staging"));
+  const stageRoot = join(scopeDir, stampedName(".occx-staging"));
   // GLOBAL-style staging (-g --prefix): npm nests the package's dependencies INSIDE the
   // package dir, exactly like the live global tree this stage will replace. A local-style
   // install would hoist bun/zod to stageRoot/node_modules — siblings that the swap would
@@ -296,8 +296,8 @@ export function transactionalNpmUpdate({
   }
 
   // D3: swap. live -> backup, stage -> live, re-verify live, rollback on failure.
-  const backupRoot = join(scopeDir, stampedName(".ocx-backup"));
-  const backupPackage = join(backupRoot, "opencodex");
+  const backupRoot = join(scopeDir, stampedName(".occx-backup"));
+  const backupPackage = join(backupRoot, "openccx");
   try {
     mkdirSync(backupRoot, { recursive: true });
   } catch (error) {

@@ -50,7 +50,7 @@ import {
 
 /**
  * Third-party extension layers cannot be enumerated (devlog 001 class E), and no
- * WP1 export can say so — it is a statement about what opencodex can know, not
+ * WP1 export can say so — it is a statement about what openccx can know, not
  * about the user's file. Stating it explicitly beats implying the inventory is
  * exhaustive. If class E ever becomes enumerable, this constant is what changes.
  */

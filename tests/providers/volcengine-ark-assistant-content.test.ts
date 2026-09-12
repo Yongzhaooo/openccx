@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
-import type { OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 /**
  * #796: Volcengine Ark validates an assistant message's text as a REQUIRED parameter and treats
@@ -18,7 +18,7 @@ import type { OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../src/
  * inferred from the error's nested parameter path and is still unconfirmed; see #796.
  */
 
-function providerFor(baseUrl: string): OcxProviderConfig {
+function providerFor(baseUrl: string): OccxProviderConfig {
   return { adapter: "openai-chat", baseUrl, apiKey: "sk-test", authMode: "key" };
 }
 
@@ -34,8 +34,8 @@ interface ChatMsg {
   tool_call_id?: string;
 }
 
-function wire(provider: OcxProviderConfig, messages: OcxMessage[]): ChatMsg[] {
-  const parsed: OcxParsedRequest = {
+function wire(provider: OccxProviderConfig, messages: OccxMessage[]): ChatMsg[] {
+  const parsed: OccxParsedRequest = {
     modelId: "kimi-k3",
     context: { messages },
     stream: false,
@@ -45,7 +45,7 @@ function wire(provider: OcxProviderConfig, messages: OcxMessage[]): ChatMsg[] {
   return (JSON.parse(req.body) as { messages: ChatMsg[] }).messages;
 }
 
-function assistantToolCall(): OcxMessage {
+function assistantToolCall(): OccxMessage {
   return {
     role: "assistant",
     content: [{ type: "toolCall" as const, id: "call_1", name: "shell", arguments: { cmd: "ls" } }],
@@ -58,7 +58,7 @@ function assistantsOf(messages: ChatMsg[]): ChatMsg[] {
 }
 
 describe("Volcengine Ark empty assistant content (#796)", () => {
-  const history: OcxMessage[] = [
+  const history: OccxMessage[] = [
     { role: "user", content: "list dir", timestamp: 0 },
     assistantToolCall(),
     { role: "toolResult", toolCallId: "call_1", toolName: "shell", content: "file1.txt", isError: false, timestamp: 0 },
@@ -90,7 +90,7 @@ describe("Volcengine Ark empty assistant content (#796)", () => {
   test("a synthesized orphan tool-call assistant follows the same rule", () => {
     // A tool result with no matching call: the adapter fabricates the assistant turn, and that
     // fabricated message hits the same Ark validator.
-    const orphan: OcxMessage[] = [
+    const orphan: OccxMessage[] = [
       { role: "user", content: "hi", timestamp: 0 },
       { role: "toolResult", toolCallId: "call_missing", toolName: "shell", content: "out", isError: false, timestamp: 0 },
     ];
@@ -125,7 +125,7 @@ describe("Volcengine Ark empty assistant content (#796)", () => {
     // preserveReasoningContentModels -- public config, so it is not a theoretical branch.
     const arkReasoning = providerFor("https://ark.cn-beijing.volces.com/api/v3");
     arkReasoning.preserveReasoningContentModels = ["kimi-k3"];
-    const reasoningHistory: OcxMessage[] = [
+    const reasoningHistory: OccxMessage[] = [
       { role: "user", content: "hi", timestamp: 0 },
       { role: "assistant", content: [{ type: "thinking" as const, thinking: "deliberating" }], timestamp: 0 },
     ];

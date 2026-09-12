@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Database } from "bun:sqlite";
 import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { classifyRecoverableHistoryError, countPendingOpencodexHistory, historyBackupPathFor, isRecoverableHistoryError, migrateHistoryToOpenai, restoreLegacyOpenaiHistory, restoredUserEventFor, setAfterNoopPendingCountForTests, setAfterStrictHistoryRolloutAppendForTests, setBeforeHistoryApplyTransactionForTests, setBeforeHistoryBackupConsumeForTests, setBeforeStrictHistoryRolloutAppendForTests, setHistoryDbBusyTimeoutForTests, snapshotCodexHistoryNoop, syncCodexHistoryProvider, withHistoryRetry } from "../../src/codex/history-provider";
+import { classifyRecoverableHistoryError, countPendingOpenccxHistory, historyBackupPathFor, isRecoverableHistoryError, migrateHistoryToOpenai, restoreLegacyOpenaiHistory, restoredUserEventFor, setAfterNoopPendingCountForTests, setAfterStrictHistoryRolloutAppendForTests, setBeforeHistoryApplyTransactionForTests, setBeforeHistoryBackupConsumeForTests, setBeforeStrictHistoryRolloutAppendForTests, setHistoryDbBusyTimeoutForTests, snapshotCodexHistoryNoop, syncCodexHistoryProvider, withHistoryRetry } from "../../src/codex/history-provider";
 import { INVALID_HISTORY_BACKUP_FIXTURES, validHistoryBackupFixture } from "../helpers/codex-history-manifest-fixtures";
 import { preflightCodexHistoryInjection, setHistoryAppendHooksForTests } from "../../src/codex/history-provider";
 
@@ -38,7 +38,7 @@ function latestSessionMetaPayload(path: string): Record<string, unknown> {
 }
 
 function makeFixture({ includeExec = false, includeLegacy = false } = {}) {
-  const dir = join(tmpdir(), `ocx-history-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-history-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true });
   const rollout = join(dir, "rollout.jsonl");
   writeFileSync(rollout, [
@@ -52,7 +52,7 @@ function makeFixture({ includeExec = false, includeLegacy = false } = {}) {
   writeFileSync(execRollout, [
     JSON.stringify({
       type: "session_meta",
-      payload: { id: "thread-2", model_provider: "opencodex", source: "exec", cwd: dir },
+      payload: { id: "thread-2", model_provider: "openccx", source: "exec", cwd: dir },
     }),
     JSON.stringify({ type: "event_msg", timestamp: "2026-01-01T00:00:00.000Z", payload: { message: "y" } }),
   ].join("\n") + "\n");
@@ -60,7 +60,7 @@ function makeFixture({ includeExec = false, includeLegacy = false } = {}) {
   writeFileSync(legacyRollout, [
     JSON.stringify({
       type: "session_meta",
-      payload: { id: "thread-3", model_provider: "opencodex", source: "cli", cwd: dir },
+      payload: { id: "thread-3", model_provider: "openccx", source: "cli", cwd: dir },
     }),
     JSON.stringify({ type: "event_msg", timestamp: "2026-01-01T00:00:00.000Z", payload: { message: "z" } }),
   ].join("\n") + "\n");
@@ -89,13 +89,13 @@ function makeFixture({ includeExec = false, includeLegacy = false } = {}) {
   if (includeExec) {
     db.run(`
       INSERT INTO threads (id, rollout_path, model_provider, source, first_user_message, has_user_event)
-      VALUES ('thread-2', ?, 'opencodex', 'exec', 'hello from exec', 0)
+      VALUES ('thread-2', ?, 'openccx', 'exec', 'hello from exec', 0)
     `, execRollout);
   }
   if (includeLegacy) {
     db.run(`
       INSERT INTO threads (id, rollout_path, model_provider, source, first_user_message, has_user_event)
-      VALUES ('thread-3', ?, 'opencodex', 'cli', 'legacy remapped row', 1)
+      VALUES ('thread-3', ?, 'openccx', 'cli', 'legacy remapped row', 1)
     `, legacyRollout);
   }
   db.close();
@@ -107,9 +107,9 @@ describe("Codex history provider sync", () => {
     const fixture = makeFixture();
     noopSnapshotArtifacts.add(join(fixture.dbPath,".."));
     writeFileSync(fixture.rollout, first + "\n");
-    expect(syncCodexHistoryProvider("opencodex",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,files:0,integrityCode:"history_rollout_record_invalid"});
+    expect(syncCodexHistoryProvider("openccx",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,files:0,integrityCode:"history_rollout_record_invalid"});
     const db = new Database(fixture.dbPath);
-    db.run("UPDATE threads SET model_provider='opencodex'");
+    db.run("UPDATE threads SET model_provider='openccx'");
     db.close();
     expect(restoreLegacyOpenaiHistory(fixture.dbPath)).toMatchObject({failed:true,rows:0,files:0,integrityCode:"history_rollout_record_invalid"});
     expect(readFileSync(fixture.rollout,"utf8")).toBe(first+"\n");
@@ -124,7 +124,7 @@ describe("Codex history provider sync", () => {
       renameSync(path,path+".old");
       writeFileSync(path,replacement);
     }});
-    expect(syncCodexHistoryProvider("opencodex",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,integrityCode:"history_rollout_identity_changed"});
+    expect(syncCodexHistoryProvider("openccx",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,integrityCode:"history_rollout_identity_changed"});
     expect(readFileSync(fixture.rollout,"utf8")).toBe(replacement);
     const db=new Database(fixture.dbPath,{readonly:true});
     expect(db.query("SELECT model_provider FROM threads WHERE id='thread-1'").get()).toEqual({model_provider:"openai"});
@@ -138,8 +138,8 @@ describe("Codex history provider sync", () => {
       // Leave enough first-line padding for forward provider replacement in place.
       const raw = readFileSync(fixture.rollout, "utf8");
       writeFileSync(fixture.rollout, raw.replace('"model_provider":"openai"', '"model_provider":"openai"                '));
-      if (strict) expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath).rows).toBe(1);
-      const provider = strict ? "opencodex" : "openai";
+      if (strict) expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath).rows).toBe(1);
+      const provider = strict ? "openccx" : "openai";
       const replacement = JSON.stringify({ordinal:0,type:"session_meta",payload:{id:"thread-1",history_mode:"paginated",model_provider:provider}}) + "\n";
       let fired = false;
       setHistoryAppendHooksForTests({[stage]:(path:string)=>{
@@ -148,7 +148,7 @@ describe("Codex history provider sync", () => {
         renameSync(path,path+".old");
         writeFileSync(path,replacement);
       }});
-      const result=syncCodexHistoryProvider(strict?"openai":"opencodex",fixture.dbPath,fixture.backupPath);
+      const result=syncCodexHistoryProvider(strict?"openai":"openccx",fixture.dbPath,fixture.backupPath);
       expect(fired).toBe(true);
       expect(result).toMatchObject({failed:true,rows:0,integrityCode:strict?"history_backup_partial_restore":"history_rollout_identity_changed"});
       expect(readFileSync(fixture.rollout,"utf8")).toBe(replacement);
@@ -164,7 +164,7 @@ describe("Codex history provider sync", () => {
     noopSnapshotArtifacts.add(join(fixture.dbPath,".."));
     const replacement=JSON.stringify({ordinal:0,type:"session_meta",payload:{id:"thread-1",history_mode:"paginated",model_provider:"openai"}})+"\n";
     setBeforeHistoryApplyTransactionForTests(()=>writeFileSync(fixture.rollout,replacement));
-    expect(syncCodexHistoryProvider("opencodex",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,integrityCode:"history_paginated_requires_native_writer"});
+    expect(syncCodexHistoryProvider("openccx",fixture.dbPath,fixture.backupPath)).toMatchObject({failed:true,rows:0,integrityCode:"history_paginated_requires_native_writer"});
     expect(readFileSync(fixture.rollout,"utf8")).toBe(replacement);
     const db=new Database(fixture.dbPath,{readonly:true});
     expect(db.query("SELECT model_provider FROM threads WHERE id='thread-1'").get()).toEqual({model_provider:"openai"});
@@ -177,7 +177,7 @@ describe("Codex history provider sync", () => {
     const db = new Database(fixture.dbPath);
     db.run("ALTER TABLE threads ADD COLUMN history_mode TEXT DEFAULT 'legacy'");
     db.close();
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath)).toMatchObject({failed:true,rows:0,files:0,integrityCode:"history_paginated_requires_native_writer"});
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath)).toMatchObject({failed:true,rows:0,files:0,integrityCode:"history_paginated_requires_native_writer"});
     expect(readFileSync(fixture.rollout,"utf8")).toBe(before);
     expect(existsSync(fixture.backupPath)).toBe(false);
   });
@@ -203,7 +203,7 @@ describe("Codex history provider sync", () => {
       else records[0].payload.history_mode = "paginated";
       const before = records.map(record => JSON.stringify(record)).join("\n") + "\n";
       writeFileSync(fixture.rollout, before);
-      const result = syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+      const result = syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
       expect(result).toMatchObject({ rows: 0, files: 0, failed: true, integrityCode: "history_paginated_requires_native_writer" });
       expect(readFileSync(fixture.rollout, "utf8")).toBe(before);
       expect(existsSync(fixture.backupPath)).toBe(false);
@@ -216,7 +216,7 @@ describe("Codex history provider sync", () => {
   test("preserves a routed paginated rollout and its restore manifest", () => {
     const fixture = makeFixture();
     noopSnapshotArtifacts.add(join(fixture.dbPath, ".."));
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath).failed).toBeUndefined();
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath).failed).toBeUndefined();
     const records = readFileSync(fixture.rollout, "utf8").trim().split("\n").map(line => JSON.parse(line));
     records.forEach((record, ordinal) => { record.ordinal = ordinal; });
     const before = records.map(record => JSON.stringify(record)).join("\n") + "\n";
@@ -228,21 +228,21 @@ describe("Codex history provider sync", () => {
     expect(readFileSync(fixture.rollout, "utf8")).toBe(before);
     expect(readFileSync(fixture.backupPath, "utf8")).toBe(manifest);
     const db = new Database(fixture.dbPath, { readonly: true });
-    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "opencodex" });
+    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "openccx" });
     db.close();
   });
 
-  test("maps resumable Codex threads to opencodex via the latest session_meta", () => {
+  test("maps resumable Codex threads to openccx via the latest session_meta", () => {
     const { dbPath, backupPath, rollout } = makeFixture();
 
-    const result = syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    const result = syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     expect(result).toEqual({ rows: 1, files: 1 });
     const db = new Database(dbPath);
-    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "opencodex" });
+    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "openccx" });
     expect(db.query("SELECT has_user_event FROM threads WHERE id = 'thread-1'").get()).toEqual({ has_user_event: 1 });
     db.close();
-    expect(latestSessionMetaPayload(rollout).model_provider).toBe("opencodex");
+    expect(latestSessionMetaPayload(rollout).model_provider).toBe("openccx");
   });
 
   test("routes and exactly restores a resumable row with a null first-user message", () => {
@@ -251,11 +251,11 @@ describe("Codex history provider sync", () => {
     db.run("UPDATE threads SET first_user_message = NULL, has_user_event = 0 WHERE id = 'thread-1'");
     db.close();
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
     const routed = new Database(fixture.dbPath, { readonly: true });
     expect(routed.query("SELECT model_provider, first_user_message, has_user_event FROM threads WHERE id = 'thread-1'").get())
-      .toEqual({ model_provider: "opencodex", first_user_message: null, has_user_event: 0 });
+      .toEqual({ model_provider: "openccx", first_user_message: null, has_user_event: 0 });
     routed.close();
 
     expect(syncCodexHistoryProvider("openai", fixture.dbPath, fixture.backupPath))
@@ -278,7 +278,7 @@ describe("Codex history provider sync", () => {
     db.run("UPDATE threads SET first_user_message = NULL, has_user_event = 0 WHERE id = 'thread-1'");
     db.close();
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
 
     setBeforeHistoryBackupConsumeForTests(() => {
@@ -300,7 +300,7 @@ describe("Codex history provider sync", () => {
     const active = new Database(fixture.dbPath);
     active.run("UPDATE threads SET first_user_message = 'hello', has_user_event = 1 WHERE id = 'thread-1'");
     active.close();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
 
     const after = JSON.parse(readFileSync(fixture.backupPath, "utf8")) as {
       version: number;
@@ -308,10 +308,10 @@ describe("Codex history provider sync", () => {
     };
     expect(after.version).toBe(2);
     // Re-snapshotted for THIS attempt: the message is non-empty now, so the expected
-    // post-image is a 1 that OpenCodex itself wrote.
+    // post-image is a 1 that Openccx itself wrote.
     expect(after.entries["thread-1"]?.hadFirstUserMessage).toBe(true);
 
-    // And the user's activity survives the restore rather than being read as OpenCodex's.
+    // And the user's activity survives the restore rather than being read as Openccx's.
     syncCodexHistoryProvider("openai", fixture.dbPath, fixture.backupPath);
     const restored = new Database(fixture.dbPath, { readonly: true });
     expect(restored.query("SELECT model_provider, has_user_event FROM threads WHERE id = 'thread-1'").get())
@@ -323,7 +323,7 @@ describe("Codex history provider sync", () => {
     // If the "none" proof could not be written - a read-only directory during the rewrite,
     // say - the entry still reads "committed" while the row has drifted. Keeping the
     // recorded baseline would erase the user's event; refreshing it would preserve one
-    // OpenCodex authored. Undecidable, so refuse rather than pick.
+    // Openccx authored. Undecidable, so refuse rather than pick.
     //
     // Undecidable requires that the previous route COULD have written the differing event:
     // it sets 1 only when the message was non-empty at its own snapshot. So this fixture
@@ -331,7 +331,7 @@ describe("Codex history provider sync", () => {
     // user's.
     const fixture = makeFixture();
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
 
     // Restore lands, finalization fails, and the proof write fails too: hand-write the
@@ -356,7 +356,7 @@ describe("Codex history provider sync", () => {
 
     // Reported as an integrity refusal with nothing applied, which is how this layer
     // surfaces a state it will not guess at.
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toMatchObject({ rows: 0, files: 0, failed: true, failureReason: "integrity" });
     // Nothing was rewritten: the row and its manifest are exactly as they were.
     const untouched = new Database(fixture.dbPath, { readonly: true });
@@ -365,10 +365,10 @@ describe("Codex history provider sync", () => {
     untouched.close();
   });
 
-  test("restores an event OpenCodex authored even after legacy recovery returns the tuple", () => {
-    // The history the audit rounds kept circling: route writes opencodex/vscode/1, legacy
+  test("restores an event Openccx authored even after legacy recovery returns the tuple", () => {
+    // The history the audit rounds kept circling: route writes openccx/vscode/1, legacy
     // recovery pulls it back to openai/vscode/1, and the row now wears its ORIGINAL tuple
-    // carrying an event OpenCodex wrote. The classifier has to read the committed marker
+    // carrying an event Openccx wrote. The classifier has to read the committed marker
     // plus the route's expected event rather than the tuple, or restore keeps a 1 the user
     // never generated. A pure classifier input cannot express this - it needs the real
     // route and the real recovery.
@@ -383,11 +383,11 @@ describe("Codex history provider sync", () => {
       payload: { id: "thread-1", model_provider: "openai", source: "vscode" },
     }) + "\n");
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
     const routed = new Database(fixture.dbPath, { readonly: true });
     expect(routed.query("SELECT model_provider, has_user_event FROM threads WHERE id = 'thread-1'").get())
-      .toEqual({ model_provider: "opencodex", has_user_event: 1 });
+      .toEqual({ model_provider: "openccx", has_user_event: 1 });
     routed.close();
 
     // Legacy recovery returns provider to openai and leaves the event flag at 1.
@@ -398,7 +398,7 @@ describe("Codex history provider sync", () => {
     recovered.close();
 
     // Restore must put the event back to the recorded original: the route expected a 1, so
-    // that 1 is OpenCodex's, not the user's.
+    // that 1 is Openccx's, not the user's.
     const result = syncCodexHistoryProvider("openai", fixture.dbPath, fixture.backupPath);
     const restored = new Database(fixture.dbPath, { readonly: true });
     const row = restored.query<{ model_provider: string; source: string; has_user_event: number }, []>(
@@ -432,26 +432,26 @@ describe("Codex history provider sync", () => {
     const cases: Array<[string, ReturnType<typeof row>, ReturnType<typeof entry>, 0 | 1 | null]> = [
       // A - exactly the recorded original.
       ["A: untouched original restores its own value", row("openai", "vscode", 0), entry(), 0],
-      // B - the expected post-image; OpenCodex wrote it, so the manifest is authoritative.
-      ["B: routed post-image restores the recorded 0", row("opencodex", "vscode", 1), entry({ hadFirstUserMessage: true }), 0],
-      ["B: routed post-image of a null-message row", row("opencodex", "vscode", 0, null), entry({ hadFirstUserMessage: false }), 0],
-      ["B: exec legacy bridge is still recognized", row("openai", "cli", 1), entry({ modelProvider: "opencodex", source: "exec", hasUserEvent: 1 }), 1],
+      // B - the expected post-image; Openccx wrote it, so the manifest is authoritative.
+      ["B: routed post-image restores the recorded 0", row("openccx", "vscode", 1), entry({ hadFirstUserMessage: true }), 0],
+      ["B: routed post-image of a null-message row", row("openccx", "vscode", 0, null), entry({ hadFirstUserMessage: false }), 0],
+      ["B: exec legacy bridge is still recognized", row("openai", "cli", 1), entry({ modelProvider: "openccx", source: "exec", hasUserEvent: 1 }), 1],
       // C - original tuple with 0 to 1 drift, decided by provenance.
       ["C: relabel none is user activity", row("openai", "vscode", 1), entry({ relabel: "none", hadFirstUserMessage: false }), 1],
-      ["C: committed whose route expected 1 is OpenCodex's own", row("openai", "vscode", 1), entry({ relabel: "committed", hadFirstUserMessage: true }), 0],
-      ["C: committed whose route expected 0 cannot be OpenCodex's", row("openai", "vscode", 1), entry({ relabel: "committed", hadFirstUserMessage: false }), 1],
+      ["C: committed whose route expected 1 is Openccx's own", row("openai", "vscode", 1), entry({ relabel: "committed", hadFirstUserMessage: true }), 0],
+      ["C: committed whose route expected 0 cannot be Openccx's", row("openai", "vscode", 1), entry({ relabel: "committed", hadFirstUserMessage: false }), 1],
       ["C: pending with an expected-0 route is decidable", row("openai", "vscode", 1), entry({ relabel: "pending", hadFirstUserMessage: false }), 1],
       ["C: pending with an expected-1 route is undecidable", row("openai", "vscode", 1), entry({ relabel: "pending", hadFirstUserMessage: true }), null],
       ["C: legacy entry with drift refuses, as dev does", row("openai", "vscode", 1), entry({ hadFirstUserMessage: true }), null],
       // Reverse drift is foreign under every provenance: nothing in this system clears the
       // flag, so a baseline that moved down is a decision this manifest does not own.
       ["reverse drift refuses even with a none marker", row("openai", "vscode", 0), entry({ hasUserEvent: 1, relabel: "none" }), null],
-      ["C: exec-origin cannot be reached by legacy return", row("opencodex", "exec", 1), entry({ modelProvider: "opencodex", source: "exec", relabel: "pending", hadFirstUserMessage: true }), 1],
+      ["C: exec-origin cannot be reached by legacy return", row("openccx", "exec", 1), entry({ modelProvider: "openccx", source: "exec", relabel: "pending", hadFirstUserMessage: true }), 1],
       // D - routed tuple with drift; no provenance needed.
-      ["D: drift on the routed tuple is the user's", row("opencodex", "vscode", 1), entry({ relabel: "pending", hadFirstUserMessage: false }), 1],
-      // An exec-origin row at opencodex/cli/1 is B, not D: routeExec always writes 1, so
+      ["D: drift on the routed tuple is the user's", row("openccx", "vscode", 1), entry({ relabel: "pending", hadFirstUserMessage: false }), 1],
+      // An exec-origin row at openccx/cli/1 is B, not D: routeExec always writes 1, so
       // that IS the expected post-image and the recorded value is authoritative.
-      ["B: exec-origin post-image is opencodex/cli/1", row("opencodex", "cli", 1), entry({ modelProvider: "opencodex", source: "exec", hadFirstUserMessage: false }), 0],
+      ["B: exec-origin post-image is openccx/cli/1", row("openccx", "cli", 1), entry({ modelProvider: "openccx", source: "exec", hadFirstUserMessage: false }), 0],
       // Neither shape - a foreign decision this manifest does not own.
       ["reverse drift never restores", row("openai", "vscode", 0), entry({ hasUserEvent: 1, relabel: "committed" }), null],
       ["a different provider is foreign", row("anthropic", "vscode", 0), entry(), null],
@@ -468,13 +468,13 @@ describe("Codex history provider sync", () => {
   test("preserves a first user message that arrived after routing (#3026)", () => {
     // Routing derives the post-image has_user_event from the message AT SNAPSHOT TIME. A
     // restore that recomputes it from the message as it is NOW reads the user's first
-    // message as OpenCodex's own write and erases the activity.
+    // message as Openccx's own write and erases the activity.
     const fixture = makeFixture();
     const db = new Database(fixture.dbPath);
     db.run("UPDATE threads SET first_user_message = NULL, has_user_event = 0 WHERE id = 'thread-1'");
     db.close();
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
 
     // The user types for the first time while the row is routed.
@@ -485,7 +485,7 @@ describe("Codex history provider sync", () => {
     expect(syncCodexHistoryProvider("openai", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
     const restored = new Database(fixture.dbPath, { readonly: true });
-    // Provenance restored, activity kept: OpenCodex owns provider and source, the user owns
+    // Provenance restored, activity kept: Openccx owns provider and source, the user owns
     // this flag, and the routing write for this entry produced a 0.
     expect(restored.query("SELECT model_provider, source, has_user_event FROM threads WHERE id = 'thread-1'").get())
       .toEqual({ model_provider: "openai", source: "vscode", has_user_event: 1 });
@@ -498,7 +498,7 @@ describe("Codex history provider sync", () => {
     // would brick exactly the population this fix exists to repair, so an entry without the
     // fields must restore on the pre-existing behaviour.
     const fixture = makeFixture();
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
 
     // Rewrite the manifest in the v1 shape, dropping both new fields.
@@ -535,7 +535,7 @@ describe("Codex history provider sync", () => {
       late.close();
     });
 
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
     const manifest = JSON.parse(readFileSync(fixture.backupPath, "utf8"));
     expect(Object.keys(manifest.entries)).toEqual(["thread-1"]);
@@ -560,7 +560,7 @@ describe("Codex history provider sync", () => {
     const before = readFileSync(rollout, "utf8");
     const beforeLineCount = before.split("\n").filter(Boolean).length;
 
-    const result = syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    const result = syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     expect(result).toEqual({ rows: 1, files: 1 });
     // No temp+rename: the app caches the live append handle, so the inode must survive.
@@ -570,7 +570,7 @@ describe("Codex history provider sync", () => {
     expect(after.startsWith(before)).toBe(true);
     // Exactly one new session_meta line was appended, and it carries the new provider.
     expect(after.split("\n").filter(Boolean).length).toBe(beforeLineCount + 1);
-    expect(latestSessionMetaPayload(rollout).model_provider).toBe("opencodex");
+    expect(latestSessionMetaPayload(rollout).model_provider).toBe("openccx");
     // The original first line is untouched.
     expect(JSON.parse(before.split("\n")[0])).toEqual(JSON.parse(after.split("\n")[0]));
   });
@@ -586,22 +586,22 @@ describe("Codex history provider sync", () => {
     appendFileSync(rollout, foreignLine + "\n");
     const before = readFileSync(rollout, "utf8");
 
-    const result = syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    const result = syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     // The append describes THIS thread — never a clone of the foreign record, which the app
     // would discard. Routing the row without the file left the pair unrestorable (#3026).
     expect(result.files).toBe(1);
     const after = readFileSync(rollout, "utf8");
     expect(after.startsWith(before)).toBe(true);
-    expect(latestSessionMetaPayload(rollout)).toMatchObject({ id: "thread-1", model_provider: "opencodex" });
+    expect(latestSessionMetaPayload(rollout)).toMatchObject({ id: "thread-1", model_provider: "openccx" });
     // The foreign thread's record is still there, exactly once, exactly as written.
     expect(after.split("\n").filter(Boolean).filter(line => line === foreignLine)).toHaveLength(1);
     const db = new Database(dbPath);
-    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "opencodex" });
+    expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get()).toEqual({ model_provider: "openccx" });
     db.close();
   });
 
-  test("rewrites line 1 in place (length-preserving) when reverting an opencodex-origin rollout, so a later first-line clone cannot resurrect opencodex", () => {
+  test("rewrites line 1 in place (length-preserving) when reverting an openccx-origin rollout, so a later first-line clone cannot resurrect openccx", () => {
     const { dbPath, legacyRollout } = makeFixture({ includeLegacy: true });
     // Only the explicit legacy recovery command may force a bare routed row to OpenAI.
     const firstLineBefore = readFileSync(legacyRollout, "utf8").split("\n")[0];
@@ -627,18 +627,18 @@ describe("Codex history provider sync", () => {
   });
 
   test("patches line 1 even when the first session_meta line is larger than the read chunk (big base_instructions)", () => {
-    const dir = join(tmpdir(), `ocx-bighead-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const dir = join(tmpdir(), `occx-bighead-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(dir, { recursive: true });
     const rollout = join(dir, "rollout.jsonl");
     const big = "x".repeat(200_000); // > 64KiB read chunk, forces the probe to grow
     writeFileSync(rollout, [
-      JSON.stringify({ type: "session_meta", payload: { id: "big-1", model_provider: "opencodex", source: "cli", cwd: dir, base_instructions: big } }),
+      JSON.stringify({ type: "session_meta", payload: { id: "big-1", model_provider: "openccx", source: "cli", cwd: dir, base_instructions: big } }),
       JSON.stringify({ type: "event_msg", timestamp: "2026-01-01T00:00:00.000Z", payload: { message: "live turn keep me" } }),
     ].join("\n") + "\n");
     const dbPath = join(dir, "state_5.sqlite");
     const db = new Database(dbPath);
     db.run(`CREATE TABLE threads (id TEXT PRIMARY KEY, rollout_path TEXT NOT NULL, model_provider TEXT NOT NULL, source TEXT NOT NULL, first_user_message TEXT NOT NULL, has_user_event INTEGER NOT NULL DEFAULT 0)`);
-    db.run(`INSERT INTO threads VALUES ('big-1', ?, 'opencodex', 'cli', 'hi', 1)`, rollout);
+    db.run(`INSERT INTO threads VALUES ('big-1', ?, 'openccx', 'cli', 'hi', 1)`, rollout);
     db.close();
     const firstLineBefore = readFileSync(rollout, "utf8").split("\n")[0];
 
@@ -652,7 +652,7 @@ describe("Codex history provider sync", () => {
 
   test("maps resumable Codex threads back to openai", () => {
     const { dbPath, backupPath, rollout } = makeFixture();
-    syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     const result = syncCodexHistoryProvider("openai", dbPath, backupPath);
 
@@ -671,7 +671,7 @@ describe("Codex history provider sync", () => {
   test("does not consume a history backup written for a different Codex state DB", () => {
     const first = makeFixture();
     const second = makeFixture();
-    syncCodexHistoryProvider("opencodex", first.dbPath, first.backupPath);
+    syncCodexHistoryProvider("openccx", first.dbPath, first.backupPath);
 
     const manifestBefore = readFileSync(first.backupPath);
     expect(syncCodexHistoryProvider("openai", second.dbPath, first.backupPath))
@@ -684,15 +684,15 @@ describe("Codex history provider sync", () => {
     db.close();
   });
 
-  test("promotes opencodex exec threads to app-visible cli source and restores their exact routed provenance", () => {
+  test("promotes openccx exec threads to app-visible cli source and restores their exact routed provenance", () => {
     const { dbPath, backupPath, execRollout } = makeFixture({ includeExec: true });
 
-    const result = syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    const result = syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     expect(result).toEqual({ rows: 2, files: 2 });
     let db = new Database(dbPath);
     expect(db.query("SELECT model_provider, source, has_user_event FROM threads WHERE id = 'thread-2'").get()).toEqual({
-      model_provider: "opencodex",
+      model_provider: "openccx",
       source: "cli",
       has_user_event: 1,
     });
@@ -704,15 +704,15 @@ describe("Codex history provider sync", () => {
     expect(restore).toEqual({ rows: 2, files: 2 });
     db = new Database(dbPath);
     expect(db.query("SELECT model_provider, source, has_user_event FROM threads WHERE id = 'thread-2'").get()).toEqual({
-      model_provider: "opencodex",
+      model_provider: "openccx",
       source: "exec",
       has_user_event: 0,
     });
     db.close();
-    expect(latestSessionMetaPayload(execRollout).model_provider).toBe("opencodex");
+    expect(latestSessionMetaPayload(execRollout).model_provider).toBe("openccx");
     expect(latestSessionMetaPayload(execRollout).source).toBe("exec");
     expect(existsSync(backupPath)).toBe(false);
-    expect(countPendingOpencodexHistory(dbPath, backupPath)).toEqual({ pendingRows: 0, backupEntries: 0 });
+    expect(countPendingOpenccxHistory(dbPath, backupPath)).toEqual({ pendingRows: 0, backupEntries: 0 });
   });
 
   test("leaves no-backup routed-provider history byte-identical during native restore", () => {
@@ -725,7 +725,7 @@ describe("Codex history provider sync", () => {
     expect(result).toEqual({ rows: 0, files: 0 });
     const db = new Database(dbPath, { readonly: true });
     expect(db.query("SELECT model_provider, source FROM threads WHERE id = 'thread-3'").get()).toEqual({
-      model_provider: "opencodex",
+      model_provider: "openccx",
       source: "cli",
     });
     db.close();
@@ -743,7 +743,7 @@ describe("Codex history provider sync", () => {
     appendFileSync(legacyRollout, JSON.stringify({
       type: "session_meta",
       timestamp: "2026-02-02T00:00:00.000Z",
-      payload: { id: "thread-3", model_provider: "opencodex", source: "exec" },
+      payload: { id: "thread-3", model_provider: "openccx", source: "exec" },
     }) + "\n");
     writeFileSync(backupPath, JSON.stringify({
       version: 1,
@@ -752,7 +752,7 @@ describe("Codex history provider sync", () => {
         "thread-3": {
           id: "thread-3",
           rolloutPath: legacyRollout,
-          modelProvider: "opencodex",
+          modelProvider: "openccx",
           source: "exec",
           hasUserEvent: 1,
         },
@@ -761,10 +761,10 @@ describe("Codex history provider sync", () => {
 
     expect(syncCodexHistoryProvider("openai", dbPath, backupPath)).toEqual({ rows: 1, files: 1 });
     const first = JSON.parse(readFileSync(legacyRollout, "utf8").split("\n")[0]);
-    expect(first.payload.model_provider).toBe("opencodex");
+    expect(first.payload.model_provider).toBe("openccx");
     const db = new Database(dbPath, { readonly: true });
     expect(db.query("SELECT model_provider, source FROM threads WHERE id = 'thread-3'").get())
-      .toEqual({ model_provider: "opencodex", source: "exec" });
+      .toEqual({ model_provider: "openccx", source: "exec" });
     db.close();
     expect(existsSync(backupPath)).toBe(false);
   });
@@ -780,7 +780,7 @@ describe("Codex history provider sync", () => {
         "thread-3": {
           id: "thread-3",
           rolloutPath: malformed.legacyRollout,
-          modelProvider: "opencodex",
+          modelProvider: "openccx",
           hasUserEvent: 1,
         },
       },
@@ -801,7 +801,7 @@ describe("Codex history provider sync", () => {
         "thread-3": {
           id: "thread-3",
           rolloutPath: mismatched.rollout,
-          modelProvider: "opencodex",
+          modelProvider: "openccx",
           source: "cli",
           hasUserEvent: 1,
         },
@@ -821,7 +821,7 @@ describe("Codex history provider sync", () => {
     const forwardDbBefore = readFileSync(forward.dbPath);
     const forwardRolloutBefore = readFileSync(forward.rollout);
     const forwardManifestBefore = readFileSync(forward.backupPath);
-    expect(syncCodexHistoryProvider("opencodex", forward.dbPath, forward.backupPath))
+    expect(syncCodexHistoryProvider("openccx", forward.dbPath, forward.backupPath))
       .toMatchObject({ failed: true, failureReason: "integrity" });
     expect(readFileSync(forward.dbPath).equals(forwardDbBefore)).toBe(true);
     expect(readFileSync(forward.rollout).equals(forwardRolloutBefore)).toBe(true);
@@ -836,7 +836,7 @@ describe("Codex history provider sync", () => {
         "thread-3": {
           id: "thread-3",
           rolloutPath: missingRollout.legacyRollout,
-          modelProvider: "opencodex",
+          modelProvider: "openccx",
           source: "exec",
           hasUserEvent: 1,
         },
@@ -850,9 +850,9 @@ describe("Codex history provider sync", () => {
     expect(readFileSync(missingRollout.backupPath).equals(missingManifestBefore)).toBe(true);
   });
 
-  test("refuses a manifest whose current row is neither its OpenCodex post-image nor its target", () => {
+  test("refuses a manifest whose current row is neither its Openccx post-image nor its target", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     const changed = new Database(fixture.dbPath);
     changed.run("UPDATE threads SET model_provider = 'other' WHERE id = 'thread-1'");
     changed.close();
@@ -869,7 +869,7 @@ describe("Codex history provider sync", () => {
 
   test("preserves a newer same-id rollout provider decision instead of overwriting it", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     appendFileSync(fixture.rollout, JSON.stringify({
       type: "session_meta",
       timestamp: "2026-03-01T00:00:00.000Z",
@@ -889,7 +889,7 @@ describe("Codex history provider sync", () => {
 
   test("compensates a same-id provider append that races strict restore's own append", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     appendFileSync(fixture.rollout, JSON.stringify({
       type: "event_msg",
       timestamp: "2026-02-28T00:00:00.000Z",
@@ -909,13 +909,13 @@ describe("Codex history provider sync", () => {
     expect(latestSessionMetaPayload(fixture.rollout).model_provider).toBe("custom");
     const db = new Database(fixture.dbPath, { readonly: true });
     expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get())
-      .toEqual({ model_provider: "opencodex" });
+      .toEqual({ model_provider: "openccx" });
     db.close();
   });
 
   test("reports ambiguous file progress when a strict append lands before a write fault", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setAfterStrictHistoryRolloutAppendForTests(() => {
       throw Object.assign(new Error("append finalization failed"), { code: "EPERM" });
     });
@@ -925,13 +925,13 @@ describe("Codex history provider sync", () => {
     expect(existsSync(fixture.backupPath)).toBe(true);
     const db = new Database(fixture.dbPath, { readonly: true });
     expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get())
-      .toEqual({ model_provider: "opencodex" });
+      .toEqual({ model_provider: "openccx" });
     db.close();
   });
 
   test("preflights every rollout before mutating the first entry of a multi-entry restore", () => {
     const fixture = makeFixture({ includeExec: true });
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     rmSync(fixture.execRollout);
     const databaseBefore = readFileSync(fixture.dbPath);
     const firstRolloutBefore = readFileSync(fixture.rollout);
@@ -946,7 +946,7 @@ describe("Codex history provider sync", () => {
 
   test("keeps provenance when the conditional database restore loses its compare-and-swap", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     const guarded = new Database(fixture.dbPath);
     guarded.exec(`
       CREATE TRIGGER ignore_history_restore
@@ -963,7 +963,7 @@ describe("Codex history provider sync", () => {
       .toMatchObject({ failed: true, failureReason: "integrity" });
     const db = new Database(fixture.dbPath, { readonly: true });
     expect(db.query("SELECT model_provider FROM threads WHERE id = 'thread-1'").get())
-      .toEqual({ model_provider: "opencodex" });
+      .toEqual({ model_provider: "openccx" });
     db.close();
     expect(readFileSync(fixture.rollout).equals(rolloutBefore)).toBe(true);
     expect(readFileSync(fixture.backupPath).equals(manifestBefore)).toBe(true);
@@ -971,7 +971,7 @@ describe("Codex history provider sync", () => {
 
   test("does not delete a manifest replaced after exact restore readback", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     const replacement = JSON.parse(readFileSync(fixture.backupPath, "utf8"));
     replacement.revision = "newer";
     setBeforeHistoryBackupConsumeForTests(() => {
@@ -989,7 +989,7 @@ describe("Codex history provider sync", () => {
 
   test("keeps the manifest when the database target changes after restore readback", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setBeforeHistoryBackupConsumeForTests(() => {
       const changed = new Database(fixture.dbPath);
       changed.run("UPDATE threads SET model_provider = 'custom' WHERE id = 'thread-1'");
@@ -1007,7 +1007,7 @@ describe("Codex history provider sync", () => {
 
   test("keeps the manifest when a newer same-id rollout provider lands after readback", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setBeforeHistoryBackupConsumeForTests(() => {
       appendFileSync(fixture.rollout, JSON.stringify({
         type: "session_meta",
@@ -1024,7 +1024,7 @@ describe("Codex history provider sync", () => {
 
   test("consumes the manifest when a foreign-id session_meta lands after restore readback", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     // The same last-moment race as the same-id case above, except the arriving record belongs
     // to another thread. The app discards it, so it is not a newer decision to protect.
     setBeforeHistoryBackupConsumeForTests(() => {
@@ -1042,7 +1042,7 @@ describe("Codex history provider sync", () => {
 
   test("restores a forked rollout that trails its parent thread's session_meta", () => {
     const fixture = makeFixture();
-    expect(syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath))
+    expect(syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath))
       .toEqual({ rows: 1, files: 1 });
 
     // A forked/branched session appends the SOURCE thread's session_meta after its own.
@@ -1070,11 +1070,11 @@ describe("Codex history provider sync", () => {
 
   test("leaves a foreign trailing session_meta untouched while restoring its own", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     const parentLine = JSON.stringify({
       type: "session_meta",
       timestamp: "2026-03-03T00:00:00.000Z",
-      payload: { id: "parent-thread", model_provider: "opencodex", source: "exec" },
+      payload: { id: "parent-thread", model_provider: "openccx", source: "exec" },
     });
     appendFileSync(fixture.rollout, parentLine + "\n");
 
@@ -1087,7 +1087,7 @@ describe("Codex history provider sync", () => {
 
   test("reports applied permission progress when manifest finalization is denied", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setBeforeHistoryBackupConsumeForTests(() => {
       throw Object.assign(new Error("finalization denied"), { code: "EPERM" });
     });
@@ -1103,7 +1103,7 @@ describe("Codex history provider sync", () => {
 
   test("reports applied busy progress when manifest finalization cannot complete", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setBeforeHistoryBackupConsumeForTests(() => {
       throw Object.assign(new Error("finalization busy"), { code: "EBUSY" });
     });
@@ -1115,7 +1115,7 @@ describe("Codex history provider sync", () => {
 
   test("reports applied integrity progress for an unclassified finalization failure", () => {
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     setBeforeHistoryBackupConsumeForTests(() => {
       throw new Error("finalization failed without a recoverable code");
     });
@@ -1125,7 +1125,7 @@ describe("Codex history provider sync", () => {
     expect(existsSync(fixture.backupPath)).toBe(true);
   });
 
-  test("explicitly recovers legacy opencodex user rows to openai", () => {
+  test("explicitly recovers legacy openccx user rows to openai", () => {
     const { dbPath, execRollout, legacyRollout } = makeFixture({ includeExec: true, includeLegacy: true });
 
     const result = restoreLegacyOpenaiHistory(dbPath);
@@ -1195,7 +1195,7 @@ describe("history lock retry", () => {
   test("syncCodexHistoryProvider reports why the retry budget died", () => {
     // Only manifest-backed work writes. Seed one real routed transition before holding SQLite.
     const fixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", fixture.dbPath, fixture.backupPath);
+    syncCodexHistoryProvider("openccx", fixture.dbPath, fixture.backupPath);
     const holder = new Database(fixture.dbPath);
     holder.exec("BEGIN IMMEDIATE");
     try {
@@ -1222,7 +1222,7 @@ describe("history lock retry", () => {
 
 describe("Design B migration helpers", () => {
   test("strict no-op snapshots distinguish absence from manifest uncertainty", () => {
-    const dir = join(tmpdir(), `ocx-history-noop-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const dir = join(tmpdir(), `occx-history-noop-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(dir, { recursive: true });
     const dbPath = join(dir, "state_5.sqlite");
     const backupPath = historyBackupPathFor(dbPath);
@@ -1254,7 +1254,7 @@ describe("Design B migration helpers", () => {
   });
 
   test("strict no-op snapshots reject every invalid provenance shape", () => {
-    const dir = join(tmpdir(), `ocx-history-noop-schema-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const dir = join(tmpdir(), `occx-history-noop-schema-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(dir, { recursive: true });
     const dbPath = join(dir, "state_5.sqlite");
     const backupPath = historyBackupPathFor(dbPath);
@@ -1267,13 +1267,13 @@ describe("Design B migration helpers", () => {
       writeFileSync(backupPath, JSON.stringify(manifest));
       expect(snapshotCodexHistoryNoop(dbPath, backupPath), invalid.name)
         .toMatchObject({ kind: "unknown", reason: "manifest-schema" });
-      expect(countPendingOpencodexHistory(dbPath, backupPath), invalid.name)
+      expect(countPendingOpenccxHistory(dbPath, backupPath), invalid.name)
         .toEqual({ pendingRows: 0, backupEntries: 0, failed: true, failureReason: "integrity" });
     }
   });
 
   test("a missing database with a valid nonempty manifest remains pending", () => {
-    const dir = join(tmpdir(), `ocx-history-noop-pending-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const dir = join(tmpdir(), `occx-history-noop-pending-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(dir, { recursive: true });
     const dbPath = join(dir, "state_5.sqlite");
     const backupPath = historyBackupPathFor(dbPath);
@@ -1294,7 +1294,7 @@ describe("Design B migration helpers", () => {
   });
 
   test("a WAL commit after the pending count invalidates a no-op snapshot", () => {
-    const dir = join(tmpdir(), `ocx-history-noop-wal-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const dir = join(tmpdir(), `occx-history-noop-wal-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     mkdirSync(dir, { recursive: true });
     const dbPath = join(dir, "state_5.sqlite");
     const backupPath = historyBackupPathFor(dbPath);
@@ -1326,8 +1326,8 @@ describe("Design B migration helpers", () => {
       try {
         writer.exec("PRAGMA journal_mode = WAL");
         writer.run(
-          "INSERT INTO threads VALUES (?, ?, 'opencodex', 'cli', 1, 'raced')",
-          ["raced-opencodex-row", join(dir, "raced-rollout.jsonl")],
+          "INSERT INTO threads VALUES (?, ?, 'openccx', 'cli', 1, 'raced')",
+          ["raced-openccx-row", join(dir, "raced-rollout.jsonl")],
         );
       } finally {
         writer.close();
@@ -1374,13 +1374,13 @@ describe("Design B migration helpers", () => {
     expect(sleeps.length).toBe(0);
   });
 
-  test("countPendingOpencodexHistory excludes unknown-provenance routed rows from automatic work", () => {
+  test("countPendingOpenccxHistory excludes unknown-provenance routed rows from automatic work", () => {
     const { dbPath, backupPath, execRollout, legacyRollout } = makeFixture({ includeExec: true, includeLegacy: true });
     const databaseBefore = readFileSync(dbPath);
     const execBefore = readFileSync(execRollout);
     const legacyBefore = readFileSync(legacyRollout);
 
-    const before = countPendingOpencodexHistory(dbPath, backupPath);
+    const before = countPendingOpenccxHistory(dbPath, backupPath);
     expect(before.failed).toBeUndefined();
     expect(before).toEqual({ pendingRows: 0, backupEntries: 0 });
 
@@ -1390,7 +1390,7 @@ describe("Design B migration helpers", () => {
     expect(readFileSync(execRollout).equals(execBefore)).toBe(true);
     expect(readFileSync(legacyRollout).equals(legacyBefore)).toBe(true);
 
-    const after = countPendingOpencodexHistory(dbPath, backupPath);
+    const after = countPendingOpenccxHistory(dbPath, backupPath);
     expect(after.pendingRows).toBe(0);
     expect(after.backupEntries).toBe(0);
 
@@ -1400,25 +1400,25 @@ describe("Design B migration helpers", () => {
     expect(again.ejectedRows ?? 0).toBe(0);
   });
 
-  test("countPendingOpencodexHistory classifies changed manifest targets as integrity failures", () => {
+  test("countPendingOpenccxHistory classifies changed manifest targets as integrity failures", () => {
     const databaseFixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", databaseFixture.dbPath, databaseFixture.backupPath);
+    syncCodexHistoryProvider("openccx", databaseFixture.dbPath, databaseFixture.backupPath);
     const changed = new Database(databaseFixture.dbPath);
     changed.run("UPDATE threads SET model_provider = 'custom' WHERE id = 'thread-1'");
     changed.close();
-    expect(countPendingOpencodexHistory(databaseFixture.dbPath, databaseFixture.backupPath))
+    expect(countPendingOpenccxHistory(databaseFixture.dbPath, databaseFixture.backupPath))
       .toEqual({ pendingRows: 0, backupEntries: 1, failed: true, failureReason: "integrity" });
 
     const rolloutFixture = makeFixture();
-    syncCodexHistoryProvider("opencodex", rolloutFixture.dbPath, rolloutFixture.backupPath);
+    syncCodexHistoryProvider("openccx", rolloutFixture.dbPath, rolloutFixture.backupPath);
     appendFileSync(rolloutFixture.rollout, JSON.stringify({
       type: "session_meta",
       timestamp: "2026-03-01T00:00:00.000Z",
       payload: { id: "thread-1", model_provider: "custom", source: "vscode" },
     }) + "\n");
-    expect(countPendingOpencodexHistory(rolloutFixture.dbPath, rolloutFixture.backupPath))
+    expect(countPendingOpenccxHistory(rolloutFixture.dbPath, rolloutFixture.backupPath))
       .toEqual({ pendingRows: 0, backupEntries: 1, failed: true, failureReason: "integrity" });
-    expect(countPendingOpencodexHistory(
+    expect(countPendingOpenccxHistory(
       rolloutFixture.dbPath,
       rolloutFixture.backupPath,
       { validateRestoreTargets: false },
@@ -1432,9 +1432,9 @@ describe("Design B migration helpers", () => {
       .toMatchObject({ rows: 0, files: 0, failed: true, failureReason: "integrity" });
   });
 
-  test("countPendingOpencodexHistory returns zeros for a missing DB", () => {
-    const missing = join(tmpdir(), `ocx-none-${Date.now()}`, "state_5.sqlite");
-    const result = countPendingOpencodexHistory(missing, join(tmpdir(), "no-backup.json"));
+  test("countPendingOpenccxHistory returns zeros for a missing DB", () => {
+    const missing = join(tmpdir(), `occx-none-${Date.now()}`, "state_5.sqlite");
+    const result = countPendingOpenccxHistory(missing, join(tmpdir(), "no-backup.json"));
     expect(result).toEqual({ pendingRows: 0, backupEntries: 0 });
   });
 
@@ -1454,7 +1454,7 @@ describe("Design B migration helpers", () => {
 
   test("migrateHistoryToOpenai restores only manifest-backed pending metadata", () => {
     const { dbPath, backupPath } = makeFixture();
-    syncCodexHistoryProvider("opencodex", dbPath, backupPath);
+    syncCodexHistoryProvider("openccx", dbPath, backupPath);
 
     const result = migrateHistoryToOpenai(dbPath, backupPath);
 
@@ -1470,7 +1470,7 @@ describe("Design B migration helpers", () => {
   });
 
   test("a missing DB with a leftover backup manifest does not satisfy the steady-state gate", () => {
-    const dir = join(tmpdir(), `ocx-reinstall-${process.pid}-${Date.now()}`);
+    const dir = join(tmpdir(), `occx-reinstall-${process.pid}-${Date.now()}`);
     mkdirSync(dir, { recursive: true });
     const missingDb = join(dir, "state_5.sqlite");
     const backupPath = join(dir, "codex-history-backup.json");
@@ -1480,7 +1480,7 @@ describe("Design B migration helpers", () => {
       entries: { "thread-1": { id: "thread-1", rolloutPath: join(dir, "r.jsonl"), modelProvider: "openai", source: "cli", hasUserEvent: 1 } },
     }));
 
-    const pending = countPendingOpencodexHistory(missingDb, backupPath);
+    const pending = countPendingOpenccxHistory(missingDb, backupPath);
     expect(pending.backupEntries).toBe(1); // gate must see this and NOT report a provable no-op
     expect(pending).toMatchObject({ failed: true, failureReason: "integrity" });
 
@@ -1506,7 +1506,7 @@ describe("Design B migration helpers", () => {
     expect(readFileSync(steady.rollout, "utf8")).toBe(steadyBefore);
 
     const pending = makeFixture();
-    syncCodexHistoryProvider("opencodex", pending.dbPath, pending.backupPath);
+    syncCodexHistoryProvider("openccx", pending.dbPath, pending.backupPath);
     const restored = syncCodexHistoryProvider("openai", pending.dbPath, pending.backupPath, { skipWhenProvablyNoop: true });
     expect(restored.rows).toBe(1);
     const db = new Database(pending.dbPath, { readonly: true });

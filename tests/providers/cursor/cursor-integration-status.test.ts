@@ -13,7 +13,7 @@ import { cursorLastSeen, recordCursorSeen, resetCursorSeenForTests } from "../..
 import { cursorEffortFamily } from "../../../src/server/models-capabilities";
 import { buildCursorIntegrationStatus } from "../../../src/server/management/cursor-integration-routes";
 import { startServer } from "../../../src/server";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { SERVER_BUDGET_MS } from "../../helpers/test-budget";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 import { fixturePath } from "../../helpers/repo-root";
@@ -94,7 +94,7 @@ describe("cursorEffortFamily", () => {
   });
 });
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 const CURSOR_EFFORT_FIXTURE = readFileSync(fixturePath("cursor-agent-exec-effort-table.min.js"), "utf8");
 const STATIC_CURSOR_EFFORT_DEPS = { managementApi: { loadCursorEffortTable: () => null } };
@@ -105,7 +105,7 @@ function fixtureEffortTable(): CursorEffortTable {
   return { ...parsed, version: "3.18.25", bundlePath: "/fixture/main.js" };
 }
 
-function statusConfig(): OcxConfig {
+function statusConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -128,16 +128,16 @@ function statusConfig(): OcxConfig {
 
 describe("GET /api/native-integrations/cursor", () => {
   beforeEach(() => {
-    testHome = mkdtempSync(join(tmpdir(), "ocx-cursor-status-"));
-    process.env.OPENCODEX_HOME = testHome;
+    testHome = mkdtempSync(join(tmpdir(), "occx-cursor-status-"));
+    process.env.OPENCCX_HOME = testHome;
     resetCursorSeenForTests();
   });
 
   afterEach(() => {
     resetCodexModelEntitlementCacheForTests();
     resetCursorSeenForTests();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (testHome) removeTreeWithRetry(testHome);
     testHome = "";
   });
@@ -148,7 +148,7 @@ describe("GET /api/native-integrations/cursor", () => {
     const server = startServer(0, STATIC_CURSOR_EFFORT_DEPS);
     try {
       const adminToken = readFileSync(join(testHome, "admin-api-token"), "utf8").trim();
-      const headers = { "x-opencodex-api-key": adminToken };
+      const headers = { "x-openccx-api-key": adminToken };
 
       const before = await fetch(new URL("/api/native-integrations/cursor", server.url), { headers });
       expect(before.status).toBe(200);
@@ -162,7 +162,7 @@ describe("GET /api/native-integrations/cursor", () => {
       };
       expect(first.gateway.baseUrl).toBe(`http://127.0.0.1:${server.port}/v1`);
       expect(first.gateway.apiKeyMode).toBe("placeholder");
-      expect(first.gateway.placeholder).toBe("opencodex-loopback");
+      expect(first.gateway.placeholder).toBe("openccx-loopback");
       expect(first.lastSeen).toBeNull();
       expect(first.effortTable.source).toBe("static");
       expect(typeof first.privateInference.installed).toBe("boolean");
@@ -199,12 +199,12 @@ describe("GET /api/native-integrations/cursor", () => {
 
   test("reports credential mode when an API key is configured", async () => {
     const config = statusConfig();
-    config.apiKeys = [{ id: "k1", name: "test", key: "ocx_test_key_value_1234567890", createdAt: new Date(0).toISOString() }];
+    config.apiKeys = [{ id: "k1", name: "test", key: "occx_test_key_value_1234567890", createdAt: new Date(0).toISOString() }];
     saveConfig(config);
     const server = startServer(0, STATIC_CURSOR_EFFORT_DEPS);
     try {
       const adminToken = readFileSync(join(testHome, "admin-api-token"), "utf8").trim();
-      const res = await fetch(new URL("/api/native-integrations/cursor", server.url), { headers: { "x-opencodex-api-key": adminToken } });
+      const res = await fetch(new URL("/api/native-integrations/cursor", server.url), { headers: { "x-openccx-api-key": adminToken } });
       const body = await res.json() as { gateway: { apiKeyMode: string } };
       expect(body.gateway.apiKeyMode).toBe("credential");
     } finally {
@@ -218,7 +218,7 @@ describe("GET /api/native-integrations/cursor", () => {
     const server = startServer(0, STATIC_CURSOR_EFFORT_DEPS);
     try {
       const adminToken = readFileSync(join(testHome, "admin-api-token"), "utf8").trim();
-      const status = await fetch(new URL("/api/native-integrations/cursor", server.url), { headers: { "x-opencodex-api-key": adminToken } });
+      const status = await fetch(new URL("/api/native-integrations/cursor", server.url), { headers: { "x-openccx-api-key": adminToken } });
       const body = await status.json() as { models: Array<{ id: string }> };
       expect(body.models.some(model => model.id === "kimi/k3")).toBe(false);
       const raw = await fetch(new URL("/v1/models", server.url), { headers: { "user-agent": "Cursor/3.18.25" } });
@@ -246,7 +246,7 @@ describe("GET /api/native-integrations/cursor", () => {
       { listener: undefined, expected: "http://100.76.170.81:10100/v1", keyMode: "credential" },
     ];
     for (const { listener, expected, keyMode } of cases) {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         ...statusConfig(),
         port: 10100,
         hostname: "100.76.170.81",
@@ -268,7 +268,7 @@ describe("GET /api/native-integrations/cursor", () => {
     // The other direction of the same rule: nothing about the destination demands a key here,
     // so the card must not start asking for one.
     const url = new URL("http://127.0.0.1:10100/api/native-integrations/cursor");
-    const config: OcxConfig = { ...statusConfig(), port: 10100, hostname: "127.0.0.1", apiKeys: [] };
+    const config: OccxConfig = { ...statusConfig(), port: 10100, hostname: "127.0.0.1", apiKeys: [] };
     const status = await buildCursorIntegrationStatus(
       { config, deps: { readRuntimePort: () => undefined }, url },
       [],
@@ -285,7 +285,7 @@ describe("GET /api/native-integrations/cursor", () => {
     try {
       const adminToken = readFileSync(join(testHome, "admin-api-token"), "utf8").trim();
       const status = await fetch(new URL("/api/native-integrations/cursor", server.url), {
-        headers: { "x-opencodex-api-key": adminToken },
+        headers: { "x-openccx-api-key": adminToken },
       });
       expect(status.status).toBe(200);
       const body = await status.json() as {

@@ -58,7 +58,7 @@ function acquire(deps: ClientLifecycleLockDeps): Database {
   let database: Database | undefined;
   try {
     // The production namespace belongs to the effective OS user, never HOME,
-    // OPENCODEX_HOME, Desktop library overrides or an environment test switch.
+    // OPENCCX_HOME, Desktop library overrides or an environment test switch.
     const path = deps.lockPath === undefined
       ? join(resolveEffectiveUserRuntimeRoot(resolveEffectiveUserIdentity()), "client-desktop-lifecycle.sqlite")
       : resolve(deps.lockPath);

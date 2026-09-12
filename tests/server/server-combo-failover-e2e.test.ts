@@ -16,7 +16,7 @@ import { handleManagementAPI } from "../../src/server/management-api";
 import { saveCredential } from "../../src/oauth/store";
 import { XAI_OAUTH_DISCOVERY_URL } from "../../src/oauth/xai";
 import { XAI_GROK_CLI_BASE_URL } from "../../src/providers/xai-transport";
-import type { AdapterEvent, OcxConfig, OcxProviderConfig, OcxProviderContinuationState } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxProviderConfig, OccxProviderContinuationState } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { clearRequestLogsForTests, hydrateRequestLogsFromDisk, httpStatusForRequestLogTerminal, inspectResponseLogSsePayload, type RequestLogContext } from "../../src/server/request-log";
 import { responseWithDeferredRequestLog } from "../../src/server/relay";
@@ -61,7 +61,7 @@ let customCursorTransportFactory: CursorTransportFactory | undefined;
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     if (provider.adapter === "cursor" && customCursorTransportFactory) {
       // Real cursor adapter (adapter.name === "cursor") over a fake transport, so server-level
       // tests can drive the genuine continuation/persistence policy without a live socket.
@@ -135,12 +135,12 @@ const servers: Array<ReturnType<typeof Bun.serve>> = [];
 beforeEach(() => {
   originalFetch = globalThis.fetch;
   originalNow = Date.now;
-  previousHome = process.env.OPENCODEX_HOME;
-  previousCursorToken = process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-  delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-combo-030-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-combo-030-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  previousCursorToken = process.env.OPENCCX_CURSOR_TEST_TOKEN;
+  delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+  isolatedCodexHome = installIsolatedCodexHome("occx-combo-030-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-combo-030-"));
+  process.env.OPENCCX_HOME = testDir;
   clearComboSelectionState();
   clearComboRecallForTests();
   clearComboTargetCooldowns();
@@ -167,10 +167,10 @@ afterEach(async () => {
     clearCursorThreadContinuityForTests();
     globalThis.fetch = originalFetch;
     Date.now = originalNow;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
-    if (previousCursorToken === undefined) delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-    else process.env.OPENCODEX_CURSOR_TEST_TOKEN = previousCursorToken;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
+    if (previousCursorToken === undefined) delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+    else process.env.OPENCCX_CURSOR_TEST_TOKEN = previousCursorToken;
     isolatedCodexHome?.restore();
     isolatedCodexHome = null;
     if (testDir) removeTreeWithRetry(testDir);
@@ -252,8 +252,8 @@ function provider(
   adapter: string,
   url: string,
   apiKey: string,
-  extra: Partial<OcxProviderConfig> = {},
-): OcxProviderConfig {
+  extra: Partial<OccxProviderConfig> = {},
+): OccxProviderConfig {
   return {
     adapter,
     baseUrl: url,
@@ -265,10 +265,10 @@ function provider(
 }
 
 function comboConfig(
-  providers: OcxConfig["providers"],
+  providers: OccxConfig["providers"],
   targets = Object.keys(providers).map((name, index) => ({ provider: name, model: `m${index + 1}` })),
-  extra: Partial<NonNullable<OcxConfig["combos"]>[string]> = {},
-): OcxConfig {
+  extra: Partial<NonNullable<OccxConfig["combos"]>[string]> = {},
+): OccxConfig {
   return {
     port: 0,
     defaultProvider: Object.keys(providers)[0]!,
@@ -278,7 +278,7 @@ function comboConfig(
 }
 
 async function post(
-  config: OcxConfig,
+  config: OccxConfig,
   raw: Record<string, unknown> = {},
   options: HandleOptions = {},
   headers: Record<string, string> = {},
@@ -293,7 +293,7 @@ async function post(
 let loggedRequestSequence = 0;
 
 async function postLogged(
-  config: OcxConfig,
+  config: OccxConfig,
   raw: Record<string, unknown> = {},
   options: HandleOptions = {},
   headers: Record<string, string> = {},
@@ -315,7 +315,7 @@ async function postLogged(
 }
 
 async function postModelLogged(
-  config: OcxConfig,
+  config: OccxConfig,
   model: string,
   raw: Record<string, unknown> = {},
   options: HandleOptions = {},
@@ -337,7 +337,7 @@ async function postModelLogged(
   );
 }
 
-async function latestAttemptReceipts(config: OcxConfig) {
+async function latestAttemptReceipts(config: OccxConfig) {
   const response = await management(config, "GET", "/api/logs?tail=1");
   const logs = logsFromApiBody(await response!.json());
   const usage = readUsageEntries();
@@ -345,7 +345,7 @@ async function latestAttemptReceipts(config: OcxConfig) {
 }
 
 async function expectCancelledAttemptReceipt(
-  config: OcxConfig,
+  config: OccxConfig,
   expected: { provider: string; model: string; adapter: string },
 ): Promise<void> {
   const { log, usage } = await latestAttemptReceipts(config);
@@ -384,7 +384,7 @@ async function collectSse(response: Response): Promise<SseFrame[]> {
 }
 
 async function management(
-  config: OcxConfig,
+  config: OccxConfig,
   method: string,
   path: string,
   body?: unknown,
@@ -1909,8 +1909,8 @@ describe("server combo failover 030 activation matrix", () => {
     const valid = authKind === "valid" || authKind === "chat-valid";
     const nativeToken = fakeChatGptJwt({ chatgpt_account_id: "acct-scoped-sidecar" });
     // A generic organizations claim is not OpenAI-domain evidence for a sidecar snapshot.
-    const token = authKind === "proxy-secret" ? `ocx_data_${nativeToken}`
-      : authKind === "joined-proxy-secret" ? `${nativeToken}, Bearer ocx_data_embedded`
+    const token = authKind === "proxy-secret" ? `occx_data_${nativeToken}`
+      : authKind === "joined-proxy-secret" ? `${nativeToken}, Bearer occx_data_embedded`
       : authKind === "org-only-jwt" ? fakeChatGptJwt({ organizations: [{ id: "org-foreign" }] }) : nativeToken;
     const sidecarHits: Array<{ authorization: string | null; account: string | null }> = [];
     const primaryHits: Array<{ model?: string; authorization: string | null; account: string | null; webTool: boolean }> = [];
@@ -2504,7 +2504,7 @@ describe("server combo failover 030 activation matrix", () => {
     expect(seed.status).toBe(200);
     const seedJson = await seed.json() as { id: string };
     const ownedState = previousResponseProviderState(seedJson.id);
-    expect(ownedState?.__ocxOwner?.providerName).toBe("b");
+    expect(ownedState?.__occxOwner?.providerName).toBe("b");
 
     config.providers.a = provider("test-owned", "https://provider-a.test/v1", "key-a");
     config.combos!.free!.targets = [
@@ -2602,7 +2602,7 @@ describe("server combo failover 030 activation matrix", () => {
       },
     });
     expect(stored?.cursor).toEqual({ checkpointRef: "opaque-ref", checkpointUsable: true });
-    expect(stored?.__ocxOwner?.providerName).toBe("a");
+    expect(stored?.__occxOwner?.providerName).toBe("a");
   });
 
   test("combo child retains the local id without inheriting unbound provider state", async () => {
@@ -2658,7 +2658,7 @@ describe("server combo failover 030 activation matrix", () => {
         output: [{ type: "message", role: "assistant", content: "prior target answer" }],
       },
       {
-        __ocxOwner: {
+        __occxOwner: {
           version: 2,
           providerName: "a",
           providerDestinationIdentity: `destination:${"a".repeat(64)}`,
@@ -2667,7 +2667,7 @@ describe("server combo failover 030 activation matrix", () => {
           credentialIdentity: `key:${"b".repeat(64)}`,
         },
         kiro: { conversationId: "must-not-restore" },
-      } as unknown as OcxProviderContinuationState,
+      } as unknown as OccxProviderContinuationState,
     );
     let observed: string | undefined;
     customRunTurn = async (parsed, _incoming, emit) => {
@@ -2966,7 +2966,7 @@ describe("server combo failover 030 activation matrix", () => {
       seen.push(body);
       return chatSuccess("ok", String(body.model ?? "glm-5.2-fast-preview"));
     };
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0,
       defaultProvider: "bailian",
       providers: {
@@ -3096,7 +3096,7 @@ describe("server combo failover 030 activation matrix", () => {
       }) as typeof fetch;
       const local = serve(request => originalFetch(request));
       const root = local.url.toString().replace(/\/$/, "");
-      const providers: OcxConfig["providers"] = {
+      const providers: OccxConfig["providers"] = {
         xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" },
         b: provider("openai-chat", `${root}/b/v1`, "key-b"),
         ...(includeC ? { c: provider("openai-chat", `${root}/c/v1`, "key-c") } : {}),
@@ -3178,7 +3178,7 @@ describe("server combo failover 030 activation matrix", () => {
     const a = serve(() => { aHits += 1; return chatSuccess("a"); });
     const b = serve(() => { bHits += 1; return chatSuccess("b"); });
     const c = serve(() => { cHits += 1; return chatSuccess("default"); });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0,
       defaultProvider: "c",
       providers: {
@@ -3213,7 +3213,7 @@ describe("server combo failover 030 activation matrix", () => {
       physicalModel = (await request.json() as { model?: string }).model ?? "";
       return chatSuccess("physical combo", "model");
     });
-    const physicalConfig: OcxConfig = {
+    const physicalConfig: OccxConfig = {
       port: 0,
       defaultProvider: "combo",
       providers: { combo: provider("openai-chat", baseUrl(physical), "key-combo") },
@@ -3225,7 +3225,7 @@ describe("server combo failover 030 activation matrix", () => {
 
     const member = serve(() => { memberHits += 1; return chatSuccess("member"); });
     const fallback = serve(() => { defaultHits += 1; return chatSuccess("default"); });
-    const unknownConfig: OcxConfig = {
+    const unknownConfig: OccxConfig = {
       port: 0,
       defaultProvider: "fallback",
       providers: {
@@ -3573,7 +3573,7 @@ describe("cursor conversation continuity across store:false chains", () => {
     });
   }
 
-  async function postCursor(config: OcxConfig, raw: Record<string, unknown>): Promise<Response> {
+  async function postCursor(config: OccxConfig, raw: Record<string, unknown>): Promise<Response> {
     return handleResponses(new Request("http://localhost/v1/responses", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -3581,7 +3581,7 @@ describe("cursor conversation continuity across store:false chains", () => {
     }), config, { model: "", provider: "" }, {});
   }
 
-  function cursorConfig(): OcxConfig {
+  function cursorConfig(): OccxConfig {
     return {
       port: 0,
       // Registry forces authMode=oauth for the canonical "cursor" name; a non-registry
@@ -3766,7 +3766,7 @@ describe("combo compact failover", () => {
     });
   }
 
-  async function postCompactLogged(config: OcxConfig): Promise<Response> {
+  async function postCompactLogged(config: OccxConfig): Promise<Response> {
     const logCtx: RequestLogContext = { model: "", provider: "" };
     const start = Date.now();
     const response = await handleResponsesCompact(compactRequest({
@@ -3781,7 +3781,7 @@ describe("combo compact failover", () => {
   function canonicalPoolConfig(
     targets: Array<{ provider: string; model: string }>,
     backupUrl?: string,
-  ): { config: OcxConfig } {
+  ): { config: OccxConfig } {
     const config = comboConfig({
       "openai-apikey": {
         adapter: "openai-responses",
@@ -3834,7 +3834,7 @@ describe("combo compact failover", () => {
     expect(attempts[1]).toMatchObject({ provider: "backup", adapter: "openai-chat", status: 200 });
   });
 
-  test("account-gated first target failover decodes the backup ocx1 compaction", async () => {
+  test("account-gated first target failover decodes the backup occx1 compaction", async () => {
     const b = serve(() => chatStream("mixed combo backup summary"));
     const { config } = canonicalPoolConfig([
       { provider: "openai-apikey", model: "gpt-daybreak-blue-latest" },
@@ -3852,7 +3852,7 @@ describe("combo compact failover", () => {
     expect(response.status).toBe(200);
     const json = await response.json() as { output?: unknown[] };
     expect(JSON.stringify(json.output)).toContain("mixed combo backup summary");
-    expect(JSON.stringify(json.output)).not.toContain("ocx1:");
+    expect(JSON.stringify(json.output)).not.toContain("occx1:");
   });
 
   test("combo compact runs the synthetic turn as SSE so a canonical child can serve it", async () => {

@@ -290,7 +290,7 @@ describe("provider outbound GET transport", () => {
   });
 
   test("proxy mode reaches one real proxy across outbound, connection-test, and model-discovery paths", async () => {
-    const childHome = mkdtempSync(join(tmpdir(), "ocx-provider-proxy-e2e-"));
+    const childHome = mkdtempSync(join(tmpdir(), "occx-provider-proxy-e2e-"));
     const child = Bun.spawn([
       process.execPath,
       "tests/fixtures/provider-outbound-e2e.ts",
@@ -298,7 +298,7 @@ describe("provider outbound GET transport", () => {
       cwd: process.cwd(),
       env: {
         ...process.env,
-        OPENCODEX_HOME: childHome,
+        OPENCCX_HOME: childHome,
       },
       stdout: "pipe",
       stderr: "pipe",
@@ -430,7 +430,7 @@ describe("#3462 Mihomo IPv6 fake-IP admission is gated on the scheme-matched pro
   const target = "https://opencode.ai/zen/v1/models";
 
   test("canonical IPv6-only TUN transport preserves pinning and rejects unsafe DNS answers", async () => {
-    const childDir = mkdtempSync(join(tmpdir(), "ocx-mihomo-test-"));
+    const childDir = mkdtempSync(join(tmpdir(), "occx-mihomo-test-"));
     const childTest = join(childDir, "mihomo.test.ts");
     // Builtin module mocks are activated by Bun's test loader, not plain bun execution.
     writeFileSync(childTest, `import { test } from "bun:test";\ntest("Mihomo matrix", async () => { await import(${JSON.stringify(pathToFileURL(fixturePath("provider-outbound-mihomo.ts")).href)}); });\n`);

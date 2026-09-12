@@ -26,7 +26,7 @@ import { isPlainRecord } from "./shared";
 import { readManagementJsonBody, rethrowManagementBodyTooLarge } from "./body";
 import { jsonResponse } from "../auth-cors";
 import type { ManagementContext } from "./context";
-import type { OcxConfig, OcxRoutingProfileConfig } from "../../types";
+import type { OccxConfig, OccxRoutingProfileConfig } from "../../types";
 import { shadowCallTargetError } from "./shadow-call-validation";
 
 function profileDto(config: Parameters<typeof getRoutingProfile>[0], id: string): Record<string, unknown> | null {
@@ -98,7 +98,7 @@ function parseCandidateEvidence(raw: unknown): PolicyCandidateEvidence[] | null 
 }
 
 function assembleCandidateEvidence(
-  config: OcxConfig,
+  config: OccxConfig,
   profile: NonNullable<ReturnType<typeof getRoutingProfile>>,
   now: number,
 ): PolicyCandidateEvidence[] {
@@ -109,8 +109,8 @@ function assembleCandidateEvidence(
 
 function storedProfile(
   id: string,
-  raw: OcxRoutingProfileConfig,
-): OcxRoutingProfileConfig {
+  raw: OccxRoutingProfileConfig,
+): OccxRoutingProfileConfig {
   const normalized = normalizeRoutingProfile(id, raw);
   const {
     id: _id,
@@ -133,7 +133,7 @@ function storedProfile(
  * model as a key with a different target than the old-alias key's target.
  */
 function modelMapMigrationCollision(
-  config: OcxConfig,
+  config: OccxConfig,
   oldPublicModel: string,
   newPublicModel: string,
 ): string | null {
@@ -155,7 +155,7 @@ function modelMapMigrationCollision(
  * ordinary routing and send the obsolete alias upstream.
  */
 function migrateProfileModelReferences(
-  config: OcxConfig,
+  config: OccxConfig,
   oldPublicModel: string,
   newPublicModel: string,
 ): boolean {
@@ -280,7 +280,7 @@ export async function handleRoutingProfileRoutes(ctx: ManagementContext): Promis
     let aliasMigration: { oldPublicModel: string; newPublicModel: string } | undefined;
     if (mode === "update" && previousProfile) {
       const oldPublicModel = policyPublicModelId(id, previousProfile);
-      const newProfile = normalizeRoutingProfile(id, body.profile as OcxRoutingProfileConfig);
+      const newProfile = normalizeRoutingProfile(id, body.profile as OccxRoutingProfileConfig);
       const newPublicModel = policyPublicModelId(id, newProfile);
       aliasMigration = { oldPublicModel, newPublicModel };
       const collision = modelMapMigrationCollision(config, oldPublicModel, newPublicModel);
@@ -291,7 +291,7 @@ export async function handleRoutingProfileRoutes(ctx: ManagementContext): Promis
       }
     }
     const nextProfiles = { ...(config.routingProfiles ?? {}) };
-    nextProfiles[id] = storedProfile(id, body.profile as OcxRoutingProfileConfig);
+    nextProfiles[id] = storedProfile(id, body.profile as OccxRoutingProfileConfig);
     const currentShadowTarget = config.shadowCallIntercept?.model;
     if (aliasMigration && currentShadowTarget === aliasMigration.oldPublicModel) {
       const targetError = shadowCallTargetError(

@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { callXaiImages, resolveXaiAspectRatioLiteral } from "../../src/images/xai-client";
 
-const PREV_HOME = process.env.OPENCODEX_HOME;
-beforeAll(() => { process.env.OPENCODEX_HOME = join(tmpdir(), "ocx-test-" + randomUUID()); });
-afterAll(() => { if (PREV_HOME === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = PREV_HOME; });
+const PREV_HOME = process.env.OPENCCX_HOME;
+beforeAll(() => { process.env.OPENCCX_HOME = join(tmpdir(), "occx-test-" + randomUUID()); });
+afterAll(() => { if (PREV_HOME === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = PREV_HOME; });
 
 const AUTH = { baseUrl: "https://api.x.ai", token: "test-token" };
 const originalFetch = globalThis.fetch;

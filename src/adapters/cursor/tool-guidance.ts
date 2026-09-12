@@ -1,9 +1,9 @@
-import type { OcxRequestOptions, OcxTool } from "../../types";
+import type { OccxRequestOptions, OccxTool } from "../../types";
 import { CODE_MODE_HOST_CONTRACT_SENTENCE, CODE_MODE_RESULT_ECHO_SENTENCE } from "../exec-tool-result-normalize";
 import { CODEX_SHELL_BRIDGE_TOOL_NAMES, CODEX_TOOL_SEARCH_TOOL, CODEX_UNIFIED_EXEC_TOOL, clientSemanticToolNameFromCursorWire, cursorRequestAdvertisesApplyPatch, cursorRequestHasExecutionPath, cursorRequestHasShellAlias, cursorRequestUsesCodeMode, cursorToolAllowedByChoice, cursorToolWireName, isCodexShellBridgeToolName, isCursorExecutionPathTool, isCursorStructuredEditToolName } from "./tool-naming";
 
 export const CURSOR_SHELL_ALIAS_SYSTEM_NOTE =
-  'Shell commands use the Codex shell bridge tool shown in this turn\'s catalog (`shell_command` or `exec_command`) with JSON arguments like {"cmd":"..."}. The long `mcp_opencodex-responses_*` display name is the same tool. Prefer it over Cursor-native Shell.';
+  'Shell commands use the Codex shell bridge tool shown in this turn\'s catalog (`shell_command` or `exec_command`) with JSON arguments like {"cmd":"..."}. The long `mcp_openccx-responses_*` display name is the same tool. Prefer it over Cursor-native Shell.';
 const NEIGHBOR_AGENT_TOOL_NAMES = ["Read", "Grep", "Glob", "Bash", "LS"] as const;
 const NEIGHBOR_AGENT_TOOL_ALIASES: Record<(typeof NEIGHBOR_AGENT_TOOL_NAMES)[number], readonly string[]> = {
   Read: ["read", "read_file"],
@@ -78,7 +78,7 @@ function activeTextMentionsGenericToolUseHint(text: string): boolean {
 }
 
 export function shouldAppendCursorGenericToolUseHint(
-  tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined,
+  tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined,
   text: string,
 ): boolean {
   const trimmed = text.trim();
@@ -89,7 +89,7 @@ export function shouldAppendCursorGenericToolUseHint(
 }
 
 export function appendCursorGenericToolUseHint(
-  tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined,
+  tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined,
   text: string,
 ): string {
   if (!shouldAppendCursorGenericToolUseHint(tools, text)) return text;
@@ -97,7 +97,7 @@ export function appendCursorGenericToolUseHint(
 }
 
 export function shouldUseNativeExecOnlyForGenericToolUse(
-  tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined,
+  tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined,
   text: string,
 ): boolean {
   const trimmed = text.trim();
@@ -106,10 +106,10 @@ export function shouldUseNativeExecOnlyForGenericToolUse(
     && !/(?:리소스|플러그인|깃허브|github)/i.test(trimmed);
 }
 
-export function cursorToolsForActivePrompt<T extends Pick<OcxTool, "namespace" | "name">>(
+export function cursorToolsForActivePrompt<T extends Pick<OccxTool, "namespace" | "name">>(
   tools: readonly T[] | undefined,
   activeText: string,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): readonly T[] | undefined {
   if (!shouldUseNativeExecOnlyForGenericToolUse(tools, activeText)) return tools;
   const execTools = tools?.filter(isCursorExecutionPathTool);
@@ -141,8 +141,8 @@ function discoveryToolLabel(wireNames: readonly string[]): string | undefined {
 }
 
 export function buildCursorToolGuidanceSystemNote(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): string | undefined {
   if (!tools?.length) return undefined;
   const wireNames = [...new Set(
@@ -171,7 +171,7 @@ export function buildCursorToolGuidanceSystemNote(
   const discoveryTools = discoveryToolLabel(wireNames);
   const unavailableNeighborNames = unavailableNeighborAgentToolNames(wireNames);
   // Host-shell-neutral: the Codex client executes bridge commands, and may differ from
-  // the OpenCodex proxy OS (LAN/SSH remote-proxy). Always cover PowerShell 5.1 pitfalls.
+  // the Openccx proxy OS (LAN/SSH remote-proxy). Always cover PowerShell 5.1 pitfalls.
   const hostShellNote = hasBareExec
     ? "Match shell syntax to the Codex client host that runs the bridge (not only the proxy OS). Windows PowerShell 5.1: no CMD `cd /d`, no bash heredocs (`<<EOF`); `&&`/`||` are unsupported parser errors — prefer the bridge working-directory argument for directory changes, and use `if ($?) { ... }` for success-gated follow-up steps; do not treat `;` as a substitute for `&&`. POSIX: use portable commands (`cat`/`ls`/`rg`); never emit Get-Content or Get-ChildItem unless the host shell is PowerShell. After a shell failure, make at most one corrected bridge attempt, then report the error and stop — do not repeat equivalent failing commands."
     : undefined;
@@ -184,7 +184,7 @@ export function buildCursorToolGuidanceSystemNote(
     // Code mode: shell/edit/MCP live inside freeform `exec` as nested helpers. Without this the
     // model probes for a top-level shell tool that is not there.
     codeMode
-      ? `\`${CODEX_UNIFIED_EXEC_TOOL}\` is Codex code mode: its body is JavaScript evaluated in a V8 isolate, not a shell command and not Node. Shell, file edits, and MCP are nested helpers called INSIDE that body as \`await tools.<name>(...)\`, for example \`await tools.exec_command({cmd: \"ls\"})\`. Read the tool description and the isolate global \`ALL_TOOLS\` (not \`tools.ALL_TOOLS\`) for helpers this turn provides; absence from the top-level catalog or from \`exec\`'s description is not absence. Those nested helpers are not themselves top-level tools, so do not call \`exec_command\` or \`shell_command\` at the top level here${codeModeOtherTopLevelNames.length > 0 ? `; every other tool this turn lists, including ${quotedNames(codeModeOtherTopLevelNames)}, remains callable at the top level as usual` : ""}. Nested \`tools.apply_patch(input)\` is host-executed: the string must begin exactly with \`*** Begin Patch\` and end with \`*** End Patch\`, each marker line being three asterisks, one space, the two words, then end of line with no further asterisks. OpenCodex does not rewrite JavaScript inside exec, so extra asterisks on a marker line are rejected by Codex before the file is touched.`
+      ? `\`${CODEX_UNIFIED_EXEC_TOOL}\` is Codex code mode: its body is JavaScript evaluated in a V8 isolate, not a shell command and not Node. Shell, file edits, and MCP are nested helpers called INSIDE that body as \`await tools.<name>(...)\`, for example \`await tools.exec_command({cmd: \"ls\"})\`. Read the tool description and the isolate global \`ALL_TOOLS\` (not \`tools.ALL_TOOLS\`) for helpers this turn provides; absence from the top-level catalog or from \`exec\`'s description is not absence. Those nested helpers are not themselves top-level tools, so do not call \`exec_command\` or \`shell_command\` at the top level here${codeModeOtherTopLevelNames.length > 0 ? `; every other tool this turn lists, including ${quotedNames(codeModeOtherTopLevelNames)}, remains callable at the top level as usual` : ""}. Nested \`tools.apply_patch(input)\` is host-executed: the string must begin exactly with \`*** Begin Patch\` and end with \`*** End Patch\`, each marker line being three asterisks, one space, the two words, then end of line with no further asterisks. Openccx does not rewrite JavaScript inside exec, so extra asterisks on a marker line are rejected by Codex before the file is touched.`
       : undefined,
     codeMode
       ? CODE_MODE_RESULT_ECHO_SENTENCE + " There is no `require`, no `module`, and no filesystem or network globals; reach the host only through the nested helpers. " + CODE_MODE_HOST_CONTRACT_SENTENCE
@@ -196,7 +196,7 @@ export function buildCursorToolGuidanceSystemNote(
       ? `${shellBridgeLabel} is the Codex Responses shell bridge for this turn, exposed through Cursor's tool protocol; it is not an external MCP server tool. \`shell_command\` and \`exec_command\` are aliases of the same bridge.`
       : undefined,
     hasBareExec
-      ? "Your tool list may display it under a longer `mcp_opencodex-responses_shell_command` / `mcp_opencodex-responses_exec_command` name; those are the SAME tool — call whichever your list shows, and do not comment on the naming difference to the user."
+      ? "Your tool list may display it under a longer `mcp_openccx-responses_shell_command` / `mcp_openccx-responses_exec_command` name; those are the SAME tool — call whichever your list shows, and do not comment on the naming difference to the user."
       : undefined,
     hasBareExec
       ? `NEVER attempt Cursor-native Shell, Read, Grep, List, or any tool not in the catalog above — they are not executed locally in this environment and every attempt wastes a turn and can stall the session. ${shellBridgeLabel} is the ONLY shell surface; go to it directly on the FIRST attempt, never as a fallback after probing a native tool. Do not narrate switching surfaces ("native is blocked, using the bridge instead") — there is exactly one surface.`
@@ -211,7 +211,7 @@ export function buildCursorToolGuidanceSystemNote(
       : undefined,
     hasApplyPatch
       ? structuredEditNames.length > 0
-        ? `For file edits, prefer the structured edit tools ${quotedNames(structuredEditNames)} — they take replacements that OpenCodex converts into Codex \`apply_patch\` changes. Include exact leading whitespace in old_string/new_string. Use \`apply_patch\` directly only with a \`*** Begin Patch\` envelope and bare \`@@\` hunks (never git-style \`@@ -n,m +n,m @@\`); never emit patch-like plain text as tool arguments.`
+        ? `For file edits, prefer the structured edit tools ${quotedNames(structuredEditNames)} — they take replacements that Openccx converts into Codex \`apply_patch\` changes. Include exact leading whitespace in old_string/new_string. Use \`apply_patch\` directly only with a \`*** Begin Patch\` envelope and bare \`@@\` hunks (never git-style \`@@ -n,m +n,m @@\`); never emit patch-like plain text as tool arguments.`
         : "For file edits, use the `apply_patch` tool, not built-in file write/delete tools."
       : undefined,
     hasApplyPatch

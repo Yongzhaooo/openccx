@@ -13,13 +13,13 @@ import type { PersistedUsageEntry } from "../../src/usage/log";
 import { summarizeUsage } from "../../src/usage/summary";
 import type { RequestLogContext } from "../../src/server/request-log";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
  * #2699: usage could not be attributed per account for non-Codex OAuth providers. The label type
  * was Codex-only by construction, so an xai or cursor account had nowhere to be recorded and
- * `ocx usage` reported nothing for it.
+ * `occx usage` reported nothing for it.
  *
  * The trap this file is built around: the obvious stamping point in `core.ts` sits inside
  * `isGenericFailoverProvider`, whose rotation paths additionally require two or more stored
@@ -30,13 +30,13 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
 
-function oauthConfig(): OcxConfig {
+function oauthConfig(): OccxConfig {
   return {
     defaultProvider: "xai",
     providers: {
       xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function request(stream = false): Request {
@@ -61,18 +61,18 @@ function completed(stream = false): Response {
 }
 
 async function withHome<T>(run: (home: string) => Promise<T>): Promise<T> {
-  const home = mkdtempSync(join(tmpdir(), "ocx-oauth-attribution-"));
-  const prevOpencodex = process.env.OPENCODEX_HOME;
+  const home = mkdtempSync(join(tmpdir(), "occx-oauth-attribution-"));
+  const prevOpenccx = process.env.OPENCCX_HOME;
   const prevCodex = process.env.CODEX_HOME;
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   try {
     return await run(home);
   } finally {
     globalThis.fetch = originalFetch;
     removeTreeWithRetry(home);
-    if (prevOpencodex === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = prevOpencodex;
+    if (prevOpenccx === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = prevOpenccx;
     if (prevCodex === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = prevCodex;
   }
@@ -334,7 +334,7 @@ describe("Responses per-account attribution for non-Codex OAuth", () => {
 });
 
 /**
- * Criterion 3: the label has to survive attribution into `ocx usage`, which is a separate gate
+ * Criterion 3: the label has to survive attribution into `occx usage`, which is a separate gate
  * from persistence. `accountLabelForAttribution` used to accept only Codex labels and fall back to
  * a provider-string guess that returns null for anything non-openai, so a stamped xai row was
  * dropped from the account table even once it was being written.

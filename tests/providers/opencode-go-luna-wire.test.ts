@@ -9,7 +9,7 @@ import { enrichProviderFromRegistry, providerConfigSeed } from "../../src/provid
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { resolveWireProtocolOverride } from "../../src/server/adapter-resolve";
 import { handleResponses } from "../../src/server/responses/core";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { createResponsesPassthroughAdapter } from "../../src/adapters/openai-responses";
 import { parseRequest } from "../../src/responses/parser";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
@@ -17,7 +17,7 @@ import { withTestTranslatorBudget } from "../helpers/translator-budget";
 const MODEL = "gpt-5.6-luna";
 const GO_RESPONSES_MODELS = [MODEL, "grok-4.6", "muse-spark-1.3-contributor"];
 
-function opencodeGo(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function opencodeGo(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   const entry = getProviderRegistryEntry("opencode-go");
   if (!entry) throw new Error("missing opencode-go registry fixture");
   return { ...providerConfigSeed(entry), apiKey: "test-key", ...overrides };
@@ -145,7 +145,7 @@ describe("OpenCode Go stateless reasoning and continuation routes", () => {
           `data: ${JSON.stringify({ ...payload, sequence_number })}\n\n`
         ).join("") + "data: [DONE]\n\n", { headers: { "content-type": "text/event-stream" } });
       }) as typeof fetch;
-      const config = { providers: { "opencode-go": opencodeGo() } } as unknown as OcxConfig;
+      const config = { providers: { "opencode-go": opencodeGo() } } as unknown as OccxConfig;
       const drive = async (body: Record<string, unknown>) => {
         const response = await handleResponses(new Request("http://localhost/v1/responses", {
           method: "POST", headers: { "content-type": "application/json" },
@@ -236,7 +236,7 @@ describe("OpenCode Go Luna Responses route (#1482)", () => {
 
     const config = {
       providers: { "opencode-go": opencodeGo() },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const response = await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",

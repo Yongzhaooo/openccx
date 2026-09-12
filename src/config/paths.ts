@@ -17,9 +17,9 @@ let resolvedConfigDirCache: { raw: string | undefined; path: string } | null = n
 const configDirHardeningFlights = new Map<string, Promise<void>>();
 
 export function getConfigDir(): string {
-  const raw = process.env["OPENCODEX_HOME"]?.trim() || undefined;
+  const raw = process.env["OPENCCX_HOME"]?.trim() || undefined;
   if (resolvedConfigDirCache && resolvedConfigDirCache.raw === raw) return resolvedConfigDirCache.path;
-  const path = raw ? resolve(expandUserPath(raw)) : join(homedir(), ".opencodex");
+  const path = raw ? resolve(expandUserPath(raw)) : join(homedir(), ".openccx");
   resolvedConfigDirCache = { raw, path };
   return path;
 }

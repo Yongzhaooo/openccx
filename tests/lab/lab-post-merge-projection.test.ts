@@ -18,7 +18,7 @@ function protocolSubject(seed = "projection"): ProtocolSubjectV1 {
   return {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: "protocol-v1",
+    openccxCompatibilityVersion: "protocol-v1",
     effectiveAdapter: "openai-chat",
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-chat",

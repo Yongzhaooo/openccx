@@ -9,7 +9,7 @@ export type SharedTransport = "same-origin" | "direct" | "relay";
  */
 function runtimeRoleFromDocument(): string | null {
   if (typeof document === "undefined") return null;
-  const meta = document.querySelector('meta[name="opencodex-runtime-role"]');
+  const meta = document.querySelector('meta[name="openccx-runtime-role"]');
   return meta?.getAttribute("content")?.trim() || null;
 }
 
@@ -51,7 +51,7 @@ export function isConnectedRuntime(): boolean {
 export function adminTokenPromptAllowed(): boolean {
   if (typeof document !== "undefined") {
     const declared = document
-      .querySelector('meta[name="opencodex-management-auth-required"]')
+      .querySelector('meta[name="openccx-management-auth-required"]')
       ?.getAttribute("content")
       ?.trim();
     if (declared === "1") return true;

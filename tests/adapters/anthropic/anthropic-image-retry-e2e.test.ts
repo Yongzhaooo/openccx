@@ -7,7 +7,7 @@ import { clearKeyCooldowns } from "../../../src/providers/key-failover";
 import { startServer } from "../../../src/server";
 import { resetNormalizeStateForTests } from "../../../src/adapters/anthropic-image-normalize";
 import { sniffImageDimensions } from "../../../src/adapters/anthropic-image-guard";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -17,10 +17,10 @@ let isolatedCodexHome: IsolatedCodexHome | null = null;
 let upstream: ReturnType<typeof Bun.serve> | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-imgretry-e2e-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-imgretry-e2e-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-imgretry-e2e-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-imgretry-e2e-"));
+  process.env.OPENCCX_HOME = testDir;
   clearKeyCooldowns();
   resetNormalizeStateForTests();
 });
@@ -28,8 +28,8 @@ beforeEach(() => {
 afterEach(() => {
   upstream?.stop(true);
   upstream = null;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -77,7 +77,7 @@ function scriptedUpstream(statuses: number[], seen: SeenRequest[]): ReturnType<t
   });
 }
 
-function anthropicConfig(baseUrl: string, pool = false): OcxConfig {
+function anthropicConfig(baseUrl: string, pool = false): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -98,7 +98,7 @@ function anthropicConfig(baseUrl: string, pool = false): OcxConfig {
         defaultModel: "claude-fable-5",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function postImageRequest(serverUrl: string, dataUrl: string): Promise<Response> {

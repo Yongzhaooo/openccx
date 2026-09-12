@@ -6,7 +6,7 @@ import {
   TRANSLATOR_MAX_SSE_EVENT_BYTES,
   type TranslatorBudget,
 } from "../lib/translator-budget";
-import type { OcxUsage } from "../types";
+import type { OccxUsage } from "../types";
 import { nextSseBlock, replaceSseDataPayload, sseDataPayload } from "./sse-payload-rewrite";
 
 type Rec = Record<string, unknown>;
@@ -15,7 +15,7 @@ function isRec(value: unknown): value is Rec {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-export function usageFromChat(value: unknown): OcxUsage | undefined {
+export function usageFromChat(value: unknown): OccxUsage | undefined {
   if (!isRec(value)) return undefined;
   const prompt = typeof value.prompt_tokens === "number" ? value.prompt_tokens : undefined;
   const completion = typeof value.completion_tokens === "number" ? value.completion_tokens : undefined;
@@ -122,7 +122,7 @@ interface NativeChatSseOptions {
   translatorBudget: TranslatorBudget;
   signal: AbortSignal;
   onFirstOutput?: () => void;
-  onUsage: (usage: OcxUsage) => void;
+  onUsage: (usage: OccxUsage) => void;
   onTerminal?: (status: number, message?: string) => void;
   onCancel?: () => void;
 }

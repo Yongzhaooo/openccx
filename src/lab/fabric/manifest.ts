@@ -136,7 +136,7 @@ export function expandFabricScenario(
       mediaType: caseRecord.fixture.mediaType,
       digest: caseRecord.fixture.digest,
       byteLength: Buffer.byteLength(caseRecord.fixture.bytesUtf8, "utf8"),
-      syntheticMarker: "ocx-lab-synthetic-v1",
+      syntheticMarker: "occx-lab-synthetic-v1",
       provenance: {
         kind: "lab_authored",
         authority: "007_cl07_task_effectiveness.md",

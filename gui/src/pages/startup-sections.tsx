@@ -33,7 +33,7 @@ export function StartupHeroSection({
         : "startup-hero--native";
   const StatusIcon = failed || data.status === "at-risk" ? IconAlert : IconCheck;
 
-  const routingKey: TKey = data.routingKind === "opencodex-local" ? "startup.routing.proxy"
+  const routingKey: TKey = data.routingKind === "openccx-local" ? "startup.routing.proxy"
     : data.routingKind === "custom-local" ? "startup.routing.customLocal"
       : data.routingKind === "custom-remote" ? "startup.routing.customRemote"
         : data.routingKind === "unknown" ? "startup.routing.unknown"

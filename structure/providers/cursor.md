@@ -29,7 +29,7 @@ parameterized-model channel used by current Cursor clients. Router rows are stat
 must survive a live `GetUsableModels` response that omits `default`.
 
 `cursor/grok-4.5-fast` and `cursor/grok-4.6-fast` are stable Codex-facing rows, but current Cursor
-clients do not request them as flat model slugs. OpenCodex sends the matching Grok base id through
+clients do not request them as flat model slugs. Openccx sends the matching Grok base id through
 `requested_model` with separate `effort` and `fast=true` parameters, leaving legacy `model_details`
 unset for that parameterized external selection. Grok 4.5 stops at `high`; Grok 4.6 additionally
 advertises and sends `xhigh`. Live discovery recognizes Cursor's flattened

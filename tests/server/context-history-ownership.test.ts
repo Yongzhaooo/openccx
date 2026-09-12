@@ -15,7 +15,7 @@ import { resetContextRelayActivationForTests } from "../../src/codex/context-com
 
 const principal = "principal-a";
 const keyAdmission: DataPlaneAdmission = { kind: "configured", keyId: "k1", source: "dedicated", contextPrincipalId: principal };
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const destination = "https://chatgpt.com/backend-api/codex";
@@ -32,7 +32,7 @@ function install(id: string, owner: string, token = `${id}-token`): void {
   setAccountQuotaFromParsed(id, { weeklyPercent: 20 });
 }
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 0, defaultProvider: "openai", activeCodexAccountId: "pool-b",
     autoSwitchThreshold: 95, accountPoolStrategy: "fill-first", emptyCompletionRetry: false,
     codexAccountNamespaces: { side: "pool-a" },
@@ -46,7 +46,7 @@ function requestHeaders(session: string, bearer = "caller-native-token", account
     "chatgpt-account-id": account, "session-id": session, "thread-id": session });
 }
 
-async function model(cfg: OcxConfig, session: string, name = "side/gpt-5.5", headers = requestHeaders(session), admission: DataPlaneAdmission = keyAdmission): Promise<Response> {
+async function model(cfg: OccxConfig, session: string, name = "side/gpt-5.5", headers = requestHeaders(session), admission: DataPlaneAdmission = keyAdmission): Promise<Response> {
   const lease = tryAdmitTurn(); expect(lease).not.toBeNull();
   try {
     const response = await handleResponses(new Request("http://localhost/v1/responses", { method: "POST", headers,
@@ -57,7 +57,7 @@ async function model(cfg: OcxConfig, session: string, name = "side/gpt-5.5", hea
   } finally { lease?.release(); }
 }
 
-async function notes(cfg: OcxConfig, session: string, headers = requestHeaders(session), admission: DataPlaneAdmission = keyAdmission): Promise<Response> {
+async function notes(cfg: OccxConfig, session: string, headers = requestHeaders(session), admission: DataPlaneAdmission = keyAdmission): Promise<Response> {
   const lease = tryAdmitTurn(); expect(lease).not.toBeNull();
   try {
     return await handleContextHistory(new Request("http://localhost/v1/alpha/notes/v2/read_file", {
@@ -72,9 +72,9 @@ function setContextFeature(enabled: boolean): void {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME; previousCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-context-owner-"));
-  process.env.OPENCODEX_HOME = home; process.env.CODEX_HOME = home;
+  previousHome = process.env.OPENCCX_HOME; previousCodexHome = process.env.CODEX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-context-owner-"));
+  process.env.OPENCCX_HOME = home; process.env.CODEX_HOME = home;
   setContextFeature(true);
   clearContextSessionOwnersForTests(); clearAccountQuota(); clearThreadAccountMap(); clearCodexUpstreamHealth();
   for (const id of ["pool-a", "pool-b", "__main__"]) clearAccountNeedsReauth(id);
@@ -101,7 +101,7 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   clearContextSessionOwnersForTests(); clearAccountQuota(); clearThreadAccountMap(); clearCodexUpstreamHealth();
   removeTreeWithRetry(home);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = previousCodexHome;
 });
 
@@ -153,7 +153,7 @@ test("Direct caller context never borrows stored login or proxy admission", asyn
   expect((await notes(cfg, "root-caller")).status).toBe(200);
   expect(sent.map(row => row.headers.get("authorization"))).toEqual(["Bearer caller-native-token", "Bearer caller-native-token"]);
   const admission = { kind: "environment", source: "bearer", contextPrincipalId: principal } as const;
-  expect((await notes(cfg, "root-caller", requestHeaders("root-caller", "ocx_data_test_key"), admission)).status).toBe(409);
+  expect((await notes(cfg, "root-caller", requestHeaders("root-caller", "occx_data_test_key"), admission)).status).toBe(409);
   expect(sent).toHaveLength(2);
 });
 
@@ -162,7 +162,7 @@ test("Direct proxy-bearer model and notes use stored main without leaking the pr
   const token = `header.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.signature`;
   writeFileSync(join(home, "auth.json"), JSON.stringify({ tokens: { access_token: token, account_id: "physical-main" } }));
   const admission = { kind: "environment", source: "bearer", contextPrincipalId: principal } as const;
-  const headers = requestHeaders("root-proxy", "ocx_data_test_key", "untrusted-account");
+  const headers = requestHeaders("root-proxy", "occx_data_test_key", "untrusted-account");
   expect((await model(cfg, "root-proxy", "gpt-5.5", headers, admission)).status).toBe(200);
   expect(getContextSessionOwner(principal, "root-proxy", destination)).toMatchObject({ kind: "stored", accountId: "__main__" });
   expect((await notes(cfg, "root-proxy", headers, admission)).status).toBe(200);

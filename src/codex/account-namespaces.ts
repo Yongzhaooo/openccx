@@ -1,4 +1,4 @@
-import type { CodexAccount, OcxConfig } from "../types";
+import type { CodexAccount, OccxConfig } from "../types";
 import { COMBO_NAMESPACE } from "../combos/types";
 import { OPENAI_CODEX_PROVIDER_ID } from "../providers/openai-tiers";
 import {
@@ -29,7 +29,7 @@ const RESERVED_NAMESPACE_KEYS = new Set([
 ].map(codexProviderNamespaceKey));
 const PUBLIC_ACCOUNT_SELECTOR_MAX_ATTEMPTS = 16;
 
-function comboAliasNamespaces(config: Pick<OcxConfig, "combos">): string[] {
+function comboAliasNamespaces(config: Pick<OccxConfig, "combos">): string[] {
   return Object.values(config.combos ?? {}).flatMap((combo) => {
     const alias = typeof combo?.alias === "string" ? combo.alias.trim() : "";
     const slash = alias.indexOf("/");
@@ -75,7 +75,7 @@ function claimNamespace(requested: string, used: Set<string>): string {
 
 /** Collect every public namespace that a generated account selector must not claim. */
 function occupiedNamespaces(
-  config: Pick<OcxConfig, "combos" | "providers" | "routingProfiles">,
+  config: Pick<OccxConfig, "combos" | "providers" | "routingProfiles">,
 ): Set<string> {
   return new Set([
     ...Object.keys(config.providers).map(codexProviderNamespaceKey),
@@ -87,7 +87,7 @@ function occupiedNamespaces(
 
 /** Build an initial account-selector map without deriving public selectors from aliases or ids. */
 export function defaultCodexAccountNamespaces(
-  config: Pick<OcxConfig, "codexAccounts" | "combos" | "providers" | "routingProfiles">,
+  config: Pick<OccxConfig, "codexAccounts" | "combos" | "providers" | "routingProfiles">,
 ): Record<string, string> {
   const namespaces: Record<string, string> = {};
   const used = occupiedNamespaces(config);
@@ -114,7 +114,7 @@ export function defaultCodexAccountNamespaces(
  */
 export function initializeDefaultCodexAccountNamespaces(
   config: Pick<
-    OcxConfig,
+    OccxConfig,
     | "codexAccountPickerEnabled"
     | "codexAccountNamespaces"
     | "codexAccounts"
@@ -138,7 +138,7 @@ export function initializeDefaultCodexAccountNamespaces(
  */
 export function appendDefaultCodexAccountNamespace(
   config: Pick<
-    OcxConfig,
+    OccxConfig,
     "codexAccountNamespaces" | "codexAccounts" | "combos" | "providers" | "routingProfiles"
   >,
   account: Pick<CodexAccount, "id" | "isMain" | "logLabel">,
@@ -177,7 +177,7 @@ function normalizeCodexAccountNamespaceTarget(accountId: string): string {
 }
 
 export function codexAccountNamespaceEntries(
-  config: Pick<OcxConfig, "codexAccountNamespaces">,
+  config: Pick<OccxConfig, "codexAccountNamespaces">,
 ): Array<[string, string]> {
   return Object.entries(config.codexAccountNamespaces ?? {})
     .map(([namespace, accountId]) => [namespace, normalizeCodexAccountNamespaceTarget(accountId)]);
@@ -188,7 +188,7 @@ export function codexAccountNamespaceEntries(
  * A non-empty hand-written map predating the explicit override remains enabled.
  */
 export function codexAccountPickerEnabled(
-  config: Pick<OcxConfig, "codexAccountNamespaces" | "codexAccountPickerEnabled">,
+  config: Pick<OccxConfig, "codexAccountNamespaces" | "codexAccountPickerEnabled">,
 ): boolean {
   return (config.codexAccountPickerEnabled === undefined || config.codexAccountPickerEnabled === true)
     && Object.keys(config.codexAccountNamespaces ?? {}).length > 0;

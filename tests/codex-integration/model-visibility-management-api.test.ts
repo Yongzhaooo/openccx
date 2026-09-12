@@ -12,15 +12,15 @@ import { listManagementModelRows, type ManagementModelRow } from "../../src/serv
 import { routedSlug } from "../../src/providers/slug-codec";
 
 const TEST_DIR = join(import.meta.dir, `.tmp-model-visibility-management-${process.pid}`);
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 let refreshes = 0;
 
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-model-visibility-codex-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  isolatedCodexHome = installIsolatedCodexHome("occx-model-visibility-codex-");
   refreshes = 0;
   saveConfig({
     port: 0,
@@ -44,8 +44,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
@@ -329,7 +329,7 @@ describe("atomic model visibility management", () => {
 
   test("a native model suppressed by an unconfirmed roster is still a valid visibility target (#2886)", async () => {
     // The endpoint validated bare native targets against nativeModelRows, which has already
-    // dropped rows an unconfirmed entitlement roster suppressed. So `ocx models enable
+    // dropped rows an unconfirmed entitlement roster suppressed. So `occx models enable
     // gpt-5.6-sol` answered "invalid model visibility target" for a model this build knows
     // perfectly well, leaving the operator with no way to clear its disable key.
     //

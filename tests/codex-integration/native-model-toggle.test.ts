@@ -26,7 +26,7 @@ import {
 import { handleManagementAPI } from "../../src/server/management-api";
 import { applyMultiAgentMode, applyNativeOpenAiContextOverride } from "../../src/codex/catalog/parsing";
 import { NATIVE_GPT56_CONTEXT_WINDOW, NATIVE_GPT56_OPT_IN_CONTEXT_WINDOW, nativeOpenAiContextTier, nativeOpenAiContextWindow } from "../../src/codex/catalog";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ACCOUNT_GATED_NATIVE_OPENAI_MODELS } from "../../src/codex/catalog/native-models";
 import {
   GATED_MODEL_CLIENT_VERSION_FLOOR,
@@ -44,8 +44,8 @@ beforeEach(() => {
   seedCodexModelEntitlementsForTests("main", ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"]);
 });
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OcxConfig;
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OccxConfig;
 }
 
 function nativeTemplate(): Record<string, unknown> {
@@ -122,7 +122,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
     // install. Asking upstream under an adequate client version (#3442) guarantees the QUESTION
     // is fair; it cannot guarantee an ANSWER. An unconfirmed account, a timed-out fetch or a
     // shard that has not caught up all produce the same silent disappearance, which reads as
-    // "opencodex lost my model" rather than "upstream did not confirm it".
+    // "openccx lost my model" rather than "upstream did not confirm it".
     resetCodexModelEntitlementCacheForTests();
     const flagship = ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-6-astra"];
     const slugs = nativeModelRows({ disabledModels: [] }).map(row => row.slug);
@@ -374,7 +374,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
     expect(bare?.visibility).toBe("hide");
     expect(main).toMatchObject({
       display_name: "main-account / 5.5",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       comp_hash: "native-compaction-hash",
       visibility: "list",
       priority: 0,
@@ -417,7 +417,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
     );
     expect(entries.find(entry => entry.slug === "gpt-future-unlisted")).toBeUndefined();
     expect(entries.find(entry => entry.slug === "team/gpt-future-unlisted")).toMatchObject({
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       visibility: "list",
     });
 
@@ -426,7 +426,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
       slug: "gpt-future-unlisted",
       visibility: "hide",
       supported_in_api: true,
-      opencodex_account_observed_native: true,
+      openccx_account_observed_native: true,
     }])).toHaveLength(1);
     expect(observedAccountBoundNativeOpenAiSlugs(observedEntries)).toEqual(["gpt-future-unlisted"]);
   });
@@ -532,31 +532,31 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
   test("generated-row ownership uses only the nonsemantic marker and qualified slug shape", () => {
     expect(trustedAccountBoundNativeCatalogSlug({
       slug: "side/gpt-5.6-sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     })).toBe("gpt-5.6-sol");
     expect(trustedAccountBoundNativeCatalogSlug({ slug: "side/gpt-5.6-sol" })).toBeUndefined();
     expect(trustedAccountBoundNativeCatalogSlug({
       slug: "/gpt-5.6-sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     })).toBeUndefined();
     expect(trustedAccountBoundNativeCatalogSlug({
       slug: "side/",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     })).toBeUndefined();
     expect(trustedAccountBoundNativeCatalogSlug({
       slug: "gpt-5.6-sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     })).toBeUndefined();
     expect(trustedAccountBoundNativeCatalogSlug({
       slug: "side/nested/gpt-5.6-sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
     })).toBeUndefined();
   });
 
   test("native metadata helpers trust only marked, well-shaped account rows", () => {
     const trusted = {
       slug: "side/gpt-5.6-luna",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       context_window: 128_000,
       max_context_window: 128_000,
       auto_compact_token_limit: 115_200,
@@ -569,7 +569,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
     const unmarked = {
       ...trusted,
       slug: "provider/gpt-5.6-luna",
-      opencodex_catalog_kind: undefined,
+      openccx_catalog_kind: undefined,
     };
 
     applyNativeOpenAiContextOverride(trusted);
@@ -731,7 +731,7 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
   test("disabled native state is mirrored onto its account-qualified clones", () => {
     const entries = [{
       slug: "side/gpt-5.6-sol",
-      opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND,
       visibility: "list",
     }];
     applyNativeVisibility(entries, new Set(["gpt-5.6-sol"]), true);
@@ -739,12 +739,12 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
   });
 
   test("management API surfaces: /api/models leads with native rows; subagent available drops disabled bare slugs", async () => {
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     const oldCodexHome = process.env.CODEX_HOME;
-    const root = mkdtempSync(join(tmpdir(), "ocx-native-model-management-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-native-model-management-"));
     const codexHome = join(root, "codex");
     mkdirSync(codexHome, { recursive: true });
-    process.env.OPENCODEX_HOME = join(root, "opencodex");
+    process.env.OPENCCX_HOME = join(root, "openccx");
     process.env.CODEX_HOME = codexHome;
     try {
       resetCodexModelEntitlementCacheForTests();
@@ -788,8 +788,8 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
       expect(sub.available).not.toContain("gpt-5.6-sol");
       expect(sub.available).toContain("gpt-5.6-terra");
     } finally {
-      if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOcxHome;
+      if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOccxHome;
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
       removeTreeWithRetry(root);
@@ -797,13 +797,13 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
   });
 
   test("an expired confirmed roster is refreshed before /api/models projects native rows", async () => {
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     const oldCodexHome = process.env.CODEX_HOME;
     const originalFetch = globalThis.fetch;
-    const root = mkdtempSync(join(tmpdir(), "ocx-native-model-expired-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-native-model-expired-"));
     const codexHome = join(root, "codex");
     mkdirSync(codexHome, { recursive: true });
-    process.env.OPENCODEX_HOME = join(root, "opencodex");
+    process.env.OPENCCX_HOME = join(root, "openccx");
     process.env.CODEX_HOME = codexHome;
     writeFileSync(join(codexHome, "auth.json"), JSON.stringify({
       tokens: { access_token: "expired-token", account_id: "expired-main" },
@@ -844,8 +844,8 @@ describe("native GPT model toggles (bare slugs in disabledModels)", () => {
       ]));
     } finally {
       globalThis.fetch = originalFetch;
-      if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOcxHome;
+      if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOccxHome;
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
       removeTreeWithRetry(root);

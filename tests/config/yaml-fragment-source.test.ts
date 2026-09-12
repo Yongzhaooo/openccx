@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { patchYamlFragmentSource, yamlFragmentUnsupportedStyle } from "../../src/integrations/omp-yaml-source";
 
-const DSH_PATH = ["llm-pi-ai", "providers", "opencodex"] as const;
+const DSH_PATH = ["llm-pi-ai", "providers", "openccx"] as const;
 const VALUE = { api: "openai-responses", baseURL: "http://127.0.0.1:10100/v1" };
 
 function upsert(text: string, expected: unknown) {
@@ -21,7 +21,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
       "",
     ].join("\n");
     const expected = Bun.YAML.parse(source) as Record<string, unknown>;
-    ((expected["llm-pi-ai"] as { providers: Record<string, unknown> }).providers).opencodex = VALUE;
+    ((expected["llm-pi-ai"] as { providers: Record<string, unknown> }).providers).openccx = VALUE;
 
     const patched = upsert(source, expected);
     expect(patched).not.toBeNull();
@@ -36,7 +36,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
   // exists, and neither contains a comment.
   test("adopts an empty providers container, whether block or inline", () => {
     const expected = {
-      "llm-pi-ai": { providers: { opencodex: VALUE } },
+      "llm-pi-ai": { providers: { openccx: VALUE } },
       "ui-theme": { preference: "system" },
     };
     const sources = {
@@ -74,7 +74,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
     const inline = "llm-pi-ai:\n  providers: { native: { api: openai-completions } }\n";
     for (const source of [multiline, inline]) {
       const expected = Bun.YAML.parse(source) as Record<string, unknown>;
-      ((expected["llm-pi-ai"] as { providers: Record<string, unknown> }).providers).opencodex = VALUE;
+      ((expected["llm-pi-ai"] as { providers: Record<string, unknown> }).providers).openccx = VALUE;
       expect(upsert(source, expected)).toBeNull();
       expect(yamlFragmentUnsupportedStyle(source, DSH_PATH)).toBe(true);
     }
@@ -85,7 +85,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
     const expected = {
       "agent-default-model": "native",
       other: "keep",
-      "llm-pi-ai": { providers: { opencodex: VALUE } },
+      "llm-pi-ai": { providers: { openccx: VALUE } },
     };
     const patched = upsert(source, expected);
     expect(patched).not.toBeNull();
@@ -96,14 +96,14 @@ describe("generic source-preserving YAML fragment mutation", () => {
 
   test("refuses duplicate keys, tabs, flow/quoted containers, and comments inside the owned leaf", () => {
     const unsafe = [
-      "llm-pi-ai:\n  providers:\n    opencodex:\n      api: one\n    opencodex:\n      api: two\n",
+      "llm-pi-ai:\n  providers:\n    openccx:\n      api: one\n    openccx:\n      api: two\n",
       "llm-pi-ai:\n\tproviders: {}\n",
       "llm-pi-ai: { providers: {} }\n",
       "\"llm-pi-ai\":\n  providers: {}\n",
-      "llm-pi-ai:\n  providers:\n    opencodex:\n      # owned comment\n      api: one\n",
+      "llm-pi-ai:\n  providers:\n    openccx:\n      # owned comment\n      api: one\n",
     ];
     for (const source of unsafe) {
-      expect(upsert(source, { "llm-pi-ai": { providers: { opencodex: VALUE } } })).toBeNull();
+      expect(upsert(source, { "llm-pi-ai": { providers: { openccx: VALUE } } })).toBeNull();
     }
   });
 
@@ -111,7 +111,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
     const generated = [
       "llm-pi-ai:",
       "  providers:",
-      "    opencodex:",
+      "    openccx:",
       "      api: openai-responses",
       "",
     ].join("\n");
@@ -132,7 +132,7 @@ describe("generic source-preserving YAML fragment mutation", () => {
     const source = [
       "llm-pi-ai:",
       "  providers:",
-      "    opencodex:",
+      "    openccx:",
       "      api: openai-responses",
       "    later-user-provider:",
       "      api: openai-completions # keep",
@@ -156,6 +156,6 @@ describe("generic source-preserving YAML fragment mutation", () => {
 
   test("never accepts a candidate whose complete parsed document differs from expected", () => {
     const source = "other: keep\n";
-    expect(upsert(source, { other: "different", "llm-pi-ai": { providers: { opencodex: VALUE } } })).toBeNull();
+    expect(upsert(source, { other: "different", "llm-pi-ai": { providers: { openccx: VALUE } } })).toBeNull();
   });
 });

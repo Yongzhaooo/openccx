@@ -38,7 +38,7 @@ export interface ZcodeModelEntry {
 }
 
 export interface ZcodeProviderBlock {
-  name: "OpenCodex";
+  name: "Openccx";
   kind: "openai";
   enabled: true;
   source: "custom";
@@ -101,7 +101,7 @@ export function buildZcodeClientConfig(ctx: ExportContext): ZcodeGeneratedConfig
   return {
     provider: {
       [OPENCODE_PROVIDER_ID]: {
-        name: "OpenCodex",
+        name: "Openccx",
         kind: "openai",
         enabled: true,
         source: "custom",

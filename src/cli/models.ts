@@ -1,5 +1,5 @@
 /**
- * `ocx models` subcommand — list configured models and manage custom models.
+ * `occx models` subcommand — list configured models and manage custom models.
  */
 import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline/promises";
@@ -16,15 +16,15 @@ import { encodedModelIdCollides, resolveSlugSelection, routedSlug } from "../pro
 import { isModelsRuntimeSubcommand } from "./models-runtime-subcommands";
 import { knownModelIdsForProvider } from "../router";
 import { findLiveProxy } from "../server/proxy-liveness";
-import { modelInList, type OcxConfig, type OcxCustomModel } from "../types";
+import { modelInList, type OccxConfig, type OccxCustomModel } from "../types";
 
-const ADD_USAGE = "Usage: ocx models add <provider> <modelId> [--display-name <name>] [--context-window <tokens>] [--modalities text,image,audio] [--reasoning-efforts <none,minimal,low,medium,high,xhigh,max,ultra>] [--default-reasoning-effort <level>]";
-const REMOVE_USAGE = "Usage: ocx models remove <customId|provider/modelId> [--yes]";
-const LIST_CUSTOM_USAGE = "Usage: ocx models list-custom [--json]";
+const ADD_USAGE = "Usage: occx models add <provider> <modelId> [--display-name <name>] [--context-window <tokens>] [--modalities text,image,audio] [--reasoning-efforts <none,minimal,low,medium,high,xhigh,max,ultra>] [--default-reasoning-effort <level>]";
+const REMOVE_USAGE = "Usage: occx models remove <customId|provider/modelId> [--yes]";
+const LIST_CUSTOM_USAGE = "Usage: occx models list-custom [--json]";
 const ALLOWED_MODALITIES = new Set(["text", "image", "audio"]);
 
 /**
- * Parse and validate the reasoning flags shared by `ocx models add` (offline path).
+ * Parse and validate the reasoning flags shared by `occx models add` (offline path).
  * "-" means "inherit" and omits the field entirely; "" means an explicit empty ladder
  * ("no reasoning" override, the same state the dashboard stores for the toggle-off
  * checkbox set). Malformed CSV like `low,,high` or `,,` is rejected instead of being
@@ -92,7 +92,7 @@ interface ModelEntry {
  * Keep each provider's default model first and resolve metadata through shared helpers.
  * Live-discovered models are not fetched by this listing.
  */
-function collectModels(config: OcxConfig, providerFilter?: string): ModelEntry[] {
+function collectModels(config: OccxConfig, providerFilter?: string): ModelEntry[] {
   const entries: ModelEntry[] = [];
   const providers = providerFilter
     ? { [providerFilter]: config.providers[providerFilter] }
@@ -207,7 +207,7 @@ async function handleCustomAdd(args: string[]): Promise<void> {
 
   const config = loadConfig();
   if (!hasOwnProvider(config.providers, provider)) {
-    fail(`provider "${provider}" is not configured. See: ocx provider list`);
+    fail(`provider "${provider}" is not configured. See: occx provider list`);
   }
 
   const displayName = displayNameValue?.trim() || undefined;
@@ -244,7 +244,7 @@ async function handleCustomAdd(args: string[]): Promise<void> {
     fail(`custom model "${slug}" is ambiguous; it encodes to an existing model id`);
   }
 
-  const entry: OcxCustomModel = {
+  const entry: OccxCustomModel = {
     id: randomUUID(),
     provider,
     modelId,
@@ -261,7 +261,7 @@ async function handleCustomAdd(args: string[]): Promise<void> {
   console.log(`Added custom model ${slug} (${entry.id}).`);
 }
 
-async function confirmCustomRemoval(model: OcxCustomModel): Promise<boolean> {
+async function confirmCustomRemoval(model: OccxCustomModel): Promise<boolean> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     fail("remove requires --yes in non-interactive mode");
   }
@@ -330,7 +330,7 @@ async function handleCustomRemove(args: string[]): Promise<void> {
   console.log(`Removed custom model ${routedSlug(model.provider, model.modelId)}.`);
 }
 
-function customModelCells(model: OcxCustomModel): string[] {
+function customModelCells(model: OccxCustomModel): string[] {
   return [
     model.id.slice(0, 8),
     model.modelId,
@@ -342,7 +342,7 @@ function customModelCells(model: OcxCustomModel): string[] {
   ];
 }
 
-function printCustomModelGroup(provider: string, models: OcxCustomModel[]): void {
+function printCustomModelGroup(provider: string, models: OccxCustomModel[]): void {
   const rows = models.map(customModelCells);
   const headers = ["ID", "MODEL", "DISPLAY NAME", "CONTEXT", "MODALITIES", "EFFORTS", "DEFAULT EFFORT"];
   const widths = headers.map((header, column) => Math.max(header.length, ...rows.map(row => row[column].length)));
@@ -366,7 +366,7 @@ function handleCustomList(args: string[]): void {
     console.log("No custom models registered.");
     return;
   }
-  const byProvider = new Map<string, OcxCustomModel[]>();
+  const byProvider = new Map<string, OccxCustomModel[]>();
   for (const model of models) {
     const group = byProvider.get(model.provider) ?? [];
     group.push(model);
@@ -387,14 +387,14 @@ function handleConfiguredModels(args: string[]): void {
     } else {
       console.error(`Unexpected argument(s): ${restArgs.join(", ")}`);
     }
-    console.error("Usage: ocx models [--provider <name>] [--json]");
+    console.error("Usage: occx models [--provider <name>] [--json]");
     process.exit(1);
   }
 
   const config = loadConfig();
 
   if (providerFilter && !hasOwnProvider(config.providers, providerFilter)) {
-    console.error(`Provider "${providerFilter}" is not configured. See: ocx provider list`);
+    console.error(`Provider "${providerFilter}" is not configured. See: occx provider list`);
     process.exit(1);
   }
 

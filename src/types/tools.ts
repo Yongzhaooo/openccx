@@ -1,4 +1,4 @@
-export interface OcxTool {
+export interface OccxTool {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
@@ -128,21 +128,21 @@ export function declaresCodeModeExec(declared: ReadonlySet<string> | undefined):
   return !(LEGACY_SHELL_BRIDGE_TOOL_NAMES as readonly string[]).some(legacy => declared.has(legacy));
 }
 
-export function toolChoiceAliases(tool: Pick<OcxTool, "namespace" | "name">): string[] {
+export function toolChoiceAliases(tool: Pick<OccxTool, "namespace" | "name">): string[] {
   const wireName = namespacedToolName(tool.namespace, tool.name);
   return tool.namespace ? [wireName, dottedToolName(tool.namespace, tool.name)] : [wireName];
 }
 
 function sameToolIdentity(
-  left: Pick<OcxTool, "namespace" | "name">,
-  right: Pick<OcxTool, "namespace" | "name">,
+  left: Pick<OccxTool, "namespace" | "name">,
+  right: Pick<OccxTool, "namespace" | "name">,
 ): boolean {
   return left.namespace === right.namespace && left.name === right.name;
 }
 
-type ToolIdentity = Readonly<Pick<OcxTool, "namespace" | "name">>;
+type ToolIdentity = Readonly<Pick<OccxTool, "namespace" | "name">>;
 
-function snapshotToolIdentity(tool: Pick<OcxTool, "namespace" | "name">): ToolIdentity {
+function snapshotToolIdentity(tool: Pick<OccxTool, "namespace" | "name">): ToolIdentity {
   return Object.freeze({
     name: tool.name,
     ...(tool.namespace === undefined ? {} : { namespace: tool.namespace }),
@@ -214,9 +214,9 @@ export function createToolChoiceResolver(tools: readonly ToolIdentity[] | undefi
  * aliases come from `toolChoiceAliases`. A selector with more than one candidate is invalid.
  */
 export function toolChoiceCandidates(
-  tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined,
+  tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined,
   name: string,
-): Pick<OcxTool, "namespace" | "name">[] {
+): Pick<OccxTool, "namespace" | "name">[] {
   if (!tools) return [];
   return [...(buildToolChoiceCatalog(tools).sourceCandidatesByName.get(name) ?? [])];
 }
@@ -227,9 +227,9 @@ export function toolChoiceCandidates(
  * cannot authorize a tool from an unintended namespace.
  */
 export function toolAllowedByChoice(
-  tool: Pick<OcxTool, "namespace" | "name">,
+  tool: Pick<OccxTool, "namespace" | "name">,
   allowedTools: ReadonlySet<string>,
-  tools?: readonly Pick<OcxTool, "namespace" | "name">[],
+  tools?: readonly Pick<OccxTool, "namespace" | "name">[],
 ): boolean {
   if (!tools) return toolChoiceAliases(tool).some(name => allowedTools.has(name));
   return toolAllowedByChoiceFromIndex(
@@ -252,7 +252,7 @@ function toolAllowedByChoiceFromIndex(
   return false;
 }
 
-export function resolveToolChoiceWireName(tools: readonly Pick<OcxTool, "namespace" | "name">[] | undefined, name: string): string {
+export function resolveToolChoiceWireName(tools: readonly Pick<OccxTool, "namespace" | "name">[] | undefined, name: string): string {
   const candidates = toolChoiceCandidates(tools, name);
   if (candidates.length === 1) {
     const match = candidates[0];
@@ -275,22 +275,22 @@ export function modelInList(list: string[] | undefined, modelId: string): boolea
   return colon > 0 && list.includes(modelId.slice(0, colon));
 }
 
-export type OcxToolChoice =
+export type OccxToolChoice =
   | "auto"
   | "none"
   | "required"
   | { name: string }
   | { allowedTools: string[]; mode: "auto" | "required" };
 
-export function isAllowedToolChoice(value: OcxToolChoice | undefined): value is { allowedTools: string[]; mode: "auto" | "required" } {
+export function isAllowedToolChoice(value: OccxToolChoice | undefined): value is { allowedTools: string[]; mode: "auto" | "required" } {
   return typeof value === "object" && value !== null && "allowedTools" in value;
 }
 
 /** Compile the request's tool-choice policy into a reusable advertisement/restoration predicate. */
 export function toolChoiceToolPredicate(
-  choice: OcxToolChoice | undefined,
-  tools?: readonly Pick<OcxTool, "namespace" | "name">[],
-): (tool: Pick<OcxTool, "namespace" | "name">) => boolean {
+  choice: OccxToolChoice | undefined,
+  tools?: readonly Pick<OccxTool, "namespace" | "name">[],
+): (tool: Pick<OccxTool, "namespace" | "name">) => boolean {
   if (!choice || choice === "auto" || choice === "required") return () => true;
   if (choice === "none") return () => false;
   if (isAllowedToolChoice(choice)) {

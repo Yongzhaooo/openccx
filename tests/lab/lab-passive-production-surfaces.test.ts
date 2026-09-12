@@ -8,15 +8,15 @@ import {
   PASSIVE_PRODUCTION_MAX_LIMIT,
 } from "../../src/lab/query";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const HOMES: string[] = [];
-const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-passive-surfaces-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-passive-surfaces-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -26,16 +26,16 @@ afterEach(() => {
   for (const dir of HOMES.splice(0)) {
     removeTreeWithRetry(dir);
   }
-  if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
 });
 
-function config(): OcxConfig {
-  return { providers: {} } as OcxConfig;
+function config(): OccxConfig {
+  return { providers: {} } as OccxConfig;
 }
 
 async function apiGet(home: string, path: string): Promise<Response> {
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   const req = new ManagementRequest(`http://127.0.0.1${path}`, { method: "GET" });
   const response = await handleManagementAPI(req, new URL(req.url), config(), {
     refreshCodexCatalog: async () => {},

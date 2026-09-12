@@ -18,27 +18,27 @@ import {
   routingProfileIssues,
 } from "../../src/routing/profile";
 import { evaluatePolicyProfile } from "../../src/routing/evaluator";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-profile-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-profile-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   clearAccountQuotaCache();
   closeRequestHistoryIndex();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -50,7 +50,7 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     codexAccountNamespaces: { work: "acct-1" },
     routingProfiles: {
       fast: {
-        alias: "ocx/fast",
+        alias: "occx/fast",
         candidates: [
           { provider: "a", model: "m1" },
           { provider: "b", model: "m2" },
@@ -69,7 +69,7 @@ describe("routing profiles (RI-04)", () => {
   test("normalizes a valid profile with deterministic weights and revision", () => {
     const profile = getRoutingProfile(baseConfig(), "fast")!;
     expect(profile.id).toBe("fast");
-    expect(profile.alias).toBe("ocx/fast");
+    expect(profile.alias).toBe("occx/fast");
     expect(profile.candidates).toEqual([
       { provider: "a", model: "m1" },
       { provider: "b", model: "m2" },
@@ -178,7 +178,7 @@ describe("routing profiles (RI-04)", () => {
 
     const siblingCollision = routingProfileIssues("p", {
       candidates: [{ provider: "a", model: "m1" }],
-      alias: "ocx/fast",
+      alias: "occx/fast",
     }, config);
     expect(siblingCollision.some(issue => issue.message.includes("already used"))).toBe(true);
   });
@@ -228,12 +228,12 @@ describe("routing profiles (RI-04)", () => {
   test("policy id/alias resolution follows canonical-id-first", () => {
     const config = baseConfig();
     expect(resolvePolicyProfileId(config, "policy/fast")).toBe("fast");
-    expect(resolvePolicyProfileId(config, "ocx/fast")).toBe("fast");
+    expect(resolvePolicyProfileId(config, "occx/fast")).toBe("fast");
     expect(resolvePolicyProfileId(config, "policy/missing")).toBe("missing");
     expect(resolvePolicyProfileId(config, "unknown")).toBeNull();
     expect(parsePolicyModelId("policy/fast")).toBe("fast");
     expect(parsePolicyModelId("a/m1")).toBeNull();
-    expect(policyPublicModelId("fast", getRoutingProfile(config, "fast")!)).toBe("ocx/fast");
+    expect(policyPublicModelId("fast", getRoutingProfile(config, "fast")!)).toBe("occx/fast");
   });
 
   test("dry-run evaluator: hard requirements gate eligibility", () => {
@@ -401,7 +401,7 @@ describe("routing profiles (RI-04)", () => {
     expect(listBody.profiles?.length).toBe(1);
     expect(listBody.profiles![0]).toMatchObject({
       id: "fast",
-      model: "ocx/fast",
+      model: "occx/fast",
       revision: getRoutingProfile(config, "fast")!.revision,
     });
 
@@ -451,7 +451,7 @@ describe("routing profiles (RI-04)", () => {
       },
       routingProfiles: {
         fast: {
-          alias: "ocx/fast",
+          alias: "occx/fast",
           candidates: [
             { provider: "a", model: "m1" },
             { provider: "b", model: "m2" },

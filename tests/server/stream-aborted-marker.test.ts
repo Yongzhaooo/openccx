@@ -19,7 +19,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 // Port of codex-router #139's streamAborted metering marker: an upstream stream
 // that dies after its 200 head was committed must meter as a truncated turn
-// (synthetic 502 + streamAborted), while a client cancellation keeps opencodex's
+// (synthetic 502 + streamAborted), while a client cancellation keeps openccx's
 // own 499 client_cancel semantics and never carries the marker.
 
 const encoder = new TextEncoder();
@@ -28,15 +28,15 @@ let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-stream-aborted-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-stream-aborted-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageReadCacheForTests();
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
@@ -96,7 +96,7 @@ describe("streamAborted marker (codex-router #139)", () => {
 
     // Finalize exactly like the native-passthrough terminal path in index.ts.
     addFinalRequestLog(
-      "ocx-stream-aborted-e2e",
+      "occx-stream-aborted-e2e",
       Date.now(),
       logCtx,
       httpStatusForRequestLogTerminal("failed", logCtx),
@@ -134,7 +134,7 @@ describe("streamAborted marker (codex-router #139)", () => {
     expect(attempt.streamAborted).toBeUndefined();
 
     addFinalRequestLog(
-      "ocx-cancel-e2e",
+      "occx-cancel-e2e",
       Date.now(),
       logCtx,
       499,
@@ -194,7 +194,7 @@ describe("streamAborted marker (codex-router #139)", () => {
     expect(attempt.streamAborted).toBeUndefined();
 
     addFinalRequestLog(
-      "ocx-cancel-translated",
+      "occx-cancel-translated",
       Date.now(),
       logCtx,
       499,
@@ -235,7 +235,7 @@ describe("streamAborted marker (codex-router #139)", () => {
     expect(attempt.streamAborted).toBeUndefined();
 
     addFinalRequestLog(
-      "ocx-bare-error-eof",
+      "occx-bare-error-eof",
       Date.now(),
       logCtx,
       httpStatusForRequestLogTerminal("failed", logCtx),

@@ -20,8 +20,8 @@ import type { NormalizedObservation } from "../../src/lab/conformance/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const HOMES: string[] = [];
-function tempHome(): string { const dir = join(tmpdir(), `ocx-lab-probe-${process.pid}-${Math.random().toString(16).slice(2)}`); mkdirSync(dir, { recursive: true, mode: 0o700 }); HOMES.push(dir); return dir; }
-afterEach(() => { for (const dir of HOMES.splice(0)) { try { removeTreeWithRetry(dir); } catch { /* ignore */ } } delete process.env.OPENCODEX_HOME; clearMcpStub(); });
+function tempHome(): string { const dir = join(tmpdir(), `occx-lab-probe-${process.pid}-${Math.random().toString(16).slice(2)}`); mkdirSync(dir, { recursive: true, mode: 0o700 }); HOMES.push(dir); return dir; }
+afterEach(() => { for (const dir of HOMES.splice(0)) { try { removeTreeWithRetry(dir); } catch { /* ignore */ } } delete process.env.OPENCCX_HOME; clearMcpStub(); });
 
 function behavior(adapter: string, upstreamProtocol: string): LabBehaviorValues {
   return {
@@ -38,7 +38,7 @@ function mockRoute(overrides: Partial<LabRouteContext> = {}): LabRouteContext {
   const base = {
     providerId: "fixture-provider", providerInstanceKey: "fixture-provider-instance", clientModelId: "fixture-model", upstreamModelId: "fixture-model",
     effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http",
-    baseUrl: "https://api.example.com/v1", opencodexCompatibilityVersion: "a".repeat(64), labRunApproval: true, allowPrivateNetwork: false,
+    baseUrl: "https://api.example.com/v1", openccxCompatibilityVersion: "a".repeat(64), labRunApproval: true, allowPrivateNetwork: false,
     requiredClaims: ["tools", "image", "reasoning"],
     availableHarnessFeatures: ["live_transport", "inert_tools", "adapter_vector", "reasoning_replay", "synthetic_image", "in_memory_mcp_stub", "mcp_call_result_v1", "mcp_lab_stub"],
   };
@@ -70,7 +70,7 @@ function trustedObservation(observation: NormalizedObservation) {
 }
 
 function routeSubject(): RouteSubjectV1 {
-  return { subjectSchemaVersion: 1, subjectKind: "route", providerId: "p", providerInstanceFingerprint: "a".repeat(64), clientModelId: "m", upstreamModelId: "m", effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", opencodexCompatibilityVersion: "a".repeat(64), behaviorFingerprint: "b".repeat(64), endpointFingerprint: "c".repeat(64), dependencies: [] };
+  return { subjectSchemaVersion: 1, subjectKind: "route", providerId: "p", providerInstanceFingerprint: "a".repeat(64), clientModelId: "m", upstreamModelId: "m", effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", openccxCompatibilityVersion: "a".repeat(64), behaviorFingerprint: "b".repeat(64), endpointFingerprint: "c".repeat(64), dependencies: [] };
 }
 
 describe("CL-03 live probe harness", () => {
@@ -84,7 +84,7 @@ describe("CL-03 live probe harness", () => {
   test("discovers all CL-03 live suites", () => { const authority = loadLiveCaseAuthority(); expect(discoverLiveScenarios(authority, CL03_LIVE_SUITES)).toHaveLength(10); expect(listLiveScenarioIds()).toHaveLength(10); });
 
   test("runs only applicable live suite scenarios with an injected test transport", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const authority = loadLiveCaseAuthority();
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const authority = loadLiveCaseAuthority();
     const summary = await runLiveSuite(mockRoute(), ["responses-core", "chat-core"], { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], transport: createMockTransport({ entries: [{ status: 200, body: authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!.fixture.bytesUtf8 }] }) });
     expect(summary.total).toBe(1); expect(summary.results[0]?.routeSubject?.subjectKind).toBe("route"); expect(summary.results[0]?.executionAuthority).toBe("test_transport");
   });
@@ -93,7 +93,7 @@ describe("CL-03 live probe harness", () => {
   test("MCP lab stub only", () => { registerMcpStubTool({ namespace: "lab", name: "echo" }); expect(invokeMcpStub("lab", "echo", { x: 1 }, { content: [{ type: "text", text: "ECHO" }] }).content[0]?.text).toBe("ECHO"); });
 
   test("test transports can exercise normalization but cannot create live evidence", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(caseRecord, mockRoute(), { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], transport: transportForCase(caseRecord) });
     expect(result.executionAuthority).toBe("test_transport");
     expect(() => observationFromLiveResult(result, caseRecord, authority, { configDir: home })).toThrow("trusted execution receipt");
@@ -125,7 +125,7 @@ describe("CL-03 live probe harness", () => {
   });
 
   test("raw URLs and secrets never appear in persisted trusted live evidence", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(caseRecord, mockRoute(), { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], routeExecutor: trustedObservation(passObservation()) });
     expect(result.executionAuthority).toBe("trusted_route");
     const { event } = observationFromLiveResult(result, caseRecord, authority, { configDir: home }); const serialized = JSON.stringify(event);
@@ -133,14 +133,14 @@ describe("CL-03 live probe harness", () => {
   });
 
   test("JSONL persistence and SQLite rebuild for trusted live evidence", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "chat-core.live.basic-turn")!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const authority = loadLiveCaseAuthority(); const caseRecord = authority.cases.find((c) => c.id === "chat-core.live.basic-turn")!;
     const route = mockRoute({ effectiveAdapter: "openai-chat", upstreamProtocol: "openai-chat", surface: "responses-sse" });
     const result = await runLiveScenario(caseRecord, route, { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], routeExecutor: trustedObservation(passObservation()) });
     persistLiveResult(result, caseRecord, authority, { configDir: home }); const projection = rebuildLabProjection(home); expect(projection.events).toBeGreaterThan(0); expect(projection.corruptions).toHaveLength(0); expect(replayLabLedger(join(home, "lab", "compatibility.jsonl")).events.length).toBeGreaterThan(0);
   });
 
   test("route subject applicability and cross-route evidence reuse prevention", () => {
-    const subjectA: RouteSubjectV1 = { subjectSchemaVersion: 1, subjectKind: "route", providerId: "provider-a", providerInstanceFingerprint: "a".repeat(64), clientModelId: "model-a", upstreamModelId: "model-a", effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", opencodexCompatibilityVersion: "a".repeat(64), behaviorFingerprint: "b".repeat(64), endpointFingerprint: "c".repeat(64), dependencies: [] };
+    const subjectA: RouteSubjectV1 = { subjectSchemaVersion: 1, subjectKind: "route", providerId: "provider-a", providerInstanceFingerprint: "a".repeat(64), clientModelId: "model-a", upstreamModelId: "model-a", effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", openccxCompatibilityVersion: "a".repeat(64), behaviorFingerprint: "b".repeat(64), endpointFingerprint: "c".repeat(64), dependencies: [] };
     const subjectB = { ...subjectA, providerId: "provider-b", endpointFingerprint: "d".repeat(64) } as RouteSubjectV1; expect(subjectIdForSubject(subjectA)).not.toBe(subjectIdForSubject(subjectB));
     const requirements = loadLiveCaseAuthority().cases[0]!.requirements; expect(routeSubjectApplicableToRequirements(requirements, subjectA, [])).toBe(true); expect(routeSubjectApplicableToRequirements({ ...requirements, inboundProtocols: ["anthropic-messages"] }, subjectA, [])).toBe(false);
   });
@@ -154,7 +154,7 @@ describe("CL-03 live probe harness", () => {
 
   test("live verification fails closed without route identity or validated claims", () => {
     const authority = loadLiveCaseAuthority(); const suite = expandLiveSuiteManifest("responses-core", authority);
-    const protocolSubject: ProtocolSubjectV1 = { subjectSchemaVersion: 1, subjectKind: "protocol", opencodexCompatibilityVersion: "a".repeat(64), effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", behaviorFingerprint: "b".repeat(64) };
+    const protocolSubject: ProtocolSubjectV1 = { subjectSchemaVersion: 1, subjectKind: "protocol", openccxCompatibilityVersion: "a".repeat(64), effectiveAdapter: "openai-responses", inboundProtocol: "openai-responses", upstreamProtocol: "openai-responses", surface: "responses-http", behaviorFingerprint: "b".repeat(64) };
     const noSubject = evaluateAllApplicableRequiredPassV1(suite, [], "live", { routeSupportedClaims: [], loadScenarioRequirements: () => ({ inboundProtocols: ["openai-responses"], upstreamProtocols: ["openai-responses"], surfaces: ["responses-http"], requiredClaims: [], freshness: { maxAgeMs: 604800000 } }) });
     const wrongSubject = evaluateAllApplicableRequiredPassV1(suite, [], "live", { subject: protocolSubject, routeSupportedClaims: [], loadScenarioRequirements: () => ({ inboundProtocols: ["openai-responses"], upstreamProtocols: ["openai-responses"], surfaces: ["responses-http"], requiredClaims: [], freshness: { maxAgeMs: 604800000 } }) });
     const noClaims = evaluateAllApplicableRequiredPassV1(suite, [], "live", { subject: routeSubject(), loadScenarioRequirements: () => ({ inboundProtocols: ["openai-responses"], upstreamProtocols: ["openai-responses"], surfaces: ["responses-http"], requiredClaims: [], freshness: { maxAgeMs: 604800000 } }) });
@@ -168,26 +168,26 @@ describe("CL-03 live probe harness", () => {
   });
 
   test("timeouts classify as blockers", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const scenario = loadLiveCaseAuthority().cases[0]!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const scenario = loadLiveCaseAuthority().cases[0]!;
     const result = await runLiveScenario(scenario, mockRoute(), { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], transport: createMockTransport({ entries: [{ status: 200, body: "{}", error: "total_timeout" }] }) });
     expect(result.classification).toBe("timeout");
   });
 
   test("HTTP auth failure is an exact-route blocker", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const scenario = loadLiveCaseAuthority().cases[0]!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const scenario = loadLiveCaseAuthority().cases[0]!;
     const result = await runLiveScenario(scenario, mockRoute(), { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], transport: createMockTransport({ entries: [{ status: 401, body: "" }] }) });
     expect(result.classification).toBe("authentication_blocked"); expect(result.routeSubject?.endpointFingerprint).toHaveLength(64);
   });
 
   test("reasoning replay persists no private reasoning material", async () => {
-    const home = tempHome(); process.env.OPENCODEX_HOME = home; const authority = loadLiveCaseAuthority(); const scenario = authority.cases.find((c) => c.id === "reasoning-core.live.replay")!;
+    const home = tempHome(); process.env.OPENCCX_HOME = home; const authority = loadLiveCaseAuthority(); const scenario = authority.cases.find((c) => c.id === "reasoning-core.live.replay")!;
     const result = await runLiveScenario(scenario, mockRoute({ requiredClaims: ["reasoning"] }), { configDir: home, resolve: async () => [{ address: "93.184.216.34", family: 4 }], routeExecutor: trustedObservation(reasoningObservation()) });
     expect(result.passed).toBe(true); const { event } = observationFromLiveResult(result, scenario, authority, { configDir: home }); expect(JSON.stringify(event)).not.toContain("PLAN");
   });
 
   test("inactivity_timeout failures attribute environment on observation", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadLiveCaseAuthority();
     const caseRecord = authority.cases[0]!;
     const result = await runLiveScenario(caseRecord, mockRoute(), {

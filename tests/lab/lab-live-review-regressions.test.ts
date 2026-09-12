@@ -24,7 +24,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const HOMES: string[] = [];
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-live-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-live-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -34,7 +34,7 @@ afterEach(() => {
   for (const dir of HOMES.splice(0)) {
     try { removeTreeWithRetry(dir); } catch { /* ignore */ }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function behavior(overrides: Partial<LabBehaviorValues> = {}): LabBehaviorValues {
@@ -66,7 +66,7 @@ function route(overrides: Partial<LabRouteContext> = {}): LabRouteContext {
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
     baseUrl: "https://api.example.com/v1",
-    opencodexCompatibilityVersion: "a".repeat(64),
+    openccxCompatibilityVersion: "a".repeat(64),
     behaviorValues: behavior(),
     labRunApproval: true,
     allowPrivateNetwork: false,
@@ -96,7 +96,7 @@ const LIMITS: LiveRunConfig = {
 describe("CL-03 independent-review regressions", () => {
   test("live assertions are driven by observed route bytes, not frozen fixture bytes", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadLiveCaseAuthority();
     const scenario = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(scenario, route(), {
@@ -110,7 +110,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("live execution fails closed when no real route transport is supplied", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadLiveCaseAuthority();
     const scenario = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(scenario, route(), {
@@ -124,7 +124,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("resolved metadata/private addresses are policy-checked, not merely recorded", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     await expect(createLabDestination({
       baseUrl: "https://safe-looking.example/v1",
       labRunApproval: true,
@@ -141,7 +141,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("pinned transport uses the approved address and never hostname fetch", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const destination = await createLabDestination({
       baseUrl: "https://api.example.com/v1",
       labRunApproval: true,
@@ -174,7 +174,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("transport blockers retain the exact already-built route subject", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const authority = loadLiveCaseAuthority();
     const scenario = authority.cases.find((c) => c.id === "responses-core.live.basic-turn")!;
     const result = await runLiveScenario(scenario, route(), {
@@ -188,7 +188,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("runLiveSuite does not execute inapplicable route scenarios", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     let requests = 0;
     const summary = await runLiveSuite(route(), ["responses-core", "chat-core"], {
       configDir: home,
@@ -210,7 +210,7 @@ describe("CL-03 independent-review regressions", () => {
 
   test("route subject uses configured instance identity and supplied compatibility version", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const destination = await createLabDestination({
       baseUrl: "https://api.example.com/v1",
       labRunApproval: true,
@@ -220,6 +220,6 @@ describe("CL-03 independent-review regressions", () => {
     const a = buildRouteSubjectV1(route({ providerInstanceKey: "instance-a" }), destination, home);
     const b = buildRouteSubjectV1(route({ providerInstanceKey: "instance-b" }), destination, home);
     expect(a.providerInstanceFingerprint).not.toBe(b.providerInstanceFingerprint);
-    expect(a.opencodexCompatibilityVersion).toBe("a".repeat(64));
+    expect(a.openccxCompatibilityVersion).toBe("a".repeat(64));
   });
 });

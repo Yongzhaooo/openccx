@@ -9,12 +9,12 @@ import {
   peekReasoningForCall,
   rememberReasoningForCall,
 } from "../../src/responses/reasoning-replay-cache";
-import type { AdapterEvent, OcxReasoningReplayScopeRef } from "../../src/types";
+import type { AdapterEvent, OccxReasoningReplayScopeRef } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
 const REASONING = "I need to inspect files before answering.";
-const SCOPE: OcxReasoningReplayScopeRef = {
+const SCOPE: OccxReasoningReplayScopeRef = {
   clientThreadId: "thread-empty-delta",
   current: {
     providerName: "opencode-free",
@@ -98,7 +98,7 @@ describe("reasoning replay empty-delta robustness", () => {
   });
 
   test("the memory-only cache writes no reasoning state to disk even when persistence env vars are set", async () => {
-    const scratch = mkdtempSync(join(tmpdir(), "ocx-reasoning-memory-only-"));
+    const scratch = mkdtempSync(join(tmpdir(), "occx-reasoning-memory-only-"));
     const spill = join(scratch, "must-not-exist.json");
     const moduleUrl = pathToFileURL(repoPath("src/responses/reasoning-replay-cache.ts")).href;
     const script = [
@@ -112,9 +112,9 @@ describe("reasoning replay empty-delta robustness", () => {
         cwd: scratch,
         env: {
           ...process.env,
-          OPENCODEX_HOME: scratch,
-          OPENCODEX_REASONING_REPLAY_PERSIST: "1",
-          OPENCODEX_REASONING_REPLAY_FILE: spill,
+          OPENCCX_HOME: scratch,
+          OPENCCX_REASONING_REPLAY_PERSIST: "1",
+          OPENCCX_REASONING_REPLAY_FILE: spill,
         },
         stdout: "pipe",
         stderr: "pipe",

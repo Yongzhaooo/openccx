@@ -6,8 +6,8 @@ import { join } from "node:path";
 // Child-process fixture for the bounded startup policy-binding read. A regressed (unbounded)
 // FIFO read would block forever, so the parent's spawn timeout is the hang detector; the child
 // itself only reports bind outcomes.
-const caseName = process.env.OCX_BOUNDED_READ_CASE!;
-const root = mkdtempSync(join(tmpdir(), "ocx-bounded-auth-read-"));
+const caseName = process.env.OCCX_BOUNDED_READ_CASE!;
+const root = mkdtempSync(join(tmpdir(), "occx-bounded-auth-read-"));
 const accountId = "bounded-read-account";
 const bearer = `header.${Buffer.from(JSON.stringify({
   exp: Math.floor(Date.now() / 1000) + 86_400,

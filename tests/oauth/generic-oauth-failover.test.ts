@@ -17,24 +17,24 @@ import { getAccountSet, markAccountNeedsReauth, saveCredential, setActiveAccount
 import { clearAccountQuotaCache, setCachedProviderAccountQuotaForTests } from "../../src/providers/quota";
 import { resolveCopilotApiBaseUrl } from "../../src/oauth/github-copilot";
 import { resolveProviderTransport } from "../../src/providers/xai-transport";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home: string;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-generic-failover-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-generic-failover-"));
+  process.env.OPENCCX_HOME = home;
   clearGenericFailoverHealth();
 });
 
 afterEach(() => {
   clearGenericFailoverHealth();
   clearAccountQuotaCache("xai");
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 
@@ -42,13 +42,13 @@ const OAUTH_PROVIDER = {
   adapter: "openai-chat",
   baseUrl: "https://api.x.ai/v1",
   authMode: "oauth",
-} as unknown as OcxProviderConfig;
+} as unknown as OccxProviderConfig;
 
 /**
  * `enabled: undefined` means the key is ABSENT, which after #2568d is the case that matters most:
  * it is what every install that never edited its config looks like.
  */
-function config(enabled?: boolean, perProvider?: boolean): OcxConfig {
+function config(enabled?: boolean, perProvider?: boolean): OccxConfig {
   return {
     providers: {
       xai: perProvider === undefined
@@ -56,7 +56,7 @@ function config(enabled?: boolean, perProvider?: boolean): OcxConfig {
         : { ...OAUTH_PROVIDER, oauthAccountFailover: { enabled: perProvider } },
     },
     ...(enabled === undefined ? {} : { oauthAccountFailover: { enabled } }),
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 async function seed(count: number, offset = 0): Promise<string[]> {
@@ -87,7 +87,7 @@ describe("#2568 generic OAuth account failover", () => {
       for (const enabled of [undefined, false, true]) {
         const cfg = { providers: { [provider]: { ...OAUTH_PROVIDER,
           ...(enabled === undefined ? {} : { oauthAccountFailover: { enabled } }),
-        } } } as OcxConfig;
+        } } } as OccxConfig;
         expect(preferredInitialAccount(cfg, provider)).toBeNull();
       }
       clearAccountQuotaCache(provider);
@@ -232,7 +232,7 @@ describe("#2568 generic OAuth account failover", () => {
   });
 
   test("a key-auth provider never enters generic OAuth rotation", () => {
-    const key = { ...OAUTH_PROVIDER, authMode: "key" } as OcxProviderConfig;
+    const key = { ...OAUTH_PROVIDER, authMode: "key" } as OccxProviderConfig;
     expect(isGenericFailoverProvider("groq", key)).toBe(false);
   });
 
@@ -469,13 +469,13 @@ describe("#2807 a 429 rotation pairs the bearer with its OWN origin", () => {
   const CANONICAL = "https://api.githubcopilot.com";
 
   /** The failed account's provider as `applyFailoverSnapshot` receives it: already resolved. */
-  function providerAfterAccountA(): OcxProviderConfig {
+  function providerAfterAccountA(): OccxProviderConfig {
     return {
       adapter: "openai-chat",
       authMode: "oauth",
       baseUrl: REGIONAL,
       apiKey: "bearer-account-a",
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
   }
 
   test("an account with its own regional origin keeps it", () => {
@@ -484,7 +484,7 @@ describe("#2807 a 429 rotation pairs the bearer with its OWN origin", () => {
       { ...providerAfterAccountA(), apiKey: "bearer-account-b" },
       undefined,
       resolveCopilotApiBaseUrl("https://other.githubcopilot.com"),
-    ) as OcxProviderConfig;
+    ) as OccxProviderConfig;
     expect(rotated.baseUrl).toBe("https://other.githubcopilot.com");
     expect(rotated.apiKey).toBe("bearer-account-b");
   });
@@ -497,7 +497,7 @@ describe("#2807 a 429 rotation pairs the bearer with its OWN origin", () => {
       { ...providerAfterAccountA(), apiKey: "bearer-account-b" },
       undefined,
       resolveCopilotApiBaseUrl(undefined),
-    ) as OcxProviderConfig;
+    ) as OccxProviderConfig;
     expect(rotated.baseUrl).toBe(CANONICAL);
     expect(rotated.baseUrl).not.toBe(REGIONAL);
     expect(rotated.apiKey).toBe("bearer-account-b");
@@ -511,7 +511,7 @@ describe("#2807 a 429 rotation pairs the bearer with its OWN origin", () => {
       { ...providerAfterAccountA(), apiKey: "bearer-account-b" },
       undefined,
       undefined,
-    ) as OcxProviderConfig;
+    ) as OccxProviderConfig;
     expect(leaked.baseUrl).toBe(REGIONAL);
     expect(leaked.apiKey).toBe("bearer-account-b");
   });
@@ -522,14 +522,14 @@ describe("#2807 a 429 rotation pairs the bearer with its OWN origin", () => {
       { ...providerAfterAccountA(), apiKey: "bearer-account-b" },
       undefined,
       resolveCopilotApiBaseUrl("https://attacker.example.com"),
-    ) as OcxProviderConfig;
+    ) as OccxProviderConfig;
     expect(rotated.baseUrl).toBe(CANONICAL);
   });
 });
 
 describe("#695 the generic pool consumes its persisted strategy behind pool.kernel", () => {
   /** Proactive preference on, plus whichever strategy this case is about. */
-  function kernelConfig(strategy?: "quota" | "round-robin" | "fill-first", extra: Record<string, unknown> = {}): OcxConfig {
+  function kernelConfig(strategy?: "quota" | "round-robin" | "fill-first", extra: Record<string, unknown> = {}): OccxConfig {
     return {
       pool: { kernel: true },
       providers: {
@@ -538,7 +538,7 @@ describe("#695 the generic pool consumes its persisted strategy behind pool.kern
           oauthAccountFailover: { enabled: true, ...(strategy ? { strategy } : {}), ...extra },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   test("round-robin rotates a provider with no quota data at all", async () => {
@@ -565,7 +565,7 @@ describe("#695 the generic pool consumes its persisted strategy behind pool.kern
     await setActiveAccount("xai", ids[0]!);
     const off = {
       providers: { xai: { ...OAUTH_PROVIDER, oauthAccountFailover: { enabled: true, strategy: "round-robin" } } },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     for (let i = 0; i < 4; i += 1) {
       // Same roster, same strategy, flag off: the pre-kernel answer is null every time,

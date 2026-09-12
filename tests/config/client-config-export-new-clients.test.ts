@@ -23,7 +23,7 @@ import {
   type KimiGeneratedConfig,
   type OpenclawGeneratedConfig,
 } from "../../src/clients/config-export";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * WP1 coverage for the four clients added past OpenCode and Pi
@@ -36,15 +36,15 @@ import type { OcxConfig } from "../../src/types";
 // the tree, and a fixture is not a reason to commit one.
 const SECRET = ["sk", "test", "DO", "NOT", "SERIALIZE", "0123456789"].join("-");
 
-const LOOPBACK: OcxConfig = {
+const LOOPBACK: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
   apiKeys: [{ key: SECRET }],
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
-const REMOTE: OcxConfig = { ...LOOPBACK, hostname: "0.0.0.0" } as OcxConfig;
+const REMOTE: OccxConfig = { ...LOOPBACK, hostname: "0.0.0.0" } as OccxConfig;
 
 const MODELS: ExportModel[] = [
   { namespaced: "anthropic/claude-opus-4-8", provider: "anthropic", id: "claude-opus-4-8", contextWindow: 200_000, displayName: "Claude Opus 4.8", inputModalities: ["text", "image"] },
@@ -52,7 +52,7 @@ const MODELS: ExportModel[] = [
   { namespaced: "local/no-window", provider: "local", id: "no-window" },
 ];
 
-function ctx(config: OcxConfig = LOOPBACK): ExportContext {
+function ctx(config: OccxConfig = LOOPBACK): ExportContext {
   return { baseUrl: "http://127.0.0.1:10100/v1", models: MODELS, config };
 }
 
@@ -72,7 +72,7 @@ describe("no secret reaches a client config", () => {
     for (const id of EXPORT_CLIENT_IDS) {
       if (EXPORT_CLIENTS[id].loopbackOnly) continue;
       const { text } = buildClientConfigText(id, ctx(REMOTE));
-      expect(text).toContain("x-opencodex-api-key");
+      expect(text).toContain("x-openccx-api-key");
     }
   });
 
@@ -120,7 +120,7 @@ describe("hermes", () => {
     expect(loopback.providers[OPENCODE_PROVIDER_ID]!.extra_headers).toBeUndefined();
     const remote = buildClientConfig("hermes", ctx(REMOTE)) as HermesGeneratedConfig;
     expect(remote.providers[OPENCODE_PROVIDER_ID]!.extra_headers).toEqual({
-      "x-opencodex-api-key": HERMES_API_KEY_ENV_REF,
+      "x-openccx-api-key": HERMES_API_KEY_ENV_REF,
     });
   });
 

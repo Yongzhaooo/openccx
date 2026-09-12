@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildClaudeDesktopState } from "../../src/server/management/shared";
 import { DESKTOP_SUPPORTS_1M_THRESHOLD } from "../../src/claude/desktop-3p";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -17,7 +17,7 @@ const config = {
   port: 10100,
   defaultProvider: "openai",
   providers: {},
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 test("the DTO and the writer share one threshold constant", () => {
   // If someone changes one side, this fails — that is the point.
@@ -25,9 +25,9 @@ test("the DTO and the writer share one threshold constant", () => {
 });
 
 test("supports1m is true at and above the threshold, false below it", async () => {
-  const home = mkdtempSync(join(tmpdir(), "ocx-desktop-1m-"));
-  const prev = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = home;
+  const home = mkdtempSync(join(tmpdir(), "occx-desktop-1m-"));
+  const prev = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = home;
   try {
     const state = await buildClaudeDesktopState(config);
     // Live-backed assertions against the real catalog: 1 MiB windows qualify.
@@ -45,8 +45,8 @@ test("supports1m is true at and above the threshold, false below it", async () =
     expect(983_616 >= DESKTOP_SUPPORTS_1M_THRESHOLD).toBe(false);
     expect(1_000_000 >= DESKTOP_SUPPORTS_1M_THRESHOLD).toBe(true);
   } finally {
-    if (prev === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-    else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
+    if (prev === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+    else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = prev;
     removeTreeWithRetry(home);
   }
 });

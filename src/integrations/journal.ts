@@ -57,7 +57,7 @@ export interface JournalEntry {
    * Ownership as it stood BEFORE this operation. Restore puts this back
    * alongside the bytes, so provenance always describes the file it came with
    * and is never re-derived from a provider-id prefix — which would silently
-   * adopt a user's own `opencodex/...` entry.
+   * adopt a user's own `openccx/...` entry.
    */
   priorRecord: OwnershipRecord | null;
 }

@@ -1,16 +1,16 @@
 # Qoder CLI providers
 
-OpenCodex supports Qoder Global and Qoder CN through their official Personal Access Tokens and headless CLIs.
+Openccx supports Qoder Global and Qoder CN through their official Personal Access Tokens and headless CLIs.
 It does not read Qoder Desktop sessions, browser cookies, refresh tokens, or private console APIs.
 
 ## Qoder Global
 
 1. Install the official CLI: `npm install -g @qoder-ai/qodercli`.
 2. Create a PAT from `https://qoder.com/account/integrations`.
-3. Add the `qoder` provider in `ocx init` or the Providers workspace and paste that PAT as the API key.
-4. Run `ocx provider test qoder` to verify CLI authentication and account-specific model discovery.
+3. Add the `qoder` provider in `occx init` or the Providers workspace and paste that PAT as the API key.
+4. Run `occx provider test qoder` to verify CLI authentication and account-specific model discovery.
 
-OpenCodex passes the stored key only as `QODER_PERSONAL_ACCESS_TOKEN` in a scoped child environment.
+Openccx passes the stored key only as `QODER_PERSONAL_ACCESS_TOKEN` in a scoped child environment.
 The adapter accepts only the canonical `https://qoder.com` destination. A legacy custom provider
 named `qoder` with another destination keeps its existing adapter and URL.
 
@@ -19,14 +19,14 @@ restricted with an empty strict configuration, setting sources disabled, and ses
 disabled. Codex remains the only tool owner. The first version is text/reasoning only; image input
 fails explicitly until the provider route has verified multimodal evidence.
 
-`qoder --list-models` is the authoritative entitlement roster for the current PAT. OpenCodex uses
+`qoder --list-models` is the authoritative entitlement roster for the current PAT. Openccx uses
 its normal model cache and credential-generation invalidation. If discovery fails, it degrades to a
 stale cache and then the documented static seed. Quota totals and reset times remain unavailable
 because no public quota API is used; insufficient-credit errors are still surfaced as HTTP 429.
 
 Free, trial, promotional, and subscription credits are expected to use the account attached to the
 official PAT/CLI, but the exact product eligibility is account-controlled and is not inferred by
-OpenCodex. There is no automatic regional failover or credential exchange. The companion Qoder CN
+Openccx. There is no automatic regional failover or credential exchange. The companion Qoder CN
 integration is intentionally delivered as a separate provider/PR with its own PAT, CLI profile,
 model entitlement, cache, usage, and health state.
 
@@ -35,11 +35,11 @@ model entitlement, cache, usage, and health state.
 1. Install the official CLI: `npm install -g @qodercn-ai/qoderclicn` (the vendor install script is also supported).
 2. Create a PAT at `https://qoder.cn/account/integrations`.
 3. Add the `qoder-cn` provider and paste the PAT as its API key.
-4. Run `ocx provider test qoder-cn` to verify the exact account's authentication and live roster.
+4. Run `occx provider test qoder-cn` to verify the exact account's authentication and live roster.
 
 The CN profile accepts only `https://qoder.cn`, resolves `qodercn`/`qoderclicn`, and passes the
 credential only as `QODERCN_PERSONAL_ACCESS_TOKEN`. It never reads the local interactive login or
-OpenCodex OAuth state. Global and CN credentials, executable resolution, model cache identity,
+Openccx OAuth state. Global and CN credentials, executable resolution, model cache identity,
 usage, and health are independent; neither region falls back to the other.
 
 The static CN roster is only a degraded seed captured from authenticated `qoderclicn --list-models`
@@ -56,7 +56,7 @@ Qoder CN primary sources (verified 2026-09-03):
 - SDK quick start: <https://docs.qoder.cn/cli/sdk/quick-start>
 
 This implementation credits Liang Xu (`Liang-Psych`) for the earlier Qoder CN exploration in
-OpenCodex PR #3010. It retains the useful high-level direction—official CLI, headless stream JSON,
+Openccx PR #3010. It retains the useful high-level direction—official CLI, headless stream JSON,
 and tools disabled—but deliberately replaces that PR's OAuth/private-protocol and ambient-session
 design with the documented PAT environment contract and the shared audited coding-agent adapter.
 

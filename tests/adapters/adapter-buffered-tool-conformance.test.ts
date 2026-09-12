@@ -4,7 +4,7 @@ import { buildResponseJSON } from "../../src/bridge";
 import { encodeMessage } from "../../src/lib/eventstream-decoder";
 import { parseRequest } from "../../src/responses/parser";
 import { buildToolBridgeMaps } from "../../src/server/responses";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 const PATCH = `*** Begin Patch
@@ -26,7 +26,7 @@ const WIRE_MODELS: Record<AdapterWire, string> = {
   codebuddy: "glm-5.3",
 };
 
-function providerFixture(adapterId: string, wire: AdapterWire): OcxProviderConfig {
+function providerFixture(adapterId: string, wire: AdapterWire): OccxProviderConfig {
   const baseUrls: Record<AdapterWire, string> = {
     "openai-chat": "https://api.x.ai/v1",
     "ollama-native": "https://ollama.com/v1",
@@ -51,7 +51,7 @@ function providerFixture(adapterId: string, wire: AdapterWire): OcxProviderConfi
     defaultMaxOutputTokens: 64_000,
     googleMode: "ai-studio",
     ...(wire === "openai-responses" ? { responsesPath: "/responses" } : {}),
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
 function parsed(wire: AdapterWire) {

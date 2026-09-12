@@ -187,8 +187,8 @@ export function isAppliedState(state: VisualIntegrationState): boolean {
  *
  * The native status owns the desired switch state, install detection, and the
  * real Codex config path. The startup-health payload owns observed routing:
- * `routingInjected` — server-derived as `routingKind === "opencodex-local"` —
- * answers whether opencodex is in Codex's path right now. Keeping those facts
+ * `routingInjected` — server-derived as `routingKind === "openccx-local"` —
+ * answers whether openccx is in Codex's path right now. Keeping those facts
  * separate lets the card show a disabled switch while the observed state still
  * reports what Codex is actually using.
  */
@@ -376,7 +376,7 @@ function claudeDesktopRow(
   }
   const toggleOn = payload.desiredEnabled;
   // Desired OFF keeps the switch off, but a still-selected gateway is not
-  // "absent": Desktop is still routing through OpenCodex until cleanup lands.
+  // "absent": Desktop is still routing through Openccx until cleanup lands.
   if (!toggleOn) {
     const gatewayStillSelected = payload.applied === true
       || payload.driftReason === "desired_off_gateway_selected";

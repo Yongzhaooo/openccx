@@ -155,7 +155,7 @@
       "suite": "reasoning-core",
       "capability": "reasoning.round_trip",
       "requirements": { "inboundProtocols": ["openai-responses"], "upstreamProtocols": ["openai-responses"], "surfaces": ["responses-http"], "requiredClaims": ["reasoning"], "requiredHarnessFeatures": ["adapter_vector", "reasoning_replay", "live_transport"], "platforms": [], "routePreconditions": ["lab_run_approval"] },
-      "fixture": { "id": "reasoning-live-replay-vector", "role": "adapter_vector", "mediaType": "application/vnd.opencodex.adapter-vector+json", "bytesUtf8": "{\"turn1\":{\"reasoning\":{\"id\":\"rs_fixture\",\"text\":\"PLAN\",\"signature\":\"sig_fixture\"},\"toolCall\":{\"callId\":\"call_fixture\"}},\"turn2\":{\"toolResult\":{\"callId\":\"call_fixture\",\"output\":\"RESULT\"}}}", "digest": "6e137e06f52c32e9f7d394b92343a8b849103328e958ab7c9b2825a799ea60c3" },
+      "fixture": { "id": "reasoning-live-replay-vector", "role": "adapter_vector", "mediaType": "application/vnd.openccx.adapter-vector+json", "bytesUtf8": "{\"turn1\":{\"reasoning\":{\"id\":\"rs_fixture\",\"text\":\"PLAN\",\"signature\":\"sig_fixture\"},\"toolCall\":{\"callId\":\"call_fixture\"}},\"turn2\":{\"toolResult\":{\"callId\":\"call_fixture\",\"output\":\"RESULT\"}}}", "digest": "6e137e06f52c32e9f7d394b92343a8b849103328e958ab7c9b2825a799ea60c3" },
       "assertions": [
         { "id": "signature", "operator": "json_path_equals", "selector": "/upstream/requests/1/json/input/0/signature", "expected": "sig_fixture", "required": true },
         { "id": "private-absent", "operator": "json_path_absent", "selector": "/client/response/json/reasoning", "expected": true, "required": true }
@@ -166,7 +166,7 @@
       "suite": "mcp-core",
       "capability": "tools.mcp.core",
       "requirements": { "inboundProtocols": ["openai-responses"], "upstreamProtocols": ["openai-responses"], "surfaces": ["responses-http"], "requiredClaims": ["tools"], "requiredHarnessFeatures": ["in_memory_mcp_stub", "mcp_call_result_v1", "mcp_lab_stub", "live_transport"], "platforms": [], "routePreconditions": ["lab_run_approval"] },
-      "fixture": { "id": "mcp-live-stub", "role": "synthetic_tool", "mediaType": "application/vnd.opencodex.mcp-stub+json", "bytesUtf8": "{\"namespace\":\"mcp__fixture\",\"name\":\"lookup\",\"arguments\":{\"q\":\"x\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"ECHO\"}],\"isError\":false}}", "digest": "dd8285346f7f93b9529e2fbaabb8ffc420ca2ce0c04ca19b656ed286268fcbd4" },
+      "fixture": { "id": "mcp-live-stub", "role": "synthetic_tool", "mediaType": "application/vnd.openccx.mcp-stub+json", "bytesUtf8": "{\"namespace\":\"mcp__fixture\",\"name\":\"lookup\",\"arguments\":{\"q\":\"x\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"ECHO\"}],\"isError\":false}}", "digest": "dd8285346f7f93b9529e2fbaabb8ffc420ca2ce0c04ca19b656ed286268fcbd4" },
       "assertions": [
         { "id": "result", "operator": "json_path_equals", "selector": "/client/response/json", "expected": {"content":[{"type":"text","text":"ECHO"}],"isError":false}, "required": true }
       ]

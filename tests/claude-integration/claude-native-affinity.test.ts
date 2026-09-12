@@ -9,7 +9,7 @@ import { handleResponsesWithPolicyFallback, rankPolicyFallbackCandidates } from 
 import { tryAdmitTurn } from "../../src/server/lifecycle";
 import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -25,10 +25,10 @@ let previousHome: string | undefined;
 let token: string;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-native-affinity-"));
-  process.env.OPENCODEX_HOME = home;
-  isolated = installIsolatedCodexHome("ocx-native-affinity-codex-");
+  previousHome = process.env.OPENCCX_HOME;
+  home = mkdtempSync(join(tmpdir(), "occx-native-affinity-"));
+  process.env.OPENCCX_HOME = home;
+  isolated = installIsolatedCodexHome("occx-native-affinity-codex-");
   token = fakeChatGptJwt({ exp: Math.floor(Date.now() / 1000) + 86400, chatgpt_account_id: "fixture-native-main" });
   writeFileSync(join(isolated.path, "auth.json"), JSON.stringify({ tokens: { access_token: token, account_id: "fixture-native-main" } }));
   clearComboSelectionState();
@@ -39,17 +39,17 @@ afterEach(() => {
   clearComboSelectionState();
   clearComboTargetCooldowns();
   isolated.restore();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   removeTreeWithRetry(home);
 });
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { openaiProviderTierVersion: 2, providers: {
     openai: { adapter: "openai-responses", authMode: "forward", codexAccountMode: "direct", baseUrl: "https://chatgpt.com/backend-api/codex", models: ["gpt-5.6-luna"] },
     go: { ...providerConfigSeed(getProviderRegistryEntry("opencode-go")!), apiKey: "test-go-key" },
     other: { adapter: "openai-responses", authMode: "key", baseUrl: "https://affinity.example/v1", apiKey: "test-other-key", models: ["m"] },
-  } } as OcxConfig;
+  } } as OccxConfig;
 }
 function completed(): Response {
   return Response.json({ id: "resp_affinity", object: "response", status: "completed", output: [],

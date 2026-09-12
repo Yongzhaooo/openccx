@@ -36,22 +36,22 @@ afterEach(() => {
   setAsyncIcaclsRunnerForTests(null);
 });
 
-// Sandbox OPENCODEX_HOME: the replay cache now snapshots to disk, and these tests must
+// Sandbox OPENCCX_HOME: the replay cache now snapshots to disk, and these tests must
 // never touch the real ~/.opencodex.
 let replayTestHome: string;
-const priorOpenCodexHome = process.env["OPENCODEX_HOME"];
+const priorOpenccxHome = process.env["OPENCCX_HOME"];
 
 beforeEach(() => {
   setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
   setAsyncIcaclsRunnerForTests(async () => ({ success: true, exitCode: 0, timedOut: false, stdout: "processed file: 1" }));
-  replayTestHome = mkdtempSync(join(tmpdir(), "ocx-antigravity-replay-test-"));
-  process.env["OPENCODEX_HOME"] = replayTestHome;
+  replayTestHome = mkdtempSync(join(tmpdir(), "occx-antigravity-replay-test-"));
+  process.env["OPENCCX_HOME"] = replayTestHome;
 });
 
 afterEach(() => {
   removeTreeWithRetry(replayTestHome);
-  if (priorOpenCodexHome === undefined) delete process.env["OPENCODEX_HOME"];
-  else process.env["OPENCODEX_HOME"] = priorOpenCodexHome;
+  if (priorOpenccxHome === undefined) delete process.env["OPENCCX_HOME"];
+  else process.env["OPENCCX_HOME"] = priorOpenccxHome;
 });
 
 const SIG = "sig-1234567890abcdef"; // >= 16 chars

@@ -82,7 +82,7 @@ export function createWindowsPowerShellFixture(): Promise<WindowsPowerShellFixtu
 }
 
 async function buildWindowsExecutableFixture(): Promise<WindowsPowerShellFixture> {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-ps-fixture-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-ps-fixture-"));
   const source = join(dir, "fake-powershell.ts");
   const executable = join(dir, "fake-powershell.exe");
   writeFileSync(source, [
@@ -111,7 +111,7 @@ async function buildWindowsExecutableFixture(): Promise<WindowsPowerShellFixture
 }
 
 function createPosixShellFixture(): WindowsPowerShellFixture {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-ps-fixture-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-ps-fixture-"));
   const executable = join(dir, "fake-powershell.sh");
   writeFileSync(executable, [
     "#!/bin/sh",

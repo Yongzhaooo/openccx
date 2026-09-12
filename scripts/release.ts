@@ -20,9 +20,9 @@
  *
  * Protected-branch push: `main` and `preview` carry rulesets that require a pull request, and the
  * admin bypass is `bypass_mode: "pull_request"` — enough to merge a PR, not enough to push. Set
- * `OCX_RELEASE_SSH_KEY` to the private key of the dedicated write deploy key registered as a
+ * `OCCX_RELEASE_SSH_KEY` to the private key of the dedicated write deploy key registered as a
  * `DeployKey` bypass actor on those rulesets, and the version-bump push (and only that push) uses
- * it. Override the SSH remote with `OCX_RELEASE_SSH_REPO` when releasing a fork. Unset, the push
+ * it. Override the SSH remote with `OCCX_RELEASE_SSH_REPO` when releasing a fork. Unset, the push
  * behaves exactly as before.
  */
 import { commandInvocation } from "../src/lib/win-exec";
@@ -134,7 +134,7 @@ async function runLoud(command: string[], env?: Record<string, string>): Promise
  * key fails closed instead: if the process dies, protection was never weakened, and revoking one
  * credential closes the carve-out without touching repository configuration.
  *
- * Opt-in by path: without `OCX_RELEASE_SSH_KEY` the push runs exactly as before over the configured
+ * Opt-in by path: without `OCCX_RELEASE_SSH_KEY` the push runs exactly as before over the configured
  * remote, so a contributor or CI clone is unaffected. The key is used for this one push and nothing
  * else; ordinary git operations keep the maintainer's normal credential.
  */
@@ -157,7 +157,7 @@ function quoteSshArgument(value: string): string {
  *
  * Deliberately derived rather than hardcoded: a hardcoded `git@host:owner/repo.git` literal is
  * indistinguishable from an email address to `privacy:scan`, and it would also silently push a
- * fork's release to the upstream repository. `OCX_RELEASE_SSH_REPO` still wins when a maintainer
+ * fork's release to the upstream repository. `OCCX_RELEASE_SSH_REPO` still wins when a maintainer
  * needs an explicit target.
  */
 function sshTargetFromOrigin(originUrl: string): string | undefined {
@@ -228,19 +228,19 @@ function isSshRemote(value: string): boolean {
 const SSH_USER = "git";
 
 async function releasePushCommand(branch: string): Promise<{ command: string[]; env?: Record<string, string> }> {
-  const keyPath = process.env.OCX_RELEASE_SSH_KEY?.trim();
+  const keyPath = process.env.OCCX_RELEASE_SSH_KEY?.trim();
   if (!keyPath) return { command: ["git", "push", "origin", branch] };
-  const configured = process.env.OCX_RELEASE_SSH_REPO?.trim();
+  const configured = process.env.OCCX_RELEASE_SSH_REPO?.trim();
   // An unvalidated override outranking origin means a stale exported value from a fork session can
   // silently retarget a production release. Check the shape, and print the resolved target either
   // way so the destination is visible before the push rather than inferred afterwards.
   if (configured && !isSshRemote(configured)) {
-    console.error("✗ OCX_RELEASE_SSH_REPO is not a credential-free ssh:// or git@host:owner/repo remote; refusing to push.");
+    console.error("✗ OCCX_RELEASE_SSH_REPO is not a credential-free ssh:// or git@host:owner/repo remote; refusing to push.");
     process.exit(1);
   }
   const slug = configured || sshTargetFromOrigin(await capture(["git", "remote", "get-url", "origin"]));
   if (!slug) {
-    console.error("✗ OCX_RELEASE_SSH_KEY is set but no SSH push target could be derived from origin; set OCX_RELEASE_SSH_REPO.");
+    console.error("✗ OCCX_RELEASE_SSH_KEY is set but no SSH push target could be derived from origin; set OCCX_RELEASE_SSH_REPO.");
     process.exit(1);
   }
   console.log(`→ release push target: ${slug}`);

@@ -1,6 +1,6 @@
 /**
  * Multi-agent compatibility shims (follow-up to devlog/260709_v2_gated_ultra):
- * models are no longer v1-pinned by ocx, but legacy/v1-surface requests still need
+ * models are no longer v1-pinned by occx, but legacy/v1-surface requests still need
  * the Proactive delegation prompt when they arrive with the synthetic top tier.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { injectDeveloperMessage, multiAgentGuidanceText, sanitizeEncryptedContentInPlace } from "../../src/server/responses";
 import { MULTI_AGENT_MODE_HINT_RECOMMENDATION } from "../../src/codex/multi-agent-mode-policy";
 import { parseRequest } from "../../src/responses/parser";
-import type { OcxParsedRequest } from "../../src/types";
+import type { OccxParsedRequest } from "../../src/types";
 import { CODEX_ACCOUNT_BOUND_CATALOG_KIND, effectiveSubagentRoster } from "../../src/codex/catalog";
 import { collectCodexAppServerCatalogState, resetCodexAppServerCatalogStateCache } from "../../src/codex/app-server-processes";
 import { setTrustedWindowsElevationExecutablesForTests } from "../../src/lib/windows-elevation";
@@ -22,23 +22,23 @@ import {
 } from "../../src/lib/injection-debug-log";
 
 const savedCodexHome = process.env.CODEX_HOME;
-const savedCatalogStateOverride = process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE;
+const savedCatalogStateOverride = process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE;
 
 // Hermetic default: the host machine may run a real Codex app-server whose
 // process state must not leak into these tests (#857).
-process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
+process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
 
 afterEach(() => {
   if (savedCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = savedCodexHome;
-  process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
+  process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
   clearDebugSettings();
   resetInjectionDebugLogBufferForTests();
 });
 
 afterAll(() => {
-  if (savedCatalogStateOverride === undefined) delete process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE;
-  else process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE = savedCatalogStateOverride;
+  if (savedCatalogStateOverride === undefined) delete process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE;
+  else process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE = savedCatalogStateOverride;
 });
 
 let stallingFakePowerShell: WindowsPowerShellFixture;
@@ -49,7 +49,7 @@ beforeAll(async () => {
 afterAll(() => stallingFakePowerShell?.cleanup());
 
 function codexHomeFixture(configToml: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-v1pin-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-v1pin-"));
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "config.toml"), configToml);
   process.env.CODEX_HOME = dir;
@@ -67,7 +67,7 @@ type CatalogFixtureModel = {
 
 /** Write an injected-catalog fixture into the active CODEX_HOME. */
 function catalogFixture(dir: string, models: CatalogFixtureModel[]): void {
-  writeFileSync(join(dir, "opencodex-catalog.json"), JSON.stringify({
+  writeFileSync(join(dir, "openccx-catalog.json"), JSON.stringify({
     models: models.map((model, index) => ({
       slug: model.slug,
       display_name: model.slug,
@@ -77,7 +77,7 @@ function catalogFixture(dir: string, models: CatalogFixtureModel[]): void {
       // written (normalizeRoutedCatalogEntry deletes it). The production absent-key
       // path cannot be tested if the fixture rewrites it to "v2".
       ...(model.multiAgentVersion === undefined ? {} : { multi_agent_version: model.multiAgentVersion }),
-      ...(model.accountBound ? { opencodex_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND } : {}),
+      ...(model.accountBound ? { openccx_catalog_kind: CODEX_ACCOUNT_BOUND_CATALOG_KIND } : {}),
       supported_reasoning_levels: (model.efforts ?? [])
         .map(effort => ({ effort, description: effort })),
     })),
@@ -99,7 +99,7 @@ function parsedFixture(over: {
   reasoning?: string;
   tools?: Array<{ name: string; namespace?: string }>;
   rawInput?: unknown;
-}): OcxParsedRequest {
+}): OccxParsedRequest {
   return {
     modelId: "gpt-5.5",
     context: {
@@ -160,7 +160,7 @@ describe("multiAgentGuidanceText", () => {
     // app-server cannot leak in. That override short-circuits before any collector runs,
     // so it has to come off for exactly this test — which is the one test that needs the
     // real default path.
-    delete process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE;
+    delete process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE;
 
     // Phase signal rather than a tick count: a threshold between "sync" and "async"
     // observations has to guess how many timer callbacks a loaded runner will deliver,
@@ -177,7 +177,7 @@ describe("multiAgentGuidanceText", () => {
       Object.defineProperty(process, "platform", realPlatform);
       setTrustedWindowsElevationExecutablesForTests(null);
       resetCodexAppServerCatalogStateCache();
-      process.env.OPENCODEX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
+      process.env.OPENCCX_APP_SERVER_CATALOG_STATE_OVERRIDE = "fresh";
     }
 
     expect(loopRanDuringExec).toBe(true);
@@ -199,7 +199,7 @@ describe("multiAgentGuidanceText", () => {
       const text = await multiAgentGuidanceText(parsed, options, {
         collectCatalogState: async () => ({ state }),
       });
-      // #1395: withhold OpenCodex's disk-derived claims, but do not prohibit
+      // #1395: withhold Openccx's disk-derived claims, but do not prohibit
       // options the active spawn_agent tool advertises — the global catalog
       // observation cannot be attributed to the request that triggered it.
       expect(text).toBeNull();
@@ -248,7 +248,7 @@ describe("multiAgentGuidanceText", () => {
     expect(text).toBeNull();
   });
 
-  test("stale and unknown withhold OpenCodex's own catalog claims (#1354, #1395)", async () => {
+  test("stale and unknown withhold Openccx's own catalog claims (#1354, #1395)", async () => {
     const dir = codexHomeFixture(V2_ON);
     catalogFixture(dir, [{
       slug: "anthropic/claude-sonnet-5",
@@ -288,9 +288,9 @@ describe("multiAgentGuidanceText", () => {
       { injectionModel: "anthropic/claude-sonnet-5" },
     );
 
-    expect(text).toStartWith("<opencodex_subagent_guidance>");
+    expect(text).toStartWith("<openccx_subagent_guidance>");
     expect(text).toEndWith("</opencodex_subagent_guidance>");
-    expect(text).toContain("OpenCodex sub-agent routing metadata");
+    expect(text).toContain("Openccx sub-agent routing metadata");
     expect(text).toContain("does not override Codex delegation or model-selection rules");
     expect(text).not.toContain("fork_turns");
     expect(text).not.toContain("use it unless");
@@ -396,7 +396,7 @@ describe("multiAgentGuidanceText", () => {
         injectionPrompt: "Use {{model}}.",
       },
     );
-    expect(custom).toBe('<opencodex_subagent_guidance>Use team/gpt-5.6-sol.</opencodex_subagent_guidance>');
+    expect(custom).toBe('<openccx_subagent_guidance>Use team/gpt-5.6-sol.</opencodex_subagent_guidance>');
 
     const exactBare = await multiAgentGuidanceText(
       parsedFixture({ tools: [{ name: "spawn_agent" }] }),
@@ -415,7 +415,7 @@ describe("multiAgentGuidanceText", () => {
         injectionPrompt: "Use {{model}}.",
       },
     );
-    expect(exactBareCustom).toBe("<opencodex_subagent_guidance>Use local-fast.</opencodex_subagent_guidance>");
+    expect(exactBareCustom).toBe("<openccx_subagent_guidance>Use local-fast.</opencodex_subagent_guidance>");
 
     const bareParent = await multiAgentGuidanceText(
       parsedFixture({ tools: [{ name: "spawn_agent" }] }),
@@ -461,7 +461,7 @@ describe("multiAgentGuidanceText", () => {
         injectionPrompt: "Use {{model}}.",
       },
     );
-    expect(ambiguousCustom).toBe("<opencodex_subagent_guidance>Use .</opencodex_subagent_guidance>");
+    expect(ambiguousCustom).toBe("<openccx_subagent_guidance>Use .</opencodex_subagent_guidance>");
     expect(ambiguousCustom).not.toContain("gpt-5.6-sol");
   });
 
@@ -520,7 +520,7 @@ describe("multiAgentGuidanceText", () => {
         injectionModel: "gpt-5.6-sol",
         injectionPrompt: "Use {{model}}.",
       },
-    )).toBe("<opencodex_subagent_guidance>Use .</opencodex_subagent_guidance>");
+    )).toBe("<openccx_subagent_guidance>Use .</opencodex_subagent_guidance>");
   });
 
   test("effective roster applies alias, visibility, v2 compatibility, stable priority, cap, and diagnostics", async () => {
@@ -624,7 +624,7 @@ describe("multiAgentGuidanceText", () => {
       { injectionModel: "anthropic/claude-sonnet-5" },
     );
     expect(text).toContain('"anthropic/claude-sonnet-5"');
-    expect(text).toContain("OpenCodex sub-agent routing metadata");
+    expect(text).toContain("Openccx sub-agent routing metadata");
     expect(text).not.toContain("Proactive multi-agent delegation is active");
     // and WITHOUT an injectionModel it stays silent (codex-rs owns the v2 Proactive text)
     expect(await multiAgentGuidanceText(parsedFixture({ reasoning: "ultra", tools: nativeV2 }))).toBeNull();
@@ -666,7 +666,7 @@ describe("multiAgentGuidanceText", () => {
       injectionEffort: "xhigh",
       subagentModels: ["gpt-5.6-terra"],
     });
-    expect(text).toContain("OpenCodex sub-agent routing metadata");
+    expect(text).toContain("Openccx sub-agent routing metadata");
     expect(text).not.toMatch(/hidden|not in the schema|never claim/i);
     expect(text).toContain('(reasoning_effort high/max/ultra): "gpt-5.6-terra"');
   });
@@ -750,7 +750,7 @@ describe("multiAgentGuidanceText", () => {
     // gpt-5.6-luna carries upstream's "v1" pin, which is now an eligible LEAF worker
     // (codex-rs 6d4d9442c), so it joins the substituted roster.
     expect(text).toBe(
-      '<opencodex_subagent_guidance>CUSTOM model=raw/preferred-model effort=max'
+      '<openccx_subagent_guidance>CUSTOM model=raw/preferred-model effort=max'
         + ' Available models (reasoning_effort high/max): "gpt-5.6-terra", "gpt-5.6-luna".</opencodex_subagent_guidance>',
     );
   });
@@ -797,7 +797,7 @@ describe("multiAgentGuidanceText", () => {
       parsedFixture({ reasoning: "medium", tools: [{ name: "spawn_agent" }] }),
       { subagentModels: ["gpt-5.6-terra"] },
     );
-    expect(text).toContain("OpenCodex sub-agent routing metadata");
+    expect(text).toContain("Openccx sub-agent routing metadata");
     expect(text).not.toMatch(/hidden|not in the schema|never claim/i);
     expect(text).toContain('(reasoning_effort high/max/ultra): "gpt-5.6-terra"');
     expect(text).not.toContain("Preferred sub-agent");
@@ -873,7 +873,7 @@ describe("multiAgentGuidanceText", () => {
         subagentModels: ["gpt-5.5", "opencode-go/glm-5.2", "anthropic/claude-opus-4-6", "gpt-5.6-sol", "gpt-5.6-terra"],
       },
     );
-    const body = text!.replace(/^<opencodex_subagent_guidance>/, "").replace(/<\/opencodex_subagent_guidance>$/, "");
+    const body = text!.replace(/^<openccx_subagent_guidance>/, "").replace(/<\/opencodex_subagent_guidance>$/, "");
     expect(body.length).toBeLessThanOrEqual(700);
     expect(body).toContain("Available models"); // roster fits inside the budget
   });
@@ -1201,7 +1201,7 @@ describe("injectDeveloperMessage", () => {
   test("keeps raw and parsed stateful placement aligned across reconstructed compaction history", () => {
     const rawInput = [
       { type: "message", role: "user", content: "current turn" },
-      { type: "compaction", encrypted_content: "ocx1:c3VtbWFyeQ==" },
+      { type: "compaction", encrypted_content: "occx1:c3VtbWFyeQ==" },
     ];
     const parsed = parseRequest({ model: "gpt-5.5", input: rawInput, previous_response_id: "resp_remote" });
 
@@ -1232,8 +1232,8 @@ describe("injectDeveloperMessage", () => {
   });
 
   test("proxy guidance dedup records a metadata A-B-A transition", () => {
-    const metadataA = "<opencodex_subagent_guidance>A</opencodex_subagent_guidance>";
-    const metadataB = "<opencodex_subagent_guidance>B</opencodex_subagent_guidance>";
+    const metadataA = "<openccx_subagent_guidance>A</opencodex_subagent_guidance>";
+    const metadataB = "<openccx_subagent_guidance>B</opencodex_subagent_guidance>";
     const current = { type: "message", role: "user", content: "current turn" };
     const rawInput = [generatedItem(metadataA), generatedItem(metadataB), current];
     const parsed = parseRequest({ model: "gpt-5.5", input: rawInput, previous_response_id: "resp_1" });
@@ -1249,7 +1249,7 @@ describe("injectDeveloperMessage", () => {
   test("proxy guidance dedup preserves intervening native mode changes", () => {
     const nativeA = "<multi_agent_mode>Native policy A</multi_agent_mode>";
     const nativeB = "<multi_agent_mode>Native policy B</multi_agent_mode>";
-    const metadata = "<opencodex_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
+    const metadata = "<openccx_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
     const rawInput = [generatedItem(nativeA), generatedItem(metadata), generatedItem(nativeB), { role: "user", content: "work" }];
     const before = structuredClone(rawInput);
     const parsed = parseRequest({ model: "gpt-5.5", input: rawInput });
@@ -1263,7 +1263,7 @@ describe("injectDeveloperMessage", () => {
 
   test("native mode dedup ignores later proxy guidance", () => {
     const native = "<multi_agent_mode>Native policy</multi_agent_mode>";
-    const metadata = "<opencodex_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
+    const metadata = "<openccx_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
     const rawInput = [generatedItem(native), generatedItem(metadata), { role: "user", content: "work" }];
     const before = structuredClone(rawInput);
     const parsed = parseRequest({ model: "gpt-5.5", input: rawInput });
@@ -1296,7 +1296,7 @@ describe("injectDeveloperMessage", () => {
 
     expect(rawInput).toEqual([generatedItem(metadata!), generatedItem(custom!), generatedItem(metadata!), current]);
     expect(parsed.context.messages.map(message => message.content)).toEqual([metadata, custom, metadata, "current turn"]);
-    expect(custom).toBe("<opencodex_subagent_guidance>Custom gpt-5.6-terra effort=high\nKeep {{unknown}}.</opencodex_subagent_guidance>");
+    expect(custom).toBe("<openccx_subagent_guidance>Custom gpt-5.6-terra effort=high\nKeep {{unknown}}.</opencodex_subagent_guidance>");
   });
 
   const legacyBuiltIn = '<multi_agent_mode>When the active spawn_agent tool supports optional "model" or "reasoning_effort" overrides, '
@@ -1308,7 +1308,7 @@ describe("injectDeveloperMessage", () => {
     ["custom", "<multi_agent_mode>Operator-authored legacy prompt.</multi_agent_mode>"],
   ])("preserves legacy %s and native policy when first injecting new proxy guidance", (_kind, legacy) => {
     const native = "<multi_agent_mode>Native delegation policy</multi_agent_mode>";
-    const metadata = "<opencodex_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
+    const metadata = "<openccx_subagent_guidance>Routing metadata</opencodex_subagent_guidance>";
     const current = { type: "message", role: "user", content: "work" };
     const prefix = [generatedItem(legacy), generatedItem(native)];
     const rawInput = [...prefix, current];

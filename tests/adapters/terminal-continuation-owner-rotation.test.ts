@@ -12,9 +12,9 @@ import {
 } from "../../src/responses/state";
 import type {
   AdapterEvent,
-  OcxConfig,
-  OcxParsedRequest,
-  OcxProviderConfig,
+  OccxConfig,
+  OccxParsedRequest,
+  OccxProviderConfig,
 } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -74,7 +74,7 @@ const actualResolveAdapter = actualResolver.resolveAdapter;
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     if (provider.adapter !== "test-terminal-owned") {
       return actualResolveAdapter(provider, cacheRetention);
     }
@@ -83,7 +83,7 @@ mock.module("../../src/server/adapter-resolve", () => ({
       // The terminal guard is enabled for Anthropic adapters. The transport is otherwise a
       // narrow test double so the test can emit provider-private state deterministically.
       name: "anthropic",
-      buildRequest(parsed: OcxParsedRequest) {
+      buildRequest(parsed: OccxParsedRequest) {
         const continuation = parsed._providerContinuation?.kiro?.conversationId;
         builds.push({ key, ...(continuation ? { continuation } : {}) });
         return {
@@ -113,9 +113,9 @@ describe("terminal continuation provider-owner rotation", () => {
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
-    previousHome = process.env.OPENCODEX_HOME;
-    testHome = mkdtempSync(join(tmpdir(), "ocx-terminal-owner-"));
-    process.env.OPENCODEX_HOME = testHome;
+    previousHome = process.env.OPENCCX_HOME;
+    testHome = mkdtempSync(join(tmpdir(), "occx-terminal-owner-"));
+    process.env.OPENCCX_HOME = testHome;
     builds = [];
     clearKeyCooldowns();
     clearResponseStateForTests();
@@ -123,8 +123,8 @@ describe("terminal continuation provider-owner rotation", () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     clearKeyCooldowns();
     clearResponseStateForTests();
     removeTreeWithRetry(testHome);
@@ -133,7 +133,7 @@ describe("terminal continuation provider-owner rotation", () => {
   test("429 rotation fences inherited state and persists the rotated owner", async () => {
     const keyA = "key-alpha-000111222333";
     const keyB = "key-beta-444555666777";
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0,
       defaultProvider: "owned",
       providers: {
@@ -148,7 +148,7 @@ describe("terminal continuation provider-owner rotation", () => {
           ],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const keyAIdentity = reasoningReplayKeyCredentialIdentity({ apiKey: keyA });
     saveConfig(config);
 
@@ -186,7 +186,7 @@ describe("terminal continuation provider-owner rotation", () => {
     expect(seed.status).toBe(200);
     const seedJson = await seed.json() as { id: string };
     expect(previousResponseProviderState(seedJson.id)).toMatchObject({
-      __ocxOwner: { credentialIdentity: keyAIdentity },
+      __occxOwner: { credentialIdentity: keyAIdentity },
       kiro: { conversationId: "private-a" },
     });
 
@@ -209,7 +209,7 @@ describe("terminal continuation provider-owner rotation", () => {
     expect(keyBIdentity).toBeDefined();
     expect(keyBIdentity).not.toBe(keyAIdentity);
     expect(previousResponseProviderState(rotatedJson.id)).toMatchObject({
-      __ocxOwner: { credentialIdentity: keyBIdentity },
+      __occxOwner: { credentialIdentity: keyBIdentity },
       kiro: { conversationId: "private-b" },
     });
 
@@ -223,7 +223,7 @@ describe("terminal continuation provider-owner rotation", () => {
     expect(follow.status).toBe(200);
     const followJson = await follow.json() as { id: string };
     expect(previousResponseProviderState(followJson.id)).toMatchObject({
-      __ocxOwner: { credentialIdentity: keyBIdentity },
+      __occxOwner: { credentialIdentity: keyBIdentity },
       kiro: { conversationId: "private-b-next" },
     });
 

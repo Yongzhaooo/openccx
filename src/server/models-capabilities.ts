@@ -6,7 +6,7 @@ import type { CursorEffortTable } from "../integrations/cursor-effort-table";
  * Cursor's local-agent runtime (the "Private Inference" build, `localMode=true`) enables its
  * reasoning-effort control only when at least one row in `data[]` carries `api_types` naming an
  * API family it can speak, optionally with a `capabilities` object. Plain OpenAI clients, Grok
- * Build, and the Codex catalog branch ignore both keys. Every OpenCodex route serves Chat
+ * Build, and the Codex catalog branch ignore both keys. Every Openccx route serves Chat
  * Completions, Responses and Anthropic Messages, streams, and accepts tool calls, so those are
  * constants; context length and vision come from catalog data when known and are omitted
  * otherwise, matching Cursor's optional-field schema.
@@ -17,7 +17,7 @@ import type { CursorEffortTable } from "../integrations/cursor-effort-table";
  * when NO OpenAI-family type (`chat_completions`/`responses`/`openai_chat`/`openai_responses`)
  * is present. Keep at least one OpenAI-family entry; a unit test guards this.
  */
-export const OPENCODEX_MODEL_API_TYPES: readonly string[] = Object.freeze(["chat_completions", "responses", "anthropic_messages"]);
+export const OPENCCX_MODEL_API_TYPES: readonly string[] = Object.freeze(["chat_completions", "responses", "anthropic_messages"]);
 
 export const OPENAI_FAMILY_API_TYPES: ReadonlySet<string> = new Set(["chat_completions", "responses", "openai_chat", "openai_responses"]);
 
@@ -28,7 +28,7 @@ export const OPENAI_FAMILY_API_TYPES: ReadonlySet<string> = new Set(["chat_compl
  * form the fallback mirror of the 3.18.25 table; the live table is read by
  * `src/integrations/cursor-effort-table.ts`. These values carry no Cursor behavior of their own.
  * Null means Cursor shows no Reasoning control for the id. Distinct from
- * `src/adapters/cursor/effort-map.ts`, which maps opencodex efforts onto Cursor's *backend*
+ * `src/adapters/cursor/effort-map.ts`, which maps openccx efforts onto Cursor's *backend*
  * tiers for the outbound provider; this is what Cursor's *local* picker renders.
  */
 const CURSOR_EFFORT_FAMILIES: ReadonlyArray<{ test: RegExp; ladder: readonly string[] }> = [
@@ -158,7 +158,7 @@ export function modelCapabilityFields(input: ModelCapabilityInput): ModelCapabil
     : undefined;
   const supportsVision = modalities !== undefined ? modalities.includes("image") : undefined;
   return {
-    api_types: [...OPENCODEX_MODEL_API_TYPES],
+    api_types: [...OPENCCX_MODEL_API_TYPES],
     capabilities: {
       ...(hasLongTier
         ? { context_length: longContextLength }

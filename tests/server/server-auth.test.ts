@@ -39,7 +39,7 @@ import { clearRequestLogsForTests, getRequestLogEntries } from "../../src/server
 import { readUsageEntries } from "../../src/usage/log";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { handleResponses, handleResponsesCompact } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { ownedServiceHomeInspection } from "../helpers/owned-service-home-inspection";
@@ -52,23 +52,23 @@ import { getDebugLogEntries, resetDebugLogBufferForTests } from "../../src/lib/d
 import { resetDebugSettingsForTests, setDebugSettings } from "../../src/lib/debug-settings";
 import { watchdogMs } from "../helpers/ci-watchdog";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const originalGlobalFetch = globalThis.fetch;
 const originalGlobalWebSocket = globalThis.WebSocket;
 // A per-run directory, not a fixed path. This used to be
 // join(import.meta.dir, ".tmp-server-auth-test"), the exact same literal that
 // management-provider-validation.test.ts also declared, and both files delete and
-// recreate it while pointing OPENCODEX_HOME there. `bun test --isolate` gives each file
+// recreate it while pointing OPENCCX_HOME there. `bun test --isolate` gives each file
 // its own module registry but shares one process and one filesystem, so whichever run was
 // mid-test when the other wiped the directory lost its config and credentials and started
 // answering 401 where the test expected the upstream's original 400. That also breaks two
 // concurrent runs of THIS file alone, which a rename could not fix. mkdtempSync matches the
 // isolation convention already used by tests/helpers/isolated-codex-home.ts.
-const TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-server-auth-"));
+const TEST_DIR = mkdtempSync(join(tmpdir(), "occx-server-auth-"));
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function config(hostname?: string): OcxConfig {
+function config(hostname?: string): OccxConfig {
   return {
     port: 10100,
     hostname,
@@ -86,9 +86,9 @@ function config(hostname?: string): OcxConfig {
 }
 
 const REMOTE_CATALOG_BYTES = '{"models":[{"slug":"fixture/model","display_name":"Fixture Model","priority":1,"visibility":"list","base_instructions":"Fixture instructions","input_modalities":["text"]}]}';
-const REMOTE_DATA_KEY = "ocx_data_remote_catalog";
+const REMOTE_DATA_KEY = "occx_data_remote_catalog";
 
-function remoteCatalogConfig(keyId = "remote-key"): OcxConfig {
+function remoteCatalogConfig(keyId = "remote-key"): OccxConfig {
   return {
     ...config("0.0.0.0"),
     port: 0,
@@ -98,14 +98,14 @@ function remoteCatalogConfig(keyId = "remote-key"): OcxConfig {
 
 function writeRemoteCatalog(): void {
   if (!isolatedCodexHome) throw new Error("isolated Codex home is not installed");
-  writeFileSync(join(isolatedCodexHome.path, "opencodex-catalog.json"), REMOTE_CATALOG_BYTES);
+  writeFileSync(join(isolatedCodexHome.path, "openccx-catalog.json"), REMOTE_CATALOG_BYTES);
 }
 
 function managementHeaders(initial?: HeadersInit): Headers {
   const token = configuredAdminToken();
   if (!token) throw new Error("management token was not initialized");
   const headers = new Headers(initial);
-  headers.set("x-opencodex-api-key", token);
+  headers.set("x-openccx-api-key", token);
   return headers;
 }
 
@@ -116,7 +116,7 @@ const canonicalDirect = {
   codexAccountMode: "direct",
 } as const;
 
-function poolProviders(): OcxConfig["providers"] {
+function poolProviders(): OccxConfig["providers"] {
   return {
     openai: { ...canonicalDirect, codexAccountMode: "pool" },
   };
@@ -162,16 +162,16 @@ function stubModelDiscoveryFor(...origins: string[]): void {
 }
 
 beforeEach(() => {
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-auth-codex-");
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-auth-codex-");
 });
 
 afterEach(() => {
   globalThis.fetch = originalGlobalFetch;
   globalThis.WebSocket = originalGlobalWebSocket;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   clearCodexUpstreamHealth();
@@ -194,7 +194,7 @@ function unsupportedModelBody(model = POOL_RETRY_MODEL): string {
 }
 
 type PoolRetryHarness = {
-  config: OcxConfig;
+  config: OccxConfig;
   dispatches: string[];
   request: (init?: {
     stream?: boolean;
@@ -242,13 +242,13 @@ async function startPoolRetryHarness(
     pausedAccountIds?: string[];
     reauthAccountIds?: string[];
     omitCredentialAccountIds?: string[];
-    combos?: OcxConfig["combos"];
+    combos?: OccxConfig["combos"];
     modelRosterByAccount?: Record<string, string[]>;
   } = {},
 ): Promise<PoolRetryHarness> {
   await removeTestDirBestEffort(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
   clearAccountQuota();
@@ -311,7 +311,7 @@ async function startPoolRetryHarness(
     ...(options.websockets ? { websockets: true } : {}),
     ...(options.streamMode ? { streamMode: options.streamMode } : {}),
     ...(options.combos ? { combos: options.combos } : {}),
-  } as OcxConfig;
+  } as OccxConfig;
   saveConfig(config);
   if (!options.omitCredentialAccountIds?.includes("pool-a")) {
     saveCodexAccountCredential("pool-a", {
@@ -394,14 +394,14 @@ describe("Responses request identity handoff", () => {
       output: [],
       usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 },
     }, {
-      headers: { "x-opencodex-request-id": "upstream-spoofed-value" },
+      headers: { "x-openccx-request-id": "upstream-spoofed-value" },
     }), { secondAccount: false });
     try {
       const response = await harness.request({
-        headers: { "x-opencodex-request-id": "caller-injected-value" },
+        headers: { "x-openccx-request-id": "caller-injected-value" },
       });
-      const requestId = response.headers.get("x-opencodex-request-id");
-      expect(requestId).toMatch(/^ocx-[a-f0-9]{32}$/);
+      const requestId = response.headers.get("x-openccx-request-id");
+      expect(requestId).toMatch(/^occx-[a-f0-9]{32}$/);
       expect(requestId).not.toBe("upstream-spoofed-value");
       expect(requestId).not.toBe("caller-injected-value");
       await response.text();
@@ -422,8 +422,8 @@ describe("Responses request identity handoff", () => {
     }), { secondAccount: false });
     try {
       const response = await harness.request();
-      const requestId = response.headers.get("x-opencodex-request-id");
-      expect(requestId).toMatch(/^ocx-[a-f0-9]{32}$/);
+      const requestId = response.headers.get("x-openccx-request-id");
+      expect(requestId).toMatch(/^occx-[a-f0-9]{32}$/);
 
       // The header being present above is not enough: cross-origin JavaScript may read only
       // the CORS-safelisted response headers plus whatever the expose-list names, so without
@@ -431,7 +431,7 @@ describe("Responses request identity handoff", () => {
       const exposed = (response.headers.get("Access-Control-Expose-Headers") ?? "")
         .split(",")
         .map(name => name.trim().toLowerCase());
-      expect(exposed).toContain("x-opencodex-request-id");
+      expect(exposed).toContain("x-openccx-request-id");
       await response.text();
     } finally {
       await stopPoolRetryHarness(harness);
@@ -471,12 +471,12 @@ describe("Responses request identity handoff", () => {
           controller.close();
         },
       }),
-      { headers: { "content-type": "text/event-stream", "x-opencodex-request-id": "upstream-spoofed-value" } },
+      { headers: { "content-type": "text/event-stream", "x-openccx-request-id": "upstream-spoofed-value" } },
     ), { secondAccount: false });
     try {
       const response = await harness.request({ stream: true });
-      const requestId = response.headers.get("x-opencodex-request-id");
-      expect(requestId).toMatch(/^ocx-[a-f0-9]{32}$/);
+      const requestId = response.headers.get("x-openccx-request-id");
+      expect(requestId).toMatch(/^occx-[a-f0-9]{32}$/);
       expect(requestId).not.toBe("upstream-spoofed-value");
       const reader = response.body!.getReader();
       const first = await reader.read();
@@ -496,13 +496,13 @@ describe("Responses request identity handoff", () => {
       { error: { type: "upstream_error", message: "bounded test error" } },
       {
         status: 503,
-        headers: { "x-opencodex-request-id": "upstream-spoofed-value" },
+        headers: { "x-openccx-request-id": "upstream-spoofed-value" },
       },
     ), { secondAccount: false });
     try {
       const response = await harness.request();
-      const requestId = response.headers.get("x-opencodex-request-id");
-      expect(requestId).toMatch(/^ocx-[a-f0-9]{32}$/);
+      const requestId = response.headers.get("x-openccx-request-id");
+      expect(requestId).toMatch(/^occx-[a-f0-9]{32}$/);
       expect(requestId).not.toBe("upstream-spoofed-value");
       await response.text();
       expect(getRequestLogEntries().filter(entry => entry.requestId === requestId)).toHaveLength(1);
@@ -515,8 +515,8 @@ describe("Responses request identity handoff", () => {
   test("does not issue a request id before authentication and origin admission", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     clearRequestLogsForTests();
     saveConfig({ ...config("0.0.0.0"), port: 0 });
 
@@ -530,19 +530,19 @@ describe("Responses request identity handoff", () => {
         body,
       });
       expect(missingAuth.status).toBe(401);
-      expect(missingAuth.headers.get("x-opencodex-request-id")).toBeNull();
+      expect(missingAuth.headers.get("x-openccx-request-id")).toBeNull();
 
       const rejectedOrigin = await fetch(url, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-opencodex-api-key": "local-secret",
+          "x-openccx-api-key": "local-secret",
           origin: "https://attacker.test",
         },
         body,
       });
       expect(rejectedOrigin.status).toBe(403);
-      expect(rejectedOrigin.headers.get("x-opencodex-request-id")).toBeNull();
+      expect(rejectedOrigin.headers.get("x-openccx-request-id")).toBeNull();
       expect(getRequestLogEntries()).toHaveLength(0);
       expect(readUsageEntries()).toHaveLength(0);
     } finally {
@@ -733,7 +733,7 @@ describe("server local API auth", () => {
       },
     });
     const baseUrl = `${upstream.url.toString().replace(/\/$/, "")}/v1`;
-    const cfg: OcxConfig = {
+    const cfg: OccxConfig = {
       port: 0,
       defaultProvider: "first",
       providers: {
@@ -771,7 +771,7 @@ describe("server local API auth", () => {
     }
   });
 
-  test("loopback hostnames do not require opencodex API auth", () => {
+  test("loopback hostnames do not require openccx API auth", () => {
     expect(isLoopbackHostname(undefined)).toBe(true);
     expect(isLoopbackHostname("")).toBe(true);
     expect(isLoopbackHostname("localhost")).toBe(true);
@@ -782,42 +782,42 @@ describe("server local API auth", () => {
   });
 
   test("non-loopback binding requires env token before startup", () => {
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     expect(isApiAuthRequired(config("0.0.0.0"))).toBe(true);
-    expect(() => assertServerAuthConfig(config("0.0.0.0"))).toThrow("OPENCODEX_API_AUTH_TOKEN");
+    expect(() => assertServerAuthConfig(config("0.0.0.0"))).toThrow("OPENCCX_API_AUTH_TOKEN");
 
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     expect(() => assertServerAuthConfig(config("0.0.0.0"))).not.toThrow();
   });
 
   test("auth header must match env token when non-loopback auth is required", () => {
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     const cfg = config("0.0.0.0");
 
     expect(hasValidApiAuth(new Request("http://localhost/api/config"), cfg)).toBe(false);
     expect(hasValidApiAuth(new Request("http://localhost/api/config", {
-      headers: { "x-opencodex-api-key": "wrong" },
+      headers: { "x-openccx-api-key": "wrong" },
     }), cfg)).toBe(false);
     expect(hasValidApiAuth(new Request("http://localhost/api/config", {
-      headers: { "x-opencodex-api-key": "local-secret" },
+      headers: { "x-openccx-api-key": "local-secret" },
     }), cfg)).toBe(true);
   });
 
   test("loopback remains allowed even when env token exists", () => {
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     expect(hasValidApiAuth(new Request("http://localhost/api/config"), config("127.0.0.1"))).toBe(true);
   });
 
-  test("CORS preflight permits the opencodex API key header", () => {
+  test("CORS preflight permits the openccx API key header", () => {
     const allowed = corsHeaders()["Access-Control-Allow-Headers"];
-    expect(allowed).toContain("X-OpenCodex-API-Key");
+    expect(allowed).toContain("X-Openccx-API-Key");
     expect(allowed).toContain("ChatGPT-Account-Id");
   });
 
   test("CORS preflight echoes vendor SDK request headers only for an allowed origin (#1773)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -842,7 +842,7 @@ describe("server local API auth", () => {
         }
         // The static contract survives alongside the echoed headers, and content-type is not
         // duplicated just because the caller also asked for it.
-        expect(allowed).toContain("x-opencodex-api-key");
+        expect(allowed).toContain("x-openccx-api-key");
         expect(allowed.split(",").filter(h => h.trim() === "content-type")).toHaveLength(1);
         expect(res.headers.get("vary")).toContain("Access-Control-Request-Headers");
       }
@@ -925,7 +925,7 @@ describe("server local API auth", () => {
           requiresReasoningPlaceholderModels: [],
         },
       },
-    } as OcxConfig) as {
+    } as OccxConfig) as {
       providers: Record<string, Record<string, unknown>>;
     };
 
@@ -963,7 +963,7 @@ describe("server local API auth", () => {
           keyOptional: true,
         },
       },
-    } as OcxConfig) as {
+    } as OccxConfig) as {
       providers: Record<string, Record<string, unknown>>;
     };
 
@@ -992,7 +992,7 @@ describe("server local API auth", () => {
           apiKey: "sk-secret-value",
         },
       },
-    } as OcxConfig) as { providers: Record<string, { baseUrl: string }> };
+    } as OccxConfig) as { providers: Record<string, { baseUrl: string }> };
 
     expect(dto.providers.leaky.baseUrl).toBe("https://example.test/v1");
     expect(JSON.stringify(dto)).not.toContain("pass");
@@ -1012,7 +1012,7 @@ describe("server local API auth", () => {
           baseUrl: "file:///tmp/sk-secret",
         },
       },
-    } as OcxConfig) as { providers: Record<string, { baseUrl: string }> };
+    } as OccxConfig) as { providers: Record<string, { baseUrl: string }> };
 
     expect(dto.providers.malformed.baseUrl).toBe("(invalid URL)");
     expect(dto.providers.file.baseUrl).toBe("(invalid URL)");
@@ -1023,7 +1023,7 @@ describe("server local API auth", () => {
   test("root fallback explains missing dashboard build", () => {
     expect(rootFallbackPayload()).toMatchObject({
       status: "ok",
-      service: "opencodex",
+      service: "openccx",
       dashboard: { available: false },
       endpoints: {
         health: "/healthz",
@@ -1049,8 +1049,8 @@ describe("server local API auth", () => {
   test("/v1/models requires API auth and local Origin on non-loopback bindings", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       port: 0,
       hostname: "0.0.0.0",
@@ -1062,7 +1062,7 @@ describe("server local API auth", () => {
           authMode: "forward",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     const modelsUrl = `http://127.0.0.1:${server.port}/v1/models`;
@@ -1071,18 +1071,18 @@ describe("server local API auth", () => {
       expect(missingAuth.status).toBe(401);
 
       const badOrigin = await fetch(modelsUrl, {
-        headers: { "x-opencodex-api-key": "local-secret", origin: "https://attacker.test" },
+        headers: { "x-openccx-api-key": "local-secret", origin: "https://attacker.test" },
       });
       expect(badOrigin.status).toBe(403);
 
       const ok = await fetch(modelsUrl, {
-        headers: { "x-opencodex-api-key": "local-secret" },
+        headers: { "x-openccx-api-key": "local-secret" },
       });
       expect(ok.status).toBe(200);
       expect(await ok.json()).toHaveProperty("data");
 
       const sameOrigin = await fetch(modelsUrl, {
-        headers: { "x-opencodex-api-key": "local-secret", origin: new URL(modelsUrl).origin },
+        headers: { "x-openccx-api-key": "local-secret", origin: new URL(modelsUrl).origin },
       });
       expect(sameOrigin.status).toBe(200);
     } finally {
@@ -1099,15 +1099,15 @@ describe("server local API auth", () => {
         nvidia: { adapter: "openai-chat", baseUrl: "https://integrate.api.nvidia.com/v1", freeTier: true },
         venice: { adapter: "openai-chat", baseUrl: "https://api.venice.ai/api/v1" },
       },
-    } as OcxConfig) as { providers: Record<string, { freeTier?: boolean }> };
+    } as OccxConfig) as { providers: Record<string, { freeTier?: boolean }> };
     expect(dto.providers.nvidia.freeTier).toBe(true);
     expect(dto.providers.venice.freeTier).toBeUndefined();
   });
   test("management GET rejects non-local Origin even with a valid API key", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       ...config("0.0.0.0"),
       port: 0,
@@ -1133,8 +1133,8 @@ describe("server local API auth", () => {
   test("/api/system/memory stays gated while /healthz exposes only bounded capability metadata (#314 WP3)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       ...config("0.0.0.0"),
       port: 0,
@@ -1180,7 +1180,7 @@ describe("server local API auth", () => {
   test("OPTIONS preflight rejects non-local Origin before CORS headers are trusted", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1205,8 +1205,8 @@ describe("server local API auth", () => {
       expect(accepted.status).toBe(204);
       expect(accepted.headers.get("access-control-allow-origin")).toBe(loopbackOrigin);
       const allowedHeaders = accepted.headers.get("access-control-allow-headers") ?? "";
-      expect(allowedHeaders).toContain("X-OpenCodex-GUI-Origin");
-      expect(allowedHeaders).toContain("X-OpenCodex-CSRF-Token");
+      expect(allowedHeaders).toContain("X-Openccx-GUI-Origin");
+      expect(allowedHeaders).toContain("X-Openccx-CSRF-Token");
       expect(allowedHeaders).not.toContain("X-Unrelated-Custom-Header");
     } finally {
       await server.stop(true);
@@ -1216,7 +1216,7 @@ describe("server local API auth", () => {
   test("extension allowlist gates preflight and data-plane requests by authority", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     const extensionOrigin = "chrome-extension://modkelfkcfjpgbfmnbnllalkiogfofh";
     saveConfig({
       ...config("127.0.0.1"),
@@ -1258,8 +1258,8 @@ describe("server local API auth", () => {
       });
       expect(managementPreflight.status).toBe(204);
       expect(managementPreflight.headers.get("access-control-allow-origin")).toBe(extensionOrigin);
-      expect(managementPreflight.headers.get("access-control-allow-headers")).toContain("X-OpenCodex-GUI-Origin");
-      expect(managementPreflight.headers.get("access-control-allow-headers")).toContain("X-OpenCodex-CSRF-Token");
+      expect(managementPreflight.headers.get("access-control-allow-headers")).toContain("X-Openccx-GUI-Origin");
+      expect(managementPreflight.headers.get("access-control-allow-headers")).toContain("X-Openccx-CSRF-Token");
 
       const managementUnrelated = await fetch(managementUrl, {
         method: "OPTIONS",
@@ -1302,7 +1302,7 @@ describe("server local API auth", () => {
   test("loopback management API rejects host-header same-origin rebinding", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1312,7 +1312,7 @@ describe("server local API auth", () => {
         headers: {
           host: `attacker.test:${server.port}`,
           origin: attackerOrigin,
-          "x-opencodex-api-key": configuredAdminToken() ?? "missing-admin-token",
+          "x-openccx-api-key": configuredAdminToken() ?? "missing-admin-token",
         },
       });
       expect(response.status).toBe(403);
@@ -1325,7 +1325,7 @@ describe("server local API auth", () => {
   test("management CORS echoes validated loopback Origin and covers delegated codex-auth responses", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     saveConfig(config("127.0.0.1"));
 
     const server = startServer(0);
@@ -1351,8 +1351,8 @@ describe("server local API auth", () => {
   test("non-loopback management API allows same-origin GUI requests with API token", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       ...config("0.0.0.0"),
       port: 0,
@@ -1385,8 +1385,8 @@ describe("server local API auth", () => {
   test("websocket upgrade rejects hostile Origin even with a valid API token", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
     saveConfig({
       ...config("0.0.0.0"),
       port: 0,
@@ -1408,7 +1408,7 @@ describe("server local API auth", () => {
             origin: "https://attacker.test",
             "sec-websocket-key": "dGhlIHNhbXBsZSBub25jZQ==",
             "sec-websocket-version": "13",
-            "x-opencodex-api-key": "local-secret",
+            "x-openccx-api-key": "local-secret",
           },
         }, incoming => {
           let body = "";
@@ -1442,8 +1442,8 @@ describe("server local API auth", () => {
   test("websocket upgrade returns 426 when the WS transport is disabled", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({ ...config(), port: 0, websockets: false });
 
     const server = startServer(0);
@@ -1469,8 +1469,8 @@ describe("server local API auth", () => {
   test("after a 426'd upgrade the same client can immediately fall back to HTTP POST", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
 
     const upstream = Bun.serve({
       port: 0,
@@ -1514,8 +1514,8 @@ describe("server local API auth", () => {
   test("compact v1 on a routed model propagates a summarizer failure instead of fabricating history", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
 
     const upstream = Bun.serve({
       port: 0,
@@ -1554,8 +1554,8 @@ describe("server local API auth", () => {
   test("unknown /v1/* paths return JSON 404, never GUI index.html", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
     saveConfig({ ...config(), port: 0 });
 
     const server = startServer(0);
@@ -1576,8 +1576,8 @@ describe("server local API auth", () => {
   test("POST /v1/responses/compact on a routed model returns v1 replacement history", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    process.env.OPENCCX_HOME = TEST_DIR;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
 
     const upstream = Bun.serve({
       port: 0,
@@ -1601,7 +1601,7 @@ describe("server local API auth", () => {
           defaultModel: "claude-fable-5",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -1626,8 +1626,8 @@ describe("server local API auth", () => {
       const last = json.output[json.output.length - 1];
       expect(last.role).toBe("user");
       expect(last.content?.[0].text).toContain("compact summary body");
-      // No ocx1 envelope may leak into v1 output.
-      expect(JSON.stringify(json)).not.toContain("ocx1:");
+      // No occx1 envelope may leak into v1 output.
+      expect(JSON.stringify(json)).not.toContain("occx1:");
     } finally {
       await server.stop(true);
       await upstream.stop(true);
@@ -1638,7 +1638,7 @@ describe("server local API auth", () => {
   // multi-server matrix; tight budgets flake as "tier websocket timeout" and cascade
   // into the next test via a late fetch restore (502 instead of the mocked 500).
   /**
-   * This matrix points OPENCODEX_HOME at its own temp dir, so the service
+   * This matrix points OPENCCX_HOME at its own temp dir, so the service
    * installed on the developer's machine is not evidence about it.
    * See tests/helpers/owned-service-home.ts.
    */
@@ -1647,10 +1647,10 @@ describe("server local API auth", () => {
   test("OpenAI option auth matrix keeps direct, pool, and API credentials independent", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearThreadAccountMap();
     clearCodexUpstreamHealth();
-    process.env.OPENCODEX_API_AUTH_TOKEN = "local-secret";
+    process.env.OPENCCX_API_AUTH_TOKEN = "local-secret";
 
     const seen: Array<{ host: string; authorization: string | null; chatgptAccountId: string | null }> = [];
     const upstream = Bun.serve({
@@ -1708,7 +1708,7 @@ describe("server local API auth", () => {
     const request = (server: ReturnType<typeof startServer>, headers?: HeadersInit, model = "gpt-test") => {
       const requestHeaders = new Headers(headers);
       requestHeaders.set("content-type", "application/json");
-      requestHeaders.set("x-opencodex-api-key", "local-secret");
+      requestHeaders.set("x-openccx-api-key", "local-secret");
       return fetch(new URL("/v1/responses", server.url), {
         method: "POST",
         headers: requestHeaders,
@@ -1718,7 +1718,7 @@ describe("server local API auth", () => {
     const compact = (server: ReturnType<typeof startServer>, headers?: HeadersInit, model = "gpt-test") => {
       const requestHeaders = new Headers(headers);
       requestHeaders.set("content-type", "application/json");
-      requestHeaders.set("x-opencodex-api-key", "local-secret");
+      requestHeaders.set("x-openccx-api-key", "local-secret");
       return fetch(new URL("/v1/responses/compact", server.url), {
         method: "POST",
         headers: requestHeaders,
@@ -1728,7 +1728,7 @@ describe("server local API auth", () => {
     const wsTurn = (server: ReturnType<typeof startServer>, headers?: Record<string, string>, model = "gpt-test") => {
       const url = new URL("/v1/responses", server.url);
       url.protocol = "ws:";
-      const ws = new WebSocket(url, { headers: { "x-opencodex-api-key": "local-secret", ...(headers ?? {}) } } as unknown as string[]);
+      const ws = new WebSocket(url, { headers: { "x-openccx-api-key": "local-secret", ...(headers ?? {}) } } as unknown as string[]);
       return new Promise<string>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error("tier websocket timeout")), watchdogMs(5_000));
         ws.addEventListener("open", () => {
@@ -1754,7 +1754,7 @@ describe("server local API auth", () => {
         providers: { openai: canonicalDirect },
         codexAccounts: [{ id: "direct-unusable", email: "pool@example.test", isMain: false }],
         activeCodexAccountId: "direct-unusable",
-      } as OcxConfig;
+      } as OccxConfig;
       saveCodexAccountCredential("direct-unusable", {
         accessToken: "unusable-pool-token",
         refreshToken: "unusable-pool-refresh",
@@ -1800,7 +1800,7 @@ describe("server local API auth", () => {
         await direct.stop(true);
       }
 
-      const mainOnlyConfig = (): OcxConfig => ({
+      const mainOnlyConfig = (): OccxConfig => ({
         port: 0,
         websockets: true,
         defaultProvider: "openai",
@@ -1842,7 +1842,7 @@ describe("server local API auth", () => {
       const nativeCallerConfig = {
         ...mainOnlyConfig(),
         hostname: "0.0.0.0",
-      } as OcxConfig;
+      } as OccxConfig;
       saveConfig(nativeCallerConfig);
       const beforeNativeCaller = seen.length;
       const nativeCaller = startServer(0, { inspectNativeCodexOwnership });
@@ -1924,7 +1924,7 @@ describe("server local API auth", () => {
         codexAccounts: [{ id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" }],
         activeCodexAccountId: "pool-a",
         autoSwitchThreshold: 0,
-      } as OcxConfig);
+      } as OccxConfig);
       const beforeMissingPool = seen.length;
       const missingPool = startServer(0, { inspectNativeCodexOwnership });
       try {
@@ -1949,7 +1949,7 @@ describe("server local API auth", () => {
         port: 0,
         defaultProvider: "openai",
         providers: cooldownCfg,
-      } as OcxConfig, "pool-a", 429, { retryAfter: "60" });
+      } as OccxConfig, "pool-a", 429, { retryAfter: "60" });
       const beforeCooldown = seen.length;
       const cooledMulti = startServer(0, { inspectNativeCodexOwnership });
       try {
@@ -1983,7 +1983,7 @@ describe("server local API auth", () => {
           openai: { ...canonicalDirect, disabled: true },
           "openai-apikey": { adapter: "openai-responses", baseUrl: "https://api.openai.com/v1", apiKey: "sk-platform" },
         },
-      } as OcxConfig);
+      } as OccxConfig);
       const api = startServer(0, { inspectNativeCodexOwnership });
       try {
         expect((await request(api, { authorization: "Bearer local-secret" }, "openai-apikey/gpt-test")).status).toBe(200);
@@ -2020,7 +2020,7 @@ describe("server local API auth", () => {
         ],
         activeCodexAccountId: "pool-a",
         autoSwitchThreshold: 0,
-      } as OcxConfig);
+      } as OccxConfig);
       clearAccountNeedsReauth("pool-a");
       clearAccountNeedsReauth("pool-b");
       const sequential = startServer(0);
@@ -2029,7 +2029,7 @@ describe("server local API auth", () => {
       const beforeHandshake = seen.length;
       const ws = new WebSocket(wsUrl, {
         headers: {
-          "x-opencodex-api-key": "local-secret",
+          "x-openccx-api-key": "local-secret",
           authorization: "Bearer caller-codex",
         },
       } as unknown as string[]);
@@ -2091,8 +2091,8 @@ describe("server local API auth", () => {
   test("internal web-search and vision never forward a non-ChatGPT bearer as Direct sidecar auth", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "dedicated-x-key";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "dedicated-x-key";
     const outbound: Array<{ url: string; authorization: string | null }> = [];
     globalThis.fetch = (async (input, init) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -2132,7 +2132,7 @@ describe("server local API auth", () => {
             method: "POST",
             headers: {
               "content-type": "application/json",
-              "x-opencodex-api-key": "dedicated-x-key",
+              "x-openccx-api-key": "dedicated-x-key",
               authorization,
               "chatgpt-account-id": "acct-forged",
             },
@@ -2153,8 +2153,8 @@ describe("server local API auth", () => {
   test("internal vision sidecar still accepts a canonical ChatGPT bearer for Direct sidecar auth", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
-    process.env.OPENCODEX_API_AUTH_TOKEN = "dedicated-x-key";
+    process.env.OPENCCX_HOME = TEST_DIR;
+    process.env.OPENCCX_API_AUTH_TOKEN = "dedicated-x-key";
     const outbound: Array<{ url: string; authorization: string | null; accountId: string | null }> = [];
     globalThis.fetch = (async (input, init) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -2201,7 +2201,7 @@ describe("server local API auth", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-opencodex-api-key": "dedicated-x-key",
+          "x-openccx-api-key": "dedicated-x-key",
           authorization: `Bearer ${token}`,
           "chatgpt-account-id": "acct-direct",
         },
@@ -2224,7 +2224,7 @@ describe("server local API auth", () => {
   test("expired thread affinity returns 409 before HTTP passthrough and WS resolves auth per frame", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -2251,7 +2251,7 @@ describe("server local API auth", () => {
         { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
       ],
       activeCodexAccountId: "pool-a",
-    } as OcxConfig);
+    } as OccxConfig);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
       refreshToken: "pool-refresh-token",
@@ -2342,7 +2342,7 @@ describe("server local API auth", () => {
   test("websocket passthrough refreshes pool auth for each response.create turn", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -2372,7 +2372,7 @@ describe("server local API auth", () => {
       ],
       codexAccountNamespaces: { "ws-refresh": "pool-a" },
       activeCodexAccountId: "pool-a",
-    } as OcxConfig);
+    } as OccxConfig);
     const originalNow = Date.now;
     const originalFetch = globalThis.fetch;
     // Both the clock and the fetch stub go up before `startServer`. The async pool-quota
@@ -2455,7 +2455,7 @@ describe("server local API auth", () => {
   test("websocket routed adapter records completed usage in request logs", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
 
     const upstream = Bun.serve({
       port: 0,
@@ -2485,7 +2485,7 @@ describe("server local API auth", () => {
           defaultModel: "claude-fable-5",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     const wsUrl = new URL("/v1/responses", server.url);
@@ -2550,8 +2550,8 @@ describe("server local API auth", () => {
       expect(harness.config.activeCodexAccountId).toBe("pool-a");
       const affinity = getDebugLogEntries()
         .map(entry => entry.line)
-        .filter(line => line.startsWith("[ocx:codex:affinity] "))
-        .map(line => JSON.parse(line.slice("[ocx:codex:affinity] ".length)) as {
+        .filter(line => line.startsWith("[occx:codex:affinity] "))
+        .map(line => JSON.parse(line.slice("[occx:codex:affinity] ".length)) as {
           status: number;
           authKind: string;
           credentialSubstituted: boolean;
@@ -3204,8 +3204,8 @@ describe("server local API auth", () => {
         expect(loadConfig().activeCodexAccountId).toBe("pool-a");
         const affinity = getDebugLogEntries()
           .map(entry => entry.line)
-          .filter(line => line.startsWith("[ocx:codex:affinity] "))
-          .map(line => JSON.parse(line.slice("[ocx:codex:affinity] ".length)) as {
+          .filter(line => line.startsWith("[occx:codex:affinity] "))
+          .map(line => JSON.parse(line.slice("[occx:codex:affinity] ".length)) as {
             status: number;
             authKind: string;
             credentialSubstituted: boolean;
@@ -3775,7 +3775,7 @@ describe("server local API auth", () => {
   test("passthrough connect failure records selected pool account health", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -3793,7 +3793,7 @@ describe("server local API auth", () => {
       activeCodexAccountId: "pool-a",
       upstreamFailoverThreshold: 3,
       connectTimeoutMs: 200,
-    } as OcxConfig);
+    } as OccxConfig);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
       refreshToken: "pool-refresh-token",
@@ -3830,7 +3830,7 @@ describe("server local API auth", () => {
   test("passthrough pool send relays a 307 with Location and records no health evidence (#914)", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -3863,7 +3863,7 @@ describe("server local API auth", () => {
       activeCodexAccountId: "pool-a",
       upstreamFailoverThreshold: 3,
       connectTimeoutMs: 200,
-    } as OcxConfig);
+    } as OccxConfig);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
       refreshToken: "pool-refresh-token",
@@ -3904,7 +3904,7 @@ describe("server local API auth", () => {
   test("passthrough SSE terminal failure is recorded without clearing health on initial 200", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -3930,7 +3930,7 @@ describe("server local API auth", () => {
       ],
       activeCodexAccountId: "pool-a",
       upstreamFailoverThreshold: 3,
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(cfg);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
@@ -3975,7 +3975,7 @@ describe("server local API auth", () => {
   test("passthrough SSE cyber terminal is logged as 400 cyber_policy", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearRequestLogsForTests();
 
     const message = "This content was flagged for possible cybersecurity risk. To get authorized for security work, join the Trusted Access for Cyber program.";
@@ -4007,7 +4007,7 @@ describe("server local API auth", () => {
         { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
       ],
       activeCodexAccountId: "pool-a",
-    } as OcxConfig);
+    } as OccxConfig);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
       refreshToken: "pool-refresh-token",
@@ -4047,7 +4047,7 @@ describe("server local API auth", () => {
   test("native passthrough SSE records completed usage without pool terminal tracking", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
 
     const upstream = Bun.serve({
       port: 0,
@@ -4075,7 +4075,7 @@ describe("server local API auth", () => {
           defaultModel: "gpt-5.5",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -4131,7 +4131,7 @@ describe("server local API auth", () => {
   test("passthrough SSE client cancel aborts the upstream request", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
 
     let releaseAbort!: () => void;
     const upstreamAborted = new Promise<void>(resolve => { releaseAbort = resolve; });
@@ -4172,7 +4172,7 @@ describe("server local API auth", () => {
           defaultModel: "gpt-test",
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
 
     const server = startServer(0);
     try {
@@ -4214,7 +4214,7 @@ describe("server local API auth", () => {
     try {
       const response = await harness.request({ stream: true, signal: caller.signal });
       expect(response.status).toBe(200);
-      const requestId = response.headers.get("x-opencodex-request-id");
+      const requestId = response.headers.get("x-openccx-request-id");
       const reader = response.body!.getReader();
       expect((await reader.read()).done).toBe(false);
       // Abort the HTTP request, without calling response.body.cancel(): the
@@ -4255,7 +4255,7 @@ describe("server local API auth", () => {
     ), { secondAccount: false, streamMode: "legacy-tee" });
     try {
       const response = await harness.request({ stream: true });
-      const requestId = response.headers.get("x-opencodex-request-id");
+      const requestId = response.headers.get("x-openccx-request-id");
       const reader = response.body!.getReader();
       expect((await reader.read()).done).toBe(false);
       (await source.promise).error(new Error("fixture upstream connection reset"));
@@ -4278,7 +4278,7 @@ describe("server local API auth", () => {
   test("non-forward generated stream does not mutate active pool health", async () => {
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     clearCodexUpstreamHealth();
     clearThreadAccountMap();
     clearAccountNeedsReauth("pool-a");
@@ -4313,7 +4313,7 @@ describe("server local API auth", () => {
       ],
       activeCodexAccountId: "pool-a",
       upstreamFailoverThreshold: 3,
-    } as OcxConfig);
+    } as OccxConfig);
     saveCodexAccountCredential("pool-a", {
       accessToken: "pool-access-token",
       refreshToken: "pool-refresh-token",
@@ -4351,7 +4351,7 @@ describe("GET /v1/catalog remote data plane", () => {
     try {
       const management = await fetch(new URL("/api/catalog", server.url), { headers: managementHeaders() });
       const remote = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": REMOTE_DATA_KEY },
+        headers: { "x-openccx-api-key": REMOTE_DATA_KEY },
       });
       const managementBytes = new Uint8Array(await management.arrayBuffer());
       const remoteBytes = new Uint8Array(await remote.arrayBuffer());
@@ -4370,7 +4370,7 @@ describe("GET /v1/catalog remote data plane", () => {
       expect(management.headers.get("etag")).toBe(expectedEtag);
       expect(remote.headers.get("etag")).toBeNull();
       expect(remote.headers.get("cache-control")).toBe("no-store");
-      expect(remote.headers.get("x-opencodex-key-id")).toBe("remote-key");
+      expect(remote.headers.get("x-openccx-key-id")).toBe("remote-key");
     } finally {
       await server.stop(true);
     }
@@ -4382,7 +4382,7 @@ describe("GET /v1/catalog remote data plane", () => {
     const server = startServer(0);
     try {
       const cases = [
-        [{ "x-opencodex-api-key": REMOTE_DATA_KEY }, 200, "remote-key"],
+        [{ "x-openccx-api-key": REMOTE_DATA_KEY }, 200, "remote-key"],
         [{ authorization: `Bearer ${REMOTE_DATA_KEY}` }, 200, "remote-key"],
         // Accepted, matching /v1/models and the AUTH_MATRIX row this route shipped with in
         // #809. An earlier revision of this phase rejected x-api-key here for least-privilege
@@ -4393,13 +4393,13 @@ describe("GET /v1/catalog remote data plane", () => {
         [{ "x-api-key": REMOTE_DATA_KEY }, 200, "remote-key"],
         [{ authorization: "Bearer foreign-key" }, 401, null],
         [{ authorization: `Bearer ${configuredAdminToken() ?? "missing-admin"}` }, 401, null],
-        [{ "x-opencodex-api-key": REMOTE_DATA_KEY, origin: "https://attacker.test" }, 403, null],
+        [{ "x-openccx-api-key": REMOTE_DATA_KEY, origin: "https://attacker.test" }, 403, null],
         [{}, 401, null],
       ] as const;
       for (const [headers, status, keyId] of cases) {
         const response = await fetch(new URL("/v1/catalog", server.url), { headers });
         expect(response.status).toBe(status);
-        expect(response.headers.get("x-opencodex-key-id")).toBe(keyId);
+        expect(response.headers.get("x-openccx-key-id")).toBe(keyId);
       }
     } finally {
       await server.stop(true);
@@ -4407,16 +4407,16 @@ describe("GET /v1/catalog remote data plane", () => {
   });
 
   test("environment-token and loopback admission never emit a configured key id", async () => {
-    process.env.OPENCODEX_API_AUTH_TOKEN = "environment-catalog-token";
+    process.env.OPENCCX_API_AUTH_TOKEN = "environment-catalog-token";
     saveConfig(remoteCatalogConfig());
     writeRemoteCatalog();
     const remote = startServer(0);
     try {
       const response = await fetch(new URL("/v1/catalog", remote.url), {
-        headers: { "x-opencodex-api-key": "environment-catalog-token" },
+        headers: { "x-openccx-api-key": "environment-catalog-token" },
       });
       expect(response.status).toBe(200);
-      expect(response.headers.get("x-opencodex-key-id")).toBeNull();
+      expect(response.headers.get("x-openccx-key-id")).toBeNull();
     } finally {
       await remote.stop(true);
     }
@@ -4428,7 +4428,7 @@ describe("GET /v1/catalog remote data plane", () => {
     try {
       const response = await fetch(new URL("/v1/catalog", loopback.url));
       expect(response.status).toBe(200);
-      expect(response.headers.get("x-opencodex-key-id")).toBeNull();
+      expect(response.headers.get("x-openccx-key-id")).toBeNull();
     } finally {
       await loopback.stop(true);
     }
@@ -4442,10 +4442,10 @@ describe("GET /v1/catalog remote data plane", () => {
     const server = startServer(0);
     try {
       const response = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": REMOTE_DATA_KEY },
+        headers: { "x-openccx-api-key": REMOTE_DATA_KEY },
       });
       expect(response.status).toBe(200);
-      expect(response.headers.get("x-opencodex-key-id")).toBeNull();
+      expect(response.headers.get("x-openccx-key-id")).toBeNull();
       // Other subsystems (config repair, provider migration) may warn during startup;
       // this contract is about the remote-catalog warning specifically: exactly one,
       // and it never echoes the unsafe id.
@@ -4472,7 +4472,7 @@ describe("GET /v1/catalog remote data plane", () => {
     const server = startServer(0);
     try {
       const first = await fetch(new URL("/v1/catalog", server.url), {
-        headers: { "x-opencodex-api-key": REMOTE_DATA_KEY },
+        headers: { "x-openccx-api-key": REMOTE_DATA_KEY },
       });
       expect(first.status).toBe(200);
       expect(first.headers.get("etag")).toBeNull();
@@ -4480,7 +4480,7 @@ describe("GET /v1/catalog remote data plane", () => {
 
       for (const validator of ['"sha256-anything"', 'W/"sha256-anything"', '"stale", "other"', "*", "malformed"]) {
         const response = await fetch(new URL("/v1/catalog", server.url), {
-          headers: { "x-opencodex-api-key": REMOTE_DATA_KEY, "if-none-match": validator },
+          headers: { "x-openccx-api-key": REMOTE_DATA_KEY, "if-none-match": validator },
         });
         expect(response.status).toBe(200);
         expect(await response.text()).toBe(REMOTE_CATALOG_BYTES);
@@ -4504,12 +4504,12 @@ describe("GET /v1/catalog remote data plane", () => {
       ] as const) {
         const response = await fetch(new URL(path, server.url), {
           method,
-          headers: { "x-opencodex-api-key": REMOTE_DATA_KEY },
+          headers: { "x-openccx-api-key": REMOTE_DATA_KEY },
         });
         expect(response.status).toBe(404);
         expect(response.headers.get("content-type")).toContain("application/json");
         expect(await response.json()).toMatchObject({ error: { code: "not_found" } });
-        expect(response.headers.get("x-opencodex-key-id")).toBeNull();
+        expect(response.headers.get("x-openccx-key-id")).toBeNull();
       }
     } finally {
       await server.stop(true);

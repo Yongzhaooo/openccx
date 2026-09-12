@@ -17,7 +17,7 @@ import { buildGrokInjectModels } from "../../../src/grok/models";
 import { syncGrokConfig } from "../../../src/grok/sync";
 import { handleManagementAPI } from "../../../src/server/management-api";
 import type { ManagementApiDeps } from "../../../src/server/management/context";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const NATIVE_SOL = "gpt-5.6-sol";
@@ -56,12 +56,12 @@ type GrokTomlModel = {
   }>;
 };
 
-function baseConfig(): OcxConfig {
-  return { port: 10190, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OcxConfig;
+function baseConfig(): OccxConfig {
+  return { port: 10190, hostname: "127.0.0.1", defaultProvider: "openai", providers: {} } as OccxConfig;
 }
 
 function tempGrokHome(): { root: string; grokHome: string } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-grok-effort-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-grok-effort-"));
   const grokHome = join(root, ".grok");
   mkdirSync(grokHome);
   return { root, grokHome };
@@ -121,7 +121,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
     }]);
     expect(withLadder).toContain("supports_reasoning_effort = true");
     expect(withLadder).toContain('reasoning_effort = "high"');
-    expect(withLadder).toContain("[[model.ocx-kimi-k3.reasoning_efforts]]");
+    expect(withLadder).toContain("[[model.occx-kimi-k3.reasoning_efforts]]");
     expect(withLadder).toContain('id = "low"');
     expect(withLadder).toContain('value = "low"');
     expect(withLadder).toContain('label = "Low"');
@@ -133,7 +133,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
     expect(withLadder).not.toContain("ultra");
 
     const parsed = parseModels(withLadder);
-    const k3 = parsed["ocx-kimi-k3"];
+    const k3 = parsed["occx-kimi-k3"];
     expect(k3.supports_reasoning_effort).toBe(true);
     expect(k3.reasoning_effort).toBe("high");
     expect(k3.reasoning_efforts?.map(row => row.value)).toEqual(["low", "high", "max"]);
@@ -152,9 +152,9 @@ describe("Grok managed-block thinking-intensity injection", () => {
     expect(empty).not.toContain("reasoning_effort");
     expect(empty).not.toContain("reasoning_efforts");
     const emptyParsed = parseModels(empty);
-    expect(emptyParsed["ocx-kimi-plain"]?.supports_reasoning_effort).toBeUndefined();
-    expect(emptyParsed["ocx-kimi-plain"]?.reasoning_effort).toBeUndefined();
-    expect(emptyParsed["ocx-kimi-plain"]?.reasoning_efforts).toBeUndefined();
+    expect(emptyParsed["occx-kimi-plain"]?.supports_reasoning_effort).toBeUndefined();
+    expect(emptyParsed["occx-kimi-plain"]?.reasoning_effort).toBeUndefined();
+    expect(emptyParsed["occx-kimi-plain"]?.reasoning_efforts).toBeUndefined();
   });
 
   test("Grok config injection drops Codex-only ultra from a mixed ladder", () => {
@@ -164,7 +164,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
       defaultReasoningEffort: "ultra",
     }]);
     expect(block).not.toContain("ultra");
-    const table = parseModels(block)["ocx-gpt-5-6-sol"];
+    const table = parseModels(block)["occx-gpt-5-6-sol"];
     expect(table.reasoning_efforts?.map(row => row.value)).toEqual(["low", "max"]);
     expect(table.reasoning_effort).toBe("low");
   });
@@ -175,7 +175,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
       reasoningEfforts: ["ultra"],
       defaultReasoningEffort: "ultra",
     }]);
-    const table = parseModels(block)["ocx-gpt-5-6-sol"];
+    const table = parseModels(block)["occx-gpt-5-6-sol"];
     expect(table.supports_reasoning_effort).toBeUndefined();
     expect(table.reasoning_effort).toBeUndefined();
     expect(table.reasoning_efforts).toBeUndefined();
@@ -187,7 +187,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
       reasoningEfforts: ["medium", "ultra"],
       defaultReasoningEffort: "ultra",
     }]);
-    const table = parseModels(block)["ocx-gpt-5-6-sol"];
+    const table = parseModels(block)["occx-gpt-5-6-sol"];
     expect(table.reasoning_effort).toBe("medium");
     expect(table.reasoning_efforts?.map(row => row.value)).toEqual(["medium"]);
     expect(table.reasoning_efforts?.find(row => row.default)?.value).toBe("medium");
@@ -201,7 +201,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
     }]);
     expect(block).not.toContain("ultra");
 
-    const table = parseModels(block)["ocx-voice-dual-mode"];
+    const table = parseModels(block)["occx-voice-dual-mode"];
     expect(table.reasoning_effort).toBe("minimal");
     expect(table.reasoning_efforts?.map(row => row.value)).toEqual(["none", "minimal", "low"]);
     expect(table.reasoning_efforts?.slice(0, 2)).toEqual([
@@ -269,7 +269,7 @@ describe("Grok managed-block thinking-intensity injection", () => {
       expect(plain.supports_reasoning_effort).toBeUndefined();
       expect(plain.reasoning_effort).toBeUndefined();
       expect(plain.reasoning_efforts).toBeUndefined();
-      expect(content).not.toMatch(/ocx-kimi-kimi-for-coding[\s\S]*supports_reasoning_effort/);
+      expect(content).not.toMatch(/occx-kimi-kimi-for-coding[\s\S]*supports_reasoning_effort/);
     } finally {
       removeTreeWithRetry(root);
     }
@@ -280,22 +280,22 @@ describe("dashboard Grok enable apply writes the same ladders", () => {
   let grokHome: string;
   let fixtureRoot: string;
   let previousGrokHome: string | undefined;
-  let previousOpencodexHome: string | undefined;
+  let previousOpenccxHome: string | undefined;
   const cleanup: string[] = [];
 
   beforeEach(() => {
     previousGrokHome = process.env.GROK_HOME;
-    grokHome = mkdtempSync(join(tmpdir(), "ocx-grok-effort-apply-"));
+    grokHome = mkdtempSync(join(tmpdir(), "occx-grok-effort-apply-"));
     cleanup.push(grokHome);
     process.env.GROK_HOME = grokHome;
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
-    fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-owned-home-"));
+    previousOpenccxHome = process.env.OPENCCX_HOME;
+    fixtureRoot = mkdtempSync(join(tmpdir(), "occx-owned-home-"));
     cleanup.push(fixtureRoot);
-    process.env.OPENCODEX_HOME = fixtureRoot;
+    process.env.OPENCCX_HOME = fixtureRoot;
     writeFileSync(join(fixtureRoot, "service-state.json"), JSON.stringify({
       version: 2,
       codexHome: process.env.CODEX_HOME?.trim() || join(homedir(), ".codex"),
-      opencodexHome: fixtureRoot,
+      openccxHome: fixtureRoot,
       backend: "scheduler",
     }));
   });
@@ -303,8 +303,8 @@ describe("dashboard Grok enable apply writes the same ladders", () => {
   afterEach(() => {
     if (previousGrokHome === undefined) delete process.env.GROK_HOME;
     else process.env.GROK_HOME = previousGrokHome;
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
   });
 

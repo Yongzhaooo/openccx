@@ -241,7 +241,7 @@ export interface HardenOptions {
  * Total icacls budget per harden call — ALL steps share it, including the single
  * timeout retry and the diagnostic verification pass (no per-attempt fresh budget:
  * loadConfig hardens dir+config+auth sequentially, so per-attempt budgets stack
- * into multi-minute startup stalls). Override with OPENCODEX_ACL_TIMEOUT_MS
+ * into multi-minute startup stalls). Override with OPENCCX_ACL_TIMEOUT_MS
  * (integer ms, clamped to [1000, 60000]; invalid values fall back to 30000).
  *
  * The default was 5s until #1156. One envelope has to cover the whole sequence —
@@ -268,7 +268,7 @@ function resolveHardenDeadlineMs(overrideMs?: number): number {
     if (!Number.isSafeInteger(overrideMs) || overrideMs <= 0) return 1;
     return Math.min(HARDEN_DEADLINE_MAX_MS, overrideMs);
   }
-  const raw = env["OPENCODEX_ACL_TIMEOUT_MS"]?.trim();
+  const raw = env["OPENCCX_ACL_TIMEOUT_MS"]?.trim();
   if (!raw) return HARDEN_DEADLINE_DEFAULT_MS;
   const parsed = Number(raw);
   if (!Number.isSafeInteger(parsed)) return HARDEN_DEADLINE_DEFAULT_MS;
@@ -551,7 +551,7 @@ function existingAclIsCompliant(
 }
 
 function shouldVerifyExistingAcl(): boolean {
-  return env["OPENCODEX_ACL_VERIFY_EXISTING"] === "1";
+  return env["OPENCCX_ACL_VERIFY_EXISTING"] === "1";
 }
 
 function existingAclAlreadyCompliant(targetPath: string, directory: boolean, deadline: number): boolean {
@@ -850,7 +850,7 @@ function hardenEntry(
     const state = describeAclStateAfterTimeout(targetPath, deadline);
     const annotated = `${diagnostics}; ${state}`;
     if (opts.required) throw sanitizedAclError(annotated, lastErr);
-    console.warn(`[opencodex] ${annotated} — continuing without NTFS ACL harden`);
+    console.warn(`[openccx] ${annotated} — continuing without NTFS ACL harden`);
     return { ok: false, diagnostics: annotated };
   }
   if (opts.required) throw sanitizedAclError(diagnostics, lastErr);
@@ -901,7 +901,7 @@ async function hardenEntryAsync(
     const state = await describeAclStateAfterTimeoutAsync(targetPath, deadline);
     const annotated = `${diagnostics}; ${state}`;
     if (opts.required) throw sanitizedAclError(annotated, lastErr);
-    console.warn(`[opencodex] ${annotated} — continuing without NTFS ACL harden`);
+    console.warn(`[openccx] ${annotated} — continuing without NTFS ACL harden`);
     return { ok: false, diagnostics: annotated };
   }
   if (opts.required) throw sanitizedAclError(diagnostics, lastErr);

@@ -11,7 +11,7 @@ const options = JSON.parse(readFileSync(0, "utf8")) as {
   restore: CodexNativeRestoreResult;
   status?: number;
 };
-const home = process.env.OPENCODEX_HOME!;
+const home = process.env.OPENCCX_HOME!;
 const endpoint = { hostname: "127.0.0.1", port: 10100 };
 const fakePid = 4242;
 const calls = { killed: 0, native: 0, grok: 0, cleared: 0, exited: 0 };
@@ -95,5 +95,5 @@ globalThis.fetch = (async (input: string | URL | Request) => {
   return Response.json(options.response, { status: options.status ?? 200 });
 }) as typeof fetch;
 
-process.argv = [process.execPath, "ocx", "stop"];
+process.argv = [process.execPath, "occx", "stop"];
 await import("../../src/cli/index");

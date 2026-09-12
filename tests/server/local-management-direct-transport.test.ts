@@ -246,11 +246,11 @@ describe("local management direct transport", () => {
     ) => {
       const pathname = new URL(rawPath, "http://127.0.0.1").pathname;
       if (pathname === "/healthz") {
-        write(200, { service: "opencodex", status: "ok", version: "test", uptime: 1, pid: PID, port: targetPort });
+        write(200, { service: "openccx", status: "ok", version: "test", uptime: 1, pid: PID, port: targetPort });
         return;
       }
       if (pathname === "/readyz") {
-        write(200, { service: "opencodex", status: "ready", version: "test", uptime: 1, pid: PID, port: targetPort });
+        write(200, { service: "openccx", status: "ready", version: "test", uptime: 1, pid: PID, port: targetPort });
         return;
       }
       if (pathname === "/api/system/memory") {
@@ -269,7 +269,7 @@ describe("local management direct transport", () => {
         response.end(JSON.stringify({ via: "target" }));
         return;
       }
-      const capability = request.headers["x-opencodex-local-capability"];
+      const capability = request.headers["x-openccx-local-capability"];
       if (typeof capability === "string") targetCapabilities.push(capability);
       reply(rawPath, (status, body) => {
         response.writeHead(status, { "content-type": "application/json" });
@@ -279,7 +279,7 @@ describe("local management direct transport", () => {
     const proxy = createServer((request, response) => {
       const rawPath = request.url ?? "/";
       proxyPaths.push(rawPath);
-      const capability = request.headers["x-opencodex-local-capability"];
+      const capability = request.headers["x-openccx-local-capability"];
       if (typeof capability === "string") proxyCapabilities.push(capability);
       const pathname = new URL(rawPath, "http://127.0.0.1").pathname;
       if (pathname === "/__proxy-control") {

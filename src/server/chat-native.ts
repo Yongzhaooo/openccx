@@ -42,9 +42,9 @@ import {
 import { fastPolicyForModel } from "../providers/service-tier";
 import { providerApiKeySelectionIsCurrent, resolveCurrentProviderApiKeyTransport } from "../providers/api-key-selection";
 import { enrichOpenCodeZenFreeTierMessage } from "../providers/opencode-zen-rate-limit";
-import type { OcxProviderTransport } from "../providers/xai-transport";
+import type { OccxProviderTransport } from "../providers/xai-transport";
 import type { RouteResult } from "../router";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { fetchWithHeaderTimeout, providerFetch, safeHostLabel } from "./responses/fetch-helpers";
 import { linkAbortSignal } from "./responses";
 import {
@@ -176,7 +176,7 @@ function chatCompletionJson(value: unknown): Rec | null {
 
 interface HandleNativeChatOptions {
   req: Request;
-  config: OcxConfig;
+  config: OccxConfig;
   logCtx: RequestLogContext;
   logIds?: { requestId: string; start: number; turnAdmissionLease?: AdmissionLease };
   route: RouteResult;
@@ -244,7 +244,7 @@ export async function handleNativeChatCompletions(options: HandleNativeChatOptio
   // provider carries no adapter id or base URL until routedProviderConfig backfills it.
   const proactiveKeyProvider = selectProactiveApiKeyTransport(config, route.providerName, route.provider);
   if (proactiveKeyProvider) route.provider = proactiveKeyProvider;
-  let activeProvider: OcxProviderConfig = route.provider;
+  let activeProvider: OccxProviderConfig = route.provider;
   let activeAdapter: ProviderAdapter = createOpenAIChatAdapter(activeProvider);
   let activeRequest: AdapterRequest;
   let retainedRequestBytes = 0;
@@ -337,7 +337,7 @@ export async function handleNativeChatCompletions(options: HandleNativeChatOptio
                 if (!headers.has("accept-encoding") && encoding) headers.set("accept-encoding", encoding);
                 if (init.signal?.aborted) throw init.signal.reason;
                 noteAttemptSend(attempt, logCtx.usageLogInputTokens, transportRecovery ?? recovery);
-                return ((activeProvider as OcxProviderTransport).fetch ?? execute)(request.url, applyUpstreamRecoveryInit({
+                return ((activeProvider as OccxProviderTransport).fetch ?? execute)(request.url, applyUpstreamRecoveryInit({
                   ...init, method: request.method, headers, body: request.body,
                 }, transportRecovery));
               },

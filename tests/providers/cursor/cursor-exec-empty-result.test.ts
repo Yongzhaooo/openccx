@@ -11,7 +11,7 @@ describe("codex exec bridge empty-result normalization (devlog 260826 gap-7)", (
   });
 
   test("mcp display alias names route the same way", () => {
-    const out = normalizeCursorToolResultText("", { toolName: "mcp_opencodex-responses_exec" });
+    const out = normalizeCursorToolResultText("", { toolName: "mcp_openccx-responses_exec" });
     expect(out.changed).toBe(true);
     expect(out.text).toContain("empty output");
   });

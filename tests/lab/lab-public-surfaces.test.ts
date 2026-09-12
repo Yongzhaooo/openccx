@@ -16,7 +16,7 @@ import { discoverScenarios, loadCaseAuthority } from "../../src/lab/conformance/
 import type { CaseRecord } from "../../src/lab/conformance/types";
 import { queryLabObservations } from "../../src/lab/query";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -24,11 +24,11 @@ const HOMES: string[] = [];
 
 afterEach(() => {
   for (const home of HOMES.splice(0)) removeTreeWithRetry(home);
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function tempHome(): string {
-  const home = join(tmpdir(), `ocx-cl10-surfaces-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const home = join(tmpdir(), `occx-cl10-surfaces-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(home, { recursive: true, mode: 0o700 });
   HOMES.push(home);
   return home;
@@ -82,9 +82,9 @@ function seedProtocolProjection(home: string): string {
   return eventId;
 }
 
-function config(home: string): OcxConfig {
+function config(home: string): OccxConfig {
   void home;
-  return { port: 0, defaultProvider: "openai-apikey", providers: {} } as OcxConfig;
+  return { port: 0, defaultProvider: "openai-apikey", providers: {} } as OccxConfig;
 }
 
 async function api(
@@ -92,7 +92,7 @@ async function api(
   path: string,
   init: { method?: string; body?: unknown } = {},
 ): Promise<Response> {
-  process.env.OPENCODEX_HOME = home;
+  process.env.OPENCCX_HOME = home;
   const req = new ManagementRequest(`http://127.0.0.1${path}`, {
     method: init.method ?? "GET",
     ...(init.body !== undefined
@@ -314,7 +314,7 @@ describe("CL-10 management local public evidence", () => {
 
   test("does not expose a remote publish endpoint", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const req = new ManagementRequest("http://127.0.0.1/api/lab/public/publish", {
       method: "POST",
       headers: { "content-type": "application/json" },

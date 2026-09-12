@@ -1,7 +1,7 @@
-/** `ocx account` — list and switch provider credentials (issue #180). */
+/** `occx account` — list and switch provider credentials (issue #180). */
 import { loadConfig } from "../config";
 import { providerCodexAccountMode } from "../providers/registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import {
   cmdAddKey,
   cmdAlias,
@@ -40,28 +40,28 @@ const MAIN_CODEX_ID = "__main__";
 const REPLACEMENT_STYLE_OAUTH = new Set<string>();
 
 const ACCOUNT_USAGE = `Usage:
-  ocx account list [provider] [--json] [--all] [--quota [--refresh]]
-  ocx account current <provider> [--json]
-  ocx account use <provider> <account-or-key-id|main> [--json]
-  ocx account refresh <provider> [--json]
-  ocx account auto-switch <provider> <on|off|status|threshold <0-100>> [--json]
-  ocx account alias <provider> <account-or-key-id> <display-name|-> [--json]
-  ocx account priority <provider> <account-id|main> [<-100..100|first|earlier|normal|later|last|reset>] [--json]
-  ocx account pause <provider> <account-id|main> [--json]
-  ocx account resume <provider> <account-id|main> [--json]
-  ocx account pause-exhausted <provider> [--json]
-  ocx account strategy <provider> [<quota|round-robin|fill-first>] [--json]
-  ocx account sticky <provider> [<1-100>] [--json]
-  ocx account remove <provider> <account-or-key-id|main> --yes [--json]
-  ocx account clear-cooldown <provider> <account-id|main> [--json]
-  ocx account add-key <provider> [--label <label>] [--json]
-  ocx account import <provider> --format <format> (--file <path>|--stdin) [--json]
-  ocx account login <provider> [--id <account-id>] [--reauth] [--code -] [--no-wait] [--json]
-  ocx account code <provider> [--flow <flow-id>] [--json]   (reads the code from stdin)
-  ocx account cancel <provider> [--flow <flow-id>] [--json]
-  ocx account reset-credits <account-id|main> [--consume --yes] [--json]
-  ocx account grok-reset-coupons [<account-id>] [--consume --yes] [--token-id <token-id>] [--json]
-  ocx account main <doctor|list|register|add|switch|recover> ...
+  occx account list [provider] [--json] [--all] [--quota [--refresh]]
+  occx account current <provider> [--json]
+  occx account use <provider> <account-or-key-id|main> [--json]
+  occx account refresh <provider> [--json]
+  occx account auto-switch <provider> <on|off|status|threshold <0-100>> [--json]
+  occx account alias <provider> <account-or-key-id> <display-name|-> [--json]
+  occx account priority <provider> <account-id|main> [<-100..100|first|earlier|normal|later|last|reset>] [--json]
+  occx account pause <provider> <account-id|main> [--json]
+  occx account resume <provider> <account-id|main> [--json]
+  occx account pause-exhausted <provider> [--json]
+  occx account strategy <provider> [<quota|round-robin|fill-first>] [--json]
+  occx account sticky <provider> [<1-100>] [--json]
+  occx account remove <provider> <account-or-key-id|main> --yes [--json]
+  occx account clear-cooldown <provider> <account-id|main> [--json]
+  occx account add-key <provider> [--label <label>] [--json]
+  occx account import <provider> --format <format> (--file <path>|--stdin) [--json]
+  occx account login <provider> [--id <account-id>] [--reauth] [--code -] [--no-wait] [--json]
+  occx account code <provider> [--flow <flow-id>] [--json]   (reads the code from stdin)
+  occx account cancel <provider> [--flow <flow-id>] [--json]
+  occx account reset-credits <account-id|main> [--consume --yes] [--json]
+  occx account grok-reset-coupons [<account-id>] [--consume --yes] [--token-id <token-id>] [--json]
+  occx account main <doctor|list|register|add|switch|recover> ...
 
 List and switch provider accounts and API-key pools (masked output only).
 'main' selects the Codex App login for the openai account pool.`;
@@ -82,7 +82,7 @@ function leftoverArgsError(args: string[]): string | null {
     : `Unexpected argument(s): ${args.join(", ")}`;
 }
 
-function candidateNames(config: OcxConfig): string {
+function candidateNames(config: OccxConfig): string {
   const names = new Set<string>(["openai"]);
   for (const n of Object.keys(config.providers ?? {})) names.add(n);
   return [...names].join(", ");

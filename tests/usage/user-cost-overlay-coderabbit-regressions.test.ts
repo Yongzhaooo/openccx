@@ -9,7 +9,7 @@ import {
   readConfigDiagnostics,
   saveConfig,
 } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { resolveMatchedPrice } from "../../src/usage/cost";
 import {
   activeUserCostOverlays,
@@ -26,7 +26,7 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const OVERLAY = { input: 1, output: 2, cacheRead: 0.1, cacheWrite: 0 };
-const BASE_CONFIG: OcxConfig = {
+const BASE_CONFIG: OccxConfig = {
   port: 0,
   hostname: "127.0.0.1",
   defaultProvider: "acme",
@@ -38,16 +38,16 @@ const BASE_CONFIG: OcxConfig = {
       models: ["model-x"],
     },
   },
-} as OcxConfig;
+} as OccxConfig;
 
 let testDir = "";
 let previousHome: string | undefined;
 
-function readDiskConfig(): OcxConfig {
-  return JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+function readDiskConfig(): OccxConfig {
+  return JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
 }
 
-function seedOverlay(): OcxConfig {
+function seedOverlay(): OccxConfig {
   const config = loadConfig();
   config.providers.acme!.modelCosts = { "model-x": OVERLAY };
   saveConfig(config);
@@ -65,19 +65,19 @@ async function waitUntil(predicate: () => boolean, timeoutMs = 2_000): Promise<v
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-overlay-review-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-overlay-review-"));
+  process.env.OPENCCX_HOME = testDir;
   writeFileSync(getConfigPath(), `${JSON.stringify(BASE_CONFIG, null, 2)}\n`, "utf8");
 });
 
 afterEach(() => {
   stopUserCostOverlayReconciler();
   resetUserCostOverlayReconcilerForTests();
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
   resetPreservedDiskOnlyProvidersForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
   testDir = "";
 });

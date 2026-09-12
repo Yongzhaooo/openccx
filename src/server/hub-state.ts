@@ -21,9 +21,9 @@ import {
   type HubStateProvider,
 } from "../remote/hub-state";
 import { DEFAULT_SUBAGENT_MODELS } from "../config/subagent-models";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
-export type HubStateConfigView = Pick<OcxConfig, "providers" | "subagentModels" | "claudeCode" | "hub">;
+export type HubStateConfigView = Pick<OccxConfig, "providers" | "subagentModels" | "claudeCode" | "hub">;
 
 /** A login summary row as `oauthLoginSummary()` returns it; extra fields are never read. */
 export interface HubStateLoginRow {
@@ -36,12 +36,12 @@ export interface HubStateLoginRow {
  * means none" rule `buildClaudeAgentDefs` applies, so a client that delegates from this list
  * sees exactly what the hub itself would offer.
  */
-export function hubSubagentRoster(config: Pick<OcxConfig, "subagentModels">): string[] {
+export function hubSubagentRoster(config: Pick<OccxConfig, "subagentModels">): string[] {
   return uncappedSubagentRoster(config).slice(0, MAX_HUB_STATE_SUBAGENT_MODELS);
 }
 
 /** The same roster before the cap, so `truncated` can be computed instead of guessed. */
-function uncappedSubagentRoster(config: Pick<OcxConfig, "subagentModels">): string[] {
+function uncappedSubagentRoster(config: Pick<OccxConfig, "subagentModels">): string[] {
   const roster = config.subagentModels === undefined ? DEFAULT_SUBAGENT_MODELS : config.subagentModels;
   return roster
     .filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "")

@@ -42,11 +42,11 @@ export type StartupInstallState =
 
 const INSTALL_DETAIL_LIMIT = 2_000;
 const INDETERMINATE_MESSAGE =
-  "Windows elevation timed out, but the elevated Task Scheduler transaction may still be running. New service installation attempts are temporarily blocked while OpenCodex reconciles its final state.";
+  "Windows elevation timed out, but the elevated Task Scheduler transaction may still be running. New service installation attempts are temporarily blocked while Openccx reconciles its final state.";
 const RECONCILING_MESSAGE =
   "A previous elevated Windows service installation is still being reconciled. Wait for it to finish or inspect the Task Scheduler state before retrying.";
 const BLOCKED_PARTIAL_MESSAGE =
-  "A previous elevated Windows service installation left a partial Task Scheduler state. Remove the OpenCodex scheduler task (or confirm it is absent), then clear the install block before retrying.";
+  "A previous elevated Windows service installation left a partial Task Scheduler state. Remove the Openccx scheduler task (or confirm it is absent), then clear the install block before retrying.";
 
 let installState: StartupInstallState = { status: "idle" };
 
@@ -88,7 +88,7 @@ export function clearStartupInstallPartialBlock(options: {
   if (options.probe.status === "present") {
     return {
       cleared: false,
-      detail: "OpenCodex Task Scheduler task is still present; remove it before clearing the block.",
+      detail: "Openccx Task Scheduler task is still present; remove it before clearing the block.",
     };
   }
   if (options.probe.status === "unknown") {
@@ -117,7 +117,7 @@ export function startupInstallArgv(
 }
 
 export interface CliInstallFailure {
-  /** Machine marker such as OCX_ERROR_CODE=..., when present in any stream. */
+  /** Machine marker such as OCCX_ERROR_CODE=..., when present in any stream. */
   code: string | null;
   stdout: string;
   stderr: string;
@@ -126,8 +126,8 @@ export interface CliInstallFailure {
   detail: string;
 }
 
-function extractOcxErrorCode(text: string): string | null {
-  const match = text.match(/OCX_ERROR_CODE=[A-Z0-9_]+/);
+function extractOccxErrorCode(text: string): string | null {
+  const match = text.match(/OCCX_ERROR_CODE=[A-Z0-9_]+/);
   return match ? match[0] : null;
 }
 
@@ -140,7 +140,7 @@ export function classifyCliInstallFailure(stdout: string, stderr: string, error:
   const stderrText = stderr.trim();
   const message = error.message.trim();
   const combined = [stderrText, stdoutText, message].filter(Boolean).join("\n");
-  const code = extractOcxErrorCode(combined);
+  const code = extractOccxErrorCode(combined);
   let detail = combined || message;
   if (detail.length > INSTALL_DETAIL_LIMIT) {
     const truncated = detail.slice(0, INSTALL_DETAIL_LIMIT);
@@ -180,7 +180,7 @@ function runCliInstall(
     }, (error, stdout, stderr) => {
       if (error) {
         const failure = classifyCliInstallFailure(stdout, stderr, error);
-        reject(Object.assign(new Error(failure.detail), { ocxInstallFailure: failure }));
+        reject(Object.assign(new Error(failure.detail), { occxInstallFailure: failure }));
         return;
       }
       resolve({ stdout, stderr });
@@ -189,12 +189,12 @@ function runCliInstall(
 }
 
 function installFailureCode(error: unknown): string | null {
-  if (error && typeof error === "object" && "ocxInstallFailure" in error) {
-    const failure = (error as { ocxInstallFailure?: CliInstallFailure }).ocxInstallFailure;
+  if (error && typeof error === "object" && "occxInstallFailure" in error) {
+    const failure = (error as { occxInstallFailure?: CliInstallFailure }).occxInstallFailure;
     if (failure?.code) return failure.code;
   }
   const detail = error instanceof Error ? error.message : String(error);
-  return extractOcxErrorCode(detail);
+  return extractOccxErrorCode(detail);
 }
 
 function rejectIfBusy(_action: StartupInstallAction): Error | null {
@@ -233,7 +233,7 @@ function applyReconciliationOutcome(
 /**
  * Execute the existing fixed CLI installer outside the proxy event loop.
  *
- * Repair mode (`options.repair`) runs `ocx service repair`. A stale definition may be
+ * Repair mode (`options.repair`) runs `occx service repair`. A stale definition may be
  * re-registered and elevate inside repair; this wrapper must not retry it through the separate
  * fresh-install UAC path.
  *

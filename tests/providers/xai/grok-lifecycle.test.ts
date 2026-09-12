@@ -122,7 +122,7 @@ describe("Grok fence lifecycle wiring", () => {
     expect(stopFn).toContain("nativeRestoreHandledByProxy = await stopWithDeferral(");
   });
 
-  test("a refused Grok strip makes ocx stop fail instead of reporting success", () => {
+  test("a refused Grok strip makes occx stop fail instead of reporting success", () => {
     const restoreFn = sliceFn(CLI_SOURCE, "async function restoreSharedClientStateAfterStop(", "async function handleStop(");
     const stopFn = sliceFn(CLI_SOURCE, "async function handleStop(", "async function handleUninstall(");
     // A Grok strip failure is "other", never history-only: it points Grok at a dead proxy,
@@ -154,7 +154,7 @@ describe("Grok fence lifecycle wiring", () => {
     expect(PROCESS_CONTROL_SOURCE).toContain("throw new ProxyOwnershipRefusedError(");
 
     // Both sites also print what is actually left to do. The refusal itself is written for
-    // an API client, so it recommends `ocx stop` — the command doing the printing — which
+    // an API client, so it recommends `occx stop` — the command doing the printing — which
     // is the loop #4169 reports. Echoing the server's message alone reproduces it.
     expect(stopFn.match(/console\.error\(`   \$\{refusalNextStep\(err\.code\)\}`\);/g)).toHaveLength(2);
     expect(PROCESS_CONTROL_SOURCE).toContain("export function refusalNextStep(");
@@ -192,7 +192,7 @@ describe("Grok fence lifecycle wiring", () => {
     const serviceSource = readFileSync(repoPath("src", "service.ts"), "utf8");
     // schtasks /end leaves the `cmd :loop` wrapper alive to respawn its child (#764).
     // launchd, systemd and WinSW are down when they report stopped, so charging them a
-    // seven-second poll on every ocx stop would be a regression in ordinary use.
+    // seven-second poll on every occx stop would be a regression in ordinary use.
     expect(serviceSource).toContain('"absent" | "stopped" | "stopped-respawnable" | "failed"');
     expect(serviceSource).toContain('schedulerStopped ? "stopped-respawnable" : "stopped"');
     expect(stopFn).toContain("if (schedulerCanRespawn && !ownershipBlocked)");
@@ -200,12 +200,12 @@ describe("Grok fence lifecycle wiring", () => {
     expect(stopFn).not.toContain("if (stoppedService && !ownershipBlocked)");
   });
 
-  test("ocx stop defers shared teardown so a respawn survivor keeps its config", () => {
+  test("occx stop defers shared teardown so a respawn survivor keeps its config", () => {
     const stopFn = sliceFn(CLI_SOURCE, "async function handleStop(", "async function handleUninstall(");
     const apiSource = readFileSync(repoPath("src", "server", "management-api.ts"), "utf8");
     const controlSource = readFileSync(repoPath("src", "lib", "process-control.ts"), "utf8");
     // POST /api/stop normally restores native Codex and strips the Grok fence itself. If
-    // ocx stop let it, a scheduler wrapper that respawns seconds later would already have
+    // occx stop let it, a scheduler wrapper that respawns seconds later would already have
     // lost its client config, and the parent ownershipBlocked guard could only prevent a
     // second redundant teardown (#3008).
     expect(stopFn).toContain("deferSharedTeardownNonce: teardownNonce");
@@ -271,7 +271,7 @@ describe("Grok fence lifecycle wiring", () => {
     // Setting aside is not discharging, and the message must not claim otherwise: the
     // renamed file still blocks an update until an operator removes it.
     const quarantineBlock = stopFn.slice(stopFn.indexOf("if (unreadable.length > 0"), stopFn.indexOf("// Set the code rather than exiting inline"));
-    expect(quarantineBlock).toContain("It still blocks 'ocx update'");
+    expect(quarantineBlock).toContain("It still blocks 'occx update'");
     expect(quarantineBlock).toContain("has NOT restored on its behalf");
     expect(quarantineBlock).not.toContain("no longer blocks an update");
     expect(stopFn.indexOf("await restoreSharedClientStateAfterStop()"))
@@ -301,7 +301,7 @@ describe("Grok fence lifecycle wiring", () => {
     // over that skips the recovery the receipt exists to trigger (#3008).
     const updateSource = readFileSync(repoPath("src", "update", "index.ts"), "utf8");
     expect(updateSource).toContain("readPid() || readRuntimePort() || pendingTeardownOutstanding()");
-    const launcherSource = readFileSync(repoPath("bin", "ocx.mjs"), "utf8");
+    const launcherSource = readFileSync(repoPath("bin", "occx.mjs"), "utf8");
     // The launcher runs under plain Node, so it shares the naming rule as ESM rather than
     // spelling it out — which is how it ended up watching the retired singleton filename
     // after receipts moved to one file per claim, silently seeing none of them.
@@ -332,11 +332,11 @@ describe("Grok fence lifecycle wiring", () => {
     expect(stopFn).toContain("if (restore.other) stopFailed = true");
   });
 
-  test("the daemon's exit cleanup keeps the OCX_SERVICE exclusion and adds the ownership check", () => {
+  test("the daemon's exit cleanup keeps the OCCX_SERVICE exclusion and adds the ownership check", () => {
     const startFn = sliceFn(CLI_SOURCE, "const syncCleanup = () => {", "let shuttingDown = false;");
     // Crash/respawn under a service manager must still keep the fence.
-    expect(startFn).toContain('process.env.OCX_SERVICE === "1"');
-    expect(startFn).not.toContain("OCX_KEEP_ROUTING");
+    expect(startFn).toContain('process.env.OCCX_SERVICE === "1"');
+    expect(startFn).not.toContain("OCCX_KEEP_ROUTING");
     expect(startFn).toContain("!preserveRouting && serviceEnvironmentOwnedHere()");
   });
 
@@ -407,7 +407,7 @@ describe("POST /api/stop teardown", () => {
     const serviceSource = readFileSync(repoPath("src", "service.ts"), "utf8");
     // A manager that refused to stop and a query that could not answer are different
     // problems: reporting the second as "did not stop" sends the operator looking for the
-    // wrong thing, and `ocx stop` was the command the API told them to run (#3008).
+    // wrong thing, and `occx stop` was the command the API told them to run (#3008).
     expect(serviceSource).toContain('"absent" | "stopped" | "stopped-respawnable" | "failed" | "state-unknown"');
     // Behavioural, because a source-text assertion cannot tell whether an unreadable probe
     // is still being folded into the generic failure.
@@ -429,7 +429,7 @@ describe("POST /api/stop teardown", () => {
     expect(stopFn).toContain('if (serviceStop === "state-unknown")');
     const unknownBranch = stopFn.slice(stopFn.indexOf('if (serviceStop === "state-unknown")'), stopFn.indexOf('if (serviceStop === "state-unknown")') + 700);
     expect(unknownBranch).toContain("stopFailed = true;");
-    expect(unknownBranch).toContain("ocx service status");
+    expect(unknownBranch).toContain("occx service status");
     expect(unknownBranch).not.toContain("did not stop");
     const handler = sliceFn(MANAGEMENT_SOURCE, '"/api/stop"', "/api/codex-auth/");
     expect(handler).toContain('if (serviceStop === "state-unknown")');
@@ -464,12 +464,12 @@ describe("POST /api/stop teardown", () => {
     expect(handler.indexOf("installedServiceRespawnRisk()")).toBeLessThan(handler.indexOf("stopServiceIfInstalledDetailed()"));
     // The refusal must say nothing was changed, because nothing was.
     expect(handler).toContain("Nothing was changed.");
-    // An unreadable scheduler state is its own answer: sending that operator to `ocx stop`
+    // An unreadable scheduler state is its own answer: sending that operator to `occx stop`
     // would be a loop, because it maps the same unknown probe to a stop failure.
     expect(handler).toContain('code: "service_state_unknown"');
     const unknownBranch = handler.slice(handler.indexOf('code: "service_state_unknown"'), handler.indexOf('code: "service_state_unknown"') + 500);
-    expect(unknownBranch).toContain("ocx service status");
-    expect(unknownBranch).not.toContain("run `ocx stop`");
+    expect(unknownBranch).toContain("occx service status");
+    expect(unknownBranch).not.toContain("run `occx stop`");
   });
 
   test("only a proven absence is safe to stop inline", () => {
@@ -478,7 +478,7 @@ describe("POST /api/stop teardown", () => {
     expect(installedServiceRespawnRisk(() => ({ status: "present" }) as never, "win32")).toBe("respawnable");
     // "unknown" is an ordinary return value from the probe, not a throw. Treating it as
     // absence let the route kill scheduler wrappers before refusing.
-    // It is also kept distinct from "respawnable", because the remedy differs: `ocx stop`
+    // It is also kept distinct from "respawnable", because the remedy differs: `occx stop`
     // maps the same unknown to a stop failure, so telling that operator to run it loops.
     expect(installedServiceRespawnRisk(() => ({ status: "unknown" }) as never, "win32")).toBe("unknown");
     expect(installedServiceRespawnRisk(() => { throw new Error("schtasks unavailable"); }, "win32")).toBe("unknown");

@@ -17,7 +17,7 @@ let root: Root | null;
 beforeEach(() => {
   saved = Object.fromEntries(keys.map(key => [key, Reflect.get(globalThis, key)]));
   win = new Window({ url: "http://localhost/#providers" });
-  win.localStorage.setItem("ocx-lang", "en");
+  win.localStorage.setItem("occx-lang", "en");
   for (const key of ["window", "document", "navigator", "localStorage", "sessionStorage"] as const) {
     Object.defineProperty(globalThis, key, { configurable: true, value: key === "window" ? win : win[key] });
   }
@@ -83,7 +83,7 @@ test("pending/error recovery and generic OAuth/re-login copy stay truthful", asy
   expect(host.textContent).not.toContain("turned OFF at registration");
   expect(host.textContent).not.toContain("20 models");
   expect(host.textContent).toContain("Choose which models appear");
-  expect(host.textContent).toContain("ocx sync");
+  expect(host.textContent).toContain("occx sync");
 });
 
 test("notice waits for post-discovery config refresh and ignores closed/superseded operations", async () => {

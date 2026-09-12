@@ -114,7 +114,7 @@ const FAST_FABRIC_ISOLATION = Object.freeze({
 const HOMES: string[] = [];
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-cl07-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-cl07-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
   return dir;
@@ -314,7 +314,7 @@ afterEach(() => {
       /* ignore */
     }
   }
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
 });
 
 function routeSubject(overrides: Partial<RouteSubjectV1> = {}): RouteSubjectV1 {
@@ -329,7 +329,7 @@ function routeSubject(overrides: Partial<RouteSubjectV1> = {}): RouteSubjectV1 {
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
-    opencodexCompatibilityVersion: "b".repeat(64),
+    openccxCompatibilityVersion: "b".repeat(64),
     behaviorFingerprint: "c".repeat(64),
     endpointFingerprint: "d".repeat(64),
     dependencies: [],
@@ -378,7 +378,7 @@ describe("CL-07 task effectiveness producer", () => {
 
   test("exact synthetic patch passes via trusted route", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runTrustedFabricTask(home);
     expect(result.executionAuthority).toBe("trusted_route");
     expect(result.outcome.outcome).toBe("pass");
@@ -499,7 +499,7 @@ export async function execute() {
 
   test("trusted route execution can be persisted as production evidence", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runTrustedFabricTask(home);
     const persisted = persistFabricRunResult(result, { configDir: home });
     expect(existsSync(join(home, "lab", "compatibility.jsonl"))).toBe(true);
@@ -606,7 +606,7 @@ export async function execute() {
 
   test("oversized patch fails safely", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const huge = "x".repeat(FABRIC_LIMITS.maxAggregateIoBytes + 8);
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
@@ -674,7 +674,7 @@ export async function execute() {
 
   test("mutate_after_delay harness kills producer and cleans scratch", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskHarness({
       routeSubject: routeSubject(),
       harnessKind: "mutate_after_delay",
@@ -698,7 +698,7 @@ export async function execute() {
 
   test("inactivity timeout is bounded for trusted route executors", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -711,7 +711,7 @@ export async function execute() {
 
   test("activity resets inactivity deadline within total budget", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -743,7 +743,7 @@ export async function execute() {
 
   test("sandbox violations do not become behavioral_failure", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -796,7 +796,7 @@ export async function execute() {
 
   test("authoritative route subject is bound into trusted outcomes", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const routeContext = fabricMockRoute({ providerId: "provider-bound" });
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext,
@@ -811,7 +811,7 @@ export async function execute() {
 
   test("patch path traversal is rejected at scratch apply boundary", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -825,7 +825,7 @@ export async function execute() {
 
   test("adversarial executor direct write outside scratch is not production evidence", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const outside = join(home, "outside-scratch");
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
@@ -843,7 +843,7 @@ export async function execute() {
 
   test("isolated executors resolve tmpdir inside their scratch tree", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -1034,7 +1034,7 @@ export async function execute() {
 
   test("expired ledger lock is recovered before append", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     mkdirSync(join(home, "lab"), { recursive: true, mode: 0o700 });
     const lockPath = join(home, "lab", "compatibility.jsonl.lock");
     writeFileSync(lockPath, JSON.stringify({
@@ -1101,7 +1101,7 @@ export async function execute() {
 
   test("duplicate outcome delivery is idempotent; distinct attempts remain distinct", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const firstRun = await runTrustedFabricTask(home, {}, () => 1_000);
     const first = persistFabricRunResult(firstRun, { configDir: home, recordedAt: 1_000, attempt: 1 });
     const second = persistFabricRunResult(firstRun, { configDir: home, recordedAt: 1_000, attempt: 1 });
@@ -1118,7 +1118,7 @@ export async function execute() {
 
   test("structured result converts to fabric Lab observation", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const outcome = (await runTrustedFabricTask(home)).outcome;
     const { event } = observationFromFabricOutcome(outcome, { configDir: home });
     expect(event.evidenceLayer).toBe("task_effectiveness");
@@ -1167,7 +1167,7 @@ export async function execute() {
 
   test("projection rebuild and invalidation work for task evidence", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runTrustedFabricTask(home, {}, () => 5_000);
     const persisted = persistFabricRunResult(result, { configDir: home, recordedAt: 5_000 });
     const rebuilt = rebuildLabProjection(home);
@@ -1198,7 +1198,7 @@ export async function execute() {
 
   test("artifacts are bounded and catalog exposes task evidence", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const outcome = (await runTrustedFabricTask(home)).outcome;
     const { event, artifacts } = observationFromFabricOutcome(outcome, { configDir: home });
     expect(artifacts.length).toBeGreaterThan(0);
@@ -1228,7 +1228,7 @@ export async function execute() {
 
   test("ledger lines omit prompts and credentials", async () => {
     const home = tempHome();
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     const result = await runFabricSyntheticPatchTaskForRoute({
       routeContext: fabricMockRoute(),
       destination: await fabricDestination(home),
@@ -1258,9 +1258,9 @@ export async function execute() {
 
     // The sandbox contract, on every platform: scratch is addressed, and no
     // ambient credential or config state is forwarded.
-    expect(env.OCX_FABRIC_SCRATCH_ROOT).toBe(home);
+    expect(env.OCCX_FABRIC_SCRATCH_ROOT).toBe(home);
     expect(env.TZ).toBe("UTC");
-    for (const leaked of ["OPENCODEX_HOME", "CODEX_HOME", "PATH", "HOME", "USERPROFILE", "APPDATA"]) {
+    for (const leaked of ["OPENCCX_HOME", "CODEX_HOME", "PATH", "HOME", "USERPROFILE", "APPDATA"]) {
       expect(env[leaked]).toBeUndefined();
     }
 
@@ -1274,7 +1274,7 @@ export async function execute() {
       // POSIX needs no ambient loader state; only scratch-owned temp state is added.
       expect(Object.keys(env).sort()).toEqual([
         "NO_COLOR",
-        "OCX_FABRIC_SCRATCH_ROOT",
+        "OCCX_FABRIC_SCRATCH_ROOT",
         "TEMP",
         "TMP",
         "TMPDIR",

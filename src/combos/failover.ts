@@ -1,7 +1,7 @@
 import { parseResetCooldownMs } from "../codex/routing";
 import { classifyError, isCyberPolicyCode } from "../lib/errors";
 import { isNonReplayableUpstreamCode } from "../lib/upstream-retry";
-import type { OcxComboTarget } from "../types";
+import type { OccxComboTarget } from "../types";
 import { targetKey } from "./types";
 import {
   captureConfigGeneration,
@@ -45,7 +45,7 @@ let liveComboTargets = new Set<string>();
 
 function cooldownMapKey(
   comboId: string,
-  target: Pick<OcxComboTarget, "provider" | "model">,
+  target: Pick<OccxComboTarget, "provider" | "model">,
 ): string {
   return `${comboId}\0${targetKey(target)}`;
 }
@@ -140,7 +140,7 @@ export function parseRetryAfterMs(
 
 export function isComboTargetInCooldown(
   comboId: string,
-  target: Pick<OcxComboTarget, "provider" | "model">,
+  target: Pick<OccxComboTarget, "provider" | "model">,
   now = Date.now(),
 ): boolean {
   const key = cooldownMapKey(comboId, target);
@@ -196,7 +196,7 @@ export function comboCooldownRetryAfterSeconds(comboId: string, now = Date.now()
 
 export function coolComboTarget(
   comboId: string,
-  target: Pick<OcxComboTarget, "provider" | "model">,
+  target: Pick<OccxComboTarget, "provider" | "model">,
   options?: {
     retryAfter?: string | null;
     resetAt?: unknown | unknown[];
@@ -231,10 +231,10 @@ export function coolComboTarget(
 
 export function earliestComboCooldown(
   comboId: string,
-  targets: Iterable<Pick<OcxComboTarget, "provider" | "model">>,
+  targets: Iterable<Pick<OccxComboTarget, "provider" | "model">>,
   now = Date.now(),
-): { expiry: number; target: Pick<OcxComboTarget, "provider" | "model"> } | undefined {
-  let earliest: { expiry: number; target: Pick<OcxComboTarget, "provider" | "model"> } | undefined;
+): { expiry: number; target: Pick<OccxComboTarget, "provider" | "model"> } | undefined {
+  let earliest: { expiry: number; target: Pick<OccxComboTarget, "provider" | "model"> } | undefined;
   for (const target of targets) {
     const key = cooldownMapKey(comboId, target);
     const entry = targetCooldowns.get(key);
@@ -249,7 +249,7 @@ export function earliestComboCooldown(
 /** Public convenience wrapper returning only the earliest cooldown expiry. */
 export function earliestComboCooldownExpiry(
   comboId: string,
-  targets: Iterable<Pick<OcxComboTarget, "provider" | "model">>,
+  targets: Iterable<Pick<OccxComboTarget, "provider" | "model">>,
   now = Date.now(),
 ): number | undefined {
   return earliestComboCooldown(comboId, targets, now)?.expiry;

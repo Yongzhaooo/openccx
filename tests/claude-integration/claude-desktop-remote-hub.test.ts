@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, isAbsolute, join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import type { Desktop3pModelEntry } from "../../src/claude/desktop-3p";
 import { repoPath, fixturePath } from "../helpers/repo-root";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -17,20 +17,20 @@ const children: ReturnType<typeof spawnOwned>[] = [];
 const servers: Array<{ stop(closeActiveConnections?: boolean): void | Promise<void> }> = [];
 
 function fixture(side: string, allowedOrigins: string[]) {
-  const root = mkdtempSync(join(tmpdir(), "ocx-desktop-" + side + "-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-desktop-" + side + "-"));
   roots.push(root);
   const paths = {
-    root, ocx: join(root, "ocx"), codex: join(root, "codex"),
+    root, occx: join(root, "occx"), codex: join(root, "codex"),
     desktop: join(root, "desktop"), user: join(root, "user"),
     denied: join(root, "denied-network.txt"),
   };
-  for (const path of [paths.ocx, paths.codex, paths.desktop, paths.user]) mkdirSync(path, { recursive: true });
+  for (const path of [paths.occx, paths.codex, paths.desktop, paths.user]) mkdirSync(path, { recursive: true });
   // A valid, isolated API-key auth file prevents fallback to a real OAuth account.
   writeFileSync(join(paths.codex, "auth.json"), JSON.stringify({ OPENAI_API_KEY: "fixture-only-not-a-real-key" }), { mode: 0o600 });
   const env: Record<string, string | undefined> = {
     HOME: paths.user, USERPROFILE: paths.user,
-    OPENCODEX_HOME: paths.ocx, CODEX_HOME: paths.codex,
-    OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: paths.desktop,
+    OPENCCX_HOME: paths.occx, CODEX_HOME: paths.codex,
+    OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: paths.desktop,
     CLAUDE_CONFIG_DIR: join(paths.user, ".claude"),
     XDG_CONFIG_HOME: join(paths.user, ".config"), XDG_DATA_HOME: join(paths.user, ".local", "share"),
     XDG_RUNTIME_DIR: join(root, "runtime"), APPDATA: join(paths.user, "AppData", "Roaming"),
@@ -40,8 +40,8 @@ function fixture(side: string, allowedOrigins: string[]) {
       : ["/usr/bin", "/bin", "/usr/sbin", "/sbin"])].join(delimiter),
     SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR,
     CI: "true", TERM: "dumb", NO_PROXY: "127.0.0.1,localhost",
-    OCX_TEST_ALLOWED_ORIGINS: JSON.stringify(allowedOrigins),
-    OCX_TEST_DENIED_REQUESTS: paths.denied,
+    OCCX_TEST_ALLOWED_ORIGINS: JSON.stringify(allowedOrigins),
+    OCCX_TEST_DENIED_REQUESTS: paths.denied,
   };
   mkdirSync(env.XDG_RUNTIME_DIR!, { recursive: true });
   if (process.platform === "win32") {
@@ -72,11 +72,11 @@ function fixture(side: string, allowedOrigins: string[]) {
 }
 type Fixture = ReturnType<typeof fixture>;
 
-function writeConfig(fx: Fixture, config: OcxConfig): void {
-  writeFileSync(join(fx.ocx, "config.json"), JSON.stringify(config), { mode: 0o600 });
+function writeConfig(fx: Fixture, config: OccxConfig): void {
+  writeFileSync(join(fx.occx, "config.json"), JSON.stringify(config), { mode: 0o600 });
 }
-function readConfig(fx: Fixture): OcxConfig {
-  return JSON.parse(readFileSync(join(fx.ocx, "config.json"), "utf8")) as OcxConfig;
+function readConfig(fx: Fixture): OccxConfig {
+  return JSON.parse(readFileSync(join(fx.occx, "config.json"), "utf8")) as OccxConfig;
 }
 function spawnOwned(fx: Fixture, args: string[]) {
   const child = Bun.spawn({
@@ -113,7 +113,7 @@ async function startHub(fx: Fixture) {
       throw new Error("Hub exited before readiness: " + await within(owned.stderr, 5_000, "Exited hub output deadline"));
     }
     try {
-      const runtime = JSON.parse(readFileSync(join(fx.ocx, "runtime-port.json"), "utf8")) as { pid: number; port: number };
+      const runtime = JSON.parse(readFileSync(join(fx.occx, "runtime-port.json"), "utf8")) as { pid: number; port: number };
       if (runtime.pid === owned.child.pid && runtime.port > 0) {
         const origin = "http://127.0.0.1:" + runtime.port;
         const ready = await fetch(origin + "/readyz", { signal: AbortSignal.timeout(500) });
@@ -148,7 +148,7 @@ function mockProvider() {
   servers.push(server);
   return { server, inference };
 }
-function profile(chosenDay: string, decoyDay: string): NonNullable<NonNullable<OcxConfig["claudeCode"]>["desktopProfile"]> {
+function profile(chosenDay: string, decoyDay: string): NonNullable<NonNullable<OccxConfig["claudeCode"]>["desktopProfile"]> {
   return {
     version: 1,
     assignments: {
@@ -185,7 +185,7 @@ for (const storedProfile of [true, false]) {
     const chosen = mockProvider();
     const decoy = mockProvider();
     const hub = fixture("hub", [chosen.server.url.origin, decoy.server.url.origin]);
-    hub.env.OPENCODEX_API_AUTH_TOKEN = DATA_KEY;
+    hub.env.OPENCCX_API_AUTH_TOKEN = DATA_KEY;
     const provider = (target: ReturnType<typeof mockProvider>, model: string) => ({
       adapter: "openai-chat" as const, baseUrl: target.server.url.origin + "/v1",
       apiKey: "fixture-provider-key", models: [model], liveModels: false, allowPrivateNetwork: true,
@@ -201,7 +201,7 @@ for (const storedProfile of [true, false]) {
         systemEnv: false, injectAgents: false,
         ...(storedProfile ? { desktopProfile: profile("20260211", "20260212") } : {}),
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const first = await startHub(hub);
     // Retain the allocated endpoint so the client's persisted origin survives restart.
     writeConfig(hub, { ...readConfig(hub), port: first.port });
@@ -214,14 +214,14 @@ for (const storedProfile of [true, false]) {
       clientIntegrations: { codex: false, grok: false, "claude-desktop": false },
       client: {
         serverUrl: first.origin, managementUrl: first.origin, managementTransport: "direct",
-        selectedClients: ["codex"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN", apiKeyId: "fixture-client",
+        selectedClients: ["codex"], tokenEnv: "OPENCCX_API_AUTH_TOKEN", apiKeyId: "fixture-client",
         tokenFingerprint: createHash("sha256").update(DATA_KEY).digest("hex"),
         protocolVersion: 1, connectedAt: "2026-01-01T00:00:00.000Z",
       },
-    } as OcxConfig);
-    writeFileSync(join(client.ocx, "service-api-token"), DATA_KEY + "\n", { mode: 0o600 });
+    } as OccxConfig);
+    writeFileSync(join(client.occx, "service-api-token"), DATA_KEY + "\n", { mode: 0o600 });
     const snapshotResponse = await fetch(first.origin + "/v1/models?ids=desktop&format=desktop-config", {
-      headers: { "x-opencodex-api-key": DATA_KEY }, signal: AbortSignal.timeout(5_000),
+      headers: { "x-openccx-api-key": DATA_KEY }, signal: AbortSignal.timeout(5_000),
     });
     expect(snapshotResponse.status).toBe(200);
     expect(snapshotResponse.headers.get("cache-control")).toBe("no-store");
@@ -251,7 +251,7 @@ for (const storedProfile of [true, false]) {
     const send = async (origin: string) => {
       const response = await fetch(origin + "/v1/messages", {
         method: "POST", signal: AbortSignal.timeout(10_000),
-        headers: { "content-type": "application/json", "x-opencodex-api-key": DATA_KEY, "anthropic-version": "2023-06-01" },
+        headers: { "content-type": "application/json", "x-openccx-api-key": DATA_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({ model: chosenEntry!.name, max_tokens: 8, stream: true, messages: [{ role: "user", content: "hello" }] }),
       });
       expect(response.status).toBe(200);

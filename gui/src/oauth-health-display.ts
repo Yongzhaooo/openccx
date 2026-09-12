@@ -62,7 +62,7 @@ export function oauthHealthIsCooldown(status: OAuthHealthStatus | undefined): bo
   return status === "cooldown";
 }
 
-/** Non-healthy states where copying `ocx doctor` is a useful next step. */
+/** Non-healthy states where copying `occx doctor` is a useful next step. */
 export function oauthHealthShowsDoctor(status: OAuthHealthStatus | undefined): boolean {
   return status === "warning" || status === "reauth_required";
 }

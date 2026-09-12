@@ -3,11 +3,11 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { expandUserPath, getConfigDir } from "../../src/config";
 
-const previousOpenCodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 
 afterEach(() => {
-  if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
 });
 
 describe("expandUserPath", () => {
@@ -26,9 +26,9 @@ describe("expandUserPath", () => {
   });
 });
 
-describe("OPENCODEX_HOME tilde expansion", () => {
-  test("getConfigDir honors OPENCODEX_HOME=~/...", () => {
-    process.env.OPENCODEX_HOME = "~/.ocx-tilde-test";
-    expect(getConfigDir()).toBe(join(homedir(), ".ocx-tilde-test"));
+describe("OPENCCX_HOME tilde expansion", () => {
+  test("getConfigDir honors OPENCCX_HOME=~/...", () => {
+    process.env.OPENCCX_HOME = "~/.occx-tilde-test";
+    expect(getConfigDir()).toBe(join(homedir(), ".occx-tilde-test"));
   });
 });

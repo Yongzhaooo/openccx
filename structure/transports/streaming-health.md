@@ -2,7 +2,7 @@
 
 ## Heartbeat and stall deadline
 
-The HTTP/SSE bridge emits an SSE comment-line keep-alive (`: opencodex heartbeat`) during upstream
+The HTTP/SSE bridge emits an SSE comment-line keep-alive (`: openccx heartbeat`) during upstream
 silence to re-arm Codex's idle timer (Codex's default `stream_idle_timeout` is 300 s and ANY SSE
 bytes re-arm it). A comment line is discarded by every eventsource parser without producing an event,
 so strict Responses decoders never see an unknown variant. Those bridge-enqueued keepalive frames do
@@ -15,7 +15,7 @@ Top-level `emptyCompletionRetry: true` opts Responses turns into one identical r
 upstream turn produces neither output text nor a tool call, including a stream that ends before a
 terminal event. A terminal-less stream is replayed only before actionable output; post-output EOF
 remains incomplete so text or tool calls cannot be duplicated. The default is off because the replay
-may be billable; `OCX_EMPTY_COMPLETION_RETRY=0` is a disable-only emergency override. Streaming and
+may be billable; `OCCX_EMPTY_COMPLETION_RETRY=0` is a disable-only emergency override. Streaming and
 buffered HTTP adapters plus `runTurn` transports share the same guard, while combo attempts and
 routed compaction stay excluded. Pre-content reasoning is retained under named event-count and byte
 caps and emits liveness heartbeats while held. A second empty result or retry failure becomes typed
@@ -46,7 +46,7 @@ is emitted as `response.failed` SSE.
 
 A provider HTTP 413 received before streaming starts is unambiguous request-size refusal, but raw
 relay is not compatible with Codex: Codex classifies the unknown status as retryable and resends the
-same oversized turn through its reconnect budget. For a streaming Responses caller, OpenCodex
+same oversized turn through its reconnect budget. For a streaming Responses caller, Openccx
 therefore converts the final 413 (after any adapter-owned bounded image retry) into one HTTP-200 SSE
 `response.failed` event with `error.code = context_length_exceeded` and `retryable = false`. Codex
 recognizes that terminal contract, marks the context as full, and can run its own compaction policy
@@ -141,7 +141,7 @@ The WebSocket endpoint exists at `/v1/responses`, but discovery is opt-in:
 }
 ```
 
-`websocketsEnabled(config)` is true only for an explicit `true`. When false, opencodex removes
+`websocketsEnabled(config)` is true only for an explicit `true`. When false, openccx removes
 `supports_websockets` from injected provider tables and routed catalog entries, keeping Codex on
 HTTP/SSE. When true, Codex may use Responses WebSocket frames handled by `src/server/ws-bridge.ts`.
 If Codex still attempts a WebSocket upgrade while the feature is disabled, `/v1/responses` rejects

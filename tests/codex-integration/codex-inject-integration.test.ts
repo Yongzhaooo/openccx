@@ -16,32 +16,32 @@ const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta
 
 setDefaultTimeout(SPAWN_BUDGET_MS);
 
-// Full injectCodexConfig runs in a subprocess with isolated CODEX_HOME/OPENCODEX_HOME so
+// Full injectCodexConfig runs in a subprocess with isolated CODEX_HOME/OPENCCX_HOME so
 // module-level path constants bind to the temp dirs (same pattern as codex-journal.test.ts).
-function runInject(codexHome: string, ocxHome: string, configJson = "{}"): { stdout: string; status: number } {
+function runInject(codexHome: string, occxHome: string, configJson = "{}"): { stdout: string; status: number } {
   const script = `
     const { injectCodexConfig } = require("./src/codex/inject");
-    injectCodexConfig(10100, JSON.parse(process.env.TEST_OCX_CONFIG)).then(r => {
+    injectCodexConfig(10100, JSON.parse(process.env.TEST_OCCX_CONFIG)).then(r => {
       console.log(JSON.stringify(r));
     });
   `;
   const result = spawnSync(process.execPath, ["--eval", script], {
     cwd: repoRoot,
-    env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome, TEST_OCX_CONFIG: configJson },
+    env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome, TEST_OCCX_CONFIG: configJson },
     encoding: "utf8",
     timeout: SPAWN_BUDGET_MS - 5_000,
   });
   return { stdout: result.stdout?.trim() ?? "", status: result.status ?? 1 };
 }
 
-function runRestore(codexHome: string, ocxHome: string, asyncRestore = false): { stdout: string; status: number } {
+function runRestore(codexHome: string, occxHome: string, asyncRestore = false): { stdout: string; status: number } {
   const script = `
     const { restoreNativeCodex, restoreNativeCodexAsync } = require("./src/codex/inject");
     console.log(JSON.stringify(${asyncRestore ? "await restoreNativeCodexAsync()" : "restoreNativeCodex()"}));
   `;
   const result = spawnSync(process.execPath, ["--eval", script], {
     cwd: repoRoot,
-    env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome },
+    env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome },
     encoding: "utf8",
     timeout: SPAWN_BUDGET_MS - 5_000,
   });
@@ -50,22 +50,22 @@ function runRestore(codexHome: string, ocxHome: string, asyncRestore = false): {
 
 describe("injectCodexConfig integration (Design B)", () => {
   const DESIGN_B_BLOCK = [
-    "# Auto-injected by opencodex",
+    "# Auto-injected by openccx",
     'openai_base_url = "http://127.0.0.1:10100/v1"',
-    "# Auto-injected by opencodex",
+    "# Auto-injected by openccx",
     'experimental_realtime_ws_base_url = "http://127.0.0.1:10100/v1"',
   ].join("\n");
   let codexHome: string;
-  let ocxHome: string;
+  let occxHome: string;
 
   beforeEach(() => {
-    codexHome = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-inject-codex-")));
-    ocxHome = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-inject-home-")));
+    codexHome = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-inject-codex-")));
+    occxHome = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-inject-home-")));
   });
 
   afterEach(() => {
     removeTreeWithRetry(codexHome);
-    removeTreeWithRetry(ocxHome);
+    removeTreeWithRetry(occxHome);
   });
 
   test.each(["sync", "async"])("manifest-owned native rows refuse restore before artifact changes (%s)", (kind) => {
@@ -85,7 +85,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       const db = new Database(dbPath);
       db.run("CREATE TABLE threads (id TEXT PRIMARY KEY, rollout_path TEXT, model_provider TEXT, source TEXT, first_user_message TEXT, has_user_event INTEGER)");
       db.run("INSERT INTO threads VALUES ('fixture', ?, 'openai', 'cli', 'hello', 1)", rollout);
-      const routed = syncCodexHistoryProvider("opencodex", dbPath);
+      const routed = syncCodexHistoryProvider("openccx", dbPath);
       if (routed.failed || routed.rows !== 1) throw new Error("fixture history route failed");
       db.run("UPDATE threads SET model_provider='openai'");
       db.run("ALTER TABLE threads ADD COLUMN history_mode TEXT DEFAULT 'legacy'");
@@ -93,13 +93,13 @@ describe("injectCodexConfig integration (Design B)", () => {
       const backup = historyBackupPathFor(dbPath);
       const entries = Object.keys(JSON.parse(fs.readFileSync(backup,"utf8")).entries).length;
       const defaultEntries = Object.keys(JSON.parse(fs.readFileSync(historyBackupPathFor(resolveCodexStateDbPath()),"utf8")).entries).length;
-      const paths = ["config.toml","opencodex.config.toml","opencodex-journal.json"].map(p=>join(process.env.CODEX_HOME,p)).concat([backup,rollout]);
+      const paths = ["config.toml","openccx.config.toml","openccx-journal.json"].map(p=>join(process.env.CODEX_HOME,p)).concat([backup,rollout]);
       const before = paths.map(p=>fs.readFileSync(p,"utf8"));
       const result = ${kind === "sync" ? "restoreNativeCodex()" : "await restoreNativeCodexAsync()"};
       console.log(JSON.stringify({entries,defaultEntries,result,preserved:paths.every((p,i)=>fs.readFileSync(p,"utf8")===before[i])}));
     `;
     const child = spawnSync(process.execPath, ["--eval", script], {
-      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome },
+      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome },
       encoding: "utf8", timeout: SPAWN_BUDGET_MS - 5_000,
     });
     expect(child.status, child.stderr).toBe(0);
@@ -130,7 +130,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       const {injectCodexConfig,restoreNativeCodex,restoreNativeCodexAsync}=require("./src/codex/inject");
       const initial=await injectCodexConfig(10100,{});
       if(!initial.success) throw new Error("fixture injection failed");
-      const watched=[configPath,target,join(process.env.CODEX_HOME,"opencodex-journal.json")];
+      const watched=[configPath,target,join(process.env.CODEX_HOME,"openccx-journal.json")];
       const original=watched.map(path=>fs.readFileSync(path,"utf8"));
       const deny=()=>fs.chmodSync(target,0o000);
       const allow=()=>fs.chmodSync(target,0o600);
@@ -154,7 +154,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       console.log(JSON.stringify({unreadable,captureCode,restored,outcomes,unchangedAfterEach,preserved}));
     `;
     const child = spawnSync(process.execPath, ["--eval", script], {
-      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome },
+      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome },
       encoding: "utf8", timeout: SPAWN_BUDGET_MS - 5_000,
     });
     expect(child.status, child.stderr).toBe(0);
@@ -167,7 +167,7 @@ describe("injectCodexConfig integration (Design B)", () => {
   test.each([false,true])(`commit-boundary history refusal returns a result after rollback (${stage}, legacy=%s)`,(legacy)=>{
     const original=legacy ? DESIGN_B_BLOCK+"\n" : 'model="test"\n';
     writeFileSync(join(codexHome,"config.toml"),original);
-    if(legacy) writeFileSync(join(codexHome,"opencodex.config.toml"),"[invalid profile\n");
+    if(legacy) writeFileSync(join(codexHome,"openccx.config.toml"),"[invalid profile\n");
     const script=`
       const {Database}=require("bun:sqlite");
       const {join}=require("node:path");
@@ -176,7 +176,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       const migrate=()=>{
         const db=new Database(join(process.env.CODEX_HOME,"state_5.sqlite"));
         db.run("CREATE TABLE threads (rollout_path TEXT, model_provider TEXT, history_mode TEXT)");
-        db.run("INSERT INTO threads VALUES ('fixture','opencodex','paginated')");
+        db.run("INSERT INTO threads VALUES ('fixture','openccx','paginated')");
         db.close();
       };
       setBeforeHistoryArtifactCommitForTests(value=>{
@@ -187,23 +187,23 @@ describe("injectCodexConfig integration (Design B)", () => {
       const result=await injectCodexConfig(10100,{});
       console.log(JSON.stringify({kind,result}));
     `;
-    const child=spawnSync(process.execPath,["--eval",script],{cwd:repoRoot,env:{...process.env,CODEX_HOME:codexHome,OPENCODEX_HOME:ocxHome},encoding:"utf8",timeout:SPAWN_BUDGET_MS-5000});
+    const child=spawnSync(process.execPath,["--eval",script],{cwd:repoRoot,env:{...process.env,CODEX_HOME:codexHome,OPENCCX_HOME:occxHome},encoding:"utf8",timeout:SPAWN_BUDGET_MS-5000});
     expect(child.status).toBe(0);
     const value=JSON.parse(child.stdout);
     expect(value.kind).toBe(legacy?"legacy-uncoordinated":"coordinated");
     expect(value.result).toMatchObject({success:false});
     expect(value.result.message).toContain("history_paginated_requires_native_writer");
     expect(readFileSync(join(codexHome,"config.toml"),"utf8")).toBe(original);
-    expect(existsSync(join(codexHome,"opencodex-journal.json"))).toBe(false);
-    if(legacy) expect(readFileSync(join(codexHome,"opencodex.config.toml"),"utf8")).toBe("[invalid profile\n");
-    else expect(existsSync(join(codexHome,"opencodex.config.toml"))).toBe(false);
+    expect(existsSync(join(codexHome,"openccx-journal.json"))).toBe(false);
+    if(legacy) expect(readFileSync(join(codexHome,"openccx.config.toml"),"utf8")).toBe("[invalid profile\n");
+    else expect(existsSync(join(codexHome,"openccx.config.toml"))).toBe(false);
   });
   }
 
   test.each(["sync", "legacy-uncoordinated", "coordinated"])("config restore failure aborts every later artifact (%s)", (kind) => {
     const original = kind === "coordinated" ? 'model="test"\n' : DESIGN_B_BLOCK + "\n";
     writeFileSync(join(codexHome, "config.toml"), original);
-    if (kind !== "coordinated") writeFileSync(join(codexHome, "opencodex.config.toml"), "[invalid profile\n");
+    if (kind !== "coordinated") writeFileSync(join(codexHome, "openccx.config.toml"), "[invalid profile\n");
     const catalog = '{"models":[],"sentinel":"preserve"}\n';
     writeFileSync(join(codexHome, "models_cache.json"), catalog);
     const script = `
@@ -217,13 +217,13 @@ describe("injectCodexConfig integration (Design B)", () => {
         observed=value;
         const db=new Database(join(process.env.CODEX_HOME,"state_5.sqlite"));
         db.run("CREATE TABLE threads (rollout_path TEXT, model_provider TEXT, history_mode TEXT)");
-        db.run("INSERT INTO threads VALUES ('fixture','opencodex','paginated')");
+        db.run("INSERT INTO threads VALUES ('fixture','openccx','paginated')");
         db.close();
       });
       const result=${kind === "sync" ? "restoreNativeCodex()" : "await restoreNativeCodexAsync()"};
       console.log(JSON.stringify({observed,result,before,after:readState()}));
     `;
-    const child=spawnSync(process.execPath,["--eval",script],{cwd:repoRoot,env:{...process.env,CODEX_HOME:codexHome,OPENCODEX_HOME:ocxHome},encoding:"utf8",timeout:SPAWN_BUDGET_MS-5000});
+    const child=spawnSync(process.execPath,["--eval",script],{cwd:repoRoot,env:{...process.env,CODEX_HOME:codexHome,OPENCCX_HOME:occxHome},encoding:"utf8",timeout:SPAWN_BUDGET_MS-5000});
     expect(child.status).toBe(0);
     const value=JSON.parse(child.stdout);
     expect(value.observed).toBe(kind);
@@ -239,39 +239,39 @@ describe("injectCodexConfig integration (Design B)", () => {
     }
     expect(readFileSync(join(codexHome,"config.toml"),"utf8")).toBe(original);
     expect(readFileSync(join(codexHome,"models_cache.json"),"utf8")).toBe(catalog);
-    expect(existsSync(join(codexHome,"opencodex-journal.json"))).toBe(false);
-    if(kind!=="coordinated") expect(readFileSync(join(codexHome,"opencodex.config.toml"),"utf8")).toBe("[invalid profile\n");
-    else expect(existsSync(join(codexHome,"opencodex.config.toml"))).toBe(false);
+    expect(existsSync(join(codexHome,"openccx-journal.json"))).toBe(false);
+    if(kind!=="coordinated") expect(readFileSync(join(codexHome,"openccx.config.toml"),"utf8")).toBe("[invalid profile\n");
+    else expect(existsSync(join(codexHome,"openccx.config.toml"))).toBe(false);
   });
 
   test.each([false, true])("paginated history preserves config and profile before provider transition (authless=%s)", (authless) => {
-    const original = 'model_provider = "opencodex"\n[model_providers.opencodex]\nname="OpenCodex"\nbase_url="http://127.0.0.1:10100/v1"\nwire_api="responses"\n';
+    const original = 'model_provider = "openccx"\n[model_providers.openccx]\nname="Openccx"\nbase_url="http://127.0.0.1:10100/v1"\nwire_api="responses"\n';
     const configPath = join(codexHome, "config.toml");
-    const profilePath = join(codexHome, "opencodex.config.toml");
+    const profilePath = join(codexHome, "openccx.config.toml");
     writeFileSync(configPath, original);
     writeFileSync(profilePath, "# preserve profile\n");
     const rollout = join(codexHome, "fixture.jsonl");
-    const bytes = JSON.stringify({ordinal:0,type:"session_meta",payload:{id:"fixture",history_mode:"paginated",model_provider:"opencodex"}}) + "\n";
+    const bytes = JSON.stringify({ordinal:0,type:"session_meta",payload:{id:"fixture",history_mode:"paginated",model_provider:"openccx"}}) + "\n";
     writeFileSync(rollout, bytes);
     const db = new Database(join(codexHome, "state_5.sqlite"));
     db.run("CREATE TABLE threads (id TEXT, rollout_path TEXT, model_provider TEXT, history_mode TEXT)");
-    db.run("INSERT INTO threads VALUES ('fixture', ?, 'opencodex', 'paginated')", rollout);
+    db.run("INSERT INTO threads VALUES ('fixture', ?, 'openccx', 'paginated')", rollout);
     db.close();
-    const result = runInject(codexHome, ocxHome, JSON.stringify({codexDesktopAuthless:authless}));
+    const result = runInject(codexHome, occxHome, JSON.stringify({codexDesktopAuthless:authless}));
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({success:false});
     expect(result.stdout).toContain("history_paginated_requires_native_writer");
     expect(readFileSync(configPath,"utf8")).toBe(original);
     expect(readFileSync(profilePath,"utf8")).toBe("# preserve profile\n");
     expect(readFileSync(rollout,"utf8")).toBe(bytes);
-    expect(existsSync(join(codexHome,"opencodex-journal.json"))).toBe(false);
+    expect(existsSync(join(codexHome,"openccx-journal.json"))).toBe(false);
     const restoreScript = `
       const { restoreNativeCodex, restoreNativeCodexAsync, removeCodexConfig } = require("./src/codex/inject");
       const results = [restoreNativeCodex(), await restoreNativeCodexAsync(), removeCodexConfig()];
       console.log(JSON.stringify(results));
     `;
     const restored = spawnSync(process.execPath, ["--eval", restoreScript], {
-      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome },
+      cwd: repoRoot, env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome },
       encoding: "utf8", timeout: SPAWN_BUDGET_MS - 5_000,
     });
     expect(restored.status).toBe(0);
@@ -279,7 +279,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(readFileSync(configPath,"utf8")).toBe(original);
     expect(readFileSync(profilePath,"utf8")).toBe("# preserve profile\n");
     expect(readFileSync(rollout,"utf8")).toBe(bytes);
-    expect(existsSync(join(codexHome,"opencodex-journal.json"))).toBe(false);
+    expect(existsSync(join(codexHome,"openccx-journal.json"))).toBe(false);
   });
 
   test("remote target validate-only writes nothing; commit journals client ownership and restores exact preimage", () => {
@@ -290,10 +290,10 @@ describe("injectCodexConfig integration (Design B)", () => {
       const path = require("node:path");
       const { injectCodexConfig } = require("./src/codex/inject");
       const { journalOwner, restoreJournalState } = require("./src/codex/journal");
-      const target = { baseUrl: "https://hub.example.test/v1", requiresAdmissionToken: true, tokenEnv: "OPENCODEX_API_AUTH_TOKEN" };
+      const target = { baseUrl: "https://hub.example.test/v1", requiresAdmissionToken: true, tokenEnv: "OPENCCX_API_AUTH_TOKEN" };
       (async () => {
         const configPath = path.join(process.env.CODEX_HOME, "config.toml");
-        const journalPath = path.join(process.env.CODEX_HOME, "opencodex-journal.json");
+        const journalPath = path.join(process.env.CODEX_HOME, "openccx-journal.json");
         const before = fs.readFileSync(configPath, "utf8");
         const preflight = await injectCodexConfig(10100, { syncResumeHistory: false }, {
           validateOnly: true, routingTarget: target, catalogPath: null,
@@ -313,7 +313,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     `;
     const result = spawnSync(process.execPath, ["--eval", script], {
       cwd: repoRoot,
-      env: { ...process.env, CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome },
+      env: { ...process.env, CODEX_HOME: codexHome, OPENCCX_HOME: occxHome },
       encoding: "utf8",
       timeout: SPAWN_BUDGET_MS - 5_000,
     });
@@ -325,7 +325,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(value.journalAfterPreflight).toBe(false);
     expect(value.committed.success).toBe(true);
     expect(value.injected).toContain('base_url = "https://hub.example.test/v1"');
-    expect(value.injected).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(value.injected).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     expect(value.owner).toEqual({ kind: "client", apiKeyId: "client-key-1" });
     expect(value.restored.complete).toBe(true);
     expect(value.final).toBe(original);
@@ -333,71 +333,71 @@ describe("injectCodexConfig integration (Design B)", () => {
 
   test("upgrade path: a legacy-injected config converts to the Design B form in one inject", () => {
     writeFileSync(join(codexHome, "config.toml"), [
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       'model = "gpt-5.5"',
       "",
       "[features]",
       "fast_mode = true",
       "",
-      "# Auto-injected by opencodex",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "# Auto-injected by openccx",
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       "requires_openai_auth = true",
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome);
+    const r = runInject(codexHome, occxHome);
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(config).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
-    expect(config).toContain("# Auto-injected by opencodex");
-    expect(config).not.toContain("[model_providers.opencodex]");
-    expect(config).not.toContain('model_provider = "opencodex"');
+    expect(config).toContain("# Auto-injected by openccx");
+    expect(config).not.toContain("[model_providers.openccx]");
+    expect(config).not.toContain('model_provider = "openccx"');
     expect(config).toContain('model = "gpt-5.5"');
     // Exactly the Design B markers survive (routing + realtime sideband) — no accumulation.
-    expect(config.match(/Auto-injected by opencodex/g)?.length).toBe(2);
+    expect(config.match(/Auto-injected by openccx/g)?.length).toBe(2);
     expect(config).toContain(DESIGN_B_BLOCK);
   });
 
   test("upgrade path: a non-loopback legacy env_http_headers config converts to env_key (#2073)", () => {
     writeFileSync(join(codexHome, "config.toml"), [
-      'model_provider = "opencodex"',
+      'model_provider = "openccx"',
       "",
-      "# Auto-injected by opencodex",
-      "[model_providers.opencodex]",
-      'name = "OpenCodex Proxy"',
+      "# Auto-injected by openccx",
+      "[model_providers.openccx]",
+      'name = "Openccx Proxy"',
       'base_url = "http://192.168.1.50:10100/v1"',
       'wire_api = "responses"',
       "requires_openai_auth = true",
-      'env_http_headers = { "x-opencodex-api-key" = "OPENCODEX_API_AUTH_TOKEN" }',
+      'env_http_headers = { "x-openccx-api-key" = "OPENCCX_API_AUTH_TOKEN" }',
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ hostname: "192.168.1.50" }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ hostname: "192.168.1.50" }));
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(config).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(config).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     expect(config).not.toContain("env_http_headers");
     // Still exactly one provider block, no duplicate accumulation.
-    expect(config.match(/\[model_providers\.opencodex]/g)?.length).toBe(1);
+    expect(config.match(/\[model_providers\.openccx]/g)?.length).toBe(1);
   });
 
   test("re-inject over a Design B config is idempotent", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const first = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const second = readFileSync(join(codexHome, "config.toml"), "utf8");
 
     expect(second.match(/openai_base_url/g)?.length).toBe(1);
-    expect(second.match(/Auto-injected by opencodex/g)?.length).toBe(2);
+    expect(second.match(/Auto-injected by openccx/g)?.length).toBe(2);
     expect(second).toBe(first);
     // Voice sideband override rides along with the routing override (#35830 regression).
     expect(second.match(/experimental_realtime_ws_base_url/g)?.length).toBe(1);
@@ -409,14 +409,14 @@ describe("injectCodexConfig integration (Design B)", () => {
 
     test("inject writes it under the marker block, journals it, and restore removes both keys", () => {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       const config = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(config).toContain(DESIGN_B_BLOCK);
-      const journal = JSON.parse(readFileSync(join(codexHome, "opencodex-journal.json"), "utf8"));
+      const journal = JSON.parse(readFileSync(join(codexHome, "openccx-journal.json"), "utf8"));
       expect(journal.injectedOpenaiBaseUrl).toBe(proxyUrl);
       expect(journal.injectedRealtimeWsBaseUrl).toBe(proxyUrl);
 
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
       const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(restored).not.toContain("openai_base_url");
       expect(restored).not.toContain("experimental_realtime_ws_base_url");
@@ -430,11 +430,11 @@ describe("injectCodexConfig integration (Design B)", () => {
         "",
       ].join("\n");
       writeFileSync(join(codexHome, "config.toml"), original, "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       const config = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(config).toContain(`openai_base_url = "${proxyUrl}"`);
       expect(config.match(/experimental_realtime_ws_base_url/g)?.length).toBe(1);
-      const journal = JSON.parse(readFileSync(join(codexHome, "opencodex-journal.json"), "utf8"));
+      const journal = JSON.parse(readFileSync(join(codexHome, "openccx-journal.json"), "utf8"));
       expect(journal.injectedOpenaiBaseUrl).toBe(proxyUrl);
       expect(journal.injectedRealtimeWsBaseUrl).toBeNull();
 
@@ -444,7 +444,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       const rewritten = readFileSync(join(codexHome, "config.toml"), "utf8")
         .split("\n").filter(line => !line.startsWith("#")).join("\n");
       writeFileSync(join(codexHome, "config.toml"), rewritten, "utf8");
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
       const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(restored).not.toContain("openai_base_url");
       expect(restored).toContain(`experimental_realtime_ws_base_url = "${proxyUrl}"`);
@@ -452,38 +452,38 @@ describe("injectCodexConfig integration (Design B)", () => {
 
     test("an app-reserialized routed config is not mistaken for the user's native baseline on re-inject", () => {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
-      const journalPath = join(codexHome, "opencodex-journal.json");
+      expect(runInject(codexHome, occxHome).status).toBe(0);
+      const journalPath = join(codexHome, "openccx-journal.json");
       const firstSnapshot = JSON.parse(readFileSync(journalPath, "utf8")).originalConfig;
 
       const rewritten = readFileSync(join(codexHome, "config.toml"), "utf8")
         .split("\n").filter(line => !line.startsWith("#")).join("\n");
       writeFileSync(join(codexHome, "config.toml"), rewritten, "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       expect(JSON.parse(readFileSync(journalPath, "utf8")).originalConfig).toBe(firstSnapshot);
       const config = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(config.match(/openai_base_url/g)?.length).toBe(1);
       expect(config.match(/experimental_realtime_ws_base_url/g)?.length).toBe(1);
 
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
       expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe('model = "gpt-5.5"\n');
     });
 
     test("a user-owned openai_base_url means no realtime override is injected either", () => {
       const original = 'openai_base_url = "https://my-own-gateway.example/v1"\nmodel = "gpt-5.5"\n';
       writeFileSync(join(codexHome, "config.toml"), original, "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       expect(readFileSync(join(codexHome, "config.toml"), "utf8")).not.toContain("experimental_realtime_ws_base_url");
     });
 
     test("provider-table forms (non-loopback admission, authless Desktop) do not write it", () => {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-      expect(runInject(codexHome, ocxHome, JSON.stringify({ hostname: "192.168.1.20" })).status).toBe(0);
+      expect(runInject(codexHome, occxHome, JSON.stringify({ hostname: "192.168.1.20" })).status).toBe(0);
       expect(readFileSync(join(codexHome, "config.toml"), "utf8")).not.toContain("experimental_realtime_ws_base_url");
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
 
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-      expect(runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
+      expect(runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
       expect(readFileSync(join(codexHome, "config.toml"), "utf8")).not.toContain("experimental_realtime_ws_base_url");
     });
 
@@ -491,36 +491,36 @@ describe("injectCodexConfig integration (Design B)", () => {
       // Comment-dropping rewrite, then the operator turns on authless Desktop (provider-table
       // form). Our old root URLs must not survive as if the user had written them.
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       const rewritten = readFileSync(join(codexHome, "config.toml"), "utf8")
         .split("\n").filter(line => !line.startsWith("#")).join("\n");
       writeFileSync(join(codexHome, "config.toml"), rewritten, "utf8");
 
-      expect(runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
+      expect(runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
       const table = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(table).toContain("requires_openai_auth = false");
       expect(table).not.toContain("openai_base_url");
       expect(table).not.toContain("experimental_realtime_ws_base_url");
 
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
       expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe('model = "gpt-5.5"\n');
     });
 
     test("CRLF config: re-inject keeps both keys single and CRLF-pure; restore removes both", () => {
       writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\r\n\r\n[features]\r\nfast_mode = true\r\n', "utf8");
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
-      expect(runInject(codexHome, ocxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
+      expect(runInject(codexHome, occxHome).status).toBe(0);
       const config = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(config).not.toContain("\n\n\n");
       expect(config.match(/openai_base_url/g)?.length).toBe(1);
       expect(config.match(/experimental_realtime_ws_base_url/g)?.length).toBe(1);
-      expect(config.match(/Auto-injected by opencodex/g)?.length).toBe(2);
+      expect(config.match(/Auto-injected by openccx/g)?.length).toBe(2);
       expect(config).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
       expect(config).toContain('experimental_realtime_ws_base_url = "http://127.0.0.1:10100/v1"');
       expect(config.includes("\r\n")).toBe(true);
       expect(config.replace(/\r\n/g, "").includes("\n")).toBe(false);
 
-      expect(runRestore(codexHome, ocxHome).status).toBe(0);
+      expect(runRestore(codexHome, occxHome).status).toBe(0);
       const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
       expect(restored).not.toContain("openai_base_url");
       expect(restored).not.toContain("experimental_realtime_ws_base_url");
@@ -542,7 +542,7 @@ describe("injectCodexConfig integration (Design B)", () => {
         "",
       ].join("\n"), "utf8");
 
-      const result = runInject(codexHome, ocxHome);
+      const result = runInject(codexHome, occxHome);
       expect(result.status).toBe(0);
       expect(JSON.parse(result.stdout).success).toBe(true);
 
@@ -553,7 +553,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       expect(config).toContain(assignment);
       expect(() => Bun.TOML.parse(config)).not.toThrow();
 
-      const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+      const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
       expect(profile).toContain('model_catalog_json = "custom-catalog.json"');
     },
   );
@@ -562,35 +562,35 @@ describe("injectCodexConfig integration (Design B)", () => {
     const userAssignment = 'model_catalog_json = "custom-catalog.json" # user catalog';
     writeFileSync(join(codexHome, "config.toml"), [
       userAssignment,
-      'model_catalog_json = "opencodex-catalog.json"',
+      'model_catalog_json = "openccx-catalog.json"',
       "",
       "[features]",
       "fast_mode = true",
       "",
     ].join("\n"), "utf8");
 
-    const result = runInject(codexHome, ocxHome);
+    const result = runInject(codexHome, occxHome);
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout).success).toBe(true);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(config.match(/^model_catalog_json\s*=/gm)?.length).toBe(1);
     expect(config).toContain(userAssignment);
-    expect(config).not.toContain('model_catalog_json = "opencodex-catalog.json"');
+    expect(config).not.toContain('model_catalog_json = "openccx-catalog.json"');
     expect(() => Bun.TOML.parse(config)).not.toThrow();
 
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(profile).toContain('model_catalog_json = "custom-catalog.json"');
   });
 
-  test("removes a stale OpenCodex catalog assignment with a trailing comment", () => {
+  test("removes a stale Openccx catalog assignment with a trailing comment", () => {
     writeFileSync(
       join(codexHome, "config.toml"),
-      'model_catalog_json = "opencodex-catalog.json" # stale catalog\n',
+      'model_catalog_json = "openccx-catalog.json" # stale catalog\n',
       "utf8",
     );
 
-    const result = runInject(codexHome, ocxHome);
+    const result = runInject(codexHome, occxHome);
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout).success).toBe(true);
 
@@ -600,14 +600,14 @@ describe("injectCodexConfig integration (Design B)", () => {
   });
 
   test("does not strip a catalog-shaped assignment from a user table", () => {
-    const nestedAssignment = '"model_catalog_json" = "opencodex-catalog.json" # user table value';
+    const nestedAssignment = '"model_catalog_json" = "openccx-catalog.json" # user table value';
     writeFileSync(join(codexHome, "config.toml"), [
       "[user_metadata]",
       nestedAssignment,
       "",
     ].join("\n"), "utf8");
 
-    const result = runInject(codexHome, ocxHome);
+    const result = runInject(codexHome, occxHome);
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout).success).toBe(true);
 
@@ -619,7 +619,7 @@ describe("injectCodexConfig integration (Design B)", () => {
   test("fastMode=false forces fast_mode=false in both config and profile", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ fastMode: false }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ fastMode: false }));
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
@@ -628,7 +628,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).toContain("fast_mode = false");
     expect(config).not.toContain("fast_mode = true");
 
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(profile).toContain("fast_mode = false");
     expect(profile).not.toContain("fast_mode = true");
   });
@@ -636,7 +636,7 @@ describe("injectCodexConfig integration (Design B)", () => {
   test("fastMode=true adds fast_mode=true to a config without a [features] table", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ fastMode: true }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ fastMode: true }));
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
@@ -644,14 +644,14 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).toContain("[features]");
     expect(config).toContain("fast_mode = true");
 
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(profile).toContain("fast_mode = true");
   });
 
   test("fastMode unset preserves the user's existing fast_mode setting", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n\n[features]\nfast_mode = false\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome);
+    const r = runInject(codexHome, occxHome);
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
@@ -659,14 +659,14 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).toContain("fast_mode = false");
     expect(config).not.toContain("fast_mode = true");
 
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(profile).not.toContain("fast_mode");
   });
 
   test("fastMode unset does not add a [features] table to a config that lacks one", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome);
+    const r = runInject(codexHome, occxHome);
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
@@ -674,7 +674,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).not.toContain("[features]");
     expect(config).not.toContain("fast_mode");
 
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(profile).not.toContain("fast_mode");
   });
 
@@ -687,7 +687,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ fastMode: false }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ fastMode: false }));
     expect(r.status).toBe(0);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -706,7 +706,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ fastMode: false }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ fastMode: false }));
     expect(r.status).toBe(0);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -725,7 +725,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ fastMode: false }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ fastMode: false }));
     expect(r.status).toBe(0);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -750,9 +750,9 @@ describe("injectCodexConfig integration (Design B)", () => {
       injectionEffort: "high",
     });
 
-    expect(runInject(codexHome, ocxHome, enabled).status).toBe(0);
+    expect(runInject(codexHome, occxHome, enabled).status).toBe(0);
     const injected = readFileSync(join(codexHome, "config.toml"), "utf8");
-    const profile = readFileSync(join(codexHome, "opencodex.config.toml"), "utf8");
+    const profile = readFileSync(join(codexHome, "openccx.config.toml"), "utf8");
     expect(injected).toContain(MANAGED_SUBAGENT_DEFAULT_MARKER);
     expect(injected).toContain('default_subagent_model = "gpt-5.6-sol"');
     expect(injected).toContain('default_subagent_reasoning_effort = "high"');
@@ -760,15 +760,15 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(profile).not.toContain(MANAGED_SUBAGENT_DEFAULT_MARKER);
     expect(profile).not.toContain("default_subagent_model");
 
-    expect(runInject(codexHome, ocxHome, "{}").status).toBe(0);
+    expect(runInject(codexHome, occxHome, "{}").status).toBe(0);
     const disabled = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(disabled).not.toContain(MANAGED_SUBAGENT_DEFAULT_MARKER);
     expect(disabled).not.toContain("default_subagent_model");
     expect(disabled).not.toContain("default_subagent_reasoning_effort");
     expect(disabled).toContain("[notice]\nhide = true");
 
-    expect(runInject(codexHome, ocxHome, enabled).status).toBe(0);
-    expect(runRestore(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome, enabled).status).toBe(0);
+    expect(runRestore(codexHome, occxHome).status).toBe(0);
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(original);
   });
 
@@ -784,7 +784,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     ].join("\n");
     writeFileSync(join(codexHome, "config.toml"), original, "utf8");
 
-    const result = runInject(codexHome, ocxHome, JSON.stringify({
+    const result = runInject(codexHome, occxHome, JSON.stringify({
       syncCodexSubagentDefaults: true,
       injectionModel: "gpt-5.6-sol",
       injectionEffort: "high",
@@ -814,7 +814,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     ].join("\n");
     writeFileSync(join(codexHome, "config.toml"), residue, "utf8");
 
-    const injectedResult = runInject(codexHome, ocxHome, "{}");
+    const injectedResult = runInject(codexHome, occxHome, "{}");
     expect(injectedResult.status).toBe(0);
     expect(JSON.parse(injectedResult.stdout).success).toBe(true);
     const injected = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -822,7 +822,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(injected).not.toContain("default_subagent_model");
     expect(() => Bun.TOML.parse(injected)).not.toThrow();
 
-    const restoredResult = runRestore(codexHome, ocxHome);
+    const restoredResult = runRestore(codexHome, occxHome);
     expect(restoredResult.status).toBe(0);
     expect(JSON.parse(restoredResult.stdout).success).toBe(true);
     const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -842,15 +842,15 @@ describe("injectCodexConfig integration (Design B)", () => {
     ].join("\n");
     writeFileSync(join(codexHome, "config.toml"), ambiguous, "utf8");
 
-    const result = runInject(codexHome, ocxHome, "{}");
+    const result = runInject(codexHome, occxHome, "{}");
     expect(result.status).toBe(0);
     const payload = JSON.parse(result.stdout);
     expect(payload.success).toBe(false);
     expect(payload.message).toContain("injection refused");
     expect(payload.message).toContain("orphaned managed subagent default marker");
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(ambiguous);
-    expect(existsSync(join(codexHome, "opencodex.config.toml"))).toBe(false);
-    expect(existsSync(join(codexHome, "opencodex-journal.json"))).toBe(false);
+    expect(existsSync(join(codexHome, "openccx.config.toml"))).toBe(false);
+    expect(existsSync(join(codexHome, "openccx-journal.json"))).toBe(false);
   });
 
   test("kept-user-base-url: reports routing NOT injected and leaves the user's override alone", () => {
@@ -860,7 +860,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       "",
     ].join("\n"), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({
+    const r = runInject(codexHome, occxHome, JSON.stringify({
       syncCodexSubagentDefaults: true,
       injectionModel: "gpt-5.6-sol",
       injectionEffort: "high",
@@ -869,12 +869,12 @@ describe("injectCodexConfig integration (Design B)", () => {
     const result = JSON.parse(r.stdout);
     expect(result.success).toBe(true);
     expect(result.message).toContain("routing NOT injected");
-    expect(result.message).not.toContain("All models now route through opencodex proxy");
+    expect(result.message).not.toContain("All models now route through openccx proxy");
     expect(result.nativeSubagentDefaultsWarning).toContain("user-owned root openai_base_url");
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(config).toContain('openai_base_url = "https://my-own-gateway.example/v1"');
-    expect(config).not.toContain("# Auto-injected by opencodex\nopenai_base_url");
+    expect(config).not.toContain("# Auto-injected by openccx\nopenai_base_url");
     expect(config).not.toContain(MANAGED_SUBAGENT_DEFAULT_MARKER);
     expect(config).not.toContain("default_subagent_model");
   });
@@ -895,7 +895,7 @@ describe("injectCodexConfig integration (Design B)", () => {
 
     const sessionsDir = join(codexHome, "sessions");
     mkdirSync(sessionsDir);
-    const profilePath = join(codexHome, "opencodex.config.toml");
+    const profilePath = join(codexHome, "openccx.config.toml");
     const profile = "sentinel profile\n";
     writeFileSync(profilePath, profile, "utf8");
     const rolloutPath = join(sessionsDir, "rollout-custom.jsonl");
@@ -913,7 +913,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     db.run(`INSERT INTO threads VALUES ('thread-custom', ?, 'custom', 'cli', 'hello', 1)`, rolloutPath);
     db.close();
     const dbBefore = readFileSync(dbPath);
-    const journalPath = join(codexHome, "opencodex-journal.json");
+    const journalPath = join(codexHome, "openccx-journal.json");
     writeFileSync(journalPath, JSON.stringify({
       version: 1,
       originalConfig: Buffer.from('model_provider = "openai"\n').toString("base64"),
@@ -922,7 +922,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       timestamp: new Date().toISOString(),
     }), "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({
+    const r = runInject(codexHome, occxHome, JSON.stringify({
       syncCodexSubagentDefaults: true,
       injectionModel: "gpt-5.6-sol",
       injectionEffort: "high",
@@ -944,16 +944,16 @@ describe("injectCodexConfig integration (Design B)", () => {
  });
 
   // Regression for #1090: the reporter's Windows shape — CRLF line endings, an external
-  // root model_provider, a coexisting [model_providers.opencodex] table, and a [windows]
+  // root model_provider, a coexisting [model_providers.openccx] table, and a [windows]
   // section — must survive injectCodexConfig byte-for-byte. The external-provider guard
   // runs on raw (pre-EOL-normalized) content, so CRLF parsing is part of what this proves.
-  test("#1090: CRLF Windows config with external deepseek provider and opencodex table stays byte-for-byte unchanged", () => {
+  test("#1090: CRLF Windows config with external deepseek provider and openccx table stays byte-for-byte unchanged", () => {
     const original = [
       'model = "deepseek-v4-flash"',
       'model_provider = "deepseek"',
       "",
-      "[model_providers.opencodex]",
-      'name = "opencodex"',
+      "[model_providers.openccx]",
+      'name = "openccx"',
       'base_url = "http://127.0.0.1:10100/v1"',
       'wire_api = "responses"',
       'env_key = "CODEX_DEEPSEEK_API_KEY"',
@@ -964,7 +964,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     ].join("\r\n");
     writeFileSync(join(codexHome, "config.toml"), original, "utf8");
 
-    const r = runInject(codexHome, ocxHome);
+    const r = runInject(codexHome, occxHome);
     expect(r.status).toBe(0);
     const result = JSON.parse(r.stdout);
     expect(result.success).toBe(true);
@@ -978,7 +978,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     const configPath = join(codexHome, "config.toml");
     const config = 'model_provider = "custom"\nmodel = "third-party-model"\n';
     writeFileSync(configPath, config, "utf8");
-    const profilePath = join(codexHome, "opencodex.config.toml");
+    const profilePath = join(codexHome, "openccx.config.toml");
     const profile = 'model_provider = "custom"\n';
     writeFileSync(profilePath, profile, "utf8");
 
@@ -998,11 +998,11 @@ describe("injectCodexConfig integration (Design B)", () => {
     )`);
       db.run(`INSERT INTO threads VALUES ('thread-custom', ?, 'custom', 'cli', 'hello', 1)`, rolloutPath);
       db.run("ALTER TABLE threads ADD COLUMN history_mode TEXT DEFAULT 'legacy'");
-      db.run("INSERT INTO threads VALUES ('old-routed', ?, 'opencodex', 'cli', 'older', 1, 'paginated')", rolloutPath);
+      db.run("INSERT INTO threads VALUES ('old-routed', ?, 'openccx', 'cli', 'older', 1, 'paginated')", rolloutPath);
     db.close();
     const dbBefore = readFileSync(dbPath);
 
-    const journalPath = join(codexHome, "opencodex-journal.json");
+    const journalPath = join(codexHome, "openccx-journal.json");
     writeFileSync(journalPath, JSON.stringify({
       version: 1,
       originalConfig: Buffer.from('model_provider = "openai"\n').toString("base64"),
@@ -1011,7 +1011,7 @@ describe("injectCodexConfig integration (Design B)", () => {
       timestamp: new Date().toISOString(),
     }), "utf8");
 
-      const r = runRestore(codexHome, ocxHome, asyncRestore);
+      const r = runRestore(codexHome, occxHome, asyncRestore);
     expect(r.status).toBe(0);
     const result = JSON.parse(r.stdout);
     expect(result.success).toBe(true);
@@ -1034,7 +1034,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     ].join("\n");
     writeFileSync(join(codexHome, "config.toml"), original, "utf8");
 
-    const r = runInject(codexHome, ocxHome);
+    const r = runInject(codexHome, occxHome);
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).message).toContain('external model_provider "custom"');
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(original);
@@ -1044,77 +1044,77 @@ describe("injectCodexConfig integration (Design B)", () => {
     const original = 'model_provider = "custom"\n';
     writeFileSync(join(codexHome, "config.toml"), original, "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ hostname: "192.168.1.20" }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ hostname: "192.168.1.20" }));
     expect(r.status).toBe(0);
     const message = JSON.parse(r.stdout).message;
     expect(message).toContain("http://192.168.1.20:10100/v1");
-    expect(message).toContain("x-opencodex-api-key from OPENCODEX_API_AUTH_TOKEN");
+    expect(message).toContain("x-openccx-api-key from OPENCCX_API_AUTH_TOKEN");
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(original);
   });
 
   test("authless Desktop opt-in (#1107): loopback injects the table with requires_openai_auth = false, idempotently", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true }));
     expect(r.status).toBe(0);
     const payload = JSON.parse(r.stdout);
     expect(payload.success).toBe(true);
     expect(String(payload.message)).toContain("authless Desktop mode");
 
     const first = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(first).toContain('model_provider = "opencodex"');
-    expect(first).toContain("[model_providers.opencodex]");
+    expect(first).toContain('model_provider = "openccx"');
+    expect(first).toContain("[model_providers.openccx]");
     expect(first).toContain('base_url = "http://127.0.0.1:10100/v1"');
     expect(first).toContain("requires_openai_auth = false");
     expect(first).not.toContain("env_key");
     expect(first).not.toContain("openai_base_url");
 
-    expect(runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
+    expect(runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(first);
-    expect(readFileSync(join(codexHome, "opencodex.config.toml"), "utf8")).toContain("requires_openai_auth = false");
+    expect(readFileSync(join(codexHome, "openccx.config.toml"), "utf8")).toContain("requires_openai_auth = false");
   });
 
   test("authless Desktop opt-in: turning it off restores Design B on the next inject, and restore strips it", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    expect(runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
+    expect(runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toContain("requires_openai_auth = false");
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const back = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(back).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
-    expect(back).not.toContain("[model_providers.opencodex]");
-    expect(back).not.toContain('model_provider = "opencodex"');
-    expect(back.match(/Auto-injected by opencodex/g)?.length).toBe(2);
+    expect(back).not.toContain("[model_providers.openccx]");
+    expect(back).not.toContain('model_provider = "openccx"');
+    expect(back.match(/Auto-injected by openccx/g)?.length).toBe(2);
     expect(back).toContain(DESIGN_B_BLOCK);
 
-    expect(runInject(codexHome, ocxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
-    expect(runRestore(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome, JSON.stringify({ codexDesktopAuthless: true })).status).toBe(0);
+    expect(runRestore(codexHome, occxHome).status).toBe(0);
     const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(restored).not.toContain("opencodex");
+    expect(restored).not.toContain("openccx");
     expect(restored).toContain('model = "gpt-5.5"');
   });
 
   test("client compaction opt-in (#3978): writes an authenticated provider table and returns to Design B", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
     expect(String(JSON.parse(enabled.stdout).message)).toContain("client-side compaction mode");
     const providerTable = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(providerTable).toContain('model_provider = "opencodex"');
-    expect(providerTable).toContain("[model_providers.opencodex]");
+    expect(providerTable).toContain('model_provider = "openccx"');
+    expect(providerTable).toContain("[model_providers.openccx]");
     expect(providerTable).toContain("requires_openai_auth = true");
     expect(providerTable).not.toContain("requires_openai_auth = false");
     // The root override is retained next to the table, which is what keeps threads still tagged
     // `openai` resolving to this proxy instead of to api.openai.com.
     expect(providerTable).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const designB = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(designB).toContain(DESIGN_B_BLOCK);
-    expect(designB).not.toContain("[model_providers.opencodex]");
-    expect(designB).not.toContain('model_provider = "opencodex"');
+    expect(designB).not.toContain("[model_providers.openccx]");
+    expect(designB).not.toContain('model_provider = "openccx"');
     // Disabling leaves exactly one root override, not the table form's copy plus a new one.
     expect(designB.match(/openai_base_url/g)?.length).toBe(1);
   });
@@ -1127,7 +1127,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     const userOwned = 'openai_base_url = "https://user.example/v1"\nmodel = "gpt-5.5"\n';
     writeFileSync(join(codexHome, "config.toml"), userOwned, "utf8");
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -1135,10 +1135,10 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).not.toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
     expect(config.match(/openai_base_url/g)?.length).toBe(1);
     // The opt-in itself still applies: new threads default to the proxy provider.
-    expect(config).toContain('model_provider = "opencodex"');
-    expect(config).toContain("[model_providers.opencodex]");
+    expect(config).toContain('model_provider = "openccx"');
+    expect(config).toContain("[model_providers.openccx]");
     // The user's line must never be journaled as ours, or a later restore would strip it.
-    const journal = JSON.parse(readFileSync(join(codexHome, "opencodex-journal.json"), "utf8"));
+    const journal = JSON.parse(readFileSync(join(codexHome, "openccx-journal.json"), "utf8"));
     expect(journal.injectedOpenaiBaseUrl).toBeNull();
 
     // The reported result has to match the file that was just written. The old root-only
@@ -1146,7 +1146,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     // while the history line claimed those threads still reached the proxy. Both were wrong
     // for this mixed configuration.
     const message = String(JSON.parse(enabled.stdout).message);
-    expect(message).toContain("Injected opencodex as default provider");
+    expect(message).toContain("Injected openccx as default provider");
     expect(message).not.toContain("Codex routing NOT injected");
     expect(message).not.toContain("remove your openai_base_url line");
     expect(message).toContain("left exactly as you set it");
@@ -1160,18 +1160,18 @@ describe("injectCodexConfig integration (Design B)", () => {
     const rootLine = 'openai_base_url = "http://127.0.0.1:10100/v1"';
     writeFileSync(join(codexHome, "config.toml"), `${rootLine}\nmodel = "gpt-5.5"\n`, "utf8");
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(config).toContain(rootLine);
     expect(config.match(/openai_base_url/g)?.length).toBe(1);
-    expect(config).toContain('model_provider = "opencodex"');
-    expect(config).toContain("[model_providers.opencodex]");
-    const journal = JSON.parse(readFileSync(join(codexHome, "opencodex-journal.json"), "utf8"));
+    expect(config).toContain('model_provider = "openccx"');
+    expect(config).toContain("[model_providers.openccx]");
+    const journal = JSON.parse(readFileSync(join(codexHome, "openccx-journal.json"), "utf8"));
     expect(journal.injectedOpenaiBaseUrl).toBeNull();
 
     const message = String(JSON.parse(enabled.stdout).message);
-    expect(message).toContain("Injected opencodex as default provider");
+    expect(message).toContain("Injected openccx as default provider");
     expect(message).toContain("left exactly as you set it");
     expect(message).toContain("follow your configured root openai_base_url");
     expect(message).not.toContain("not the proxy");
@@ -1180,11 +1180,11 @@ describe("injectCodexConfig integration (Design B)", () => {
   });
 
   test("the managed override keeps reporting proxy routing for existing threads", () => {
-    // Control for the case above: with no user-owned line, opencodex writes the root override
+    // Control for the case above: with no user-owned line, openccx writes the root override
     // itself, so the proxy claim is accurate and the root-only warning must not appear.
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
@@ -1198,20 +1198,20 @@ describe("injectCodexConfig integration (Design B)", () => {
 
   test("the retained root override is journaled so a comment-dropping rewrite can still restore", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
-    expect(runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true })).status).toBe(0);
+    expect(runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true })).status).toBe(0);
 
     // The marker comment is not durable: the app can reserialize config.toml and drop comments,
     // after which only the journaled value distinguishes our line from a user's (#1798).
-    const journal = JSON.parse(readFileSync(join(codexHome, "opencodex-journal.json"), "utf8"));
+    const journal = JSON.parse(readFileSync(join(codexHome, "openccx-journal.json"), "utf8"));
     expect(journal.injectedOpenaiBaseUrl).toBe("http://127.0.0.1:10100/v1");
 
     const rewritten = readFileSync(join(codexHome, "config.toml"), "utf8")
       .split("\n").filter(line => !line.startsWith("#")).join("\n");
     writeFileSync(join(codexHome, "config.toml"), rewritten, "utf8");
-    expect(runRestore(codexHome, ocxHome).status).toBe(0);
+    expect(runRestore(codexHome, occxHome).status).toBe(0);
     const restored = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(restored).not.toContain("openai_base_url");
-    expect(restored).not.toContain("[model_providers.opencodex]");
+    expect(restored).not.toContain("[model_providers.openccx]");
   });
 
   test("authless together with client compaction keeps the authless form, root key and all", () => {
@@ -1231,7 +1231,7 @@ describe("injectCodexConfig integration (Design B)", () => {
     db.run("INSERT INTO threads VALUES ('thread-authless', ?, 'openai', 'cli', 'hello', 1)", rolloutPath);
     db.close();
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({
       codexClientCompaction: true,
       codexDesktopAuthless: true,
     }));
@@ -1244,20 +1244,20 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).not.toContain("openai_base_url");
     const verifier = new Database(join(codexHome, "state_5.sqlite"), { readonly: true });
     expect(verifier.query("SELECT model_provider FROM threads WHERE id = 'thread-authless'").get())
-      .toEqual({ model_provider: "opencodex" });
+      .toEqual({ model_provider: "openccx" });
     verifier.close();
   });
-  test("client compaction opt-in leaves pre-existing ocx1 resume history byte-for-byte unchanged", () => {
+  test("client compaction opt-in leaves pre-existing occx1 resume history byte-for-byte unchanged", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
     const sessionsDir = join(codexHome, "sessions");
     mkdirSync(sessionsDir, { recursive: true });
-    const rolloutPath = join(sessionsDir, "rollout-ocx1.jsonl");
+    const rolloutPath = join(sessionsDir, "rollout-occx1.jsonl");
     const rollout = `${JSON.stringify({
       type: "compacted",
       payload: {
         replacement_history: [{
           type: "compaction",
-          encrypted_content: "ocx1:cG9ydGFibGUgc3VtbWFyeQ==",
+          encrypted_content: "occx1:cG9ydGFibGUgc3VtbWFyeQ==",
         }],
       },
     })}\n`;
@@ -1267,16 +1267,16 @@ describe("injectCodexConfig integration (Design B)", () => {
       id TEXT PRIMARY KEY, rollout_path TEXT NOT NULL, model_provider TEXT NOT NULL,
       source TEXT, first_user_message TEXT, has_user_event INTEGER
     )`);
-    db.run("INSERT INTO threads VALUES ('thread-ocx1', ?, 'opencodex', 'cli', 'hello', 1)", rolloutPath);
+    db.run("INSERT INTO threads VALUES ('thread-occx1', ?, 'openccx', 'cli', 'hello', 1)", rolloutPath);
     db.close();
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
     expect(String(JSON.parse(enabled.stdout).message)).toContain("left unchanged");
     expect(readFileSync(rolloutPath, "utf8")).toBe(rollout);
     const verifier = new Database(join(codexHome, "state_5.sqlite"), { readonly: true });
-    expect(verifier.query("SELECT model_provider FROM threads WHERE id = 'thread-ocx1'").get())
-      .toEqual({ model_provider: "opencodex" });
+    expect(verifier.query("SELECT model_provider FROM threads WHERE id = 'thread-occx1'").get())
+      .toEqual({ model_provider: "openccx" });
     verifier.close();
   });
 
@@ -1298,17 +1298,17 @@ describe("injectCodexConfig integration (Design B)", () => {
     db.run("INSERT INTO threads VALUES ('thread-designb', ?, 'openai', 'cli', 'hello', 1)", rolloutPath);
     db.close();
 
-    const enabled = runInject(codexHome, ocxHome, JSON.stringify({ codexClientCompaction: true }));
+    const enabled = runInject(codexHome, occxHome, JSON.stringify({ codexClientCompaction: true }));
     expect(enabled.status).toBe(0);
 
     // The thread stays tagged `openai` and its rollout is untouched. It keeps reaching the proxy
     // because the injection retains the root override next to the provider table, so codex's
     // built-in `openai` entry still resolves to this proxy. Re-tagging would have been the other
     // way to keep it routed, but the length-preserving first-line repair cannot grow "openai"
-    // into "opencodex", and codex re-appends that stale first line on its next metadata write.
+    // into "openccx", and codex re-appends that stale first line on its next metadata write.
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(config).toContain('model_provider = "opencodex"');
-    expect(config).toContain("[model_providers.opencodex]");
+    expect(config).toContain('model_provider = "openccx"');
+    expect(config).toContain("[model_providers.openccx]");
     expect(config).toContain("openai_base_url");
     expect(readFileSync(rolloutPath, "utf8")).toBe(rollout);
     const verifier = new Database(join(codexHome, "state_5.sqlite"), { readonly: true });
@@ -1320,24 +1320,24 @@ describe("injectCodexConfig integration (Design B)", () => {
   test("authless Desktop opt-in never weakens non-loopback admission", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ hostname: "192.168.1.20", codexDesktopAuthless: true }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ hostname: "192.168.1.20", codexDesktopAuthless: true }));
     expect(r.status).toBe(0);
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
     expect(config).toContain("requires_openai_auth = true");
-    expect(config).toContain('env_key = "OPENCODEX_API_AUTH_TOKEN"');
+    expect(config).toContain('env_key = "OPENCCX_API_AUTH_TOKEN"');
     expect(config).not.toContain("requires_openai_auth = false");
   });
 
   test("non-loopback hostname still uses the legacy provider-table injection", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    const r = runInject(codexHome, ocxHome, JSON.stringify({ hostname: "192.168.1.20" }));
+    const r = runInject(codexHome, occxHome, JSON.stringify({ hostname: "192.168.1.20" }));
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout).success).toBe(true);
 
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
-    expect(config).toContain('model_provider = "opencodex"');
-    expect(config).toContain("[model_providers.opencodex]");
+    expect(config).toContain('model_provider = "openccx"');
+    expect(config).toContain("[model_providers.openccx]");
     expect(config).toContain('base_url = "http://192.168.1.20:10100/v1"');
     expect(config).not.toContain("openai_base_url");
   });
@@ -1345,7 +1345,7 @@ describe("injectCodexConfig integration (Design B)", () => {
   test("CRLF config (Windows-edited) stays uniformly CRLF after injection", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\r\n\r\n[features]\r\nfast_mode = true\r\n', "utf8");
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
 
     expect(config).toContain('openai_base_url = "http://127.0.0.1:10100/v1"');
@@ -1354,14 +1354,14 @@ describe("injectCodexConfig integration (Design B)", () => {
     expect(config).toContain("\r\n");
 
     // Idempotent re-inject keeps the CRLF form stable.
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     expect(readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(config);
   });
 
   test("LF config gains no carriage returns from injection", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
 
     expect(config).toContain("openai_base_url");
@@ -1371,7 +1371,7 @@ describe("injectCodexConfig integration (Design B)", () => {
   test("inject does not turn on multi_agent_v2; fresh installs stay on Codex's default v1 surface until the user opts in", () => {
     writeFileSync(join(codexHome, "config.toml"), 'model = "gpt-5.5"\n', "utf8");
 
-    expect(runInject(codexHome, ocxHome).status).toBe(0);
+    expect(runInject(codexHome, occxHome).status).toBe(0);
     const config = readFileSync(join(codexHome, "config.toml"), "utf8");
 
     expect(config).not.toContain("[features.multi_agent_v2]");

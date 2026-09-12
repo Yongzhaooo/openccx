@@ -6,7 +6,7 @@ describe("isAgentDriven", () => {
     expect(isAgentDriven({ TERM: "xterm-256color", SHELL: "/bin/zsh" })).toBe(false);
   });
 
-  test("recognizes the agent harnesses that run ocx on a user's behalf", () => {
+  test("recognizes the agent harnesses that run occx on a user's behalf", () => {
     expect(isAgentDriven({ CLAUDECODE: "1" })).toBe(true);
     expect(isAgentDriven({ CODEX_THREAD_ID: "019fa50b" })).toBe(true);
     expect(isAgentDriven({ CURSOR_TRACE_ID: "abc" })).toBe(true);

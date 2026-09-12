@@ -10,7 +10,7 @@ import {
   GetBlobArgsSchema,
   KvServerMessageSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { OcxMessage } from "../../../src/types";
+import type { OccxMessage } from "../../../src/types";
 
 function blobData(blobId: Uint8Array): Uint8Array {
   const reply = fromBinary(AgentClientMessageSchema, handleCursorNativeKv(create(KvServerMessageSchema, {
@@ -56,7 +56,7 @@ function turnStepTexts(bytes: Uint8Array): string[] {
 
 const CALL_ID = "call_echo_1";
 
-function history(options: { resultCallId?: string } = {}): OcxMessage[] {
+function history(options: { resultCallId?: string } = {}): OccxMessage[] {
   return [
     { role: "user", content: "Run echo AAA.", timestamp: 1 },
     {
@@ -78,7 +78,7 @@ function history(options: { resultCallId?: string } = {}): OcxMessage[] {
   ];
 }
 
-function encode(messages: OcxMessage[], modelId: string): Uint8Array {
+function encode(messages: OccxMessage[], modelId: string): Uint8Array {
   return encodeCursorRunRequest({
     modelId,
     conversationId: "c_pairing",
@@ -96,7 +96,7 @@ function encode(messages: OcxMessage[], modelId: string): Uint8Array {
  * zero bytes, which the encoder reads as "no checkpoint" and silently downgrades to full replay —
  * so a test seeded with an empty state would pass while exercising the wrong branch entirely.
  */
-function encodeCheckpoint(messages: OcxMessage[], modelId: string, suffixStart: number): Uint8Array {
+function encodeCheckpoint(messages: OccxMessage[], modelId: string, suffixStart: number): Uint8Array {
   // Stored for real so the decoder helper can read every root back, checkpoint-carried included.
   const seedRoot = storeCursorBlob(new TextEncoder().encode(JSON.stringify({
     role: "user",
@@ -180,7 +180,7 @@ describe("cursor replayed tool results name their invocation", () => {
   // A reused call id must not let a LATER command describe an EARLIER result: a confidently wrong
   // invocation line is worse than none, because nothing downstream can detect the mislabel.
   test("a call id claimed by two different invocations yields no invocation line", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run both.", timestamp: 1 },
       {
         role: "assistant",
@@ -203,7 +203,7 @@ describe("cursor replayed tool results name their invocation", () => {
   });
 
   test("a call id repeated for the SAME invocation still names it", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run it twice.", timestamp: 1 },
       {
         role: "assistant",
@@ -225,7 +225,7 @@ describe("cursor replayed tool results name their invocation", () => {
   test("unserializable arguments do not break request encoding", () => {
     const cyclic: Record<string, unknown> = {};
     cyclic.self = cyclic;
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run it.", timestamp: 1 },
       {
         role: "assistant",
@@ -242,7 +242,7 @@ describe("cursor replayed tool results name their invocation", () => {
   // REVIEW BLOCKER PROBE 1: a large legitimate argument must not push the actual output out of the
   // root byte budget. The invocation line is a convenience; the RESULT is the payload.
   test("PROBE a huge argument must not evict the result output from root replay", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Write the file.", timestamp: 1 },
       {
         role: "assistant",
@@ -259,7 +259,7 @@ describe("cursor replayed tool results name their invocation", () => {
   // The cap is a budget for the RENDERED line, so the truncation marker must come out of it rather
   // than be appended on top of a full-size prefix.
   test("the truncated invocation line stays within the declared argument budget", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Write the file.", timestamp: 1 },
       {
         role: "assistant",
@@ -279,7 +279,7 @@ describe("cursor replayed tool results name their invocation", () => {
   // REVIEW BLOCKER PROBE 2: namespace is part of tool identity. Two different tools sharing one
   // decoded id must be ambiguous, not silently labelled with the first namespace.
   test("PROBE namespaced collision must not name the wrong tool", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Read both.", timestamp: 1 },
       {
         role: "assistant",
@@ -308,7 +308,7 @@ describe("cursor replayed tool results name their invocation", () => {
     a.self = a;
     const b: Record<string, unknown> = { tag: "B" };
     b.self = b;
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run both.", timestamp: 1 },
       {
         role: "assistant",
@@ -357,7 +357,7 @@ describe("cursor checkpoint continuation names the invocation from covered histo
   // result-only suffix produces no turns at all (verified: turns=0) and cannot cover this; the
   // shape that does is a suffix carrying a later user message plus the result of a covered call.
   test("the invocation line also reaches the checkpoint suffix turn step", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run echo AAA.", timestamp: 1 },
       {
         role: "assistant",
@@ -385,7 +385,7 @@ describe("cursor checkpoint continuation names the invocation from covered histo
   // Ambiguity resolution must also read the full history: a call id reused before the cut cannot be
   // labelled from the suffix alone, so a suffix-only index would confidently name the wrong command.
   test("an id reused in covered history yields no invocation line", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run both.", timestamp: 1 },
       {
         role: "assistant",
@@ -422,7 +422,7 @@ describe("cursor checkpoint continuation names the invocation from covered histo
    * `echo FIRST` — a wrong label nothing downstream can detect, which is worse than no label.
    */
   test("an ambiguous id resolved from full history is not re-resolved from the suffix", () => {
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "Run both.", timestamp: 1 },
       {
         role: "assistant",
@@ -463,7 +463,7 @@ describe("cursor invocation lookup is bounded by history position", () => {
   const FWD = "call_fwd";
 
   /** Result at index 1; the call claiming its id is at index 3. */
-  function forwardHistory(): OcxMessage[] {
+  function forwardHistory(): OccxMessage[] {
     return [
       { role: "user", content: "start", timestamp: 1 },
       { role: "toolResult", toolCallId: FWD, toolName: "exec_command", content: "EARLY-OUT", isError: false, timestamp: 2 },
@@ -524,7 +524,7 @@ describe("cursor invocation lookup is bounded by history position", () => {
     // CURSOR_EXTERNAL_ROOT_BYTE_LIMIT is 512 KiB; this must exceed it to force any pruning, so
     // historyMessageStart lands above zero. A 400 KiB message left it at 0 and made the case toothless.
     const bulky = "Z".repeat(600 * 1024);
-    const messages: OcxMessage[] = [
+    const messages: OccxMessage[] = [
       { role: "user", content: "first", timestamp: 1 },
       // Pruned from the root, which is what pushes historyMessageStart above zero.
       { role: "user", content: bulky, timestamp: 2 },

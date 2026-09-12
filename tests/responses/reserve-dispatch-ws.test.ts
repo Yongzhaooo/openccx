@@ -6,7 +6,7 @@ import { clearAccountNeedsReauth } from "../../src/codex/account-runtime-state";
 import { clearCodexUpstreamHealthForAccount } from "../../src/codex/routing";
 import { clearMainAccountInfoCache, observeMainQuotaCredential, observeMainQuotaIdentity } from "../../src/codex/main-account-cache";
 import { getMainReserveAuthorization, isMainReserveAuthorizationLive } from "../../src/codex/reserve-availability";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 const URL = "https://chatgpt.com/backend-api/codex/responses";
 const realWebSocket = globalThis.WebSocket;
@@ -263,7 +263,7 @@ describe("synchronous Reserve dispatch callbacks on WebSocket", () => {
     let constructed!: (socket: DelayedWebSocket) => void;
     const created = new Promise<DelayedWebSocket>(resolve => { constructed = resolve; });
     DelayedWebSocket.constructed = constructed;
-    const provider: OcxProviderConfig & { fetch: typeof fetch } = {
+    const provider: OccxProviderConfig & { fetch: typeof fetch } = {
       adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex",
       fetch: Object.assign(async () => { httpSends += 1; return new Response("unexpected"); }, { preconnect() {} }),
     };

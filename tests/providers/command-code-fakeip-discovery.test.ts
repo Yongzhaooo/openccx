@@ -36,7 +36,7 @@ const { PROXY_ENV_KEYS } = await import("../../src/lib/proxy-env");
 const { gatherRoutedModels, clearGatherRoutedModelsInflight } = await import("../../src/codex/catalog/provider-fetch");
 const { clearModelCache, clearProviderDiscoveryStatus, getProviderDiscoveryStatus } = await import("../../src/codex/model-cache");
 const { withStubbedProviderFetch } = await import("../helpers/catalog-provider-fetch");
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 const FIXTURE = readFileSync(join(import.meta.dir, "../fixtures/commandcode-models.json"), "utf8");
 
@@ -48,7 +48,7 @@ function clearProxyEnv(): void {
   for (const key of proxyKeys) delete process.env[key];
 }
 
-function canonicalOAuthRow(): OcxProviderConfig {
+function canonicalOAuthRow(): OccxProviderConfig {
   return {
     adapter: "command-code",
     baseUrl: "https://api.commandcode.ai",
@@ -58,7 +58,7 @@ function canonicalOAuthRow(): OcxProviderConfig {
   };
 }
 
-function canonicalConfig(): OcxConfig {
+function canonicalConfig(): OccxConfig {
   return {
     providers: {
       "command-code": {
@@ -66,7 +66,7 @@ function canonicalConfig(): OcxConfig {
         apiKey: "simulated-oauth-bearer",
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 afterEach(() => {
@@ -123,17 +123,17 @@ describe("command-code OAuth discovery under Clash/Mihomo fake-IP DNS", () => {
     // Production resolves the OAuth bearer through the OBSERVED auth-store path
     // (filesystem evidence -> observedModelsAuthResolver), never the provider
     // row. Mirror that here: write a command-code account into an isolated
-    // OPENCODEX_HOME auth store and gather through the observed entry point.
+    // OPENCCX_HOME auth store and gather through the observed entry point.
     // The stubbed executor asserts the materialized bearer without exposing it.
     const { mkdtempSync, mkdirSync, writeFileSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { gatherRoutedModelsForCatalogGather } = await import("../../src/codex/catalog/provider-fetch");
-    const root = mkdtempSync(join(tmpdir(), "ocx-cc-fakeip-"));
-    const home = join(root, "opencodex");
+    const root = mkdtempSync(join(tmpdir(), "occx-cc-fakeip-"));
+    const home = join(root, "openccx");
     mkdirSync(home, { recursive: true });
-    const previousHome = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     const now = Date.now();
     writeFileSync(
       join(home, "auth.json"),
@@ -161,7 +161,7 @@ describe("command-code OAuth discovery under Clash/Mihomo fake-IP DNS", () => {
     }) as typeof fetch;
 
     try {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         providers: {
           "command-code": {
             adapter: "command-code",
@@ -182,8 +182,8 @@ describe("command-code OAuth discovery under Clash/Mihomo fake-IP DNS", () => {
       expect(ours.map(model => model.id)).toContain("deepseek/deepseek-v4-flash");
       expect(getProviderDiscoveryStatus("command-code")).toEqual({ status: "ok" });
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       const { removeTreeWithRetry } = await import("../helpers/remove-tree");
       removeTreeWithRetry(root);
     }

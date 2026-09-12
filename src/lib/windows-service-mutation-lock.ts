@@ -18,7 +18,7 @@ export class WindowsServiceMutationBusyError extends Error {
   readonly code = "WINDOWS_SERVICE_MUTATION_BUSY";
 
   constructor() {
-    super("Another OpenCodex Windows service operation is already in progress. Wait for it to finish, then retry.");
+    super("Another Openccx Windows service operation is already in progress. Wait for it to finish, then retry.");
     this.name = "WindowsServiceMutationBusyError";
   }
 }
@@ -46,9 +46,9 @@ function isBusy(error: unknown): boolean {
 }
 
 /**
- * Stable per-user lock namespace for the fixed `opencodex-proxy` task name.
+ * Stable per-user lock namespace for the fixed `openccx-proxy` task name.
  *
- * Deliberately outside OPENCODEX_HOME: creating the lock must not make a genuinely fresh
+ * Deliberately outside OPENCCX_HOME: creating the lock must not make a genuinely fresh
  * config root look pre-existing before the installer records its uninstall ownership. The
  * effective-user runtime root ignores LOCALAPPDATA/USERPROFILE overrides, so two processes
  * running as the same SID cannot split the lock by changing their environment or config home.
@@ -70,7 +70,7 @@ function assertRegularPath(path: string, kind: "directory" | "file"): void {
 }
 
 /**
- * Serialize one complete Windows service mutation across OpenCodex processes.
+ * Serialize one complete Windows service mutation across Openccx processes.
  *
  * The SQLite write transaction is the lock. It stays held across UAC and async verification,
  * and the OS releases it if the process exits, so no stale lock file needs unsafe reclamation.

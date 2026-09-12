@@ -9,7 +9,7 @@ import { createCursorRequest } from "../../../src/adapters/cursor/request-builde
 import { encodeCursorRunRequest } from "../../../src/adapters/cursor/protobuf-request";
 import { fromBinary } from "@bufbuild/protobuf";
 import { AgentClientMessageSchema, type AgentRunRequest } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { OcxParsedRequest } from "../../../src/types/request";
+import type { OccxParsedRequest } from "../../../src/types/request";
 
 function decodeRunRequest(bytes: Uint8Array): AgentRunRequest {
   const msg = fromBinary(AgentClientMessageSchema, bytes);
@@ -17,12 +17,12 @@ function decodeRunRequest(bytes: Uint8Array): AgentRunRequest {
   return msg.message.value;
 }
 
-function parsedFor(modelId: string, reasoning?: string): OcxParsedRequest {
+function parsedFor(modelId: string, reasoning?: string): OccxParsedRequest {
   return {
     modelId,
     context: { systemPrompt: [], messages: [{ role: "user", content: "hi" }] },
     options: reasoning ? { reasoning } : {},
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 describe("cursor ultra (-1m / Max Mode) toggle (devlog 260826 070)", () => {

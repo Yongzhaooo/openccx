@@ -39,7 +39,7 @@ function observation(): ObservationEvent {
   const subject: ProtocolSubjectV1 = {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: "2.13.0",
+    openccxCompatibilityVersion: "2.13.0",
     effectiveAdapter: "openai-chat",
     inboundProtocol: "openai-responses",
     upstreamProtocol: "openai-chat",
@@ -87,9 +87,9 @@ function projectedBundle() {
 
 describe("CL-10 publisher continuity", () => {
   test("same content from two publishers coexists and revokes independently", () => {
-    const publisherA = configDir("ocx-cl10-publisher-a-");
-    const publisherB = configDir("ocx-cl10-publisher-b-");
-    const consumer = configDir("ocx-cl10-consumer-");
+    const publisherA = configDir("occx-cl10-publisher-a-");
+    const publisherB = configDir("occx-cl10-publisher-b-");
+    const consumer = configDir("occx-cl10-consumer-");
     const unsigned = projectedBundle();
     const bundleA = signPublicEvidenceBundle({ ...unsigned, configDir: publisherA });
     const bundleB = signPublicEvidenceBundle({ ...unsigned, configDir: publisherB });

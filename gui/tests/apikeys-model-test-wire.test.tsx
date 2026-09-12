@@ -37,7 +37,7 @@ const KEYS_OK = {
   claudeCodeEnabled: true,
 };
 
-const ONE_TIME_KEY = "ocx_data_onetime_secret_value";
+const ONE_TIME_KEY = "occx_data_onetime_secret_value";
 
 interface SentRequest {
   url: string;
@@ -98,7 +98,7 @@ function installFetch(sent: SentRequest[], dataPlaneStatus = 200): void {
       sent.push({
         url,
         method,
-        key: headers.get("x-opencodex-api-key"),
+        key: headers.get("x-openccx-api-key"),
         authorization: headers.get("authorization"),
         body: JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>,
       });

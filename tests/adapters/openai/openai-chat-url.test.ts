@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../../src/adapters/openai-chat";
 import { openaiChatCompletionsUrl } from "../../../src/adapters/openai-chat-url";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 describe("openai-chat URL normalization", () => {
   test("maps the four common paste shapes to the canonical chat endpoint", () => {
@@ -31,13 +31,13 @@ describe("openai-chat URL normalization", () => {
   });
 
   test("buildRequest uses the normalized URL when baseUrl already includes /chat/completions/", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.example.test/v1/chat/completions/",
       apiKey: "sk-test",
       authMode: "key",
     };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "teamwicked-kimi-k3",
       context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
       stream: false,

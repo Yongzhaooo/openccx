@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { INTERNAL_DEADLINE_MS, SPAWN_BUDGET_MS } from "../helpers/test-budget";
 import { configuredReasoningEfforts } from "../../src/reasoning-effort";
 import { isModelTextOnly } from "../../src/vision";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
@@ -28,7 +28,7 @@ function runCli(args: string[], env: Record<string, string> = {}) {
 }
 
 function freshConfig(extra?: Record<string, unknown>) {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-models-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-models-"));
   const config = {
     port: 10100,
     providers: {
@@ -52,11 +52,11 @@ function freshConfig(extra?: Record<string, unknown>) {
   return { dir };
 }
 
-describe("ocx models", () => {
+describe("occx models", () => {
   test("models lists all provider models", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("test-model-1");
       expect(result.stdout).toContain("test-model-2");
@@ -70,7 +70,7 @@ describe("ocx models", () => {
   test("models --provider filters to one provider", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "--provider", "test"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--provider", "test"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("test-model-1");
       expect(result.stdout).toContain("test:");
@@ -82,7 +82,7 @@ describe("ocx models", () => {
   test("models --provider rejects unknown provider", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "--provider", "nonexistent"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--provider", "nonexistent"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("not configured");
     } finally {
@@ -93,7 +93,7 @@ describe("ocx models", () => {
   test("models --json returns valid JSON", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(parsed.models).toBeArray();
@@ -109,7 +109,7 @@ describe("ocx models", () => {
   test("models --provider X --json combines flags", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "--provider", "test", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--provider", "test", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(parsed.models.every((m: { provider: string }) => m.provider === "test")).toBe(true);
@@ -121,7 +121,7 @@ describe("ocx models", () => {
   test("models --help prints usage", () => {
     const result = runCli(["models", "--help"]);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("ocx models");
+    expect(result.stdout).toContain("occx models");
   });
 
   test("help models shows models help entry", () => {
@@ -131,9 +131,9 @@ describe("ocx models", () => {
   });
 });
 
-describe("ocx models richer metadata", () => {
+describe("occx models richer metadata", () => {
   test("models --json includes contextWindow and inputModalities", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-models-rich-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-models-rich-"));
     const config = {
       port: 10100,
       providers: {
@@ -160,7 +160,7 @@ describe("ocx models richer metadata", () => {
     };
     writeFileSync(join(dir, "config.json"), JSON.stringify(config), "utf8");
     try {
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       const modelA = parsed.models.find((m: { model: string }) => m.model === "model-a");
@@ -190,7 +190,7 @@ describe("ocx models richer metadata", () => {
     // isModelTextOnly matches noVisionModels with modelInList and reads
     // modelInputModalities with modelRecordValue, so a `gpt-oss` entry covers
     // `gpt-oss:120b`. This command must not report a different answer.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-models-family-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-models-family-"));
     const provider = {
       adapter: "openai-chat",
       baseUrl: "http://localhost:8080/v1",
@@ -208,9 +208,9 @@ describe("ocx models richer metadata", () => {
     );
     try {
       // Ground truth first: what the proxy itself will do with this config.
-      expect(isModelTextOnly(provider as unknown as OcxProviderConfig, "gpt-oss:120b")).toBe(true);
+      expect(isModelTextOnly(provider as unknown as OccxProviderConfig, "gpt-oss:120b")).toBe(true);
 
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const row = JSON.parse(result.stdout).models
         .find((m: { model: string }) => m.model === "gpt-oss:120b");
@@ -226,7 +226,7 @@ describe("ocx models richer metadata", () => {
     // `configuredReasoningEfforts` is what the catalog and the effort cap resolve
     // through. Restating part of it here reported a ladder for a model the proxy
     // strips reasoning from, and echoed a level Codex does not declare.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-models-efforts-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-models-efforts-"));
     const provider = {
       adapter: "openai-chat",
       baseUrl: "http://localhost:8080/v1",
@@ -243,7 +243,7 @@ describe("ocx models richer metadata", () => {
       "utf8",
     );
     try {
-      const config = provider as unknown as OcxProviderConfig;
+      const config = provider as unknown as OccxProviderConfig;
       // Ground truth first: what the proxy itself will do with this config.
       expect(configuredReasoningEfforts(config, "model-a")).toEqual(["low", "medium", "high"]);
       // An empty ladder is not the same claim as "no override": it says this model
@@ -251,7 +251,7 @@ describe("ocx models richer metadata", () => {
       expect(configuredReasoningEfforts(config, "model-b")).toEqual([]);
       expect(configuredReasoningEfforts(config, "model-c")).toEqual(["low", "high"]);
 
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const rows = JSON.parse(result.stdout).models as { model: string; reasoningEfforts: unknown }[];
       const ladderOf = (model: string) => rows.find((m) => m.model === model)?.reasoningEfforts;
@@ -268,7 +268,7 @@ describe("ocx models richer metadata", () => {
     // isModelTextOnly returns true on the noVisionModels match before it ever reads
     // modelInputModalities, so an exact entry listing "image" does not grant vision.
     // Reporting ["text", "image"] here would advertise support the proxy then rejects.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-models-novision-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-models-novision-"));
     const provider = {
       adapter: "openai-chat",
       baseUrl: "http://localhost:8080/v1",
@@ -285,9 +285,9 @@ describe("ocx models richer metadata", () => {
     );
     try {
       // Ground truth first: the proxy treats this model as text-only.
-      expect(isModelTextOnly(provider as unknown as OcxProviderConfig, "gpt-oss:120b")).toBe(true);
+      expect(isModelTextOnly(provider as unknown as OccxProviderConfig, "gpt-oss:120b")).toBe(true);
 
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const row = JSON.parse(result.stdout).models
         .find((m: { model: string }) => m.model === "gpt-oss:120b");
@@ -298,7 +298,7 @@ describe("ocx models richer metadata", () => {
   });
 
   test("an exact entry still wins over the family entry", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-models-exact-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-models-exact-"));
     const provider = {
       adapter: "openai-chat",
       baseUrl: "http://localhost:8080/v1",
@@ -313,7 +313,7 @@ describe("ocx models richer metadata", () => {
       "utf8",
     );
     try {
-      const result = runCli(["models", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--json"], { OPENCCX_HOME: dir });
       const row = JSON.parse(result.stdout).models
         .find((m: { model: string }) => m.model === "gpt-oss:20b");
       expect(row.contextWindow).toBe(32000);
@@ -325,7 +325,7 @@ describe("ocx models richer metadata", () => {
   test("models rejects unknown flags", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "--bogus"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "--bogus"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("Unknown flag");
     } finally {
@@ -334,11 +334,11 @@ describe("ocx models richer metadata", () => {
   });
 });
 
-describe("ocx models custom slash ids", () => {
+describe("occx models custom slash ids", () => {
   test("models add accepts slash model ids", () => {
     const { dir } = freshConfig();
     try {
-      const result = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
       expect(config.customModels[0].modelId).toBe("openai/gpt-5.5");
@@ -351,9 +351,9 @@ describe("ocx models custom slash ids", () => {
     for (const target of ["test/openai/gpt-5.5", "test/openai-gpt-5.5"]) {
       const { dir } = freshConfig();
       try {
-        const add = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCODEX_HOME: dir });
+        const add = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCCX_HOME: dir });
         expect(add.status).toBe(0);
-        const remove = runCli(["models", "remove", target, "--yes"], { OPENCODEX_HOME: dir });
+        const remove = runCli(["models", "remove", target, "--yes"], { OPENCCX_HOME: dir });
         expect(remove.status).toBe(0);
         const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
         expect(config.customModels ?? []).toEqual([]);
@@ -368,7 +368,7 @@ describe("ocx models custom slash ids", () => {
     try {
       const result = runCli(
         ["models", "add", "test", "openai/gpt-5.5", "--display-name", "foo/bar"],
-        { OPENCODEX_HOME: dir },
+        { OPENCCX_HOME: dir },
       );
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("displayName must not contain /");
@@ -395,10 +395,10 @@ describe("ocx models custom slash ids", () => {
       },
     });
     try {
-      const slash = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCODEX_HOME: dir });
+      const slash = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCCX_HOME: dir });
       expect(slash.status).toBe(1);
       expect(slash.stderr).toContain("ambiguous");
-      const multi = runCli(["models", "add", "test", "a/b-c"], { OPENCODEX_HOME: dir });
+      const multi = runCli(["models", "add", "test", "a/b-c"], { OPENCCX_HOME: dir });
       expect(multi.status).toBe(1);
       expect(multi.stderr).toContain("ambiguous");
     } finally {
@@ -424,7 +424,7 @@ describe("ocx models custom slash ids", () => {
       },
     });
     try {
-      const result = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "add", "test", "openai/gpt-5.5"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("ambiguous");
     } finally {
@@ -440,7 +440,7 @@ describe("ocx models custom slash ids", () => {
       ],
     });
     try {
-      const result = runCli(["models", "remove", "test/openai-gpt-5.5", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "test/openai-gpt-5.5", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("ambiguous");
       expect(result.stderr).toContain("custom model id");
@@ -468,7 +468,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
     });
     try {
       // Before: this deleted the slash row outright, because slugEquals matched only it.
-      const result = runCli(["models", "remove", "test/openai/gpt-5.5", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "test/openai/gpt-5.5", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("ambiguous");
       // Refusing is the right default for a destructive command: nothing was removed.
@@ -488,7 +488,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
       ],
     });
     try {
-      const result = runCli(["models", "remove", "test/openai/gpt-5.5", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "test/openai/gpt-5.5", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
       expect(config.customModels.map((m: { modelId: string }) => m.modelId)).toEqual(["unrelated"]);
@@ -505,7 +505,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
       ],
     });
     try {
-      const result = runCli(["models", "remove", "openai/gpt-5.5", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "openai/gpt-5.5", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
       expect(config.customModels).toEqual([
@@ -523,7 +523,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
       ],
     });
     try {
-      const result = runCli(["models", "remove", "openai/gpt-5.5", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "openai/gpt-5.5", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("not found");
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
@@ -550,7 +550,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
       ],
     });
     try {
-      const result = runCli(["models", "remove", "acme/turbo", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "acme/turbo", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
       // The sibling survives: the selector named the native row, not the qualified reading.
@@ -574,7 +574,7 @@ describe("#2491 the removal selector uses the shared equivalence relation", () =
       ],
     });
     try {
-      const result = runCli(["models", "remove", "acme/turbo", "--yes"], { OPENCODEX_HOME: dir });
+      const result = runCli(["models", "remove", "acme/turbo", "--yes"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       const config = JSON.parse(readFileSync(join(dir, "config.json"), "utf8"));
       expect(config.customModels).toBeUndefined();

@@ -4,7 +4,7 @@ import { cursorUmbrellaRows } from "../../../src/adapters/cursor/catalog";
 import { enrichProviderFromRegistry, providerConfigSeed } from "../../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../../src/providers/registry";
 import { configuredModelDisplayName } from "../../../src/codex/catalog/provider-fetch";
-import type { OcxProviderConfig } from "../../../src/types";
+import type { OccxProviderConfig } from "../../../src/types";
 
 /**
  * `routedDisplayName` (codex/catalog/sync.ts) passes a routed slug through unchanged, so a
@@ -56,7 +56,7 @@ describe("cursor picker labels reach the catalog", () => {
       adapter: "cursor",
       baseUrl: "https://api2.cursor.sh",
       modelDisplayNames: { "kimi-k3": "My K3" },
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     enrichProviderFromRegistry("cursor", existing);
     // Operator value survives...
     expect(configuredModelDisplayName(existing, "kimi-k3")).toBe("My K3");

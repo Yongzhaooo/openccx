@@ -1,7 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { getProviderRegistryEntry } from "../providers/registry";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 
 const BLOCKED_METADATA_HOSTS = new Set([
   "instance-data.ec2.internal",
@@ -257,7 +257,7 @@ function registrySendsOAuthToOverriddenBaseUrl(name: string): boolean {
 
 export function providerSecureTransportConfigError(
   name: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "allowPrivateNetwork">,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "allowPrivateNetwork">,
 ): string | null {
   if (!registrySendsOAuthToOverriddenBaseUrl(name)) return null;
   let parsed: URL;
@@ -298,12 +298,12 @@ export function providerSecureTransportConfigError(
  */
 export function providerAllowsPrivateNetwork(
   name: string,
-  provider: Pick<OcxProviderConfig, "allowPrivateNetwork">,
+  provider: Pick<OccxProviderConfig, "allowPrivateNetwork">,
 ): boolean {
   return provider.allowPrivateNetwork === true || registryAllowsPrivateNetwork(name);
 }
 
-export function providerDestinationConfigError(name: string, provider: Pick<OcxProviderConfig, "baseUrl" | "allowPrivateNetwork">): string | null {
+export function providerDestinationConfigError(name: string, provider: Pick<OccxProviderConfig, "baseUrl" | "allowPrivateNetwork">): string | null {
   const secureTransportError = providerSecureTransportConfigError(name, provider);
   if (secureTransportError) return secureTransportError;
   const assessment = assessDestination(provider.baseUrl);
@@ -314,7 +314,7 @@ export function providerDestinationConfigError(name: string, provider: Pick<OcxP
   return `baseUrl points to a ${assessment.detail}; set allowPrivateNetwork:true only for intentionally local/self-hosted providers`;
 }
 
-export function assertProviderDestinationAllowed(name: string, provider: Pick<OcxProviderConfig, "baseUrl" | "allowPrivateNetwork">): void {
+export function assertProviderDestinationAllowed(name: string, provider: Pick<OccxProviderConfig, "baseUrl" | "allowPrivateNetwork">): void {
   const error = providerDestinationConfigError(name, provider);
   if (error) throw new Error(`provider ${name} ${error}`);
 }
@@ -334,7 +334,7 @@ export function assertProviderDestinationAllowed(name: string, provider: Pick<Oc
  */
 export async function providerDestinationResolvedError(
   name: string,
-  provider: Pick<OcxProviderConfig, "baseUrl" | "allowPrivateNetwork">,
+  provider: Pick<OccxProviderConfig, "baseUrl" | "allowPrivateNetwork">,
   options?: { allowBenchmarkAddresses?: boolean },
 ): Promise<string | null> {
   const syncError = providerDestinationConfigError(name, provider);

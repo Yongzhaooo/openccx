@@ -27,7 +27,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const origHome = process.env.HOME;
 const origLocalAppData = process.env.LOCALAPPDATA;
 const origUserProfile = process.env.USERPROFILE;
-const origOcxHome = process.env.OPENCODEX_HOME;
+const origOccxHome = process.env.OPENCCX_HOME;
 const origRegion = process.env.KIRO_REGION;
 const origCliDbFile = process.env.KIRO_CLI_DB_FILE;
 const origCliDbPath = process.env.KIROCLI_DB_PATH;
@@ -44,7 +44,7 @@ beforeEach(() => {
   // Native kiro-cli store resolves per-platform (issue #710); win32 prefers these over HOME.
   process.env.LOCALAPPDATA = join(tmp, "AppData", "Local");
   process.env.USERPROFILE = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
   process.env.KIRO_REGION = "us-east-1";
   delete process.env.KIRO_CLI_DB_FILE;
   delete process.env.KIROCLI_DB_PATH;
@@ -56,7 +56,7 @@ afterEach(() => {
   if (origHome === undefined) delete process.env.HOME; else process.env.HOME = origHome;
   if (origLocalAppData === undefined) delete process.env.LOCALAPPDATA; else process.env.LOCALAPPDATA = origLocalAppData;
   if (origUserProfile === undefined) delete process.env.USERPROFILE; else process.env.USERPROFILE = origUserProfile;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME; else process.env.OPENCODEX_HOME = origOcxHome;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME; else process.env.OPENCCX_HOME = origOccxHome;
   if (origRegion === undefined) delete process.env.KIRO_REGION; else process.env.KIRO_REGION = origRegion;
   if (origCliDbFile === undefined) delete process.env.KIRO_CLI_DB_FILE; else process.env.KIRO_CLI_DB_FILE = origCliDbFile;
   if (origCliDbPath === undefined) delete process.env.KIROCLI_DB_PATH; else process.env.KIROCLI_DB_PATH = origCliDbPath;
@@ -430,7 +430,7 @@ describe("oauth refresh hardening", () => {
     expect(getCredential("xai")?.expires).toBe(diskExpires);
   });
 
-  test("stale Grok generation refreshes once and detaches to OpenCodex ownership", async () => {
+  test("stale Grok generation refreshes once and detaches to Openccx ownership", async () => {
     await saveCredential("xai", {
       access: "xai-old", refresh: "rt-old", expires: Date.now() - 1, accountId: "user-1", source: "local-cli",
     });
@@ -452,7 +452,7 @@ describe("oauth refresh hardening", () => {
     expect(mock.discoveryCount()).toBe(1);
     expect(mock.tokenCount()).toBe(1);
     expect(warnings).toEqual([[
-      "[oauth:xai] Grok CLI credential was stale; refreshed into OpenCodex ownership. Grok CLI may require login again.",
+      "[oauth:xai] Grok CLI credential was stale; refreshed into Openccx ownership. Grok CLI may require login again.",
     ]]);
     expect(getCredential("xai")?.refresh).toBe("rt-fresh");
     expect(getCredential("xai")?.source).toBe("oauth");

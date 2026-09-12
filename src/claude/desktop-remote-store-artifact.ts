@@ -64,7 +64,7 @@ export function locateLegacy(io: StoreIO, owner: DesktopRemoteOwner, known: read
     if (!file) { if (entry.id === meta.value.appliedId) throw new DesktopStoreError("unsafe"); continue; }
     const credential = profileCredential(file.value);
     if (!credential || credential.origin !== owner.serverUrl) continue;
-    if (entry.name !== "opencodex" || !known.includes(credential.fingerprint) || found) throw new DesktopStoreError("conflict");
+    if (entry.name !== "openccx" || !known.includes(credential.fingerprint) || found) throw new DesktopStoreError("conflict");
     found = { id: entry.id, file };
   }
   return found;
@@ -93,8 +93,8 @@ export function establish(io: StoreIO, owner: DesktopRemoteOwner, known: readonl
   const selected = selectedFile(io, bundle.paths.library, meta.value);
   const legacy = locateLegacy(io, owner, known);
   if (onlyLegacy && !legacy && !bundle.state) return null;
-  const entry = meta.value.entries.find(e => e.id === meta.value.appliedId && e.name === "opencodex")
-    ?? meta.value.entries.find(e => e.name === "opencodex");
+  const entry = meta.value.entries.find(e => e.id === meta.value.appliedId && e.name === "openccx")
+    ?? meta.value.entries.find(e => e.name === "openccx");
   const targetId = bundle.state?.targetId ?? legacy?.id ?? entry?.id ?? randomUUID();
   if (!meta.value.entries.some(e => e.id === targetId) && meta.value.entries.length >= MAX_DESKTOP_METADATA_ENTRIES) {
     throw new DesktopStoreError("conflict");
@@ -103,7 +103,7 @@ export function establish(io: StoreIO, owner: DesktopRemoteOwner, known: readonl
   const credential = profileCredential(target?.value ?? null);
   if (credential && known.includes(credential.fingerprint) && credential.origin !== owner.serverUrl) throw new DesktopStoreError("conflict");
   const fallback = credential?.origin === owner.serverUrl;
-  if (fallback && (!known.includes(credential.fingerprint) || (entry?.name !== "opencodex" && legacy?.id !== targetId))) throw new DesktopStoreError("conflict");
+  if (fallback && (!known.includes(credential.fingerprint) || (entry?.name !== "openccx" && legacy?.id !== targetId))) throw new DesktopStoreError("conflict");
   const priorSelection = meta.value.appliedId && selected && !(fallback && meta.value.appliedId === targetId)
     ? { id: meta.value.appliedId, hash: selected.hash } : null;
   const baseline: Baseline = {
@@ -134,7 +134,7 @@ export function artifact(io: StoreIO, bundle: Bundle, next: Projection, kind: Ar
   // An absent row is valid only while a recorded first creation is unfinished.
   // Keeping the original null projection receipt across apply -> restore proves it.
   const uncommittedCreation = bundle.baseline?.targetExisted === false && state.lastProjectionHash === projectionHash(null);
-  if ((existing && existing.name !== "opencodex") || (!existing && !uncommittedCreation)) throw new DesktopStoreError("conflict");
+  if ((existing && existing.name !== "openccx") || (!existing && !uncommittedCreation)) throw new DesktopStoreError("conflict");
   if (!existing && meta.value.entries.length >= MAX_DESKTOP_METADATA_ENTRIES) throw new DesktopStoreError("conflict");
   const before = projectionHash(current?.value ?? null), after = projectionHash(next);
   const selection = meta.value.appliedId ?? null;
@@ -160,7 +160,7 @@ export function artifact(io: StoreIO, bundle: Bundle, next: Projection, kind: Ar
   if (!existing || afterSelection !== selection) {
     if (!existing && fresh.value.entries.length >= MAX_DESKTOP_METADATA_ENTRIES) throw new DesktopStoreError("conflict");
     if (afterSelection && !io.read(profilePath(bundle.paths.library, afterSelection))) throw new DesktopStoreError("unsafe");
-    const entries = existing ? fresh.value.entries : [...fresh.value.entries, { id: state.targetId, name: "opencodex" }];
+    const entries = existing ? fresh.value.entries : [...fresh.value.entries, { id: state.targetId, name: "openccx" }];
     const value = { ...fresh.value, entries, ...(afterSelection ? { appliedId: afterSelection } : {}) };
     io.write(join(bundle.paths.library, "_meta.json"), value, fresh.file);
   }

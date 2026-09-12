@@ -17,9 +17,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { CODEX_FORWARD_BASE_URL } from "../../src/providers/openai-tiers";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
-function providerConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function providerConfig(overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   return {
     defaultProvider: "gw",
     providers: {
@@ -31,7 +31,7 @@ function providerConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
         ...overrides,
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("/v1/responses defaults store:false only for the canonical forward Codex backend", () => {
@@ -57,7 +57,7 @@ describe("/v1/responses defaults store:false only for the canonical forward Code
   }
 
   async function drive(
-    config: OcxConfig,
+    config: OccxConfig,
     store: unknown,
   ): Promise<{ url: string; body: Record<string, unknown> | null }> {
     const { urls, bodies } = captureUpstream();

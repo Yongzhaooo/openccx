@@ -198,9 +198,9 @@ describe("responses-field-backfill", () => {
     };
     const [out] = apply(sseBlock(event));
     const parsed = parseData([out])[0];
-    expect(parsed.response.output[0].id).toBe("rs_ocx_0");
-    expect(parsed.response.output[1].id).toBe("msg_ocx_1");
-    expect(parsed.response.output[2].id).toBe("fc_ocx_2");
+    expect(parsed.response.output[0].id).toBe("rs_occx_0");
+    expect(parsed.response.output[1].id).toBe("msg_occx_1");
+    expect(parsed.response.output[2].id).toBe("fc_occx_2");
   });
 
   test("preserves existing item ids", () => {
@@ -234,7 +234,7 @@ describe("responses-field-backfill", () => {
     };
     const [out] = apply(sseBlock(event));
     const parsed = parseData([out])[0];
-    expect(parsed.item.id).toBe("msg_ocx_3");
+    expect(parsed.item.id).toBe("msg_occx_3");
   });
 
   test("falls back to item_ prefix for inherited type names", () => {
@@ -250,7 +250,7 @@ describe("responses-field-backfill", () => {
     };
     const [out] = apply(sseBlock(event));
     const parsed = parseData([out])[0];
-    expect(parsed.item.id).toBe("item_ocx_0");
+    expect(parsed.item.id).toBe("item_occx_0");
   });
 
   test("an invalid output_index still yields a well-formed synthesized id", () => {
@@ -268,12 +268,12 @@ describe("responses-field-backfill", () => {
       const [out] = apply(sseBlock(event));
       const parsed = parseData([out])[0];
       // The fallback carries its own namespace so it can never equal an index-derived id.
-      expect(parsed.item.id).toMatch(/^msg_ocx_fallback_\d+$/);
+      expect(parsed.item.id).toMatch(/^msg_occx_fallback_\d+$/);
     }
   });
 
   test("two items with an unusable output_index do not collide on one id", () => {
-    // Collapsing an unusable index to 0 would synthesize `msg_ocx_0` twice, which is the
+    // Collapsing an unusable index to 0 would synthesize `msg_occx_0` twice, which is the
     // duplicate-id defect this backfill exists to prevent. Position is unrecoverable here;
     // uniqueness is not optional.
     const event = (text: string) => ({
@@ -288,8 +288,8 @@ describe("responses-field-backfill", () => {
     const first = parseData(apply(sseBlock(event("one"))))[0];
     const second = parseData(apply(sseBlock(event("two"))))[0];
 
-    expect(first.item.id).toMatch(/^msg_ocx_fallback_\d+$/);
-    expect(second.item.id).toMatch(/^msg_ocx_fallback_\d+$/);
+    expect(first.item.id).toMatch(/^msg_occx_fallback_\d+$/);
+    expect(second.item.id).toMatch(/^msg_occx_fallback_\d+$/);
     expect(first.item.id).not.toBe(second.item.id);
   });
 
@@ -306,8 +306,8 @@ describe("responses-field-backfill", () => {
     };
     // Stability across events referencing the same item is the whole point of index-derivation,
     // so the fallback must not leak into the well-formed path.
-    expect(parseData(apply(sseBlock(event)))[0].item.id).toBe("msg_ocx_3");
-    expect(parseData(apply(sseBlock(event)))[0].item.id).toBe("msg_ocx_3");
+    expect(parseData(apply(sseBlock(event)))[0].item.id).toBe("msg_occx_3");
+    expect(parseData(apply(sseBlock(event)))[0].item.id).toBe("msg_occx_3");
   });
 
   test("backfillResponsesFieldsJson backfills missing ids on output items", () => {
@@ -332,9 +332,9 @@ describe("responses-field-backfill", () => {
       ],
     };
     const result = JSON.parse(backfillResponsesFieldsJson(JSON.stringify(response))) as typeof response;
-    expect(result.output[0].id).toBe("rs_ocx_0");
-    expect(result.output[1].id).toBe("msg_ocx_1");
-    expect(result.output[2].id).toBe("fc_ocx_2");
+    expect(result.output[0].id).toBe("rs_occx_0");
+    expect(result.output[1].id).toBe("msg_occx_1");
+    expect(result.output[2].id).toBe("fc_occx_2");
   });
 
   test("backfillResponsesFieldsJson preserves existing item ids", () => {
@@ -641,7 +641,7 @@ describe("responses-field-backfill", () => {
     };
     // The wire type is `image_generation_call`; keying the table on the short spelling alone
     // silently demoted every real one to the generic `item_` prefix.
-    expect(result.output[0]!.id).toBe("ig_ocx_0");
+    expect(result.output[0]!.id).toBe("ig_occx_0");
   });
 
   // A routed tool_search lowering is restored as `tool_search_call` with no id, so this
@@ -658,7 +658,7 @@ describe("responses-field-backfill", () => {
     const result = JSON.parse(backfillResponsesFieldsJson(JSON.stringify(response))) as {
       output: { id: string }[];
     };
-    expect(result.output[0]!.id).toBe("tsc_ocx_0");
+    expect(result.output[0]!.id).toBe("tsc_occx_0");
   });
 
   test("custom_tool_call gets its own prefix too", () => {
@@ -671,7 +671,7 @@ describe("responses-field-backfill", () => {
     const result = JSON.parse(backfillResponsesFieldsJson(JSON.stringify(response))) as {
       output: { id: string }[];
     };
-    expect(result.output[0]!.id).toBe("ctc_ocx_0");
+    expect(result.output[0]!.id).toBe("ctc_occx_0");
   });
 
   // A malformed `output_index` falls back to a counter. While that counter lived in the same
@@ -686,10 +686,10 @@ describe("responses-field-backfill", () => {
     })));
     const fallbackId = (malformed[0]!.item as { id: string }).id;
 
-    // Every index-derived id is `msg_ocx_<digits>`; the fallback namespace is lexically
+    // Every index-derived id is `msg_occx_<digits>`; the fallback namespace is lexically
     // disjoint from it, so no integer index can ever produce this string.
-    expect(fallbackId).toMatch(/^msg_ocx_fallback_\d+$/);
-    expect(fallbackId).not.toMatch(/^msg_ocx_\d+$/);
+    expect(fallbackId).toMatch(/^msg_occx_fallback_\d+$/);
+    expect(fallbackId).not.toMatch(/^msg_occx_\d+$/);
 
     for (const index of [0, 1, 1_000_000, 1_000_001, 1_000_002]) {
       const derived = parseData(apply(sseBlock({

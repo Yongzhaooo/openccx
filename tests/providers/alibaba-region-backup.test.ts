@@ -9,14 +9,14 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 test("absent source produces no backup", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bak-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bak-"));
   try {
     expect(backupConfigBeforeAlibabaRegionMigration(join(dir, "config.json"))).toBe("absent");
   } finally { removeTreeWithRetry(dir); }
 });
 
 test("creates a snapshot, then never replaces it", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bak-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bak-"));
   const configPath = join(dir, "config.json");
   const backupPath = `${configPath}.pre-alibaba-region-v1.bak`;
   try {
@@ -31,7 +31,7 @@ test("creates a snapshot, then never replaces it", () => {
 test("an existing snapshot is kept even after the config legitimately changes", () => {
   // The false positive an equality rule would have created: a snapshot from an
   // earlier aborted run plus ordinary later edits must not stop the proxy.
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bak-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bak-"));
   const configPath = join(dir, "config.json");
   const backupPath = `${configPath}.pre-alibaba-region-v1.bak`;
   try {
@@ -45,7 +45,7 @@ test("an existing snapshot is kept even after the config legitimately changes", 
 });
 
 test("a short copy is never published", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bak-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bak-"));
   const configPath = join(dir, "config.json");
   try {
     writeFileSync(configPath, '{"before":true}', "utf8");
@@ -61,7 +61,7 @@ test("a short copy is never published", () => {
 });
 
 test("a failed copy leaves no snapshot and no temp file", () => {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-bak-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-bak-"));
   const configPath = join(dir, "config.json");
   try {
     writeFileSync(configPath, '{"before":true}', "utf8");

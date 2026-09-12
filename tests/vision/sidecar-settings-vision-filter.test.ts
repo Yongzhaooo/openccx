@@ -4,19 +4,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { handleManagementAPI } from "../../src/server/management-api";
 import * as modelRows from "../../src/server/management/model-rows";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { BASELINE_VISION_MODELS } from "../../src/vision/eligibility";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-async function getSidecarSettings(config: OcxConfig): Promise<Response> {
+async function getSidecarSettings(config: OccxConfig): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(new Request(url), url, config);
   if (!response) throw new Error("sidecar settings route did not handle GET");
   return response;
 }
 
-async function putSidecarSettings(config: OcxConfig, vision: Record<string, unknown>): Promise<Response> {
+async function putSidecarSettings(config: OccxConfig, vision: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/sidecar-settings");
   const response = await handleManagementAPI(
     new Request(url, {
@@ -31,7 +31,7 @@ async function putSidecarSettings(config: OcxConfig, vision: Record<string, unkn
   return response;
 }
 
-async function putClaudeCode(config: OcxConfig, body: Record<string, unknown>): Promise<Response> {
+async function putClaudeCode(config: OccxConfig, body: Record<string, unknown>): Promise<Response> {
   const url = new URL("http://localhost/api/claude-code");
   const response = await handleManagementAPI(
     new Request(url, {
@@ -46,13 +46,13 @@ async function putClaudeCode(config: OcxConfig, body: Record<string, unknown>): 
   return response;
 }
 
-function emptyConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function emptyConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "none",
     providers: {},
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("sidecar-settings vision model filter", () => {
@@ -60,14 +60,14 @@ describe("sidecar-settings vision model filter", () => {
   let isolatedHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    isolatedHome = mkdtempSync(join(tmpdir(), "ocx-sidecar-vision-filter-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
+    previousHome = process.env.OPENCCX_HOME;
+    isolatedHome = mkdtempSync(join(tmpdir(), "occx-sidecar-vision-filter-"));
+    process.env.OPENCCX_HOME = isolatedHome;
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (isolatedHome) removeTreeWithRetry(isolatedHome);
     isolatedHome = undefined;
   });

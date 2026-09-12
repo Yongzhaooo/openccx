@@ -17,8 +17,8 @@ import {
   captureWireAdapterHardPins,
   isWirePinnedModel,
   type FastWire,
-  type OcxConfig,
-  type OcxParsedRequest,
+  type OccxConfig,
+  type OccxParsedRequest,
   type TierDecision,
 } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
@@ -542,7 +542,7 @@ describe("FastWire config and registry validation", () => {
     }));
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect((result.config as OcxConfig).providers.fixture?.fastWire).toEqual({
+      expect((result.config as OccxConfig).providers.fixture?.fastWire).toEqual({
         kind: "service-tier",
         canonicalToWire: { priority: "priority", flex: "flex" },
         foreignCallerTiers: "verbatim",
@@ -666,7 +666,7 @@ describe("Responses TierDecision immutability", () => {
   ])("$label preserves the caller-owned raw body", ({ decision, expected }) => {
     const rawBody = { model: MODEL, input: "ping", service_tier: "flex" };
     const original = { ...rawBody };
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: MODEL,
       context: { messages: [] },
       stream: true,

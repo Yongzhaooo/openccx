@@ -48,20 +48,20 @@ describe("global fast switch lists -fast identities outside Codex", () => {
 
   test("Claude Code discovery lists the umbrella id with the switch off", () => {
     expect(listIds([cursorModel("claude-opus-5")], false))
-      .toContain("claude-ocx-cursor--claude-opus-5");
+      .toContain("claude-occx-cursor--claude-opus-5");
     expect(listIds([cursorModel("claude-opus-5")], undefined))
-      .toContain("claude-ocx-cursor--claude-opus-5");
+      .toContain("claude-occx-cursor--claude-opus-5");
   });
 
   test("Claude Code discovery lists the fast identity with the switch on", () => {
     expect(listIds([cursorModel("claude-opus-5")], true))
-      .toContain("claude-ocx-cursor--claude-opus-5-thinking-fast");
+      .toContain("claude-occx-cursor--claude-opus-5-thinking-fast");
     expect(listIds([cursorModel("grok-4.6", 500_000)], true))
-      .toContain("claude-ocx-cursor--grok-4.6-fast");
+      .toContain("claude-occx-cursor--grok-4.6-fast");
   });
 
   test("the switch leaves a base without a fast variant alone", () => {
-    expect(listIds([cursorModel("kimi-k3")], true)).toContain("claude-ocx-cursor--kimi-k3");
+    expect(listIds([cursorModel("kimi-k3")], true)).toContain("claude-occx-cursor--kimi-k3");
   });
 
   test("Desktop 3P hashed aliases are untouched by the switch", () => {

@@ -1,4 +1,4 @@
-import type { OcxTool } from "../../types";
+import type { OccxTool } from "../../types";
 import { CODEX_SHELL_COMMAND_TOOL, isBareCodexExecCommandTool, isBareCodexShellBridgeTool, isCodexShellBridgeToolName } from "./tool-naming";
 
 export const CURSOR_EXEC_COMMAND_INPUT_SCHEMA = {
@@ -41,7 +41,7 @@ export const CURSOR_FREEFORM_INPUT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-function cursorFreeformInputSchema(tool: OcxTool): unknown {
+function cursorFreeformInputSchema(tool: OccxTool): unknown {
   const properties = tool.parameters?.properties;
   const input = properties && typeof properties === "object" && !Array.isArray(properties)
     ? (properties as Record<string, unknown>).input
@@ -124,7 +124,7 @@ export const CODEX_SHELL_BRIDGE_ARG_NORMALIZE_SCHEMA = {
 
 
 /** Schema advertised to Cursor for this tool (may use Cursor-preferred field names like `cmd`). */
-export function cursorToolInputSchema(tool: OcxTool): unknown {
+export function cursorToolInputSchema(tool: OccxTool): unknown {
   if (tool.freeform) {
     if (isBareCodexShellBridgeTool(tool)) {
       throw new Error(`freeform Cursor tools cannot use reserved shell bridge name ${tool.name}; use a namespace`);
@@ -139,7 +139,7 @@ export function cursorToolInputSchema(tool: OcxTool): unknown {
  * Must NOT reuse `cursorToolInputSchema` for the shell bridge: advertising `cmd` while also
  * treating `cmd` as canonical prevents the `cmd` → `command` rewrite Codex requires (#399).
  */
-export function cursorToolArgNormalizeSchema(tool: OcxTool): unknown {
+export function cursorToolArgNormalizeSchema(tool: OccxTool): unknown {
   if (tool.freeform) {
     if (isBareCodexShellBridgeTool(tool)) {
       throw new Error(`freeform Cursor tools cannot use reserved shell bridge name ${tool.name}; use a namespace`);
@@ -152,7 +152,7 @@ export function cursorToolArgNormalizeSchema(tool: OcxTool): unknown {
   return tool.parameters ?? {};
 }
 
-function shellBridgeArgNormalizeSchema(tool: OcxTool): unknown {
+function shellBridgeArgNormalizeSchema(tool: OccxTool): unknown {
   const parameters = tool.parameters;
   if (!parameters || typeof parameters !== "object") return CODEX_SHELL_BRIDGE_ARG_NORMALIZE_SCHEMA;
   const base = parameters as Record<string, unknown>;

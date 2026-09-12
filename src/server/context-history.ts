@@ -13,7 +13,7 @@ import { listOpenAiForwardSidecarCandidates } from "../providers/openai-sidecar"
 import { clearableDeadline, type ClearableDeadline } from "../lib/abort";
 import { readBoundedResponseBytes } from "../lib/bounded-body";
 import type { AdmissionLease } from "../lib/admission";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { resolveContextPrincipal, ForwardAdmissionCredentialError, validateForwardAdmissionCredential, type DataPlaneAdmission } from "./auth-cors";
 import { readBoundedJsonRequestBody } from "./request-decompress";
 import { codexLogAccountId, decodeRequestErrorResponse } from "./responses";
@@ -45,7 +45,7 @@ export function contextSelectionHeaders(headers: Headers, sessionId: string): He
  * an unfinished body or a stalled refresh hold that slot with no bound at all.
  */
 export async function handleContextHistory(
-  req: Request, config: OcxConfig, logCtx: RequestLogContext,
+  req: Request, config: OccxConfig, logCtx: RequestLogContext,
   endpoint: string, turnAdmissionLease?: AdmissionLease, admission?: DataPlaneAdmission,
   revalidateAdmission?: () => DataPlaneAdmission | null,
 ): Promise<Response> {
@@ -59,7 +59,7 @@ export async function handleContextHistory(
 }
 
 async function relayContextHistory(
-  req: Request, config: OcxConfig, logCtx: RequestLogContext,
+  req: Request, config: OccxConfig, logCtx: RequestLogContext,
   endpoint: string, deadline: ClearableDeadline,
   turnAdmissionLease?: AdmissionLease, admission?: DataPlaneAdmission,
   revalidateAdmission?: () => DataPlaneAdmission | null,
@@ -84,7 +84,7 @@ async function relayContextHistory(
   const principalId = resolveContextPrincipal(req, config, admission);
   if (!principalId) {
     return formatErrorResponse(403, "context_principal_required",
-      "Context history requires an opencodex API key on the request; admission alone carries no caller identity");
+      "Context history requires an openccx API key on the request; admission alone carries no caller identity");
   }
   let body: unknown;
   try { body = await readBoundedJsonRequestBody(req, MAX_REQUEST_BYTES, undefined, { signal: deadline.signal }); }
@@ -169,7 +169,7 @@ async function relayContextHistory(
   // the same principal, so a withdrawn key cannot dispatch on a snapshot taken minutes earlier.
   if (revalidateAdmission && resolveContextPrincipal(req, config, revalidateAdmission() ?? undefined) !== principalId) {
     return formatErrorResponse(401, "authentication_error",
-      "opencodex API key changed during this request; retry with current credentials");
+      "openccx API key changed during this request; retry with current credentials");
   }
   // The operator may disable the feature while body or credential IO is pending.
   if (!contextRelayActivated()) return formatErrorResponse(404, "not_found", "Unknown context endpoint");

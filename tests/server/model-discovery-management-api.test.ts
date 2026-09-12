@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest as Request } from "../helpers/management-auth";
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 10100, defaultProvider: "vendor", providers: { vendor: { liveModels: false, models: ["known"] } }, disabledModels: ["vendor/new"] };
 }
 
-async function call(live: OcxConfig, path: string, method = "GET", body?: unknown) {
+async function call(live: OccxConfig, path: string, method = "GET", body?: unknown) {
   const url = new URL(`http://localhost${path}`);
   const response = await handleManagementAPI(new Request(url, {
     method, ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),

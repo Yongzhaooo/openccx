@@ -34,19 +34,19 @@ import {
   projectConfigOverridesProvider,
   serializeOpencodeRuntimeConfig,
 } from "../../src/cli/opencode";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-function cfg(extra?: Partial<OcxConfig>): OcxConfig {
+function cfg(extra?: Partial<OccxConfig>): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://x/v1" } },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-describe("ocx opencode provider block", () => {
+describe("occx opencode provider block", () => {
   test("points at the live proxy port over the OpenAI-compatible surface", () => {
     const block = buildOpencodeProviderBlock(10123, [], []);
     expect(block.options.baseURL).toBe("http://127.0.0.1:10123/v1");
@@ -67,7 +67,7 @@ describe("ocx opencode provider block", () => {
     expect(JSON.stringify(block)).not.toContain("sk-");
   });
 
-  test("non-loopback binds add x-opencodex-api-key via env reference", () => {
+  test("non-loopback binds add x-openccx-api-key via env reference", () => {
     const block = buildOpencodeProviderBlock(
       10100,
       [],
@@ -76,7 +76,7 @@ describe("ocx opencode provider block", () => {
       "0.0.0.0",
       cfg({ hostname: "0.0.0.0" }),
     );
-    expect(block.options.headers).toEqual({ "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF });
+    expect(block.options.headers).toEqual({ "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF });
     expect(block.options.apiKey).toBeUndefined();
     expect(JSON.stringify(block.options)).not.toContain("sk-");
   });
@@ -156,7 +156,7 @@ describe("ocx opencode provider block", () => {
   });
 });
 
-describe("ocx opencode runtime config", () => {
+describe("occx opencode runtime config", () => {
   test("serializes only the generated provider block for OPENCODE_CONFIG_CONTENT", () => {
     const runtime = buildOpencodeConfig(10100, [], [{ provider: "kiro", id: "glm-5" }]);
     const parsed = JSON.parse(serializeOpencodeRuntimeConfig(runtime)) as { provider?: Record<string, unknown> };
@@ -206,7 +206,7 @@ describe("ocx opencode runtime config", () => {
   });
 });
 
-describe("ocx opencode JSONC parsing", () => {
+describe("occx opencode JSONC parsing", () => {
   test("plain JSON parses unchanged", () => {
     expect(parseJsonc('{"a":1}')).toEqual({ a: 1 });
   });
@@ -234,14 +234,14 @@ describe("ocx opencode JSONC parsing", () => {
   });
 });
 
-describe("ocx opencode proxy model catalog", () => {
-  const ENV_KEY = "OCX_TEST_OPENCODE_PROXY_ONLY_KEY";
+describe("occx opencode proxy model catalog", () => {
+  const ENV_KEY = "OCCX_TEST_OPENCODE_PROXY_ONLY_KEY";
   const RESOLVED = "proxy-only-resolved-key";
   const PROVIDER = "proxyenv";
 
   test("the first launcher reads selection persisted during /api/models before building both provider blocks", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-opencode-discovery-selection-"));
-    const envKeys = ["OPENCODEX_HOME", "CODEX_HOME", "XDG_CONFIG_HOME", OPENCODE_CONFIG_CONTENT_ENV];
+    const home = mkdtempSync(join(tmpdir(), "occx-opencode-discovery-selection-"));
+    const envKeys = ["OPENCCX_HOME", "CODEX_HOME", "XDG_CONFIG_HOME", OPENCODE_CONFIG_CONTENT_ENV];
     const previous = Object.fromEntries(envKeys.map(key => [key, process.env[key]]));
     const configPath = join(home, "config.json");
     const pending = cfg({
@@ -278,7 +278,7 @@ describe("ocx opencode proxy model catalog", () => {
     });
     const stderr = spyOn(console, "error").mockImplementation(() => {});
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       process.env.CODEX_HOME = join(home, "codex");
       process.env.XDG_CONFIG_HOME = join(home, "xdg");
       delete process.env[OPENCODE_CONFIG_CONTENT_ENV];
@@ -289,8 +289,8 @@ describe("ocx opencode proxy model catalog", () => {
       expect(fetcher).toHaveBeenCalledTimes(1);
       expect(spawn).toHaveBeenCalledTimes(1);
       const injected = JSON.parse(inline);
-      expect(Object.keys(injected.provider.opencodex.models)).toEqual(["pending/chosen"]);
-      expect(Object.keys(injected.providers.opencodex.models)).toEqual(["pending/chosen"]);
+      expect(Object.keys(injected.provider.openccx.models)).toEqual(["pending/chosen"]);
+      expect(Object.keys(injected.providers.openccx.models)).toEqual(["pending/chosen"]);
       expect(pending.providers.pending!.initialModelSelection!.status).toBe("pending");
     } finally {
       finder.mockRestore(); fetcher.mockRestore(); spawn.mockRestore(); stderr.mockRestore();
@@ -333,7 +333,7 @@ describe("ocx opencode proxy model catalog", () => {
           fetch: ((input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, init)) as typeof fetch,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     const previous = process.env[ENV_KEY];
     delete process.env[ENV_KEY];
@@ -383,7 +383,7 @@ describe("ocx opencode proxy model catalog", () => {
         {
           fetchImpl: async (url, init) => {
             expect(String(url)).toBe("http://127.0.0.1:10100/api/models");
-            expect(new Headers(init?.headers).get("X-OpenCodex-API-Key")).toBe("sk-mgmt");
+            expect(new Headers(init?.headers).get("X-Openccx-API-Key")).toBe("sk-mgmt");
             return new Response(JSON.stringify(rows), { status: 200 });
           },
         },
@@ -463,7 +463,7 @@ describe("ocx opencode proxy model catalog", () => {
     // Built in one pass, so a later tweak to one generation cannot desync the endpoint.
     expect(blocks.v2.settings).toEqual(blocks.v1.options);
     expect(blocks.v2.settings.headers).toEqual({
-      "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF,
+      "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF,
     });
   });
 
@@ -525,7 +525,7 @@ describe("ocx opencode proxy model catalog", () => {
   });
 });
 
-describe("ocx opencode native slug selection", () => {
+describe("occx opencode native slug selection", () => {
   test("omits native slugs in Codex Direct mode", () => {
     const config = cfg({
       providers: {
@@ -564,13 +564,13 @@ describe("ocx opencode native slug selection", () => {
  * developer's real ~/.config/opencode/opencode.json, so on a machine that has the integration
  * applied these tests would assert against that machine instead of their own fixture.
  */
-describe("ocx opencode project-layer detection", () => {
+describe("occx opencode project-layer detection", () => {
   function detect(cwd: string, home: string): string | null {
     return opencodeProviderOverridePath(cwd, {}, home);
   }
 
   test("detects a global config that redefines our provider key", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-opencode-global-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-opencode-global-"));
     const globalDir = join(home, ".config", "opencode");
     mkdirSync(globalDir, { recursive: true });
     const globalPath = join(globalDir, "opencode.json");
@@ -580,21 +580,21 @@ describe("ocx opencode project-layer detection", () => {
   });
 
   test("detects a project config that redefines our provider key", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-proj-"));
     writeFileSync(join(dir, "opencode.json"), JSON.stringify({ provider: { [OPENCODE_PROVIDER_ID]: { npm: "x" } } }));
     expect(detect(dir, dir)).toBe(join(dir, "opencode.json"));
   });
 
   test("detects a project config that defines only the V2 provider key", () => {
-    // The launcher overwrites `providers.opencodex` as well, so a V2-only config has to warn
+    // The launcher overwrites `providers.openccx` as well, so a V2-only config has to warn
     // exactly like the legacy spelling does.
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-proj-"));
     writeFileSync(join(dir, "opencode.json"), JSON.stringify({ providers: { [OPENCODE_PROVIDER_ID]: { package: "x" } } }));
     expect(detect(dir, dir)).toBe(join(dir, "opencode.json"));
   });
 
   test("detects opencode.jsonc and parent directories up to the git root", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-root-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-opencode-proj-root-"));
     mkdirSync(join(root, "packages", "app"), { recursive: true });
     mkdirSync(join(root, ".git"));
     writeFileSync(join(root, "packages", "opencode.jsonc"), `{
@@ -605,7 +605,7 @@ describe("ocx opencode project-layer detection", () => {
   });
 
   test("does not walk above the git root", () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-stop-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-opencode-proj-stop-"));
     const parent = join(root, "parent");
     const repo = join(parent, "repo");
     mkdirSync(repo, { recursive: true });
@@ -615,25 +615,25 @@ describe("ocx opencode project-layer detection", () => {
   });
 
   test("ignores a project config that defines other providers", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-proj-"));
     writeFileSync(join(dir, "opencode.json"), JSON.stringify({ provider: { other: { npm: "x" } } }));
     expect(detect(dir, dir)).toBeNull();
   });
 
   test("no project config is not a warning", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-proj-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-proj-"));
     expect(detect(dir, dir)).toBeNull();
   });
 });
 
-describe("ocx opencode env assembly", () => {
+describe("occx opencode env assembly", () => {
   test("OPENCODE_CONFIG_CONTENT carries only the runtime provider blocks", () => {
     const routed = [{ provider: "kiro", id: "glm-5" }];
     const blocks = {
       v1: buildOpencodeProviderBlock(10100, [], routed),
       v2: buildOpencodeV2ProviderBlock(10100, [], routed),
     };
-    const built = buildOpencodeEnv(blocks, "sk-ocx-123", { OPENCODE_CONFIG: "/user/mine.json", PATH: "/bin" });
+    const built = buildOpencodeEnv(blocks, "sk-occx-123", { OPENCODE_CONFIG: "/user/mine.json", PATH: "/bin" });
     expect(isOpencodeRuntimeConfigError(built)).toBe(false);
     if (isOpencodeRuntimeConfigError(built)) return;
     expect(built.OPENCODE_CONFIG).toBe("/user/mine.json");
@@ -656,7 +656,7 @@ describe("ocx opencode env assembly", () => {
     });
     const built = buildOpencodeEnv(
       { v1: block, v2: v2Block },
-      "sk-ocx-123",
+      "sk-occx-123",
       { [OPENCODE_CONFIG_CONTENT_ENV]: inherited },
     );
     expect(isOpencodeRuntimeConfigError(built)).toBe(false);
@@ -677,7 +677,7 @@ describe("ocx opencode env assembly", () => {
       v1: buildOpencodeProviderBlock(10100, [], []),
       v2: buildOpencodeV2ProviderBlock(10100, [], []),
     };
-    expect(buildOpencodeEnv(blocks, "sk-ocx-123", { [OPENCODE_CONFIG_CONTENT_ENV]: "[]" }))
+    expect(buildOpencodeEnv(blocks, "sk-occx-123", { [OPENCODE_CONFIG_CONTENT_ENV]: "[]" }))
       .toEqual({ error: "OPENCODE_CONFIG_CONTENT must be a JSON object." });
   });
 
@@ -686,26 +686,26 @@ describe("ocx opencode env assembly", () => {
       v1: buildOpencodeProviderBlock(10100, [], []),
       v2: buildOpencodeV2ProviderBlock(10100, [], []),
     };
-    const built = buildOpencodeEnv(blocks, "sk-ocx-123", {});
+    const built = buildOpencodeEnv(blocks, "sk-occx-123", {});
     expect(isOpencodeRuntimeConfigError(built)).toBe(false);
     if (isOpencodeRuntimeConfigError(built)) return;
-    expect(built[OPENCODE_API_KEY_ENV]).toBe("sk-ocx-123");
-    expect(built[OPENCODE_CONFIG_CONTENT_ENV]).not.toContain("sk-ocx-123");
+    expect(built[OPENCODE_API_KEY_ENV]).toBe("sk-occx-123");
+    expect(built[OPENCODE_CONFIG_CONTENT_ENV]).not.toContain("sk-occx-123");
   });
 });
 
-describe("ocx opencode admission key", () => {
+describe("occx opencode admission key", () => {
   test("the environment token wins over a configured API key", () => {
     const config = cfg({ apiKeys: [{ id: "1", name: "main", key: "sk-cfg", createdAt: "2026-01-01" }] });
-    expect(opencodeApiKey(config, { OPENCODEX_API_AUTH_TOKEN: "sk-env" })).toBe("sk-env");
+    expect(opencodeApiKey(config, { OPENCCX_API_AUTH_TOKEN: "sk-env" })).toBe("sk-env");
   });
 
   test("falls back to the hardened service token file before config.apiKeys", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-token-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-token-"));
     const tokenFile = join(dir, "service-api-token");
     writeFileSync(tokenFile, "sk-service\n", "utf8");
     const config = cfg({ apiKeys: [{ id: "1", name: "main", key: "sk-cfg", createdAt: "2026-01-01" }] });
-    expect(opencodeApiKey(config, { OCX_API_TOKEN_FILE: tokenFile })).toBe("sk-service");
+    expect(opencodeApiKey(config, { OCCX_API_TOKEN_FILE: tokenFile })).toBe("sk-service");
   });
 
   test("falls back to the configured proxy API key", () => {
@@ -714,48 +714,48 @@ describe("ocx opencode admission key", () => {
   });
 
   test("falls back to a placeholder on an open loopback proxy", () => {
-    expect(opencodeApiKey(cfg(), {})).toBe("ocx");
+    expect(opencodeApiKey(cfg(), {})).toBe("occx");
   });
 });
 
-describe("ocx opencode proxy auto-start env", () => {
-  test("passes OCX_API_TOKEN_FILE to ocx start when only the hardened service token exists", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-opencode-start-"));
+describe("occx opencode proxy auto-start env", () => {
+  test("passes OCCX_API_TOKEN_FILE to occx start when only the hardened service token exists", () => {
+    const dir = mkdtempSync(join(tmpdir(), "occx-opencode-start-"));
     const tokenFile = join(dir, "service-api-token");
     writeFileSync(tokenFile, "sk-service-only\n", "utf8");
-    const config = cfg({ hostname: "0.0.0.0", apiKeys: [] as OcxConfig["apiKeys"] });
+    const config = cfg({ hostname: "0.0.0.0", apiKeys: [] as OccxConfig["apiKeys"] });
 
-    const startEnv = opencodeProxyStartEnv({ OCX_API_TOKEN_FILE: tokenFile });
-    expect(startEnv.OPENCODEX_API_AUTH_TOKEN).toBeUndefined();
-    expect(startEnv.OCX_API_TOKEN_FILE).toBe(tokenFile);
-    expect(startEnv.OCX_SERVICE).toBe("1");
+    const startEnv = opencodeProxyStartEnv({ OCCX_API_TOKEN_FILE: tokenFile });
+    expect(startEnv.OPENCCX_API_AUTH_TOKEN).toBeUndefined();
+    expect(startEnv.OCCX_API_TOKEN_FILE).toBe(tokenFile);
+    expect(startEnv.OCCX_SERVICE).toBe("1");
     expect(JSON.stringify(startEnv)).not.toContain("sk-service-only");
     expect(loadServiceTokenFromFile(startEnv)).toBe("sk-service-only");
     expect(opencodeApiKey(config, startEnv)).toBe("sk-service-only");
   });
 
-  test("defaults OCX_API_TOKEN_FILE when admission env token is absent", () => {
+  test("defaults OCCX_API_TOKEN_FILE when admission env token is absent", () => {
     const startEnv = opencodeProxyStartEnv({ hostname: "0.0.0.0" });
-    expect(startEnv.OPENCODEX_API_AUTH_TOKEN).toBeUndefined();
-    expect(startEnv.OCX_API_TOKEN_FILE).toBe(serviceApiTokenFilePath());
-    expect(startEnv.OCX_SERVICE).toBe("1");
+    expect(startEnv.OPENCCX_API_AUTH_TOKEN).toBeUndefined();
+    expect(startEnv.OCCX_API_TOKEN_FILE).toBe(serviceApiTokenFilePath());
+    expect(startEnv.OCCX_SERVICE).toBe("1");
   });
 
-  test("does not inject OCX_API_TOKEN_FILE when OPENCODEX_API_AUTH_TOKEN is already set", () => {
-    const startEnv = opencodeProxyStartEnv({ OPENCODEX_API_AUTH_TOKEN: "sk-env", hostname: "0.0.0.0" });
-    expect(startEnv.OPENCODEX_API_AUTH_TOKEN).toBe("sk-env");
-    expect(startEnv.OCX_API_TOKEN_FILE).toBeUndefined();
+  test("does not inject OCCX_API_TOKEN_FILE when OPENCCX_API_AUTH_TOKEN is already set", () => {
+    const startEnv = opencodeProxyStartEnv({ OPENCCX_API_AUTH_TOKEN: "sk-env", hostname: "0.0.0.0" });
+    expect(startEnv.OPENCCX_API_AUTH_TOKEN).toBe("sk-env");
+    expect(startEnv.OCCX_API_TOKEN_FILE).toBeUndefined();
   });
 });
 
-describe("ocx opencode global config path", () => {
+describe("occx opencode global config path", () => {
   test("global path follows XDG_CONFIG_HOME when set", () => {
     expect(opencodeGlobalConfigPath({ XDG_CONFIG_HOME: "/xdg" }, "/home/u")).toBe(join("/xdg", "opencode", "opencode.json"));
     expect(opencodeGlobalConfigPath({}, "/home/u")).toBe(join("/home/u", ".config", "opencode", "opencode.json"));
   });
 });
 
-describe("ocx opencode not-found hint", () => {
+describe("occx opencode not-found hint", () => {
   test("cmd.exe reports command-not-found as 9009", () => {
     expect(opencodeNotFoundHint(9009, null, "win32")).toContain("npm install -g opencode-ai");
   });

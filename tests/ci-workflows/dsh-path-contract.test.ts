@@ -10,7 +10,7 @@ import {
 } from "../../src/clients/config-export";
 import { INTEGRATION_CLIENTS } from "../../src/integrations/registry";
 
-const HOME = join(tmpdir(), "ocx-dsh-path-home");
+const HOME = join(tmpdir(), "occx-dsh-path-home");
 
 describe("DSH 0.1.0-rc.6 path contract", () => {
   test("blank or absent DSH_HOME falls back to ~/.dsh", () => {

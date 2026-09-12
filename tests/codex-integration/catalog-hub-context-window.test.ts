@@ -18,7 +18,7 @@ import { catalogHintsFromModelsApiItem } from "../../src/codex/catalog/provider-
 const HUB_MODELS_ITEM = {
   id: "anthropic/claude-opus-5",
   object: "model" as const,
-  owned_by: "opencodex-hub",
+  owned_by: "openccx-hub",
   capabilities: {
     context_length: 922000,
     max_output_tokens: 64000,

@@ -250,7 +250,7 @@ test("default namespace uses OS identity despite home overrides (isolated resolv
     }));
     const { withClientLifecycle, withClientLifecycleSync } = await import(${JSON.stringify(lockModule)});
     for (const suffix of ["one", "two"]) {
-      for (const key of ["HOME", "USERPROFILE", "LOCALAPPDATA", "TMPDIR", "TMP", "TEMP", "OPENCODEX_HOME", "CODEX_HOME", "OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR"]) {
+      for (const key of ["HOME", "USERPROFILE", "LOCALAPPDATA", "TMPDIR", "TMP", "TEMP", "OPENCCX_HOME", "CODEX_HOME", "OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR"]) {
         process.env[key] = ${JSON.stringify(root)} + "/" + suffix;
       }
       await withClientLifecycle(async () => {

@@ -1,18 +1,18 @@
 import { expect, spyOn, test } from "bun:test";
 import { parseRequest } from "../../src/responses/parser";
 import { buildClaudeReplayConfig } from "../../src/server/claude-messages";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { planVisionSidecar } from "../../src/vision";
 import { planWebSearch } from "../../src/web-search";
 import * as sidecarAuth from "../../src/sidecar/auth";
 
-const routed: OcxProviderConfig = {
+const routed: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://routed.test/v1",
   apiKey: "routed-key",
   noVisionModels: ["text-model"],
 };
-const forward: OcxProviderConfig = {
+const forward: OccxProviderConfig = {
   adapter: "openai-responses",
   baseUrl: "https://chatgpt.test/v1",
   authMode: "forward",
@@ -39,7 +39,7 @@ const request = parseRequest({
 });
 
 test("Claude replay overrides both sidecars while preserving global-only settings", () => {
-  const config: OcxConfig = {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "routed",
     providers: { routed, forward },
@@ -106,7 +106,7 @@ test("Claude replay overrides both sidecars while preserving global-only setting
 });
 
 test("unset Claude overrides inherit the global sidecar backend and model", () => {
-  const config: OcxConfig = {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "routed",
     providers: { routed, forward },
@@ -129,7 +129,7 @@ test("unset Claude overrides inherit the global sidecar backend and model", () =
 test("live policy eligibility remains separate from Claude helper override snapshots", () => {
   const authSpy = spyOn(sidecarAuth, "resolveSidecarAuth").mockReturnValue({ isCodexAuth: true, isAnthropicAuth: false });
   try {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, defaultProvider: "routed", providers: { routed, forward }, codexDesktopAuthless: false,
       webSearchSidecar: { backend: "openai", model: "global-search", timeoutMs: 12_345 },
       visionSidecar: { backend: "openai", model: "global-vision", timeoutMs: 23_456 },

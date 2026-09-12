@@ -5,7 +5,7 @@
  * management API, GUI) consumes this module so the bytes a user copies, downloads, or
  * curls can never drift between surfaces.
  *
- * Two invariants carried over from `ocx opencode` (src/cli/opencode.ts), which owned the
+ * Two invariants carried over from `occx opencode` (src/cli/opencode.ts), which owned the
  * OpenCode serializer before it moved here:
  *
  * - **No secret is ever serialized.** Configs carry only the client's documented env
@@ -27,7 +27,7 @@ import { FORMAT_MEDIA_TYPE, serializeDocument, type ConfigFormat } from "../inte
 import { canonicalizeReasoningEfforts } from "../reasoning-effort";
 import { expandFastExportModels } from "./config-export/fast-models";
 import { probeHostname } from "../server/proxy-liveness";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export type { ConfigFormat } from "../integrations/serialize";
 export type { ManagedFragment, ManagedContribution, BuildContribution, OpencodeLaunchEnv, OpencodeCatalogModel, ExportModel, ExportContext, ExportClientId, ExportClientSpec, PiModelEntry } from "./config-export/contracts";
@@ -141,7 +141,7 @@ const OPENCODE_PROVIDER_NPM = "@ai-sdk/openai-compatible";
 const OPENCODE_V2_PROVIDER_PACKAGE = "@opencode-ai/ai/providers/openai-compatible";
 
 /** Display name for the provider block, identical in both generations. */
-const OPENCODE_PROVIDER_NAME = "OpenCodex";
+const OPENCODE_PROVIDER_NAME = "Openccx";
 
 /**
  * Resolve the user's global opencode config path. opencode uses the XDG layout on every
@@ -223,7 +223,7 @@ export function ompModelsConfigPath(env: OpencodeLaunchEnv = process.env, home: 
 export function opencodeProxyBaseUrl(
   port: number,
   hostname?: string,
-  config?: Pick<OcxConfig, "unauthenticatedLoopbackListener">,
+  config?: Pick<OccxConfig, "unauthenticatedLoopbackListener">,
 ): string {
   if (config?.unauthenticatedLoopbackListener?.enabled) {
     return standaloneCodexRoutingTarget(port, {
@@ -275,7 +275,7 @@ function absoluteClientPath(raw: string, home: string, variable: string): string
   if (!isAbsolute(trimmed)) {
     throw new ClientPathError(
       `${variable} must be an absolute path or start with ~; "${trimmed}" depends on the working directory, `
-      + "so opencodex and the client would disagree about which file it names.",
+      + "so openccx and the client would disagree about which file it names.",
     );
   }
   return trimmed;
@@ -401,7 +401,7 @@ export function dshHomeDir(env: OpencodeLaunchEnv = process.env, home: string = 
   if (!isAbsolute(raw)) {
     throw new ClientPathError(
       `DSH_HOME must be an absolute path or start with ~; "${raw}" depends on the working directory, `
-      + "so opencodex and DSH would disagree about which settings file it names.",
+      + "so openccx and DSH would disagree about which settings file it names.",
     );
   }
   // DSH calls node:path.resolve after tilde expansion. Preserve the raw value
@@ -552,7 +552,7 @@ function asideCurrentAccountId(root: string): number {
     raw = readFileSync(manifest, "utf8");
   } catch {
     throw new ClientPathError(
-      `Aside's account manifest is missing or unreadable at ${manifest}, so opencodex cannot tell which `
+      `Aside's account manifest is missing or unreadable at ${manifest}, so openccx cannot tell which `
       + "account's model catalog to write. Launch Aside once to create it.",
     );
   }
@@ -568,7 +568,7 @@ function asideCurrentAccountId(root: string): number {
   const id = (parsed as { currentAccountId?: unknown } | null)?.currentAccountId;
   if (typeof id !== "number" || !Number.isInteger(id) || id < 0) {
     throw new ClientPathError(
-      `Aside's account manifest at ${manifest} declares no usable currentAccountId, so opencodex cannot `
+      `Aside's account manifest at ${manifest} declares no usable currentAccountId, so openccx cannot `
       + "tell which account is current.",
     );
   }
@@ -607,12 +607,12 @@ export function raycastConfigPath(env: OpencodeLaunchEnv = process.env, home: st
 }
 
 /** Endpoint plus admission, identical for the V1 `options` and V2 `settings` field. */
-function opencodeProviderConnection(baseURL: string, config: OcxConfig): OpencodeProviderConnection {
+function opencodeProviderConnection(baseURL: string, config: OccxConfig): OpencodeProviderConnection {
   const options: OpencodeProviderConnection = { baseURL };
-  // Non-loopback binds accept proxy admission only via x-opencodex-api-key so Authorization
+  // Non-loopback binds accept proxy admission only via x-openccx-api-key so Authorization
   // stays free for Codex Direct upstream credentials when applicable.
   if (shouldInjectApiAuthHeader(config)) {
-    options.headers = { "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF };
+    options.headers = { "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF };
     return options;
   }
   options.apiKey = OPENCODE_API_KEY_ENV_REF;
@@ -624,7 +624,7 @@ function opencodeProviderConnection(baseURL: string, config: OcxConfig): Opencod
  *
  * No model-level `settings.reasoningEffort` default is emitted: the proxy already applies
  * its own configured default when a request carries no effort, and pinning one here would
- * override a default the user controls in opencodex. Variants are opt-in per selection,
+ * override a default the user controls in openccx. Variants are opt-in per selection,
  * which is the same reason we never emit `defaultModel` for MCode.
  *
  * `none` is dropped even when a ladder declares it. It is a valid *declared* effort, but the
@@ -657,7 +657,7 @@ function opencodeEffortVariants(model: OpencodeCatalogModel): OpencodeModelVaria
 export function opencodeProviderBlocks(
   baseURL: string,
   catalogModels: readonly OpencodeCatalogModel[],
-  config: OcxConfig,
+  config: OccxConfig,
 ): OpencodeProviderBlocks {
   const v1Models: Record<string, OpencodeModelEntry> = {};
   const v2Models: Record<string, OpencodeV2ModelEntry> = {};
@@ -711,34 +711,34 @@ export function opencodeProviderBlocks(
   };
 }
 
-/** `opencodex` provider block for a resolved base URL (opencode V1 shape). */
+/** `openccx` provider block for a resolved base URL (opencode V1 shape). */
 function opencodeProviderBlock(
   baseURL: string,
   catalogModels: readonly OpencodeCatalogModel[],
-  config: OcxConfig,
+  config: OccxConfig,
 ): OpencodeProviderBlock {
   return opencodeProviderBlocks(baseURL, catalogModels, config).v1;
 }
 
-/** `opencodex` provider block for a resolved base URL (opencode V2 shape, carries variants). */
+/** `openccx` provider block for a resolved base URL (opencode V2 shape, carries variants). */
 export function opencodeV2ProviderBlock(
   baseURL: string,
   catalogModels: readonly OpencodeCatalogModel[],
-  config: OcxConfig = OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG,
+  config: OccxConfig = OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG,
 ): OpencodeV2ProviderBlock {
   return opencodeProviderBlocks(baseURL, catalogModels, config).v2;
 }
 
 /**
- * Build the `opencodex` provider block from proxy catalog rows keyed by each row's
- * canonical `namespaced` selector. Used by the `ocx opencode` launcher, which injects
+ * Build the `openccx` provider block from proxy catalog rows keyed by each row's
+ * canonical `namespaced` selector. Used by the `occx opencode` launcher, which injects
  * the block through OpenCode's inline runtime layer rather than any file.
  */
 export function buildOpencodeProviderBlockFromCatalog(
   port: number,
   catalogModels: readonly OpencodeCatalogModel[],
   hostname?: string,
-  config: OcxConfig = OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG,
+  config: OccxConfig = OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG,
 ): OpencodeProviderBlock {
   return opencodeProviderBlock(opencodeProxyBaseUrl(port, hostname), catalogModels, config);
 }
@@ -1161,10 +1161,10 @@ function buildPrimeContribution(ctx: ExportContext): ManagedContribution {
  * Aside is the strongest case yet for reusing Pi's builder, because the
  * evidence is a live file rather than a package manifest.
  *
- * The machine this landed on already had opencodex wired into Aside BY HAND:
- * `~/.aside/u/0/models.json` carried a `providers.opencodex` block with the same
+ * The machine this landed on already had openccx wired into Aside BY HAND:
+ * `~/.aside/u/0/models.json` carried a `providers.openccx` block with the same
  * four keys, the same `openai-completions` dialect, the same
- * `opencodex-loopback` placeholder, and 24 models using the same
+ * `openccx-loopback` placeholder, and 24 models using the same
  * `thinkingLevelMap` levels this builder emits. A user reproduced Pi's document
  * from scratch because that is what Aside reads.
  *
@@ -1191,7 +1191,7 @@ function buildAsideContribution(ctx: ExportContext): ManagedContribution {
  *
  * The flag is passed HERE as well as in the spec's `build`, which is the one
  * thing Prime and Aside do not do. They pass the default on both paths, so they
- * are consistent; passing it on only one would make `ocx export --client omo`
+ * are consistent; passing it on only one would make `occx export --client omo`
  * emit a `compat` block while enable and refresh wrote a file without it, and
  * the two would drift apart at the first refresh.
  */
@@ -1442,7 +1442,7 @@ export const EXPORT_CLIENTS: Record<ExportClientId, ExportClientSpec> = {
     filename: "cline-config-bundle.json",
     destination: env => clineConfigPath(env),
     apiKeyEnv: "",
-    exportHint: "Cline CLI bundle: settings goes in providers.json, catalog in sibling models.json. Stop Cline before enabling/syncing/restoring, then restart. Select --provider opencodex; the default provider stays unchanged. Loopback only.",
+    exportHint: "Cline CLI bundle: settings goes in providers.json, catalog in sibling models.json. Stop Cline before enabling/syncing/restoring, then restart. Select --provider openccx; the default provider stays unchanged. Loopback only.",
     build: buildClineClientConfig,
     format: "json",
     summarize: summarizeCline,
@@ -1482,7 +1482,7 @@ export function buildClientConfigText(
   };
 }
 
-/** The fragments opencodex owns in a client's config (writer-side). */
+/** The fragments openccx owns in a client's config (writer-side). */
 export function buildClientContribution(client: ExportClientId, ctx: ExportContext): ManagedContribution {
   return EXPORT_CLIENTS[client].buildContribution(ctx);
 }

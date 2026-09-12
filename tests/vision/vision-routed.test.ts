@@ -6,7 +6,7 @@ import { saveConfig } from "../../src/config";
 import { configuredPort, setCorsOrigin } from "../../src/server/auth-cors";
 import { parseRequest } from "../../src/responses/parser";
 import { startServer } from "../../src/server";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { planVisionSidecar, resetVisionDescriptionCache } from "../../src/vision";
 import {
   describeImageRouted,
@@ -26,24 +26,24 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 let upstream: ReturnType<typeof Bun.serve> | null = null;
-const originalEnvToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+const originalEnvToken = process.env.OPENCCX_API_AUTH_TOKEN;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-vision-routed-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-vision-routed-"));
-  process.env.OPENCODEX_HOME = testDir;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-vision-routed-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-vision-routed-"));
+  process.env.OPENCCX_HOME = testDir;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
   resetVisionDescriptionCache();
 });
 
 afterEach(() => {
   upstream?.stop(true);
   upstream = null;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (originalEnvToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = originalEnvToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (originalEnvToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = originalEnvToken;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -63,7 +63,7 @@ describe("describeImageRouted unit", () => {
           url: new URL(req.url).pathname,
           marker: req.headers.get(VISION_DESCRIBE_TERMINAL_HEADER),
           auth: req.headers.get("authorization"),
-          apiKey: req.headers.get("x-opencodex-api-key"),
+          apiKey: req.headers.get("x-openccx-api-key"),
           body: await req.json() as Record<string, unknown>,
         };
         return Response.json({ choices: [{ message: { content: CAPTION } }] });
@@ -141,13 +141,13 @@ describe("describeImageRouted unit", () => {
   test("the vision plan carries the listener through to the self-fetch", () => {
     // The planner hands `describeImageRouted` a NARROWED config. Dropping the listener there
     // would leave the resolver nothing to resolve and silently restore the closed port.
-    const routed: OcxProviderConfig = {
+    const routed: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://routed.test/v1",
       apiKey: "routed-key",
       noVisionModels: ["text-model"],
     };
-    const vlm: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://vlm.test/v1", apiKey: "k" };
+    const vlm: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://vlm.test/v1", apiKey: "k" };
     const request = parseRequest({
       model: "routed/text-model",
       input: [{
@@ -167,7 +167,7 @@ describe("describeImageRouted unit", () => {
       defaultProvider: "routed",
       providers: { routed, vlm },
       visionSidecar: { enabled: true, backend: "routed", model: "vlm/qwen-vl" },
-    } as unknown as OcxConfig, routed, "text-model", request);
+    } as unknown as OccxConfig, routed, "text-model", request);
     expect(plan?.backend).toBe("routed");
     expect(plan?.routedConfig?.unauthenticatedLoopbackListener).toEqual({ enabled: true, port: 10104 });
     // `hostname` has to survive the narrowing for the same reason: with no listener it is the
@@ -178,16 +178,16 @@ describe("describeImageRouted unit", () => {
       .toBe("http://100.76.170.81:10100");
   });
 
-  test("admission ladder: env token first, then first apiKeys entry, as x-opencodex-api-key", () => {
+  test("admission ladder: env token first, then first apiKeys entry, as x-openccx-api-key", () => {
     expect(routedDescribeAdmissionToken({})).toBeUndefined();
     expect(routedDescribeAdmissionToken({
       apiKeys: [{ id: "a", name: "a", key: "key-1", createdAt: "" }],
     })).toBe("key-1");
-    process.env.OPENCODEX_API_AUTH_TOKEN = "env-token";
+    process.env.OPENCCX_API_AUTH_TOKEN = "env-token";
     expect(routedDescribeAdmissionToken({
       apiKeys: [{ id: "a", name: "a", key: "key-1", createdAt: "" }],
     })).toBe("env-token");
-    delete process.env.OPENCODEX_API_AUTH_TOKEN;
+    delete process.env.OPENCCX_API_AUTH_TOKEN;
   });
 
   test("error taxonomy: HTTP error is redacted and never throws; invalid image rejected locally", async () => {
@@ -239,7 +239,7 @@ describe("chat-surface recursion fence (full path)", () => {
   test("marked POST strips images (no describe); unmarked plans/strips per legacy path", async () => {
     const forwarded: string[] = [];
     upstream = textOnlyUpstream(body => forwarded.push(body));
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "routed",
       providers: {
         routed: {
@@ -250,7 +250,7 @@ describe("chat-surface recursion fence (full path)", () => {
           noVisionModels: ["text-only"],
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {
@@ -323,7 +323,7 @@ describe("chat-surface recursion fence (full path)", () => {
         });
       },
     });
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 0, hostname: "127.0.0.1", defaultProvider: "routed",
       visionSidecar: { backend: "routed", model: "vision/vlm" },
       providers: {
@@ -342,7 +342,7 @@ describe("chat-surface recursion fence (full path)", () => {
           modelInputModalities: { vlm: ["text", "image"] },
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     saveConfig(config);
     const server = startServer(0);
     try {

@@ -49,7 +49,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxClaudeDesktopProfile, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxClaudeDesktopProfile, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import type { DesktopProfileModel } from "../../claude/desktop-profile";
 import { drainAndShutdown } from "../lifecycle";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "../request-log";
@@ -242,7 +242,7 @@ export function requestLogDto(
  * share the same fetch, the same per-provider cache (dedups Codex's frequent /v1/models polling),
  * and the same stale fallback when a provider blips, instead of a parallel uncached copy.
  */
-export async function fetchAllModels(config: OcxConfig): Promise<CatalogModel[]> {
+export async function fetchAllModels(config: OccxConfig): Promise<CatalogModel[]> {
   const { gatherRoutedModels } = await import("../../codex/catalog");
   const baseline = captureInitialSelectionBaseline(config);
   if (!baseline) return gatherRoutedModels(config);
@@ -260,7 +260,7 @@ export interface GrokCandidateModel {
 }
 
 /** Configuration pickers may retain disabled choices, but never offer provisional models. */
-export async function fetchInitializedModels(config: OcxConfig): Promise<CatalogModel[]> {
+export async function fetchInitializedModels(config: OccxConfig): Promise<CatalogModel[]> {
   return (await fetchAllModels(config)).filter(model => !initialModelSelectionPending(config.providers[model.provider]));
 }
 
@@ -270,7 +270,7 @@ export async function fetchInitializedModels(config: OcxConfig): Promise<Catalog
  * model is absent from the fence, so readGrokStatus alone could never list it. Built
  * from the same two sources as the sync so the two can never disagree.
  */
-export async function fetchGrokCandidateModels(config: OcxConfig): Promise<GrokCandidateModel[]> {
+export async function fetchGrokCandidateModels(config: OccxConfig): Promise<GrokCandidateModel[]> {
   const { filterCatalogVisibleModels, nativeContextLimits, nativeOpenAiContextWindow, visibleNativeSlugs } = await import("../../codex/catalog");
   const routed = filterCatalogVisibleModels(await fetchAllModels(config), config);
   return [
@@ -286,7 +286,7 @@ export async function fetchGrokCandidateModels(config: OcxConfig): Promise<GrokC
   ];
 }
 
-export function stripRegistryOnlyStaticHeaders(name: string, provider: OcxProviderConfig): OcxProviderConfig {
+export function stripRegistryOnlyStaticHeaders(name: string, provider: OccxProviderConfig): OccxProviderConfig {
   const entry = providerMatchesRegistryTransport(name, provider) ? getProviderRegistryEntry(name) : undefined;
   if (!entry?.staticHeaders || !provider.headers) return provider;
   const headerEntries = Object.entries(provider.headers);
@@ -299,7 +299,7 @@ export function stripRegistryOnlyStaticHeaders(name: string, provider: OcxProvid
 }
 
 /** Shared Desktop profile DTO builder for the management API and CLI. */
-export async function buildClaudeDesktopState(config: OcxConfig, stored?: OcxClaudeDesktopProfile) {
+export async function buildClaudeDesktopState(config: OccxConfig, stored?: OccxClaudeDesktopProfile) {
   const { filterCatalogVisibleModels, nativeContextLimits, nativeOpenAiContextWindow, desktopVisibleNativeSlugs } = await import("../../codex/catalog");
   const { DESKTOP_SUPPORTS_1M_THRESHOLD } = await import("../../claude/desktop-3p");
   const { reconcileDesktopProfile, renderDesktopProfile } = await import("../../claude/desktop-profile");

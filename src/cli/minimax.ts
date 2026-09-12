@@ -1,11 +1,11 @@
 /**
  * MiniMax client launchers.
  *
- * `ocx mcode` uses the managed `custom_provider.opencodex` block written by the
- * existing file-integration subsystem. `ocx mmx` is intentionally text-only:
+ * `occx mcode` uses the managed `custom_provider.openccx` block written by the
+ * existing file-integration subsystem. `occx mmx` is intentionally text-only:
  * the official platform CLI's text commands speak Anthropic Messages, while its
  * image/video/speech/music/search/quota endpoints are MiniMax-specific APIs that
- * OpenCodex does not claim to implement.
+ * Openccx does not claim to implement.
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,7 +19,7 @@ import { selfLaunchArgv } from "../lib/self-launch-argv";
 import { commandInvocation } from "../lib/win-exec";
 import { isLoopbackHostname } from "../server/auth-cors";
 import { findLiveProxy, probeHostname, type LiveProxy } from "../server/proxy-liveness";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { opencodeProxyStartEnv } from "./opencode";
 
 export interface MinimaxLaunchEnv {
@@ -129,7 +129,7 @@ export function buildMmxEnv(
 ): MinimaxLaunchEnv {
   const env: MinimaxLaunchEnv = { ...base };
   // The official MMX client installs one ProxyAgent whenever any proxy variable
-  // is present and does not apply NO_PROXY. Its OpenCodex destination is always
+  // is present and does not apply NO_PROXY. Its Openccx destination is always
   // loopback, so carrying these variables could send the request off-machine.
   // Windows environment names are case-insensitive; strip every inherited
   // spelling before installing the wrapper-owned values below.
@@ -146,7 +146,7 @@ export function buildMmxEnv(
 
 /**
  * MMX hard-codes `/anthropic/v1/messages` below its configured base URL while
- * OpenCodex already exposes the canonical Anthropic data plane at
+ * Openccx already exposes the canonical Anthropic data plane at
  * `/v1/messages`. Keep that client-specific path adaptation inside the checked
  * launcher instead of widening the proxy server's authentication surface.
  */
@@ -175,11 +175,11 @@ export function startMmxTextBridge(
       const target = new URL(canonicalPath, `${upstreamOrigin}/`);
       target.search = incoming.search;
       const headers = new Headers(req.headers);
-      // The bridge is loopback-only and OpenCodex does not require a real key
+      // The bridge is loopback-only and Openccx does not require a real key
       // there. Pin the public placeholder even if a future MMX release loads a
       // credential from somewhere outside the isolated config directory.
       headers.delete("authorization");
-      headers.delete("x-opencodex-api-key");
+      headers.delete("x-openccx-api-key");
       headers.set("x-api-key", LOOPBACK_API_KEY_PLACEHOLDER);
       headers.delete("host");
       headers.delete("content-length");
@@ -205,7 +205,7 @@ export function startMmxTextBridge(
       } catch {
         return Response.json({
           type: "error",
-          error: { type: "api_error", message: "OpenCodex proxy unavailable" },
+          error: { type: "api_error", message: "Openccx proxy unavailable" },
         }, { status: 502 });
       } finally {
         // Once response headers arrive, streaming body cancellation remains
@@ -243,12 +243,12 @@ function normalizedMcodeBaseUrl(value: string): string | null {
 }
 
 /** Read only the provider destination; never return or log the persisted key. */
-export function mcodeOpenCodexBaseUrl(text: string): string | null {
+export function mcodeOpenccxBaseUrl(text: string): string | null {
   try {
     const parsed = Bun.YAML.parse(text) as {
-      custom_provider?: { opencodex?: { options?: { baseURL?: unknown } } };
+      custom_provider?: { openccx?: { options?: { baseURL?: unknown } } };
     };
-    const baseURL = parsed?.custom_provider?.opencodex?.options?.baseURL;
+    const baseURL = parsed?.custom_provider?.openccx?.options?.baseURL;
     return typeof baseURL === "string" ? baseURL : null;
   } catch {
     return null;
@@ -261,7 +261,7 @@ export function usableMinimaxLiveProxy(live: LiveProxy | null): LiveProxy | null
   return isLoopbackHostname(probeHostname(live.hostname)) ? live : null;
 }
 
-async function ensureProxy(config: OcxConfig): Promise<LiveProxy | null> {
+async function ensureProxy(config: OccxConfig): Promise<LiveProxy | null> {
   const live = usableMinimaxLiveProxy(await findLiveProxy());
   if (live) return live;
   const pinPort = typeof config.port === "number" && config.port > 0 ? config.port : 10100;
@@ -333,7 +333,7 @@ export function installMmxTerminationHandlers(
   const onTerminationSignal = (signal: "SIGINT" | "SIGTERM") => {
     const receivedAt = now();
     // Ctrl-C reaches the foreground Bun process directly and is also
-    // forwarded by bin/ocx.mjs. Keep the listener installed and coalesce the
+    // forwarded by bin/occx.mjs. Keep the listener installed and coalesce the
     // near-simultaneous duplicate so async cleanup cannot be interrupted by
     // the default signal action after a once-listener disappears.
     if (
@@ -400,7 +400,7 @@ export async function cmdMcode(args: string[]): Promise<number> {
   if (isStandaloneInformationalInvocation(args, "mcode")) return spawnClient("mcode", args, process.env, MCODE_INSTALL_HINT);
   const config = loadConfig();
   if (!isLoopbackHostname(config.hostname)) {
-    console.error("❌ MiniMax Code integration is loopback-only; its config cannot carry OpenCodex's dedicated remote-admission header.");
+    console.error("❌ MiniMax Code integration is loopback-only; its config cannot carry Openccx's dedicated remote-admission header.");
     return 2;
   }
   const live = await ensureProxy(config);
@@ -410,7 +410,7 @@ export async function cmdMcode(args: string[]): Promise<number> {
   }
   let configuredBase: string | null = null;
   try {
-    configuredBase = mcodeOpenCodexBaseUrl(readFileSync(mcodeConfigPath(process.env), "utf8"));
+    configuredBase = mcodeOpenccxBaseUrl(readFileSync(mcodeConfigPath(process.env), "utf8"));
   } catch (error) {
     // Missing or unreadable is reported as not connected below. An unstable
     // relative override needs its own message because re-enabling cannot fix it.
@@ -420,15 +420,15 @@ export async function cmdMcode(args: string[]): Promise<number> {
     }
   }
   if (!configuredBase) {
-    console.error("❌ MiniMax Code is not connected. Run: ocx integration client enable --client mcode");
+    console.error("❌ MiniMax Code is not connected. Run: occx integration client enable --client mcode");
     return 2;
   }
   const expected = `http://${probeHostname(live.hostname)}:${live.port}`;
   if (normalizedMcodeBaseUrl(configuredBase) !== normalizedMcodeBaseUrl(expected)) {
-    console.error("❌ MiniMax Code's OpenCodex provider points at a stale proxy address. Re-run: ocx integration client enable --client mcode");
+    console.error("❌ MiniMax Code's Openccx provider points at a stale proxy address. Re-run: occx integration client enable --client mcode");
     return 2;
   }
-  console.error(`✅ MiniMax Code wired to ${expected}; select custom_provider:opencodex/<model> in MCode.`);
+  console.error(`✅ MiniMax Code wired to ${expected}; select custom_provider:openccx/<model> in MCode.`);
   return spawnClient("mcode", args, process.env, MCODE_INSTALL_HINT);
 }
 
@@ -436,17 +436,17 @@ export async function cmdMmx(args: string[]): Promise<number> {
   if (isStandaloneInformationalInvocation(args, "mmx")) return spawnClient("mmx", args, process.env, MMX_INSTALL_HINT);
   const unsafe = mmxUnsafeOverride(args);
   if (unsafe) {
-    console.error(`❌ ${unsafe} is not accepted by ocx mmx because it could bypass the proxy or expose a caller credential.`);
+    console.error(`❌ ${unsafe} is not accepted by occx mmx because it could bypass the proxy or expose a caller credential.`);
     return 2;
   }
   const commandPath = mmxCommandPath(args);
   if (commandPath[0] !== "text") {
-    console.error("❌ ocx mmx supports only `mmx text` commands. Use plain `mmx` for MiniMax image, video, speech, music, vision, search, quota, auth, config, file, and update APIs.");
+    console.error("❌ occx mmx supports only `mmx text` commands. Use plain `mmx` for MiniMax image, video, speech, music, vision, search, quota, auth, config, file, and update APIs.");
     return 2;
   }
   const config = loadConfig();
   if (!isLoopbackHostname(config.hostname)) {
-    console.error("❌ ocx mmx is loopback-only; MMX has no field for OpenCodex's dedicated remote-admission header.");
+    console.error("❌ occx mmx is loopback-only; MMX has no field for Openccx's dedicated remote-admission header.");
     return 2;
   }
   const live = await ensureProxy(config);
@@ -455,7 +455,7 @@ export async function cmdMmx(args: string[]): Promise<number> {
     return 1;
   }
 
-  const configDir = mkdtempSync(join(tmpdir(), "opencodex-mmx-"));
+  const configDir = mkdtempSync(join(tmpdir(), "openccx-mmx-"));
   let bridge: MmxTextBridge | null = null;
   let mmxChild: ChildProcess | null = null;
   let cleanupPromise: Promise<void> | null = null;

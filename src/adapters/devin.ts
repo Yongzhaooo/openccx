@@ -2,11 +2,11 @@
  * Devin / Cognition / Windsurf adapter.
  *
  * Uses the unofficial cloud-direct Connect-RPC client (GetChatMessage).
- * OpenCodex injects the OAuth API key onto provider.apiKey
- * before runTurn. This adapter maps OcxContext <-> ChatHistoryItem and
+ * Openccx injects the OAuth API key onto provider.apiKey
+ * before runTurn. This adapter maps OccxContext <-> ChatHistoryItem and
  * streams CloudChatEvent into AdapterEvent.
  */
-import type { AdapterEvent, OcxAssistantMessage, OcxContentPart, OcxMessage, OcxParsedRequest, OcxProviderConfig, OcxTool, OcxToolCall, OcxToolResultMessage, OcxUsage } from "../types";
+import type { AdapterEvent, OccxAssistantMessage, OccxContentPart, OccxMessage, OccxParsedRequest, OccxProviderConfig, OccxTool, OccxToolCall, OccxToolResultMessage, OccxUsage } from "../types";
 import type { IncomingMeta, ProviderAdapter } from "./base";
 import { streamChatEvents, allocateCascadeId, CloudChatError, type ChatHistoryItem, type ToolDef } from "./devin/cloud-direct";
 import { getCachedCatalog } from "./devin/cloud-direct/catalog";
@@ -70,35 +70,35 @@ async function resolveWireModelUid(
 
 export class DevinMissingCredentialError extends Error {
   constructor() {
-    super("Devin live transport requires a Devin API key. Run ocx login devin to sign in with your Cognition/Devin account.");
+    super("Devin live transport requires a Devin API key. Run occx login devin to sign in with your Cognition/Devin account.");
     this.name = "DevinMissingCredentialError";
   }
 }
 
-export function resolveDevinToken(provider: OcxProviderConfig, headers?: Headers): string {
+export function resolveDevinToken(provider: OccxProviderConfig, headers?: Headers): string {
   const providerKey = provider.apiKey?.trim();
   if (providerKey) return providerKey;
   const forwarded = headers?.get("authorization") ?? headers?.get("Authorization");
   if (forwarded?.toLowerCase().startsWith("bearer ")) return forwarded.slice("bearer ".length).trim();
-  const envToken = process.env.OPENCODEX_DEVIN_TEST_TOKEN?.trim();
+  const envToken = process.env.OPENCCX_DEVIN_TEST_TOKEN?.trim();
   if (envToken) return envToken;
   throw new DevinMissingCredentialError();
 }
 
-function textFromParts(content: string | OcxContentPart[] | undefined): string {
+function textFromParts(content: string | OccxContentPart[] | undefined): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
   return content.map((part) => (part.type === "text" ? part.text : "")).filter(Boolean).join("\n");
 }
 
-function toolResultText(message: OcxToolResultMessage): string {
+function toolResultText(message: OccxToolResultMessage): string {
   const body = textFromParts(message.content);
   return message.isError ? ("ERROR: " + body) : body;
 }
 
-function assistantToolCalls(message: OcxAssistantMessage): Array<{ id: string; name: string; arguments: string }> {
+function assistantToolCalls(message: OccxAssistantMessage): Array<{ id: string; name: string; arguments: string }> {
   return message.content
-    .filter((part): part is OcxToolCall => part.type === "toolCall")
+    .filter((part): part is OccxToolCall => part.type === "toolCall")
     .map((part) => ({
       id: part.id,
       name: part.name,
@@ -106,7 +106,7 @@ function assistantToolCalls(message: OcxAssistantMessage): Array<{ id: string; n
     }));
 }
 
-function assistantText(message: OcxAssistantMessage): string {
+function assistantText(message: OccxAssistantMessage): string {
   return message.content
     // Thinking stays out of the replayed content. Cognition has no reasoning
     // replay field, and folding chain-of-thought into assistant text sends it
@@ -117,7 +117,7 @@ function assistantText(message: OcxAssistantMessage): string {
     .join("\n");
 }
 
-export function mapOcxMessagesToDevin(parsed: OcxParsedRequest): ChatHistoryItem[] {
+export function mapOccxMessagesToDevin(parsed: OccxParsedRequest): ChatHistoryItem[] {
   const items: ChatHistoryItem[] = [];
   const system = parsed.context.systemPrompt?.filter((line) => line.trim().length > 0).join("\n");
   if (system) items.push({ role: "system", content: system });
@@ -129,7 +129,7 @@ export function mapOcxMessagesToDevin(parsed: OcxParsedRequest): ChatHistoryItem
   return items;
 }
 
-function mapOneMessage(message: OcxMessage): ChatHistoryItem | undefined {
+function mapOneMessage(message: OccxMessage): ChatHistoryItem | undefined {
   if (message.role === "user" || message.role === "developer") {
     const text = textFromParts(message.content).trim();
     if (!text) return undefined;
@@ -155,7 +155,7 @@ function mapOneMessage(message: OcxMessage): ChatHistoryItem | undefined {
   return undefined;
 }
 
-export function mapOcxToolsToDevin(tools: OcxTool[] | undefined): ToolDef[] | undefined {
+export function mapOccxToolsToDevin(tools: OccxTool[] | undefined): ToolDef[] | undefined {
   if (!tools || tools.length === 0) return undefined;
   return tools.map((tool) => ({
     name: tool.name,
@@ -165,7 +165,7 @@ export function mapOcxToolsToDevin(tools: OcxTool[] | undefined): ToolDef[] | un
 }
 
 export function createDevinAdapter(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   context: { providerId?: string } = {},
 ): ProviderAdapter {
   // Which credential slot holds this row's tenant. Defaults to `devin` so every
@@ -194,7 +194,7 @@ export function createDevinAdapter(
       };
     },
 
-    async runTurn(parsed: OcxParsedRequest, incoming: IncomingMeta, emit: (event: AdapterEvent) => void) {
+    async runTurn(parsed: OccxParsedRequest, incoming: IncomingMeta, emit: (event: AdapterEvent) => void) {
       if (incoming.abortSignal?.aborted) {
         emit({ type: "error", message: "Devin turn was aborted before start." });
         return;
@@ -226,7 +226,7 @@ export function createDevinAdapter(
       const host = resolveDevinApiServer(provider.baseUrl, credentialProviderId);
       const modelUid = await resolveWireModelUid(rawModelId, apiKey, host, parsed.options.reasoning);
       let openToolId: string | undefined;
-      let usage: OcxUsage | undefined;
+      let usage: OccxUsage | undefined;
       let stopReason: string | undefined;
 
       const closeOpenTool = () => {
@@ -240,8 +240,8 @@ export function createDevinAdapter(
           apiKey,
           apiServerUrl: host,
           modelUid,
-          messages: mapOcxMessagesToDevin(parsed),
-          tools: mapOcxToolsToDevin(parsed.context.tools),
+          messages: mapOccxMessagesToDevin(parsed),
+          tools: mapOccxToolsToDevin(parsed.context.tools),
           cascadeId,
           // Without these the request falls back to the encoder's defaults
           // (8192 output, a 128k context window, temperature 0.7), so a client

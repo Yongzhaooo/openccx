@@ -4,7 +4,7 @@ import { MODELS_RUNTIME_SUBCOMMANDS, isModelsRuntimeSubcommand } from "../../src
 import { MODELS_RUNTIME_USAGE, handleModelsRuntimeCommand } from "../../src/cli/models-runtime";
 
 /**
- * #3094: `ocx models new-policy` and `ocx models new-arrivals` were implemented in
+ * #3094: `occx models new-policy` and `occx models new-arrivals` were implemented in
  * models-runtime.ts, listed in its USAGE, and documented on the docs site, but
  * handleModels in models.ts routed a separately written array that omitted them. Both
  * commands reached handleConfiguredModels instead and died with
@@ -16,14 +16,14 @@ import { MODELS_RUNTIME_USAGE, handleModelsRuntimeCommand } from "../../src/cli/
  */
 describe("models runtime subcommand dispatch (#3094)", () => {
   test("every documented runtime subcommand is in the shared routing set", () => {
-    // USAGE is the user-facing contract: "  ocx models <sub> ..." per line.
+    // USAGE is the user-facing contract: "  occx models <sub> ..." per line.
     const documented = new Set<string>();
     for (const line of MODELS_RUNTIME_USAGE.split("\n")) {
-      const match = /^\s+ocx models ([a-z-]+)/.exec(line);
+      const match = /^\s+occx models ([a-z-]+)/.exec(line);
       if (match?.[1]) documented.add(match[1]);
     }
-    // `ocx models <enable|disable> ...` is written as an alternation in USAGE.
-    if (MODELS_RUNTIME_USAGE.includes("ocx models <enable|disable>")) {
+    // `occx models <enable|disable> ...` is written as an alternation in USAGE.
+    if (MODELS_RUNTIME_USAGE.includes("occx models <enable|disable>")) {
       documented.add("enable");
       documented.add("disable");
     }

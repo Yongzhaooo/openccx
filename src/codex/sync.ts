@@ -2,7 +2,7 @@ import { currentExternalCodexModelProvider, injectCodexConfig } from "./inject";
 import { printProjectCodexConfigWarnings, groupProjectCodexConfigWarningsByPath, type ProjectCodexConfigWarning } from "./project-config-warnings";
 import { refreshCodexModelCatalog } from "./refresh";
 import { applyProxyEnv, loadConfig } from "../config";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { collectOrcaCodexHomeDiagnostic } from "./home";
 import { summarizeComboCatalogOmissions, type ComboCatalogOmission } from "./catalog/aggregation";
 import {
@@ -42,8 +42,8 @@ export interface CodexSyncResult {
 
 export interface CodexSyncOptions {
   /**
-   * Explicit `ocx sync` is also the refresh path for side profiles that consume
-   * the OpenCodex catalog without injection. When set, the sync still refreshes
+   * Explicit `occx sync` is also the refresh path for side profiles that consume
+   * the Openccx catalog without injection. When set, the sync still refreshes
    * the catalog and models cache even if the Codex integration toggle is OFF or
    * an external `model_provider` owns config.toml. Config/history injection is
    * skipped in those cases, so the behavior is harmless to a native home.
@@ -82,7 +82,7 @@ function reportCodexHomeTarget(
 
 export async function syncModelsToCodex(
   port?: number,
-  config: OcxConfig = loadConfig(),
+  config: OccxConfig = loadConfig(),
   log: Pick<Console, "log" | "error"> | null = console,
   deps: CodexSyncDeps = defaultDeps,
   options: CodexSyncOptions = {},
@@ -136,7 +136,7 @@ export async function syncModelsToCodex(
   const externalProvider = (deps.currentExternalCodexModelProvider ?? currentExternalCodexModelProvider)();
 
   if (desiredDisabled && catalogEvenWhenNotInjected) {
-    // Explicit `ocx sync` with the integration OFF: refresh the catalog/cache so
+    // Explicit `occx sync` with the integration OFF: refresh the catalog/cache so
     // side profiles that route to the proxy keep their model list current, but
     // never touch config, journal, or history.
     applyProxyEnv(config);
@@ -163,7 +163,7 @@ export async function syncModelsToCodex(
 
   if (externalProvider) {
     if (catalogEvenWhenNotInjected) {
-      // External providers own config.toml, and the injector removes the OpenCodex
+      // External providers own config.toml, and the injector removes the Openccx
       // journal for external providers (inject.ts). This explicit catalog-only sync
       // must not touch config, journal, or history, so refresh the catalog/cache and
       // return without injection.
@@ -220,7 +220,7 @@ export async function syncModelsToCodex(
     };
   }
 
-  applyProxyEnv(config); // `ocx ensure`/`ocx sync` fetch provider models outside the server process
+  applyProxyEnv(config); // `occx ensure`/`occx sync` fetch provider models outside the server process
   let added = 0;
   let catalogPath: string | null = null;
   let catalogPathForInjection: string | null | undefined;
@@ -297,7 +297,7 @@ export async function syncModelsToCodex(
 }
 
 async function refreshCatalogForSync(
-  config: OcxConfig,
+  config: OccxConfig,
   deps: CodexSyncDeps,
   catalogOptions: CodexCatalogSyncOptions | undefined,
   log: Pick<Console, "log" | "error"> | null,

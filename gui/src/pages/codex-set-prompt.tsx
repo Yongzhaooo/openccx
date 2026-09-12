@@ -675,7 +675,7 @@ export default function CodexSetPrompt({ apiBase }: { apiBase: string }) {
 
           {/*
             model_instructions_file is reported, never written: it replaces the base
-            prompt outright, so the panel states that something outside opencodex
+            prompt outright, so the panel states that something outside openccx
             has taken it over.
           */}
           {snapshot.modelInstructionsFile !== null && (

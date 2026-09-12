@@ -11,7 +11,7 @@ field to be passed back in later multi-turn and tool-call requests. If the
 gateway drops that history, DeepSeek can reject the next request with a 400 that
 says the `reasoning_content` from thinking mode must be passed back.
 
-opencodex already has a provider flag for OpenAI-compatible chat models that
+openccx already has a provider flag for OpenAI-compatible chat models that
 require reasoning history replay: `preserveReasoningContentModels`.
 
 ## Decision

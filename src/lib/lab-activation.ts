@@ -26,7 +26,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { labAutomationPolicyPath } from "../lab/paths";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { LabAutomationError } from "../lab/automation/types";
 import { registerLabPassiveRouteLinker } from "./lab-passive-linker-registration";
 import { registerCurrentServerResourceCleanup } from "./server-resource-ownership";
@@ -45,7 +45,7 @@ interface LabRuntimeBinding {
 interface LabActivationRecord {
   staticDetach: Array<() => void>;
   runtime: LabRuntimeBinding | null;
-  seenRuntimeConfigs: WeakSet<OcxConfig>;
+  seenRuntimeConfigs: WeakSet<OccxConfig>;
 }
 
 /** Activation records keyed by configDir, so one process can own several configs. */
@@ -89,7 +89,7 @@ export function labAutomationEnabledOnDisk(configDir?: string): boolean {
 }
 
 /** True when this install actually uses Lab: any routing profile, or automation enabled. */
-export function labActivationRequired(config: OcxConfig, configDir?: string): boolean {
+export function labActivationRequired(config: OccxConfig, configDir?: string): boolean {
   if (Object.keys(config.routingProfiles ?? {}).length > 0) return true;
   return labAutomationEnabledOnDisk(configDir);
 }
@@ -124,7 +124,7 @@ function startAutomationIfEnabled(configDir?: string): void {
 
 function installLabAutomationRuntime(
   record: LabActivationRecord,
-  config: OcxConfig,
+  config: OccxConfig,
   configDir?: string,
 ): void {
   const previous = record.runtime;
@@ -164,7 +164,7 @@ function installLabAutomationRuntime(
  * server-owned CL-08 runtime binding is refreshed when its prior owner ended or when a new
  * server instance arrives with a config object that has not owned this activation before.
  */
-export function activateLab(config: OcxConfig, configDir?: string): void {
+export function activateLab(config: OccxConfig, configDir?: string): void {
   const key = activationKey(configDir);
   const existing = activated.get(key);
   if (existing) {
@@ -185,7 +185,7 @@ export function activateLab(config: OcxConfig, configDir?: string): void {
   const record: LabActivationRecord = {
     staticDetach: [],
     runtime: null,
-    seenRuntimeConfigs: new WeakSet<OcxConfig>(),
+    seenRuntimeConfigs: new WeakSet<OccxConfig>(),
   };
   record.staticDetach.push(registerLabPassiveRouteLinker(configDir));
   record.staticDetach.push(setCompatibilityEvidenceProvider(labCompatibilityEvidenceProvider));

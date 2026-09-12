@@ -7,7 +7,7 @@ import { CliUsageError, isJsonOption, printData, runCliAction } from "./runtime-
 import { trustedNodeLauncherContext } from "./launcher-context";
 
 export const CODEX_CLI_UPDATE_USAGE = `Usage:
-  ocx system codex-cli-update check [--json]`;
+  occx system codex-cli-update check [--json]`;
 
 export type ParsedCodexCliUpdateArgs = Readonly<{
   json: boolean;

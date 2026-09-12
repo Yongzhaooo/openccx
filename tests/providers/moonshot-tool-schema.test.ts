@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter as createOpenAIChatAdapterProduction } from "../../src/adapters/openai-chat";
-import type { OcxParsedRequest, OcxTool } from "../../src/types";
+import type { OccxParsedRequest, OccxTool } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createOpenAIChatAdapter = (
   ...args: Parameters<typeof createOpenAIChatAdapterProduction>
 ) => withTestTranslatorBudget(createOpenAIChatAdapterProduction(...args));
 
-function parsedRequest(tool: OcxTool): OcxParsedRequest {
+function parsedRequest(tool: OccxTool): OccxParsedRequest {
   return {
     modelId: "k3",
     context: {
@@ -25,7 +25,7 @@ function adapterFor(baseUrl: string) {
 
 async function emittedParameters(
   baseUrl: string,
-  tool: OcxTool,
+  tool: OccxTool,
 ): Promise<Record<string, unknown> | undefined> {
   const request = await adapterFor(baseUrl).buildRequest(parsedRequest(tool));
   const body = JSON.parse(request.body) as {
@@ -434,7 +434,7 @@ describe("Moonshot tool schema normalization (issue #2673)", () => {
   });
 
   test("leaves non-Moonshot openai-chat providers untouched", async () => {
-    const tool: OcxTool = {
+    const tool: OccxTool = {
       name: "automation_update",
       description: "Manage automations.",
       parameters: structuredClone(CODEX_STYLE_SCHEMA),

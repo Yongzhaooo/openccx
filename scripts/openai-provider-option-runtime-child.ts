@@ -1,22 +1,22 @@
 import { chmodSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const [opencodexHome, codexHome, capturePath] = Bun.argv.slice(2);
-if (!opencodexHome || !codexHome || !capturePath) {
-  throw new Error("runtime child requires opencodex home, codex home, and capture path");
+const [openccxHome, codexHome, capturePath] = Bun.argv.slice(2);
+if (!openccxHome || !codexHome || !capturePath) {
+  throw new Error("runtime child requires openccx home, codex home, and capture path");
 }
 
 for (const key of Object.keys(process.env)) {
-  if (/^(?:OPENAI_|CODEX_|OPENCODEX_)/.test(key) || /^(?:http|https|all)_proxy$/i.test(key)) {
+  if (/^(?:OPENAI_|CODEX_|OPENCCX_)/.test(key) || /^(?:http|https|all)_proxy$/i.test(key)) {
     delete process.env[key];
   }
 }
-process.env.OPENCODEX_HOME = opencodexHome;
+process.env.OPENCCX_HOME = openccxHome;
 process.env.CODEX_HOME = codexHome;
-process.env.OPENCODEX_API_AUTH_TOKEN = "fixture-admission";
+process.env.OPENCCX_API_AUTH_TOKEN = "fixture-admission";
 process.env.NO_PROXY = "127.0.0.1,localhost,::1";
 process.env.no_proxy = "127.0.0.1,localhost,::1";
-mkdirSync(opencodexHome, { recursive: true, mode: 0o700 });
+mkdirSync(openccxHome, { recursive: true, mode: 0o700 });
 mkdirSync(codexHome, { recursive: true, mode: 0o700 });
 const authPath = join(codexHome, "auth.json");
 const jwtPart = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -63,7 +63,7 @@ function lifecycle(body: Record<string, unknown>): string {
     type: "message",
     status: "completed",
     role: "assistant",
-    content: [{ type: "output_text", text: "OCX_PROBE_OK", annotations: [] }],
+    content: [{ type: "output_text", text: "OCCX_PROBE_OK", annotations: [] }],
   };
   const response = {
     id: "resp_runtime_fixture",
@@ -77,8 +77,8 @@ function lifecycle(body: Record<string, unknown>): string {
     { type: "response.created", response: { ...response, status: "in_progress", output: [] } },
     { type: "response.output_item.added", output_index: 0, item: { ...item, status: "in_progress", content: [] } },
     { type: "response.content_part.added", item_id: item.id, output_index: 0, content_index: 0, part: { type: "output_text", text: "", annotations: [] } },
-    { type: "response.output_text.delta", item_id: item.id, output_index: 0, content_index: 0, delta: "OCX_PROBE_OK" },
-    { type: "response.output_text.done", item_id: item.id, output_index: 0, content_index: 0, text: "OCX_PROBE_OK" },
+    { type: "response.output_text.delta", item_id: item.id, output_index: 0, content_index: 0, delta: "OCCX_PROBE_OK" },
+    { type: "response.output_text.done", item_id: item.id, output_index: 0, content_index: 0, text: "OCCX_PROBE_OK" },
     { type: "response.content_part.done", item_id: item.id, output_index: 0, content_index: 0, part: item.content[0] },
     { type: "response.output_item.done", output_index: 0, item },
     { type: "response.completed", response },

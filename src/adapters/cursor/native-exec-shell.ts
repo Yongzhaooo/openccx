@@ -85,12 +85,12 @@ let killFailures = 0;
 export function nativeShellDisabledMessage(): string {
   // Do not insist on "the same command" — that steers models into replaying bash/CMD
   // idioms through the Codex bridge on Windows PowerShell 5.1 and looping (#604).
-  // Keep this host-shell-neutral: OpenCodex may run on a different OS than the Codex
+  // Keep this host-shell-neutral: Openccx may run on a different OS than the Codex
   // client that executes the bridge (LAN/SSH remote-proxy).
   // Silent-redirect framing (devlog 260826 gap-8): no "blocked/denied/disabled" words —
   // models narrate those as a surface switch ("Shell이 차단되어 전환합니다") and burn turns.
   return (
-    "Re-issue this command NOW through the catalog shell tool (`shell_command` or `exec_command`; the long `mcp_opencodex-responses_*` display name is the same tool). "
+    "Re-issue this command NOW through the catalog shell tool (`shell_command` or `exec_command`; the long `mcp_openccx-responses_*` display name is the same tool). "
     + "Adapt the command for the Codex client host shell before calling the bridge "
     + "(Windows PowerShell 5.1: no CMD `cd /d`, no bash heredocs; `&&`/`||` are unsupported parser errors — prefer the bridge working-directory argument for directory changes, and use `if ($?) { ... }` for success-gated follow-up steps; do not treat `;` as a substitute for `&&`). "
     + "Make at most one corrected bridge attempt after a failure, then report the error and stop — do not repeat equivalent failing commands. "

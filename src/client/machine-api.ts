@@ -1,7 +1,7 @@
 import { journalOwner } from "../codex/journal";
 import { diagnoseCodexShim, installCodexShim, uninstallCodexShim } from "../codex/shim";
 import { readManagementJsonBody } from "../server/management/body";
-import type { OcxClientConnectionConfig } from "../types";
+import type { OccxClientConnectionConfig } from "../types";
 import { disconnectClient, syncConnectedClient } from "./connect";
 
 export type HubReachability = "unknown" | "online" | "offline" | "unauthorized";
@@ -48,7 +48,7 @@ async function jsonBody(req: Request): Promise<unknown | Response> {
   }
 }
 
-function statusPayload(req: Request, state: OcxClientConnectionConfig, deps: MachineApiDeps): MachineStatusV1 {
+function statusPayload(req: Request, state: OccxClientConnectionConfig, deps: MachineApiDeps): MachineStatusV1 {
   const machineBase = new URL(req.url).origin;
   return {
     mode: "client",
@@ -70,7 +70,7 @@ function statusPayload(req: Request, state: OcxClientConnectionConfig, deps: Mac
 export async function handleMachineApi(
   req: Request,
   url: URL,
-  state: OcxClientConnectionConfig,
+  state: OccxClientConnectionConfig,
   injected: MachineApiDeps = defaultDeps,
 ): Promise<Response | null> {
   const deps = { ...defaultDeps, ...injected };

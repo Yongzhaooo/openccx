@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createOllamaNativeAdapter } from "../../../src/adapters/ollama-native";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 /**
  * Structured output is a capability boundary, not a formatting preference.
@@ -14,7 +14,7 @@ import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
  * Local and custom self-hosted Ollama honour `format`, so they keep mapping it.
  */
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "ollama-native",
     baseUrl: "https://ollama.com/v1",
@@ -23,11 +23,11 @@ function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig
     liveModels: false,
     models: ["glm-5.3-flash"],
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-const LOCAL = { baseUrl: "http://localhost:11434/v1", authMode: "local", apiKey: undefined } as Partial<OcxProviderConfig>;
-const CUSTOM = { baseUrl: "https://ollama.internal.example/api", authMode: "key", apiKey: "test-key-not-a-real-credential" } as Partial<OcxProviderConfig>;
+const LOCAL = { baseUrl: "http://localhost:11434/v1", authMode: "local", apiKey: undefined } as Partial<OccxProviderConfig>;
+const CUSTOM = { baseUrl: "https://ollama.internal.example/api", authMode: "key", apiKey: "test-key-not-a-real-credential" } as Partial<OccxProviderConfig>;
 
 const SCHEMA = {
   type: "object",
@@ -35,13 +35,13 @@ const SCHEMA = {
   required: ["ok"],
 } as Record<string, unknown>;
 
-function parsedWith(options: Record<string, unknown> = {}, modelId = "glm-5.3-flash"): OcxParsedRequest {
+function parsedWith(options: Record<string, unknown> = {}, modelId = "glm-5.3-flash"): OccxParsedRequest {
   return {
     modelId,
     stream: true,
     options,
     context: { messages: [{ role: "user", content: "hi" }] },
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
 const JSON_OBJECT = { textFormat: { type: "json_object" } };

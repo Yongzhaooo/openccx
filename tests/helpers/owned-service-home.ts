@@ -9,7 +9,7 @@ export interface OwnedServiceHome {
 }
 
 const WINDOWS_SERVICE_PROBE_PRELOAD = resolve(import.meta.dir, "owned-service-home-preload.ts");
-const WINDOWS_SERVICE_PROBE_FLAG = "OCX_TEST_SERVICE_HOME_PROBE";
+const WINDOWS_SERVICE_PROBE_FLAG = "OCCX_TEST_SERVICE_HOME_PROBE";
 
 /**
  * Insert a test preload into a Bun command without relying on BUN_OPTIONS.
@@ -51,24 +51,24 @@ function windowsServiceProbeEnv(): Record<string, string> {
  */
 export function claimOwnedServiceHome(
   codexHome: string,
-  opencodexHome: string,
+  openccxHome: string,
   home: string,
 ): OwnedServiceHome {
-  writeFileSync(join(opencodexHome, "service-state.json"), JSON.stringify({
+  writeFileSync(join(openccxHome, "service-state.json"), JSON.stringify({
     version: 2,
     codexHome,
-    opencodexHome,
+    openccxHome,
     backend: "scheduler",
   }));
 
   if (process.platform === "darwin") {
     const launchAgents = join(home, "Library", "LaunchAgents");
     mkdirSync(launchAgents, { recursive: true, mode: 0o700 });
-    writeFileSync(join(launchAgents, "com.opencodex.proxy.plist"), [
+    writeFileSync(join(launchAgents, "com.openccx.proxy.plist"), [
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
       "<plist version=\"1.0\"><dict><key>EnvironmentVariables</key><dict>",
       `<key>CODEX_HOME</key><string>${codexHome}</string>`,
-      `<key>OPENCODEX_HOME</key><string>${opencodexHome}</string>`,
+      `<key>OPENCCX_HOME</key><string>${openccxHome}</string>`,
       "</dict></dict></plist>",
     ].join("\n"));
   }
@@ -80,18 +80,18 @@ export function claimOwnedServiceHome(
 
   const unitDir = join(home, ".config", "systemd", "user");
   mkdirSync(unitDir, { recursive: true, mode: 0o700 });
-  writeFileSync(join(unitDir, "opencodex-proxy.service"), [
+  writeFileSync(join(unitDir, "openccx-proxy.service"), [
     "[Service]",
     `Environment=\"CODEX_HOME=${codexHome}\"`,
-    `Environment=\"OPENCODEX_HOME=${opencodexHome}\"`,
+    `Environment=\"OPENCCX_HOME=${openccxHome}\"`,
   ].join("\n"));
 
-  const binDir = join(home, ".ocx-test-bin");
+  const binDir = join(home, ".occx-test-bin");
   mkdirSync(binDir, { recursive: true, mode: 0o700 });
   const systemctl = join(binDir, "systemctl");
   writeFileSync(systemctl, [
     "#!/bin/sh",
-    "if [ \"$1\" != \"--user\" ] || [ \"$2\" != \"show\" ] || [ \"$3\" != \"opencodex-proxy\" ]; then exit 64; fi",
+    "if [ \"$1\" != \"--user\" ] || [ \"$2\" != \"show\" ] || [ \"$3\" != \"openccx-proxy\" ]; then exit 64; fi",
     "printf '%s\\n' 'LoadState=loaded' 'ActiveState=inactive' 'FragmentPath=fixture' 'NeedDaemonReload=no'",
   ].join("\n"));
   chmodSync(systemctl, 0o700);

@@ -10,14 +10,14 @@ import { helperPath, repoRoot as resolveRepoRoot } from "../helpers/repo-root";
 const repoRoot = resolveRepoRoot();
 
 test("Windows owned-service-home fixture masks manager queries in a real child", async () => {
-  const root = mkdtempSync(join(tmpdir(), "ocx-owned-service-home-seam-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-owned-service-home-seam-"));
   const codexHome = join(root, "codex");
-  const opencodexHome = join(root, "opencodex");
+  const openccxHome = join(root, "openccx");
   const home = join(root, "home");
-  for (const path of [codexHome, opencodexHome, home]) mkdirSync(path, { recursive: true });
+  for (const path of [codexHome, openccxHome, home]) mkdirSync(path, { recursive: true });
 
   try {
-    const fixture = claimOwnedServiceHome(codexHome, opencodexHome, home);
+    const fixture = claimOwnedServiceHome(codexHome, openccxHome, home);
     if (process.platform !== "win32") return;
 
     // Copy the test preload below a path that contains spaces. Passing it as a
@@ -53,15 +53,15 @@ test("Windows owned-service-home fixture masks manager queries in a real child",
         }
         return probe;
       };
-      const exactScheduler = serviceProbe("exact scheduler", schtasks, ["/query", "/tn", "opencodex-proxy", "/xml"]);
-      const foreignScheduler = serviceProbe("foreign scheduler", schtasks, ["/query", "/tn", "foreign-opencodex-proxy", "/xml"]);
-      const extraScheduler = serviceProbe("extra scheduler", schtasks, ["/query", "/tn", "opencodex-proxy", "/xml", "/extra"]);
-      const exactNative = serviceProbe("exact native", sc, ["query", "opencodex-proxy-native"]);
-      const extraNative = serviceProbe("extra native", sc, ["query", "opencodex-proxy-native", "extra"]);
+      const exactScheduler = serviceProbe("exact scheduler", schtasks, ["/query", "/tn", "openccx-proxy", "/xml"]);
+      const foreignScheduler = serviceProbe("foreign scheduler", schtasks, ["/query", "/tn", "foreign-openccx-proxy", "/xml"]);
+      const extraScheduler = serviceProbe("extra scheduler", schtasks, ["/query", "/tn", "openccx-proxy", "/xml", "/extra"]);
+      const exactNative = serviceProbe("exact native", sc, ["query", "openccx-proxy-native"]);
+      const extraNative = serviceProbe("extra native", sc, ["query", "openccx-proxy-native", "extra"]);
       const result = inspectServiceManagerInstallation({
         platform: "win32",
         home: process.env.USERPROFILE,
-        configDir: process.env.OPENCODEX_HOME,
+        configDir: process.env.OPENCCX_HOME,
       });
       console.log(JSON.stringify({
         result,
@@ -79,7 +79,7 @@ test("Windows owned-service-home fixture masks manager queries in a real child",
         HOME: home,
         USERPROFILE: home,
         CODEX_HOME: codexHome,
-        OPENCODEX_HOME: opencodexHome,
+        OPENCCX_HOME: openccxHome,
       },
       stdout: "pipe",
       stderr: "pipe",
@@ -100,12 +100,12 @@ test("Windows owned-service-home fixture masks manager queries in a real child",
     };
     expect(payload.result).toEqual({ kind: "absent" });
     expect(payload.exactScheduler.status).toBe(1);
-    expect(payload.exactScheduler.stderr).toContain("OCX_TEST_SERVICE_HOME");
-    expect(payload.foreignScheduler.stderr).not.toContain("OCX_TEST_SERVICE_HOME");
-    expect(payload.extraScheduler.stderr).not.toContain("OCX_TEST_SERVICE_HOME");
+    expect(payload.exactScheduler.stderr).toContain("OCCX_TEST_SERVICE_HOME");
+    expect(payload.foreignScheduler.stderr).not.toContain("OCCX_TEST_SERVICE_HOME");
+    expect(payload.extraScheduler.stderr).not.toContain("OCCX_TEST_SERVICE_HOME");
     expect(payload.exactNative.status).toBe(1);
-    expect(payload.exactNative.stderr).toContain("OCX_TEST_SERVICE_HOME");
-    expect(payload.extraNative.stderr).not.toContain("OCX_TEST_SERVICE_HOME");
+    expect(payload.exactNative.stderr).toContain("OCCX_TEST_SERVICE_HOME");
+    expect(payload.extraNative.stderr).not.toContain("OCCX_TEST_SERVICE_HOME");
   } finally {
     removeTreeWithRetry(root);
   }

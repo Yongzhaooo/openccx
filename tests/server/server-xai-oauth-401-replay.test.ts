@@ -8,16 +8,16 @@ import { saveCredential } from "../../src/oauth/store";
 import { XAI_GROK_CLI_BASE_URL } from "../../src/providers/xai-transport";
 import { readUsageEntries, usageLogPath } from "../../src/usage/log";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TOKEN_ENDPOINT = "https://auth.x.ai/oauth/token";
 const OAUTH_RESPONSES_ENDPOINT = `${XAI_GROK_CLI_BASE_URL}/responses`;
-const PUBLIC_OAUTH_AUTHENTICATION_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
-const WINDOWS_PATH_CANARY = "C:\\Users\\Alice\\.opencodex\\auth.json.ocx-tmp";
-const UNC_PATH_CANARY = "\\\\server\\share\\opencodex\\auth.json.ocx-tmp";
-const POSIX_PATH_CANARY = "/home/alice/.opencodex/auth.json.ocx-tmp";
+const PUBLIC_OAUTH_AUTHENTICATION_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
+const WINDOWS_PATH_CANARY = "C:\\Users\\Alice\\.openccx\\auth.json.occx-tmp";
+const UNC_PATH_CANARY = "\\\\server\\share\\openccx\\auth.json.occx-tmp";
+const POSIX_PATH_CANARY = "/home/alice/.opencodex/auth.json.occx-tmp";
 
 let testDir = "";
 let previousHome: string | undefined;
@@ -26,16 +26,16 @@ let originalFetch: typeof fetch;
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-xai-401-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-xai-401-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-xai-401-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-xai-401-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -51,7 +51,7 @@ async function seedOAuth(expires = Date.now() + 3_600_000): Promise<void> {
   });
 }
 
-function xaiConfig(authMode: "oauth" | "key" = "oauth"): OcxConfig {
+function xaiConfig(authMode: "oauth" | "key" = "oauth"): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -66,7 +66,7 @@ function xaiConfig(authMode: "oauth" | "key" = "oauth"): OcxConfig {
         models: ["grok-4.5"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function successBody(text: string): string {
@@ -288,7 +288,7 @@ describe("xAI OAuth Responses opt-in upstream 401 replay", () => {
           models: ["grok-4.5"],
         },
       },
-    } as OcxConfig);
+    } as OccxConfig);
     const seenAuth: string[] = [];
     globalThis.fetch = (async (input, init) => {
       const url = input instanceof Request ? input.url : String(input);

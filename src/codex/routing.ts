@@ -26,7 +26,7 @@ import {
   hasMainAccountRefreshGrant,
 } from "./main-account";
 import { isSelectableCodexPoolAccount } from "./account-id";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { captureConfigGeneration, type GenerationContext } from "../lib/state-store-sweeper";
 import { isCanonicalOpenAiForwardProvider } from "../providers/openai-tiers";
 import { retainedUtf8Bytes } from "../lib/admission";
@@ -303,7 +303,7 @@ export type CodexUpstreamOutcomeMeta = {
 };
 
 function hasConfiguredPoolAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   selectionOptions?: CodexAccountUsabilityOptions,
 ): boolean {
@@ -314,7 +314,7 @@ function hasConfiguredPoolAccount(
     .some(account => isSelectableCodexPoolAccount(account) && account.id === accountId);
 }
 
-export function listLiveCodexAccountIds(config: OcxConfig): ReadonlySet<string> {
+export function listLiveCodexAccountIds(config: OccxConfig): ReadonlySet<string> {
   const ids = new Set((config.codexAccounts ?? []).map(account => account.id));
   const openai = config.providers.openai;
   if (openai && openai.disabled !== true && isCanonicalOpenAiForwardProvider(openai)) {
@@ -664,7 +664,7 @@ function canAcquireQuotaProbeLease(health: CodexUpstreamHealth | undefined, now:
  * Added Pool credentials only; owned main usage recovery is handled separately.
  */
 export function claimDueCodexQuotaRecoveryProbes(
-  config: OcxConfig,
+  config: OccxConfig,
   limit: number,
   now = Date.now(),
 ): CodexQuotaRecoveryProbeClaim[] {
@@ -742,7 +742,7 @@ export type ManualResetCooldownClaim =
   | { kind: "pool"; probe: CodexQuotaRecoveryProbeClaim }
   | { kind: "main"; probe: CooldownRecoveryLease };
 
-function manualResetAccountEligible(config: OcxConfig, accountId: string): boolean {
+function manualResetAccountEligible(config: OccxConfig, accountId: string): boolean {
   return !isCodexAccountPaused(config, accountId) && !isAccountNeedsReauth(accountId)
     && (accountId === MAIN_CODEX_ACCOUNT_ID
       || (config.codexAccounts ?? []).some(account => account.id === accountId && isSelectableCodexPoolAccount(account)));
@@ -750,7 +750,7 @@ function manualResetAccountEligible(config: OcxConfig, accountId: string): boole
 
 /** Explicit reset bypasses probe pacing, never another owner's lease or quota scope. */
 export function claimManualResetCooldowns(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   now = Date.now(),
   expectedPoolGeneration?: number,
@@ -789,7 +789,7 @@ type ManualResetQuotaProof = CodexQuotaRecoveryProbeProof & {
 
 /** Main proof is checked by the already-owned auth operation, never by a Pool record. */
 export function settleManualResetCooldown(
-  config: OcxConfig,
+  config: OccxConfig,
   claim: ManualResetCooldownClaim,
   recovered: boolean,
   proof: ManualResetQuotaProof = {},
@@ -1143,7 +1143,7 @@ export function isCodexAccountSoftAvoided(accountId: string, now = Date.now()): 
  * existing install rotates exactly as before. Compared with `codexPlanKey` because the stored plan
  * is an unrestricted provider string whose casing this repository does not control.
  */
-function excludedCodexPoolPlanKeys(config: OcxConfig): ReadonlySet<string> | undefined {
+function excludedCodexPoolPlanKeys(config: OccxConfig): ReadonlySet<string> | undefined {
   const configured = config.codexPool?.excludedPlans;
   if (!configured?.length) return undefined;
   const keys = configured
@@ -1170,7 +1170,7 @@ function excludedCodexPoolPlanKeys(config: OcxConfig): ReadonlySet<string> | und
  * covered main would disagree with itself between drain and ordinary routing.
  */
 function isCodexAccountPlanExcluded(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   precomputed?: ReadonlySet<string>,
 ): boolean {
@@ -1183,7 +1183,7 @@ function isCodexAccountPlanExcluded(
 }
 
 function isCodexAccountSelectable(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   now: number,
   quotaScope?: CodexQuotaScope,
@@ -1415,7 +1415,7 @@ function bindModelDetourAffinity(
 }
 
 function getEligiblePoolAccounts(
-  config: OcxConfig,
+  config: OccxConfig,
   excludeId?: string,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
@@ -1466,7 +1466,7 @@ function getEligiblePoolAccounts(
 }
 
 function listEligibleCodexAccountIds(
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -1474,7 +1474,7 @@ function listEligibleCodexAccountIds(
   return getEligiblePoolAccounts(config, undefined, now, quotaScope, selectionOptions);
 }
 
-function stickyLimitForConfig(config: OcxConfig): number {
+function stickyLimitForConfig(config: OccxConfig): number {
   return normalizeAccountPoolStickyLimit(config.accountPoolStickyLimit);
 }
 
@@ -1489,7 +1489,7 @@ function stickyLimitForConfig(config: OcxConfig): number {
  * eligibility on its own.
  */
 function hasCodexQuotaHeadroom(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   selectionOptions?: CodexAccountUsabilityOptions,
   now: number = Date.now(),
@@ -1510,7 +1510,7 @@ function hasCodexQuotaHeadroom(
  * eligible id in stable sorted order after the current active (wrapping).
  */
 function pickFillFirstCodexAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -1528,7 +1528,7 @@ function pickFillFirstCodexAccount(
 
 /** Next eligible account in stable order after `afterId` (wrapping). */
 function pickNextFillFirstCodexAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   afterId: string | null,
   eligible: readonly string[] = listEligibleCodexAccountIds(config, Date.now()),
   now = Date.now(),
@@ -1586,7 +1586,7 @@ function pickNextFillFirstCodexAccount(
  * the peeked account if that path becomes load-bearing.
  */
 function pickUnboundStrategyAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   threadId: string | null,
   now: number,
   commit: boolean,
@@ -1635,7 +1635,7 @@ function pickUnboundStrategyAccount(
   return null;
 }
 
-export function getPoolAccountPlan(config: OcxConfig, accountId: string): string | undefined {
+export function getPoolAccountPlan(config: OccxConfig, accountId: string): string | undefined {
   if (accountId === MAIN_CODEX_ACCOUNT_ID) return getMainAccountPlan();
   return (config.codexAccounts ?? [])
     .find(account => isSelectableCodexPoolAccount(account) && account.id === accountId)?.plan;
@@ -1643,7 +1643,7 @@ export function getPoolAccountPlan(config: OcxConfig, accountId: string): string
 
 /** Selection-only main routing must not lazily read the fenced native credential for its plan. */
 function getPoolAccountPlanForSelection(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   selectionOptions?: CodexAccountUsabilityOptions,
 ): string | undefined {
@@ -1672,7 +1672,7 @@ function sharedStateSelectionOptions(
 }
 
 function pickLowerUsageAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   active: string,
   activeUsage: number,
   now: number,
@@ -1705,7 +1705,7 @@ function pickLowerUsageAccount(
 
 /** Coolest account in an already-selected candidate list; first index wins ties. */
 function pickLowestUsageAmong(
-  config: OcxConfig,
+  config: OccxConfig,
   ids: readonly string[],
   selectionOptions?: CodexAccountUsabilityOptions,
   now: number = Date.now(),
@@ -1727,7 +1727,7 @@ function pickLowestUsageAmong(
 }
 
 export function pickLowestUsageCodexAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   excludeId?: string,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
@@ -1747,7 +1747,7 @@ export function pickLowestUsageCodexAccount(
  * round-robin takes the next ring pick (caller should have noted the failure).
  */
 export function pickAlternateCodexAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   excludeId: string,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
@@ -1817,7 +1817,7 @@ function manualPreferenceBlocks(poolKey: string, accountId: string): boolean {
   return preferred !== undefined && preferred !== accountId;
 }
 
-export function getEffectiveActiveCodexAccountId(config: OcxConfig): string | undefined {
+export function getEffectiveActiveCodexAccountId(config: OccxConfig): string | undefined {
   return runtimeActiveCodexAccountId ?? config.activeCodexAccountId;
 }
 
@@ -1827,7 +1827,7 @@ export function getEffectiveActiveCodexAccountId(config: OcxConfig): string | un
  * of comparing the stored pin themselves, which would report a pin that a later
  * automatic pick has already moved past.
  */
-export function isEffectiveCodexAccountPinned(config: OcxConfig): boolean {
+export function isEffectiveCodexAccountPinned(config: OccxConfig): boolean {
   const pinned = pinnedCodexAccountId(config);
   return pinned !== undefined && pinned === getEffectiveActiveCodexAccountId(config);
 }
@@ -1836,7 +1836,7 @@ export function isEffectiveCodexAccountPinned(config: OcxConfig): boolean {
  * Automatic strategy / failover cursor only — never mutates `config.activeCodexAccountId`
  * so an unrelated `saveConfig` cannot persist transient rotation as operator selection.
  */
-function rememberActiveCodexAccount(_config: OcxConfig, accountId: string): void {
+function rememberActiveCodexAccount(_config: OccxConfig, accountId: string): void {
   runtimeActiveCodexAccountId = accountId;
 }
 
@@ -1844,7 +1844,7 @@ function rememberActiveCodexAccount(_config: OcxConfig, accountId: string): void
  * End the manual pin when routing moves to a different account. Returns whether
  * the pin changed so the caller can fold it into a write it was already making.
  */
-function releaseCodexAccountPinFor(config: OcxConfig, accountId: string): boolean {
+function releaseCodexAccountPinFor(config: OccxConfig, accountId: string): boolean {
   const pinned = pinnedCodexAccountId(config);
   if (pinned === undefined || pinned === accountId) return false;
   clearCodexAccountPin(config);
@@ -1852,7 +1852,7 @@ function releaseCodexAccountPinFor(config: OcxConfig, accountId: string): boolea
 }
 
 /** Persist operator (or quota-strategy) active selection to config + disk. */
-function setActiveCodexAccount(config: OcxConfig, accountId: string): void {
+function setActiveCodexAccount(config: OccxConfig, accountId: string): void {
   runtimeActiveCodexAccountId = undefined;
   const releasedPin = releaseCodexAccountPinFor(config, accountId);
   if (config.activeCodexAccountId === accountId && !releasedPin) return;
@@ -1861,7 +1861,7 @@ function setActiveCodexAccount(config: OcxConfig, accountId: string): void {
 }
 
 /** Quota strategy persists; RR/fill-first keep a process-local cursor only. */
-function promoteActiveCodexAccount(config: OcxConfig, accountId: string): void {
+function promoteActiveCodexAccount(config: OccxConfig, accountId: string): void {
   if (normalizeAccountPoolStrategy(config.accountPoolStrategy) === "quota") {
     setActiveCodexAccount(config, accountId);
     return;
@@ -1880,7 +1880,7 @@ function promoteActiveCodexAccount(config: OcxConfig, accountId: string): void {
  * only in the process-local cursor.
  */
 export function reconcileCodexActiveAfterExclusion(
-  config: OcxConfig,
+  config: OccxConfig,
   excludedAccountId: string,
   now = Date.now(),
 ): string | null {
@@ -1917,7 +1917,7 @@ function isUnknownUsage(usage: number): boolean {
  * tier that strictly outranks it. Threads bound by affinity never reach here.
  */
 function pickPriorityPreemption(
-  config: OcxConfig,
+  config: OccxConfig,
   active: string,
   now: number,
   quotaScope?: CodexQuotaScope,
@@ -1954,7 +1954,7 @@ function pickPriorityPreemption(
  * most once per pin.
  */
 function releaseDrainedCodexAccountPin(
-  config: OcxConfig,
+  config: OccxConfig,
   selectionOptions?: Pick<
     CodexAccountUsabilityOptions,
     "nativeMainSelectionOnly" | "isMainAccountTokenLive"
@@ -1981,7 +1981,7 @@ function releaseDrainedCodexAccountPin(
 }
 
 function applyQuotaAutoSwitch(
-  config: OcxConfig,
+  config: OccxConfig,
   active: string,
   now: number,
   quotaScope?: CodexQuotaScope,
@@ -2011,7 +2011,7 @@ function applyQuotaAutoSwitch(
   return active;
 }
 
-function shouldFailover(config: OcxConfig, accountId: string, now: number): boolean {
+function shouldFailover(config: OccxConfig, accountId: string, now: number): boolean {
   const threshold = config.upstreamFailoverThreshold ?? 3;
   if (threshold <= 0) return false;
   dropSpentCredentialFailure(accountId);
@@ -2021,7 +2021,7 @@ function shouldFailover(config: OcxConfig, accountId: string, now: number): bool
 }
 
 function isHealthySharedCodexSelection(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   now: number,
   quotaScope: CodexQuotaScope | undefined,
@@ -2033,7 +2033,7 @@ function isHealthySharedCodexSelection(
 }
 
 function strategySelectionOptionsForModelDetour(
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
   quotaScope: CodexQuotaScope | undefined,
   selectionOptions: CodexAccountUsabilityOptions | undefined,
@@ -2057,7 +2057,7 @@ function strategySelectionOptionsForModelDetour(
 }
 
 function applyFailureFailover(
-  config: OcxConfig,
+  config: OccxConfig,
   active: string,
   now: number,
   quotaScope?: CodexQuotaScope,
@@ -2083,7 +2083,7 @@ function applyFailureFailover(
 
 export function resolveCodexAccountForThread(
   threadId: string | null,
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
 ): string | null {
@@ -2132,7 +2132,7 @@ function hasUnrecoveredCodexQuotaRefusal(accountId: string, quotaScope?: CodexQu
 
 function previewReusableAffinityAccount(
   entry: ThreadAffinityEntry | undefined,
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -2188,7 +2188,7 @@ function previewReusableAffinityAccount(
  * `usage < autoSwitchThreshold` and would reproduce the old rule under a new name.
  */
 function mayRebindAffinityForQuota(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   usage: number,
   threshold: number,
@@ -2208,7 +2208,7 @@ function mayRebindAffinityForQuota(
  */
 function reevaluateAffinityQuota(
   entry: ThreadAffinityEntry,
-  config: OcxConfig,
+  config: OccxConfig,
   now: number,
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -2256,7 +2256,7 @@ function reevaluateAffinityQuota(
  */
 export function previewCodexAccountForRequest(
   threadId: string | null,
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -2338,7 +2338,7 @@ export function previewCodexAccountForRequest(
 
 export function resolveCodexAccountForThreadDetailed(
   threadId: string | null,
-  config: OcxConfig,
+  config: OccxConfig,
   now = Date.now(),
   quotaScope?: CodexQuotaScope,
   selectionOptions?: CodexAccountUsabilityOptions,
@@ -2611,7 +2611,7 @@ export function resolveCodexAccountForThreadDetailed(
 }
 
 export function recordCodexUpstreamOutcome(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string | null,
   outcome: CodexUpstreamOutcome,
   meta: CodexUpstreamOutcomeMeta = {},
@@ -2950,7 +2950,7 @@ export function recordCodexUpstreamOutcome(
   }
 }
 
-export function formatCodexProviderForLog(providerName: string, accountId: string | null, config: OcxConfig): string {
+export function formatCodexProviderForLog(providerName: string, accountId: string | null, config: OccxConfig): string {
   if (!accountId) return providerName;
   // The main Codex login participates in rotation as "main-pool" (MAIN_CODEX_ACCOUNT_ID) but is the
   // same physical account as the "main" passthrough (null accountId). Log both under the base provider

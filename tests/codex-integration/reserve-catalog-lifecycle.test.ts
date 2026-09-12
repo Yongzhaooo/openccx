@@ -10,8 +10,8 @@ import { repoPath, repoRoot } from "../helpers/repo-root";
 import { resolveCodexCatalogSerializationDatabasePath, resolveEffectiveUserIdentity } from "../../src/codex/user-identity";
 
 const roots: string[] = [];
-const SOURCE = "opencodex_reserve_source";
-const MARKER = "opencodex_reserve_metadata_source";
+const SOURCE = "openccx_reserve_source";
+const MARKER = "openccx_reserve_metadata_source";
 const SELECTOR = "personal/gpt-reserve";
 
 interface Sandbox {
@@ -49,7 +49,7 @@ function reserveRow(qualified: boolean, efforts = ["high", "xhigh"]): RawEntry {
     comp_hash: "genuine-reserve-comp-hash",
     supported_reasoning_levels: efforts.map(effort => ({ effort, description: `Genuine ${effort}` })),
     default_reasoning_level: efforts.at(-1),
-    ...(qualified ? { opencodex_catalog_kind: "account-selector-v1", [MARKER]: "gpt-reserve" } : {}),
+    ...(qualified ? { openccx_catalog_kind: "account-selector-v1", [MARKER]: "gpt-reserve" } : {}),
   };
 }
 
@@ -62,14 +62,14 @@ function writeRuntime(sandbox: Sandbox, efforts: string[]): void {
 }
 
 function makeSandbox(models: RawEntry[] = [nativeRow()], rootFields: RawEntry = {}): Sandbox {
-  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-reserve-lifecycle-")));
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-reserve-lifecycle-")));
   roots.push(root);
   const home = join(root, "home");
   const codexHome = join(root, "codex-home");
-  const ocxHome = join(root, "ocx-home");
+  const occxHome = join(root, "occx-home");
   const runtime = join(root, "runtime");
-  for (const path of [home, codexHome, ocxHome, runtime]) mkdirSync(path, { recursive: true, mode: 0o700 });
-  const owned = claimOwnedServiceHome(codexHome, ocxHome, home);
+  for (const path of [home, codexHome, occxHome, runtime]) mkdirSync(path, { recursive: true, mode: 0o700 });
+  const owned = claimOwnedServiceHome(codexHome, occxHome, home);
   const bundledPath = join(root, "bundled-models.json");
   const runtimeScript = join(root, "codex-fixture.mjs");
   writeFileSync(runtimeScript, [
@@ -82,10 +82,10 @@ function makeSandbox(models: RawEntry[] = [nativeRow()], rootFields: RawEntry = 
     ? `@echo off\r\n"${process.execPath}" "${runtimeScript}" %*\r\n`
     : `#!/bin/sh\nexec "${process.execPath}" "${runtimeScript}" "$@"\n`);
   if (process.platform !== "win32") chmodSync(command, 0o700);
-  const catalogPath = join(codexHome, "opencodex-catalog.json");
+  const catalogPath = join(codexHome, "openccx-catalog.json");
   writeFileSync(catalogPath, JSON.stringify({ ...rootFields, models }));
   writeFileSync(join(codexHome, "config.toml"), 'cli_auth_credentials_store = "file"\n[features]\nmulti_agent_v2 = true\n');
-  writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+  writeFileSync(join(occxHome, "config.json"), JSON.stringify({
     port: 10100, hostname: "127.0.0.1", defaultProvider: "external",
     codexDesktopAuthless: true, codexAccountPickerEnabled: true,
     codexAccountNamespaces: { personal: "@main" },
@@ -101,7 +101,7 @@ function makeSandbox(models: RawEntry[] = [nativeRow()], rootFields: RawEntry = 
     env: {
       ...Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
       ...owned.env,
-      CODEX_HOME: codexHome, OPENCODEX_HOME: ocxHome, CODEX_CLI_PATH: command,
+      CODEX_HOME: codexHome, OPENCCX_HOME: occxHome, CODEX_CLI_PATH: command,
       HOME: home, USERPROFILE: home, XDG_RUNTIME_DIR: runtime,
       TMPDIR: runtime, TEMP: runtime, TMP: runtime, LOCALAPPDATA: join(home, "LocalAppData"),
       BUN_OPTIONS: "", OPENAI_API_KEY: "", CODEX_ACCESS_TOKEN: "",
@@ -177,8 +177,8 @@ describe("Reserve actual catalog finalization lifecycle", () => {
       ...reserveRow(false, ["medium"]),
       display_name: "Historical A",
       comp_hash: "historical-a-hash",
-      opencodex_account_observed_native: true,
-      opencodex_account_observed_selectors: ["personal"],
+      openccx_account_observed_native: true,
+      openccx_account_observed_selectors: ["personal"],
     };
     const activeB = {
       ...reserveRow(false, ["high"]),
@@ -199,7 +199,7 @@ describe("Reserve actual catalog finalization lifecycle", () => {
     // Prove the obsolete carried observation actually survives cache invalidation and
     // competes with retained B on the next real CLI-process sync.
     expect(cacheAfterFirst.models?.find(row => row.slug === "gpt-reserve")).toMatchObject({
-      comp_hash: "historical-a-hash", opencodex_account_observed_native: true,
+      comp_hash: "historical-a-hash", openccx_account_observed_native: true,
     });
     expect(first.models?.some(row => row.slug === "gpt-reserve")).toBe(false);
 
@@ -220,7 +220,7 @@ describe("Reserve actual catalog finalization lifecycle", () => {
       ],
     });
     expect(retained(first)[MARKER]).toBeUndefined();
-    expect(retained(first).opencodex_catalog_kind).toBeUndefined();
+    expect(retained(first).openccx_catalog_kind).toBeUndefined();
     const cache = JSON.parse(readFileSync(sandbox.cachePath, "utf8")) as RawCatalog;
     expect(cache.models?.some(row => row.slug === SELECTOR || row.slug === "gpt-reserve")).toBe(false);
     const second = sync(sandbox);

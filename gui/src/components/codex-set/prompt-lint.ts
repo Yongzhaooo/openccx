@@ -18,7 +18,7 @@ export interface LintFinding {
 }
 
 /**
- * The 8 KB advisory is OPENCODEX POLICY, not an upstream limit.
+ * The 8 KB advisory is OPENCCX POLICY, not an upstream limit.
  * `developer_instructions` is a plain config string with no cap, and an earlier
  * draft wrongly cited the 32 KiB AGENTS.md project-doc budget, which governs an
  * unrelated mechanism. The justification is per-request token cost and keeping a

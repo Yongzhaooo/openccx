@@ -10,13 +10,13 @@ import {
   setCompatibilityVersionOverrideForTests,
 } from "../../src/routing/compatibility/version";
 import { ManagementRequest } from "../helpers/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let testDir = "";
 let previousHome: string | undefined;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -57,17 +57,17 @@ function managementDeps() {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-cl06-boundaries-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-cl06-boundaries-"));
+  process.env.OPENCCX_HOME = testDir;
   readInstallationSalt(testDir);
   setCompatibilityVersionOverrideForTests("f".repeat(64));
 });
 
 afterEach(() => {
   resetCompatibilityVersionCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   // A shutting-down server can still hold a file here, and Windows answers EBUSY
   // rather than unlinking underneath it. Failing teardown would blame a test that
   // already asserted; the state that matters was reset above.

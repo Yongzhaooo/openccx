@@ -4,7 +4,7 @@ import { providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { fastPolicyForModel } from "../../src/providers/service-tier";
 import { parseFastOnlyRowId, parseSyntheticRowId } from "../../src/server/fast-row";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 /**
  * Ingress round-trip semantics for synthetic Fast selectors
@@ -16,22 +16,22 @@ import type { OcxConfig, OcxProviderConfig } from "../../src/types";
  * the decision layer every one of the five ingresses feeds.
  */
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-responses",
     baseUrl: "https://fixture.example/v1",
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function configWith(providers: Record<string, OcxProviderConfig>, extra: Partial<OcxConfig> = {}): OcxConfig {
+function configWith(providers: Record<string, OccxProviderConfig>, extra: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: Object.keys(providers)[0] ?? "fixture",
     providers,
     fastRows: true,
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 const eligible = () => configWith({

@@ -8,7 +8,7 @@ import { saveConfig } from "../../src/config";
 import { buildDesktop3pRegistry } from "../../src/claude/desktop-3p";
 import { SERVER_BUDGET_MS } from "../helpers/test-budget";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -17,15 +17,15 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-claude-native-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-claude-native-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-claude-native-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-claude-native-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -55,7 +55,7 @@ function mockAnthropicUpstream(captured: Captured[]) {
   });
 }
 
-function cfg(anthropicBaseUrl: string, extraClaude?: Record<string, unknown>): OcxConfig {
+function cfg(anthropicBaseUrl: string, extraClaude?: Record<string, unknown>): OccxConfig {
   return {
     port: 0,
     defaultProvider: "mock",
@@ -64,7 +64,7 @@ function cfg(anthropicBaseUrl: string, extraClaude?: Record<string, unknown>): O
     },
     connectTimeoutMs: 250,
     claudeCode: { anthropicBaseUrl, ...extraClaude },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 const OAUTH_HEADERS = {
@@ -213,7 +213,7 @@ test("Fable 1M picker alias preserves native passthrough on both Messages endpoi
   const upstream = mockAnthropicUpstream(captured);
   saveConfig(cfg(upstream.url.toString().replace(/\/$/, "")));
   const server = startServer(0);
-  const pickerModel = "claude-ocx-native--claude-fable-5-1";
+  const pickerModel = "claude-occx-native--claude-fable-5-1";
   try {
     const messagesWithoutMarker = await fetch(new URL("/v1/messages", server.url), {
       method: "POST",
@@ -259,7 +259,7 @@ test("exposed native passthrough requires dedicated admission and never forwards
     ...cfg(upstream.url.toString().replace(/\/$/, "")),
     hostname: "0.0.0.0",
     apiKeys: [{ id: "remote", name: "remote", key: admissionSecret, createdAt: "2026-08-12" }],
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0);
   const messagesUrl = `http://127.0.0.1:${server.port}/v1/messages`;
   try {
@@ -282,7 +282,7 @@ test("exposed native passthrough requires dedicated admission and never forwards
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-opencodex-api-key": admissionSecret,
+        "x-openccx-api-key": admissionSecret,
         authorization: `Bearer ${providerBearer}`,
         "x-api-key": admissionSecret,
       },
@@ -293,7 +293,7 @@ test("exposed native passthrough requires dedicated admission and never forwards
     expect(captured).toHaveLength(1);
     expect(captured[0].headers.get("authorization")).toBe(`Bearer ${providerBearer}`);
     expect(captured[0].headers.get("x-api-key")).toBeNull();
-    expect(captured[0].headers.get("x-opencodex-api-key")).toBeNull();
+    expect(captured[0].headers.get("x-openccx-api-key")).toBeNull();
 
     // CodeRabbit follow-up: the inverse layout must also keep the real provider x-api-key while
     // removing an admission secret carried in Authorization.
@@ -301,7 +301,7 @@ test("exposed native passthrough requires dedicated admission and never forwards
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-opencodex-api-key": admissionSecret,
+        "x-openccx-api-key": admissionSecret,
         authorization: `Bearer ${admissionSecret}`,
         "x-api-key": providerApiKey,
       },
@@ -312,12 +312,12 @@ test("exposed native passthrough requires dedicated admission and never forwards
     expect(captured).toHaveLength(2);
     expect(captured[1].headers.get("authorization")).toBeNull();
     expect(captured[1].headers.get("x-api-key")).toBe(providerApiKey);
-    expect(captured[1].headers.get("x-opencodex-api-key")).toBeNull();
+    expect(captured[1].headers.get("x-openccx-api-key")).toBeNull();
 
     for (const headerName of ["authorization", "x-api-key"] as const) {
       const headers = new Headers({
         "content-type": "application/json",
-        "x-opencodex-api-key": admissionSecret,
+        "x-openccx-api-key": admissionSecret,
       });
       if (headerName === "authorization") {
         headers.append(headerName, `Bearer ${providerBearer}`);
@@ -359,7 +359,7 @@ test.each([false, true])("Desktop mapping errors follow admission on both endpoi
       for (const model of ["claude-opus-4-8-20260202", "claude-opus-4-8-20260202--fast[1m]", "claude-opus-4-8-zzz"]) {
         for (const credential of [undefined, "wrong-admission-fixture", admissionSecret]) {
           const headers = new Headers(OAUTH_HEADERS);
-          if (credential !== undefined) headers.set("x-opencodex-api-key", credential);
+          if (credential !== undefined) headers.set("x-openccx-api-key", credential);
           const response = await globalThis.fetch(`http://127.0.0.1:${server.port}${path}`, {
             method: "POST", headers, signal: AbortSignal.timeout(5_000),
             body: JSON.stringify({ ...claudeBody(), model }),
@@ -409,14 +409,14 @@ test("alias/mapped models and non-anthropic credentials do NOT pass through", as
     const alias = await fetch(new URL("/v1/messages", server.url), {
       method: "POST",
       headers: OAUTH_HEADERS,
-      body: JSON.stringify({ model: "claude-ocx-mock--test-model", max_tokens: 10, messages: [{ role: "user", content: "x" }] }),
+      body: JSON.stringify({ model: "claude-occx-mock--test-model", max_tokens: 10, messages: [{ role: "user", content: "x" }] }),
     });
     expect(alias.status).not.toBe(200);
 
     // Claude model with placeholder bearer -> translate path (no sk-ant credential).
     const placeholder = await fetch(new URL("/v1/messages", server.url), {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer opencodex-local" },
+      headers: { "content-type": "application/json", "authorization": "Bearer openccx-local" },
       body: JSON.stringify({ model: "claude-fable-5", max_tokens: 10, messages: [{ role: "user", content: "x" }] }),
     });
     expect(placeholder.status).not.toBe(200);

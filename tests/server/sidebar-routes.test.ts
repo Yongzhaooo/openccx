@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { invalidateStarStatusCache, setStarDepsForTests, type StarDeps } from "../../src/github/star-state";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Route-level proof for the two sidebar endpoints. The unit tests cover the state
@@ -13,7 +13,7 @@ const config = {
   port: 10100,
   defaultProvider: "openai",
   providers: {},
-} as OcxConfig;
+} as OccxConfig;
 
 async function call(
   method: string,
@@ -189,8 +189,8 @@ describe("route surface", () => {
       // accepts for a mutation after matching origin and the per-session CSRF token.
       const { status, body } = await call("POST", "/api/github/star", {
         origin: "http://127.0.0.1:10100",
-        "x-opencodex-gui-origin": "http://127.0.0.1:10100",
-        "x-opencodex-csrf-token": "csrf-token",
+        "x-openccx-gui-origin": "http://127.0.0.1:10100",
+        "x-openccx-csrf-token": "csrf-token",
       }, "gui-session");
       expect(status).toBe(200);
       expect((body as Record<string, unknown>).ok).toBe(true);
@@ -212,8 +212,8 @@ describe("route surface", () => {
       invalidateStarStatusCache();
       const { status, body } = await call("POST", "/api/github/star", {
         origin: "http://127.0.0.1:10100",
-        "x-opencodex-gui-origin": "http://127.0.0.1:10100",
-        "x-opencodex-csrf-token": "forged-by-the-token-holder",
+        "x-openccx-gui-origin": "http://127.0.0.1:10100",
+        "x-openccx-csrf-token": "forged-by-the-token-holder",
       }, "admin-token");
       expect(status).toBe(403);
       expect((body as Record<string, unknown>).code).toBe("agent_consent_required");
@@ -246,8 +246,8 @@ describe("route surface", () => {
       invalidateStarStatusCache();
       const { status } = await call("POST", "/api/github/star", {
         origin: "http://127.0.0.1:10100",
-        "x-opencodex-gui-origin": "http://127.0.0.1:10100",
-        "x-opencodex-csrf-token": "csrf-token",
+        "x-openccx-gui-origin": "http://127.0.0.1:10100",
+        "x-openccx-csrf-token": "csrf-token",
       });
       expect(status).toBe(403);
     }));

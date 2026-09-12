@@ -34,7 +34,7 @@ export const NATIVE_GPT6_ASTRA_MODEL = "gpt-6-astra";
  * discovery ask upstream under an adequate client version, which guarantees the QUESTION is
  * fair but cannot guarantee an ANSWER: an unconfirmed account, a timed-out fetch, or a shard
  * that has not caught up all produce the same silent disappearance, and a model vanishing from
- * the picker reads as "opencodex lost my model" rather than "upstream did not confirm it".
+ * the picker reads as "openccx lost my model" rather than "upstream did not confirm it".
  * Listing them unconditionally means the request dispatches and the user sees the real upstream
  * status. `disabledModels` remains the visibility lever.
  *
@@ -144,7 +144,7 @@ export function nativeOpenAiAliasPresentation(slug: string): { displayName: stri
  * `gpt-daybreak-blue-latest` is entitlement-gated upstream: it is absent from codex-rs's
  * bundled catalog and reaches a client only through an authenticated `/models` response.
  * It is listed here by explicit owner decision so the capability template exists without waiting
- * for an observation, because opencodex injects `model_catalog_json` and codex-rs therefore builds
+ * for an observation, because openccx injects `model_catalog_json` and codex-rs therefore builds
  * a `StaticModelsManager` whose refresh is a no-op — an entitled account had no way to
  * discover it on a clean install.
  *

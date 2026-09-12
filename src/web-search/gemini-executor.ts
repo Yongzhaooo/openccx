@@ -8,7 +8,7 @@
  * trusted for token transmission (same rule as src/server/images.ts).
  * Never throws — returns {error} so the caller injects a graceful tool result.
  */
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { getValidAccessTokenSnapshot, publicOAuthAuthenticationErrorMessage } from "../oauth";
 import { applyUpstreamRecoveryInit, fetchWithResetRetry } from "../lib/upstream-retry";
 import { cancelBodyOnAbort, signalWithTimeout } from "../lib/abort";
@@ -30,7 +30,7 @@ function isRec(v: unknown): v is Record<string, unknown> {
 export async function runGeminiWebSearch(
   query: string,
   providerName: string,
-  _provider: OcxProviderConfig,
+  _provider: OccxProviderConfig,
   settings: SidecarSettings,
   abortSignal?: AbortSignal,
 ): Promise<SidecarOutcome> {
@@ -44,7 +44,7 @@ export async function runGeminiWebSearch(
     return { text: "", sources: [], error: `gemini sidecar auth failed: ${publicOAuthAuthenticationErrorMessage(e)}` };
   }
   if (!project) {
-    return { text: "", sources: [], error: "gemini sidecar missing Cloud Code Assist project id — re-run ocx login google-antigravity" };
+    return { text: "", sources: [], error: "gemini sidecar missing Cloud Code Assist project id — re-run occx login google-antigravity" };
   }
   // Destination pinned to the registry endpoint (see module doc).
   const base = getProviderRegistryEntry("google-antigravity")?.baseUrl ?? CCA_FALLBACK_BASE;

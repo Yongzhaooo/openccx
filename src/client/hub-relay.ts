@@ -21,9 +21,9 @@ const REQUEST_HEADERS = new Set([
   "if-none-match",
   "if-unmodified-since",
   "origin",
-  "x-opencodex-api-key",
-  "x-opencodex-csrf-token",
-  "x-opencodex-gui-origin",
+  "x-openccx-api-key",
+  "x-openccx-csrf-token",
+  "x-openccx-gui-origin",
 ]);
 const RESPONSE_HEADERS = new Set([
   "cache-control",

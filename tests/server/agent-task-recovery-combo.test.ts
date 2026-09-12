@@ -52,12 +52,12 @@ function comboConfig(targets: Array<{ provider: string; model: string }>) {
 }
 
 describe("combo path encrypted agent task recovery", () => {
-  const priorHome = process.env["OPENCODEX_HOME"];
+  const priorHome = process.env["OPENCCX_HOME"];
   let home: string;
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocx-agent-task-combo-"));
-    process.env["OPENCODEX_HOME"] = home;
+    home = mkdtempSync(join(tmpdir(), "occx-agent-task-combo-"));
+    process.env["OPENCCX_HOME"] = home;
     clearResponseStateMemoryForTests();
     resetAgentTaskRecoveryState();
     clearCachedProviderQuotas();
@@ -71,8 +71,8 @@ describe("combo path encrypted agent task recovery", () => {
     clearComboTargetCooldowns();
     clearResponseStateForTests();
     removeTreeWithRetry(home);
-    if (priorHome === undefined) delete process.env["OPENCODEX_HOME"];
-    else process.env["OPENCODEX_HOME"] = priorHome;
+    if (priorHome === undefined) delete process.env["OPENCCX_HOME"];
+    else process.env["OPENCCX_HOME"] = priorHome;
   });
 
   test("recovers an all-third-party combo once without retaining plaintext continuation state", async () => {

@@ -15,7 +15,7 @@ import {
 import { INTEGRATION_CLIENT_IDS, isLoopbackOnly } from "../../src/integrations/registry";
 import { classifyIntegration, readIntegrationState } from "../../src/integrations/state";
 import { createIntegrationStateStore } from "../../src/integrations/store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -29,18 +29,18 @@ const MODELS: ExportModel[] = [
   { namespaced: "anthropic/claude-opus-4-8", provider: "anthropic", id: "claude-opus-4-8", contextWindow: 200_000 },
 ];
 
-const CONFIG: OcxConfig = {
+const CONFIG: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 let home: string;
 let stateRoot: string;
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-integrations-state-"));
+  home = mkdtempSync(join(tmpdir(), "occx-integrations-state-"));
   stateRoot = join(home, "state", "integrations");
 });
 
@@ -153,7 +153,7 @@ describe("the five states, each triggered directly", () => {
     const editedDocument = JSON.parse(text) as {
       providers: Record<string, Record<string, unknown>>;
     };
-    editedDocument.providers.opencodex!.baseUrl = "http://user-edited.invalid/v1";
+    editedDocument.providers.openccx!.baseUrl = "http://user-edited.invalid/v1";
     writeFileSync(
       join(home, ".pi", "agent", "models.json"),
       `${JSON.stringify(editedDocument, null, 2)}\n`,
@@ -214,7 +214,7 @@ describe("ordering guards", () => {
     const editedDocument = JSON.parse(text) as {
       providers: Record<string, Record<string, unknown>>;
     };
-    editedDocument.providers.opencodex!.baseUrl = "http://user-edited.invalid/v1";
+    editedDocument.providers.openccx!.baseUrl = "http://user-edited.invalid/v1";
     writeFileSync(
       join(home, ".pi", "agent", "models.json"),
       `${JSON.stringify(editedDocument, null, 2)}\n`,
@@ -449,7 +449,7 @@ describe("classifier unit behavior", () => {
     // JSON.parse keeps only the last member, so serializing the parsed
     // document drops the earlier one — content loss, not normalization.
     expect(parseConfig("{\"a\": 1, \"a\": 2}", "json")).toBe(PARSE_FAILED);
-    expect(parseConfig("{\"providers\": {\"mine\": 1}, \"providers\": {\"ocx\": 2}}", "json"))
+    expect(parseConfig("{\"providers\": {\"mine\": 1}, \"providers\": {\"occx\": 2}}", "json"))
       .toBe(PARSE_FAILED);
     // Two spellings of ONE member name: the comparison is on decoded names.
     expect(parseConfig("{\"a\": 1, \"\\u0061\": 2}", "json")).toBe(PARSE_FAILED);
@@ -528,7 +528,7 @@ describe("classifier unit behavior", () => {
     const original = {
       clientId: "zcode" as const,
       fragments: [{
-        path: ["provider", "opencodex"],
+        path: ["provider", "openccx"],
         value: {
           enabled: true,
           options: { apiKey: "loopback", baseURL: "http://127.0.0.1:10100/v1" },
@@ -544,7 +544,7 @@ describe("classifier unit behavior", () => {
     const reordered = {
       clientId: "zcode" as const,
       fragments: [{
-        path: ["provider", "opencodex"],
+        path: ["provider", "openccx"],
         value: {
           models: {
             routed: {
@@ -572,16 +572,16 @@ describe("ownership is scoped to recorded fragments", () => {
   };
   const ownedContribution = {
     clientId: "omp" as const,
-    fragments: [{ path: ["providers", "opencodex"], value: ownedValue }],
+    fragments: [{ path: ["providers", "openccx"], value: ownedValue }],
   };
   const extraValue = {
     baseUrl: "https://freebuff.invalid/v1",
     api: "openai-chat",
   };
   const documentWithExtra = {
-    providers: { opencodex: ownedValue, freebuff: extraValue },
+    providers: { openccx: ownedValue, freebuff: extraValue },
   };
-  const originalText = "providers:\n  opencodex:\n    baseUrl: http://127.0.0.1:10100/v1\n    api: openai-chat\n";
+  const originalText = "providers:\n  openccx:\n    baseUrl: http://127.0.0.1:10100/v1\n    api: openai-chat\n";
   const textWithExtra = `${originalText}  freebuff:\n    baseUrl: https://freebuff.invalid/v1\n    api: openai-chat\n`;
   const record: OwnershipRecord = {
     clientId: "omp",
@@ -590,7 +590,7 @@ describe("ownership is scoped to recorded fragments", () => {
     // classifier must not use this whole-file hash to claim our block changed.
     fileFingerprint: fingerprint(originalText),
     blockFingerprint: fingerprint(canonicalContribution(ownedContribution)),
-    fragmentPaths: [["providers", "opencodex"]],
+    fragmentPaths: [["providers", "openccx"]],
     appliedAt: "2026-08-02T00:00:00.000Z",
     opId: "seeded-op",
   };
@@ -611,20 +611,20 @@ describe("ownership is scoped to recorded fragments", () => {
     const dshContribution = {
       clientId: "dsh" as const,
       fragments: [{
-        path: ["llm-pi-ai", "providers", "opencodex"],
+        path: ["llm-pi-ai", "providers", "openccx"],
         value: ownedValue,
       }],
     };
     const dshDocument = {
       "agent-default-model": "user-edited-after-apply",
-      "llm-pi-ai": { providers: { opencodex: ownedValue } },
+      "llm-pi-ai": { providers: { openccx: ownedValue } },
     };
     const dshRecord: OwnershipRecord = {
       ...record,
       clientId: "dsh",
       configPath: "/tmp/settings.yaml",
       blockFingerprint: fingerprint(canonicalContribution(dshContribution)),
-      fragmentPaths: [["llm-pi-ai", "providers", "opencodex"]],
+      fragmentPaths: [["llm-pi-ai", "providers", "openccx"]],
     };
     expect(classifyIntegration({
       fileText: "agent-default-model: user-edited-after-apply\n",
@@ -661,7 +661,7 @@ describe("ownership is scoped to recorded fragments", () => {
   test("modifying an owned fragment remains a conflict", () => {
     const editedDocument = {
       providers: {
-        opencodex: { ...ownedValue, baseUrl: "http://user-edited.invalid/v1" },
+        openccx: { ...ownedValue, baseUrl: "http://user-edited.invalid/v1" },
         freebuff: extraValue,
       },
     };
@@ -700,7 +700,7 @@ describe("ownership is scoped to recorded fragments", () => {
   });
 
   test("Hermes also ignores whole-file edits outside its registry-declared fragment", () => {
-    // Hermes declares sourcePreservingYaml: { path: ["providers", "opencodex"] }.
+    // Hermes declares sourcePreservingYaml: { path: ["providers", "openccx"] }.
     const contribution = { ...ownedContribution, clientId: "hermes" as const };
     const clientRecord: OwnershipRecord = {
       ...record,
@@ -759,7 +759,7 @@ describe("ownership is scoped to recorded fragments", () => {
     };
     const editedDocument = {
       providers: {
-        opencodex: { ...ownedValue, baseUrl: "http://user-edited.invalid/v1" },
+        openccx: { ...ownedValue, baseUrl: "http://user-edited.invalid/v1" },
         freebuff: extraValue,
       },
     };

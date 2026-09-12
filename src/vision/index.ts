@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { OcxContentPart, OcxMessage, OcxParsedRequest, OcxTextContent } from "../types";
+import type { OccxContentPart, OccxMessage, OccxParsedRequest, OccxTextContent } from "../types";
 import { describeImage, type DescribeOutcome } from "./describe";
 import { describeImageAnthropic } from "./anthropic-describe";
 import { describeImageRouted } from "./routed-describe";
@@ -184,7 +184,7 @@ interface ImageJob {
 }
 
 /** Render one describe outcome as the replacement text part (clamped to the per-image budget). */
-function renderDescription(out: { text: string; error?: string }): OcxTextContent {
+function renderDescription(out: { text: string; error?: string }): OccxTextContent {
   return {
     type: "text",
     text: out.error
@@ -277,7 +277,7 @@ async function executeDescription(
  * multi-image turn doesn't pay the sum of per-image latencies. Failures degrade to a short marker.
  */
 export async function describeImagesInPlace(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   plan: VisionPlan,
   selectedForwardHeaders: Headers,
   abortSignal?: AbortSignal,
@@ -285,13 +285,13 @@ export async function describeImagesInPlace(
   translatorBudget?: TranslatorBudget,
 ): Promise<void> {
   const jobs: ImageJob[] = [];
-  const targets: { msg: OcxMessage; parts: OcxContentPart[] }[] = [];
+  const targets: { msg: OccxMessage; parts: OccxContentPart[] }[] = [];
   for (const msg of parsed.context.messages) {
     if (!carriesImages(msg.role) || !Array.isArray(msg.content)) continue;
-    const parts = msg.content as OcxContentPart[];
+    const parts = msg.content as OccxContentPart[];
     if (!parts.some(p => p.type === "image")) continue;
     const contextText = parts
-      .filter((p): p is OcxTextContent => p.type === "text")
+      .filter((p): p is OccxTextContent => p.type === "text")
       .map(p => p.text)
       .join(" ")
       .slice(0, CONTEXT_MAX_CHARS);
@@ -359,7 +359,7 @@ export async function describeImagesInPlace(
   let oi = 0;
   const descriptions: string[] = [];
   for (const { msg, parts } of targets) {
-    const newParts: OcxContentPart[] = [];
+    const newParts: OccxContentPart[] = [];
     for (const p of parts) {
       if (p.type !== "image") {
         newParts.push(p);

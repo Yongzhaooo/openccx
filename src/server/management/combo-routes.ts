@@ -52,7 +52,7 @@ import {
   setDebugSettings,
   type DebugFlag,
 } from "../../lib/debug-settings";
-import type { OcxClaudeCodeConfig, OcxComboConfig, OcxConfig, OcxCustomModel, OcxProviderConfig } from "../../types";
+import type { OccxClaudeCodeConfig, OccxComboConfig, OccxConfig, OccxCustomModel, OccxProviderConfig } from "../../types";
 import { drainAndShutdown } from "../lifecycle";
 import { reconcileLiveStateStores } from "../../lib/state-store-registrations";
 import { filterRequestLogs, getRequestLogEntries, type RequestLogEntry } from "../request-log";
@@ -177,7 +177,7 @@ export async function handleComboRoutes(ctx: ManagementContext): Promise<Respons
       excludeComboId: sourceId,
     });
     if (error) return jsonResponse({ error }, 400);
-    const normalized = normalizeComboConfig(effectiveCombo as unknown as OcxComboConfig);
+    const normalized = normalizeComboConfig(effectiveCombo as unknown as OccxComboConfig);
     // Persist only non-default identity/capability fields so config stays sparse.
     // Capability defaults (`imageInput`, `reasoningEffortMode`) go through the same
     // helper the GET/PUT responses use, so the wire shape and the stored shape cannot drift.
@@ -187,7 +187,7 @@ export async function handleComboRoutes(ctx: ManagementContext): Promise<Respons
       displayName: normalizedDisplayName,
       ...normalizedBase
     } = sparseComboConfig(normalized);
-    const stored: OcxComboConfig = {
+    const stored: OccxComboConfig = {
       ...normalizedBase,
       ...(normalizedAlias ? { alias: normalizedAlias } : {}),
       ...(normalizedNativeAlias ? { nativeAlias: true } : {}),

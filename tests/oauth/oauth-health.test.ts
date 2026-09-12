@@ -22,7 +22,7 @@ import {
   getCodexAccountHealthSnapshot,
   recordCodexUpstreamOutcome,
 } from "../../src/codex/routing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { formatOAuthHealthForStatus } from "../../src/cli/status-oauth";
 import {
   LOCAL_MANAGEMENT_CAPABILITY_HEADER,
@@ -35,25 +35,25 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const origHome = process.env.HOME;
-const origOcxHome = process.env.OPENCODEX_HOME;
-const origAdminToken = process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
+const origOccxHome = process.env.OPENCCX_HOME;
+const origAdminToken = process.env.OPENCCX_ADMIN_AUTH_TOKEN;
 let tmp: string;
 
 beforeEach(() => {
   tmp = join(tmpdir(), `oauth-health-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(tmp, { recursive: true });
   process.env.HOME = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "ocx");
+  process.env.OPENCCX_HOME = join(tmp, "occx");
   clearCodexUpstreamHealth();
 });
 
 afterEach(() => {
   if (origHome === undefined) delete process.env.HOME;
   else process.env.HOME = origHome;
-  if (origOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = origOcxHome;
-  if (origAdminToken === undefined) delete process.env.OPENCODEX_ADMIN_AUTH_TOKEN;
-  else process.env.OPENCODEX_ADMIN_AUTH_TOKEN = origAdminToken;
+  if (origOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = origOccxHome;
+  if (origAdminToken === undefined) delete process.env.OPENCCX_ADMIN_AUTH_TOKEN;
+  else process.env.OPENCCX_ADMIN_AUTH_TOKEN = origAdminToken;
   clearCodexUpstreamHealth();
   clearAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID);
   removeTreeWithRetry(tmp);
@@ -128,7 +128,7 @@ describe("projectCodexAccountHealth", () => {
    * the credential mutation lock opens a SQLite file inside the config dir.
    */
   function withPoolStoreDir(): void {
-    mkdirSync(join(tmp, "ocx"), { recursive: true });
+    mkdirSync(join(tmp, "occx"), { recursive: true });
   }
 
   test("a terminal validation verdict is projected as reauth_required", async () => {
@@ -179,7 +179,7 @@ describe("projectCodexAccountHealth", () => {
     });
 
     // collectLocalCodexEntries used to inline its own copy of the projector, which is how
-    // `ocx status`/`ocx doctor` would have kept calling this account healthy.
+    // `occx status`/`occx doctor` would have kept calling this account healthy.
     const entry = collectOAuthHealthEntries().find(e => e.provider === "codex" && e.accountId === "pool-cli");
     expect(entry?.health).toEqual({ status: "reauth_required", reason: "refresh_failed" });
     expect(entry?.action).toBe(CODEX_REAUTH_ACTION);
@@ -215,11 +215,11 @@ describe("collectOAuthHealthEntries", () => {
       provider: "kimi",
       accountId,
       health: { status: "reauth_required", reason: "refresh_failed" },
-      action: "run `ocx login kimi`",
+      action: "run `occx login kimi`",
     });
   });
 
-  test("Codex reauth action points at the dashboard pool, not ocx login codex", () => {
+  test("Codex reauth action points at the dashboard pool, not occx login codex", () => {
     markCodexAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID);
     const entries = collectOAuthHealthEntries();
     const entry = entries.find(e => e.provider === "codex" && e.accountId === MAIN_CODEX_ACCOUNT_ID);
@@ -229,7 +229,7 @@ describe("collectOAuthHealthEntries", () => {
       health: { status: "reauth_required", reason: "refresh_failed" },
       action: CODEX_REAUTH_ACTION,
     });
-    expect(entry!.action).not.toContain("ocx login codex");
+    expect(entry!.action).not.toContain("occx login codex");
   });
 
   test("kiro manual access-only unexpired credentials are healthy", async () => {
@@ -273,7 +273,7 @@ describe("collectOAuthHealthEntries", () => {
 describe("collectOAuthHealthEntriesForCli", () => {
   test("uses management API Codex health and does not read CLI process maps", async () => {
     markCodexAccountNeedsReauth(MAIN_CODEX_ACCOUNT_ID);
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "ocx-admin-health-test";
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "occx-admin-health-test";
     const attestationSecret = "A".repeat(43);
     let authorization: string | null = null;
     let apiKey: string | null = null;
@@ -285,7 +285,7 @@ describe("collectOAuthHealthEntriesForCli", () => {
         fetchCalls += 1;
         const headers = new Headers(init?.headers);
         authorization = headers.get("authorization");
-        apiKey = headers.get("x-opencodex-api-key");
+        apiKey = headers.get("x-openccx-api-key");
         expect(headers.get(LOCAL_MANAGEMENT_EXPECTED_PID_HEADER)).toBe("4242");
         expect(verifyLocalManagementReadCapability(
           attestationSecret,
@@ -324,7 +324,7 @@ describe("collectOAuthHealthEntriesForCli", () => {
   });
 
   test("never sends the admin token to a configured-port listener without runtime attestation", async () => {
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "ocx-admin-health-test";
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "occx-admin-health-test";
     let fetchCalls = 0;
     const report = await collectOAuthHealthEntriesForCli(Date.now(), {
       findLiveProxyImpl: async () => ({ hostname: "127.0.0.1", port: 19191, pid: 4242, source: "config" }),
@@ -340,7 +340,7 @@ describe("collectOAuthHealthEntriesForCli", () => {
   });
 
   test("a stale runtime record cannot launch a local capability request", async () => {
-    process.env.OPENCODEX_ADMIN_AUTH_TOKEN = "ocx-admin-health-test";
+    process.env.OPENCCX_ADMIN_AUTH_TOKEN = "occx-admin-health-test";
     const attestationSecret = "A".repeat(43);
     let apiCalls = 0;
     const report = await collectOAuthHealthEntriesForCli(Date.now(), {
@@ -418,7 +418,7 @@ describe("collectOAuthHealthEntriesForCli", () => {
 
 describe("getCodexAccountHealthSnapshot", () => {
   test("exposes active cooldown source without changing write policy", () => {
-    const config = { providers: {} } as OcxConfig;
+    const config = { providers: {} } as OccxConfig;
     const now = Date.parse("2026-07-23T14:00:00.000Z");
     recordCodexUpstreamOutcome(config, "pool-acct", 429, { retryAfter: "120", now });
 

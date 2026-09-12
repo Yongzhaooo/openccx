@@ -25,6 +25,6 @@ export function isCodexCliUpdateInspectionArgv(argv) {
   // Bun consumes every internal launch-proof argument before ordinary command
   // parsing. Classify the same effective argv here so a user-supplied invalid
   // proof cannot hide this namespace from the pre-Bun zero-effect policy.
-  const args = argv.slice(2).filter(value => !value.startsWith("--ocx-internal-launch-proof="));
+  const args = argv.slice(2).filter(value => !value.startsWith("--occx-internal-launch-proof="));
   return args[0] === "system" && args[1] === "codex-cli-update";
 }

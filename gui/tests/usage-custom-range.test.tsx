@@ -22,7 +22,7 @@ beforeEach(() => {
   previousGlobals = Object.fromEntries(globals.map(key => [key, Reflect.get(globalThis, key)])) as typeof previousGlobals;
   clearClientResourceStoresForTests();
   testWindow = new Window({ url: "http://localhost/" });
-  testWindow.localStorage.setItem("ocx-lang", "en");
+  testWindow.localStorage.setItem("occx-lang", "en");
   Object.defineProperties(globalThis, {
     document: { configurable: true, value: testWindow.document },
     window: { configurable: true, value: testWindow },
@@ -164,7 +164,7 @@ for (const connected of [false, true]) {
 }
 
 test("America/Santiago midnight DST retains final-day activity and tooltip", async () => {
-  if (process.env.OCX_USAGE_SANTIAGO_CHILD !== "1") {
+  if (process.env.OCCX_USAGE_SANTIAGO_CHILD !== "1") {
     // Restoring an absent TZ can change Bun's effective timezone on Windows.
     // Start the DST case in its timezone without mutating this suite's clock.
     const timezone = { present: Object.hasOwn(process.env, "TZ"), value: process.env.TZ };
@@ -175,14 +175,14 @@ test("America/Santiago midnight DST retains final-day activity and tooltip", asy
       "--timeout", "10000",
     ], {
       cwd: resolve(import.meta.dir, ".."),
-      env: { ...process.env, TZ: "America/Santiago", OCX_USAGE_SANTIAGO_CHILD: "1" },
+      env: { ...process.env, TZ: "America/Santiago", OCCX_USAGE_SANTIAGO_CHILD: "1" },
       stdout: "pipe", stderr: "pipe", timeout: 12000, killSignal: "SIGKILL",
     });
     const diagnostics = `${child.stdout.toString()}\n${child.stderr.toString()}`;
     expect(child.exitedDueToTimeout, diagnostics).not.toBe(true);
     expect(child.signalCode, diagnostics).toBeUndefined();
     expect(child.exitCode, diagnostics).toBe(0);
-    expect(child.stdout.toString().split(/\r?\n/), diagnostics).toContain("OCX_SANTIAGO_CASE_COMPLETED");
+    expect(child.stdout.toString().split(/\r?\n/), diagnostics).toContain("OCCX_SANTIAGO_CASE_COMPLETED");
     expect({ present: Object.hasOwn(process.env, "TZ"), value: process.env.TZ }).toEqual(timezone);
     expect(new Date(2020, 8, 15, 10, 20).getTime()).toBe(localTime);
     return;
@@ -205,8 +205,8 @@ test("America/Santiago midnight DST retains final-day activity and tooltip", asy
   await act(async () => active!.dispatchEvent(new testWindow.MouseEvent("mouseover", { bubbles: true })));
   expect(container.querySelector(".heatmap-tip-date")?.textContent).toBe("2026-09-07");
   expect(container.querySelector(".heatmap-tip")?.textContent).toContain("700");
-  if (process.env.OCX_USAGE_SANTIAGO_CHILD === "1") console.log("OCX_SANTIAGO_CASE_COMPLETED");
-}, process.env.OCX_USAGE_SANTIAGO_CHILD === "1" ? 10000 : 15000);
+  if (process.env.OCCX_USAGE_SANTIAGO_CHILD === "1") console.log("OCCX_SANTIAGO_CASE_COMPLETED");
+}, process.env.OCCX_USAGE_SANTIAGO_CHILD === "1" ? 10000 : 15000);
 
 test("Apply submits inclusive bounds once; Clear restores the held preset without custom cache entries", async () => {
   await mount();

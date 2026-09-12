@@ -98,7 +98,7 @@ function mapRouteSubject(subject: RouteSubjectV1): RouteSubjectDto {
     inboundProtocol: subject.inboundProtocol,
     upstreamProtocol: subject.upstreamProtocol,
     surface: subject.surface,
-    opencodexCompatibilityVersion: subject.opencodexCompatibilityVersion,
+    openccxCompatibilityVersion: subject.openccxCompatibilityVersion,
     behaviorFingerprint: subject.behaviorFingerprint,
     endpointFingerprint: subject.endpointFingerprint,
     dependencies: subject.dependencies.map(mapRouteDependency),
@@ -113,7 +113,7 @@ export function mapSubjectJson(subjectJson: string): SubjectDto | null {
       return {
         subjectKind: "protocol",
         subjectSchemaVersion: 1,
-        opencodexCompatibilityVersion: String(parsed.opencodexCompatibilityVersion),
+        openccxCompatibilityVersion: String(parsed.openccxCompatibilityVersion),
         effectiveAdapter: String(parsed.effectiveAdapter),
         inboundProtocol: String(parsed.inboundProtocol),
         upstreamProtocol: String(parsed.upstreamProtocol),

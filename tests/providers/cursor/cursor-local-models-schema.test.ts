@@ -12,9 +12,9 @@ import { startServer } from "../../../src/server";
 import {
   modelCapabilityFields,
   OPENAI_FAMILY_API_TYPES,
-  OPENCODEX_MODEL_API_TYPES,
+  OPENCCX_MODEL_API_TYPES,
 } from "../../../src/server/models-capabilities";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { SERVER_BUDGET_MS } from "../../helpers/test-budget";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -23,10 +23,10 @@ import { removeTreeWithRetry } from "../../helpers/remove-tree";
 // start a real server and read the raw OpenAI-shape list, like the Grok discovery tests.
 setDefaultTimeout(SERVER_BUDGET_MS);
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
-function capabilityConfig(): OcxConfig {
+function capabilityConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -56,26 +56,26 @@ function capabilityConfig(): OcxConfig {
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-cursor-local-schema-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-cursor-local-schema-"));
+  process.env.OPENCCX_HOME = testHome;
 });
 
 afterEach(() => {
   resetCodexModelEntitlementCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
 
 describe("modelCapabilityFields", () => {
   test("api_types keeps an OpenAI-family member so Cursor never routes to the Messages wire alone", () => {
-    expect(OPENCODEX_MODEL_API_TYPES.some(type => OPENAI_FAMILY_API_TYPES.has(type))).toBe(true);
+    expect(OPENCCX_MODEL_API_TYPES.some(type => OPENAI_FAMILY_API_TYPES.has(type))).toBe(true);
   });
 
   test("empty input yields only the constant capabilities", () => {
     const fields = modelCapabilityFields({});
-    expect(fields.api_types).toEqual(OPENCODEX_MODEL_API_TYPES);
+    expect(fields.api_types).toEqual(OPENCCX_MODEL_API_TYPES);
     expect(fields.capabilities).toEqual({
       output_modalities: ["text"],
       supports_tool_use: true,

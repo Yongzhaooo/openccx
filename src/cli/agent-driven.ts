@@ -2,7 +2,7 @@
  * Detects whether this process was started by a coding agent rather than typed
  * by a person.
  *
- * Agent harnesses run `ocx` on the user's behalf and answer prompts from their
+ * Agent harnesses run `occx` on the user's behalf and answer prompts from their
  * own logic, which means a consent question would be decided by the agent
  * instead of the account owner. Prompts that act on the user's identity check
  * this and defer instead: they stay silent so the question reaches the human on

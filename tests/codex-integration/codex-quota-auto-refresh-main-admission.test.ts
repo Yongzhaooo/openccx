@@ -15,7 +15,7 @@ import { resetCodexQuotaAutoRefreshForTests, runCodexQuotaAutoRefresh, type Code
 import { getNativeMainProfileRequestCount, resetLifecycleDrainStateForTests } from "../../src/server/lifecycle";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const accountId = "fixture-auto-main";
@@ -30,7 +30,7 @@ let previousCodexHome: string | undefined;
 let previousFetch: typeof fetch;
 let now: number;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { defaultProvider: "openai", codexMainAccountHardLock: true, providers: { openai: {
     adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward", codexAccountMode: "pool",
   } }, codexAccounts: [], codexQuotaAutoRefresh: { [MAIN]: { fiveHour: true, weekly: true } } };
@@ -55,7 +55,7 @@ function observe(percent: number): void {
     shortResetAt: RESET_SECONDS, weeklyPercent: 0, weeklyResetAt: RESET_SECONDS }, undefined, writer);
 }
 
-function recordMarkers(cfg: OcxConfig, id: string, completed: CodexQuotaAutoRefreshWindows): boolean {
+function recordMarkers(cfg: OccxConfig, id: string, completed: CodexQuotaAutoRefreshWindows): boolean {
   cfg.codexQuotaAutoRefresh = { ...cfg.codexQuotaAutoRefresh, [id]: {
     ...cfg.codexQuotaAutoRefresh?.[id],
     ...(completed.fiveHour !== undefined ? { lastFiveHourResetAt: completed.fiveHour } : {}),
@@ -95,11 +95,11 @@ function deferred<T>() {
 
 beforeEach(() => {
   now = Date.now();
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   previousFetch = globalThis.fetch;
-  home = mkdtempSync(join(tmpdir(), "ocx-auto-main-admission-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-auto-main-admission-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   const aclOk = { success: true, exitCode: 0, timedOut: false, stdout: "" };
   setIcaclsRunnerForTests(() => aclOk);
@@ -129,8 +129,8 @@ afterEach(async () => {
   try { await flushConfigDirHardeningForTests(); } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     removeTreeWithRetry(home);

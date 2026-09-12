@@ -47,7 +47,7 @@ import type { CodexCooldownSource, CodexQuotaScope } from "./routing";
 import { maskAccountId } from "../lib/privacy";
 import { formatErrorResponse } from "../bridge";
 import { CODEX_UNKNOWN_USAGE_SCORE, getAccountQuota, parseUsageQuota, parseMainPolicyUsageQuota, setAccountQuotaFromParsed } from "./quota";
-import type { CodexAccountMode, OcxConfig, OcxProviderConfig } from "../types";
+import type { CodexAccountMode, OccxConfig, OccxProviderConfig } from "../types";
 import { FORWARD_HEADERS } from "../adapters/openai-responses";
 import { captureConfigGeneration } from "../lib/state-store-sweeper";
 import { retainedUtf8Bytes } from "../lib/admission";
@@ -78,7 +78,7 @@ const CODEX_APP_AFFINITY_KEY = randomBytes(32);
  * path. This keeps the keyring boundary intact instead of reading auth.json just to classify a
  * request that already brought its own credential (#3157).
  */
-function requestOwnedMainPinHasQuotaHeadroom(config: OcxConfig): boolean {
+function requestOwnedMainPinHasQuotaHeadroom(config: OccxConfig): boolean {
   const threshold = config.autoSwitchThreshold ?? 80;
   if (threshold <= 0) return true;
   const usage = computeCodexUsageScore(getAccountQuota(MAIN_CODEX_ACCOUNT_ID));
@@ -106,7 +106,7 @@ export function codexPoolAffinityKey(headers: Headers): string | undefined {
   if (!sessionId || !threadId) return undefined;
 
   return `app:${createHmac("sha256", CODEX_APP_AFFINITY_KEY)
-    .update("opencodex-app-pool-affinity-v1\0")
+    .update("openccx-app-pool-affinity-v1\0")
     .update(sessionId)
     .update("\0")
     .update(threadId)
@@ -179,7 +179,7 @@ export function releaseCodexAuthContextProbeLease(ctx: CodexAuthContext | undefi
   else releaseCodexQuotaProbeLease(ctx.accountId!, leaseId);
 }
 
-export type OcxRuntimeProviderConfig = OcxProviderConfig & {
+export type OccxRuntimeProviderConfig = OccxProviderConfig & {
   _codexAccountOverride?: { accessToken: string; chatgptAccountId: string };
   _codexAccountRequired?: boolean;
 };
@@ -215,7 +215,7 @@ function assertCodexAccountValidationReady(accountId: string): void {
 }
 
 export const CODEX_MAIN_PROFILE_MAINTENANCE_MESSAGE =
-  "OpenCodex local native-main profile maintenance is active; retry this request";
+  "Openccx local native-main profile maintenance is active; retry this request";
 
 export class CodexMainProfileDrainingError extends Error {
   /**
@@ -241,7 +241,7 @@ export class CodexMainProfileDrainingError extends Error {
 }
 
 /**
- * #2108: a reboot could leave this fence closed until `ocx restart`, and the report was
+ * #2108: a reboot could leave this fence closed until `occx restart`, and the report was
  * unactionable because the settled reason was never written anywhere. It cannot ride the
  * message (claude-messages.ts matches that string exactly to keep the fence a 503 rather
  * than an Anthropic 529) and it cannot ride a header (/api/logs reads only error.message
@@ -345,7 +345,7 @@ export class CodexReserveHelperUnsupportedError extends CodexReserveUnavailableE
   }
 }
 
-export type CodexAuthPolicyConfig = Readonly<Pick<OcxConfig,
+export type CodexAuthPolicyConfig = Readonly<Pick<OccxConfig,
   "codexMainAccountHardLock" | "codexDesktopAuthless" | "runtimeRole" | "pausedCodexAccountIds"
 >>;
 
@@ -455,7 +455,7 @@ export function unwrapUpstreamRetryEvidenceError(error: unknown): unknown {
   return error;
 }
 
-function assertMainAccountPolicy(config: Pick<OcxConfig, "codexMainAccountHardLock"> | undefined): void {
+function assertMainAccountPolicy(config: Pick<OccxConfig, "codexMainAccountHardLock"> | undefined): void {
   if (!config) return;
   const status = getMainAccountHardLockStatus(config);
   if (status.state === "blocked") throw new CodexMainAccountHardLockError(status.resetAt);
@@ -486,7 +486,7 @@ function sameCredentialMaterial(a: string, b: string): boolean {
  * personal/business registrations with the same email and account id over-deny during the
  * cooldown — the safe direction.
  */
-function callerIsCooledPoolAccount(headers: Headers, config: OcxConfig, accountId: string): boolean {
+function callerIsCooledPoolAccount(headers: Headers, config: OccxConfig, accountId: string): boolean {
   const bearer = headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!bearer) return true;
   const callerAccountId = headers.get("chatgpt-account-id") ?? extractAccountId(undefined, bearer);
@@ -566,8 +566,8 @@ export function cooldownErrorMessage(err: CodexAccountCooldownError, accountSele
     : `Selected Codex account (${cooldownAccountLabel(err.accountId)})`;
   const recovery = accountSelector
     ? " This request is pinned to that selector and will not switch accounts; choose another account-qualified model or retry later."
-    : " Run 'ocx account list openai' to find the id, then"
-      + " 'ocx account clear-cooldown openai <id>' to lift it, or switch accounts with 'ocx account use openai <id>'.";
+    : " Run 'occx account list openai' to find the id, then"
+      + " 'occx account clear-cooldown openai <id>' to lift it, or switch accounts with 'occx account use openai <id>'.";
   return `${selected}${scope ? ` ${scope} is` : " is"} cooling down until ${until}`
     + ` (source: ${err.cooldownSource ?? "default"}).${recovery}`;
 }
@@ -629,7 +629,7 @@ export interface ResolveCodexAuthContextOptions {
   getValidMainAccountToken?: typeof getValidMainAccountToken;
   nativeMainRefreshDependencies?: NativeMainRefreshDependencies;
   signal?: AbortSignal;
-  primeCodexPoolQuotas?: (config: OcxConfig, reason: string) => Promise<void>;
+  primeCodexPoolQuotas?: (config: OccxConfig, reason: string) => Promise<void>;
   /** Test seam for account-gated native model discovery. */
   resolveCodexModelEntitlements?: typeof resolveCodexModelEntitlements;
   /** Direct requests admitted with a proxy bearer substitute the stored native-main credential. */
@@ -648,7 +648,7 @@ export interface CodexAccountSelectionAdmission {
 
 export async function resolveCodexAuthContext(
   headers: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   mode: CodexAccountMode,
   options: ResolveCodexAuthContextOptions = {},
 ): Promise<CodexAuthContext> {
@@ -1059,10 +1059,10 @@ export function assertCodexAuthContextNotCooled(ctx: CodexAuthContext | undefine
 }
 
 export function applyCodexAuthContextToProvider(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   ctx: CodexAuthContext,
   mode: CodexAccountMode | undefined,
-): OcxRuntimeProviderConfig {
+): OccxRuntimeProviderConfig {
   if (mode !== "pool" || (ctx.kind !== "pool" && ctx.kind !== "main-pool") || provider.authMode !== "forward") return provider;
   assertCodexAccountValidationReady(ctx.accountId);
   return {
@@ -1228,17 +1228,17 @@ export function headersForCodexAuthContext(
   return materializeCodexUpstreamAuth(headers, ctx, { config, modelId, admission });
 }
 
-export function isCodexAuthContextUsable(ctx: CodexAuthContext, config: OcxConfig): boolean {
+export function isCodexAuthContextUsable(ctx: CodexAuthContext, config: OccxConfig): boolean {
   if (ctx.kind === "main") return true;
   if (ctx.kind === "main-pool") return isCodexAccountUsable(config, ctx.accountId);
   return isCodexAccountUsable(config, ctx.accountId) && isCodexAccountGenerationLive(ctx.accountId, ctx.generation);
 }
 
-export function stripCodexRuntimeProviderFields(provider: OcxProviderConfig): OcxProviderConfig {
+export function stripCodexRuntimeProviderFields(provider: OccxProviderConfig): OccxProviderConfig {
   const {
     _codexAccountOverride: _override,
     _codexAccountRequired: _required,
     ...safeProvider
-  } = provider as OcxRuntimeProviderConfig;
+  } = provider as OccxRuntimeProviderConfig;
   return safeProvider;
 }

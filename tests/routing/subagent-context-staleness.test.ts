@@ -15,14 +15,14 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  * `context_window`, so a child planned and compacted against a narrower budget than its
  * parent — measured at 272,000 x 95% = 258,400 while the request path resolved 922,000.
  */
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 const originalCodexHome = process.env.CODEX_HOME;
 let home: string;
 let codexHome: string;
 
 function writeStaleCatalog(): void {
   mkdirSync(codexHome, { recursive: true });
-  writeFileSync(join(codexHome, "opencodex-catalog.json"), JSON.stringify({
+  writeFileSync(join(codexHome, "openccx-catalog.json"), JSON.stringify({
     models: [
       {
         slug: "gpt-5.6-sol",
@@ -48,17 +48,17 @@ function writeConfig(): void {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-subagent-ctx-"));
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-subagent-codex-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-subagent-ctx-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-subagent-codex-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = codexHome;
   writeConfig();
   writeStaleCatalog();
 });
 
 afterEach(() => {
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   if (originalCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = originalCodexHome;
   removeTreeWithRetry(home);

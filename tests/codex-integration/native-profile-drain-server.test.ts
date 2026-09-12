@@ -20,25 +20,25 @@ import {
   getNativeMainProfileRequestCount,
   resetLifecycleDrainStateForTests,
 } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { ownedServiceHomeInspection } from "../helpers/owned-service-home-inspection";
 
 import { watchdogMs } from "../helpers/ci-watchdog";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-/** These cases sandbox CODEX_HOME/OPENCODEX_HOME, so the installed service is not their evidence. */
+/** These cases sandbox CODEX_HOME/OPENCCX_HOME, so the installed service is not their evidence. */
 const inspectNativeCodexOwnership = ownedServiceHomeInspection("native-profile drain server test");
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
-let opencodexHome = "";
+let openccxHome = "";
 let codexHome = "";
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-main-drain-server-"));
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-main-drain-codex-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-main-drain-server-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-main-drain-codex-"));
+  process.env.OPENCCX_HOME = openccxHome;
   process.env.CODEX_HOME = codexHome;
   writeFileSync(
     join(codexHome, "auth.json"),
@@ -58,10 +58,10 @@ afterEach(() => {
   clearThreadAccountMap();
   clearMainAccountInfoCache();
   resetMainCodexAccountIdentityTrackingForTests();
-  if (opencodexHome) removeTreeWithRetry(opencodexHome);
+  if (openccxHome) removeTreeWithRetry(openccxHome);
   if (codexHome) removeTreeWithRetry(codexHome);
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
 });
@@ -96,7 +96,7 @@ describe("native main profile scoped server admission", () => {
       codexAccounts: [],
       activeCodexAccountId: MAIN_CODEX_ACCOUNT_ID,
       autoSwitchThreshold: 0,
-    } as OcxConfig);
+    } as OccxConfig);
     const waitForFrame = (ws: WebSocket, needle: string) => new Promise<string>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error(`websocket timeout waiting for ${needle}`)), watchdogMs(2_000));
       const onMessage = (event: MessageEvent) => {
@@ -209,7 +209,7 @@ describe("native main profile scoped server admission", () => {
           ]
         : [],
       experimentalRealtimeWsBaseUrl: upstream.url.toString(),
-    } as OcxConfig);
+    } as OccxConfig);
     const connectEcho = async (
       server: ReturnType<typeof startServer>,
       path: string,
@@ -287,7 +287,7 @@ describe("native main profile scoped server admission", () => {
       const blocked = await handleNativeProfileAPI(
         switchRequest(),
         new URL("http://localhost/api/native-main-profiles/switch"),
-        {} as OcxConfig,
+        {} as OccxConfig,
         { manager, drainTimeoutMs: 0 },
       );
       expect(blocked?.status).toBe(409);
@@ -302,7 +302,7 @@ describe("native main profile scoped server admission", () => {
       const afterClose = await handleNativeProfileAPI(
         switchRequest(),
         new URL("http://localhost/api/native-main-profiles/switch"),
-        {} as OcxConfig,
+        {} as OccxConfig,
         { manager, drainTimeoutMs: 0 },
       );
       expect(afterClose?.status).toBe(200);
@@ -393,7 +393,7 @@ describe("native main profile scoped server admission", () => {
       autoSwitchThreshold: 0,
       codexAccounts: [],
       experimentalRealtimeWsBaseUrl: "ws://uncooperative.invalid/",
-    } as OcxConfig);
+    } as OccxConfig);
     updateAccountQuota(MAIN_CODEX_ACCOUNT_ID, 1, 1);
 
     let upstream: UncooperativeUpstream | undefined;
@@ -448,7 +448,7 @@ describe("native main profile scoped server admission", () => {
           body: JSON.stringify({ target: "target", confirmedStopped: true }),
         }),
         new URL("http://localhost/api/native-main-profiles/switch"),
-        {} as OcxConfig,
+        {} as OccxConfig,
         { manager, drainTimeoutMs: 75 },
       );
       expect(blocked?.status).toBe(409);

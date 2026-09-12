@@ -1,9 +1,9 @@
 import { loadConfig, saveConfigPreservingClaudeCode } from "../../config";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 
 export type CodexLogGuardMode = "off" | "compat" | "quiet";
 
-type ConfigWithLogGuard = OcxConfig & {
+type ConfigWithLogGuard = OccxConfig & {
   codexLogGuard?: {
     mode?: unknown;
     [key: string]: unknown;
@@ -11,8 +11,8 @@ type ConfigWithLogGuard = OcxConfig & {
 };
 
 export interface CodexLogGuardPolicyDeps {
-  load?: () => OcxConfig;
-  save?: (config: OcxConfig) => void;
+  load?: () => OccxConfig;
+  save?: (config: OccxConfig) => void;
 }
 
 export function readCodexLogGuardMode(deps: CodexLogGuardPolicyDeps = {}): CodexLogGuardMode {
@@ -25,7 +25,7 @@ export function readCodexLogGuardMode(deps: CodexLogGuardPolicyDeps = {}): Codex
  * Persist user intent separately from Codex's logs database.
  *
  * A Codex migration may rebuild the `logs` table and thereby remove our
- * trigger. Keeping intent in OpenCodex config makes that observable as drift
+ * trigger. Keeping intent in Openccx config makes that observable as drift
  * rather than silently treating protection as disabled. `off` is explicit so
  * a stale unknown value cannot reactivate protection later.
  */

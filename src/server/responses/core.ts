@@ -108,13 +108,13 @@ import { enrichOpenCodeZenUpstreamMessage } from "../../providers/opencode-zen-r
 import { CODE_MODE_EXEC_TOOL_NAME, modelInList, namespacedToolName } from "../../types";
 import type {
   AdapterEvent,
-  OcxConfig,
-  OcxParsedRequest,
-  OcxProviderConfig,
-  OcxProviderContinuationOwner,
-  OcxProviderContinuationState,
-  OcxReasoningReplayIdentity,
-  OcxUsage,
+  OccxConfig,
+  OccxParsedRequest,
+  OccxProviderConfig,
+  OccxProviderContinuationOwner,
+  OccxProviderContinuationState,
+  OccxReasoningReplayIdentity,
+  OccxUsage,
   TierDecision,
 } from "../../types";
 import {
@@ -471,7 +471,7 @@ export function adapterNeedsForcedContinuation(name: string): boolean {
 }
 
 export function sidecarOutcomeRecorder(
-  config: OcxConfig,
+  config: OccxConfig,
   authCtx: CodexAuthContext,
 ): ((outcome: CodexUpstreamOutcome) => void) | undefined {
   return authCtx.kind === "pool" || authCtx.kind === "main-pool"
@@ -505,29 +505,29 @@ export function codexLogAccountId(authCtx: CodexAuthContext): string | null {
 type ContinuationOwnerRead =
   | { kind: "missing" }
   | { kind: "invalid" }
-  | { kind: "valid"; owner: OcxProviderContinuationOwner };
+  | { kind: "valid"; owner: OccxProviderContinuationOwner };
 
 function readProviderContinuationOwner(
-  state: OcxProviderContinuationState | undefined,
+  state: OccxProviderContinuationState | undefined,
 ): ContinuationOwnerRead {
-  if (!state || state.__ocxOwner === undefined) return { kind: "missing" };
-  const owner = state.__ocxOwner;
+  if (!state || state.__occxOwner === undefined) return { kind: "missing" };
+  const owner = state.__occxOwner;
   if (!isValidProviderContinuationOwner(owner)) return { kind: "invalid" };
   return { kind: "valid", owner: { ...owner } };
 }
 
 function providerContinuationPayload(
-  state: OcxProviderContinuationState | undefined,
-): OcxProviderContinuationState | undefined {
+  state: OccxProviderContinuationState | undefined,
+): OccxProviderContinuationState | undefined {
   if (!state) return undefined;
   const cloned = structuredClone(state);
-  delete cloned.__ocxOwner;
+  delete cloned.__occxOwner;
   return Object.keys(cloned).length > 0 ? cloned : undefined;
 }
 
 function bindProviderContinuationForRoute(
-  parsed: OcxParsedRequest,
-  currentOwner: OcxProviderContinuationOwner | undefined,
+  parsed: OccxParsedRequest,
+  currentOwner: OccxProviderContinuationOwner | undefined,
 ): void {
   const candidate = parsed._providerContinuationCandidate;
   const storedOwner = readProviderContinuationOwner(candidate);
@@ -545,8 +545,8 @@ function bindProviderContinuationForRoute(
 }
 
 function providerContinuationDestinationIdentity(
-  parsed: OcxParsedRequest,
-  provider: OcxProviderConfig,
+  parsed: OccxParsedRequest,
+  provider: OccxProviderConfig,
 ): string | undefined {
   const kiroContext = parsed._kiroAuthContext;
   return reasoningReplayDestinationIdentity(JSON.stringify([
@@ -559,9 +559,9 @@ function providerContinuationDestinationIdentity(
 }
 
 function bindRouteReasoningReplayScope(args: {
-  parsed: OcxParsedRequest;
+  parsed: OccxParsedRequest;
   providerName: string;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   adapterName: string;
   oauthCredentialSnapshot?: Pick<OAuthAccessSnapshot, "accountId" | "generation">;
   codexAuthContext?: CodexAuthContext;
@@ -626,7 +626,7 @@ function bindRouteReasoningReplayScope(args: {
     );
   }
   const providerDestinationIdentity = reasoningReplayDestinationIdentity(provider.baseUrl);
-  const replayIdentity: OcxReasoningReplayIdentity | undefined = credentialIdentity && providerDestinationIdentity
+  const replayIdentity: OccxReasoningReplayIdentity | undefined = credentialIdentity && providerDestinationIdentity
     ? {
         providerName,
         providerDestinationIdentity,
@@ -915,7 +915,7 @@ function normalizeUpstreamErrorText(text: string, fallback: string): NormalizedU
   return { safeText, message, type, code, cyberPolicy };
 }
 
-function prepareOpaqueBlobRecovery(parsed: OcxParsedRequest): void {
+function prepareOpaqueBlobRecovery(parsed: OccxParsedRequest): void {
   parsed._stripReasoningEncryptedContent = true;
   const rawBody = parsed._rawBody;
   if (!rawBody || typeof rawBody !== "object" || Array.isArray(rawBody)) return;
@@ -975,7 +975,7 @@ async function attemptOpaqueBlobRecovery(
     response: Response;
     outboundBody?: string;
     adapterName: string;
-    parsed: OcxParsedRequest;
+    parsed: OccxParsedRequest;
     guard: OpaqueBlobRecoveryGuard;
     signal: AbortSignal;
   },
@@ -1018,7 +1018,7 @@ async function attemptOpaqueBlobRecovery(
     : { kind: "recovered", response: result };
 }
 
-function nonEmptyProviderApiKey(provider: OcxProviderConfig): string | undefined {
+function nonEmptyProviderApiKey(provider: OccxProviderConfig): string | undefined {
   return typeof provider.apiKey === "string" && provider.apiKey.trim().length > 0
     ? provider.apiKey
     : undefined;
@@ -1031,13 +1031,13 @@ function isFixedCodexAccount(authCtx: CodexAuthContext): boolean {
 
 export function usesCodexForwardPoolAuth(
   authCtx: CodexAuthContext,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
 ): authCtx is Extract<CodexAuthContext, { kind: "pool" | "main-pool" }> {
   return (authCtx.kind === "pool" || authCtx.kind === "main-pool")
     && provider.authMode === "forward" && provider.adapter === "openai-responses";
 }
 
-function codexWsQuotaObserver(authCtx: CodexAuthContext, provider: OcxProviderConfig, modelId?: string): CodexWsQuotaObserver | undefined {
+function codexWsQuotaObserver(authCtx: CodexAuthContext, provider: OccxProviderConfig, modelId?: string): CodexWsQuotaObserver | undefined {
   if (!isCanonicalOpenAiForwardProvider(provider) || !usesCodexForwardPoolAuth(authCtx, provider)) return undefined;
   const { accountId, writerGeneration } = authCtx;
   const credentialGeneration = authCtx.kind === "pool" ? authCtx.generation : undefined;
@@ -1050,7 +1050,7 @@ function codexWsQuotaObserver(authCtx: CodexAuthContext, provider: OcxProviderCo
 
 export function preAuthUpstreamHostCircuitKey(
   route: Pick<RouteResult, "provider" | "providerName" | "codexAccountMode" | "codexAccountId">,
-  config: OcxConfig,
+  config: OccxConfig,
   options: { requireResponsesAdapter?: boolean } = {},
 ): string | null {
   if (
@@ -1176,9 +1176,9 @@ export function shouldRetryCodexPoolAccountTransient(response: Response): boolea
 interface CodexPoolAccountRetryArgs {
   /** Sanitized caller input, before any selected Pool credential was materialized. */
   callerAuthHeaders: Headers;
-  config: OcxConfig;
-  route: { providerName: string; modelId: string; provider: OcxProviderConfig };
-  parsed: OcxParsedRequest;
+  config: OccxConfig;
+  route: { providerName: string; modelId: string; provider: OccxProviderConfig };
+  parsed: OccxParsedRequest;
   logCtx: RequestLogContext;
   options: {
     admission?: DataPlaneAdmission;
@@ -1236,7 +1236,7 @@ type CodexPoolAccountRetryResult =
 
 /** Keep retry-stage entitlement snapshots inside the native-main selection fence. */
 async function resolveCodexRetryModelEntitlements(
-  config: OcxConfig,
+  config: OccxConfig,
   resolver: typeof resolveCodexModelEntitlements,
   turnAdmissionLease?: AdmissionLease,
 ): Promise<Awaited<ReturnType<typeof resolveCodexModelEntitlements>>> {
@@ -1275,7 +1275,7 @@ export function codexAccountGatedCanonicalWireModel(modelId: string): string | u
   return undefined;
 }
 
-function applyCodexAccountGatedWireNormalization(parsed: OcxParsedRequest, route: RouteResult, logCtx?: RequestLogContext): void {
+function applyCodexAccountGatedWireNormalization(parsed: OccxParsedRequest, route: RouteResult, logCtx?: RequestLogContext): void {
   if (!isCanonicalOpenAiForwardProvider(route.provider)) return;
   const wireModel = codexAccountGatedCanonicalWireModel(route.modelId);
   if (!wireModel) return;
@@ -1613,9 +1613,9 @@ async function retryCodexPoolOnAlternateAccount(
 
 
 export function codexForwardTerminalOutcomeRecorder(
-  config: OcxConfig,
+  config: OccxConfig,
   authCtx: CodexAuthContext,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId?: string,
   logCtx?: RequestLogContext,
 ): ((status: ResponsesTerminalStatus, httpStatusOverride?: number) => void) | undefined {
@@ -1719,7 +1719,7 @@ export interface ConsumedComboFailure {
   /** Upstream Codex quota-window reset timestamps used for combo cooldowns. */
   resetAt?: string[];
   /** Reserved for 040 usage attribution without adding another body read. */
-  usage?: OcxUsage;
+  usage?: OccxUsage;
 }
 
 
@@ -1799,7 +1799,7 @@ export interface HandleResponsesOptions {
   comboReplaySnapshot?: {
     sourceBody: unknown;
     previousResponseInputExpanded: boolean;
-    providerContinuation: OcxProviderContinuationState | undefined;
+    providerContinuation: OccxProviderContinuationState | undefined;
     recoveredPlaintext: boolean;
   };
   /** Internal combo handoff: allow a later same-provider model after a reset-derived 429/402. */
@@ -1815,7 +1815,7 @@ export interface HandleResponsesOptions {
    * request IS the vision sidecar's own loopback describe call. The plan site
    * then STRIPS images instead of planning another describe — a depth cap of 1
    * that holds under predicate drift and combo re-resolution. The Chat surface
-   * detects the raw `x-opencodex-vision-describe` header before its bridge
+   * detects the raw `x-openccx-vision-describe` header before its bridge
    * rebuilds headers and carries the fact through this flag.
    */
   visionDescribeTerminal?: boolean;
@@ -1848,7 +1848,7 @@ export async function consumeComboFailure(
 ): Promise<ConsumedComboFailure> {
   const fallback = `Provider error ${response.status}`;
   let classificationText = fallback;
-  let usage: OcxUsage | undefined;
+  let usage: OccxUsage | undefined;
   let upstreamCode: string | undefined;
   let upstreamMessage: string | undefined;
   let upstreamType: string | undefined;
@@ -1940,7 +1940,7 @@ export async function consumeComboFailure(
 
 
 
-export function usageFromComboFailureText(text: string): OcxUsage | undefined {
+export function usageFromComboFailureText(text: string): OccxUsage | undefined {
   try {
     const payload = JSON.parse(text) as Record<string, unknown>;
     const nested = payload.response;
@@ -2049,7 +2049,7 @@ function warnFastWireCapabilityGap(providerName: string, modelId: string): void 
   }
   warnedFastWireCapabilityGaps.add(key);
   console.warn(
-    `[opencodex] Fast policy for ${safeProvider}/${safeModel} has service-tier capability but no Fast wire; preserving only caller-permitted tier behavior`,
+    `[openccx] Fast policy for ${safeProvider}/${safeModel} has service-tier capability but no Fast wire; preserving only caller-permitted tier behavior`,
   );
 }
 export const UPSTREAM_JSON_BODY_READ_OPTIONS = {
@@ -2099,7 +2099,7 @@ function canPassThroughEncryptedV2AgentTask(
 }
 
 /** Keep synthesized Claude identity out of request headers reused by policy/combo fallback. */
-function withClaudeNativeSession(headers: Headers, provider: OcxProviderConfig, sessionId?: string): Headers {
+function withClaudeNativeSession(headers: Headers, provider: OccxProviderConfig, sessionId?: string): Headers {
   if (!sessionId || !isCanonicalOpenAiForwardProvider(provider)
     || headers.has("session_id") || headers.has("session-id") || headers.has("thread-id")) return headers;
   const forwarded = new Headers(headers);
@@ -2117,7 +2117,7 @@ type ResponsesAuthResolution =
  */
 async function resolveResponsesCodexAuth(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   route: RouteResult,
   options: HandleResponsesOptions,
   credentialDomainWasRewritten = false,
@@ -2336,7 +2336,7 @@ function isTerminalPoolRefreshFailure(error: unknown): boolean {
  * The refusal an operator meets when a stored pool credential's forced refresh does not complete.
  *
  * A bare "retry this request" reads as a transient fault in the proxy, which is how #4212's
- * reporter spent an afternoon concluding OpenCodex had broken while one of their own accounts was
+ * reporter spent an afternoon concluding Openccx had broken while one of their own accounts was
  * the thing that needed them. It stays a retryable 503 and stays non-quarantining, because the
  * refresh genuinely may succeed and a token-endpoint 5xx must not retire a healthy account
  * (#2887). What it adds is the account and the exit: when retrying stops helping, that account
@@ -2360,7 +2360,7 @@ function isTerminalPoolRefreshFailure(error: unknown): boolean {
  */
 export function poolCredentialRefreshIncompleteResponse(args: {
   authCtx: CodexAuthContext;
-  config: Pick<OcxConfig, "codexAccounts">;
+  config: Pick<OccxConfig, "codexAccounts">;
   accountSelector?: string;
 }): Response {
   const label = args.accountSelector ?? codexAuthContextLogLabel(args.authCtx, args.config);
@@ -2383,13 +2383,13 @@ export function poolCredentialRefreshIncompleteResponse(args: {
  */
 async function refreshPoolForwardAuth(args: {
   req: Request;
-  config: OcxConfig;
+  config: OccxConfig;
   route: RouteResult;
   authCtx: CodexAuthContext & { kind: "pool" };
   substituteMainCredential: boolean;
   options: HandleResponsesOptions;
 }): Promise<
-  | { ok: true; authCtx: CodexAuthContext; provider: OcxProviderConfig; headers: Headers }
+  | { ok: true; authCtx: CodexAuthContext; provider: OccxProviderConfig; headers: Headers }
   | { ok: false; response: Response; quarantine: boolean; quarantineGeneration?: number }
 > {
   const { req, config, route, authCtx, substituteMainCredential, options } = args;
@@ -2460,13 +2460,13 @@ async function refreshPoolForwardAuth(args: {
 
 async function refreshNativeMainForwardAuth(args: {
   req: Request;
-  config: OcxConfig;
+  config: OccxConfig;
   route: RouteResult;
   authCtx: CodexAuthContext;
   substituteMainCredential: boolean;
   options: HandleResponsesOptions;
 }): Promise<
-  | { ok: true; authCtx: CodexAuthContext; provider: OcxProviderConfig; headers: Headers }
+  | { ok: true; authCtx: CodexAuthContext; provider: OccxProviderConfig; headers: Headers }
   | { ok: false; response: Response }
 > {
   const { req, config, route, authCtx, substituteMainCredential, options } = args;
@@ -2511,7 +2511,7 @@ async function refreshNativeMainForwardAuth(args: {
 }
 
 async function resolveSubagentFallbackModelEligibility(args: {
-  config: OcxConfig;
+  config: OccxConfig;
   fallbackChain: readonly string[] | null;
   nativeMainReadsForbidden: boolean;
   resolver: typeof resolveCodexModelEntitlements;
@@ -2534,9 +2534,9 @@ async function resolveSubagentFallbackModelEligibility(args: {
  * Must run only after subagent fallback has settled the model/provider.
  */
 async function applyFinalRouteRequestNormalization(args: {
-  parsed: OcxParsedRequest;
+  parsed: OccxParsedRequest;
   route: RouteResult;
-  config: OcxConfig;
+  config: OccxConfig;
   req: Request;
   logCtx: RequestLogContext;
   inboundWire: InboundWire;
@@ -2661,10 +2661,10 @@ async function applyFinalRouteRequestNormalization(args: {
     if (guidance) {
       injectDeveloperMessage(parsed, guidance);
       if (isInjectionDebugEnabled()) {
-        injectionDebugLog(`[opencodex] ${route.modelId}: multi-agent guidance injected (surface=${collabSurface(parsed)}, guidanceEnabled=${multiAgentGuidanceEnabled(config)}, ${guidance.length} chars)`);
+        injectionDebugLog(`[openccx] ${route.modelId}: multi-agent guidance injected (surface=${collabSurface(parsed)}, guidanceEnabled=${multiAgentGuidanceEnabled(config)}, ${guidance.length} chars)`);
       }
     } else if (isInjectionDebugEnabled() && collabSurface(parsed) !== null) {
-      injectionDebugLog(`[opencodex] ${route.modelId}: collab surface=${collabSurface(parsed)}, guidance silent (effort=${parsed.options.reasoning ?? "unset"}, injectionModel=${config.injectionModel ?? "unset"})`);
+      injectionDebugLog(`[openccx] ${route.modelId}: collab surface=${collabSurface(parsed)}, guidance silent (effort=${parsed.options.reasoning ?? "unset"}, injectionModel=${config.injectionModel ?? "unset"})`);
     }
   }
 
@@ -2674,7 +2674,7 @@ async function applyFinalRouteRequestNormalization(args: {
     if (pinned) {
       logCtx.requestedEffort = pinned.from ? `${pinned.from}->${pinned.to}` : pinned.to;
       if (isInjectionDebugEnabled()) {
-        injectionDebugLog(`[opencodex] ${route.modelId}: pinned reasoning effort applied (${pinned.from ?? "none"} -> ${pinned.to})`);
+        injectionDebugLog(`[openccx] ${route.modelId}: pinned reasoning effort applied (${pinned.from ?? "none"} -> ${pinned.to})`);
       }
     }
   }
@@ -2687,11 +2687,11 @@ async function applyFinalRouteRequestNormalization(args: {
       if (capped) {
         logCtx.requestedEffort = `${capped.from}->${capped.to}`;
         if (isInjectionDebugEnabled()) {
-          injectionDebugLog(`[opencodex] ${route.modelId}: effort cap applied (${capped.from} -> ${capped.to}, ${capped.subagent ? "sub-agent" : "main"} turn)`);
+          injectionDebugLog(`[openccx] ${route.modelId}: effort cap applied (${capped.from} -> ${capped.to}, ${capped.subagent ? "sub-agent" : "main"} turn)`);
         }
       }
     } else if (isInjectionDebugEnabled() && (config.effortCap || config.subagentEffortCap)) {
-      injectionDebugLog(`[opencodex] ${route.modelId}: effort cap skipped (surface=${surface ?? "none"}, v2 feature only)`);
+      injectionDebugLog(`[openccx] ${route.modelId}: effort cap skipped (surface=${surface ?? "none"}, v2 feature only)`);
     }
   }
 
@@ -2719,7 +2719,7 @@ export async function handleComboResponses(
   req: Request,
   rawBody: unknown,
   comboId: string,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   options: HandleResponsesOptions & { translatorBudget: TranslatorBudget },
 ): Promise<Response> {
@@ -2743,7 +2743,7 @@ export async function handleComboResponses(
   const body = expandPreviousResponseInput(rawBody, inboundClientThreadId);
   const scopeMismatch = previousResponseScopeMismatch(body);
   if (scopeMismatch) {
-    console.warn("[opencodex] dropped a previous_response_id with a mismatched client task scope; continuing fresh");
+    console.warn("[openccx] dropped a previous_response_id with a mismatched client task scope; continuing fresh");
   }
   if (previousResponseReplayFailure(body)) {
     return formatErrorResponse(
@@ -3279,7 +3279,7 @@ function finalizeOwnedTranslatorBudget(response: Response, budget: TranslatorBud
  * to `forwardCallerTier`.
  */
 export function applyServiceTierGate(
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   rawBody: unknown,
   options: { serviceTier?: string; tierDecision?: TierDecision },
   modelId?: string,
@@ -3322,7 +3322,7 @@ export function applyServiceTierGate(
  */
 export async function handleResponses(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   options: HandleResponsesOptions = {},
 ): Promise<Response> {
@@ -3339,7 +3339,7 @@ export async function handleResponses(
         ? captureCallerDirectAuth(req.headers, config) : options.callerDirectAuth,
       // Capture before combo replay rebuilds the Request headers; children carry options.
       visionDescribeTerminal: options.visionDescribeTerminal === true
-        || req.headers.get("x-opencodex-vision-describe") === "1",
+        || req.headers.get("x-openccx-vision-describe") === "1",
       translatorBudget,
     });
     return ownsBudget ? finalizeOwnedTranslatorBudget(response, translatorBudget) : response;
@@ -3355,7 +3355,7 @@ export async function handleResponses(
  */
 async function handleResponsesInner(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   options: HandleResponsesOptions & { translatorBudget: TranslatorBudget },
 ): Promise<Response> {
@@ -3467,7 +3467,7 @@ async function handleResponsesInner(
   } else {
     body = expandPreviousResponseInput(body, inboundClientThreadId);
     if (previousResponseScopeMismatch(body)) {
-      console.warn("[opencodex] dropped a previous_response_id with a mismatched client task scope; continuing fresh");
+      console.warn("[openccx] dropped a previous_response_id with a mismatched client task scope; continuing fresh");
     }
     if (previousResponseReplayFailure(body)) {
       return formatErrorResponse(
@@ -3492,11 +3492,11 @@ async function handleResponsesInner(
     );
     if (rewritten > 0)
       console.warn(
-        `[opencodex] rewrote ${rewritten} plaintext encrypted_content part(s) to input_text (spawn-message compatibility)`,
+        `[openccx] rewrote ${rewritten} plaintext encrypted_content part(s) to input_text (spawn-message compatibility)`,
       );
   }
 
-  let parsed: OcxParsedRequest;
+  let parsed: OccxParsedRequest;
   let toolBridgeMaps: ReturnType<typeof buildToolBridgeMaps>;
   try {
     parsed = parseRequest(body);
@@ -3755,7 +3755,7 @@ async function handleResponsesInner(
       (logCtx as unknown as Record<string, unknown>).subagentModelFallbackFrom = fallback.from;
       (logCtx as unknown as Record<string, unknown>).subagentModelFallbackTo = fallback.to;
       if (isInjectionDebugEnabled()) {
-        injectionDebugLog(`[opencodex] subagent model fallback ${fallback.from} -> ${fallback.to}`);
+        injectionDebugLog(`[openccx] subagent model fallback ${fallback.from} -> ${fallback.to}`);
       }
     }
     subagentQuotaFailureModel = fallback?.to ?? parsed.modelId;
@@ -3828,7 +3828,7 @@ async function handleResponsesInner(
       if (!unreadableEncryptedAgentTask) {
         try {
           const reparsed = parseRequest(body);
-          const kept: Array<keyof OcxParsedRequest> = [
+          const kept: Array<keyof OccxParsedRequest> = [
             "_previousResponseInputExpanded",
             "_providerContinuation",
             "_providerContinuationCandidate",
@@ -3901,7 +3901,7 @@ async function handleResponsesInner(
             (logCtx as unknown as Record<string, unknown>).subagentModelFallbackFrom = fallback.from;
             (logCtx as unknown as Record<string, unknown>).subagentModelFallbackTo = fallback.to;
             if (isInjectionDebugEnabled()) {
-              injectionDebugLog(`[opencodex] subagent model fallback ${fallback.from} -> ${fallback.to}`);
+              injectionDebugLog(`[openccx] subagent model fallback ${fallback.from} -> ${fallback.to}`);
             }
           }
           subagentQuotaFailureModel = fallback?.to ?? parsed.modelId;
@@ -4100,14 +4100,14 @@ async function handleResponsesInner(
   let activeAdapter: ProviderAdapter;
   let runTurnAdapter: ProviderAdapter;
   let sameTargetRequest: AdapterRequest | undefined;
-  let sameTargetParsed: OcxParsedRequest | undefined;
+  let sameTargetParsed: OccxParsedRequest | undefined;
   let sameTargetToken = 0;
   let transportToken = 0;
   let imageTierBias = 0;
   const invalidateSameTargetRequest = (): void => { transportToken += 1; };
   type DispatchBinding =
     | { kind: "oauth"; selection: NonNullable<typeof oauthSelection>; snapshot: OAuthAccessSnapshot }
-    | { kind: "api-key"; provider: OcxProviderConfig };
+    | { kind: "api-key"; provider: OccxProviderConfig };
   const requestBindings = new WeakMap<AdapterRequest, DispatchBinding>();
   const adapterBindings = new WeakMap<ProviderAdapter, DispatchBinding>();
   const rawRunTurns = new WeakMap<ProviderAdapter, NonNullable<ProviderAdapter["runTurn"]>>();
@@ -4197,20 +4197,20 @@ async function handleResponsesInner(
    */
   const applyFailoverSnapshot = async (
     snapshot: OAuthAccessSnapshot,
-    retryParsed: OcxParsedRequest = parsed,
+    retryParsed: OccxParsedRequest = parsed,
   ): Promise<boolean> => {
     if (route.provider.googleMode === "cloud-code-assist" && !snapshot.projectId) return false;
     const committed = await commitResolvedOAuthSelection(snapshot);
     if (!committed) return false;
     snapshot = committed;
-    let rotatedProvider: OcxProviderConfig = { ...route.provider, apiKey: snapshot.accessToken };
+    let rotatedProvider: OccxProviderConfig = { ...route.provider, apiKey: snapshot.accessToken };
     if (route.providerName === "github-copilot") {
       rotatedProvider = resolveProviderTransport(
         route.providerName,
         rotatedProvider,
         parsed.options.promptCacheKey,
         resolveCopilotApiBaseUrl(snapshot.apiBaseUrl),
-      ) as OcxProviderConfig;
+      ) as OccxProviderConfig;
     }
     if (snapshot.projectId) rotatedProvider = { ...rotatedProvider, project: snapshot.projectId };
     route.provider = rotatedProvider;
@@ -4246,7 +4246,7 @@ async function handleResponsesInner(
       && !!row && !row.needsReauth && row.credential.expires > Date.now()
       && credentialGeneration(row.credential) === binding.snapshot.generation;
   };
-  const resolveSelectionAdapter = (provider: OcxProviderConfig, retention = config.cacheRetention): ProviderAdapter => {
+  const resolveSelectionAdapter = (provider: OccxProviderConfig, retention = config.cacheRetention): ProviderAdapter => {
     const resolved = resolveAdapter(provider, retention, route.providerName);
     if (route.provider.authMode === "forward") return resolved;
     const binding: DispatchBinding | undefined = route.provider.authMode === "oauth"
@@ -4268,7 +4268,7 @@ async function handleResponsesInner(
     }
     return resolved;
   };
-  const refreshDispatchAdapter = async (requestParsed: OcxParsedRequest): Promise<ProviderAdapter> => {
+  const refreshDispatchAdapter = async (requestParsed: OccxParsedRequest): Promise<ProviderAdapter> => {
     if (route.provider.authMode === "oauth") {
       if (!servingOAuthSnapshot || !await applyFailoverSnapshot(servingOAuthSnapshot, requestParsed)) {
         throw new Error("OAuth account selection changed before dispatch");
@@ -4284,7 +4284,7 @@ async function handleResponsesInner(
     invalidateSameTargetRequest();
     return adapter;
   };
-  const refreshRunTurnAdapter = async (requestParsed: OcxParsedRequest): Promise<ProviderAdapter> => {
+  const refreshRunTurnAdapter = async (requestParsed: OccxParsedRequest): Promise<ProviderAdapter> => {
     requestParsed._cursorIdentityScope = undefined;
     requestParsed._cursorConversationId = undefined;
     if (requestParsed._providerContinuation?.cursor) {
@@ -4336,7 +4336,7 @@ async function handleResponsesInner(
       let dispatchInit = init;
       for (let attempt = 0; attempt < 3; attempt++) {
         if (selectionIsCurrent(requestBindings.get(wireRequest))) {
-          const fetchImpl = (route.provider as OcxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? execute;
+          const fetchImpl = (route.provider as OccxProviderConfig & { fetch?: typeof globalThis.fetch }).fetch ?? execute;
           const binding = requestBindings.get(wireRequest);
           const snapshot = route.providerName === "anthropic" && anthropicPoolAccountId && binding?.kind === "oauth"
             ? binding.snapshot : undefined;
@@ -4521,7 +4521,7 @@ async function handleResponsesInner(
         return formatErrorResponse(
           400,
           "invalid_request_error",
-          `${redactSecretString(err.message)}. Remove or reconfigure provider '${safeProviderName}' in the OpenCodex configuration.`,
+          `${redactSecretString(err.message)}. Remove or reconfigure provider '${safeProviderName}' in the Openccx configuration.`,
         );
       }
       return formatErrorResponse(401, "authentication_error", publicOAuthAuthenticationErrorMessage(err));
@@ -4748,8 +4748,8 @@ async function handleResponsesInner(
   };
 
   const continuationStateForResponse = (
-    emitted?: OcxProviderContinuationState,
-  ): OcxProviderContinuationState | undefined => {
+    emitted?: OccxProviderContinuationState,
+  ): OccxProviderContinuationState | undefined => {
     const cursorConversationId = parsed._cursorConversationId;
     const inherited = providerContinuationPayload(parsed._providerContinuation);
     const emittedPayload = providerContinuationPayload(emitted);
@@ -4757,12 +4757,12 @@ async function handleResponsesInner(
     const merged = mergeProviderContinuationPayload(
       inherited ?? {},
       emittedPayload ?? {},
-    ) as OcxProviderContinuationState;
+    ) as OccxProviderContinuationState;
     if (cursorConversationId) {
       merged.cursor = { ...(merged.cursor ?? {}), conversationId: cursorConversationId };
     }
     return parsed._providerContinuationOwner
-      ? { ...merged, __ocxOwner: { ...parsed._providerContinuationOwner } }
+      ? { ...merged, __occxOwner: { ...parsed._providerContinuationOwner } }
       : merged;
   };
 
@@ -4819,7 +4819,7 @@ async function handleResponsesInner(
     const routedCustomToolRepairNames = new Set<string>();
     const routedToolSearchNames = new Set<string>();
     // Local continuation cache for the ChatGPT passthrough. Codex WS turns chain with
-    // previous_response_id, ocx converts them to internal HTTP requests, and the ChatGPT Codex
+    // previous_response_id, occx converts them to internal HTTP requests, and the ChatGPT Codex
     // REST backend rejects the parameter — the adapter strips it in forward mode, so the ONLY
     // way a chained turn keeps its earlier context is the local replay expansion. Record
     // completed passthrough responses (force bypasses Codex's blanket store:false) so the next
@@ -6517,7 +6517,7 @@ async function handleResponsesInner(
     }
   }
 
-  // Tool results are PAIRED by call_id. parseRequest writes it into OcxToolResultMessage.toolCallId
+  // Tool results are PAIRED by call_id. parseRequest writes it into OccxToolResultMessage.toolCallId
   // (parser.ts:738/752) without validating it, because inputItemSchema's permissive catch-all
   // (schema.ts:106) accepts a tool item whose strict schema failed only for a missing call_id. A
   // translating adapter then consumes `toolCallId: string` holding undefined: kiro-wire.ts:32
@@ -6856,7 +6856,7 @@ async function handleResponsesInner(
   // text and no tool call is a failure the client cannot see — it silently records the turn as
   // done. The guard holds pre-content adapter events, suppresses the terminal of an empty
   // turn, retries the IDENTICAL request once, and surfaces a stated error when the retry is
-  // empty or fails. This is a top-level config opt-in; OCX_EMPTY_COMPLETION_RETRY=0 is a
+  // empty or fails. This is a top-level config opt-in; OCCX_EMPTY_COMPLETION_RETRY=0 is a
   // disable-only emergency override. Compaction turns and combo attempts keep their own
   // machinery (the combo preflight already handles empty streams). Native Chat-to-Chat
   // requests return from handleChatCompletions before entering Responses core, so they are
@@ -7093,7 +7093,7 @@ async function handleResponsesInner(
               if (logCtx.activeAttempt) logCtx.activeAttempt.usage = usage;
             }
           },
-          onCompletedResponse: (response: Record<string, unknown>, providerState?: OcxProviderContinuationState) => {
+          onCompletedResponse: (response: Record<string, unknown>, providerState?: OccxProviderContinuationState) => {
             commitReasoningReplayServingRoute();
             rememberKiroDeliveredFinalAnswer(adapter.name, response);
             if (!routedCompaction) {
@@ -7145,7 +7145,7 @@ async function handleResponsesInner(
         return formatErrorResponse(502, "upstream_error", redactSecretString(message));
       }
     }
-    let providerState: OcxProviderContinuationState | undefined;
+    let providerState: OccxProviderContinuationState | undefined;
     const json = buildResponseJSON(events, parsed._responseModelId ?? parsed.modelId, {
       translatorBudget,
       replayCacheScope: parsed._reasoningReplayScope,
@@ -7856,7 +7856,7 @@ async function handleResponsesInner(
    * never sees a second hidden HTTP response or an unbounded retry loop.
    */
   const fetchTerminalGuardContinuation = async function* (
-    nextParsed: OcxParsedRequest,
+    nextParsed: OccxParsedRequest,
     initialRecoveryKind?: AttemptRecoveryKind,
   ): AsyncGenerator<AdapterEvent> {
     let response: Response | undefined;
@@ -8258,7 +8258,7 @@ async function handleResponsesInner(
             if (logCtx.activeAttempt) logCtx.activeAttempt.usage = usage;
           }
         },
-        onCompletedResponse: (response: Record<string, unknown>, providerState?: OcxProviderContinuationState) => {
+        onCompletedResponse: (response: Record<string, unknown>, providerState?: OccxProviderContinuationState) => {
           commitReasoningReplayServingRoute();
           rememberKiroDeliveredFinalAnswer(activeAdapter.name, response);
           // Compaction turns must NOT enter the continuation cache: _rawBody still holds the full
@@ -8317,7 +8317,7 @@ async function handleResponsesInner(
       cleanupUpstreamAbort();
     }
     const { toolNsMap, declaredToolNames, toolParameterSchemas, freeformToolNames, toolSearchToolNames } = toolBridgeMaps;
-    let providerState: OcxProviderContinuationState | undefined;
+    let providerState: OccxProviderContinuationState | undefined;
     const json = buildResponseJSON(events, parsed._responseModelId ?? parsed.modelId, {
       translatorBudget,
       replayCacheScope: parsed._reasoningReplayScope,

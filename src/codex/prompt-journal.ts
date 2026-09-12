@@ -1,7 +1,7 @@
 /**
  * prompt-journal.ts — the write transaction behind the prompt-layer surface.
  *
- * Two files must move together: `opencodex-prompt.json` (the source of truth for
+ * Two files must move together: `openccx-prompt.json` (the source of truth for
  * custom layers) and `config.toml` (which carries the generated projection).
  * Atomic rename makes each write individually torn-free; it does nothing about
  * a crash between them, or about another writer touching a file after we read
@@ -69,7 +69,7 @@ function fsyncDir(path: string): void {
 
 /** Write at mode 0600 from creation — a later chmod leaves a readable window. */
 export function durableWrite(path: string, content: string): void {
-  const tmp = `${path}.ocx.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
+  const tmp = `${path}.occx.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
   let fd: number | undefined;
   try {
     writeFileSync(tmp, content, { encoding: "utf8", mode: FILE_MODE });
@@ -148,7 +148,7 @@ export function ensureDir(path: string): void {
 // ---------------------------------------------------------------------------
 // Envelope
 //
-// Line 1 is `ocx-journal-v1 <sha256 of line 2>`; line 2 is the record. The
+// Line 1 is `occx-journal-v1 <sha256 of line 2>`; line 2 is the record. The
 // checksum is verified BEFORE anything is read from it. An earlier design said
 // "restore from the pre-image if it is intact" for a journal that had failed its
 // own checksum — restoring from a document you have just declared untrustworthy.
@@ -170,7 +170,7 @@ export interface JournalRecord {
   preStoreBytes: string | null;
 }
 
-const ENVELOPE_TAG = "ocx-journal-v1";
+const ENVELOPE_TAG = "occx-journal-v1";
 
 export function encodeJournal(record: JournalRecord): string {
   const body = JSON.stringify(record);
@@ -279,7 +279,7 @@ export function recoverIfNeeded(
     return {
       ok: false,
       error: "recovery_required",
-      detail: `${which} matches neither the pre- nor post-image; it was modified outside opencodex`,
+      detail: `${which} matches neither the pre- nor post-image; it was modified outside openccx`,
     };
   }
 

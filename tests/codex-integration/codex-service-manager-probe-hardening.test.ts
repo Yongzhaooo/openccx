@@ -20,8 +20,8 @@ let configDir = "";
 let trustedSystem32 = "";
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-probe-hardening-"));
-  configDir = join(home, "custom-opencodex");
+  home = mkdtempSync(join(tmpdir(), "occx-probe-hardening-"));
+  configDir = join(home, "custom-openccx");
   trustedSystem32 = join(home, "System32");
   mkdirSync(configDir, { recursive: true });
   mkdirSync(trustedSystem32, { recursive: true });
@@ -78,22 +78,22 @@ function schedulerXml(launcherPath: string): string {
 function writeSchedulerChain(
   dir: string,
   codexHome: string,
-  opencodexHome: string,
+  openccxHome: string,
   options: { writeTaskXml?: boolean } = {},
 ): { launcher: string; wrapper: string; taskXml: string } {
   mkdirSync(dir, { recursive: true });
-  const wrapper = join(dir, "opencodex-service.cmd");
-  const launcher = join(dir, "opencodex-service-launcher.vbs");
-  const taskXml = join(dir, "opencodex-service-task.xml");
+  const wrapper = join(dir, "openccx-service.cmd");
+  const launcher = join(dir, "openccx-service-launcher.vbs");
+  const taskXml = join(dir, "openccx-service-task.xml");
   writeFileSync(wrapper, [
     "@echo off",
     "setlocal",
     `set "CODEX_HOME=${codexHome}"`,
-    `set "OPENCODEX_HOME=${opencodexHome}"`,
-    'set "OCX_BUN=C:\\bun\\bun.exe"',
-    'set "OCX_CLI=C:\\opencodex\\src\\cli\\index.ts"',
+    `set "OPENCCX_HOME=${openccxHome}"`,
+    'set "OCCX_BUN=C:\\bun\\bun.exe"',
+    'set "OCCX_CLI=C:\\openccx\\src\\cli\\index.ts"',
     ":loop",
-    '"%OCX_BUN%" "%OCX_CLI%" start --port 10100',
+    '"%OCCX_BUN%" "%OCCX_CLI%" start --port 10100',
   ].join("\r\n"));
   writeFileSync(launcher, `shell.Run """${wrapper}""", 0, True\r\n`);
   if (options.writeTaskXml !== false) writeFileSync(taskXml, schedulerXml(launcher));
@@ -112,17 +112,17 @@ function xmlEscape(value: string): string {
 function writeWinsw(
   dir: string,
   codexHome: string,
-  opencodexHome: string,
+  openccxHome: string,
 ): void {
   const winswDir = join(dir, "winsw");
   mkdirSync(winswDir, { recursive: true });
-  writeFileSync(join(winswDir, "opencodex-proxy-native.exe"), "not-executable-test-placeholder");
-  writeFileSync(join(winswDir, "opencodex-proxy-native.xml"), [
+  writeFileSync(join(winswDir, "openccx-proxy-native.exe"), "not-executable-test-placeholder");
+  writeFileSync(join(winswDir, "openccx-proxy-native.xml"), [
     '<?xml version="1.0" encoding="UTF-8"?>',
     "<service>",
-    "  <id>opencodex-proxy-native</id>",
+    "  <id>openccx-proxy-native</id>",
     `  <env name="CODEX_HOME" value="${xmlEscape(codexHome)}"/>`,
-    `  <env name="OPENCODEX_HOME" value="${xmlEscape(opencodexHome)}"/>`,
+    `  <env name="OPENCCX_HOME" value="${xmlEscape(openccxHome)}"/>`,
     '  <arguments>"C:\\cli\\index.ts" start --port 10100</arguments>',
     "</service>",
   ].join("\n"));
@@ -148,7 +148,7 @@ describe("Windows ownership probe hardening regressions", () => {
    * tasks. The targeted query answers in CP936, which the English regex cannot
    * match, so absence is settled by the locale-neutral listing — and that
    * listing needed 12.3s while the probe killed it at 2s, leaving `unknown` and
-   * an `ocx sync` that refused to write for want of ownership proof.
+   * an `occx sync` that refused to write for want of ownership proof.
    */
   const GBK_TASK_NOT_FOUND = Buffer.from(
     "b4edcef33a20cfb5cdb3d5d2b2bbb5bdd6b8b6a8b5c4cec4bcfea1a3",
@@ -217,7 +217,7 @@ describe("Windows ownership probe hardening regressions", () => {
     const codexHome = join(home, "codex");
     mkdirSync(codexHome, { recursive: true });
     process.env.CODEX_HOME = codexHome;
-    process.env.OPENCODEX_HOME = configDir;
+    process.env.OPENCCX_HOME = configDir;
     writeFileSync(join(configDir, "config.json"), JSON.stringify({
       ...getDefaultConfig(),
       port: 0,
@@ -242,7 +242,7 @@ describe("Windows ownership probe hardening regressions", () => {
     };
     const ownerships: string[] = [];
     const server = startServer(0, {
-      resolveServiceHomes: () => ({ codexHome, opencodexHome: configDir }),
+      resolveServiceHomes: () => ({ codexHome, openccxHome: configDir }),
       inspectNativeCodexOwnership: scope => {
         const answer = inspectNativeCodexOwnership({
           ...scope,
@@ -274,7 +274,7 @@ describe("Windows ownership probe hardening regressions", () => {
     const cache = createWindowsTaskListingCache();
     let targetedQueries = 0;
     let fullListings = 0;
-    const launcher = join(configDir, "opencodex-service-launcher.vbs");
+    const launcher = join(configDir, "openccx-service-launcher.vbs");
     const runRaw: RawProbeRunner = (file, args) => {
       if (!file.toLowerCase().endsWith("schtasks.exe")) return raw(1, "", "unexpected executable");
       if (args.includes("/xml")) {
@@ -331,7 +331,7 @@ describe("Windows ownership probe hardening regressions", () => {
         fullListings += 1;
         return fullListings === 1
           ? raw(0, '"\\SomeOtherTask","N/A","Ready"\r\n')
-          : raw(0, '"\\opencodex-proxy","N/A","Ready"\r\n');
+          : raw(0, '"\\openccx-proxy","N/A","Ready"\r\n');
       }
       return raw(1, "", "unexpected query");
     };
@@ -426,9 +426,9 @@ describe("Windows ownership probe hardening regressions", () => {
     expect(fullListings).toBe(2);
   });
 
-  test("a scheduler registered for another OpenCodex home does not claim the current home (#2800)", () => {
-    const foreignConfigDir = join(home, "foreign-opencodex");
-    const foreignLauncher = join(foreignConfigDir, "opencodex-service-launcher.vbs");
+  test("a scheduler registered for another Openccx home does not claim the current home (#2800)", () => {
+    const foreignConfigDir = join(home, "foreign-openccx");
+    const foreignLauncher = join(foreignConfigDir, "openccx-service-launcher.vbs");
     const runRaw: RawProbeRunner = (file, args) => {
       if (file.toLowerCase().endsWith("sc.exe")) return raw(1, "", "1060");
       if (args.includes("/xml")) return raw(0, schedulerXml(foreignLauncher));
@@ -444,7 +444,7 @@ describe("Windows ownership probe hardening regressions", () => {
       statePaths: [],
       currentHomes: {
         codexHome: join(home, "current-codex"),
-        opencodexHome: configDir,
+        openccxHome: configDir,
       },
     });
 
@@ -455,7 +455,7 @@ describe("Windows ownership probe hardening regressions", () => {
   });
 
   test("a current-home scheduler with missing local task XML remains unproven", () => {
-    const localLauncher = join(configDir, "opencodex-service-launcher.vbs");
+    const localLauncher = join(configDir, "openccx-service-launcher.vbs");
     const runRaw: RawProbeRunner = (file, args) => {
       if (file.toLowerCase().endsWith("sc.exe")) return raw(1, "", "1060");
       if (args.includes("/xml")) return raw(0, schedulerXml(localLauncher));
@@ -471,18 +471,18 @@ describe("Windows ownership probe hardening regressions", () => {
       statePaths: [],
       currentHomes: {
         codexHome: join(home, "current-codex"),
-        opencodexHome: configDir,
+        openccxHome: configDir,
       },
     });
 
     expect(result).toEqual({
       ownership: "unknown",
-      reason: "Task Scheduler holds opencodex-proxy but its task XML is missing",
+      reason: "Task Scheduler holds openccx-proxy but its task XML is missing",
     });
   });
 
   test("registered CP949 task XML preserves a Korean profile path", () => {
-    const koreanConfigDir = join(home, "한글", ".opencodex");
+    const koreanConfigDir = join(home, "한글", ".openccx");
     const codexHome = join(home, "한글", ".codex");
     const chain = writeSchedulerChain(koreanConfigDir, codexHome, koreanConfigDir);
     const runRaw: RawProbeRunner = (file, args) => {
@@ -507,10 +507,10 @@ describe("Windows ownership probe hardening regressions", () => {
     expect(result.kind).toBe("present");
     if (result.kind !== "present") return;
     expect(result.claims[0].registration).toBe("present");
-    expect(result.claims[0].homes).toEqual({ codexHome, opencodexHome: koreanConfigDir });
+    expect(result.claims[0].homes).toEqual({ codexHome, openccxHome: koreanConfigDir });
   });
 
-  test("ownership inspects the effective current OPENCODEX_HOME without an injected configDir", () => {
+  test("ownership inspects the effective current OPENCCX_HOME without an injected configDir", () => {
     const currentCodexHome = "C:\\current\\.codex";
     const foreignCodexHome = "C:\\foreign\\.codex";
     writeSchedulerChain(configDir, foreignCodexHome, configDir);
@@ -519,7 +519,7 @@ describe("Windows ownership probe hardening regressions", () => {
       version: 2,
       backend: "scheduler",
       codexHome: currentCodexHome,
-      opencodexHome: configDir,
+      openccxHome: configDir,
     }));
     const calls: Array<{ file: string; args: readonly string[] }> = [];
     const runRaw = taskAbsentRunner(calls);
@@ -530,7 +530,7 @@ describe("Windows ownership probe hardening regressions", () => {
       runRaw,
       winswStatus: () => "nonexistent",
       statePaths: [statePath],
-      currentHomes: { codexHome: currentCodexHome, opencodexHome: configDir },
+      currentHomes: { codexHome: currentCodexHome, openccxHome: configDir },
     });
 
     expect(result.ownership).toBe("unknown");
@@ -543,7 +543,7 @@ describe("Windows ownership probe hardening regressions", () => {
     const calls: Array<{ file: string; args: readonly string[] }> = [];
     const runRaw: RawProbeRunner = (file, args) => {
       calls.push({ file, args });
-      if (file.toLowerCase().endsWith("sc.exe")) return raw(0, "SERVICE_NAME: opencodex-proxy-native");
+      if (file.toLowerCase().endsWith("sc.exe")) return raw(0, "SERVICE_NAME: openccx-proxy-native");
       if (args.includes("/xml")) return raw(1, "", "ERROR: Das System kann die angegebene Datei nicht finden.");
       if (args.includes("/fo")) return raw(0, "");
       return raw(1, "", "unexpected query");
@@ -556,7 +556,7 @@ describe("Windows ownership probe hardening regressions", () => {
     expect(result.claims[0].backend).toBe("winsw");
     expect(calls.some(call => call.file.toLowerCase().endsWith("sc.exe")
       && call.args[0] === "query"
-      && call.args[1] === "opencodex-proxy-native")).toBe(true);
+      && call.args[1] === "openccx-proxy-native")).toBe(true);
     expect(calls.every(call => call.file.toLowerCase().includes("system32"))).toBe(true);
   });
 
@@ -585,7 +585,7 @@ describe("Windows ownership probe hardening regressions", () => {
   test("a scheduler definition cannot make the probe follow a launcher outside the generated config chain", () => {
     const foreignDir = join(home, "foreign");
     const foreign = writeSchedulerChain(foreignDir, "C:\\foreign\\.codex", foreignDir);
-    writeFileSync(join(configDir, "opencodex-service-task.xml"), schedulerXml(foreign.launcher));
+    writeFileSync(join(configDir, "openccx-service-task.xml"), schedulerXml(foreign.launcher));
     const calls: Array<{ file: string; args: readonly string[] }> = [];
     const runRaw = taskAbsentRunner(calls);
 
@@ -653,7 +653,7 @@ describe("Windows ownership probe hardening regressions", () => {
     writeFileSync(statePath, JSON.stringify({
       version: 1,
       codexHome,
-      opencodexHome: configDir,
+      openccxHome: configDir,
     }));
     const calls: Array<{ file: string; args: readonly string[] }> = [];
     const runRaw = taskAbsentRunner(calls);
@@ -665,7 +665,7 @@ describe("Windows ownership probe hardening regressions", () => {
       runRaw,
       winswStatus: () => "started",
       statePaths: [statePath],
-      currentHomes: { codexHome, opencodexHome: configDir },
+      currentHomes: { codexHome, openccxHome: configDir },
     });
 
     expect(result.ownership).toBe("unknown");

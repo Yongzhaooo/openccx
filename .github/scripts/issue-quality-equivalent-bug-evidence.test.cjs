@@ -16,7 +16,7 @@ Claude Code
 Cursor Claude-family models deterministically fail through the Claude Code path after the stream starts, while non-Claude Cursor models complete normally using the same provider and installation.
 
 ### Environment
-- OpenCodex: 2.10.2
+- Openccx: 2.10.2
 - OS: Linux (Ubuntu x64)
 - Claude Code: 1.0.88
 
@@ -24,8 +24,8 @@ Cursor Claude-family models deterministically fail through the Claude Code path 
 - \`cursor/claude-sonnet-4.5\` -> FAIL with \`resource_exhausted\` after stream start.
 - \`cursor/grok-4.5\` -> PASS using the same request path.
 
-### Debug evidence (ocx debug provider)
-Run \`ocx debug provider cursor\` and send the same request through the Claude Code integration.
+### Debug evidence (occx debug provider)
+Run \`occx debug provider cursor\` and send the same request through the Claude Code integration.
 
 \`\`\`text
 Provider error: resource_exhausted after stream start
@@ -49,11 +49,11 @@ Claude Code
 The Cursor request fails after streaming starts through the Claude Code integration.
 
 ### Environment
-- **OpenCodex**: 2.10.2
+- **Openccx**: 2.10.2
 - **OS**: Linux (Ubuntu x64)
 
 ### Debug evidence
-Run ocx debug provider cursor; the request fails with \`resource_exhausted\` after stream start.
+Run occx debug provider cursor; the request fails with \`resource_exhausted\` after stream start.
 `,
   });
 
@@ -61,7 +61,7 @@ Run ocx debug provider cursor; the request fails with \`resource_exhausted\` aft
 });
 
 test("does not duplicate case-insensitive reproduction aliases", () => {
-  const repeated = "Run `ocx start` and observe the proxy error after the request fails.";
+  const repeated = "Run `occx start` and observe the proxy error after the request fails.";
   const result = validateIssue({
     title: "[Bug]: Proxy request fails",
     labels: ["bug"],
@@ -73,7 +73,7 @@ Claude Code
 ${repeated}
 
 ### Environment
-- OpenCodex: 2.10.2
+- Openccx: 2.10.2
 - OS: Linux
 
 ### Steps to Reproduce
@@ -97,7 +97,7 @@ Claude Code
 The selected Cursor model does not complete a request through the Claude Code integration.
 
 ### Environment
-- OpenCodex: 2.10.2
+- Openccx: 2.10.2
 - OS: Linux
 
 ### What fails / what passes
@@ -109,7 +109,7 @@ It does not work.
   assert.match(result.reasons.join("\n"), /Reproduction/i);
 });
 
-test("still rejects an unknown OpenCodex version from Environment", () => {
+test("still rejects an unknown Openccx version from Environment", () => {
   const result = validateIssue({
     title: "[Bug]: Cursor request fails",
     labels: ["bug"],
@@ -121,11 +121,11 @@ Claude Code
 A Cursor request fails after the proxy starts streaming a response through Claude Code.
 
 ### Environment
-- OpenCodex: unknown
+- Openccx: unknown
 - OS: Linux
 
 ### Debug evidence
-Run \`ocx debug provider cursor\`; it returns \`resource_exhausted\` after stream start.
+Run \`occx debug provider cursor\`; it returns \`resource_exhausted\` after stream start.
 `,
   });
 
@@ -145,10 +145,10 @@ Claude Code
 A Cursor request fails after the proxy starts streaming a response through Claude Code.
 
 ### Environment
-- OpenCodex: 2.10.2
+- Openccx: 2.10.2
 
 ### Debug evidence
-Run \`ocx debug provider cursor\`; it returns \`resource_exhausted\` after stream start.
+Run \`occx debug provider cursor\`; it returns \`resource_exhausted\` after stream start.
 `,
   });
 

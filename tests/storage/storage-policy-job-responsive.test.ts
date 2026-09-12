@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { drainAndShutdown } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import {
   resetStorageCleanupPolicyJobForTestsAsync,
@@ -26,7 +26,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -38,7 +38,7 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function seedArchived(codexHome: string): void {
@@ -57,14 +57,14 @@ function seedArchived(codexHome: string): void {
 }
 
 beforeEach(async () => {
-  previousHome = process.env.OPENCODEX_HOME;
-  // Join leftover Workers before allocating homes / mutating OPENCODEX_HOME.
+  previousHome = process.env.OPENCCX_HOME;
+  // Join leftover Workers before allocating homes / mutating OPENCCX_HOME.
   stopStorageCleanupScheduler();
   await resetStorageCleanupPolicyJobForTestsAsync();
   await drainStorageWorkers();
-  isolatedCodexHome = installIsolatedCodexHome("ocx-policy-job-responsive-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-policy-job-responsive-"));
-  process.env.OPENCODEX_HOME = testDir;
+  isolatedCodexHome = installIsolatedCodexHome("occx-policy-job-responsive-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-policy-job-responsive-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
   stopStorageCleanupScheduler();
 });
@@ -74,8 +74,8 @@ afterEach(async () => {
   await resetStorageCleanupPolicyJobForTestsAsync();
   await drainStorageWorkers();
   setStorageCleanupPolicyJobTestHooks(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);

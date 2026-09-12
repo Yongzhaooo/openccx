@@ -32,12 +32,12 @@ import { clearProviderApiKeyQuotaCache, setCachedProviderApiKeyQuotaForTests } f
 import { ACCOUNT_QUOTA_TTL_MS } from "../../src/providers/quota-wire";
 import { subscribeAccountSelections } from "../../src/lib/account-selection-events";
 import { providerManagementConfigError, safeConfigDTO } from "../../src/server/auth-cors";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let home: string;
 
-function makeConfig(provider: Partial<OcxProviderConfig>): OcxConfig {
+function makeConfig(provider: Partial<OccxProviderConfig>): OccxConfig {
   const config = {
     port: 10199,
     defaultProvider: "p",
@@ -46,14 +46,14 @@ function makeConfig(provider: Partial<OcxProviderConfig>): OcxConfig {
         adapter: "openai-chat",
         baseUrl: "https://api.example.com/v1",
         ...provider,
-      } as OcxProviderConfig,
+      } as OccxProviderConfig,
     },
-  } as OcxConfig;
+  } as OccxConfig;
   saveConfig(config);
   return config;
 }
 
-function pool3(): OcxProviderConfig["apiKeyPool"] {
+function pool3(): OccxProviderConfig["apiKeyPool"] {
   return [
     { id: "k1", key: "key-alpha-000111222333", addedAt: 1 },
     { id: "k2", key: "key-beta-444555666777", addedAt: 2 },
@@ -62,13 +62,13 @@ function pool3(): OcxProviderConfig["apiKeyPool"] {
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-keyfailover-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-keyfailover-"));
+  process.env.OPENCCX_HOME = home;
   clearKeyCooldowns();
 });
 
 afterEach(() => {
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
   removeTreeWithRetry(home);
   clearKeyCooldowns();
 });
@@ -86,11 +86,11 @@ describe("hasKeyPoolFailover", () => {
     expect(dto).not.toContain("synthetic-first");
   });
   test("true only for key-auth providers with 2+ pool entries", () => {
-    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x", apiKeyPool: pool3() } as OcxProviderConfig)).toBe(true);
-    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x", apiKeyPool: [pool3()![0]] } as OcxProviderConfig)).toBe(false);
-    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x" } as OcxProviderConfig)).toBe(false);
-    expect(hasKeyPoolFailover({ adapter: "anthropic", baseUrl: "x", authMode: "oauth", apiKeyPool: pool3() } as OcxProviderConfig)).toBe(false);
-    expect(hasKeyPoolFailover({ adapter: "openai-responses", baseUrl: "x", authMode: "forward", apiKeyPool: pool3() } as OcxProviderConfig)).toBe(false);
+    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x", apiKeyPool: pool3() } as OccxProviderConfig)).toBe(true);
+    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x", apiKeyPool: [pool3()![0]] } as OccxProviderConfig)).toBe(false);
+    expect(hasKeyPoolFailover({ adapter: "openai-chat", baseUrl: "x" } as OccxProviderConfig)).toBe(false);
+    expect(hasKeyPoolFailover({ adapter: "anthropic", baseUrl: "x", authMode: "oauth", apiKeyPool: pool3() } as OccxProviderConfig)).toBe(false);
+    expect(hasKeyPoolFailover({ adapter: "openai-responses", baseUrl: "x", authMode: "forward", apiKeyPool: pool3() } as OccxProviderConfig)).toBe(false);
   });
 });
 
@@ -136,8 +136,8 @@ describe("rotateKeyOn429", () => {
   });
 
   test.each(["env", "keychain"])("rotates a rejected %s reference instead of reusing its resolved credential", kind => {
-    const reference = kind === "env" ? "${OCX_SELECTION_TEST_KEY}" : "keychain:p/k1";
-    process.env.OCX_SELECTION_TEST_KEY = "synthetic-resolved-first";
+    const reference = kind === "env" ? "${OCCX_SELECTION_TEST_KEY}" : "keychain:p/k1";
+    process.env.OCCX_SELECTION_TEST_KEY = "synthetic-resolved-first";
     setProviderKeychainEntryFactoryForTests(() => ({
       getPassword: () => "synthetic-resolved-first",
       setPassword: () => {},
@@ -154,7 +154,7 @@ describe("rotateKeyOn429", () => {
       expect(loadConfig().providers.p.apiKey).toBe("synthetic-second");
       expect(getKeyCooldownUntil("p", "k1")).not.toBeNull();
     } finally {
-      delete process.env.OCX_SELECTION_TEST_KEY;
+      delete process.env.OCCX_SELECTION_TEST_KEY;
       setProviderKeychainEntryFactoryForTests(null);
     }
   });
@@ -294,7 +294,7 @@ describe("rotateProviderTransportOn429", () => {
       "hashed-parent\0hashed-child",
     );
     const initialSession = initial.headers?.["x-opencode-session"];
-    expect(initialSession).toMatch(/^ocx_[0-9a-f]{32}$/);
+    expect(initialSession).toMatch(/^occx_[0-9a-f]{32}$/);
 
     const rotated = rotateProviderTransportOn429(config, "opencode-go", initial, {
       now: 1_000_000,
@@ -322,7 +322,7 @@ describe("rotateProviderTransportOn429", () => {
     writeFileSync(getConfigPath(), `${JSON.stringify(config, null, 2)}\n`);
     expect(config.providers["kimi-code"].promptCacheKey).toBeUndefined();
 
-    const parsed: OcxParsedRequest = {
+    const parsed: OccxParsedRequest = {
       modelId: "k3",
       context: { messages: [{ role: "user", content: "hi", timestamp: 0 }] },
       stream: false,
@@ -355,7 +355,7 @@ describe("rotateProviderTransportOn429", () => {
       parallelToolCalls: false,
       modelContextWindows: { "some-model": 262_144 },
       noTemperatureModels: ["some-model"],
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
 
     const rotated = rotateProviderTransportOn429(config, "p", routedProvider, {
       now: 1_000_000,
@@ -511,13 +511,13 @@ describe("rotateKeyOn401", () => {
      * assertions below fail.
      */
     test("the Transport twin rebuilds the route the picker only snapshots", () => {
-      process.env.OCX_KEYFAILOVER_WARM = "resolved-warm-key";
+      process.env.OCCX_KEYFAILOVER_WARM = "resolved-warm-key";
       try {
         const config = makeConfig({
           apiKey: "key-alpha-000111222333",
           apiKeyPool: [
             { id: "k1", key: "key-alpha-000111222333", addedAt: 1 },
-            { id: "k2", key: "\${OCX_KEYFAILOVER_WARM}", addedAt: 2 },
+            { id: "k2", key: "\${OCCX_KEYFAILOVER_WARM}", addedAt: 2 },
           ],
           apiKeyPoolStrategy: "round-robin",
         });
@@ -534,9 +534,9 @@ describe("rotateKeyOn401", () => {
         expect(transport?.fetch).toBe(sentinelFetch);
         // And the persisted row still holds the reference, which is what made the wholesale
         // assignment wrong in the first place.
-        expect(loadConfig().providers.p!.apiKey).toBe("\${OCX_KEYFAILOVER_WARM}");
+        expect(loadConfig().providers.p!.apiKey).toBe("\${OCCX_KEYFAILOVER_WARM}");
       } finally {
-        delete process.env.OCX_KEYFAILOVER_WARM;
+        delete process.env.OCCX_KEYFAILOVER_WARM;
       }
     });
 
@@ -565,7 +565,7 @@ describe("rotateKeyOn401", () => {
     });
 
     /** Quota rows live in a private cache keyed on the resolved secret; seed it through the seam. */
-    function seedQuota(config: OcxConfig, keyId: string, key: string, percent: number | null, unavailable?: true) {
+    function seedQuota(config: OccxConfig, keyId: string, key: string, percent: number | null, unavailable?: true) {
       setCachedProviderApiKeyQuotaForTests(
         "p", config.providers.p!, keyId, key,
         percent === null ? null : { weeklyPercent: percent, updatedAt: Date.now() } as never,

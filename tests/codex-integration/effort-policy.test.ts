@@ -13,28 +13,28 @@ import { handleManagementAPI } from "../../src/server/management-api";
 import { NoEnabledOpenAiProviderError, routeModel } from "../../src/router";
 import { mapReasoningEffort } from "../../src/reasoning-effort";
 import { nativeEffortClamp } from "../../src/codex/catalog";
-import type { OcxConfig, OcxParsedRequest } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const savedHome = process.env.OPENCODEX_HOME;
+const savedHome = process.env.OPENCCX_HOME;
 const savedCodexHome = process.env.CODEX_HOME;
 let tempHome: string | null = null;
 let tempCodexHome: string | null = null;
 
 afterEach(() => {
-  if (savedHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedHome;
+  if (savedHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedHome;
   if (savedCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = savedCodexHome;
   if (tempHome) { removeTreeWithRetry(tempHome); tempHome = null; }
   if (tempCodexHome) { removeTreeWithRetry(tempCodexHome); tempCodexHome = null; }
 });
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OcxConfig;
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OccxConfig;
 }
 
-function makeParsed(reasoning?: string): OcxParsedRequest {
+function makeParsed(reasoning?: string): OccxParsedRequest {
   return {
     modelId: "gpt-5.6-sol",
     context: { messages: [{ role: "user", content: "hi", timestamp: 1 }] },
@@ -237,7 +237,7 @@ describe("supportedLadderFor (real routeModel routes)", () => {
     // modelReasoningEfforts for grok-4.5 and noReasoningModels for the fast models.
     const config = makeConfig({
       providers: { xai: { adapter: "openai-chat", baseUrl: "https://api.x.ai/v1", authMode: "oauth" } },
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     const route = routeModel(config, "xai/grok-4.5");
     expect(supportedLadderFor(route)).toEqual(["low", "medium", "high"]);
     const grok46 = routeModel(config, "xai/grok-4.6");
@@ -255,7 +255,7 @@ describe("supportedLadderFor (real routeModel routes)", () => {
         },
       },
       defaultProvider: "custom",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     const route = routeModel(config, "my-model");
     expect(route.providerName).toBe("custom");
     expect(supportedLadderFor(route)).toEqual(["low", "medium"]);
@@ -270,14 +270,14 @@ describe("supportedLadderFor (real routeModel routes)", () => {
         },
       },
       defaultProvider: "toggle",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     expect(supportedLadderFor(routeModel(config, "toggle/t-model"))).toBeUndefined();
   });
 
   test("custom key-mode providers cannot capture a bare native-looking OpenAI id", () => {
-    tempCodexHome = mkdtempSync(join(tmpdir(), "ocx-effort-catalog-"));
+    tempCodexHome = mkdtempSync(join(tmpdir(), "occx-effort-catalog-"));
     process.env.CODEX_HOME = tempCodexHome;
-    writeFileSync(join(tempCodexHome, "opencodex-catalog.json"), JSON.stringify({
+    writeFileSync(join(tempCodexHome, "openccx-catalog.json"), JSON.stringify({
       models: [{ slug: "gpt-5.5", display_name: "gpt-5.5", supported_reasoning_levels: [
         { effort: "low", description: "low" }, { effort: "medium", description: "medium" },
       ] }],
@@ -290,7 +290,7 @@ describe("supportedLadderFor (real routeModel routes)", () => {
         },
       },
       defaultProvider: "selfhosted",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     expect(() => routeModel(config, "gpt-5.5")).toThrow(NoEnabledOpenAiProviderError);
     const namespaced = routeModel(config, "selfhosted/gpt-5.5");
     expect(namespaced.providerName).toBe("selfhosted");
@@ -298,9 +298,9 @@ describe("supportedLadderFor (real routeModel routes)", () => {
   });
 
   test("native forward-mode passthrough reads the injected catalog ladder", () => {
-    tempCodexHome = mkdtempSync(join(tmpdir(), "ocx-effort-catalog-"));
+    tempCodexHome = mkdtempSync(join(tmpdir(), "occx-effort-catalog-"));
     process.env.CODEX_HOME = tempCodexHome;
-    writeFileSync(join(tempCodexHome, "opencodex-catalog.json"), JSON.stringify({
+    writeFileSync(join(tempCodexHome, "openccx-catalog.json"), JSON.stringify({
       models: [{ slug: "gpt-5.5", display_name: "gpt-5.5", supported_reasoning_levels: [
         { effort: "low", description: "low" }, { effort: "medium", description: "medium" },
         { effort: "high", description: "high" }, { effort: "xhigh", description: "xhigh" },
@@ -311,14 +311,14 @@ describe("supportedLadderFor (real routeModel routes)", () => {
         openai: { adapter: "openai-responses", baseUrl: "https://chatgpt.com/backend-api/codex", authMode: "forward" },
       },
       defaultProvider: "openai",
-    } as Partial<OcxConfig>);
+    } as Partial<OccxConfig>);
     const route = routeModel(config, "gpt-5.5");
     expect(supportedLadderFor(route)).toEqual(["low", "medium", "high", "xhigh"]);
   });
 });
 
 describe("effortCapAppliesTo (caps are a v2-feature gate)", () => {
-  function parsedWithTools(tools: Array<{ name: string; namespace?: string }>, reasoning?: string): OcxParsedRequest {
+  function parsedWithTools(tools: Array<{ name: string; namespace?: string }>, reasoning?: string): OccxParsedRequest {
     return {
       modelId: "gpt-5.6-sol",
       context: {
@@ -442,7 +442,7 @@ describe("cap composition with downstream clamps", () => {
 
 describe("/api/effort-caps", () => {
   // Management writes validate the entire config, unlike the pure policy helpers above.
-  function makeApiConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+  function makeApiConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
     return makeConfig({
       defaultProvider: "effort-fixture",
       providers: { "effort-fixture": {
@@ -454,11 +454,11 @@ describe("/api/effort-caps", () => {
   }
 
   function isolatedHome(): void {
-    tempHome = mkdtempSync(join(tmpdir(), "ocx-effort-caps-"));
-    process.env.OPENCODEX_HOME = tempHome;
+    tempHome = mkdtempSync(join(tmpdir(), "occx-effort-caps-"));
+    process.env.OPENCCX_HOME = tempHome;
   }
 
-  async function put(config: OcxConfig, body: unknown): Promise<Response> {
+  async function put(config: OccxConfig, body: unknown): Promise<Response> {
     const req = new Request("http://localhost/api/effort-caps", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

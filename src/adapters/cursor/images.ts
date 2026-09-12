@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { create } from "@bufbuild/protobuf";
-import type { OcxContentPart, OcxImageContent, OcxMessage } from "../../types";
+import type { OccxContentPart, OccxImageContent, OccxMessage } from "../../types";
 import {
   SelectedContextSchema,
   SelectedImageSchema,
@@ -92,7 +92,7 @@ export type PrepareCursorImageOutcome =
   | { status: "ready"; image: ResolvedCursorImage }
   | { status: "omitted"; reason: string };
 
-function isImagePart(part: OcxContentPart): part is OcxImageContent {
+function isImagePart(part: OccxContentPart): part is OccxImageContent {
   return part.type === "image";
 }
 
@@ -199,7 +199,7 @@ export function sniffCursorImageFormat(
 }
 
 /** Collect image URLs from one message's content parts, preserving order. */
-export function extractCursorImageUrls(content: string | readonly OcxContentPart[]): string[] {
+export function extractCursorImageUrls(content: string | readonly OccxContentPart[]): string[] {
   return extractCursorImageParts(content).map(part => part.imageUrl);
 }
 
@@ -210,7 +210,7 @@ export interface CursorImagePartRef {
 
 /** Collect image parts (URL + optional detail) from one message's content. */
 export function extractCursorImageParts(
-  content: string | readonly OcxContentPart[],
+  content: string | readonly OccxContentPart[],
 ): CursorImagePartRef[] {
   if (typeof content === "string" || !Array.isArray(content)) return [];
   const parts: CursorImagePartRef[] = [];
@@ -226,7 +226,7 @@ export function extractCursorImageParts(
 }
 
 /**
- * Resolve OpenCodex image parts (data: URLs only) into bytes for SelectedImage.
+ * Resolve Openccx image parts (data: URLs only) into bytes for SelectedImage.
  * Prep (JPEG soft-cap) runs before the 1 MiB wire cap so large clipboard PNGs can shrink.
  * Unsupported / undecodable images are omitted (fail-closed).
  */
@@ -551,7 +551,7 @@ export function buildSelectedContext(
  * Opted-in tool-result runs use prepareCursorRawMessages directly instead.
  */
 export async function resolveActiveCursorImages(
-  messages: readonly OcxMessage[] | undefined,
+  messages: readonly OccxMessage[] | undefined,
   signal?: AbortSignal,
   preparedImages?: readonly ResolvedCursorImage[],
 ): Promise<ResolvedCursorImage[]> {
@@ -614,14 +614,14 @@ export async function prepareCursorImageDataUrl(
 }
 
 async function prepareCursorContentParts(
-  content: string | readonly OcxContentPart[],
+  content: string | readonly OccxContentPart[],
   signal?: AbortSignal,
-): Promise<{ content: string | readonly OcxContentPart[]; images: ResolvedCursorImage[] }> {
+): Promise<{ content: string | readonly OccxContentPart[]; images: ResolvedCursorImage[] }> {
   if (typeof content === "string" || !Array.isArray(content)) {
     return { content, images: [] };
   }
   let changed = false;
-  const next: OcxContentPart[] = [];
+  const next: OccxContentPart[] = [];
   const images: ResolvedCursorImage[] = [];
   for (const part of content) {
     if (part.type === "image" && typeof part.imageUrl === "string" && part.imageUrl.length > 0) {
@@ -646,7 +646,7 @@ async function prepareCursorContentParts(
  * First original-message index that still needs image prep for the active vision window.
  * Historical messages before this index are left untouched (no decode).
  */
-export function cursorVisionPrepareStartIndex(messages: readonly OcxMessage[]): number {
+export function cursorVisionPrepareStartIndex(messages: readonly OccxMessage[]): number {
   // Default window excludes tool results; their preparation requires explicit opt-in.
   if (messages.at(-1)?.role === "toolResult") return messages.length;
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -664,12 +664,12 @@ export function cursorVisionPrepareStartIndex(messages: readonly OcxMessage[]): 
  * same preparation path, with an aggregate image cap and ready-image source labels.
  */
 export interface PreparedCursorRawMessages {
-  messages: readonly OcxMessage[] | undefined;
+  messages: readonly OccxMessage[] | undefined;
   images: ResolvedCursorImage[];
 }
 
 export async function prepareCursorRawMessages(
-  messages: readonly OcxMessage[] | undefined,
+  messages: readonly OccxMessage[] | undefined,
   signal?: AbortSignal,
   options?: { trailingToolImages?: boolean },
 ): Promise<PreparedCursorRawMessages> {
@@ -700,7 +700,7 @@ export async function prepareCursorRawMessages(
     throw new CursorImageError(`Too many images in one request (max ${MAX_CURSOR_IMAGES}).`);
   }
   let changed = false;
-  const out: OcxMessage[] = [];
+  const out: OccxMessage[] = [];
   const images: ResolvedCursorImage[] = [];
   for (let i = 0; i < messages.length; i++) {
     throwIfImagePhaseAborted(signal);
@@ -724,7 +724,7 @@ export async function prepareCursorRawMessages(
       }
       if (prepared.content !== message.content) {
         changed = true;
-        out.push({ ...message, content: prepared.content } as OcxMessage);
+        out.push({ ...message, content: prepared.content } as OccxMessage);
         continue;
       }
     }

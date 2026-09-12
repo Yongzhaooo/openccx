@@ -17,7 +17,7 @@ const roots: string[] = [];
 const noHardening = async (): Promise<void> => {};
 
 function fixture(): NativeProfileContext {
-  const codexHome = mkdtempSync(join(tmpdir(), "ocx-native-claim-"));
+  const codexHome = mkdtempSync(join(tmpdir(), "occx-native-claim-"));
   roots.push(codexHome);
   return { codexHome } as NativeProfileContext;
 }

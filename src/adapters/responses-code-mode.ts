@@ -1,4 +1,4 @@
-import { toolChoiceToolPredicate, type OcxParsedRequest, type OcxProviderConfig } from "../types";
+import { toolChoiceToolPredicate, type OccxParsedRequest, type OccxProviderConfig } from "../types";
 import { isOpenAiOperatedResponsesDestination } from "../providers/openai-tiers";
 import { CODE_MODE_HOST_CONTRACT_SENTENCE, CODE_MODE_RESULT_ECHO_SENTENCE, annotateCodeModeHostFailure, normalizeEmptyExecToolResultText } from "./exec-tool-result-normalize";
 import { isBareShellBridgeTool, isCodexCodeModeExecTool } from "./tool-catalog-nudge";
@@ -38,7 +38,7 @@ function appendMissing(instructions: string, sentences: readonly string[]): stri
 }
 
 /** Native routed Responses needs the same first-call/output contract as translated adapters. */
-export function normalizeResponsesCodeMode(body: unknown, parsed: OcxParsedRequest, provider: OcxProviderConfig): unknown {
+export function normalizeResponsesCodeMode(body: unknown, parsed: OccxParsedRequest, provider: OccxProviderConfig): unknown {
   if (!record(body) || parsed._compactionRequest || isOpenAiOperatedResponsesDestination(provider)) return body;
   const visible = parsed.context.tools?.filter(toolChoiceToolPredicate(parsed.options.toolChoice, parsed.context.tools));
   if (!visible?.some(isCodexCodeModeExecTool) || visible.some(isBareShellBridgeTool)) return body;

@@ -257,7 +257,7 @@ function instrumentRecoveryLauncher(source: string, directory: string): string {
   return source;
 }
 const updateSource = readFileSync(join(repoRoot, "src", "update", "index.ts"), "utf8");
-const launcherSource = readFileSync(join(repoRoot, "bin", "ocx.mjs"), "utf8");
+const launcherSource = readFileSync(join(repoRoot, "bin", "occx.mjs"), "utf8");
 const serverSource = readFileSync(join(repoRoot, "src", "server", "index.ts"), "utf8");
 const dispatchSource = readFileSync(join(repoRoot, "src", "cli", "dispatch.ts"), "utf8");
 
@@ -299,7 +299,7 @@ describe("bounded recovery diagnostics", () => {
   });
 
   test("bounded stderr summaries classify native/resource failures but never expose arbitrary text", () => {
-    const directory = mkdtempSync(join(tmpdir(), "ocx-recovery-redaction-"));
+    const directory = mkdtempSync(join(tmpdir(), "occx-recovery-redaction-"));
     try {
       const path = join(directory, "stderr");
       writeFileSync(path, "hidden-prefix".repeat(1000) + "\nENOMEM dyld[123]: Library not loaded: /synthetic-private/token\npanic: bearer-secret@example.test\n");
@@ -496,15 +496,15 @@ describe("update stops the running proxy before replacing files", () => {
   });
 
   test("recovery sandbox replaces an inherited Codex home without claiming a managed service", () => {
-    const parentEnv = { CODEX_HOME: "/synthetic-parent-codex", OCX_REAL_HOME: "/synthetic-real-home", FIXTURE: "unchanged" };
+    const parentEnv = { CODEX_HOME: "/synthetic-parent-codex", OCCX_REAL_HOME: "/synthetic-real-home", FIXTURE: "unchanged" };
     const isolated = createIsolatedTestEnvironment(parentEnv);
     try {
       expect(resolveCodexHomeDir({ env: isolated.env })).toBe(join(isolated.root, ".codex"));
       expect(existsSync(join(isolated.root, ".codex"))).toBe(true);
-      expect(isolated.env.OCX_REAL_HOME).toBe("/synthetic-real-home");
+      expect(isolated.env.OCCX_REAL_HOME).toBe("/synthetic-real-home");
       expect(isolated.env.FIXTURE).toBe("unchanged");
-      expect(existsSync(join(isolated.root, ".opencodex", "service-state.json"))).toBe(false);
-      expect(parentEnv).toEqual({ CODEX_HOME: "/synthetic-parent-codex", OCX_REAL_HOME: "/synthetic-real-home", FIXTURE: "unchanged" });
+      expect(existsSync(join(isolated.root, ".openccx", "service-state.json"))).toBe(false);
+      expect(parentEnv).toEqual({ CODEX_HOME: "/synthetic-parent-codex", OCCX_REAL_HOME: "/synthetic-real-home", FIXTURE: "unchanged" });
     } finally {
       isolated.cleanup();
     }
@@ -564,7 +564,7 @@ describe("update stops the running proxy before replacing files", () => {
     expect(stopAt).toBeGreaterThan(-1);
     expect(installAt).toBeGreaterThan(-1);
     expect(stopAt).toBeLessThan(installAt);
-    expect(launcherSource).toContain('existsSync(join(configDir(), "ocx.pid"))');
+    expect(launcherSource).toContain('existsSync(join(configDir(), "occx.pid"))');
     expect(launcherSource).toContain('existsSync(join(configDir(), "runtime-port.json"))');
   });
 
@@ -598,11 +598,11 @@ describe("update stops the running proxy before replacing files", () => {
     // for the backend choice on the genuinely-absent install fallback.
     expect(launcherSource).toContain('"service-state.json"');
     // That marker can be STALE, so the fallback asks for structured state rather than
-    // parsing a failure message; bin/ocx.mjs is plain Node and cannot import
+    // parsing a failure message; bin/occx.mjs is plain Node and cannot import
     // diagnoseService(), so it reads startup.serviceInstalled from `status --json`.
     expect(launcherSource).toContain("startup?.serviceInstalled");
-    expect(updateSource).toContain("OCX_BAKE_PORT");
-    expect(launcherSource).toContain("OCX_BAKE_PORT");
+    expect(updateSource).toContain("OCCX_BAKE_PORT");
+    expect(launcherSource).toContain("OCCX_BAKE_PORT");
     // Live runtime port 10100 must not be discarded as a missing-port sentinel.
     expect(launcherSource).toContain("sawRuntimePort");
     expect(updateSource).toContain("runtimeTrusted");
@@ -613,9 +613,9 @@ describe("update stops the running proxy before replacing files", () => {
     async () => {
       const isolated = createIsolatedTestEnvironment();
       const root = isolated.root;
-      const packageRoot = join(root, "node_modules", "@bitkyc08", "opencodex");
-      const launcher = join(packageRoot, "bin", "ocx.mjs");
-      const opencodexHome = isolated.env.OPENCODEX_HOME!;
+      const packageRoot = join(root, "node_modules", "@bitkyc08", "openccx");
+      const launcher = join(packageRoot, "bin", "occx.mjs");
+      const openccxHome = isolated.env.OPENCCX_HOME!;
       const fakeBin = join(root, "fake-bin");
       const fakeNpm = join(fakeBin, "npm");
       const cache = join(root, "npm-cache");
@@ -623,7 +623,7 @@ describe("update stops the running proxy before replacing files", () => {
       const bundledBun = join(repoRoot, "node_modules", "bun");
       const env = {
         ...isolated.env,
-        OCX_FAKE_NPM_CACHE: cache,
+        OCCX_FAKE_NPM_CACHE: cache,
         PATH: `${fakeBin}:${isolated.env.PATH ?? ""}`,
       };
       let recoveredPid: number | undefined;
@@ -635,7 +635,7 @@ describe("update stops the running proxy before replacing files", () => {
         expect(existsSync(bundledBun)).toBe(true);
         mkdirSync(dirname(launcher), { recursive: true });
         mkdirSync(join(packageRoot, "node_modules"), { recursive: true });
-        mkdirSync(opencodexHome, { recursive: true });
+        mkdirSync(openccxHome, { recursive: true });
         mkdirSync(fakeBin, { recursive: true });
         mkdirSync(cache, { recursive: true });
         mkdirSync(diagnostics, { mode: 0o700 });
@@ -651,14 +651,14 @@ describe("update stops the running proxy before replacing files", () => {
           version: "1.0.0",
           type: "module",
         }));
-        writeFileSync(join(opencodexHome, "config.json"), JSON.stringify({ port }));
-        writeFileSync(join(opencodexHome, "runtime-port.json"), JSON.stringify({ port, pid: 999_999_999 }));
+        writeFileSync(join(openccxHome, "config.json"), JSON.stringify({ port }));
+        writeFileSync(join(openccxHome, "runtime-port.json"), JSON.stringify({ port, pid: 999_999_999 }));
         writeFileSync(fakeNpm, `#!/bin/sh
 case "$1" in
   view)
     if [ "$3" = "dist.integrity" ]; then printf 'sha512-testfixturevalue000000000\\n'; else printf '2.0.0\\n'; fi
     ;;
-  config) printf '%s\\n' "$OCX_FAKE_NPM_CACHE" ;;
+  config) printf '%s\\n' "$OCCX_FAKE_NPM_CACHE" ;;
   install) exit 1 ;;
   *) exit 1 ;;
 esac
@@ -682,13 +682,13 @@ esac
           console.error(new Error([
             "Recovery readiness failed (raw child output redacted).",
             `lastProbe=${lastProbe}`,
-            `runtimeFiles=${JSON.stringify(Object.fromEntries(["ocx.pid", "runtime-port.json"].map(name => [name, existsSync(join(opencodexHome, name))])))}`,
+            `runtimeFiles=${JSON.stringify(Object.fromEntries(["occx.pid", "runtime-port.json"].map(name => [name, existsSync(join(openccxHome, name))])))}`,
             `status=${recoveryDiagnosticFile(join(diagnostics, "status"), true)}`,
             `stdout=${recoveryDiagnosticFile(join(diagnostics, "stdout"))}`,
             `stderr=${recoveryDiagnosticFile(join(diagnostics, "stderr"))}`,
           ].join("\n").slice(0, 4096)));
         })).toBe(true);
-        const runtime = JSON.parse(readFileSync(join(opencodexHome, "runtime-port.json"), "utf8"));
+        const runtime = JSON.parse(readFileSync(join(openccxHome, "runtime-port.json"), "utf8"));
         expect(runtime.pid).toBeGreaterThan(0);
         recoveredPid = runtime.pid;
       } finally {
@@ -697,7 +697,7 @@ esac
         // path started can still be identified at all.
         if (!recoveredPid) {
           try {
-            recoveredPid = JSON.parse(readFileSync(join(opencodexHome, "runtime-port.json"), "utf8")).pid;
+            recoveredPid = JSON.parse(readFileSync(join(openccxHome, "runtime-port.json"), "utf8")).pid;
           } catch { /* the proxy never wrote runtime state */ }
         }
         auditedRecoveryPid = Number.isSafeInteger(recoveredPid) && recoveredPid! > 0
@@ -718,7 +718,7 @@ esac
           // Gating the reap on that exit code let a detached proxy survive, get reparented to
           // init, and then spin on a fixture tree this same block had already deleted — one
           // escapee burned a full core for hours. Verify liveness and reap regardless.
-          // bin/ocx.mjs mirrors its Bun child's exit, so reaping the recorded child pid takes
+          // bin/occx.mjs mirrors its Bun child's exit, so reaping the recorded child pid takes
           // the node launcher with it.
           if (Number.isSafeInteger(recoveredPid) && recoveredPid! > 0 && isProcessAlive(recoveredPid!)) {
             killProxy(recoveredPid!);
@@ -753,7 +753,7 @@ esac
 
 
   test("both update paths surface an incomplete manifest-backed history restore after the stop", () => {
-    // A codex-history-backup-*.json surviving `ocx stop` means exact metadata restoration
+    // A codex-history-backup-*.json surviving `occx stop` means exact metadata restoration
     // remains pending. It can be contention or an integrity refusal, so neither update path
     // may claim a DB lock or that every routed thread is hidden.
     expect(updateSource).toContain("export function historyRestoreIncomplete(");
@@ -788,7 +788,7 @@ esac
 
   test("GUI worker update children use pipe stdio so background updates do not open consoles", () => {
     expect(updateSource).toContain("function updateChildStdio()");
-    expect(updateSource).toContain('process.env.OCX_SERVICE === "1"');
+    expect(updateSource).toContain('process.env.OCCX_SERVICE === "1"');
     expect(updateSource).toContain('return "pipe"');
     // All three update children (stop, installer, service reinstall) go through it.
     expect(updateSource).toContain("stdio: stopStdio");
@@ -798,7 +798,7 @@ esac
   });
 });
 
-describe("ocx update --help has no side effects (#168)", () => {
+describe("occx update --help has no side effects (#168)", () => {
   test("the Bun CLI short-circuits help before importing the update runner", () => {
     const caseAt = dispatchSource.indexOf('update: async');
     const helpAt = dispatchSource.indexOf('printSubcommandUsage("update")');
@@ -822,7 +822,7 @@ describe("ocx update --help has no side effects (#168)", () => {
 
 describe("/healthz identity fields", () => {
   test("healthz advertises service identity, pid, and port", () => {
-    expect(serverSource).toContain('service: "opencodex"');
+    expect(serverSource).toContain('service: "openccx"');
     expect(serverSource).toContain("pid: process.pid");
     expect(serverSource).toContain("port: healthPort");
   });

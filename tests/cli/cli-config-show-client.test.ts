@@ -1,5 +1,5 @@
 /**
- * `ocx config show` on a client says so, and stops burying the fact (#4236).
+ * `occx config show` on a client says so, and stops burying the fact (#4236).
  *
  * `runtimeRole: "client"` and the `client` block were already in the output and were already
  * missed: an agent read a client's config, saw `providers: {}` and no grok, and concluded the hub
@@ -20,20 +20,20 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { remoteHubConfigNote } from "../../src/cli/config-command";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { SPAWN_BUDGET_MS } from "../helpers/test-budget";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
-const isolatedCodexHome = mkdtempSync(join(tmpdir(), "ocx-config-client-codex-"));
+const isolatedCodexHome = mkdtempSync(join(tmpdir(), "occx-config-client-codex-"));
 
 setDefaultTimeout(SPAWN_BUDGET_MS);
 
 function runCli(args: string[], home: string) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
-    env: { ...process.env, CODEX_HOME: isolatedCodexHome, OPENCODEX_HOME: home },
+    env: { ...process.env, CODEX_HOME: isolatedCodexHome, OPENCCX_HOME: home },
     encoding: "utf8",
     timeout: SPAWN_BUDGET_MS - 5_000,
   });
@@ -46,7 +46,7 @@ const PRIOR_CATALOG = "A".repeat(12_288);
 const FIXTURE_TOKEN = "fixture-token";
 
 function clientHome(options: { token?: string | null } = {}): string {
-  const home = mkdtempSync(join(tmpdir(), "ocx-config-client-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-config-client-"));
   const token = options.token === undefined ? FIXTURE_TOKEN : options.token;
   if (token !== null) writeFileSync(join(home, "service-api-token"), token, { mode: 0o600 });
   writeFileSync(join(home, "config.json"), JSON.stringify({
@@ -58,7 +58,7 @@ function clientHome(options: { token?: string | null } = {}): string {
       managementUrl: "https://hub.example.test",
       managementTransport: "direct",
       selectedClients: ["codex", "claude"],
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: "client-one",
       tokenFingerprint: createHash("sha256").update(FIXTURE_TOKEN).digest("hex"),
       protocolVersion: 1,
@@ -70,7 +70,7 @@ function clientHome(options: { token?: string | null } = {}): string {
 }
 
 function standaloneHome(): string {
-  const home = mkdtempSync(join(tmpdir(), "ocx-config-standalone-"));
+  const home = mkdtempSync(join(tmpdir(), "occx-config-standalone-"));
   writeFileSync(join(home, "config.json"), JSON.stringify({ port: 10100, providers: {} }));
   return home;
 }
@@ -85,17 +85,17 @@ function connection(overrides: Partial<NoteConnection> = {}): NoteConnection {
 const CLIENT_CONFIG = {
   runtimeRole: "client",
   client: { serverUrl: "https://hub.example.test:8443" },
-} as OcxConfig;
+} as OccxConfig;
 
 describe("remoteHubConfigNote", () => {
   test("only a client with a connection block gets a note, and nothing is probed otherwise", () => {
     // The thunk throws: a standalone or hub install must not pay for the connection probe, and
     // the guard has to return before it.
     const refuse = (): NoteConnection => { throw new Error("connection must not be probed"); };
-    expect(remoteHubConfigNote({ runtimeRole: "client" } as OcxConfig, refuse)).toBeNull();
-    expect(remoteHubConfigNote({ runtimeRole: "standalone" } as OcxConfig, refuse)).toBeNull();
-    expect(remoteHubConfigNote({ runtimeRole: "hub" } as OcxConfig, refuse)).toBeNull();
-    expect(remoteHubConfigNote({} as OcxConfig, refuse)).toBeNull();
+    expect(remoteHubConfigNote({ runtimeRole: "client" } as OccxConfig, refuse)).toBeNull();
+    expect(remoteHubConfigNote({ runtimeRole: "standalone" } as OccxConfig, refuse)).toBeNull();
+    expect(remoteHubConfigNote({ runtimeRole: "hub" } as OccxConfig, refuse)).toBeNull();
+    expect(remoteHubConfigNote({} as OccxConfig, refuse)).toBeNull();
   });
 
   test("the note names the hub and points at the command that has the facts", () => {
@@ -103,7 +103,7 @@ describe("remoteHubConfigNote", () => {
     expect(note).toEqual({
       connected: true,
       origin: "https://hub.example.test:8443",
-      note: "provider credentials and model availability live on the hub; run ocx status",
+      note: "provider credentials and model availability live on the hub; run occx status",
     });
   });
 
@@ -118,7 +118,7 @@ describe("remoteHubConfigNote", () => {
       expect(note?.note).toContain(`hub data-plane token is ${token}`);
       // Still the hub's origin, and still a pointer at the command that can say more.
       expect(note?.origin).toBe("https://hub.example.test:8443");
-      expect(note?.note).toContain("ocx connect status");
+      expect(note?.note).toContain("occx connect status");
     }
   });
 
@@ -135,7 +135,7 @@ describe("remoteHubConfigNote", () => {
   });
 });
 
-describe("ocx config show on a client", () => {
+describe("occx config show on a client", () => {
   test("leads with _remoteHub and omits the priorCatalog blob", () => {
     const home = clientHome();
     try {
@@ -147,7 +147,7 @@ describe("ocx config show on a client", () => {
       expect(parsed._remoteHub).toEqual({
         connected: true,
         origin: "https://hub.example.test:8443",
-        note: "provider credentials and model availability live on the hub; run ocx status",
+        note: "provider credentials and model availability live on the hub; run occx status",
       });
       expect(parsed.client.priorCatalog).toBe(`<omitted: ${PRIOR_CATALOG.length} bytes>`);
       expect(result.stdout).not.toContain(PRIOR_CATALOG.slice(0, 256));
@@ -191,7 +191,7 @@ describe("ocx config show on a client", () => {
   });
 
   test("a client holding no data-plane token is not reported as connected", () => {
-    // End to end, because the hardcoded `true` lived at the call site's expense: `ocx config
+    // End to end, because the hardcoded `true` lived at the call site's expense: `occx config
     // show` is what an agent reads, and this is the machine that cannot reach its hub at all.
     const home = clientHome({ token: null });
     try {

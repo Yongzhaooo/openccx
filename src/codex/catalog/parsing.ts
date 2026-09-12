@@ -6,7 +6,7 @@ import { atomicWriteFile, expandUserPath, getConfigDir, loadConfig, ultraFastTie
 import { CODEX_CONFIG_PATH, CODEX_MODELS_CACHE_PATH, DEFAULT_CATALOG_PATH, readRootTomlString, resolveCodexConfigPath } from "../paths";
 import { clearModelCache, DEFAULT_MODEL_CACHE_TTL_MS, getFreshCached, getStaleCached, isModelsFetchCoolingDown, markModelsFetchFailure, setCached } from "../model-cache";
 import { buildModelsRequest, resolveModelsAuthToken } from "../../oauth";
-import type { OcxConfig, OcxProviderConfig } from "../../types";
+import type { OccxConfig, OccxProviderConfig } from "../../types";
 import { modelInList } from "../../types";
 import { CODEX_REASONING_LEVELS, codexEffortRank, configuredReasoningEfforts, modelRecordValue, sanitizeCodexReasoningEfforts } from "../../reasoning-effort";
 import { getModelMetadata, getModelMetadataCaseInsensitive, listModelMetadata, resolveMetadataProvider } from "../../generated/model-metadata";
@@ -71,7 +71,7 @@ export function activeCodexConfigPath(): string {
 
 export function activeDefaultCatalogPath(): string {
   const home = activeCodexHome();
-  return home ? join(home, "opencodex-catalog.json") : DEFAULT_CATALOG_PATH;
+  return home ? join(home, "openccx-catalog.json") : DEFAULT_CATALOG_PATH;
 }
 
 export function activeCodexModelsCachePath(): string {
@@ -122,7 +122,7 @@ export interface CatalogModel {
   contextCap?: number;
   contextCapped?: boolean;
   inputModalities?: string[];
-  /** Provider opted into parallel tool calls (OcxProviderConfig.parallelToolCalls). */
+  /** Provider opted into parallel tool calls (OccxProviderConfig.parallelToolCalls). */
   parallelToolCalls?: boolean;
   /**
    * This routed row is an explicitly configured account-native alias on the canonical ChatGPT
@@ -150,7 +150,7 @@ export interface CatalogModel {
    *
    * It is NOT visibility. The row stays `visibility: "list"` on purpose: the issue explicitly
    * rejects hiding, and Codex Desktop only understands "list" and "hide" anyway, so hiding would
-   * be the one outcome the reporter asked not to have. An OpenCodex-aware consumer greys the
+   * be the one outcome the reporter asked not to have. An Openccx-aware consumer greys the
    * entry; the native picker ignores the field, which is the honest limit of what a custom
    * catalog field can do.
    */
@@ -167,7 +167,7 @@ export interface CatalogModel {
    * serializes it into the Codex catalog, and it never affects routing or visibility.
    */
   pricingStatus?: "free" | "paid";
-  /** OpenCodex-only catalog ownership marker; Codex ignores the serialized extension field. */
+  /** Openccx-only catalog ownership marker; Codex ignores the serialized extension field. */
   catalogKind?: typeof CODEX_CUSTOM_MODEL_CATALOG_KIND | typeof CODEX_PROVIDER_MODEL_CATALOG_KIND;
 }
 
@@ -265,7 +265,7 @@ export function readCodexCatalogPathForHome(codexHome: string): string {
       if (path) return resolve(codexHome, path);
     }
   } catch { /* ignore */ }
-  return join(codexHome, "opencodex-catalog.json");
+  return join(codexHome, "openccx-catalog.json");
 }
 
 /**
@@ -303,9 +303,9 @@ export function findNativeTemplate(catalog: RawCatalog | null): RawEntry | null 
     m => typeof m.slug === "string"
       && !m.slug.includes("/")
       && "base_instructions" in m
-      && m.opencodex_catalog_kind !== CODEX_NATIVE_ALIAS_CATALOG_KIND
+      && m.openccx_catalog_kind !== CODEX_NATIVE_ALIAS_CATALOG_KIND
       && m.owned_by !== COMBO_NAMESPACE
-      && !(typeof m.description === "string" && m.description.startsWith("Routed via opencodex → ")),
+      && !(typeof m.description === "string" && m.description.startsWith("Routed via openccx → ")),
   ) ?? null;
 }
 
@@ -331,9 +331,9 @@ export function findSupportedNativeTemplate(catalog: RawCatalog | null): RawEntr
       && SUPPORTED_NATIVE_OPENAI_SLUGS.has(m.slug)
       && !m.slug.includes("/")
       && "base_instructions" in m
-      && m.opencodex_catalog_kind !== CODEX_NATIVE_ALIAS_CATALOG_KIND
+      && m.openccx_catalog_kind !== CODEX_NATIVE_ALIAS_CATALOG_KIND
       && m.owned_by !== COMBO_NAMESPACE
-      && !(typeof m.description === "string" && m.description.startsWith("Routed via opencodex → ")),
+      && !(typeof m.description === "string" && m.description.startsWith("Routed via openccx → ")),
   ) ?? null;
 }
 
@@ -614,7 +614,7 @@ export function ensureStrictCatalogFields(
     entry.max_context_window = contextWindow;
   }
   if (typeof entry.effective_context_window_percent !== "number") entry.effective_context_window_percent = 95;
-  if (typeof entry.comp_hash !== "string") entry.comp_hash = "opencodex";
+  if (typeof entry.comp_hash !== "string") entry.comp_hash = "openccx";
   // Routed rows must not carry NATIVE eligibility metadata. `deriveEntry` deep-clones a
   // native template and deletes a fixed denylist, so these five survive onto rows backed
   // by unrelated provider credentials — advertising ChatGPT plan eligibility for a model
@@ -651,9 +651,9 @@ export interface MultiAgentModeOptions {
 export function catalogEntryIsNativeChatGpt(entry: RawEntry): boolean {
   const slug = typeof entry.slug === "string" ? entry.slug : "";
   // combo-native-alias-v1 occupies a bare native slug but is routed through
-  // OpenCodex. Keep those on v2 unless the row still carries the ChatGPT-forward
+  // Openccx. Keep those on v2 unless the row still carries the ChatGPT-forward
   // contract (`use_responses_lite`).
-  if (entry.opencodex_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND) {
+  if (entry.openccx_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND) {
     return entry.use_responses_lite === true;
   }
   if (trustedAccountBoundNativeCatalogSlug(entry)) return true;
@@ -661,7 +661,7 @@ export function catalogEntryIsNativeChatGpt(entry: RawEntry): boolean {
     ? slug.slice(OPENAI_CODEX_PROVIDER_ID.length + 1)
     : "";
   if (
-    entry.opencodex_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
+    entry.openccx_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
     && entry.use_responses_lite === true
     && hasNativeOpenAiCapabilityMetadata(routedNativeSlug)
   ) return true;
@@ -689,7 +689,7 @@ export function applyRoutedCodexToolMode(
  *   binary validates spawn_agent models against THIS catalog with its own
  *   `multi_agent_version == Some(V2)` test (codex-rs multi_agents_common.rs), so an
  *   absent pin means a clean refusal at spawn time — exactly the cross-provider
- *   spawns opencodex exists to enable (option B, devlog
+ *   spawns openccx exists to enable (option B, devlog
  *   260730_codex_rs_upstream_v2_live_handoff/060). Upstream pins are always
  *   preserved: a genuine "v1" pin is a real capability statement and stays excluded.
  *   With the feature off the output is byte-identical to the historical behavior.
@@ -716,11 +716,11 @@ export function applyMultiAgentMode(
     for (const entry of entries) {
       if (options.preserveDefaultMultiAgentVersion?.(entry)) continue;
       const slug = typeof entry.slug === "string" ? entry.slug : "";
-      const nativeAlias = entry.opencodex_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND;
+      const nativeAlias = entry.openccx_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND;
       const routedNativeSlug = slug.startsWith(`${OPENAI_CODEX_PROVIDER_ID}/`)
         ? slug.slice(OPENAI_CODEX_PROVIDER_ID.length + 1)
         : "";
-      const codexForwardCapabilityAlias = entry.opencodex_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
+      const codexForwardCapabilityAlias = entry.openccx_catalog_kind === CODEX_CUSTOM_MODEL_CATALOG_KIND
         && entry.use_responses_lite === true
         && hasNativeOpenAiCapabilityMetadata(routedNativeSlug)
         ? routedNativeSlug
@@ -799,7 +799,7 @@ export function normalizeRoutedCatalogEntry(
   entry.supports_search_tool = true;
   // Cursor's transport already serializes overlapping tool calls into atomic Responses tool events.
   // Advertising parallel calls lets Codex send the same native capability bit it sends for OpenAI.
-  // Opt-in providers (OcxProviderConfig.parallelToolCalls, e.g. xAI) advertise it too: the
+  // Opt-in providers (OccxProviderConfig.parallelToolCalls, e.g. xAI) advertise it too: the
   // openai-chat adapter stops forcing parallel_tool_calls:false and the buffered stream parser
   // assembles multi-call turns (devlog/_plan/260709_parallel_tool_calls).
   entry.supports_parallel_tool_calls = isCursorEntry || parallelToolCalls === true;
@@ -874,7 +874,7 @@ export function readCatalogBackup(catalogPath: string): RawCatalog | null {
 
 export function catalogHasRoutedEntries(catalog: RawCatalog | null): boolean {
   return (catalog?.models ?? []).some(m => typeof m.slug === "string"
-    && (m.slug.includes("/") || m.opencodex_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND));
+    && (m.slug.includes("/") || m.openccx_catalog_kind === CODEX_NATIVE_ALIAS_CATALOG_KIND));
 }
 
 export function writePristineCatalogBackup(backupPath: string, catalogPath: string, catalog: RawCatalog): void {

@@ -29,18 +29,18 @@ import {
 import { resolveCodexHomeDir } from "./home";
 import { resolveCodexStateDbPath } from "./paths";
 
-export interface OcxCompactionRewriteResult {
+export interface OccxCompactionRewriteResult {
   content: string;
   replaced: number;
 }
 
-export interface OcxCompactionHistoryRecoveryResult {
+export interface OccxCompactionHistoryRecoveryResult {
   rolloutPath: string;
   backupPath: string | null;
   replaced: number;
 }
 
-export interface OcxCompactionHistoryRecoveryOptions {
+export interface OccxCompactionHistoryRecoveryOptions {
   threadId: string;
   codexHome?: string;
   stateDbPath?: string;
@@ -146,13 +146,13 @@ function rewriteJsonlLine(line: string): { line: string; replaced: number } {
 }
 
 /**
- * Convert OpenCodeX-owned `ocx1:` compaction items into ordinary replayable user messages.
+ * Convert OpenCodeX-owned `occx1:` compaction items into ordinary replayable user messages.
  *
  * Only the authoritative `compacted.payload.replacement_history` snapshot is changed. Earlier
  * response-item events are historical output and are deliberately preserved byte-for-byte.
  * Native opaque compactions are also untouched because OpenCodeX cannot decode them safely.
  */
-export function rewriteOcxCompactionsForNativeReplay(content: string): OcxCompactionRewriteResult {
+export function rewriteOccxCompactionsForNativeReplay(content: string): OccxCompactionRewriteResult {
   const parts = content.split(/(\r?\n)/);
   let replaced = 0;
   for (let index = 0; index < parts.length; index += 2) {
@@ -174,9 +174,9 @@ export function rewriteOcxCompactionsForNativeReplay(content: string): OcxCompac
  * The original bytes are copied to an owner-private backup before the rollout is atomically
  * replaced. A last-moment digest check refuses a concurrent Codex append instead of losing it.
  */
-export function recoverOcxCompactionHistory(
-  options: OcxCompactionHistoryRecoveryOptions,
-): OcxCompactionHistoryRecoveryResult {
+export function recoverOccxCompactionHistory(
+  options: OccxCompactionHistoryRecoveryOptions,
+): OccxCompactionHistoryRecoveryResult {
   if (!THREAD_ID_RE.test(options.threadId)) throw new Error("thread id must be a UUID");
   const codexHome = realpathSync.native(options.codexHome ?? resolveCodexHomeDir());
   const stateDbPath = options.stateDbPath ?? resolveCodexStateDbPath({ codexHome });
@@ -200,7 +200,7 @@ export function recoverOcxCompactionHistory(
   if (!Buffer.from(original, "utf8").equals(originalBytes)) {
     throw new Error("the rollout is not valid UTF-8 and cannot be repaired safely");
   }
-  const rewritten = rewriteOcxCompactionsForNativeReplay(original);
+  const rewritten = rewriteOccxCompactionsForNativeReplay(original);
   if (rewritten.replaced === 0) {
     return { rolloutPath, backupPath: null, replaced: 0 };
   }
@@ -211,7 +211,7 @@ export function recoverOcxCompactionHistory(
   const backupPath = join(backupDir, `${basename(rolloutPath)}.${stamp}.bak`);
   writePrivateFile(backupPath, original);
 
-  const tempPath = `${rolloutPath}.ocx-repair-${process.pid}-${crypto.randomUUID()}.tmp`;
+  const tempPath = `${rolloutPath}.occx-repair-${process.pid}-${crypto.randomUUID()}.tmp`;
   try {
     writePrivateFile(tempPath, rewritten.content);
     if (digest(readFileSync(rolloutPath)) !== digest(originalBytes)) {

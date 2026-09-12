@@ -19,32 +19,32 @@ import {
 import { OAuthMutationBusyError, saveCredential } from "../../src/oauth/store";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { flushConfigDirHardeningForTests } from "../../src/config/paths";
 import { setAsyncIcaclsRunnerForTests, setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let TEST_DIR = "";
-const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
-const PUBLIC_ERROR_CANARY = "C:\\Users\\Alice\\.opencodex\\auth.json.ocx-tmp \\\\server\\share\\auth.json /home/alice/.opencodex/auth.json";
+const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
+const PUBLIC_ERROR_CANARY = "C:\\Users\\Alice\\.openccx\\auth.json.occx-tmp \\\\server\\share\\auth.json /home/alice/.opencodex/auth.json";
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 describe("OAuth status privacy", () => {
   beforeEach(() => {
     clearLoginState("xai");
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     setIcaclsRunnerForTests(() => ICACLS_OK);
     setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-    TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-oauth-status-privacy-"));
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    TEST_DIR = mkdtempSync(join(tmpdir(), "occx-oauth-status-privacy-"));
+    process.env.OPENCCX_HOME = TEST_DIR;
   });
 
   afterEach(async () => {
     clearLoginState("xai");
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     await flushConfigDirHardeningForTests();
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
@@ -232,7 +232,7 @@ describe("OAuth status privacy", () => {
           baseUrl: "https://provider.example/v1",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     const response = await handleResponses(new Request("http://localhost/v1/responses", {
       method: "POST",
@@ -259,7 +259,7 @@ describe("OAuth status privacy", () => {
           baseUrl: "https://provider.example/v1",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     const request = () => new Request("http://localhost/v1/responses", {
       method: "POST",
@@ -289,7 +289,7 @@ describe("OAuth status privacy", () => {
   test("public OAuth errors preserve only the fixed operational allowlist", () => {
     expect(publicOAuthAuthenticationErrorMessage(new Error(PUBLIC_ERROR_CANARY))).toBe(PUBLIC_OAUTH_ERROR);
     expect(publicOAuthAuthenticationErrorMessage(new OAuthLoginRequiredError("xai"))).toBe(
-      "Not logged in to xai. Run: ocx login xai",
+      "Not logged in to xai. Run: occx login xai",
     );
     expect(publicOAuthAuthenticationErrorMessage(new OAuthLoginRequiredError(PUBLIC_ERROR_CANARY)))
       .toBe(PUBLIC_OAUTH_ERROR);
@@ -325,7 +325,7 @@ describe("OAuth status privacy", () => {
       throw new Error(`provider login failed at ${PUBLIC_ERROR_CANARY}`);
     };
     try {
-      const config = { port: 0, defaultProvider: "xai", providers: {} } as OcxConfig;
+      const config = { port: 0, defaultProvider: "xai", providers: {} } as OccxConfig;
       const request = new ManagementRequest("http://localhost/api/oauth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -351,7 +351,7 @@ describe("OAuth status privacy", () => {
         controller.signal.addEventListener("abort", () => reject(new Error("Login cancelled")), { once: true });
       });
     };
-    const config = { port: 0, defaultProvider: "xai", providers: {} } as OcxConfig;
+    const config = { port: 0, defaultProvider: "xai", providers: {} } as OccxConfig;
     const request = () => new ManagementRequest("http://localhost/api/oauth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -381,7 +381,7 @@ describe("OAuth status privacy", () => {
       throw new Error(`late provider login failure at ${PUBLIC_ERROR_CANARY}`);
     };
     try {
-      const config = { port: 0, defaultProvider: "xai", providers: {} } as OcxConfig;
+      const config = { port: 0, defaultProvider: "xai", providers: {} } as OccxConfig;
       const startRequest = new ManagementRequest("http://localhost/api/oauth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -414,7 +414,7 @@ describe("OAuth status privacy", () => {
     const cases: Array<{ error: Error; expected: string }> = [
       {
         error: new OAuthLoginRequiredError("xai"),
-        expected: "Not logged in to xai. Run: ocx login xai",
+        expected: "Not logged in to xai. Run: occx login xai",
       },
       {
         error: new OAuthReauthIdentityMismatchError(),
@@ -437,7 +437,7 @@ describe("OAuth status privacy", () => {
         expected: "OAuth mutation queue is busy",
       },
     ];
-    const config = { port: 0, defaultProvider: "xai", providers: {} } as OcxConfig;
+    const config = { port: 0, defaultProvider: "xai", providers: {} } as OccxConfig;
     try {
       for (const { error, expected } of cases) {
         OAUTH_PROVIDERS.xai.login = async (controller) => {

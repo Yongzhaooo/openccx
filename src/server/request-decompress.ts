@@ -107,7 +107,7 @@ export class DecompressedBodyTooLargeError extends Error {
 }
 
 /**
- * Name OpenCodex as the refuser, and name the lever.
+ * Name Openccx as the refuser, and name the lever.
  *
  * #4112 gave the UPSTREAM context refusal on `/v1/responses` its own HTTP 413 with
  * `context_length_exceeded`. That makes the two 413s on this surface look alike to a client
@@ -127,7 +127,7 @@ export function describeInboundBodyRefusal(error: DecompressedBodyTooLargeError)
     : observed === null
       ? `the body is above the ${limit} MB inbound admission limit`
       : `the body is ${approximate}${observed} MB, above the ${limit} MB inbound admission limit`;
-  return `OpenCodex refused this request before reading it: ${sizes}. `
+  return `Openccx refused this request before reading it: ${sizes}. `
     + "This is a local proxy limit, not a provider refusal. Raise \"maxInboundBodyBytes\" in "
     + `config.json (ceiling ${INBOUND_CEILING_MB} MB) and restart the proxy, or compact the `
     + "conversation earlier.";

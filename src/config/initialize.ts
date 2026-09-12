@@ -18,9 +18,9 @@ export class InitialConfigPublicationError extends Error {
     options?: ErrorOptions & { hardeningFailed?: boolean },
   ) {
     super(options?.hardeningFailed
-      ? "Initial config permissions could not be secured. Choose an OPENCODEX_HOME location that supports private file permissions (NTFS ACLs on Windows), then rerun `ocx init`."
+      ? "Initial config permissions could not be secured. Choose an OPENCCX_HOME location that supports private file permissions (NTFS ACLs on Windows), then rerun `occx init`."
       : hardLinkUnavailable
-      ? "Initial config requires hard-link publication; the filesystem or its permissions denied it. Inspect the config directory before retrying. Choose an OPENCODEX_HOME location that supports hard links and private file permissions, then rerun `ocx init`."
+      ? "Initial config requires hard-link publication; the filesystem or its permissions denied it. Inspect the config directory before retrying. Choose an OPENCCX_HOME location that supports hard links and private file permissions, then rerun `occx init`."
       : "Initial config publication did not finish.", options);
     this.name = "InitialConfigPublicationError";
   }
@@ -85,7 +85,7 @@ export function publishInitialConfigNoReplace(
   io: Partial<InitialConfigPublicationIO> = {},
 ): boolean {
   assertNotRealHomeUnderTest(dirname(target));
-  const temp = `${target}.ocx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
+  const temp = `${target}.occx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
   let fd: number | undefined;
   let publication: PublicationState = "not-published";
   let collided = false;

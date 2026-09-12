@@ -200,8 +200,8 @@ export function pnpmOwnerInvocation(owner, args, platform = process.platform, en
 
 function shimNames(platform) {
   return platform === "win32"
-    ? ["ocx.cmd", "ocx.ps1", "opencodex.cmd", "opencodex.ps1"]
-    : ["ocx", "opencodex"];
+    ? ["occx.cmd", "occx.ps1", "openccx.cmd", "openccx.ps1"]
+    : ["occx", "openccx"];
 }
 
 function targetVariants(packageDir, globalBinDir, platform) {
@@ -209,7 +209,7 @@ function targetVariants(packageDir, globalBinDir, platform) {
   try { packageCandidates.push(realpathSync(packageDir)); } catch { /* keep lexical path */ }
   const binCandidates = [globalBinDir];
   try { binCandidates.push(realpathSync(globalBinDir)); } catch { /* keep lexical path */ }
-  const launcherCandidates = packageCandidates.map(candidate => join(candidate, "bin", "ocx.mjs"));
+  const launcherCandidates = packageCandidates.map(candidate => join(candidate, "bin", "occx.mjs"));
   const relativeCandidates = binCandidates.flatMap(bin => launcherCandidates.map(candidate => relative(bin, candidate)));
   return [...new Set([...launcherCandidates, ...relativeCandidates].map(value => {
     const normalised = String(value).replaceAll("\\", "/").replace(/^\.\//, "");
@@ -219,7 +219,7 @@ function targetVariants(packageDir, globalBinDir, platform) {
 
 function shimPointsToPackage(shimPath, packageDir, globalBinDir, platform) {
   try {
-    if (samePath(shimPath, join(packageDir, "bin", "ocx.mjs"), platform)) return true;
+    if (samePath(shimPath, join(packageDir, "bin", "occx.mjs"), platform)) return true;
   } catch { /* fall through to text inspection */ }
   let text;
   try {
@@ -236,7 +236,7 @@ function shimPointsToPackage(shimPath, packageDir, globalBinDir, platform) {
     const trimmed = line.trim();
     return !trimmed.startsWith("#") && !/^rem(?:\s|$)/i.test(trimmed);
   }).join("\n");
-  const expectedLauncher = join(packageDir, "bin", "ocx.mjs");
+  const expectedLauncher = join(packageDir, "bin", "occx.mjs");
   if (shimTargetPaths(shimPath, executableText, platform).some(target => samePath(target, expectedLauncher, platform))) {
     return true;
   }
@@ -254,7 +254,7 @@ function shimIsRunnable(shimPath, platform) {
 
 function shimTargetPaths(shimPath, text, platform) {
   const targets = [];
-  const launcherPattern = /((?:\$basedir(?:_win)?|\$PSScriptRoot|%~dp0|[A-Za-z]:[\\/]|\/|\.\.?[\\/])[^"'`\r\n]*[\\/]bin[\\/]ocx\.mjs)/gi;
+  const launcherPattern = /((?:\$basedir(?:_win)?|\$PSScriptRoot|%~dp0|[A-Za-z]:[\\/]|\/|\.\.?[\\/])[^"'`\r\n]*[\\/]bin[\\/]occx\.mjs)/gi;
   const shimDir = pathDirname(shimPath, platform);
   for (const match of text.matchAll(launcherPattern)) {
     let target = match[1];
@@ -421,11 +421,11 @@ export function resolvePnpmGlobalOwner({
     // If the process was entered through a generated command shim, its directory is
     // another owner fact. This disambiguates two pnpm homes that expose the same pnpm
     // version and (for example after a copied prefix) report the same package path.
-    // Direct `node bin/ocx.mjs` and Windows shims that invoke the package path do not
+    // Direct `node bin/occx.mjs` and Windows shims that invoke the package path do not
     // provide a usable shim path, so they continue to rely on the package/group proof.
     if (runningShimPath) {
       const shimName = String(runningShimPath).replaceAll("\\", "/").split("/").at(-1)?.toLowerCase();
-      const isCommandShim = ["ocx", "opencodex", "ocx.cmd", "opencodex.cmd", "ocx.ps1", "opencodex.ps1"].includes(shimName ?? "");
+      const isCommandShim = ["occx", "openccx", "occx.cmd", "openccx.cmd", "occx.ps1", "openccx.ps1"].includes(shimName ?? "");
       if (isCommandShim && !samePath(dirname(runningShimPath), globalBinDir, platform)) {
         lastReason = "pnpm package owner did not match the running global shim";
         continue;

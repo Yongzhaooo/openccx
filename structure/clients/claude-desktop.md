@@ -2,7 +2,7 @@
 
 ## Connected Claude Desktop profiles
 
-Connected `ocx claude desktop apply` reads the hub's Desktop snapshot and writes the hub origin
+Connected `occx claude desktop apply` reads the hub's Desktop snapshot and writes the hub origin
 and exact hub-issued IDs to the local Desktop configuration. Static/hybrid embed the entries;
 discovery-only keeps discovery on the hub. The hub owns family assignments and defaults; local
 show/edit/import/export operations do not manage that profile. After hub changes or historical
@@ -53,7 +53,7 @@ managed profile again. The CLI reports `rotation: "committed"` only for the new 
 revocation of that previous key. Incomplete recovery keeps the operation unresolved. Disconnect
 restores Desktop even with `--keep-catalog`; retries preserve the original catalog choice and must
 not clear a newer connection. Authorized uninstall completes or resumes owned Desktop cleanup
-before removing OpenCodex state, and preserves recovery state when cleanup conflicts or fails.
+before removing Openccx state, and preserves recovery state when cleanup conflicts or fails.
 
 These guarantees concern files on disk. Fully quitting and reopening Desktop is required after
 apply, rotation/recovery or restoration; there is no automatic process restart or guarantee that
@@ -65,7 +65,7 @@ or profile-upload API. Thinking replay and prompt caching remain separate in #37
 
 The Desktop profile writer and the management status probe share
 `resolveDesktop3pConfigLibraryPath`. The resolver reproduces Desktop's own rule rather than a guess:
-an explicit `CLAUDE_USER_DATA_DIR` (or the opencodex override) wins; on Windows
+an explicit `CLAUDE_USER_DATA_DIR` (or the openccx override) wins; on Windows
 `%LOCALAPPDATA%\Claude-3p` wins; otherwise the Electron user-data path gains a `-3p` suffix if it
 does not already have one. `configLibrary` is appended to that root.
 

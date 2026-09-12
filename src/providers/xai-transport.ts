@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { OcxProviderConfig } from "../types";
+import type { OccxProviderConfig } from "../types";
 import { resolveGithubCopilotTransport } from "./github-copilot-transport";
 
 export const XAI_GROK_CLI_BASE_URL = "https://cli-chat-proxy.grok.com/v1";
@@ -14,7 +14,7 @@ const XAI_RESPONSES_HOSTS = new Set(["api.x.ai", "cli-chat-proxy.grok.com"]);
  * web_search fields, so they are one dialect rather than two. Matching is exact-host over
  * https, which keeps lookalikes (`api.x.ai.evil.test`) and nonstandard ports out.
  */
-export function isXaiResponsesDestination(provider: Pick<OcxProviderConfig, "baseUrl">): boolean {
+export function isXaiResponsesDestination(provider: Pick<OccxProviderConfig, "baseUrl">): boolean {
   try {
     const url = new URL(provider.baseUrl);
     return url.protocol === "https:"
@@ -27,7 +27,7 @@ export function isXaiResponsesDestination(provider: Pick<OcxProviderConfig, "bas
 
 export const XAI_GROK_COMPATIBILITY = {
   version: "0.2.93",
-  userAgent: "opencodex-grok/0.2.93",
+  userAgent: "openccx-grok/0.2.93",
   headers: {
     clientIdentifier: "x-grok-client-identifier",
     clientVersion: "x-grok-client-version",
@@ -43,13 +43,13 @@ export const XAI_GROK_COMPATIBILITY = {
 export const XAI_GROK_CLIENT_VERSION = XAI_GROK_COMPATIBILITY.version;
 export const XAI_CONV_ID_HEADER = XAI_GROK_COMPATIBILITY.headers.conversationId;
 
-export type OcxProviderTransport = OcxProviderConfig & {
+export type OccxProviderTransport = OccxProviderConfig & {
   /** Request executor used only at runtime; never persisted. */
   fetch?: typeof globalThis.fetch;
 };
 
 const XAI_GROK_CLI_HEADERS: Readonly<Record<string, string>> = {
-  [XAI_GROK_COMPATIBILITY.headers.clientIdentifier]: "opencodex",
+  [XAI_GROK_COMPATIBILITY.headers.clientIdentifier]: "openccx",
   [XAI_GROK_COMPATIBILITY.headers.clientVersion]: XAI_GROK_CLIENT_VERSION,
   [XAI_GROK_COMPATIBILITY.headers.tokenAuth]: "xai-grok-cli",
   [XAI_GROK_COMPATIBILITY.headers.authenticateResponse]: "authenticate-response",
@@ -108,14 +108,14 @@ export function deriveXaiConvId(promptCacheKey: string): string {
  * transport (= per logical request until key rotation), so same-target replays and transient
  * retries carry the same id while a rotated key gets a fresh one.
  * Agent, deployment, model-override, turn, mode, and user identity headers are intentionally
- * omitted because opencodex has no truthful values for the official fields.
+ * omitted because openccx has no truthful values for the official fields.
  */
 export function resolveProviderTransport(
   providerName: string,
-  provider: OcxProviderTransport,
+  provider: OccxProviderTransport,
   promptCacheKey?: string,
   apiBaseUrl?: string,
-): OcxProviderTransport {
+): OccxProviderTransport {
   if (providerName === "github-copilot") {
     return resolveGithubCopilotTransport(provider, apiBaseUrl);
   }

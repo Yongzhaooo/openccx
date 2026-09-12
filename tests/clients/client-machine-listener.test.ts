@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { Server } from "bun";
 import { startMachineListener } from "../../src/client/machine-listener";
 import { serveGuiFile } from "../../src/server/gui-static";
-import type { OcxClientConnectionConfig } from "../../src/types";
+import type { OccxClientConnectionConfig } from "../../src/types";
 import type { ManagementAuthState } from "../../src/server/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
@@ -14,12 +14,12 @@ let root = "";
 let previousHome: string | undefined;
 const servers: Server<unknown>[] = [];
 
-const connection = (transport: "direct" | "relay" = "direct"): OcxClientConnectionConfig => ({
+const connection = (transport: "direct" | "relay" = "direct"): OccxClientConnectionConfig => ({
   serverUrl: "https://hub.example.test",
   managementUrl: "https://hub.example.test",
   managementTransport: transport,
   selectedClients: ["codex"],
-  tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+  tokenEnv: "OPENCCX_API_AUTH_TOKEN",
   apiKeyId: "client-key-a",
   tokenFingerprint: "a".repeat(64),
   protocolVersion: 1,
@@ -30,7 +30,7 @@ const connection = (transport: "direct" | "relay" = "direct"): OcxClientConnecti
 function authState(): ManagementAuthState {
   return {
     available: true,
-    token: `ocx_admin_${"a".repeat(43)}`,
+    token: `occx_admin_${"a".repeat(43)}`,
     source: "environment",
     sessions: new Map(),
     pairingGrants: new Map(),
@@ -38,9 +38,9 @@ function authState(): ManagementAuthState {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  root = mkdtempSync(join(tmpdir(), "ocx-machine-listener-"));
-  process.env.OPENCODEX_HOME = root;
+  previousHome = process.env.OPENCCX_HOME;
+  root = mkdtempSync(join(tmpdir(), "occx-machine-listener-"));
+  process.env.OPENCCX_HOME = root;
   mkdirSync(root, { recursive: true });
   writeFileSync(join(root, "config.json"), JSON.stringify({
     port: 0,
@@ -52,8 +52,8 @@ beforeEach(() => {
 
 afterEach(async () => {
   for (const server of servers.splice(0)) await server.stop(true);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (root) removeTreeWithRetry(root);
 });
 
@@ -67,12 +67,12 @@ async function guiHeaders(server: Server<unknown>, mutation = false): Promise<He
   const bootstrap = await fetch(new URL("/opencodex-session", server.url));
   const html = await bootstrap.text();
   const headers = new Headers({
-    "X-OpenCodex-API-Key": meta(html, "opencodex-session-token"),
-    "X-OpenCodex-GUI-Origin": meta(html, "opencodex-session-origin"),
+    "X-Openccx-API-Key": meta(html, "openccx-session-token"),
+    "X-Openccx-GUI-Origin": meta(html, "openccx-session-origin"),
   });
   if (mutation) {
-    headers.set("Origin", meta(html, "opencodex-session-origin"));
-    headers.set("X-OpenCodex-CSRF-Token", meta(html, "opencodex-session-csrf"));
+    headers.set("Origin", meta(html, "openccx-session-origin"));
+    headers.set("X-Openccx-CSRF-Token", meta(html, "openccx-session-csrf"));
     headers.set("Content-Type", "application/json");
   }
   return headers;
@@ -110,7 +110,7 @@ describe("client machine listener", () => {
     servers.push(server);
     const statusUrl = new URL("/api/machine/status", server.url);
     expect((await fetch(statusUrl)).status).toBe(401);
-    expect((await fetch(statusUrl, { headers: { "X-OpenCodex-API-Key": `ocx_admin_${"a".repeat(43)}` } })).status).toBe(401);
+    expect((await fetch(statusUrl, { headers: { "X-Openccx-API-Key": `occx_admin_${"a".repeat(43)}` } })).status).toBe(401);
 
     const safeHeaders = await guiHeaders(server);
     const status = await fetch(statusUrl, { headers: safeHeaders });
@@ -170,13 +170,13 @@ describe("the served document states the client role", () => {
   // falls through to a JSON payload when `gui/dist` is absent, and a checkout without a
   // GUI build would make an HTTP-level assertion pass vacuously.
   test("the client dashboard document carries the role tag", () => {
-    const dist = mkdtempSync(join(tmpdir(), "ocx-gui-dist-"));
+    const dist = mkdtempSync(join(tmpdir(), "occx-gui-dist-"));
     try {
       writeFileSync(join(dist, "index.html"), "<!doctype html><html><head></head><body></body></html>");
       const response = serveGuiFile("/", dist, undefined, "client");
       expect(response).not.toBeNull();
       return response!.text().then(html => {
-        expect(meta(html, "opencodex-runtime-role")).toBe("client");
+        expect(meta(html, "openccx-runtime-role")).toBe("client");
       });
     } finally {
       removeTreeWithRetry(dist);

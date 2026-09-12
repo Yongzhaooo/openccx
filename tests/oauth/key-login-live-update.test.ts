@@ -8,14 +8,14 @@ import { KEY_LOGIN_PROVIDERS } from "../../src/oauth/key-providers";
 import { startServer } from "../../src/server";
 import { createLocalAttestationSecret } from "../../src/lib/local-management-attestation";
 import type { LocalProviderReloadResult } from "../../src/server/local-provider-reload-client";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { refreshUserCostOverlays } from "../../src/usage/user-cost-overlays";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { managementFetch as fetch } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
- * Regression: `ocx login <key-provider>` used to POST the unmerged preset row
+ * Regression: `occx login <key-provider>` used to POST the unmerged preset row
  * into a running proxy. The proxy then saved the replacement without the
  * preserved modelCosts overlay, undoing the just-written disk state until a
  * restart (the live row had no existingCosts to carry forward).
@@ -25,7 +25,7 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 let upstream: ReturnType<typeof Bun.serve> | undefined;
 
-function umansKeyConfig(baseUrl: string, port = 0): OcxConfig {
+function umansKeyConfig(baseUrl: string, port = 0): OccxConfig {
   return {
     port,
     hostname: "127.0.0.1",
@@ -38,14 +38,14 @@ function umansKeyConfig(baseUrl: string, port = 0): OcxConfig {
         apiKey: "sk-old",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-key-login-live-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-key-login-live-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-key-login-live-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-key-login-live-"));
+  process.env.OPENCCX_HOME = testDir;
   // Reload validates the provider destination before adopting disk state. Use an
   // owned literal address so this persistence regression cannot wait on public DNS.
   upstream = Bun.serve({
@@ -63,9 +63,9 @@ afterEach(async () => {
     upstream = undefined;
     // The overlay registry is module-level; reset it so rows added through the
     // live provider update path cannot leak into later tests in a shared run.
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     isolatedCodexHome?.restore();
     isolatedCodexHome = null;
     if (testDir) removeTreeWithRetry(testDir);
@@ -108,7 +108,7 @@ describe("CLI key-login live-update overlay preservation", () => {
       expect(merged.modelCosts).toEqual(edited.providers.umans!.modelCosts);
 
       // Reload treats disk as authoritative and never re-saves it.
-      const disk = JSON.parse(readFileSync(join(testDir, "config.json"), "utf-8")) as OcxConfig;
+      const disk = JSON.parse(readFileSync(join(testDir, "config.json"), "utf-8")) as OccxConfig;
       expect(disk.providers.umans!.modelCosts).toEqual(edited.providers.umans!.modelCosts);
       expect(disk.providers.umans!.apiKey).toBe("sk-rotated");
 

@@ -18,7 +18,7 @@ import {
 } from "../../src/clients/config-export";
 import { serializeDocument } from "../../src/integrations/serialize";
 import { readPath } from "../../src/integrations/state";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Activation coverage for the four clients added in WP1
@@ -31,14 +31,14 @@ const MODELS: ExportModel[] = [
   { namespaced: "mystery/model", provider: "mystery", id: "model" },
 ];
 
-const LOOPBACK: OcxConfig = {
+const LOOPBACK: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
-function ctx(config: OcxConfig = LOOPBACK): ExportContext {
+function ctx(config: OccxConfig = LOOPBACK): ExportContext {
   return { baseUrl: "http://127.0.0.1:10100/v1", models: MODELS, config };
 }
 
@@ -46,7 +46,7 @@ describe("no client config ever carries a credential", () => {
   // Assembled rather than written out: privacy:scan flags token-shaped literals,
   // and it is right to — a fixture is not a reason to commit one.
   const SENTINEL = ["sk", "live", "do", "not", "serialize", "me"].join("-");
-  const withKey = { ...LOOPBACK, apiKeys: [{ key: SENTINEL }] } as OcxConfig;
+  const withKey = { ...LOOPBACK, apiKeys: [{ key: SENTINEL }] } as OccxConfig;
 
   test.each(EXPORT_CLIENT_IDS)("%s emits a reference or a placeholder, never a key", clientId => {
     const spec = EXPORT_CLIENTS[clientId];
@@ -88,9 +88,9 @@ describe("hermes", () => {
     const loopback = buildClientConfig("hermes", ctx()) as HermesGeneratedConfig;
     expect(loopback.providers[OPENCODE_PROVIDER_ID]!.extra_headers).toBeUndefined();
 
-    const remote = buildClientConfig("hermes", ctx({ ...LOOPBACK, hostname: "0.0.0.0" } as OcxConfig)) as HermesGeneratedConfig;
+    const remote = buildClientConfig("hermes", ctx({ ...LOOPBACK, hostname: "0.0.0.0" } as OccxConfig)) as HermesGeneratedConfig;
     expect(remote.providers[OPENCODE_PROVIDER_ID]!.extra_headers).toEqual({
-      "x-opencodex-api-key": HERMES_API_KEY_ENV_REF,
+      "x-openccx-api-key": HERMES_API_KEY_ENV_REF,
     });
   });
 });
@@ -163,7 +163,7 @@ describe("contributions describe what a writer would own", () => {
       const document = buildClientConfig(clientId, ctx());
       for (const fragment of EXPORT_CLIENTS[clientId].buildContribution(ctx()).fragments) {
         // Read through the writer's own segment grammar: Raycast's path holds
-        // a `[id=opencodex]` selector into a sequence, not a map key.
+        // a `[id=openccx]` selector into a sequence, not a map key.
         expect(readPath(document, fragment.path)).toEqual(fragment.value);
       }
     }

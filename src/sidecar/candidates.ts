@@ -12,7 +12,7 @@
  * src/web-search/backends.ts. Both start from THIS set so the two sidecars
  * cannot diverge on what "visible" means.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { listManagementModelRows } from "../server/management/model-rows";
 import { modelAcceptsImageInput, type VisionCandidateModel } from "../vision/eligibility";
 import { sidecarAuthSlots, type SidecarAuthState } from "./auth";
@@ -33,7 +33,7 @@ export interface SidecarCandidate {
  * routes must not 500 and must keep the logged-in floor populated.
  */
 export async function pickerVisibleSidecarCandidates(
-  config: OcxConfig,
+  config: OccxConfig,
   auth: SidecarAuthState,
 ): Promise<SidecarCandidate[]> {
   let rows: Awaited<ReturnType<typeof listManagementModelRows>> = [];
@@ -67,7 +67,7 @@ export async function pickerVisibleSidecarCandidates(
  * no longer expands to the whole catalog.
  */
 export function visionSidecarCandidates(
-  config: Pick<OcxConfig, "providers">,
+  config: Pick<OccxConfig, "providers">,
   all: readonly SidecarCandidate[],
 ): SidecarCandidate[] {
   return all.filter(candidate => modelAcceptsImageInput(config, toVisionCandidate(candidate)) !== false);

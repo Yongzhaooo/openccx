@@ -19,7 +19,7 @@ import type { PersistedUsageEntry } from "../../src/usage/log";
 
 function log(overrides: Partial<RequestLogEntry>): RequestLogEntry {
   return {
-    requestId: "ocx-test",
+    requestId: "occx-test",
     timestamp: 1,
     model: "gpt-test",
     provider: "openai",

@@ -126,7 +126,7 @@ function validatePriorRecord(record: OwnershipRecord | null, configPath: string)
     || typeof record.opId !== "string" || typeof record.appliedAt !== "string"
     || !Array.isArray(record.fragmentPaths) || record.fragmentPaths.length !== 1
     || record.fragmentPaths[0]?.length !== 2 || record.fragmentPaths[0][0] !== "providers"
-    || record.fragmentPaths[0][1] !== "opencodex"
+    || record.fragmentPaths[0][1] !== "openccx"
     || (record.createdContainers !== undefined && (!Array.isArray(record.createdContainers)
       || !record.createdContainers.every(path => path === "providers")))) {
     throw new AsideProfileError("aside_operation_invalid", 409, "Aside operation ownership metadata is invalid");

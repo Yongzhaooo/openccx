@@ -14,8 +14,8 @@ import {
 } from "./runtime-api";
 
 const CLAUDE_USAGE = `Usage:
-  ocx claude config [status] [--json]
-  ocx claude config set [--enabled <on|off>] [--auth-mode <auto|proxy|subscription>]
+  occx claude config [status] [--json]
+  occx claude config set [--enabled <on|off>] [--auth-mode <auto|proxy|subscription>]
       [--system-env <on|off>] [--fast-mode <on|off>] [--auto-context <on|off>]
       [--compact-window <tokens|default>] [--inject-agents <on|off>]
       [--small-fast-model <id|->] [--model-map <from=to,from=to|->]
@@ -23,16 +23,16 @@ const CLAUDE_USAGE = `Usage:
       [--vision-model <id|->] [--vision-backend <openai|anthropic|->] [--json]`;
 
 const GROK_USAGE = `Usage:
-  ocx grok [status] [--json]
-  ocx grok <exclude|include|set> <model,model...> [--json]
-  ocx grok clear [--json]
-  ocx grok apply [--json]`;
+  occx grok [status] [--json]
+  occx grok <exclude|include|set> <model,model...> [--json]
+  occx grok clear [--json]
+  occx grok apply [--json]`;
 
 const CLIENT_USAGE = `Usage:
-  ocx integration client [status] [--client <id>] [--profile <id>] [--json]
-  ocx integration client <enable|disable> --client <id> [--profile <id>] [--overwrite-conflict] [--json]
-  ocx integration client history [--client <id>] [--profile <id>] [--json]
-  ocx integration client restore --op <opId> [--client aside --profile <id>] [--confirm-drift] [--json]
+  occx integration client [status] [--client <id>] [--profile <id>] [--json]
+  occx integration client <enable|disable> --client <id> [--profile <id>] [--overwrite-conflict] [--json]
+  occx integration client history [--client <id>] [--profile <id>] [--json]
+  occx integration client restore --op <opId> [--client aside --profile <id>] [--confirm-drift] [--json]
   --profile selects one Aside account-backed profile; omitted Aside toggles affect all profiles.`;
 
 function validateAsideProfile(profile: string | undefined, client: string | undefined): void {
@@ -314,22 +314,22 @@ export async function handleClientIntegrationCommand(
 export const INTEGRATION_USAGE = { claude: CLAUDE_USAGE, grok: GROK_USAGE, client: CLIENT_USAGE };
 
 const ZCODE_USAGE = `Usage:
-  ocx zcode [status] [--json]
-  ocx zcode <enable|disable> [--json]
-  ocx zcode history [--json]
-  ocx zcode restore --op <opId> [--confirm-drift] [--json]`;
+  occx zcode [status] [--json]
+  occx zcode <enable|disable> [--json]
+  occx zcode history [--json]
+  occx zcode restore --op <opId> [--confirm-drift] [--json]`;
 
 /**
  * Thin alias over the client-integration surface for ZCode (Z.ai's desktop
  * client). ZCode is a GUI app with no launch surface to wrap, so unlike
- * `ocx mcode` there is no exec step: connecting the managed provider block is
+ * `occx mcode` there is no exec step: connecting the managed provider block is
  * the whole integration, and every safety property (ownership, snapshots,
  * journal, drift refusal) stays behind the shared management API. ZCode reads
  * its config at startup, so enable/disable print a restart reminder.
  */
 export async function handleZcodeCommand(argv: string[], deps: RuntimeApiDeps = {}): Promise<number> {
   const args = [...argv];
-  // Find the first non-flag token so `ocx zcode --json enable` still enables.
+  // Find the first non-flag token so `occx zcode --json enable` still enables.
   const verbIndex = args.findIndex(arg => !arg.startsWith("-"));
   const action = (verbIndex === -1 ? "status" : args[verbIndex]).toLowerCase();
   const known = ["status", "show", "list", "enable", "disable", "history", "journal", "restore"];

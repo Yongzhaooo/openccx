@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { providerFetch, withUpstreamHttpVersion } from "../../src/server/responses/fetch-helpers";
 import { UpstreamHttpVersionTargetError } from "../../src/lib/upstream-http-version";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 const HTTPS_URL = "https://opencode.ai/zen/go/v1/chat/completions";
 const HTTP_URL = "http://127.0.0.1:10900/zen/go/v1/chat/completions";
 
-// OcxProviderConfig has no fetch member; the stub fetch used by the propagation
+// OccxProviderConfig has no fetch member; the stub fetch used by the propagation
 // tests is a test-only transport override, so the helper needs an intersection.
-type TestProvider = OcxProviderConfig & { fetch?: typeof globalThis.fetch };
+type TestProvider = OccxProviderConfig & { fetch?: typeof globalThis.fetch };
 
 function provider(overrides: Partial<TestProvider> = {}): TestProvider {
   return {

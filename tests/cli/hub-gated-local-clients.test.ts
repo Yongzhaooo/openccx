@@ -5,10 +5,10 @@
  * unauthenticated loopback listener is on. The gate is fine; the reporting was not. Every
  * caller printed the *toggle's* message, so on a hub with `clientIntegrations` absent:
  *
- *  - `ocx sync` said "Codex integration is OFF" about a switch the operator never set,
- *  - `ocx restore back` committed ON and then told the operator to "retry after the competing
+ *  - `occx sync` said "Codex integration is OFF" about a switch the operator never set,
+ *  - `occx restore back` committed ON and then told the operator to "retry after the competing
  *    integration change finishes" — there was no competing writer,
- *  - `ocx ensure` removed the managed Grok block as if Grok had been switched off.
+ *  - `occx ensure` removed the managed Grok block as if Grok had been switched off.
  *
  * These tests pin the distinct reason and its sentence at each of those boundaries.
  */
@@ -27,12 +27,12 @@ import {
 } from "../../src/codex/desired-state";
 import { saveConfig } from "../../src/config";
 import type { GrokInjectResult } from "../../src/grok/inject";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const PHANTOM_CONFLICT = "Retry after the competing integration change finishes";
 
-function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function hubConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10_100,
     hostname: "100.76.170.81",
@@ -41,7 +41,7 @@ function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     defaultProvider: "openai",
     checkForUpdates: false,
     ...overrides,
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("the hub gate has its own reason and its own sentence", () => {
@@ -99,15 +99,15 @@ describe("the hub gate has its own reason and its own sentence", () => {
   });
 });
 
-describe("ocx ensure does not strip a Grok block the operator still wants", () => {
-  function harness(config: OcxConfig) {
+describe("occx ensure does not strip a Grok block the operator still wants", () => {
+  function harness(config: OccxConfig) {
     const actions: Array<"strip" | "sync"> = [];
     const logs: string[] = [];
     const deps: EnsureDesiredIntegrationsDeps = {
       loadConfig: () => config,
       stripGrokConfig: () => {
         actions.push("strip");
-        return { ok: true, changed: true, message: "Removed the opencodex managed block from Grok config." } as GrokInjectResult;
+        return { ok: true, changed: true, message: "Removed the openccx managed block from Grok config." } as GrokInjectResult;
       },
       syncGrokConfig: async () => {
         actions.push("sync");
@@ -122,7 +122,7 @@ describe("ocx ensure does not strip a Grok block the operator still wants", () =
 
   test("a hub-gated skip leaves ~/.grok/config.toml untouched and says why", async () => {
     // The operator never turned Grok off. Deleting their fence and reporting it as the toggle
-    // working is the defect: it destroys a working config on every `ocx ensure`.
+    // working is the defect: it destroys a working config on every `occx ensure`.
     const h = harness(hubConfig());
     await ensureGrokFenceMatchesDesired(10_100, {}, h.deps);
     expect(h.actions).toEqual([]);
@@ -153,7 +153,7 @@ describe("ocx ensure does not strip a Grok block the operator still wants", () =
 
 describe("CLI output on a hub-gated host", () => {
   /**
-   * `tests/preload.ts` sandboxes HOME/OPENCODEX_HOME, but these cases PERSIST a hub config and
+   * `tests/preload.ts` sandboxes HOME/OPENCCX_HOME, but these cases PERSIST a hub config and
    * `restore back` mutates it (`setIntegrationEnabled`), so each gets its own home rather than
    * leaving a hub role behind for the next test in the shard.
    */
@@ -162,13 +162,13 @@ describe("CLI output on a hub-gated host", () => {
     args: string[],
     extraDeps: Partial<CliDispatchDeps> = {},
   ): Promise<{ code: number; out: string[]; err: string[] }> {
-    const home = mkdtempSync(join(tmpdir(), "ocx-hub-gated-"));
-    const previous = process.env.OPENCODEX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-hub-gated-"));
+    const previous = process.env.OPENCCX_HOME;
     const out: string[] = [];
     const err: string[] = [];
     const log = console.log;
     const error = console.error;
-    process.env.OPENCODEX_HOME = home;
+    process.env.OPENCCX_HOME = home;
     console.log = (...values: unknown[]) => { out.push(values.join(" ")); };
     console.error = (...values: unknown[]) => { err.push(values.join(" ")); };
     try {
@@ -182,8 +182,8 @@ describe("CLI output on a hub-gated host", () => {
     } finally {
       console.log = log;
       console.error = error;
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   }
@@ -215,9 +215,9 @@ describe("CLI output on a hub-gated host", () => {
     // Through `syncModelsToCodex` rather than the `sync` runner: the runner's own output is a
     // pass-through of these two fields, and reaching it for real would drag in the native
     // ownership probe (a launchctl/systemd call) this assertion has nothing to do with.
-    const home = mkdtempSync(join(tmpdir(), "ocx-hub-gated-sync-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-hub-gated-sync-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       saveConfig(hubConfig());
       const { syncModelsToCodex } = await import("../../src/codex/sync");
@@ -230,8 +230,8 @@ describe("CLI output on a hub-gated host", () => {
       expect(result.ok).toBe(true);
       expect(result.catalogWritten).toBe(false);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });

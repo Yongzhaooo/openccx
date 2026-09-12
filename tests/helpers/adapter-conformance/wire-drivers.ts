@@ -17,16 +17,16 @@ import {
 import { prepareCursorRunRequest } from "../../../src/adapters/cursor/protobuf-request";
 import { createCursorRequest } from "../../../src/adapters/cursor/request-builder";
 import { encodeMessage } from "../../../src/lib/eventstream-decoder";
-import type { OcxParsedRequest } from "../../../src/types";
+import type { OccxParsedRequest } from "../../../src/types";
 import { withTestTranslatorBudget } from "../translator-budget";
 
 export interface ToolWireDriver {
-  observeOutbound(adapter: ProviderAdapter, parsed: OcxParsedRequest): Promise<string>;
+  observeOutbound(adapter: ProviderAdapter, parsed: OccxParsedRequest): Promise<string>;
   extractWireToolName?(body: string, canonicalName: string): string;
   streamingToolCall?(wireName: string, wrappedArguments: string): Response;
 }
 
-async function observeHttpOutbound(adapter: ProviderAdapter, parsed: OcxParsedRequest): Promise<string> {
+async function observeHttpOutbound(adapter: ProviderAdapter, parsed: OccxParsedRequest): Promise<string> {
   const testAdapter = withTestTranslatorBudget(adapter);
   const request = await testAdapter.buildRequest(parsed);
   try {

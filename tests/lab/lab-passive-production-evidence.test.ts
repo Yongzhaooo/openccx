@@ -17,7 +17,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 function usageEntryWithAttempt(attempt: Record<string, unknown>): PersistedUsageEntry {
   return {
-    requestId: "ocx-cl09-passive",
+    requestId: "occx-cl09-passive",
     timestamp: 1,
     provider: "combo",
     model: "combo/test",
@@ -100,7 +100,7 @@ describe("CL-09 bounded passive production projection", () => {
       schemaVersion: 1,
       subjectId,
       source: "production_usage_v1",
-      requestRef: "ocx-cl09-passive",
+      requestRef: "occx-cl09-passive",
       attemptOrdinal: 1,
       observedAt: 1234,
       outcome: "success",
@@ -131,7 +131,7 @@ describe("CL-09 bounded passive production projection", () => {
       status: 429,
       errorCode: "rate_limit_error",
     });
-    environmental.requestId = "ocx-cl09-environmental";
+    environmental.requestId = "occx-cl09-environmental";
     environmental.status = 429;
 
     const routeError = usageEntryWithAttempt({
@@ -139,7 +139,7 @@ describe("CL-09 bounded passive production projection", () => {
       status: 502,
       errorCode: "upstream_error",
     });
-    routeError.requestId = "ocx-cl09-route-error";
+    routeError.requestId = "occx-cl09-route-error";
     routeError.status = 502;
 
     const result = derivePassiveProductionSignals([cancelled, environmental, routeError], subjectId);
@@ -156,7 +156,7 @@ describe("CL-09 bounded passive production projection", () => {
     const subjectId = "5".repeat(64);
     const entries = Array.from({ length: 3 }, (_, index) => {
       const entry = usageEntryWithAttempt({ labRouteSubjectId: subjectId });
-      entry.requestId = `ocx-cl09-limit-${index}`;
+      entry.requestId = `occx-cl09-limit-${index}`;
       entry.timestamp = index;
       return entry;
     });
@@ -166,7 +166,7 @@ describe("CL-09 bounded passive production projection", () => {
   });
 
   test("uses the selected config directory and detects scan overflow", () => {
-    const configDir = mkdtempSync(join(tmpdir(), "ocx-cl09-passive-"));
+    const configDir = mkdtempSync(join(tmpdir(), "occx-cl09-passive-"));
     try {
       const subjectId = "6".repeat(64);
       const otherSubjectId = "7".repeat(64);
@@ -174,7 +174,7 @@ describe("CL-09 bounded passive production projection", () => {
         const entry = usageEntryWithAttempt({
           labRouteSubjectId: index === PASSIVE_PRODUCTION_MAX_SCAN_ROWS ? subjectId : otherSubjectId,
         });
-        entry.requestId = `ocx-cl09-config-${index}`;
+        entry.requestId = `occx-cl09-config-${index}`;
         entry.timestamp = index;
         return entry;
       });
@@ -185,7 +185,7 @@ describe("CL-09 bounded passive production projection", () => {
       expect(result.signals).toHaveLength(1);
       expect(result.scannedRows).toBe(PASSIVE_PRODUCTION_MAX_SCAN_ROWS);
       expect(result.truncated).toBe(true);
-      expect(result.signals[0]?.requestRef).toBe(`ocx-cl09-config-${PASSIVE_PRODUCTION_MAX_SCAN_ROWS}`);
+      expect(result.signals[0]?.requestRef).toBe(`occx-cl09-config-${PASSIVE_PRODUCTION_MAX_SCAN_ROWS}`);
     } finally {
       removeTreeWithRetry(configDir);
     }
@@ -219,7 +219,7 @@ describe("CL-09 bounded passive production projection", () => {
 
     expect(result.signals).toHaveLength(1);
     expect(result.signals[0]?.subjectId).toBe(subjectA);
-    expect(result.signals[0]?.requestRef).toBe("ocx-cl09-passive");
+    expect(result.signals[0]?.requestRef).toBe("occx-cl09-passive");
   });
 
   test("keeps fallback attempts attributable to the exact route that executed them", () => {

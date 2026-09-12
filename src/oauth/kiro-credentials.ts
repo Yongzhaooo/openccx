@@ -5,9 +5,9 @@ import { isAbsolute, join, posix, win32 } from "node:path";
 import { Database } from "bun:sqlite";
 
 const DEFAULT_EXPIRES_MS = 3600_000;
-const KIRO_CLI_RECOVERY_SUFFIX = ".opencodex-recovery";
-const KIRO_CLI_RECOVERY_HEADER_V1 = Buffer.from("opencodex-kiro-session-v1\n", "utf8");
-const KIRO_CLI_RECOVERY_HEADER = Buffer.from("opencodex-kiro-session-v2\n", "utf8");
+const KIRO_CLI_RECOVERY_SUFFIX = ".openccx-recovery";
+const KIRO_CLI_RECOVERY_HEADER_V1 = Buffer.from("openccx-kiro-session-v1\n", "utf8");
+const KIRO_CLI_RECOVERY_HEADER = Buffer.from("openccx-kiro-session-v2\n", "utf8");
 const KIRO_CLI_RECOVERY_PROCESS_INSTANCE = randomUUID();
 const KIRO_CLI_RECOVERY_PROCESS_INSTANCE_PATTERN = /^[A-Za-z0-9._-]{1,128}$/;
 const SQLITE_DATABASE_HEADER = Buffer.from("SQLite format 3\0", "binary");
@@ -97,7 +97,7 @@ function parseExpires(value: unknown, present: boolean, hasRefreshToken: boolean
   }
   if (present) {
     console.warn(
-      `[ocx:kiro:credentials] credential expiry is present but unparseable; ${
+      `[occx:kiro:credentials] credential expiry is present but unparseable; ${
         hasRefreshToken ? "treating credential as expired" : "using the default TTL because no refresh token is available"
       }`,
     );
@@ -639,8 +639,8 @@ function isKiroRecoveryOwnerAlive(ownerPid: number, ownerProcessInstance?: strin
 /** Restore a previously captured CLI database after every kiro-cli child process has exited. */
 export function restoreKiroCliSession(snapshot: KiroCliSessionSnapshot): void {
   const nonce = `${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}`;
-  const staged = `${snapshot.path}.ocx-restore.${nonce}.tmp`;
-  const displacedBase = `${snapshot.path}.ocx-restore.${nonce}.new`;
+  const staged = `${snapshot.path}.occx-restore.${nonce}.tmp`;
+  const displacedBase = `${snapshot.path}.occx-restore.${nonce}.new`;
   const displaced: Array<{ current: string; backup: string }> = [];
   let published = false;
   try {

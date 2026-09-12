@@ -7,7 +7,7 @@ import { loadConfig, saveConfig } from "../../src/config";
 import { startServer as startServerImpl } from "../../src/server";
 import { writeDesktop3pConfig, removeDesktop3pStandardPivot } from "../../src/claude/desktop-3p";
 import * as systemEnv from "../../src/server/system-env";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { MANAGEMENT_JSON_BODY_MAX_BYTES } from "../../src/server/management/body";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -36,32 +36,32 @@ function startServer(port?: number, deps: NonNullable<Parameters<typeof startSer
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
-  previousDesktopConfigDir = process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-claude-mgmt-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-claude-mgmt-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousDesktopConfigDir = process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  isolatedCodexHome = installIsolatedCodexHome("occx-claude-mgmt-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-claude-mgmt-"));
+  process.env.OPENCCX_HOME = testDir;
   // These API tests intentionally toggle agent injection off. Never let that
   // prune the developer's real ~/.claude/agents directory.
   process.env.CLAUDE_CONFIG_DIR = join(testDir, "claude");
-  process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = join(testDir, "claude-desktop");
+  process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = join(testDir, "claude-desktop");
   saveConfig({
     port: 0,
     defaultProvider: "mock",
     providers: {
       mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1:1/v1", apiKey: "k", allowPrivateNetwork: true, liveModels: false, models: ["test-model"] },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousClaudeConfigDir === undefined) delete process.env.CLAUDE_CONFIG_DIR;
   else process.env.CLAUDE_CONFIG_DIR = previousClaudeConfigDir;
-  if (previousDesktopConfigDir === undefined) delete process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR;
-  else process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopConfigDir;
+  if (previousDesktopConfigDir === undefined) delete process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR;
+  else process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR = previousDesktopConfigDir;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -79,7 +79,7 @@ test("GET /api/claude-code returns defaults + available + aliases", async () => 
     expect(d.modelMap).toEqual({});
     expect(d.available).toContain("mock/test-model");
     // Aliases preview uses the readable CLI-surface family (devlog 050 / audit 051 #2).
-    expect(d.aliases.some((a: { id: string }) => a.id === "claude-ocx-mock--test-model")).toBe(true);
+    expect(d.aliases.some((a: { id: string }) => a.id === "claude-occx-mock--test-model")).toBe(true);
     expect(typeof d.port).toBe("number");
   } finally {
     await server.stop(true);
@@ -472,7 +472,7 @@ test("PUT immediately restores generated agents after re-enable and roster chang
       body: JSON.stringify({ injectAgents: true }),
     });
     expect(enable.status).toBe(200);
-    expect(readdirSync(agentsDir).some(name => name === "ocx-gpt-5-6-sol.md")).toBe(true);
+    expect(readdirSync(agentsDir).some(name => name === "occx-gpt-5-6-sol.md")).toBe(true);
 
     const disable = await fetch(new URL("/api/claude-code", server.url), {
       method: "PUT",
@@ -488,7 +488,7 @@ test("PUT immediately restores generated agents after re-enable and roster chang
       body: JSON.stringify({ injectAgents: true }),
     });
     expect(reenable.status).toBe(200);
-    expect(readdirSync(agentsDir).some(name => name === "ocx-gpt-5-6-sol.md")).toBe(true);
+    expect(readdirSync(agentsDir).some(name => name === "occx-gpt-5-6-sol.md")).toBe(true);
 
     const roster = await fetch(new URL("/api/subagent-models", server.url), {
       method: "PUT",
@@ -496,7 +496,7 @@ test("PUT immediately restores generated agents after re-enable and roster chang
       body: JSON.stringify({ models: ["gpt-5.6-terra"] }),
     });
     expect(roster.status).toBe(200);
-    expect(readdirSync(agentsDir)).toEqual(["ocx-gpt-5-6-terra.md"]);
+    expect(readdirSync(agentsDir)).toEqual(["occx-gpt-5-6-terra.md"]);
   } finally {
     await server.stop(true);
   }
@@ -668,7 +668,7 @@ test("GET /api/claude-code reports Auto-connect unsupported outside Darwin", asy
   saveConfig({
     ...loadConfig(),
     claudeCode: { systemEnv: true },
-  } as OcxConfig);
+  } as OccxConfig);
   const server = startServer(0, { managementApi: { platform: "linux" } });
   try {
     const r = await fetch(new URL("/api/claude-code", server.url));
@@ -711,7 +711,7 @@ test("Claude Desktop profile GET, PUT and apply round-trip four-family assignmen
     expect(apply.status).toBe(200);
     const result = await apply.json() as { path: string; applied: boolean };
     expect(result.applied).toBe(true);
-    expect(result.path.startsWith(process.env.OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR!)).toBe(true);
+    expect(result.path.startsWith(process.env.OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR!)).toBe(true);
     const appliedConfig = JSON.parse(readFileSync(result.path, "utf8")) as { inferenceGatewayBaseUrl: string };
     expect(appliedConfig.inferenceGatewayBaseUrl).toBe(new URL(server.url).origin);
   } finally {

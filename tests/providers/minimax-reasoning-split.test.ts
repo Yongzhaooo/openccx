@@ -3,11 +3,11 @@ import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
 import { createTranslatorBudget } from "../../src/lib/translator-budget";
 import { enrichProviderFromRegistry } from "../../src/providers/derive";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
-type ReasoningEffort = OcxParsedRequest["options"]["reasoning"];
+type ReasoningEffort = OccxParsedRequest["options"]["reasoning"];
 
-function parsed(modelId: string, reasoning?: ReasoningEffort): OcxParsedRequest {
+function parsed(modelId: string, reasoning?: ReasoningEffort): OccxParsedRequest {
   return {
     modelId,
     context: { messages: [{ role: "user", content: "ping", timestamp: 0 }] },
@@ -16,19 +16,19 @@ function parsed(modelId: string, reasoning?: ReasoningEffort): OcxParsedRequest 
   };
 }
 
-function body(provider: OcxProviderConfig, modelId: string, reasoning?: ReasoningEffort): Record<string, unknown> {
+function body(provider: OccxProviderConfig, modelId: string, reasoning?: ReasoningEffort): Record<string, unknown> {
   const request = createOpenAIChatAdapter(provider).buildRequest(parsed(modelId, reasoning));
   return JSON.parse(request.body as string) as Record<string, unknown>;
 }
 
-function adapterFor(provider: OcxProviderConfig, modelId: string) {
+function adapterFor(provider: OccxProviderConfig, modelId: string) {
   const adapter = createOpenAIChatAdapter(provider);
   adapter.buildRequest(parsed(modelId));
   return adapter;
 }
 
-function minimaxRoute(modelId = "MiniMax-M3", provider: Partial<OcxProviderConfig> = {}) {
-  const config: OcxConfig = {
+function minimaxRoute(modelId = "MiniMax-M3", provider: Partial<OccxProviderConfig> = {}) {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "minimax",
     providers: {
@@ -121,7 +121,7 @@ describe("MiniMax split reasoning", () => {
   });
 
   test("registry enrichment never replaces explicit split-reasoning fields", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://api.minimax.io/v1",
       reasoningSplitModels: ["only-user-model"],
@@ -137,7 +137,7 @@ describe("MiniMax split reasoning", () => {
   });
 
   test("unconfigured OpenAI-compatible providers remain unchanged", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
     };
@@ -203,7 +203,7 @@ describe("MiniMax split reasoning", () => {
   });
 
   test("providers without reasoning_details opt-in keep ignoring the array", async () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
     };
@@ -229,7 +229,7 @@ describe("MiniMax split reasoning", () => {
   });
 
   test("a non-matching model on an opted-in provider ignores reasoning_details", async () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/v1",
       reasoningDetailsModels: ["MiniMax-M3"],

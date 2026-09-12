@@ -1,11 +1,11 @@
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { routedSlug } from "./slug-codec";
 
 export const MODEL_REMOVAL_GRACE_FETCHES = 3;
 export const MAX_KNOWN_MODELS_PER_PROVIDER = 2_000;
 export const MAX_RECENT_ARRIVALS_PER_PROVIDER = 50;
 
-export type KnownModelBaseline = NonNullable<NonNullable<OcxConfig["modelDiscovery"]>["knownModels"]>[string];
+export type KnownModelBaseline = NonNullable<NonNullable<OccxConfig["modelDiscovery"]>["knownModels"]>[string];
 export type NewModelPolicy = "on" | "off";
 
 export interface NewModelPolicyResult {
@@ -87,7 +87,7 @@ export function applyNewModelPolicy(options: {
   };
 }
 
-export function effectiveNewModelPolicy(config: OcxConfig, provider: string): NewModelPolicy {
+export function effectiveNewModelPolicy(config: OccxConfig, provider: string): NewModelPolicy {
   const local = config.providers[provider]?.newModelPolicy;
   if (local === "on" || local === "off") return local;
   return config.modelDiscovery?.newModelPolicy ?? "on";
@@ -95,7 +95,7 @@ export function effectiveNewModelPolicy(config: OcxConfig, provider: string): Ne
 
 /** Apply authoritative provider rows to a mutable convergence copy; degraded providers are omitted. */
 export function reconcileSuccessfulModelDiscoveries(options: {
-  config: OcxConfig;
+  config: OccxConfig;
   models: Iterable<{ provider: string; id: string; custom?: boolean }>;
   authoritativeProviders: Iterable<string>;
   now: string;

@@ -11,7 +11,7 @@ import {
   MIMO_CHAT_URL,
   createMimoFreeAdapter,
 } from "../../src/adapters/mimo-free";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,9 +19,9 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 for (const phase of ["bootstrap", "chat", "401-replay"] as const) test.each([307, 308])(`MiMo ${phase} never follows %i`, async status => {
   const nativeFetch = globalThis.fetch;
-  const previousHome = process.env.OPENCODEX_HOME;
-  const testHome = mkdtempSync(join(tmpdir(), "ocx-mimo-redirect-"));
-  process.env.OPENCODEX_HOME = testHome;
+  const previousHome = process.env.OPENCCX_HOME;
+  const testHome = mkdtempSync(join(tmpdir(), "occx-mimo-redirect-"));
+  process.env.OPENCCX_HOME = testHome;
   resetMimoClientIdCache();
   resetMimoJwtCache();
   let targetHits = 0;
@@ -63,15 +63,15 @@ for (const phase of ["bootstrap", "chat", "401-replay"] as const) test.each([307
     await response?.body?.cancel();
     await origin.stop(true);
     await target.stop(true);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     resetMimoClientIdCache();
     resetMimoJwtCache();
     removeTreeWithRetry(testHome);
   }
 });
 
-function minimalRequest(model = "mimo-auto"): OcxParsedRequest {
+function minimalRequest(model = "mimo-auto"): OccxParsedRequest {
   return {
     modelId: model,
     stream: false,
@@ -152,10 +152,10 @@ describe("mimo-free client id", () => {
   const { tmpdir } = require("node:os") as typeof import("node:os");
   const { join: joinPath } = require("node:path") as typeof import("node:path");
 
-  test("random UUID persisted under OPENCODEX_HOME and stable across cache resets", () => {
-    const home = mkdtempSync(joinPath(tmpdir(), "ocx-mimo-id-"));
-    const prevHome = process.env["OPENCODEX_HOME"];
-    process.env["OPENCODEX_HOME"] = home;
+  test("random UUID persisted under OPENCCX_HOME and stable across cache resets", () => {
+    const home = mkdtempSync(joinPath(tmpdir(), "occx-mimo-id-"));
+    const prevHome = process.env["OPENCCX_HOME"];
+    process.env["OPENCCX_HOME"] = home;
     resetMimoClientIdCache();
     try {
       const id1 = getMimoClientId();
@@ -169,28 +169,28 @@ describe("mimo-free client id", () => {
       resetMimoClientIdCache();
       expect(getMimoClientId()).toBe(id1);
     } finally {
-      if (prevHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = prevHome;
+      if (prevHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = prevHome;
       resetMimoClientIdCache();
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("client id is not derived from machine attributes (two homes differ)", () => {
-    const homeA = mkdtempSync(joinPath(tmpdir(), "ocx-mimo-a-"));
-    const homeB = mkdtempSync(joinPath(tmpdir(), "ocx-mimo-b-"));
-    const prevHome = process.env["OPENCODEX_HOME"];
+    const homeA = mkdtempSync(joinPath(tmpdir(), "occx-mimo-a-"));
+    const homeB = mkdtempSync(joinPath(tmpdir(), "occx-mimo-b-"));
+    const prevHome = process.env["OPENCCX_HOME"];
     try {
-      process.env["OPENCODEX_HOME"] = homeA;
+      process.env["OPENCCX_HOME"] = homeA;
       resetMimoClientIdCache();
       const idA = getMimoClientId();
-      process.env["OPENCODEX_HOME"] = homeB;
+      process.env["OPENCCX_HOME"] = homeB;
       resetMimoClientIdCache();
       const idB = getMimoClientId();
       expect(idA).not.toBe(idB);
     } finally {
-      if (prevHome === undefined) delete process.env["OPENCODEX_HOME"];
-      else process.env["OPENCODEX_HOME"] = prevHome;
+      if (prevHome === undefined) delete process.env["OPENCCX_HOME"];
+      else process.env["OPENCCX_HOME"] = prevHome;
       resetMimoClientIdCache();
       rmSync(homeA, { recursive: true, force: true });
       rmSync(homeB, { recursive: true, force: true });
@@ -315,7 +315,7 @@ describe("mimo-free auth retry predicate", () => {
   });
 
   function adapterForRetry(): ReturnType<typeof createMimoFreeAdapter> {
-    const provider: OcxProviderConfig = providerConfigSeed(PROVIDER_REGISTRY.find(e => e.id === "mimo-free")!);
+    const provider: OccxProviderConfig = providerConfigSeed(PROVIDER_REGISTRY.find(e => e.id === "mimo-free")!);
     return createMimoFreeAdapter(provider);
   }
 
@@ -382,7 +382,7 @@ describe("mimo-free adapter request building", () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = mock(async () => new Response(JSON.stringify({ jwt: fakeJwt }), { status: 200 }));
     try {
-      const provider: OcxProviderConfig = providerConfigSeed(PROVIDER_REGISTRY.find(e => e.id === "mimo-free")!);
+      const provider: OccxProviderConfig = providerConfigSeed(PROVIDER_REGISTRY.find(e => e.id === "mimo-free")!);
       const adapter = createMimoFreeAdapter(provider);
       const parsed = minimalRequest();
       parsed.options.reasoning = "high";

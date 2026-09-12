@@ -367,7 +367,7 @@ export function forgetLastObservedWindows(scope: string, accountTag?: string): v
   if (removed) schedulePersist();
 }
 
-/** Test-only: forget in-memory state so the next call re-reads OPENCODEX_HOME. */
+/** Test-only: forget in-memory state so the next call re-reads OPENCCX_HOME. */
 export function resetQuotaResetStoreForTests(): void {
   claims.clear();
   ring = [];

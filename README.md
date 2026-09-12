@@ -11,7 +11,7 @@ Two commands, and every one of them runs any LLM you point it at.</p>
 
 ```bash
 npm install -g @bitkyc08/opencodex
-ocx start
+occx start
 ```
 
 <table>
@@ -24,7 +24,7 @@ The picker is stock Claude Code. The brain behind it isn't.
 
 </td>
 <td width="50%">
-  <img src="assets/claude-code-models.gif" alt="Claude Code running a routed model through opencodex — the status bar shows gpt-5.6-luna-medium as the active model" width="100%">
+  <img src="assets/claude-code-models.gif" alt="Claude Code running a routed model through openccx — the status bar shows gpt-5.6-luna-medium as the active model" width="100%">
 </td>
 </tr>
 <tr>
@@ -36,7 +36,7 @@ Pick a provider and go — same workflow, different brain.
 
 </td>
 <td width="50%">
-  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/demo.gif" alt="opencodex demo — running a task in the Codex app on a routed non-OpenAI model" width="100%">
+  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/demo.gif" alt="openccx demo — running a task in the Codex app on a routed non-OpenAI model" width="100%">
 </td>
 </tr>
 <tr>
@@ -48,7 +48,7 @@ Opus answers, then hands the task to a GPT-5.6 Sol subagent.
 
 </td>
 <td width="50%">
-  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/claude-desktop-subagent.gif" alt="Claude Desktop answering as Claude Opus 4.8, then dispatching a GPT-5.6 Sol subagent through opencodex" width="100%">
+  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/claude-desktop-subagent.gif" alt="Claude Desktop answering as Claude Opus 4.8, then dispatching a GPT-5.6 Sol subagent through openccx" width="100%">
 </td>
 </tr>
 <tr>
@@ -60,7 +60,7 @@ Sol drives the session and calls a Kimi K3 subagent.
 
 </td>
 <td width="50%">
-  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/grok-build-subagent.gif" alt="Grok Build running GPT-5.6 Sol through opencodex and calling a Kimi K3 subagent" width="100%">
+  <img src="https://raw.githubusercontent.com/lidge-jun/opencodex/main/assets/grok-build-subagent.gif" alt="Grok Build running GPT-5.6 Sol through openccx and calling a Kimi K3 subagent" width="100%">
 </td>
 </tr>
 </table>
@@ -69,7 +69,7 @@ Sol drives the session and calls a Kimi K3 subagent.
   <a href="README.md">English</a> · <a href="readme/README.fr.md">Français</a> · <a href="readme/README.ko.md">한국어</a> · <a href="readme/README.zh-CN.md">简体中文</a> · <a href="readme/README.zh-TW.md">繁體中文</a> · <a href="readme/README.ru.md">Русский</a> · <a href="readme/README.ja.md">日本語</a> · <a href="readme/README.tr.md">Türkçe</a> · 📖 <a href="https://opencodex.me/"><b>Full documentation →</b></a>
 </p>
 
-opencodex is a lightweight local proxy that translates Codex's Responses API into whatever your
+openccx is a lightweight local proxy that translates Codex's Responses API into whatever your
 provider speaks — streaming, tool calls, reasoning tokens, images, in both directions. Use Claude,
 Gemini, Grok, GLM, DeepSeek, Kimi, Qwen, Ollama, or any other LLM with Codex, Claude Code, Claude
 Desktop, and Grok Build. It can also manage a **ChatGPT account pool** for Codex auth: add accounts,
@@ -82,13 +82,13 @@ account while existing threads stay pinned to the account that started them.
 
 ```bash
 npm install -g @bitkyc08/opencodex   # Node 18+; the Bun runtime is bundled automatically
-ocx start                         # proxy + dashboard on localhost:10100
+occx start                         # proxy + dashboard on localhost:10100
 ```
 
-Use `ocx service` to run it in the background.
+Use `occx service` to run it in the background.
 
 Open **http://localhost:10100** and configure everything in the web dashboard — add providers
-(40+ built-ins, or any OpenAI-compatible endpoint), pick models, manage accounts. `ocx gui`
+(40+ built-ins, or any OpenAI-compatible endpoint), pick models, manage accounts. `occx gui`
 re-opens the dashboard at any time.
 It can also manage a **ChatGPT account pool** for Codex auth. Add multiple ChatGPT / Codex accounts,
 refresh their 5h / weekly / 30d quota in the dashboard. Under quota routing, new sessions can use
@@ -101,7 +101,7 @@ once the others are drained.
 
 ### Sponsors
 
-Sponsors keep opencodex maintained across every upstream protocol change. Interested?
+Sponsors keep openccx maintained across every upstream protocol change. Interested?
 See [SPONSORS.md](./SPONSORS.md).
 
 <!-- sponsors:main — one banner, model developers only; empty until a Main sponsor signs -->
@@ -110,12 +110,12 @@ See [SPONSORS.md](./SPONSORS.md).
 <table>
 <tbody>
 <tr>
-<td width="180"><a href="https://www.orcarouter.ai/?utm_source=opencodex&utm_medium=readme"><img src="assets/sponsors/orcarouter.png" alt="OrcaRouter" width="150"></a></td>
-<td>Thanks to <a href="https://www.orcarouter.ai/?utm_source=opencodex&utm_medium=readme">OrcaRouter</a> for sponsoring this project! OrcaRouter is one OpenAI-compatible AI gateway for production AI: adaptive routing that grades every prompt and sends it to the model that clears your bar, automatic failover, routing rules as code, zero-markup provider pricing with prompt caching, and guardrails, an agent firewall, and request logs on every call across 200+ models. Pick <code>OrcaRouter</code> in the Add provider picker or run <code>ocx provider add orcarouter</code>; <code>orcarouter/auto</code> is the adaptive router.</td>
+<td width="180"><a href="https://www.orcarouter.ai/?utm_source=openccx&utm_medium=readme"><img src="assets/sponsors/orcarouter.png" alt="OrcaRouter" width="150"></a></td>
+<td>Thanks to <a href="https://www.orcarouter.ai/?utm_source=openccx&utm_medium=readme">OrcaRouter</a> for sponsoring this project! OrcaRouter is one OpenAI-compatible AI gateway for production AI: adaptive routing that grades every prompt and sends it to the model that clears your bar, automatic failover, routing rules as code, zero-markup provider pricing with prompt caching, and guardrails, an agent firewall, and request logs on every call across 200+ models. Pick <code>OrcaRouter</code> in the Add provider picker or run <code>occx provider add orcarouter</code>; <code>orcarouter/auto</code> is the adaptive router.</td>
 </tr>
 <tr>
 <td width="180"><a href="https://www.packyapi.com/register?aff=k5KT"><img src="assets/sponsors/packycode.png" alt="PackyCode" width="150"></a></td>
-<td>Thanks to <a href="https://www.packyapi.com/register?aff=k5KT">PackyCode</a> for sponsoring this project! PackyCode is a stable, high-performance API relay provider, offering relay services for Claude Code, Codex, Gemini, and more. With automatic failover, smart routing, and unlimited concurrency, it turns AI into a real productivity tool. <a href="https://www.packyapi.com/register?aff=k5KT">Register via this link</a> and get started! Pick <code>PackyCode</code> in the Add provider picker or run <code>ocx provider add packycode</code>.<br><sub>PackyCode 是一家稳定、高效的 API 中转服务商，提供 Claude Code、Codex、Gemini 等多种中转服务。具备自动故障转移、智能路由和无限并发等多种功能，让 AI 编程成为真正的生产力工具。<a href="https://www.packyapi.com/register?aff=k5KT">点此链接注册</a>，立即开始使用！</sub></td>
+<td>Thanks to <a href="https://www.packyapi.com/register?aff=k5KT">PackyCode</a> for sponsoring this project! PackyCode is a stable, high-performance API relay provider, offering relay services for Claude Code, Codex, Gemini, and more. With automatic failover, smart routing, and unlimited concurrency, it turns AI into a real productivity tool. <a href="https://www.packyapi.com/register?aff=k5KT">Register via this link</a> and get started! Pick <code>PackyCode</code> in the Add provider picker or run <code>occx provider add packycode</code>.<br><sub>PackyCode 是一家稳定、高效的 API 中转服务商，提供 Claude Code、Codex、Gemini 等多种中转服务。具备自动故障转移、智能路由和无限并发等多种功能，让 AI 编程成为真正的生产力工具。<a href="https://www.packyapi.com/register?aff=k5KT">点此链接注册</a>，立即开始使用！</sub></td>
 </tr>
 </tbody>
 </table>
@@ -131,7 +131,7 @@ the data-plane token once through stdin and start the hub:
 
 ```bash
 git clone https://github.com/lidge-jun/opencodex.git
-cd opencodex
+cd openccx
 bun scripts/generate-compatibility-version.ts
 docker compose build
 openssl rand -hex 32 | docker compose run --rm -T hub bun run docker/bootstrap-token.ts
@@ -141,7 +141,7 @@ curl --fail --silent http://127.0.0.1:10100/readyz
 ```
 
 The default host binding is `127.0.0.1:10100`. Remote exposure requires explicit
-`OPENCODEX_BIND_ADDRESS=<LAN-or-Tailscale-IP> docker compose up -d`; `0.0.0.0` opts into
+`OPENCCX_BIND_ADDRESS=<LAN-or-Tailscale-IP> docker compose up -d`; `0.0.0.0` opts into
 all host interfaces. Restrict access with a firewall and an authenticated TLS/tailnet frontend.
 The generated JSON stays untracked; it is copied into the image without including `.git`.
 Regenerate it after source changes, and do not change the source between generation and build.
@@ -149,7 +149,7 @@ The build rejects stale manifests, missing or mismatched files, extra source fil
 It checks every recorded SHA-256 against the build context and copied runtime files, including
 `package.json`, `bun.lock`, and the specifically included `scripts/model-metadata.source.json`.
 
-The token and mutable state stay in the `ocx-state` named volume; no credential is placed in the
+The token and mutable state stay in the `occx-state` named volume; no credential is placed in the
 image, Compose file, environment, or shell arguments. See the
 [Remote Hub deployment guide](https://opencodex.me/guides/remote-hub/#docker-compose) for provider
 setup, authenticated acceptance checks, remote management, and rollback.
@@ -164,7 +164,7 @@ setup, authenticated acceptance checks, remote management, and rollback.
 ```bash
 curl -fsSL https://bun.sh/install | bash
 git clone https://github.com/lidge-jun/opencodex.git
-cd opencodex && ~/.bun/bin/bun install
+cd openccx && ~/.bun/bin/bun install
 ~/.bun/bin/bun run src/cli/index.ts start
 ```
 
@@ -173,7 +173,7 @@ cd opencodex && ~/.bun/bin/bun install
 ```powershell
 irm bun.sh/install.ps1 | iex
 git clone https://github.com/lidge-jun/opencodex.git
-cd opencodex; bun install
+cd openccx; bun install
 bun run src/cli/index.ts start
 ```
 
@@ -188,16 +188,16 @@ they reach the npm package.
 
 ```bash
 npm install -g @bitkyc08/opencodex
-ocx start     # or `ocx service`
-ocx init      # interactive setup: writes ~/.opencodex/config.json and wires Codex
+occx start     # or `occx service`
+occx init      # interactive setup: writes ~/.opencodex/config.json and wires Codex
 ```
 
-`ocx init` never starts the proxy; start it first (or after — either order works, but headless
-commands like `ocx provider add` and `ocx combo set` talk to the **live** proxy and exit nonzero
-when it is unreachable). `ocx status` / `ocx doctor` / `ocx health` report the running state.
+`occx init` never starts the proxy; start it first (or after — either order works, but headless
+commands like `occx provider add` and `occx combo set` talk to the **live** proxy and exit nonzero
+when it is unreachable). `occx status` / `occx doctor` / `occx health` report the running state.
 
-> **Agents installing or running opencodex:** read
-> [`AGENTS_INSTALL.md`](./AGENTS_INSTALL.md). An interactive `ocx start` may ask once whether to
+> **Agents installing or running openccx:** read
+> [`AGENTS_INSTALL.md`](./AGENTS_INSTALL.md). An interactive `occx start` may ask once whether to
 > star this repository — that is the user's decision, never an agent's. The CLI suppresses the
 > prompt for agent-driven runs and the API refuses them with `403 agent_consent_required`.
 
@@ -224,7 +224,7 @@ see the [installation docs](https://opencodex.me/getting-started/installation/).
 
   > **Provider-policy note:** Account pooling is for routing and operational resilience only; it does
   > not guarantee protection from provider rate limits, enforcement, suspension, or other account
-  > actions. OpenCodex does not endorse using additional accounts to circumvent provider limits or
+  > actions. Openccx does not endorse using additional accounts to circumvent provider limits or
   > sharing account credentials between people. You are responsible for complying with each
   > provider's current terms. See the
   > [Codex Auth account-pool guidance](https://opencodex.me/guides/web-dashboard/#codex-auth-and-account-pools)
@@ -241,7 +241,7 @@ see the [installation docs](https://opencodex.me/getting-started/installation/).
   through a sidecar over your ChatGPT login.
 - **See what's happening** — the dashboard shows providers, OAuth status, model selection, and a
   live request log with cache token counts.
-- **Clean exit, zero residue** — `ocx stop` restores Codex to its original configuration.
+- **Clean exit, zero residue** — `occx stop` restores Codex to its original configuration.
 - **Bounded memory ownership** — every long-lived cache, ring buffer, and protocol-translation
   store has a finite cap, byte budget, or active reconciliation. No unbounded `Map` or `Set`
   survives a config reload.
@@ -249,7 +249,7 @@ see the [installation docs](https://opencodex.me/getting-started/installation/).
 <details>
 <summary>Memory ownership details</summary>
 
-OpenCodex tracks 36 categories of process-retained state. Each has a documented bound:
+Openccx tracks 36 categories of process-retained state. Each has a documented bound:
 
 - **12 retained stores** (request log, debug rings, image cache, model cache, vision
   descriptions, cursor blobs, responses continuation, etc.) are byte-accounted and
@@ -291,26 +291,26 @@ full-slash form keeps working too. Details: [model routing docs](https://opencod
 OpenAI (ChatGPT login or API key), Anthropic, Google Gemini, xAI, Kimi, Azure OpenAI, Ollama
 (local + Cloud), Cursor (experimental), and every OpenAI-compatible endpoint — plus DeepSeek,
 Groq, OpenRouter, Together, Fireworks, Cerebras, Mistral, Hugging Face, NVIDIA NIM, MiniMax,
-Qwen Cloud, Qoder Global and CN (official PAT + CLI), SiliconFlow, and more. Full list: `ocx init` or the
+Qwen Cloud, Qoder Global and CN (official PAT + CLI), SiliconFlow, and more. Full list: `occx init` or the
 [provider docs](https://opencodex.me/guides/providers/).
 
 ## CLI
 
 ```bash
-ocx init                       # interactive setup (writes config, wires Codex, offers the shim)
-ocx start [--port 10100]       # start the proxy in the foreground
-ocx stop                       # stop + restore native Codex
-ocx service [install|repair|restart|start|stop|status|uninstall|remove]  # background service
-ocx codex-shim install         # start the proxy on demand whenever `codex` launches
-ocx health [--json]            # check immediate proxy liveness
-ocx ready [--json] [--wait [--timeout <seconds>]]  # check post-sync readiness
-ocx status                     # is the proxy running?
-ocx gui                        # open the web dashboard
-ocx provider <...>             # manage providers (list/add/edit/test/remove)
-ocx account <...>              # manage ChatGPT accounts & API-key pools
-ocx combo <...>                # manage failover / round-robin combos
-ocx v2 <...>                   # multi-agent v1/v2 surface controls
-ocx update [--tag preview]     # update opencodex
+occx init                       # interactive setup (writes config, wires Codex, offers the shim)
+occx start [--port 10100]       # start the proxy in the foreground
+occx stop                       # stop + restore native Codex
+occx service [install|repair|restart|start|stop|status|uninstall|remove]  # background service
+occx codex-shim install         # start the proxy on demand whenever `codex` launches
+occx health [--json]            # check immediate proxy liveness
+occx ready [--json] [--wait [--timeout <seconds>]]  # check post-sync readiness
+occx status                     # is the proxy running?
+occx gui                        # open the web dashboard
+occx provider <...>             # manage providers (list/add/edit/test/remove)
+occx account <...>              # manage ChatGPT accounts & API-key pools
+occx combo <...>                # manage failover / round-robin combos
+occx v2 <...>                   # multi-agent v1/v2 surface controls
+occx update [--tag preview]     # update openccx
 ```
 
 Unpinned starts may pick another free port if the preferred one is busy; an explicit `--port`
@@ -323,7 +323,7 @@ post-sync readiness with the sanitized JSON identity `{service, version, uptime,
 It returns `200` when `status` is `ready`; `pending` and terminal `failed` return `503` with
 `Retry-After: 1`.
 
-`ocx ready [--json] [--wait [--timeout <seconds>]]` performs one probe by default. `--wait` polls
+`occx ready [--json] [--wait [--timeout <seconds>]]` performs one probe by default. `--wait` polls
 for up to 45 seconds by default, but exits immediately when it observes terminal `failed`;
 `--timeout <seconds>` sets a 1–300 second limit, requires `--wait`, and accepts only positive integers. CLI `--json` output is
 `{ready, status, pid, port}`, where `status` is `ready`, `pending`, `failed`, or `unreachable`.
@@ -334,28 +334,28 @@ for up to 45 seconds by default, but exits immediately when it observes terminal
 | `1` | Not ready: pending, failed, timeout, or unreachable |
 | `64` | Invalid arguments |
 
-An older proxy without `/readyz` fails closed as `unreachable` with exit 1, while `ocx health`
+An older proxy without `/readyz` fails closed as `unreachable` with exit 1, while `occx health`
 remains compatible.
 
 ### Autostart: service vs shim
 
-Use the **service** (`ocx service`) for an always-on proxy that restarts on crash. Use the
-**shim** (`ocx codex-shim install`) for lightweight, on-demand startup without a background
-daemon. Remove them with `ocx service uninstall` / `ocx codex-shim uninstall`.
+Use the **service** (`occx service`) for an always-on proxy that restarts on crash. Use the
+**shim** (`occx codex-shim install`) for lightweight, on-demand startup without a background
+daemon. Remove them with `occx service uninstall` / `occx codex-shim uninstall`.
 
 ### Uninstall
 
 ```bash
-ocx uninstall                  # stop, remove service/shim, restore native Codex, clean up state
+occx uninstall                  # stop, remove service/shim, restore native Codex, clean up state
 npm uninstall -g @bitkyc08/opencodex
 ```
 
 ## Remote access
 
-By default opencodex binds to `127.0.0.1` and needs no extra authentication. Binding beyond
+By default openccx binds to `127.0.0.1` and needs no extra authentication. Binding beyond
 loopback (`"hostname": "0.0.0.0"`) **requires** a bearer token — the proxy refuses to start
-without `OPENCODEX_API_AUTH_TOKEN`, and every client request must carry it as
-`x-opencodex-api-key`. Details: [configuration reference](https://opencodex.me/reference/configuration/).
+without `OPENCCX_API_AUTH_TOKEN`, and every client request must carry it as
+`x-openccx-api-key`. Details: [configuration reference](https://opencodex.me/reference/configuration/).
 
 ## Documentation
 
@@ -375,11 +375,11 @@ Acknowledging a report is not the same as triaging it, and no first-response tar
 ## Development
 
 Source development requires the `bun` CLI on your `PATH`. This is separate from the published npm
-package's bundled Bun runtime, which is used only by installed `ocx` commands.
+package's bundled Bun runtime, which is used only by installed `occx` commands.
 
 ```bash
 git clone https://github.com/lidge-jun/opencodex.git
-cd opencodex
+cd openccx
 bun install
 bun run typecheck
 bun run test
@@ -393,9 +393,9 @@ where the commit does not name its original author, is recorded in
 
 ## Disclaimer
 
-opencodex is an independent, community-maintained project and is **not affiliated with or endorsed by OpenAI, Anthropic, or any other provider**.
+openccx is an independent, community-maintained project and is **not affiliated with or endorsed by OpenAI, Anthropic, or any other provider**.
 
-Some providers — notably Anthropic (Claude) — may suspend or restrict accounts that route API traffic through third-party proxies. **Use at your own risk (UAYOR).** Before connecting a provider, review its Terms of Service to confirm that proxy-based access is permitted. The opencodex maintainers are not responsible for any account actions taken by upstream providers.
+Some providers — notably Anthropic (Claude) — may suspend or restrict accounts that route API traffic through third-party proxies. **Use at your own risk (UAYOR).** Before connecting a provider, review its Terms of Service to confirm that proxy-based access is permitted. The openccx maintainers are not responsible for any account actions taken by upstream providers.
 
 ## License
 

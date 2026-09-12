@@ -13,11 +13,11 @@ import {
 import { providerFetch } from "../../src/server/responses/fetch-helpers";
 import { fetchWithHeaderTimeout } from "../../src/server/responses/fetch-helpers";
 import { requestPacingOverloadResponse } from "../../src/server/responses/pacing-overload";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 afterEach(() => resetProviderRequestPacingForTest());
 
-function provider(requestPacing: OcxProviderConfig["requestPacing"]): OcxProviderConfig {
+function provider(requestPacing: OccxProviderConfig["requestPacing"]): OccxProviderConfig {
   return { adapter: "openai-chat", baseUrl: "https://example.test/v1", requestPacing };
 }
 
@@ -95,7 +95,7 @@ describe("provider request pacing queue", () => {
     const configured = {
       ...provider({ enabled: true, requestsPerMinute: 600 }),
       fetch: fetchImpl,
-    } as OcxProviderConfig & { fetch: typeof globalThis.fetch };
+    } as OccxProviderConfig & { fetch: typeof globalThis.fetch };
     const send = providerFetch(configured, undefined, { providerName: "demo", modelId: "model-a" });
     const first = send("https://example.test/v1/first");
     const second = send("https://example.test/v1/second");
@@ -132,7 +132,7 @@ describe("provider request pacing queue", () => {
     const configured = {
       ...provider({ enabled: true, minIntervalMs: 100 }),
       fetch: fetchImpl,
-    } as OcxProviderConfig & { fetch: typeof globalThis.fetch };
+    } as OccxProviderConfig & { fetch: typeof globalThis.fetch };
 
     await waitForProviderRequestSlot("cursor", configured, "model-a");
     const send = providerFetch(configured, undefined, {
@@ -296,7 +296,7 @@ describe("provider request pacing queue", () => {
     const configured = {
       ...provider({ enabled: true, minIntervalMs: 120 }),
       fetch: fetchImpl,
-    } as OcxProviderConfig & { fetch: typeof globalThis.fetch };
+    } as OccxProviderConfig & { fetch: typeof globalThis.fetch };
     const executor = providerFetch(configured, undefined, { providerName: "demo", modelId: "model-a" });
     await fetchWithHeaderTimeout("https://example.test/v1/chat/completions", {}, new AbortController().signal, 50, false, executor);
     const second = await fetchWithHeaderTimeout("https://example.test/v1/chat/completions", {}, new AbortController().signal, 50, false, executor);
@@ -305,7 +305,7 @@ describe("provider request pacing queue", () => {
 
   test("Google AI Studio providerFetch paces each attempt through waitForPacing", async () => {
     let pacingWaited = 0;
-    const configured: OcxProviderConfig = {
+    const configured: OccxProviderConfig = {
       adapter: "google",
       baseUrl: "https://generativelanguage.googleapis.com",
       apiKey: "key",

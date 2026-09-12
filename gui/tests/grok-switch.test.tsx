@@ -27,7 +27,7 @@ const STATUS = () => ({
   configPath: "/home/u/.grok/config.toml",
   present,
   baseUrl: "http://127.0.0.1:10100/v1",
-  models: [{ alias: "ocx-gpt-5-6-sol", id: "gpt-5.6-sol", contextWindow: 372_000 }],
+  models: [{ alias: "occx-gpt-5-6-sol", id: "gpt-5.6-sol", contextWindow: 372_000 }],
   candidates: [
     { id: "gpt-5.6-sol", contextWindow: 372_000, native: true },
     { id: "cursor/grok-4.5", contextWindow: 500_000, native: false },
@@ -48,7 +48,7 @@ beforeEach(() => {
     navigator: { configurable: true, value: testWindow.navigator },
     localStorage: { configurable: true, value: testWindow.localStorage },
   });
-  testWindow.localStorage.setItem("ocx.grok.collapsedGroups.v2", JSON.stringify([]));
+  testWindow.localStorage.setItem("occx.grok.collapsedGroups.v2", JSON.stringify([]));
   (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
   selectionPuts = [];

@@ -262,7 +262,7 @@ export function observationFromConformanceResult(
               attribution:
                 result.classification === "harness_failure"
                   ? ("harness" as const)
-                  : ("opencodex" as const),
+                  : ("openccx" as const),
             },
           }),
     };

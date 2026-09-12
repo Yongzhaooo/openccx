@@ -4,9 +4,9 @@ import { isLocalAttestationSecret } from "./local-management-attestation";
 export const SYSTEM_RESTART_METHOD = "POST";
 export const SYSTEM_RESTART_PATH = "/api/system/restart";
 export const SYSTEM_RESTART_CAPABILITY_VERSION = "v1";
-export const SYSTEM_RESTART_EXPECTED_PID_HEADER = "x-opencodex-restart-expected-pid";
-export const SYSTEM_RESTART_NONCE_HEADER = "x-opencodex-restart-nonce";
-export const SYSTEM_RESTART_CAPABILITY_HEADER = "x-opencodex-restart-capability";
+export const SYSTEM_RESTART_EXPECTED_PID_HEADER = "x-openccx-restart-expected-pid";
+export const SYSTEM_RESTART_NONCE_HEADER = "x-openccx-restart-nonce";
+export const SYSTEM_RESTART_CAPABILITY_HEADER = "x-openccx-restart-capability";
 
 /** Fixed drain and replacement budgets shared by the server, CLI, and tray. */
 export const MEMORY_DRAIN_RESTART_MS = 60_000;
@@ -37,7 +37,7 @@ function restartCapabilityPayload(
   if (method !== SYSTEM_RESTART_METHOD || path !== SYSTEM_RESTART_PATH) return null;
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
-  return `opencodex-system-restart-v1\n${nonce}\n${method}\n${path}\n${pid}\n${port}`;
+  return `openccx-system-restart-v1\n${nonce}\n${method}\n${path}\n${pid}\n${port}`;
 }
 
 /** Process-scoped, operation-only authorization. It is not a reusable management credential. */

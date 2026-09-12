@@ -28,15 +28,15 @@ let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-usage-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-usage-"));
+  process.env.OPENCCX_HOME = testDir;
   resetUsageReadCacheForTests();
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
@@ -104,7 +104,7 @@ describe("usage log", () => {
 
   test("preserves explicitly empty attempts through normalization", () => {
     const normalized = normalizeUsageEntryForTest({
-      requestId: "ocx-empty-attempts",
+      requestId: "occx-empty-attempts",
       timestamp: 1,
       provider: "openai",
       model: "gpt-test",
@@ -119,7 +119,7 @@ describe("usage log", () => {
 
   test("preserves only valid non-PII Codex account log labels", () => {
     const normalized = normalizeUsageEntryForTest({
-      requestId: "ocx-account-label",
+      requestId: "occx-account-label",
       timestamp: 1,
       provider: "openai-pabc123",
       model: "gpt-test",
@@ -154,7 +154,7 @@ describe("usage log", () => {
 
   test("persists the rate-limit-429 recovery kind on attempts", () => {
     const entry: PersistedUsageEntry = {
-      requestId: "ocx-ratelimit-kind",
+      requestId: "occx-ratelimit-kind",
       timestamp: 1,
       provider: "blsc",
       model: "blsc/DeepSeek-V4-Flash",
@@ -182,7 +182,7 @@ describe("usage log", () => {
     // the set writes fine and vanishes on read-back, so this must round-trip through the file
     // rather than merely typecheck.
     const entry: PersistedUsageEntry = {
-      requestId: "ocx-key-401-kind",
+      requestId: "occx-key-401-kind",
       timestamp: 1,
       provider: "blsc",
       model: "blsc/DeepSeek-V4-Flash",
@@ -207,7 +207,7 @@ describe("usage log", () => {
 
   test("persists the empty-completion recovery kind on attempts", () => {
     const entry: PersistedUsageEntry = {
-      requestId: "ocx-empty-completion-kind",
+      requestId: "occx-empty-completion-kind",
       timestamp: 1,
       provider: "fixture",
       model: "fixture/model",
@@ -232,7 +232,7 @@ describe("usage log", () => {
 
   test("persists the opaque-blob rejection recovery kind on attempts", () => {
     const entry: PersistedUsageEntry = {
-      requestId: "ocx-opaque-blob-kind",
+      requestId: "occx-opaque-blob-kind",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.6-sol",
@@ -366,7 +366,7 @@ describe("usage log", () => {
 
   test("persists conversationId for Logs session correlation", () => {
     appendUsageEntry({
-      requestId: "ocx-conversation",
+      requestId: "occx-conversation",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.5",
@@ -378,7 +378,7 @@ describe("usage log", () => {
       totalTokens: 2,
     });
     expect(readUsageEntries()).toEqual([expect.objectContaining({
-      requestId: "ocx-conversation",
+      requestId: "occx-conversation",
       conversationId: "thread-abc",
     })]);
   });
@@ -388,7 +388,7 @@ describe("usage log", () => {
     // cumulative context figure once the log stores raw adapter usage (usageFromBridge).
     // Dropping it here erased Kiro context growth from every persisted row.
     appendUsageEntry({
-      requestId: "ocx-context-checkpoint",
+      requestId: "occx-context-checkpoint",
       timestamp: 1,
       provider: "kiro",
       model: "claude-opus-5",
@@ -399,7 +399,7 @@ describe("usage log", () => {
       totalTokens: 472,
     });
     expect(readUsageEntries()).toEqual([expect.objectContaining({
-      requestId: "ocx-context-checkpoint",
+      requestId: "occx-context-checkpoint",
       usage: expect.objectContaining({
         inputTokens: 220,
         outputTokens: 252,
@@ -413,7 +413,7 @@ describe("usage log", () => {
 
   test("never invents a context checkpoint when the adapter reported none", () => {
     appendUsageEntry({
-      requestId: "ocx-no-checkpoint",
+      requestId: "occx-no-checkpoint",
       timestamp: 1,
       provider: "kiro",
       model: "claude-opus-5",
@@ -430,7 +430,7 @@ describe("usage log", () => {
 
   test("persists only canonical ordered attempt fields", () => {
     appendUsageEntry({
-      requestId: "ocx-attempts",
+      requestId: "occx-attempts",
       timestamp: 1,
       provider: "combo",
       model: "combo/free",
@@ -499,7 +499,7 @@ describe("usage log", () => {
 
   test("omits malformed optional attempt reasoning metadata without dropping the attempt", () => {
     appendUsageEntry({
-      requestId: "ocx-attempt-reasoning",
+      requestId: "occx-attempt-reasoning",
       timestamp: 1,
       provider: "combo",
       model: "combo/free",
@@ -533,7 +533,7 @@ describe("usage log", () => {
 
   test("keeps boolean reasoning values only for reasoning.enabled", () => {
     const base = {
-      requestId: "ocx-boolean-reasoning",
+      requestId: "occx-boolean-reasoning",
       timestamp: 1,
       provider: "combo",
       model: "combo/free",
@@ -626,7 +626,7 @@ describe("usage log", () => {
 
   test("persists parent and attempt firstOutputMs roundtrip (WP4 TTFT)", () => {
     appendUsageEntry({
-      requestId: "ocx-ttft",
+      requestId: "occx-ttft",
       timestamp: 1,
       provider: "a",
       model: "m1",
@@ -662,7 +662,7 @@ describe("usage log", () => {
     for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, -5]) {
       rmSync(usageLogPath(), { force: true });
       appendUsageEntry({
-        requestId: "ocx-ttft-bad",
+        requestId: "occx-ttft-bad",
         timestamp: 1,
         provider: "a",
         model: "m1",
@@ -673,7 +673,7 @@ describe("usage log", () => {
         usage: { inputTokens: 10, outputTokens: 5 },
       });
       const [entry] = readUsageEntries();
-      expect(entry?.requestId).toBe("ocx-ttft-bad");
+      expect(entry?.requestId).toBe("occx-ttft-bad");
       expect(entry).not.toHaveProperty("firstOutputMs");
     }
   });
@@ -734,13 +734,13 @@ describe("usage log", () => {
     });
   });
 
-  test("uses OPENCODEX_HOME for the append-only JSONL path", () => {
+  test("uses OPENCCX_HOME for the append-only JSONL path", () => {
     expect(usageLogPath()).toBe(join(testDir, "usage.jsonl"));
   });
 
   test("appends secret-safe usage entries and reads them back", () => {
     appendUsageEntry({
-      requestId: "ocx-1",
+      requestId: "occx-1",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.5",
@@ -756,11 +756,11 @@ describe("usage log", () => {
 
     expect(existsSync(usageLogPath())).toBe(true);
     const raw = readFileSync(usageLogPath(), "utf-8");
-    expect(raw).toContain("\"requestId\":\"ocx-1\"");
+    expect(raw).toContain("\"requestId\":\"occx-1\"");
     expect(raw).not.toContain("prompt");
     expect(raw).not.toContain("authorization");
     expect(readUsageEntries()).toEqual([{
-      requestId: "ocx-1",
+      requestId: "occx-1",
       timestamp: 1,
       provider: "openai",
       model: "gpt-5.5",
@@ -780,7 +780,7 @@ describe("usage log", () => {
 
   test("drops runtime extra fields before persisting usage JSONL", () => {
     appendUsageEntry({
-      requestId: "ocx-extra",
+      requestId: "occx-extra",
       timestamp: 2,
       provider: "openai",
       model: "gpt-5.5",
@@ -819,7 +819,7 @@ describe("usage log", () => {
       expect(raw).not.toContain(leaked);
     }
     expect(readUsageEntries()).toEqual([{
-      requestId: "ocx-extra",
+      requestId: "occx-extra",
       timestamp: 2,
       provider: "openai",
       model: "gpt-5.5",
@@ -896,7 +896,7 @@ describe("usage log", () => {
 
   test("preserves cached token counts alongside estimated status", () => {
     appendUsageEntry({
-      requestId: "ocx-cache",
+      requestId: "occx-cache",
       timestamp: 3,
       provider: "kiro",
       model: "claude-opus-4.8",
@@ -915,7 +915,7 @@ describe("usage log", () => {
     });
 
     expect(readUsageEntries()[0]).toEqual({
-      requestId: "ocx-cache",
+      requestId: "occx-cache",
       timestamp: 3,
       provider: "kiro",
       model: "claude-opus-4.8",
@@ -936,7 +936,7 @@ describe("usage log", () => {
 
   test("persists and reads back effort / service-tier GUI metadata", () => {
     appendUsageEntry({
-      requestId: "ocx-effort",
+      requestId: "occx-effort",
       timestamp: 9,
       provider: "openai",
       model: "gpt-5.6-sol",
@@ -955,7 +955,7 @@ describe("usage log", () => {
       usageStatus: "unreported",
     });
     expect(readUsageEntries()[0]).toMatchObject({
-      requestId: "ocx-effort",
+      requestId: "occx-effort",
       requestedEffort: "xhigh",
       effectiveEffort: "high",
       reasoningWireField: "reasoning_effort",
@@ -971,7 +971,7 @@ describe("usage log", () => {
   test("readRecentUsageEntries returns only the newest N rows", () => {
     for (let i = 0; i < 12; i++) {
       appendUsageEntry({
-        requestId: `ocx-tail-${i}`,
+        requestId: `occx-tail-${i}`,
         timestamp: i,
         provider: "openai",
         model: "gpt",
@@ -981,11 +981,11 @@ describe("usage log", () => {
       });
     }
     expect(readRecentUsageEntries(5).map(e => e.requestId)).toEqual([
-      "ocx-tail-7",
-      "ocx-tail-8",
-      "ocx-tail-9",
-      "ocx-tail-10",
-      "ocx-tail-11",
+      "occx-tail-7",
+      "occx-tail-8",
+      "occx-tail-9",
+      "occx-tail-10",
+      "occx-tail-11",
     ]);
     expect(readRecentUsageEntries(0)).toEqual([]);
     expect(readRecentUsageEntries(-1)).toEqual([]);

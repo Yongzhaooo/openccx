@@ -142,7 +142,7 @@ function validateProtocolSubject(raw: Record<string, unknown>): ProtocolSubjectV
   return {
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: assertString(raw.opencodexCompatibilityVersion, "opencodexCompatibilityVersion"),
+    openccxCompatibilityVersion: assertString(raw.openccxCompatibilityVersion, "openccxCompatibilityVersion"),
     effectiveAdapter: assertString(raw.effectiveAdapter, "effectiveAdapter"),
     inboundProtocol: assertString(raw.inboundProtocol, "inboundProtocol"),
     upstreamProtocol: assertString(raw.upstreamProtocol, "upstreamProtocol"),
@@ -183,7 +183,7 @@ function validateRouteSubject(raw: Record<string, unknown>): RouteSubjectV1 {
     inboundProtocol: assertString(raw.inboundProtocol, "inboundProtocol"),
     upstreamProtocol: assertString(raw.upstreamProtocol, "upstreamProtocol"),
     surface: assertString(raw.surface, "surface"),
-    opencodexCompatibilityVersion: assertString(raw.opencodexCompatibilityVersion, "opencodexCompatibilityVersion"),
+    openccxCompatibilityVersion: assertString(raw.openccxCompatibilityVersion, "openccxCompatibilityVersion"),
     behaviorFingerprint: assertString(raw.behaviorFingerprint, "behaviorFingerprint"),
     endpointFingerprint: assertString(raw.endpointFingerprint, "endpointFingerprint"),
     dependencies,
@@ -413,7 +413,7 @@ function validateObservation(raw: Record<string, unknown>): ObservationEvent {
       code: assertString(raw.failure.code, "failure.code"),
       retryable: raw.failure.retryable === true,
       attribution: assertClosed(raw.failure.attribution, "failure.attribution", [
-        "opencodex",
+        "openccx",
         "route",
         "environment",
         "harness",

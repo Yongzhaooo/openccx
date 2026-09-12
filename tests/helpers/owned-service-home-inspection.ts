@@ -2,7 +2,7 @@ import type { OwnershipInspection } from "../../src/integrations/native/ownershi
 
 /**
  * Service-home ownership evidence for tests that sandbox CODEX_HOME /
- * OPENCODEX_HOME but start a server in THIS process.
+ * OPENCCX_HOME but start a server in THIS process.
  *
  * `claimOwnedServiceHome` in ./owned-service-home.ts is the other half of this
  * problem and stays the right tool when a fixture can seed real state and a
@@ -11,12 +11,12 @@ import type { OwnershipInspection } from "../../src/integrations/native/ownershi
  * host's real launchd/systemd registration through `inspectNativeCodexOwnership`
  * before it touches any Codex lock, cache, owner, journal, or credential path.
  *
- * On a machine running ocx as a service, that inspection sees a loaded job whose
+ * On a machine running occx as a service, that inspection sees a loaded job whose
  * definition names the developer's real homes, returns `ownership: "unknown"`
  * for the fixture's temp homes, and fences native-main admission closed — so the
  * startup gate never opens and the assertions time out.
  *
- * The failure is invisible in CI (no runner has ocx installed as a service) and
+ * The failure is invisible in CI (no runner has occx installed as a service) and
  * reproducible on exactly the maintainer machines that run the proxy they are
  * developing, including through the local preflight suite in scripts/release.ts.
  *

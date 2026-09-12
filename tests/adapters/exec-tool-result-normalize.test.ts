@@ -85,13 +85,13 @@ describe("code-mode host failure annotation", () => {
     // A foreign MCP server's own exec is not Codex's, even when its output quotes the phrase, and a
     // namespace that merely CONTAINS the provider name is still foreign.
     expect(annotateCodeModeHostFailure("Script error:\ntool `apply_patch` expects a string input", { toolName: "exec", toolNamespace: "mcp__docker" })).toBeUndefined();
-    expect(annotateCodeModeHostFailure("Script error:\ntool `apply_patch` expects a string input", { toolName: "exec", toolNamespace: "mcp__foreign-opencodex-responses" })).toBeUndefined();
+    expect(annotateCodeModeHostFailure("Script error:\ntool `apply_patch` expects a string input", { toolName: "exec", toolNamespace: "mcp__foreign-openccx-responses" })).toBeUndefined();
     // Codex's own display namespaces and flattened aliases for the same code-mode tool still count.
     for (const options of [
-      { toolName: "exec", toolNamespace: "opencodex-responses" },
-      { toolName: "exec", toolNamespace: "mcp__opencodex-responses" },
-      { toolName: "mcp__opencodex-responses__exec" },
-      { toolName: "mcp_opencodex-responses_exec" },
+      { toolName: "exec", toolNamespace: "openccx-responses" },
+      { toolName: "exec", toolNamespace: "mcp__openccx-responses" },
+      { toolName: "mcp__openccx-responses__exec" },
+      { toolName: "mcp_openccx-responses_exec" },
     ]) {
       expect(annotateCodeModeHostFailure("Script error:\ntool `apply_patch` expects a string input", options)).toContain("[recovery:");
     }

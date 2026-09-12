@@ -23,7 +23,7 @@ import {
   type ProviderModelDiscoverySpec,
 } from "../../src/providers/registry";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { withRegistryDiscovery } from "../helpers/provider-registry-discovery";
 import { fixturePath } from "../helpers/repo-root";
@@ -50,8 +50,8 @@ async function withTogetherDiscovery<T>(
   return withRegistryDiscovery("together", spec, run, { preserveCustomDestination: true });
 }
 
-function togetherConfig(overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
-  const config: OcxConfig = {
+function togetherConfig(overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
+  const config: OccxConfig = {
     port: 10100,
     defaultProvider: "together",
     providers: {
@@ -143,7 +143,7 @@ describe("registry-owned provider model discovery", () => {
       expect(renamedCanonical.url)
         .toBe("https://api.together.xyz/v1/catalog?capability=chat&limit=100");
 
-      const collidingCustom: OcxProviderConfig = {
+      const collidingCustom: OccxProviderConfig = {
         adapter: "openai-chat",
         baseUrl: "https://custom.example/v9",
         authMode: "key",
@@ -171,7 +171,7 @@ describe("registry-owned provider model discovery", () => {
   });
 
   test("pins fixed OAuth discovery before resolving relative and default endpoints", async () => {
-    const staleConfig: OcxProviderConfig = {
+    const staleConfig: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://untrusted.example/v9",
       authMode: "oauth",
@@ -436,9 +436,9 @@ describe("registry-owned provider model discovery", () => {
     let credentialHome: string;
 
     beforeEach(async () => {
-      previousHome = process.env.OPENCODEX_HOME;
-      credentialHome = mkdtempSync(join(tmpdir(), "ocx-nous-discovery-"));
-      process.env.OPENCODEX_HOME = credentialHome;
+      previousHome = process.env.OPENCCX_HOME;
+      credentialHome = mkdtempSync(join(tmpdir(), "occx-nous-discovery-"));
+      process.env.OPENCCX_HOME = credentialHome;
       clearModelCache("nous");
       await saveCredential("nous", {
         access: "access-token-nous-discovery-fixture",
@@ -449,8 +449,8 @@ describe("registry-owned provider model discovery", () => {
 
     afterEach(() => {
       clearModelCache("nous");
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(credentialHome);
     });
 
@@ -475,7 +475,7 @@ describe("registry-owned provider model discovery", () => {
         expect(new Headers(init?.headers).get("authorization")).toBe("Bearer access-token-nous-discovery-fixture");
         return new Response(payload, { headers: { "content-type": "application/json" } });
       }) as typeof fetch;
-      const config = withStubbedProviderFetch<OcxConfig>({
+      const config = withStubbedProviderFetch<OccxConfig>({
         defaultProvider: "nous",
         providers: { nous: { ...providerConfigSeed(entry), models: ["safe-fallback"] } },
       });

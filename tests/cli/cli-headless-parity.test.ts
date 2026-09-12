@@ -20,7 +20,7 @@ import { repoPath } from "../helpers/repo-root";
 type Recorded = { path: string; method: string; body: unknown };
 const servers: Array<ReturnType<typeof Bun.serve>> = [];
 
-describe("ocx system settings client compaction", () => {
+describe("occx system settings client compaction", () => {
   test("persists the explicit boolean through the shared settings endpoint", async () => {
     const { requests, deps } = fakeRuntime((_req, body) => ({ ok: true, ...body }));
     const logSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -37,7 +37,7 @@ describe("ocx system settings client compaction", () => {
   });
 });
 
-describe("ocx agent sidecar --list (#2188)", () => {
+describe("occx agent sidecar --list (#2188)", () => {
   test("web --list prints the server's webSearchModels — the GUI's exact list", async () => {
     const { requests, deps } = fakeRuntime(req => {
       const url = new URL(req.url);
@@ -239,86 +239,86 @@ describe("headless GUI parity CLI", () => {
       }
     }
     const coverage: Array<[string, string]> = [
-      ["/api/claude-code", "ocx claude config"],
-      ["/api/claude-desktop", "ocx claude desktop"],
-      ["/api/claude/", "ocx observe"],
-      ["/api/codex-auth", "ocx account"],
+      ["/api/claude-code", "occx claude config"],
+      ["/api/claude-desktop", "occx claude desktop"],
+      ["/api/claude/", "occx observe"],
+      ["/api/codex-auth", "occx account"],
       // GUI-only affordance: starring the repo from the sidebar. There is deliberately
       // no CLI mirror — the headless surface has nothing to gain from a one-click
-      // social action, and inventing `ocx github star` would be a command nobody asked
+      // social action, and inventing `occx github star` would be a command nobody asked
       // for. Listed here so the parity sweep stays exhaustive rather than silently
       // skipping the endpoint.
       ["/api/github/star", "(none — GUI-only)"],
-      ["/api/oauth", "ocx account"],
+      ["/api/oauth", "occx account"],
       // The unified pool-settings route (#695 wp5c). One path answers for every pool
-      // kind, and `ocx account strategy` / `ocx account sticky` / `ocx account auto-switch`
+      // kind, and `occx account strategy` / `occx account sticky` / `occx account auto-switch`
       // are what drive it headlessly — they declare it in src/cli/capabilities.ts rather
       // than the retired per-namespace paths.
-      ["/api/pool/settings", "ocx account strategy/sticky/auto-switch"],
-      ["/api/accounts/events", "(none — dashboard invalidation; ocx account reads current selection)"],
-      ["/api/providers/keys", "ocx account"],
-      ["/api/providers", "ocx provider"],
-      ["/api/provider-", "ocx provider/models"],
-      ["/api/selected-models", "ocx models"],
-      ["/api/custom-models", "ocx models"],
-      ["/api/model", "ocx models"],
-      ["/api/combos", "ocx combo"],
-      ["/api/client-config", "ocx export"],
-      ["/api/client-integrations", "ocx integration client"],
-      // #2463: both read and write reach the CLI. `ocx alias list` reads /api/aliases,
-      // `ocx alias defaults` writes /api/default-aliases, and the per-provider writes sit
+      ["/api/pool/settings", "occx account strategy/sticky/auto-switch"],
+      ["/api/accounts/events", "(none — dashboard invalidation; occx account reads current selection)"],
+      ["/api/providers/keys", "occx account"],
+      ["/api/providers", "occx provider"],
+      ["/api/provider-", "occx provider/models"],
+      ["/api/selected-models", "occx models"],
+      ["/api/custom-models", "occx models"],
+      ["/api/model", "occx models"],
+      ["/api/combos", "occx combo"],
+      ["/api/client-config", "occx export"],
+      ["/api/client-integrations", "occx integration client"],
+      // #2463: both read and write reach the CLI. `occx alias list` reads /api/aliases,
+      // `occx alias defaults` writes /api/default-aliases, and the per-provider writes sit
       // under /api/providers/:name/alias, already covered by the /api/providers prefix.
-      ["/api/aliases", "ocx alias"],
-      ["/api/default-aliases", "ocx alias defaults"],
+      ["/api/aliases", "occx alias"],
+      ["/api/default-aliases", "occx alias defaults"],
       // GUI-only for now: the overview card switches for Claude Code and Grok.
       // Their effect is already reachable from the CLI by other names —
-      // `ocx grok apply` regenerates the fence and `ocx stop` strips it, and
-      // the Claude flag flips through `ocx claude config` — so a dedicated
-      // `ocx integration native` verb would duplicate existing commands rather
+      // `occx grok apply` regenerates the fence and `occx stop` strips it, and
+      // the Claude flag flips through `occx claude config` — so a dedicated
+      // `occx integration native` verb would duplicate existing commands rather
       // than add a capability. Listed so the sweep stays exhaustive.
       ["/api/native-integrations", "(none — GUI-only)"],
-      ["/api/debug", "ocx debug/observe"],
-      ["/api/diagnostics", "ocx system"],
-      ["/api/effort", "ocx agent"],
-      ["/api/grok", "ocx grok"],
-      ["/api/injection", "ocx agent"],
-      ["/api/keys", "ocx access"],
-      ["/api/keys/rotate", "ocx access key rotate"],
-      ["/api/keys/rotate/commit", "ocx access key rotate commit"],
-      ["/api/machine", "ocx connect/status/sync/disconnect"],
+      ["/api/debug", "occx debug/observe"],
+      ["/api/diagnostics", "occx system"],
+      ["/api/effort", "occx agent"],
+      ["/api/grok", "occx grok"],
+      ["/api/injection", "occx agent"],
+      ["/api/keys", "occx access"],
+      ["/api/keys/rotate", "occx access key rotate"],
+      ["/api/keys/rotate/commit", "occx access key rotate commit"],
+      ["/api/machine", "occx connect/status/sync/disconnect"],
       ["/api/session/logout", "(none — GUI current-session logout)"],
-      ["/api/logs", "ocx observe"],
-      ["/api/lab", "ocx lab"],
-      ["/api/config", "ocx config"],
+      ["/api/logs", "occx observe"],
+      ["/api/lab", "occx lab"],
+      ["/api/config", "occx config"],
       // The client machine plane. These are served by the connected client's own loopback
       // listener rather than the hub, and each one mirrors a connect-family command:
-      // status/clients -> `ocx connect status`, sync -> `ocx sync`, shim -> the client
-      // integration commands, disconnect -> `ocx disconnect`. hub-relay is the fixed-target
+      // status/clients -> `occx connect status`, sync -> `occx sync`, shim -> the client
+      // integration commands, disconnect -> `occx disconnect`. hub-relay is the fixed-target
       // relay those same commands use to reach the hub, so it has no separate CLI verb of
       // its own — it is the transport selected by `--management-transport relay`.
-      ["/api/machine", "ocx connect/disconnect/sync"],
+      ["/api/machine", "occx connect/disconnect/sync"],
       // The prompt composer is a GUI-first surface: it reads Codex's own layer
       // inventory and writes one config key. There is no headless equivalent
       // today, and claiming one would be worse than saying so here.
       ["/api/codex-prompt", "(none — GUI prompt-layer surface; keys live in config.toml)"],
-      ["/api/settings", "ocx system"],
+      ["/api/settings", "occx system"],
       // Routing Intelligence (RI-04..RI-10): profiles + dry-run are mirrored by
-      // `ocx route policy`. Analytics is GUI-first for now; the same request
+      // `occx route policy`. Analytics is GUI-first for now; the same request
       // history remains available through observe/index tooling.
-      ["/api/routing-profiles", "ocx route policy"],
-      ["/api/routing-analytics", "(none — GUI analytics surface; history via ocx observe/logs)"],
-      ["/api/shadow", "ocx models"],
-      ["/api/sidecar", "ocx agent"],
-      ["/api/startup", "ocx system"],
-      ["/api/stop", "ocx stop"],
-      ["/api/storage", "ocx observe"],
-      ["/api/subagent", "ocx agent"],
-      ["/api/sync", "ocx system sync"],
-      ["/api/system", "ocx observe/system"],
-      ["/api/update", "ocx system update"],
-      ["/api/usage", "ocx observe usage"],
-      ["/api/v2", "ocx v2/agent"],
-      ["/api/windows-tray", "ocx tray"],
+      ["/api/routing-profiles", "occx route policy"],
+      ["/api/routing-analytics", "(none — GUI analytics surface; history via occx observe/logs)"],
+      ["/api/shadow", "occx models"],
+      ["/api/sidecar", "occx agent"],
+      ["/api/startup", "occx system"],
+      ["/api/stop", "occx stop"],
+      ["/api/storage", "occx observe"],
+      ["/api/subagent", "occx agent"],
+      ["/api/sync", "occx system sync"],
+      ["/api/system", "occx observe/system"],
+      ["/api/update", "occx system update"],
+      ["/api/usage", "occx observe usage"],
+      ["/api/v2", "occx v2/agent"],
+      ["/api/windows-tray", "occx tray"],
     ];
     const uncovered = [...endpoints].filter(endpoint => !coverage.some(([prefix]) => endpoint === prefix || endpoint.startsWith(prefix)));
     expect(uncovered).toEqual([]);
@@ -597,7 +597,7 @@ describe("headless GUI parity CLI", () => {
 
   test("API key create returns the one-time key through the access command", async () => {
     const runtime = fakeRuntime((req) => new URL(req.url).pathname === "/api/keys"
-      ? { id: "key-1", name: "deploy", key: "ocx_secret" }
+      ? { id: "key-1", name: "deploy", key: "occx_secret" }
       : undefined);
     expect(await handleAccessCommand(["key", "create", "deploy", "--json"], runtime.deps)).toBe(0);
     expect(runtime.requests[0]).toEqual({ path: "/api/keys", method: "POST", body: { name: "deploy" } });
@@ -612,7 +612,7 @@ describe("headless GUI parity CLI", () => {
         fetchImpl: async () => { requests += 1; return new Response(); },
       })).toBe(0);
       expect(await handleConnectCommand(["revoke", "--admin-token-stdin", "--json"], {
-        stdinImpl: Readable.from(["ocx_admin_test\n"]),
+        stdinImpl: Readable.from(["occx_admin_test\n"]),
         fetchImpl: async () => { requests += 1; return new Response(); },
       })).toBe(1);
       expect(requests).toBe(0);
@@ -743,9 +743,9 @@ describe("headless GUI parity CLI", () => {
   });
 
   test("config set validates the complete candidate before the atomic write", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-cli-config-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-cli-config-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       writeFileSync(join(home, "config.json"), JSON.stringify({
         port: 10100,
@@ -757,16 +757,16 @@ describe("headless GUI parity CLI", () => {
       expect(await handleConfigCommand(["set", "port", "-1", "--json"])).not.toBe(0);
       expect(JSON.parse(readFileSync(join(home, "config.json"), "utf8")).port).toBe(10100);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
 
   test("config set and import reject an invalid app-owned memory budget without persisting the normalized default", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-cli-memory-budget-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-cli-memory-budget-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     try {
       const configPath = join(home, "config.json");
       const importPath = join(home, "invalid-import.json");
@@ -787,8 +787,8 @@ describe("headless GUI parity CLI", () => {
       expect(await handleConfigCommand(["import", importPath, "--yes", "--json"])).not.toBe(0);
       expect(readFileSync(configPath, "utf8")).toBe(original);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
@@ -797,9 +797,9 @@ describe("headless GUI parity CLI", () => {
   test("config set applies onto the disk state, not a snapshot read before the lock (#1835)", async () => {
     // The read used to happen outside the mutation lock, so a concurrent edit landing
     // between it and the whole-snapshot save was silently reverted.
-    const home = mkdtempSync(join(tmpdir(), "ocx-cli-set-race-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-cli-set-race-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     const configPath = join(home, "config.json");
     const base = {
       port: 10100,
@@ -827,17 +827,17 @@ describe("headless GUI parity CLI", () => {
       expect(Object.keys(after.providers)).toEqual(expect.arrayContaining(["openai", "competitor"]));
       expect(after.providers.competitor).toMatchObject({ apiKey: "competitor-key" });
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
 
   test("config unset actually removes the key through the mutation primitive (#1835)", async () => {
     // A merge-only callback cannot delete, so unset would report success and change nothing.
-    const home = mkdtempSync(join(tmpdir(), "ocx-cli-unset-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-cli-unset-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     const configPath = join(home, "config.json");
     try {
       writeFileSync(configPath, JSON.stringify({
@@ -852,15 +852,15 @@ describe("headless GUI parity CLI", () => {
       expect(Object.hasOwn(after, "autoSwitchThreshold")).toBe(false);
       expect(after.providers.openai).toBeDefined();
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
   test("config set releases the manual pin when it writes the selection order", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-cli-priority-pin-"));
-    const previous = process.env.OPENCODEX_HOME;
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-cli-priority-pin-"));
+    const previous = process.env.OPENCCX_HOME;
+    process.env.OPENCCX_HOME = home;
     const configPath = join(home, "config.json");
     const base = {
       port: 10100,
@@ -890,14 +890,14 @@ describe("headless GUI parity CLI", () => {
       expect(await handleConfigCommand(["set", "autoSwitchThreshold", "50", "--json"])).toBe(0);
       expect(readPin()).toBe("work");
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
       removeTreeWithRetry(home);
     }
   });
 });
 
-describe("#2565 ocx provider quota renders bars, not a count", () => {
+describe("#2565 occx provider quota renders bars, not a count", () => {
   /**
    * `quota()` rendered the response through `summaryLines()`, a depth-1 flattener that emits
    * "N item(s)" for a non-scalar array. Every fetched report was discarded and the default
@@ -905,7 +905,7 @@ describe("#2565 ocx provider quota renders bars, not a count", () => {
    */
   const report = (provider: string, quota: Record<string, unknown>) => ({ provider, quota });
 
-  test("one line per report, using the same formatter as ocx account refresh", () => {
+  test("one line per report, using the same formatter as occx account refresh", () => {
     const line = providerQuotaLine("anthropic", report("anthropic", {
       fiveHourPercent: 9,
       fiveHourResetAt: 1_787_690_999_802,
@@ -935,7 +935,7 @@ describe("#2565 ocx provider quota renders bars, not a count", () => {
   });
 });
 
-describe("#2566 per-account quota in ocx account list", () => {
+describe("#2566 per-account quota in occx account list", () => {
   const row = (over: Record<string, unknown> = {}) => ({
     provider: "anthropic",
     type: "oauth" as const,

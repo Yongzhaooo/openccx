@@ -4,7 +4,7 @@ These captures show the production dashboard bundle served by `startServer`,
 using the real management routes, device-login implementation, credential store,
 account-pool controller, and refresh button. They are not component fixtures.
 
-The server used an isolated OpenCodex/Codex home. Only external provider responses
+The server used an isolated Openccx/Codex home. Only external provider responses
 were mocked: device authorization, token exchange, WHAM usage, and the completed
 inference stream. The account identity and credentials are synthetic. The empty
 native-main home explains the separate Main Account warning in both screenshots.

@@ -14,7 +14,7 @@ afterEach(() => {
 
 describe("Codex Log Guard lock", () => {
   test("fails fast on same-database contention without using history H", async () => {
-    const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "occx-log-guard-lock-"));
     roots.push(root);
     const lockPath = join(root, "log-guard-lock.sqlite");
     const codexHome = join(root, "codex-home");

@@ -21,16 +21,16 @@ interface WebSearchModelOption {
 }
 
 const USAGE = `Usage:
-  ocx agent [status] [--json]
-  ocx agent injection <status|set> [--model <id|->] [--effort <level|->]
+  occx agent [status] [--json]
+  occx agent injection <status|set> [--model <id|->] [--effort <level|->]
       [--prompt <text|->] [--guidance <on|off>] [--json]
-  ocx agent effort <status|set> [--main <level|->] [--subagent <level|->] [--json]
-  ocx agent subagents <status|set|clear> [model,model...] [--json]
-  ocx agent fallback <status|set|clear> [model,model...] [--poll-ms <5000-600000>] [--json]
-  ocx agent sidecar <status|web|vision> [--list] [--model <id|->]
+  occx agent effort <status|set> [--main <level|->] [--subagent <level|->] [--json]
+  occx agent subagents <status|set|clear> [model,model...] [--json]
+  occx agent fallback <status|set|clear> [model,model...] [--poll-ms <5000-600000>] [--json]
+  occx agent sidecar <status|web|vision> [--list] [--model <id|->]
       [--backend web:<openai|anthropic|xai|gemini|exa|-> vision:<openai|anthropic|routed|->]
       [--reasoning <level>] [--max-descriptions <n>] [--json]
-  ocx agent request-user-input [on|off] [--json]`;
+  occx agent request-user-input [on|off] [--json]`;
 
 function clearable(value: string | undefined): string | null | undefined {
   return value === "-" ? null : value;

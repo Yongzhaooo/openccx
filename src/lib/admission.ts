@@ -1,4 +1,4 @@
-export const RETAINED_TRUNCATION_MARKER = "\n…[truncated by opencodex]";
+export const RETAINED_TRUNCATION_MARKER = "\n…[truncated by openccx]";
 
 export class ResourceAdmissionError extends Error {
   readonly code: string = "server_busy";

@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 import type {
-  OcxAssistantContentPart,
-  OcxContentPart,
-  OcxMessage,
-  OcxParsedRequest,
-  OcxToolCall,
-  OcxToolResultMessage,
+  OccxAssistantContentPart,
+  OccxContentPart,
+  OccxMessage,
+  OccxParsedRequest,
+  OccxToolCall,
+  OccxToolResultMessage,
 } from "../../types";
-import { isAllowedToolChoice, namespacedToolName, toolChoiceAliases, type OcxTool, type OcxToolChoice } from "../../types";
+import { isAllowedToolChoice, namespacedToolName, toolChoiceAliases, type OccxTool, type OccxToolChoice } from "../../types";
 import type { CursorRequestMessage, CursorRequestedModelParameter, CursorRunRequest } from "./types";
 import { cursorCheckpointModelAffinityId, cursorWireModelSelection, type CursorRoutingLevel } from "./discovery";
 import { cursorUltraBaseModelId } from "./discovery";
@@ -40,17 +40,17 @@ export const CURSOR_TOOL_COUNT_LIMIT = 330;
 export const CURSOR_TOOL_BYTES_LIMIT = 120_000;
 
 interface CursorToolBudgetResult {
-  tools: OcxTool[];
-  omitted: OcxTool[];
+  tools: OccxTool[];
+  omitted: OccxTool[];
 }
 
-function explicitlySelectedNames(choice: OcxToolChoice | undefined): Set<string> {
+function explicitlySelectedNames(choice: OccxToolChoice | undefined): Set<string> {
   if (!choice || choice === "auto" || choice === "none" || choice === "required") return new Set();
   return new Set("name" in choice ? [choice.name] : isAllowedToolChoice(choice) ? choice.allowedTools : []);
 }
 
-function toolPriority(tool: OcxTool, selectedNames: ReadonlySet<string>): number {
-  // Execution path (bare or opencodex-responses `exec` / `exec_command` / `shell_command`)
+function toolPriority(tool: OccxTool, selectedNames: ReadonlySet<string>): number {
+  // Execution path (bare or openccx-responses `exec` / `exec_command` / `shell_command`)
   // outranks filler so a crowded catalog cannot drop the Codex shell bridge (#399).
   if (isCursorExecutionPathTool(tool)) return 0;
   if (isBareCodexShellBridgeTool(tool)) return 0;
@@ -67,7 +67,7 @@ function toolPriority(tool: OcxTool, selectedNames: ReadonlySet<string>): number
   return 6;
 }
 
-function isPinnedCursorTool(tool: OcxTool, selectedNames: ReadonlySet<string>): boolean {
+function isPinnedCursorTool(tool: OccxTool, selectedNames: ReadonlySet<string>): boolean {
   return toolPriority(tool, selectedNames) <= 3;
 }
 
@@ -77,8 +77,8 @@ function isPinnedCursorTool(tool: OcxTool, selectedNames: ReadonlySet<string>): 
  * names, provider identifiers, and schemas all count toward the byte ceiling.
  */
 export function applyCursorToolBudget(
-  tools: readonly OcxTool[] | undefined,
-  toolChoice: OcxToolChoice | undefined,
+  tools: readonly OccxTool[] | undefined,
+  toolChoice: OccxToolChoice | undefined,
 ): CursorToolBudgetResult {
   const catalog = tools ?? [];
   const baseEligible = catalog.filter(tool => cursorToolAllowedByChoice(tool, toolChoice, catalog));
@@ -95,11 +95,11 @@ export function applyCursorToolBudget(
   const candidates = eligible
     .map((tool, index) => ({ tool, index, priority: toolPriority(tool, selectedNames) }))
     .sort((a, b) => a.priority - b.priority || a.index - b.index);
-  const kept: OcxTool[] = [];
-  const keptSet = new Set<OcxTool>();
+  const kept: OccxTool[] = [];
+  const keptSet = new Set<OccxTool>();
   let keptBytes = 0;
 
-  const tryKeep = (tool: OcxTool): boolean => {
+  const tryKeep = (tool: OccxTool): boolean => {
     if (keptSet.has(tool) || kept.length >= CURSOR_TOOL_COUNT_LIMIT) return keptSet.has(tool);
     // Repeated protobuf message fields serialize as concatenated tag/length/value entries,
     // so each one-entry wrapper size is the exact additive contribution to McpTools.
@@ -169,15 +169,15 @@ export function applyCursorToolBudget(
   };
 }
 
-function catalogLimitNote(kept: readonly OcxTool[], omitted: readonly OcxTool[]): string | undefined {
+function catalogLimitNote(kept: readonly OccxTool[], omitted: readonly OccxTool[]): string | undefined {
   if (omitted.length === 0) return undefined;
   const recoverable = kept.some(tool => tool.toolSearch || cursorToolWireName(tool) === "tool_search");
   const names = omitted.slice(0, 12).map(cursorToolWireName);
   const remainder = omitted.length - names.length;
   const omittedSummary = `${names.join(", ")}${remainder > 0 ? `, and ${remainder} more` : ""}`;
   return recoverable
-    ? `[opencodex] Cursor's transport limit allows ${kept.length} of ${kept.length + omitted.length} client tools this turn. Omitted: ${omittedSummary}. Use tool_search for a needed omitted tool; tools returned by tool_search are prioritized on the next turn.`
-    : `[opencodex] Cursor's transport limit allows ${kept.length} of ${kept.length + omitted.length} client tools this turn. Omitted and unavailable this turn: ${omittedSummary}.`;
+    ? `[openccx] Cursor's transport limit allows ${kept.length} of ${kept.length + omitted.length} client tools this turn. Omitted: ${omittedSummary}. Use tool_search for a needed omitted tool; tools returned by tool_search are prioritized on the next turn.`
+    : `[openccx] Cursor's transport limit allows ${kept.length} of ${kept.length + omitted.length} client tools this turn. Omitted and unavailable this turn: ${omittedSummary}.`;
 }
 
 /**
@@ -188,7 +188,7 @@ function catalogLimitNote(kept: readonly OcxTool[], omitted: readonly OcxTool[])
  * route's eligibility, so `fastMode: false` correctly suppresses a caller's Fast request.
  * A `{kind:"set"}` decision on a Cursor route means canonical Fast survived that gate.
  */
-export function cursorFastRequested(parsed: OcxParsedRequest): boolean {
+export function cursorFastRequested(parsed: OccxParsedRequest): boolean {
   return parsed.options.tierDecision?.kind === "set";
 }
 
@@ -200,7 +200,7 @@ export function cursorFastRequested(parsed: OcxParsedRequest): boolean {
  * `createCursorRequest` is not pure — it mints conversation ids — so rebuilding there would
  * report a request that was never sent.
  */
-export function cursorRequestEmitsFastVariant(parsed: OcxParsedRequest): boolean {
+export function cursorRequestEmitsFastVariant(parsed: OccxParsedRequest): boolean {
   if (!cursorFastRequested(parsed)) return false;
   const model = normalizeCursorModelId(parsed.modelId, parsed.options.reasoning, true);
   return model.modelId.endsWith("-fast")
@@ -247,7 +247,7 @@ function normalizeCursorModelId(modelId: string, reasoning?: string, fast?: bool
   };
 }
 
-function contentPartToText(part: OcxContentPart | OcxAssistantContentPart): string | undefined {
+function contentPartToText(part: OccxContentPart | OccxAssistantContentPart): string | undefined {
   switch (part.type) {
     case "text":
       return part.text;
@@ -265,7 +265,7 @@ function contentPartToText(part: OcxContentPart | OcxAssistantContentPart): stri
   }
 }
 
-function toolResultToText(message: OcxToolResultMessage): string {
+function toolResultToText(message: OccxToolResultMessage): string {
   return [
     "[tool_result]",
     `call_id: ${decodeCursorCallId(message.toolCallId)}`,
@@ -276,7 +276,7 @@ function toolResultToText(message: OcxToolResultMessage): string {
   ].join("\n");
 }
 
-function contentToText(content: string | readonly (OcxContentPart | OcxAssistantContentPart)[]): string {
+function contentToText(content: string | readonly (OccxContentPart | OccxAssistantContentPart)[]): string {
   if (typeof content === "string") return content;
   return content
     .map(contentPartToText)
@@ -284,7 +284,7 @@ function contentToText(content: string | readonly (OcxContentPart | OcxAssistant
     .join("\n");
 }
 
-function requestMessage(message: OcxMessage): CursorRequestMessage | undefined {
+function requestMessage(message: OccxMessage): CursorRequestMessage | undefined {
   switch (message.role) {
     case "user":
     case "developer":
@@ -314,7 +314,7 @@ function requestMessage(message: OcxMessage): CursorRequestMessage | undefined {
  * and JPEG-rewritten parts stay visible to activePromptText after image preparation.
  */
 export function cursorRequestMessagesFromRaw(
-  messages: readonly OcxMessage[] | undefined,
+  messages: readonly OccxMessage[] | undefined,
 ): CursorRequestMessage[] {
   if (!messages?.length) return [];
   return messages
@@ -329,7 +329,7 @@ export function generatedCursorConversationId(): string {
 /** Derive an opaque provider-scoped Cursor id from the upstream client's conversation identity. */
 export function cursorConversationIdFromClientThread(threadId: string, identityScope?: string): string {
   const digest = createHash("sha256")
-    .update("ocx:cursor:thread:")
+    .update("occx:cursor:thread:")
     .update(identityScope?.trim() || "local")
     .update("\0")
     .update(threadId)
@@ -345,7 +345,7 @@ export function cursorConversationIdFromClientThread(threadId: string, identityS
  * (cache-cohort fingerprint, not conversation ownership).
  */
 export function resolveCursorConversationId(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   _wireModelId: string,
   options: CreateCursorRequestOptions = {},
 ): string {
@@ -361,7 +361,7 @@ export function resolveCursorConversationId(
   return generatedCursorConversationId();
 }
 
-export function cursorClientThreadOwner(parsed: OcxParsedRequest): string | undefined {
+export function cursorClientThreadOwner(parsed: OccxParsedRequest): string | undefined {
   return parsed._clientThreadId?.trim() || parsed._cursorClientThreadId?.trim() || undefined;
 }
 
@@ -373,8 +373,8 @@ function updateFramed(hash: ReturnType<typeof createHash>, value: string): void 
   hash.update(bytes);
 }
 
-export function cursorInstructionDigest(parsed: OcxParsedRequest): string {
-  const hash = createHash("sha256").update("ocx:cursor:sys:");
+export function cursorInstructionDigest(parsed: OccxParsedRequest): string {
+  const hash = createHash("sha256").update("occx:cursor:sys:");
   for (const line of parsed.context.systemPrompt ?? []) updateFramed(hash, line);
   for (const message of parsed.context.messages) {
     if (message.role !== "developer") continue;
@@ -383,8 +383,8 @@ export function cursorInstructionDigest(parsed: OcxParsedRequest): string {
   return hash.digest("hex");
 }
 
-export function cursorCoveredPrefixDigest(parsed: OcxParsedRequest, coveredMessageCount: number): string {
-  const hash = createHash("sha256").update("ocx:cursor:prefix:");
+export function cursorCoveredPrefixDigest(parsed: OccxParsedRequest, coveredMessageCount: number): string {
+  const hash = createHash("sha256").update("occx:cursor:prefix:");
   updateFramed(hash, cursorInstructionDigest(parsed));
   for (const message of parsed.context.messages.slice(0, coveredMessageCount)) {
     updateFramed(hash, message.role);
@@ -399,7 +399,7 @@ export interface CreateCursorRequestOptions {
 }
 
 function lookupPrefixSnapshot(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   request: CursorRunRequest,
   identityScope: string,
 ): CursorCheckpointSnapshot | undefined {
@@ -420,7 +420,7 @@ function lookupPrefixSnapshot(
 }
 
 function lineageMismatch(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   snapshot: CursorCheckpointSnapshot,
 ): CursorCheckpointInvalidationReason | undefined {
   const covered = snapshot.coveredMessageCount;
@@ -436,7 +436,7 @@ function lineageMismatch(
 }
 
 function resolveCursorCheckpoint(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   request: CursorRunRequest,
   options: CreateCursorRequestOptions,
 ): { snapshot: CursorCheckpointSnapshot } | { reason: CursorCheckpointInvalidationReason } {
@@ -474,7 +474,7 @@ function resolveCursorCheckpoint(
 }
 
 export function createCursorRequest(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   options: CreateCursorRequestOptions = {},
 ): CursorRunRequest {
   const messages = cursorRequestMessagesFromRaw(parsed.context.messages);

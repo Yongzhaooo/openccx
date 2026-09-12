@@ -32,7 +32,7 @@ export interface GracefulStopIo {
   /**
    * Nonce of the pending-teardown receipt this caller claimed.
    *
-   * `ocx stop` sets it because it restores shared client config itself, only after
+   * `occx stop` sets it because it restores shared client config itself, only after
    * proving a stopped Task Scheduler did not respawn the proxy (#3008). The nonce is what
    * makes the deferral an owned obligation rather than a flag anyone can set: the proxy
    * honours it only when it names the receipt actually on disk. Direct callers omit it
@@ -42,7 +42,7 @@ export interface GracefulStopIo {
   /**
    * Endpoint the caller already resolved for this pid.
    *
-   * `ocx stop` records this same snapshot in its pending-teardown receipt. Re-reading the
+   * `occx stop` records this same snapshot in its pending-teardown receipt. Re-reading the
    * runtime file here could pick up a different one, which would make the receipt name an
    * endpoint the stop never contacted — and recovery probes exactly that endpoint.
    */
@@ -105,8 +105,8 @@ export function lastStopRefusalCode(): string | null {
  * spend acting on it.
  *
  * These name the cause only. The command belongs to {@link refusalNextStep}, because the
- * only callers of `stopProxy` are `ocx stop` and the service manager's own cleanup, and a
- * message that told either of them to run `ocx stop` would be the #4169 loop again.
+ * only callers of `stopProxy` are `occx stop` and the service manager's own cleanup, and a
+ * message that told either of them to run `occx stop` would be the #4169 loop again.
  */
 function refusalFallbackMessage(code: string | null): string {
   switch (code) {
@@ -126,30 +126,30 @@ function refusalFallbackMessage(code: string | null): string {
 }
 
 /**
- * What is actually left to do when `ocx stop` is the command that received the refusal.
+ * What is actually left to do when `occx stop` is the command that received the refusal.
  *
  * Every refusal `POST /api/stop` produces is written for an API client, so it recommends
- * `ocx stop` — which is the command already running when the CLI prints it. That is the
- * loop #4169 reports: the endpoint points at `ocx stop`, `ocx stop` repeats the endpoint,
- * and neither names the wrapper that is refusing. `ocx stop` has already asked the service
+ * `occx stop` — which is the command already running when the CLI prints it. That is the
+ * loop #4169 reports: the endpoint points at `occx stop`, `occx stop` repeats the endpoint,
+ * and neither names the wrapper that is refusing. `occx stop` has already asked the service
  * manager to stop by the time this is reached, so the remaining question is always what the
  * service manager is doing, and no branch may answer with the command that just failed.
  */
 export function refusalNextStep(code: string | null): string {
   switch (code) {
     case "respawnable_service":
-      return "This stop already asked the service manager to stop, so running `ocx stop` "
-        + "again is not the missing step. Run `ocx service status` to see whether a wrapper "
+      return "This stop already asked the service manager to stop, so running `occx stop` "
+        + "again is not the missing step. Run `occx service status` to see whether a wrapper "
         + "is still installed and able to respawn the proxy.";
     case "self_unload_service":
-      return "This stop already asked the service manager to stop, so running `ocx stop` "
-        + "again is not the missing step. Run `ocx service status` to see whether the service "
+      return "This stop already asked the service manager to stop, so running `occx stop` "
+        + "again is not the missing step. Run `occx service status` to see whether the service "
         + "is still registered.";
     case "service_state_unknown":
-      return "Run `ocx service status` to see the query error, repair the service manager "
+      return "Run `occx service status` to see the query error, repair the service manager "
         + "access, then retry.";
     default:
-      return "Run `ocx service status` to inspect the service state.";
+      return "Run `occx service status` to inspect the service state.";
   }
 }
 
@@ -207,12 +207,12 @@ async function stopProxyGracefullyDetailed(
   if (!runtime?.port) return done(false);
   const env = io.env ?? process.env;
   const headers: Record<string, string> = {};
-  const token = configuredAdminToken(env.OPENCODEX_HOME?.trim() || undefined, env as NodeJS.ProcessEnv);
-  if (token) headers["x-opencodex-api-key"] = token;
+  const token = configuredAdminToken(env.OPENCCX_HOME?.trim() || undefined, env as NodeJS.ProcessEnv);
+  if (token) headers["x-openccx-api-key"] = token;
   const fetchFn = io.fetchFn ?? fetch;
   let sharedTeardownConfirmed = false;
   try {
-    // `ocx stop` asks the proxy NOT to restore shared client config: it does that itself,
+    // `occx stop` asks the proxy NOT to restore shared client config: it does that itself,
     // after verifying a stopped Task Scheduler did not respawn the proxy (#3008). Letting
     // the child do it means a survivor found seconds later has already lost its config.
     const stopUrl = `http://${gracefulStopHost(runtime.hostname)}:${runtime.port}/api/stop`
@@ -294,7 +294,7 @@ export async function stopProxy(pid: number, io: GracefulStopIo = {}): Promise<b
   }
   if (graceful === "teardown-unconfirmed") {
     // Exit was observed, so do not enter the forced-stop fallback. Returning false keeps
-    // shared restoration with `ocx stop` instead of claiming that the proxy completed it.
+    // shared restoration with `occx stop` instead of claiming that the proxy completed it.
     await waitForStoppedPort(runtime, pid);
     return false;
   }
@@ -320,7 +320,7 @@ async function waitForStoppedPort(
       intervalMs: 100,
       scanIntervalMs: 500,
       // Only the process we just stopped — never kill a newly started twin proxy.
-      killOcxHolders: !!(stoppedPid && stoppedPid > 0),
+      killOccxHolders: !!(stoppedPid && stoppedPid > 0),
       onlyKillPids: stoppedPid && stoppedPid > 0 ? [stoppedPid] : [],
     });
   } catch {

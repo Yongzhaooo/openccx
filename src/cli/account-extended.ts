@@ -37,22 +37,22 @@ import {
 const MAIN_ID = "__main__";
 const AUTO_NOTE = "auto (no pin — lowest-usage account is selected per request)";
 const EXTENDED_USAGE = `Usage:
-  ocx account refresh <provider> [--json]
-  ocx account auto-switch <provider> <on|off|status|threshold <0-100>> [--json]
-  ocx account alias <provider> <id|main> <display-name|-> [--json]
-  ocx account priority <provider> <id|main> [<-100..100|first|earlier|normal|later|last|reset>] [--json]
-  ocx account pause <provider> <id|main> [--json]
-  ocx account resume <provider> <id|main> [--json]
-  ocx account pause-exhausted <provider> [--json]
-  ocx account strategy <provider> [<quota|round-robin|fill-first>] [--json]
-  ocx account sticky <provider> [<1-100>] [--json]
-  ocx account remove <provider> <id|main> --yes [--json]
-  ocx account clear-cooldown <provider> <id|main> [--json]
-  ocx account add-key <provider> [--label <label>] [--json]
-  ocx account import <provider> --format <format> (--file <path>|--stdin) [--json]`;
+  occx account refresh <provider> [--json]
+  occx account auto-switch <provider> <on|off|status|threshold <0-100>> [--json]
+  occx account alias <provider> <id|main> <display-name|-> [--json]
+  occx account priority <provider> <id|main> [<-100..100|first|earlier|normal|later|last|reset>] [--json]
+  occx account pause <provider> <id|main> [--json]
+  occx account resume <provider> <id|main> [--json]
+  occx account pause-exhausted <provider> [--json]
+  occx account strategy <provider> [<quota|round-robin|fill-first>] [--json]
+  occx account sticky <provider> [<1-100>] [--json]
+  occx account remove <provider> <id|main> --yes [--json]
+  occx account clear-cooldown <provider> <id|main> [--json]
+  occx account add-key <provider> [--label <label>] [--json]
+  occx account import <provider> --format <format> (--file <path>|--stdin) [--json]`;
 const PIPE_GUIDANCE = `Pipe the API key on stdin, for example:
-  ocx account add-key <provider> <<< "$MY_KEY"
-  security find-generic-password -w <item> | ocx account add-key <provider>`;
+  occx account add-key <provider> <<< "$MY_KEY"
+  security find-generic-password -w <item> | occx account add-key <provider>`;
 const ACCOUNT_IMPORT_TIMEOUT_MS = ACCOUNT_IMPORT_DEADLINE_MS;
 
 function flag(args: string[], value: string): boolean {
@@ -264,7 +264,7 @@ function refreshLine(row: FamilyRows["rows"][number]): string {
   const quotaText = row.quota ? quotaParts(row.quota).join(" ") : "";
   parts.push(quotaText.length > 0 ? quotaText : "quota: unknown");
   if (row.needsReauth) parts.push("needs-reauth");
-  if (row.validationPending) parts.push("validation-pending (routing disabled; open 'ocx gui' and click Refresh quotas after recovery)");
+  if (row.validationPending) parts.push("validation-pending (routing disabled; open 'occx gui' and click Refresh quotas after recovery)");
   return parts.filter(Boolean).join(" ");
 }
 
@@ -336,7 +336,7 @@ export async function cmdRefresh(args: string[], deps: AccountDeps): Promise<num
     // A passive provider has no probe to run, so "no report available" reads as a
     // failure of something that was never attempted. Say what is actually true.
     else if (hasPassiveAccountQuota(name)) {
-      console.log(`${name} reports usage only during a streaming response; there is nothing to refresh. Run a request through this provider to update it, then see \`ocx account list ${name}\`.`);
+      console.log(`${name} reports usage only during a streaming response; there is nothing to refresh. Run a request through this provider to update it, then see \`occx account list ${name}\`.`);
     } else console.log(`no quota report available for ${name}`);
     return 0;
   }
@@ -442,7 +442,7 @@ export async function cmdRemove(args: string[], deps: AccountDeps): Promise<numb
   const requestedId = args.shift();
   if (!name || !requestedId || args.length) return wantsJson ? fail("provider and account id are required") : usage();
   if (!confirmed) {
-    const message = `Confirmation required. Re-run: ocx account remove ${name} ${requestedId} --yes`;
+    const message = `Confirmation required. Re-run: occx account remove ${name} ${requestedId} --yes`;
     return wantsJson ? fail(message) : usage(message);
   }
   const classified = configAndType(deps, name);
@@ -452,15 +452,15 @@ export async function cmdRemove(args: string[], deps: AccountDeps): Promise<numb
     ? fail("the main Codex App login cannot be removed")
     : usage("Error: the main Codex App login cannot be removed");
   const baseUrl = await resolveBaseUrl(deps);
-  if (!baseUrl) return fail("Proxy not reachable. Start it with 'ocx start' or 'ocx ensure'.");
+  if (!baseUrl) return fail("Proxy not reachable. Start it with 'occx start' or 'occx ensure'.");
   const before = await fetchRows(deps, baseUrl, name, classified.type);
-  if (before.networkDown) return fail("Proxy not reachable. Start it with 'ocx start' or 'ocx ensure'.");
+  if (before.networkDown) return fail("Proxy not reachable. Start it with 'occx start' or 'occx ensure'.");
   if (before.errorJson) return fail(errorText(before.errorJson, `failed to verify ${name} before removal`));
   if (!before.rows.some(row => row.id === id)) return wantsJson
     ? fail(`account or key "${requestedId}" was not found`)
     : usage(`Error: account or key "${requestedId}" was not found`);
   const response = await apiJson(deps, baseUrl, "DELETE", deletePath(classified.type, name, id));
-  if (response.status === 0) return fail("Proxy not reachable. Start it with 'ocx start' or 'ocx ensure'.");
+  if (response.status === 0) return fail("Proxy not reachable. Start it with 'occx start' or 'occx ensure'.");
   if (response.status !== 200) return fail(errorText(response.json, `failed to remove ${requestedId}`));
   const catalogRefreshPending = classified.type === "codex"
     && codexCatalogRefreshPending(response.json);
@@ -752,7 +752,7 @@ export async function cmdPriority(args: string[], deps: AccountDeps): Promise<nu
 }
 
 /**
- * `ocx account pause|resume <provider> <id>` (#2702).
+ * `occx account pause|resume <provider> <id>` (#2702).
  *
  * The server routes have always existed; only the CLI caller was missing, so pausing an
  * account was dashboard-only. The issue reports these as POST; the code is PUT
@@ -795,7 +795,7 @@ export async function cmdPause(args: string[], deps: AccountDeps, paused: boolea
 }
 
 /**
- * `ocx account pause-exhausted [--off]` (#2702).
+ * `occx account pause-exhausted [--off]` (#2702).
  *
  * Pauses every account whose quota is spent. The route refreshes quota for each account, so
  * it can partially fail; the response distinguishes "checked none and some failed" from
@@ -891,7 +891,7 @@ function poolTransportFor(
 }
 
 /**
- * `ocx account strategy <provider> [<name>]` and `ocx account sticky <provider> [<n>]` (#2702).
+ * `occx account strategy <provider> [<name>]` and `occx account sticky <provider> [<n>]` (#2702).
  *
  * One implementation rather than two near-duplicates, because strategy and sticky are two
  * fields of one setting on every pool that has them.

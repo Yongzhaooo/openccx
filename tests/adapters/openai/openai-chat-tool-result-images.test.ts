@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../../src/adapters/openai-chat";
-import type { OcxContentPart, OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxContentPart, OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 // Issue #888: role:"tool" content is text-only on chat-completions providers, so images inside a
 // tool result ride in a follow-up user vision message released when the tool round closes. When
 // text is present, the tool row carries that literal text plus fallback markers only for images
 // that cannot be transported in the follow-up carrier.
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://example.test/v1",
   apiKey: "sk-test",
@@ -29,8 +29,8 @@ interface ChatMsg {
   tool_call_id?: string;
 }
 
-function wire(messages: OcxMessage[]): ChatMsg[] {
-  const parsed: OcxParsedRequest = {
+function wire(messages: OccxMessage[]): ChatMsg[] {
+  const parsed: OccxParsedRequest = {
     modelId: "test-model",
     context: { messages },
     stream: false,
@@ -40,11 +40,11 @@ function wire(messages: OcxMessage[]): ChatMsg[] {
   return (JSON.parse(req.body) as { messages: ChatMsg[] }).messages;
 }
 
-function user(text: string): OcxMessage {
+function user(text: string): OccxMessage {
   return { role: "user", content: text, timestamp: 0 };
 }
 
-function assistantWithCalls(calls: { id: string; name: string }[]): OcxMessage {
+function assistantWithCalls(calls: { id: string; name: string }[]): OccxMessage {
   return {
     role: "assistant",
     content: calls.map(c => ({ type: "toolCall" as const, id: c.id, name: c.name, arguments: {} })),
@@ -52,14 +52,14 @@ function assistantWithCalls(calls: { id: string; name: string }[]): OcxMessage {
   };
 }
 
-function toolResult(callId: string, name: string, content: string | OcxContentPart[]): OcxMessage {
+function toolResult(callId: string, name: string, content: string | OccxContentPart[]): OccxMessage {
   return { role: "toolResult", toolCallId: callId, toolName: name, content, isError: false, timestamp: 0 };
 }
 
 function isImageCarrier(msg: ChatMsg): boolean {
   if (msg.role !== "user" || !Array.isArray(msg.content)) return false;
   const [head, ...rest] = msg.content;
-  return head?.type === "text" && typeof head.text === "string" && head.text.startsWith("[ocx]")
+  return head?.type === "text" && typeof head.text === "string" && head.text.startsWith("[occx]")
     && rest.length > 0 && rest.every(p => p.type === "image_url");
 }
 

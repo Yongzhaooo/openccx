@@ -79,24 +79,24 @@ refusal policy or changes to ordinary content/tool semantics.
 ## MiniMax Anthropic-compatible clients
 
 The MiniMax platform CLI's text resource posts Anthropic Messages to
-`/anthropic/v1/messages`. `ocx mmx` adapts that hard-coded client path with a temporary
+`/anthropic/v1/messages`. `occx mmx` adapts that hard-coded client path with a temporary
 loopback bridge instead of adding another server route. The bridge accepts only POSTs to the
 messages and count-tokens paths, rewrites them to the existing `/v1/messages` data plane,
 preserves the query and streaming body, strips all incoming credential headers, and pins the
 public loopback placeholder. It stops as soon as the MMX child exits, so the server's
 `AUTH_MATRIX` and authentication surface remain unchanged.
 
-`ocx mmx` exposes only the text resource because the other MMX resources use MiniMax-specific
+`occx mmx` exposes only the text resource because the other MMX resources use MiniMax-specific
 image, video, speech, music, vision, search, quota and file endpoints. The launcher isolates
 `~/.mmx` credentials behind a temporary config, removes ambient proxy variables so loopback
 traffic cannot be sent off-machine, owns the temporary bridge lifecycle, and refuses
 destination, region and credential overrides. It is
 loopback-only because MMX cannot carry the dedicated remote-admission header. MiniMax Code uses
-the separate reversible `custom_provider.opencodex` file integration and is likewise
+the separate reversible `custom_provider.openccx` file integration and is likewise
 loopback-only; its generated block never changes `defaultModel`. Each generated MCode model
 copies an authoritative catalog context window into `limit.context` and a nonempty canonical
 reasoning ladder into `thinking.effortOptions`. Missing capabilities stay absent instead of
-falling back to OpenCodex guesses, and the integration does not write the removed
+falling back to Openccx guesses, and the integration does not write the removed
 `thinking.effort` / `defaultEffort` fields because MCode owns the active effort per session.
 
 Chat helper admission in `src/server/responses/core.ts` follows the

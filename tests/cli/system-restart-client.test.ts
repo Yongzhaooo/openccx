@@ -106,7 +106,7 @@ describe("bound system restart client", () => {
       setup.requests.push({ url: String(input), init });
       return new Response(JSON.stringify({
         status: "ok",
-        service: "opencodex",
+        service: "openccx",
         version: "test",
         uptime: 1,
         pid: target.pid,
@@ -117,7 +117,7 @@ describe("bound system restart client", () => {
     expect(outcome.accepted).toBe(false);
     expect(setup.requests).toHaveLength(1);
     const headers = new Headers(setup.requests[0]!.init?.headers);
-    expect(headers.has("X-OpenCodex-API-Key")).toBe(false);
+    expect(headers.has("X-Openccx-API-Key")).toBe(false);
   });
 
   test("refuses a pre-update proxy before POST instead of weakening PID-bound auth", async () => {
@@ -160,13 +160,13 @@ describe("bound system restart client", () => {
 
     const proofHeaders = new Headers(setup.requests[0]!.init?.headers);
     expect(proofHeaders.get(LOCAL_ATTESTATION_CHALLENGE_HEADER)).toBe(setup.challenge);
-    expect(proofHeaders.has("X-OpenCodex-API-Key")).toBe(false);
+    expect(proofHeaders.has("X-Openccx-API-Key")).toBe(false);
 
     const restart = setup.requests[1]!;
     expect(restart.url).toBe("http://127.0.0.1:10100/api/system/restart");
     expect(restart.init?.method).toBe("POST");
     const restartHeaders = new Headers(restart.init?.headers);
-    expect(restartHeaders.has("X-OpenCodex-API-Key")).toBe(false);
+    expect(restartHeaders.has("X-Openccx-API-Key")).toBe(false);
     expect(restartHeaders.get(SYSTEM_RESTART_EXPECTED_PID_HEADER)).toBe(String(target.pid));
     expect(restartHeaders.get(SYSTEM_RESTART_NONCE_HEADER)).toBe(setup.challenge);
     expect(verifySystemRestartCapability(
@@ -239,7 +239,7 @@ function successfulDepsResponse(secret: string, challenge: string): Response {
   const proof = createLocalAttestationProof(secret, challenge, target.pid!, target.port);
   return new Response(JSON.stringify({
     status: "ok",
-    service: "opencodex",
+    service: "openccx",
     version: "test",
     uptime: 1,
     pid: target.pid,

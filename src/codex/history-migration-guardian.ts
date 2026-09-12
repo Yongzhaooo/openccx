@@ -4,7 +4,7 @@ import { resolveCodexHistoryJobTarget, runCodexHistoryJob } from "./history-job"
 /**
  * Daemon-side retry for the one-time Design-B history metadata restoration.
  *
- * Most upgrades run `ocx start` while the Codex app still holds `state_5.sqlite`,
+ * Most upgrades run `occx start` while the Codex app still holds `state_5.sqlite`,
  * so the inject-time restore can fail on the FIRST start while manifest-backed original
  * metadata is still pending. Instead
  * of asking the user to close the app and rerun start, this guardian keeps retrying
@@ -14,7 +14,7 @@ import { resolveCodexHistoryJobTarget, runCodexHistoryJob } from "./history-job"
  * - Ticks use `{ attempts: 1 }`: no sleepSync inside the daemon event loop; the tick
  *   cadence IS the retry. Worst case per tick is one sqlite busy wait.
  * - Timers are unref'd so the guardian never keeps the process alive.
- * - Started ONLY from `ocx start` (cli handleStart), never from injectCodexConfig —
+ * - Started ONLY from `occx start` (cli handleStart), never from injectCodexConfig —
  *   `/api/sync` re-runs inject and must not double-start loops.
  */
 
@@ -92,7 +92,7 @@ export function startHistoryMigrationGuardian(deps: HistoryMigrationGuardianDeps
     }
     if (ticks >= maxTicks) {
       stopped = true;
-      log.log("⚠️ history-migration: Could not verify that backed-up provider metadata was restored; the history database may be busy, unavailable, or not yet ready. Run 'ocx sync' (or check 'ocx doctor').");
+      log.log("⚠️ history-migration: Could not verify that backed-up provider metadata was restored; the history database may be busy, unavailable, or not yet ready. Run 'occx sync' (or check 'occx doctor').");
       return;
     }
     schedule();

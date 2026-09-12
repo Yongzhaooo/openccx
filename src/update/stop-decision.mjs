@@ -1,9 +1,9 @@
 import { STOP_HISTORY_INCOMPLETE_EXIT_CODE } from "./stop-contract.mjs";
 
 /**
- * May an update replace package files after `ocx stop` returned?
+ * May an update replace package files after `occx stop` returned?
  *
- * Both updaters ask this: `src/update/index.ts` on the Bun path and `bin/ocx.mjs` on the
+ * Both updaters ask this: `src/update/index.ts` on the Bun path and `bin/occx.mjs` on the
  * npm path the dashboard uses. It lives here as plain ESM so the Node launcher can import
  * it, and so the two lanes cannot drift into disagreeing about the same situation — which
  * is how #3008 shipped in the first place, with the fix on one side only.

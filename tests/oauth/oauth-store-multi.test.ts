@@ -38,7 +38,7 @@ import type { OAuthCredentials } from "../../src/oauth/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-oauth-store-multi-test");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
 
 async function cleanupOAuthStoreFixture(): Promise<void> {
@@ -46,8 +46,8 @@ async function cleanupOAuthStoreFixture(): Promise<void> {
   setIcaclsRunnerForTests(null);
   setAsyncIcaclsRunnerForTests(null);
   resetHardenedStateForTests();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
 }
 
@@ -71,10 +71,10 @@ async function selectionAccounts() {
 
 describe("multi-account auth store", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     resetHardenedStateForTests();
     setIcaclsRunnerForTests(() => ICACLS_OK);
     setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
@@ -115,13 +115,13 @@ describe("multi-account auth store", () => {
       // An event-loop checkpoint lets an incorrectly unawaited cleanup finish; no sleep oracle.
       await new Promise<void>(resolve => setImmediate(resolve));
       expect(cleanupSettled).toBe(false);
-      expect(process.env.OPENCODEX_HOME).toBe(TEST_DIR);
+      expect(process.env.OPENCCX_HOME).toBe(TEST_DIR);
       expect(existsSync(TEST_DIR)).toBe(true);
 
       release();
       expect(await cleaning).toBeNull();
       expect(cleanupSettled).toBe(true);
-      expect(process.env.OPENCODEX_HOME).toBe(previousOpencodexHome);
+      expect(process.env.OPENCCX_HOME).toBe(previousOpenccxHome);
       expect(existsSync(TEST_DIR)).toBe(false);
     } finally {
       if (deadlineTimer !== undefined) clearTimeout(deadlineTimer);

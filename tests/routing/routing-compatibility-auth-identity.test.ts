@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { PROVIDER_REGISTRY } from "../../src/providers/registry";
 import { resolveProductionBehaviorValues } from "../../src/routing/compatibility/behavior";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 describe("CL-06 registry auth compatibility identity", () => {
   test("registry-derived OAuth matches explicit OAuth behavior identity", () => {
@@ -10,12 +10,12 @@ describe("CL-06 registry auth compatibility identity", () => {
     if (!registryEntry) return;
 
     const modelId = "identity-model";
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: registryEntry.adapter,
       baseUrl: registryEntry.baseUrl,
       models: [modelId],
     };
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: registryEntry.id,
       providers: { [registryEntry.id]: provider },

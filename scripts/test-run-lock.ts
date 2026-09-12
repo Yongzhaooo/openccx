@@ -20,10 +20,10 @@ import {
 } from "../src/codex/user-identity";
 import { hardenSecretDir } from "../src/lib/windows-secret-acl";
 
-export const TEST_RUN_ID_ENV = "OCX_TEST_RUN_ID";
-export const TEST_RUN_LOCK_PATH_ENV = "OCX_TEST_RUN_LOCK_PATH";
-export const TEST_RUN_LOCK_TOKEN_ENV = "OCX_TEST_RUN_LOCK_TOKEN";
-export const TEST_RUN_NO_QUEUE_ENV = "OCX_TEST_NO_QUEUE";
+export const TEST_RUN_ID_ENV = "OCCX_TEST_RUN_ID";
+export const TEST_RUN_LOCK_PATH_ENV = "OCCX_TEST_RUN_LOCK_PATH";
+export const TEST_RUN_LOCK_TOKEN_ENV = "OCCX_TEST_RUN_LOCK_TOKEN";
+export const TEST_RUN_NO_QUEUE_ENV = "OCCX_TEST_NO_QUEUE";
 const OWNER_FILE = "owner.json";
 const MEMBERS_DIR = "members";
 const INCOMPLETE_OWNER_GRACE_MS = 10_000;
@@ -169,7 +169,7 @@ export function resolveInheritedTestRunLock(
     throw new Error("The wrapped Bun test lock capability is incomplete; refusing inherited lock access.");
   }
 
-  const expectedName = `opencodex-bun-test-${machineDiscriminator(options.hostName ?? hostname())}.lock`;
+  const expectedName = `openccx-bun-test-${machineDiscriminator(options.hostName ?? hostname())}.lock`;
   if (
     !win32.isAbsolute(candidate)
     || win32.basename(candidate) !== expectedName
@@ -297,7 +297,7 @@ export function resolveDefaultTestRunLockPath(
         `Cannot resolve a safe user-scoped Bun test lock: the Windows lock directory ${issueAfterHardening}.`,
       );
     }
-    return win32.join(lockRoot, `opencodex-bun-test-${discriminator}.lock`);
+    return win32.join(lockRoot, `openccx-bun-test-${discriminator}.lock`);
   }
 
   const uid = options.uid ?? (typeof process.getuid === "function" ? process.getuid() : undefined);
@@ -319,7 +319,7 @@ export function resolveDefaultTestRunLockPath(
         expectedUid: uid,
         requirePrivateMode: true,
       });
-      if (!issue) return posix.join(xdgRuntimeDir, `opencodex-bun-test-${discriminator}.lock`);
+      if (!issue) return posix.join(xdgRuntimeDir, `openccx-bun-test-${discriminator}.lock`);
       failures.push(`XDG_RUNTIME_DIR ${issue}`);
     }
   }
@@ -327,7 +327,7 @@ export function resolveDefaultTestRunLockPath(
   if (!posix.isAbsolute(tempDir)) {
     failures.push("the OS temporary directory is not absolute");
   } else {
-    const fallback = posix.join(tempDir, `opencodex-test-runtime-${uid}`);
+    const fallback = posix.join(tempDir, `openccx-test-runtime-${uid}`);
     try {
       fileSystem.mkdirSync(fallback, { mode: POSIX_PRIVATE_MODE });
     } catch (error) {
@@ -342,7 +342,7 @@ export function resolveDefaultTestRunLockPath(
         expectedUid: uid,
         requirePrivateMode: true,
       });
-      if (!issue) return posix.join(fallback, `opencodex-bun-test-${discriminator}.lock`);
+      if (!issue) return posix.join(fallback, `openccx-bun-test-${discriminator}.lock`);
       failures.push(`the temporary UID runtime directory ${issue}`);
     }
   }
@@ -457,7 +457,7 @@ function ownsLock(lockPath: string, owner: TestRunLockOwner): boolean {
 }
 
 /**
- * Acquire the user-scoped, machine-local OpenCodex Bun-test lock.
+ * Acquire the user-scoped, machine-local Openccx Bun-test lock.
  *
  * `mkdir` is the cross-platform atomic primitive. The owner PID makes a lock left by
  * SIGKILL recoverable, while the run ID lets every worker belonging to one bare

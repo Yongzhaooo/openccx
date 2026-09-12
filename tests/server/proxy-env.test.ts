@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createServer } from "node:http";
 import { applyProxyEnv } from "../../src/config";
 import { resolveProxyRoute } from "../../src/lib/proxy-env";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-const PROXY_ENV_KEYS = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "all_proxy", "no_proxy", "OCX_TEST_PROXY_REF", "OCX_TEST_NO_PROXY_REF"] as const;
+const PROXY_ENV_KEYS = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "all_proxy", "no_proxy", "OCCX_TEST_PROXY_REF", "OCCX_TEST_NO_PROXY_REF"] as const;
 let saved: Record<string, string | undefined>;
 
 beforeEach(() => {
@@ -22,14 +22,14 @@ afterEach(() => {
   }
 });
 
-function configWithProxy(proxy?: string, noProxy?: string | string[]): OcxConfig {
-  return { proxy, noProxy, providers: {} } as unknown as OcxConfig;
+function configWithProxy(proxy?: string, noProxy?: string | string[]): OccxConfig {
+  return { proxy, noProxy, providers: {} } as unknown as OccxConfig;
 }
 
 // The top-level config schema ends in `.passthrough()` and declares neither `proxy` nor
 // `noProxy`, so these shapes survive validation and reach applyProxyEnv verbatim.
-function configWithRawProxy(proxy: unknown, noProxy?: unknown): OcxConfig {
-  return { proxy, noProxy, providers: {} } as unknown as OcxConfig;
+function configWithRawProxy(proxy: unknown, noProxy?: unknown): OccxConfig {
+  return { proxy, noProxy, providers: {} } as unknown as OccxConfig;
 }
 
 describe("resolveProxyRoute", () => {
@@ -272,14 +272,14 @@ describe("applyProxyEnv", () => {
   });
 
   test("resolves ${VAR}-style noProxy references", () => {
-    process.env.OCX_TEST_NO_PROXY_REF = "internal.example,10.0.0.0/8";
-    applyProxyEnv(configWithProxy("http://proxy.corp:8080", "${OCX_TEST_NO_PROXY_REF}"));
+    process.env.OCCX_TEST_NO_PROXY_REF = "internal.example,10.0.0.0/8";
+    applyProxyEnv(configWithProxy("http://proxy.corp:8080", "${OCCX_TEST_NO_PROXY_REF}"));
     expect(process.env.NO_PROXY).toBe("internal.example,10.0.0.0/8,localhost,127.0.0.1,::1,[::1]");
   });
 
   test("resolves ${VAR}-style env references like other config secrets", () => {
-    process.env.OCX_TEST_PROXY_REF = "http://ref-proxy:9999";
-    applyProxyEnv(configWithProxy("${OCX_TEST_PROXY_REF}"));
+    process.env.OCCX_TEST_PROXY_REF = "http://ref-proxy:9999";
+    applyProxyEnv(configWithProxy("${OCCX_TEST_PROXY_REF}"));
     expect(process.env.HTTP_PROXY).toBe("http://ref-proxy:9999");
   });
 });

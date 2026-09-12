@@ -20,7 +20,7 @@ import {
   InteractionUpdateSchema,
 } from "../../../src/adapters/cursor/gen/agent_pb";
 
-const PROVIDER = "opencodex-responses";
+const PROVIDER = "openccx-responses";
 
 function startedFrame(callId: string, toolName: string) {
   const toolCall = create(ToolCallSchema, {

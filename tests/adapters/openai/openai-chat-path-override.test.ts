@@ -12,9 +12,9 @@
 import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../../src/adapters/openai-chat";
 import { routeModel } from "../../../src/router";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
-function parsed(modelId: string): OcxParsedRequest {
+function parsed(modelId: string): OccxParsedRequest {
   return {
     modelId,
     context: { messages: [{ role: "user", content: "hello", timestamp: 0 }] },
@@ -25,13 +25,13 @@ function parsed(modelId: string): OcxParsedRequest {
 
 describe("openai-chat send path override", () => {
   test("without the field the adapter keeps appending /chat/completions to baseUrl", () => {
-    const provider: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
+    const provider: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.test/v1" };
     const req = createOpenAIChatAdapter(provider).buildRequest(parsed("some-model"));
     expect(req.url).toBe("https://example.test/v1/chat/completions");
   });
 
   test("a configured path replaces the whole suffix, trailing slash and all", () => {
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://example.test/",
       chatCompletionsPath: "/api/other/v4/chat/completions",
@@ -41,7 +41,7 @@ describe("openai-chat send path override", () => {
   });
 
   test("the zai row carries both wires, so a Chat opt-in reaches the Chat prefix", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "zai",
       providers: { zai: { adapter: "openai-responses", baseUrl: "https://api.z.ai" } },

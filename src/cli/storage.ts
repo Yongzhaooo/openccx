@@ -1,10 +1,10 @@
 /**
- * `ocx storage` — the archived-session cleanup, trash, and cleanup-policy surface (wp7).
+ * `occx storage` — the archived-session cleanup, trash, and cleanup-policy surface (wp7).
  *
  * Every route here existed with no CLI caller, so reclaiming disk space was dashboard-only.
  * Three of them delete or move operator data, and the rules for those are deliberate:
  *
- * 1. **Default to preview.** `ocx storage cleanup --percent N` runs the preview route and prints
+ * 1. **Default to preview.** `occx storage cleanup --percent N` runs the preview route and prints
  *    what WOULD be freed, then exits 0 having mutated nothing.
  * 2. **`--yes` is required to mutate.** There is no interactive prompt: an agent cannot answer
  *    one, and a prompt an agent can answer is not a safety boundary.
@@ -29,14 +29,14 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx storage report [--json]
-  ocx storage cleanup --percent <0-100> [--mode <quarantine|permanent>] [--yes] [--json]
-  ocx storage trash [list] [--json]
-  ocx storage trash restore <entry-id> [--yes] [--json]
-  ocx storage policy [show] [--json]
-  ocx storage policy set [--enabled <true|false>] [--percent <0-100>]
+  occx storage report [--json]
+  occx storage cleanup --percent <0-100> [--mode <quarantine|permanent>] [--yes] [--json]
+  occx storage trash [list] [--json]
+  occx storage trash restore <entry-id> [--yes] [--json]
+  occx storage policy [show] [--json]
+  occx storage policy set [--enabled <true|false>] [--percent <0-100>]
       [--mode <quarantine|permanent>] [--schedule <startup|daily|weekly|manual>] [--json]
-  ocx storage policy run [--yes] [--json]
+  occx storage policy run [--yes] [--json]
 
 Cleanup and restore MUTATE operator data and require --yes.
 Without --yes, cleanup prints the preview and changes nothing.`;
@@ -220,7 +220,7 @@ export async function handleStorageCommand(argv: string[], deps: RuntimeApiDeps 
   const sub = hasSub ? argv[0]! : "report";
   const rest = hasSub ? argv.slice(1) : argv;
   if (sub === "codex-logs") {
-    // Doctor and the Log Guard guides still document `ocx storage codex-logs …`.
+    // Doctor and the Log Guard guides still document `occx storage codex-logs …`.
     // This module owns cleanup/trash/policy; log-guard stays on the observe handler.
     const { handleObserveCommand } = await import("./observe");
     return handleObserveCommand(["storage", "codex-logs", ...rest], deps);

@@ -17,7 +17,7 @@ mock.module("../../src/oauth", () => ({
 import { CLAUDE_CODE_SYSTEM_INSTRUCTION } from "../../src/oauth/anthropic";
 import { parseRequest } from "../../src/responses/parser";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import {
   describeImagesInPlace,
   describeImageAnthropic,
@@ -27,14 +27,14 @@ import {
 } from "../../src/vision";
 
 const DATA_IMAGE = "data:image/png;base64,aGVsbG8=";
-const anthropicProvider: OcxProviderConfig = {
+const anthropicProvider: OccxProviderConfig = {
   adapter: "anthropic",
   authMode: "oauth",
   baseUrl: "https://api.anthropic.test/v1/",
 };
 const settings = { model: "claude-sonnet-5", timeoutMs: 5000 };
-const AUTH_ERROR_CANARY = "\\\\server\\share\\opencodex\\auth.json.ocx-tmp /home/alice/.opencodex/auth.json.ocx-tmp";
-const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the OpenCodex account status and retry.";
+const AUTH_ERROR_CANARY = "\\\\server\\share\\openccx\\auth.json.occx-tmp /home/alice/.opencodex/auth.json.occx-tmp";
+const PUBLIC_OAUTH_ERROR = "OAuth authentication failed. Check the Openccx account status and retry.";
 
 function sseResponse(
   frames: Array<Record<string, unknown> | string>,
@@ -330,12 +330,12 @@ describe("Anthropic vision executor", () => {
 
 describe("Anthropic vision planning and management config", () => {
   test("explicit anthropic backend fails closed without a usable stored credential", async () => {
-    const routed: OcxProviderConfig = {
+    const routed: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://routed.test/v1",
       noVisionModels: ["blind"],
     };
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "routed",
       providers: {
@@ -353,10 +353,10 @@ describe("Anthropic vision planning and management config", () => {
   });
 
   test("GET/PUT persists valid vision backend and cap and rejects invalid values", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const isolatedHome = mkdtempSync(join(tmpdir(), "ocx-vision-management-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
-    const config: OcxConfig = { port: 10100, defaultProvider: "none", providers: {} };
+    const previousHome = process.env.OPENCCX_HOME;
+    const isolatedHome = mkdtempSync(join(tmpdir(), "occx-vision-management-"));
+    process.env.OPENCCX_HOME = isolatedHome;
+    const config: OccxConfig = { port: 10100, defaultProvider: "none", providers: {} };
     try {
       const put = await handleManagementAPI(
         new Request("http://localhost/api/sidecar-settings", {
@@ -454,17 +454,17 @@ describe("Anthropic vision planning and management config", () => {
       expect(config.webSearchSidecar).toEqual({ reasoning: "high" });
       expect(config.visionSidecar).toEqual({ maxDescriptionsPerTurn: 4 });
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(isolatedHome);
     }
   });
 
   test("PUT rejects malformed body shapes with 400 and never persists them (review F2)", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const isolatedHome = mkdtempSync(join(tmpdir(), "ocx-vision-management-malformed-"));
-    process.env.OPENCODEX_HOME = isolatedHome;
-    const config: OcxConfig = { port: 10100, defaultProvider: "none", providers: {} };
+    const previousHome = process.env.OPENCCX_HOME;
+    const isolatedHome = mkdtempSync(join(tmpdir(), "occx-vision-management-malformed-"));
+    process.env.OPENCCX_HOME = isolatedHome;
+    const config: OccxConfig = { port: 10100, defaultProvider: "none", providers: {} };
     try {
       for (const raw of ["null", "[]", "\"str\"", "123",
         JSON.stringify({ vision: [] }), JSON.stringify({ vision: "bad" }),
@@ -484,8 +484,8 @@ describe("Anthropic vision planning and management config", () => {
       expect(config.visionSidecar).toBeUndefined();
       expect(config.webSearchSidecar).toBeUndefined();
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(isolatedHome);
     }
   });

@@ -12,7 +12,7 @@
 import { injectCodexConfig } from "../../src/codex/inject";
 import { readConfigDiagnostics } from "../../src/config";
 
-const payload = JSON.parse(process.env.OCX_INJECT_RACE_PAYLOAD ?? "{}") as {
+const payload = JSON.parse(process.env.OCCX_INJECT_RACE_PAYLOAD ?? "{}") as {
   port?: number;
   lockTimeoutMs?: number;
 };

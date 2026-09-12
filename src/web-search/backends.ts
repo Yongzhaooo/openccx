@@ -16,7 +16,7 @@
  * devlog/_plan/260820_sidecar_selection_unification/002 and 031. Documenting
  * a tool is not the same as being able to run it.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { AUTH_SLOT_MODELS, type SidecarAuthState } from "../sidecar/auth";
 import type { SidecarCandidate } from "../sidecar/candidates";
 import { getAccountSet } from "../oauth/store";
@@ -25,7 +25,7 @@ import type { WebSearchBackendId } from "./index";
 export interface WebSearchBackendDescriptor {
   backend: WebSearchBackendId;
   /** Liveness signal for this backend (auth presence for the shipped two). */
-  isActive(auth: SidecarAuthState, config: OcxConfig): boolean;
+  isActive(auth: SidecarAuthState, config: OccxConfig): boolean;
   /** Which candidate rows this backend's executor can actually run. */
   eligibleModel(candidate: SidecarCandidate, auth: SidecarAuthState): boolean;
 }
@@ -94,7 +94,7 @@ export const WEB_SEARCH_BACKENDS: readonly WebSearchBackendDescriptor[] = [
  * side keeps Luna/Haiku even when the picker hides them.
  */
 export function webSearchSidecarCandidates(
-  config: OcxConfig,
+  config: OccxConfig,
   auth: SidecarAuthState,
   all: readonly SidecarCandidate[],
 ): SidecarCandidate[] {

@@ -1,4 +1,4 @@
-export const REMOTE_WORKSPACE_TOOL_NAMESPACE = "ocx_remote_workspace" as const;
+export const REMOTE_WORKSPACE_TOOL_NAMESPACE = "occx_remote_workspace" as const;
 export const REMOTE_WORKSPACE_MAX_TOOL_RESULT_BYTES = 256 * 1024;
 
 export const REMOTE_WORKSPACE_CAPABILITIES = [
@@ -52,7 +52,7 @@ const RELATIVE_PATH = {
 export const REMOTE_WORKSPACE_DYNAMIC_TOOLS: readonly [RemoteWorkspaceDynamicToolNamespace] = [{
   type: "namespace",
   name: REMOTE_WORKSPACE_TOOL_NAMESPACE,
-  description: "Operate only on the selected remote OpenCodex executor workspace.",
+  description: "Operate only on the selected remote Openccx executor workspace.",
   tools: [
     {
       type: "function",
@@ -216,7 +216,7 @@ export function remoteWorkspaceDeveloperInstructions(
   const safeName = deviceName.replace(/[\x00-\x1f\x7f]/g, " ").slice(0, 120) || "remote executor";
   const allowed = tools.map(tool => `${REMOTE_WORKSPACE_TOOL_NAMESPACE}.${tool}`).join(", ");
   return [
-    `This thread operates on the OpenCodex remote executor named ${JSON.stringify(safeName)}.`,
+    `This thread operates on the Openccx remote executor named ${JSON.stringify(safeName)}.`,
     `Its available remote tools are: ${allowed}. Use no other tool for filesystem or command work.`,
     "The coordinator filesystem is an empty isolation boundary and is not the user's workspace.",
     "Never use local shell, local file, or local patch tools for this thread.",

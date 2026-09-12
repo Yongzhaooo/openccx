@@ -54,18 +54,18 @@ let previousAclTimeout: string | undefined;
 let previousAclVerifyExisting: string | undefined;
 
 beforeEach(() => {
-  previousAclTimeout = process.env.OPENCODEX_ACL_TIMEOUT_MS;
-  previousAclVerifyExisting = process.env.OPENCODEX_ACL_VERIFY_EXISTING;
-  delete process.env.OPENCODEX_ACL_TIMEOUT_MS;
-  delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-acl-test-"));
+  previousAclTimeout = process.env.OPENCCX_ACL_TIMEOUT_MS;
+  previousAclVerifyExisting = process.env.OPENCCX_ACL_VERIFY_EXISTING;
+  delete process.env.OPENCCX_ACL_TIMEOUT_MS;
+  delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
+  testDir = mkdtempSync(join(tmpdir(), "occx-acl-test-"));
 });
 
 afterEach(() => {
-  if (previousAclTimeout === undefined) delete process.env.OPENCODEX_ACL_TIMEOUT_MS;
-  else process.env.OPENCODEX_ACL_TIMEOUT_MS = previousAclTimeout;
-  if (previousAclVerifyExisting === undefined) delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
-  else process.env.OPENCODEX_ACL_VERIFY_EXISTING = previousAclVerifyExisting;
+  if (previousAclTimeout === undefined) delete process.env.OPENCCX_ACL_TIMEOUT_MS;
+  else process.env.OPENCCX_ACL_TIMEOUT_MS = previousAclTimeout;
+  if (previousAclVerifyExisting === undefined) delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
+  else process.env.OPENCCX_ACL_VERIFY_EXISTING = previousAclVerifyExisting;
   if (testDir && existsSync(testDir)) rmSync(testDir, { recursive: true, force: true });
   testDir = "";
 });
@@ -334,7 +334,7 @@ describe("opt-in existing ACL proof", () => {
     resetHardenedStateForTests();
     resetWindowsPrincipalForTests();
     setPlatformForTests("win32");
-    process.env.OPENCODEX_ACL_VERIFY_EXISTING = "1";
+    process.env.OPENCCX_ACL_VERIFY_EXISTING = "1";
     seedIdentity();
   });
 
@@ -383,7 +383,7 @@ describe("opt-in existing ACL proof", () => {
     setNowForTests(() => clock);
     setAsyncWindowsPrincipalRunnerForTests(async () => success(`${ownerSid}\n${ownerName}\n`));
     seedIdentity();
-    delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
+    delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
     setAsyncIcaclsRunnerForTests(async () => {
       clock += 100;
       return { success: false, exitCode: null, timedOut: true, stdout: "" };
@@ -393,7 +393,7 @@ describe("opt-in existing ACL proof", () => {
         .rejects.toMatchObject({ code: "ETIMEDOUT" });
       await expect(hardenSecretPathAsync(target, { required: true, deadlineMs: 100, retryTimedOutOnce: true }))
         .rejects.toMatchObject({ code: "ETIMEDOUT" });
-      process.env.OPENCODEX_ACL_VERIFY_EXISTING = "1";
+      process.env.OPENCCX_ACL_VERIFY_EXISTING = "1";
       const calls: string[][] = [];
       let compliant = false;
       setAsyncIcaclsRunnerForTests(async args => {
@@ -466,7 +466,7 @@ describe("opt-in existing ACL proof", () => {
 
     expect(hardenSecretPath(target, { required: true })).toEqual({ ok: true });
     expect(hardenedSecretPathCountForTests()).toBe(0);
-    delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
+    delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
     const mutations: string[][] = [];
     setIcaclsRunnerForTests(args => { mutations.push(args); return success(); });
     expect(hardenSecretPath(target, { required: true })).toEqual({ ok: true });
@@ -477,7 +477,7 @@ describe("opt-in existing ACL proof", () => {
   test("the default flag-off path preserves the exact mutation sequence", () => {
     const target = join(testDir, "default-mutation.json");
     writeFileSync(target, "secret");
-    delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
+    delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
     const calls: string[][] = [];
     setIcaclsRunnerForTests(args => { calls.push(args); return success(); });
 
@@ -496,13 +496,13 @@ describe("ephemeral harden success memo lifecycle", () => {
     // legitimately leave success memos behind; this test asserts exact memo
     // counts, so it must start from a clean slate rather than inherit them.
     resetHardenedStateForTests();
-    const tempA = join(testDir, "config.json.ocx.1.1.tmp");
-    const tempB = join(testDir, "config.json.ocx.1.2.tmp");
+    const tempA = join(testDir, "config.json.occx.1.1.tmp");
+    const tempB = join(testDir, "config.json.occx.1.2.tmp");
     writeFileSync(tempA, "first", "utf8");
     writeFileSync(tempB, "second", "utf8");
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     let grants = 0;
     setIcaclsRunnerForTests(args => {
       if (args.includes("/grant:r")) grants += 1;
@@ -635,7 +635,7 @@ describe("icacls executable authority", () => {
 describe("atomic secret temp writer portability", () => {
   test("sync and async secret temp writers use Bun-portable exclusive creation", async () => {
     // Bun on Windows misinterpreted the equivalent numeric O_* combination as
-    // ENOENT, so every pid/config/oauth temp write failed during ocx start
+    // ENOENT, so every pid/config/oauth temp write failed during occx start
     // and on management-API config saves. Keep both writers on the portable
     // exclusive-write spelling ("wx" keeps O_EXCL; 0o600 keeps the private
     // mode) so the O_CREAT bit can never be dropped again.
@@ -648,7 +648,7 @@ describe("initial config temp writer portability", () => {
   test("initial config publication uses Bun-portable exclusive creation", () => {
     // publishInitialConfigNoReplace carries the same Bun/Windows exposure as the
     // atomic writers above: the numeric O_* combination lost its creation bit, so
-    // first-run `ocx init` failed before it could publish config.json. Exclusive
+    // first-run `occx init` failed before it could publish config.json. Exclusive
     // creation is what makes the added O_TRUNC harmless — an existing temp name
     // (or a symlink planted at one) fails the open instead of being truncated.
     const src = readFileSync(repoPath("src", "config", "initialize.ts"), "utf8");
@@ -763,7 +763,7 @@ describe("icacls failure paths (injected seams)", () => {
     // Pinned to the pre-#1156 budget: this test is about the SHARING of one envelope across
     // steps, not about how large the envelope is. Without the pin it would silently stop
     // timing out at the 30s default and assert nothing.
-    process.env.OPENCODEX_ACL_TIMEOUT_MS = "5000";
+    process.env.OPENCCX_ACL_TIMEOUT_MS = "5000";
     const filePath = secretFile();
     let now = 0;
     const budgets: number[] = [];
@@ -869,7 +869,7 @@ describe("icacls failure paths (injected seams)", () => {
     expect(() => hardenSecretPath(filePath, { required: true })).toThrow(/broad ACL grants still present/);
   });
 
-  test("OPENCODEX_ACL_TIMEOUT_MS overrides the total budget with clamping", () => {
+  test("OPENCCX_ACL_TIMEOUT_MS overrides the total budget with clamping", () => {
     const budgets: number[] = [];
     let now = 0;
     setNowForTests(() => now);
@@ -879,27 +879,27 @@ describe("icacls failure paths (injected seams)", () => {
       return ok;
     });
 
-    const prev = process.env.OPENCODEX_ACL_TIMEOUT_MS;
+    const prev = process.env.OPENCCX_ACL_TIMEOUT_MS;
     try {
-      process.env.OPENCODEX_ACL_TIMEOUT_MS = "10000";
+      process.env.OPENCCX_ACL_TIMEOUT_MS = "10000";
       hardenSecretPath(secretFile("env-a.json"), { required: true });
       expect(budgets[0]).toBeLessThanOrEqual(10_000);
       expect(budgets[0]).toBeGreaterThan(5_000);
 
       budgets.length = 0;
-      process.env.OPENCODEX_ACL_TIMEOUT_MS = "50"; // below floor → clamped to 1000
+      process.env.OPENCCX_ACL_TIMEOUT_MS = "50"; // below floor → clamped to 1000
       hardenSecretPath(secretFile("env-b.json"), { required: true });
       expect(budgets[0]).toBeLessThanOrEqual(1_000);
       expect(budgets[0]).toBeGreaterThan(500);
 
       budgets.length = 0;
-      process.env.OPENCODEX_ACL_TIMEOUT_MS = "5000ms"; // malformed → default 30000 (#1156)
+      process.env.OPENCCX_ACL_TIMEOUT_MS = "5000ms"; // malformed → default 30000 (#1156)
       hardenSecretPath(secretFile("env-c.json"), { required: true });
       expect(budgets[0]).toBeLessThanOrEqual(30_000);
       expect(budgets[0]).toBeGreaterThan(29_000);
     } finally {
-      if (prev === undefined) delete process.env.OPENCODEX_ACL_TIMEOUT_MS;
-      else process.env.OPENCODEX_ACL_TIMEOUT_MS = prev;
+      if (prev === undefined) delete process.env.OPENCCX_ACL_TIMEOUT_MS;
+      else process.env.OPENCCX_ACL_TIMEOUT_MS = prev;
     }
   });
 
@@ -1024,8 +1024,8 @@ describe("async hardenSecretPath (issue #612)", () => {
   test("timeoutMemoKey shares the timeout cache across distinct temp paths", async () => {
     setAsyncIcaclsRunnerForTests(async () => timeout);
     const dest = join(testDir, "responses-state.json");
-    const tempA = join(testDir, "responses-state.json.ocx.1.1.tmp");
-    const tempB = join(testDir, "responses-state.json.ocx.1.2.tmp");
+    const tempA = join(testDir, "responses-state.json.occx.1.1.tmp");
+    const tempB = join(testDir, "responses-state.json.occx.1.2.tmp");
     writeFileSync(tempA, "a", "utf-8");
     writeFileSync(tempB, "b", "utf-8");
 
@@ -1042,7 +1042,7 @@ describe("async hardenSecretPath (issue #612)", () => {
 
   test("a required timeout preserves ETIMEDOUT and one explicit recovery gets a fresh budget", async () => {
     // Pinned: this asserts that a SECOND call gets a fresh envelope, not the envelope's size.
-    process.env.OPENCODEX_ACL_TIMEOUT_MS = "5000";
+    process.env.OPENCCX_ACL_TIMEOUT_MS = "5000";
     const target = secretFile("one-time-recovery.json");
     let now = 0;
     let grantCalls = 0;
@@ -1077,7 +1077,7 @@ describe("async hardenSecretPath (issue #612)", () => {
   test.each(["sync", "async"] as const)("%s timeout origin distinguishes memo refusal without another recovery", async lane => {
     // Pinned: this asserts recovery CARDINALITY. At the 30s default the first call would
     // succeed on its internal retry and the cardinality claim would never be exercised.
-    process.env.OPENCODEX_ACL_TIMEOUT_MS = "5000";
+    process.env.OPENCCX_ACL_TIMEOUT_MS = "5000";
     const target = secretFile("consumed-recovery.json");
     let now = 0;
     let grantCalls = 0;
@@ -1089,7 +1089,7 @@ describe("async hardenSecretPath (issue #612)", () => {
     };
     setIcaclsRunnerForTests(runner);
     setAsyncIcaclsRunnerForTests(async args => runner(args));
-    const identity = { ...ok, stdout: "S-1-5-21-1-2-3-1001\nocx-test\n" };
+    const identity = { ...ok, stdout: "S-1-5-21-1-2-3-1001\noccx-test\n" };
     setWindowsPrincipalRunnerForTests(() => identity);
     setAsyncWindowsPrincipalRunnerForTests(async () => identity);
     const harden = async (retryTimedOutOnce = false) => lane === "sync"
@@ -1160,9 +1160,9 @@ describe("ephemeral ACL memo release (#840 refinement)", () => {
     // another order, or this test alone, and the harden fails before it ever
     // reaches the memo behavior under test.
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
-    const tempA = join(testDir, "dest.ocx.1.1.tmp");
-    const tempB = join(testDir, "dest.ocx.1.2.tmp");
+    process.env.USERNAME = "occx-test-user";
+    const tempA = join(testDir, "dest.occx.1.1.tmp");
+    const tempB = join(testDir, "dest.occx.1.2.tmp");
     writeFileSync(tempA, "a", "utf-8");
     writeFileSync(tempB, "b", "utf-8");
     try {
@@ -1185,7 +1185,7 @@ describe("ephemeral ACL memo release (#840 refinement)", () => {
   test("sync atomic write keys timeouts by destination, and the memo survives temp cleanup", () => {
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     let runnerCalls = 0;
     setIcaclsRunnerForTests(() => {
       runnerCalls += 1;
@@ -1288,7 +1288,7 @@ const ENTRY_POINTS: readonly EntryPoint[] = [
 async function withWin32(body: () => Promise<void>): Promise<void> {
   setPlatformForTests("win32");
   const previousUsername = process.env.USERNAME;
-  process.env.USERNAME = "ocx-test-user";
+  process.env.USERNAME = "occx-test-user";
   try {
     await body();
   } finally {
@@ -1555,7 +1555,7 @@ describe("hardenStableLockFile — the production call edge, not just the primit
 
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     const seen: string[][] = [];
     setAsyncIcaclsRunnerForTests(async args => {
       seen.push(args);
@@ -1588,7 +1588,7 @@ describe("hardenStableLockFile — the production call edge, not just the primit
 
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     setAsyncIcaclsRunnerForTests(async () => ({
       success: false, exitCode: 5, timedOut: false, stdout: "", stderr: "",
     }));
@@ -1676,7 +1676,7 @@ describe("the production default hardener is reached, with the resolved platform
     const seen: string[][] = [];
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     setAsyncIcaclsRunnerForTests(async args => {
       seen.push(args);
       if (args.includes("/grant:r")) onGrant();
@@ -1687,7 +1687,7 @@ describe("the production default hardener is reached, with the resolved platform
         ? await resultFor(args)
         : { success: true, exitCode: 0, timedOut: false, stdout: "" };
     });
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-default-harden-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-default-harden-"));
     try {
       await run(codexHome);
     } finally {
@@ -1833,14 +1833,14 @@ describe("a required hardening failure stops the operation it protects", () => {
   ): Promise<void> => {
     setPlatformForTests("win32");
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     setAsyncIcaclsRunnerForTests(async args => {
       // Count only the first step of each sequence, so the counter is attempts
       // rather than icacls invocations.
       if (args.includes("/grant:r")) onAttempt(args);
       return { success: false, exitCode: 5, timedOut: false, stdout: "", stderr: "" };
     });
-    const codexHome = mkdtempSync(join(tmpdir(), "ocx-harden-fail-"));
+    const codexHome = mkdtempSync(join(tmpdir(), "occx-harden-fail-"));
     try {
       await run(codexHome);
     } finally {
@@ -1967,7 +1967,7 @@ for (const { label, harden, create } of ENTRY_POINTS) {
       create(target);
       setPlatformForTests("win32");
       const previousUsername = process.env.USERNAME;
-      process.env.USERNAME = "ocx-test-user";
+      process.env.USERNAME = "occx-test-user";
       setIcaclsRunnerForTests(() => result);
       setAsyncIcaclsRunnerForTests(async () => result);
       try {

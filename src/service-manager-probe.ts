@@ -3,7 +3,7 @@
  *
  * The question this answers is NOT "is a job loaded". Installation writes the
  * definition BEFORE the state file (`service.ts` install paths) and embeds
- * `CODEX_HOME`/`OPENCODEX_HOME` inside it, so an interrupted reinstall leaves a
+ * `CODEX_HOME`/`OPENCCX_HOME` inside it, so an interrupted reinstall leaves a
  * valid state file for one home beside an installed definition for another. A
  * probe that only asked about registration would call that owned. On macOS it is
  * worse: a logged-out user has the plist on disk with no GUI domain at all, so
@@ -57,7 +57,7 @@ export interface ServiceManagerClaim {
    */
   readonly homes: {
     readonly codexHome: string | null;
-    readonly opencodexHome: string | null;
+    readonly openccxHome: string | null;
   };
   readonly registration: "present" | "absent";
 }
@@ -184,7 +184,7 @@ export interface ProbeDeps {
   readonly platform?: NodeJS.Platform;
   readonly uid?: number;
   readonly home?: string;
-  /** Effective OpenCodex config dir (OPENCODEX_HOME). Overrides `<home>/.opencodex`. */
+  /** Effective Openccx config dir (OPENCCX_HOME). Overrides `<home>/.opencodex`. */
   readonly configDir?: string;
   /** Test seam for WinSW SCM status. Production uses bounded trusted `sc.exe query`. */
   readonly winswStatus?: () => "started" | "stopped" | "nonexistent" | "unknown";
@@ -194,8 +194,8 @@ export interface ProbeDeps {
   readonly windowsTaskListingCache?: WindowsTaskListingCache;
 }
 
-const LABEL = "com.opencodex.proxy";
-const TASK = "opencodex-proxy";
+const LABEL = "com.openccx.proxy";
+const TASK = "openccx-proxy";
 
 /**
  * `launchctl print` exits 113 for a service that is not there and 112 when the
@@ -322,7 +322,7 @@ function inspectSystemdOffline(home: string): ServiceManagerInstallation {
       definitionPath,
       homes: {
         codexHome: unitEnvValue(body, "CODEX_HOME"),
-        opencodexHome: unitEnvValue(body, "OPENCODEX_HOME"),
+        openccxHome: unitEnvValue(body, "OPENCCX_HOME"),
       },
       registration: "absent",
     }],
@@ -386,7 +386,7 @@ function inspectLaunchd(deps: Required<Pick<ProbeDeps, "run" | "uid" | "home">>)
       definitionPath,
       homes: {
         codexHome: plistEnvValue(body, "CODEX_HOME"),
-        opencodexHome: plistEnvValue(body, "OPENCODEX_HOME"),
+        openccxHome: plistEnvValue(body, "OPENCCX_HOME"),
       },
       registration,
     }],
@@ -422,7 +422,7 @@ function inspectSystemd(deps: Required<Pick<ProbeDeps, "run" | "home">>): Servic
     //
     // That is evidence about the BUS, not evidence that a foreign service owns this home
     // (#2114). Calling it `unknown` fences native-main for the whole process, so a laptop
-    // with no session bus answers every native request with a 503 until `ocx restart`.
+    // with no session bus answers every native request with a 503 until `occx restart`.
     //
     // Widening on the exit code alone would fail open, because with the bus down systemctl
     // cannot see a foreign unit either. So ask the disk, which needs no bus, and fall back
@@ -465,7 +465,7 @@ function inspectSystemd(deps: Required<Pick<ProbeDeps, "run" | "home">>): Servic
       definitionPath,
       homes: {
         codexHome: unitEnvValue(body, "CODEX_HOME"),
-        opencodexHome: unitEnvValue(body, "OPENCODEX_HOME"),
+        openccxHome: unitEnvValue(body, "OPENCCX_HOME"),
       },
       registration,
     }],
@@ -477,7 +477,7 @@ function inspectSystemd(deps: Required<Pick<ProbeDeps, "run" | "home">>): Servic
  *
  * The chain is not one file: the task XML names only the launcher, the launcher
  * (VBS) names only the batch wrapper, and the homes live in the wrapper's
- * `set "CODEX_HOME=..."` / `set "OPENCODEX_HOME=..."` lines. Parsing the XML
+ * `set "CODEX_HOME=..."` / `set "OPENCCX_HOME=..."` lines. Parsing the XML
  * and stopping would find no homes and read that as agreement, so the walk goes
  * all the way to the wrapper.
  *
@@ -491,12 +491,12 @@ function inspectSystemd(deps: Required<Pick<ProbeDeps, "run" | "home">>): Servic
  * Every failure to ask is `unknown`, never absence.
  */
 function windowsTaskName(): string {
-  return "opencodex-proxy";
+  return "openccx-proxy";
 }
 
 function windowsConfigDirPath(deps: { home: string; configDir?: string }): string {
   if (deps.configDir) return deps.configDir;
-  return join(deps.home, ".opencodex");
+  return join(deps.home, ".openccx");
 }
 
 /** Decode the XML entities emitted by the service-definition writers. */
@@ -519,8 +519,8 @@ function windowsTaskArguments(xml: string): string | null {
  * Pull the wrapper path out of a VBS `shell.Run` line.
  *
  * `buildWindowsLauncherVbs` escapes a `"` inside a VBS string literal by
- * doubling it, so a wrapper `C:\...\opencodex-service.cmd` is emitted as
- * `shell.Run """C:\...\opencodex-service.cmd""", 0, True`.
+ * doubling it, so a wrapper `C:\...\openccx-service.cmd` is emitted as
+ * `shell.Run """C:\...\openccx-service.cmd""", 0, True`.
  */
 function vbsWrappedCommand(body: string): string | null {
   const match = /\.Run\s+"""([^"]*)"""/.exec(body);
@@ -561,14 +561,14 @@ function decodeBatchPathValue(
 
 /** Validate the generated wrapper before interpreting omitted optional homes. */
 function wrapperLooksGenerated(body: string): boolean {
-  return /:loop\s*[\s\S]*^"%OCX_BUN%" "%OCX_CLI%" start\b[^\r\n]*$/im.test(body);
+  return /:loop\s*[\s\S]*^"%OCCX_BUN%" "%OCCX_CLI%" start\b[^\r\n]*$/im.test(body);
 }
 
 function normalizeWindowsPath(value: string): string {
   return win32Path.normalize(value.replace(/\//g, "\\")).replace(/[\\]+$/, "").toLowerCase();
 }
 
-/** True only when a definition-provided path remains inside the effective OPENCODEX_HOME. */
+/** True only when a definition-provided path remains inside the effective OPENCCX_HOME. */
 function windowsPathInsideConfigDir(candidate: string, configDir: string): boolean {
   const root = normalizeWindowsPath(configDir);
   const path = normalizeWindowsPath(candidate);
@@ -714,7 +714,7 @@ function inspectWindows(
     & Pick<ProbeDeps, "configDir" | "winswStatus" | "windowsLocale" | "windowsTaskListingCache">,
 ): ServiceManagerInstallation {
   const configDir = windowsConfigDirPath(deps);
-  const taskXmlPath = join(configDir, "opencodex-service-task.xml");
+  const taskXmlPath = join(configDir, "openccx-service-task.xml");
   const task = artifactPresence(taskXmlPath);
   const winsw = walkWinswChain(deps);
   const winswInstalled = winsw.kind === "present" && winsw.claims[0].registration === "present";
@@ -731,7 +731,7 @@ function inspectWindows(
 
   const registration = probeWindowsTaskRegistration(deps);
   if (registration.registered === "unknown") {
-    return unknown("Task Scheduler could not be asked whether opencodex-proxy is registered");
+    return unknown("Task Scheduler could not be asked whether openccx-proxy is registered");
   }
   const schedulerRegistered = registration.registered === "present";
 
@@ -780,14 +780,14 @@ function inspectWindows(
     }
     const launcherArg = windowsTaskArguments(registration.registeredXml);
     if (!launcherArg) {
-      return unknown("Task Scheduler holds opencodex-proxy but its task XML is missing");
+      return unknown("Task Scheduler holds openccx-proxy but its task XML is missing");
     }
     const launcherPath = /"([^"]+)"/.exec(launcherArg)?.[1];
     if (!launcherPath) {
-      return unknown("Task Scheduler holds opencodex-proxy but its task XML is missing");
+      return unknown("Task Scheduler holds openccx-proxy but its task XML is missing");
     }
     return windowsPathInsideConfigDir(launcherPath, configDir)
-      ? unknown("Task Scheduler holds opencodex-proxy but its task XML is missing")
+      ? unknown("Task Scheduler holds openccx-proxy but its task XML is missing")
       : { kind: "absent" };
   }
 
@@ -818,20 +818,20 @@ function inspectWindows(
 
 /** Compare two home pairs with Windows path normalization (case, slashes, trailing separators). */
 function homesEqual(
-  a: { codexHome: string | null; opencodexHome: string | null },
-  b: { codexHome: string | null; opencodexHome: string | null },
+  a: { codexHome: string | null; openccxHome: string | null },
+  b: { codexHome: string | null; openccxHome: string | null },
 ): boolean {
   const norm = (v: string | null): string | null => {
     if (v === null) return null;
     return v.replace(/[\\/]+$/, "").replace(/\//g, "\\").toLowerCase();
   };
-  return norm(a.codexHome) === norm(b.codexHome) && norm(a.opencodexHome) === norm(b.opencodexHome);
+  return norm(a.codexHome) === norm(b.codexHome) && norm(a.openccxHome) === norm(b.openccxHome);
 }
 
 /**
  * Walk one scheduled-task definition (staged or registered XML) down to the
  * generated batch wrapper and extract the homes it names. Definition-provided
- * paths are followed only inside the effective OPENCODEX_HOME, preventing a
+ * paths are followed only inside the effective OPENCCX_HOME, preventing a
  * foreign task from turning this ownership probe into an arbitrary local/UNC
  * file read while preserving interrupted-reinstall diagnostics within the
  * generated service-asset directory.
@@ -886,11 +886,11 @@ function walkWindowsChain(
   }
 
   if (!wrapperLooksGenerated(wrapperBody)) {
-    return unknown(`the launcher wrapper does not look like a generated opencodex service wrapper: ${wrapperPath}`);
+    return unknown(`the launcher wrapper does not look like a generated openccx service wrapper: ${wrapperPath}`);
   }
 
   const rawCodexHome = batchSetValue(wrapperBody, "CODEX_HOME");
-  const rawOpencodexHome = batchSetValue(wrapperBody, "OPENCODEX_HOME");
+  const rawOpenccxHome = batchSetValue(wrapperBody, "OPENCCX_HOME");
 
   return {
     kind: "present",
@@ -899,7 +899,7 @@ function walkWindowsChain(
       definitionPath,
       homes: {
         codexHome: rawCodexHome === null ? null : decodeBatchPathValue(rawCodexHome),
-        opencodexHome: rawOpencodexHome === null ? null : decodeBatchPathValue(rawOpencodexHome),
+        openccxHome: rawOpenccxHome === null ? null : decodeBatchPathValue(rawOpenccxHome),
       },
       registration: "absent",
     }],
@@ -926,7 +926,7 @@ function walkWinswChain(
   // A query we could not ask is a question about a service that cannot exist: WinSW is an
   // optional backend, and with neither its XML nor its exe on disk there is nothing for a
   // registration to belong to. Fencing here on an `sc.exe` timeout is one of the two
-  // triggers behind #2108, where a scheduler-only install answers 503 until `ocx restart`.
+  // triggers behind #2108, where a scheduler-only install answers 503 until `occx restart`.
   //
   // The disk outranks the unaskable query only when BOTH assets are gone. Either one
   // present means a real install may be there and the old `unknown` still holds.
@@ -947,7 +947,7 @@ function walkWinswChain(
     return unknown(`the WinSW XML could not be read: ${String(error)}`);
   }
   if (!winswXmlLooksGenerated(body)) {
-    return unknown(`the WinSW XML does not look like a generated opencodex service definition: ${xmlPath}`);
+    return unknown(`the WinSW XML does not look like a generated openccx service definition: ${xmlPath}`);
   }
 
   const envValue = (name: string): string | null => {
@@ -964,7 +964,7 @@ function walkWinswChain(
       definitionPath: exePath,
       homes: {
         codexHome: envValue("CODEX_HOME"),
-        opencodexHome: envValue("OPENCODEX_HOME"),
+        openccxHome: envValue("OPENCCX_HOME"),
       },
       registration,
     }],
@@ -973,7 +973,7 @@ function walkWinswChain(
 
 /** The generated WinSW XML embeds the SCM id and a `start --port` invocation. */
 function winswXmlLooksGenerated(body: string): boolean {
-  return /<id>\s*opencodex-proxy-native\s*<\/id>/i.test(body)
+  return /<id>\s*openccx-proxy-native\s*<\/id>/i.test(body)
     && /<arguments>.*?start\s+--port\b/i.test(body);
 }
 

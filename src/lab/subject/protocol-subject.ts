@@ -70,7 +70,7 @@ export function buildProtocolSubjectV1(
   return Object.freeze({
     subjectSchemaVersion: 1,
     subjectKind: "protocol",
-    opencodexCompatibilityVersion: PROTOCOL_COMPATIBILITY_VERSION,
+    openccxCompatibilityVersion: PROTOCOL_COMPATIBILITY_VERSION,
     effectiveAdapter,
     inboundProtocol: ctx.inboundProtocol,
     upstreamProtocol: ctx.upstreamProtocol,

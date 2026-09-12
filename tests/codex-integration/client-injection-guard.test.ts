@@ -18,12 +18,12 @@ const configApi = require("./src/config");
 const { injectCodexConfig } = require("./src/codex/inject");
 const paths = require("./src/codex/paths");
 const { restoreJournalState } = require("./src/codex/journal");
-const { readCodexTransitionState, openCodexCoordinatorTransaction } = require("./src/codex/transition-state");
+const { readCodexTransitionState, openccxCoordinatorTransaction } = require("./src/codex/transition-state");
 const { resolveCodexCoordinatorDatabasePath, resolveEffectiveUserIdentity } = require("./src/codex/user-identity");
 const { withClientLifecycleSync } = require("./src/client/lifecycle-lock");
 const { readDesktopDisconnectReceipt, writeDesktopDisconnectReceipt } = require("./src/claude/desktop-remote-store");
-const mode = process.env.OCX_GUARD_SCENARIO;
-const root = process.env.OCX_GUARD_ROOT;
+const mode = process.env.OCCX_GUARD_SCENARIO;
+const root = process.env.OCCX_GUARD_ROOT;
 const tokenFingerprint = createHash("sha256").update("test-key").digest("hex");
 const owner = { serverUrl: "https://hub.example.test", apiKeyId: "client-fixture", connectedAt: "2026-01-01T00:00:00.000Z" };
 let guardCalls = 0;
@@ -31,7 +31,7 @@ const observations = [];
 let nBlocker;
 let cBlocker;
 function snapshot() {
-  return Object.fromEntries([paths.CODEX_CONFIG_PATH, paths.CODEX_PROFILE_PATH, path.join(paths.getCodexHome(), "opencodex-journal.json")].map(file => {
+  return Object.fromEntries([paths.CODEX_CONFIG_PATH, paths.CODEX_PROFILE_PATH, path.join(paths.getCodexHome(), "openccx-journal.json")].map(file => {
     if (!fs.existsSync(file)) return [path.basename(file), null];
     const stat = fs.lstatSync(file, { bigint: true });
     return [path.basename(file), {
@@ -61,7 +61,7 @@ async function invoke() {
     const result = await injectCodexConfig(19999, configApi.loadConfig(), {
       catalogPath: null, lockTimeoutMs: 5000,
       journalOwner: { kind: "client", apiKeyId: owner.apiKeyId },
-      routingTarget: { baseUrl: owner.serverUrl + "/v1", requiresAdmissionToken: true, tokenEnv: "OPENCODEX_API_AUTH_TOKEN" },
+      routingTarget: { baseUrl: owner.serverUrl + "/v1", requiresAdmissionToken: true, tokenEnv: "OPENCCX_API_AUTH_TOKEN" },
       beforeClientWrite: guard,
     });
     return { success: result.success, message: result.message };
@@ -82,12 +82,12 @@ async function invoke() {
     guardCalls = 0;
     observations.length = 0;
   }
-  if (mode === "malformed") fs.writeFileSync(path.join(paths.getCodexHome(), "opencodex-journal.json"), "malformed journal sentinel\n");
+  if (mode === "malformed") fs.writeFileSync(path.join(paths.getCodexHome(), "openccx-journal.json"), "malformed journal sentinel\n");
   const before = snapshot();
   let contention;
   if (mode === "queued" || mode === "queued-native") {
     // A real N transaction alone leaves C available for the disconnect claim.
-    nBlocker = openCodexCoordinatorTransaction(coordinatorPath);
+    nBlocker = openccxCoordinatorTransaction(coordinatorPath);
     const pending = invoke();
     if (guardCalls !== 0) throw new Error("guard_ran_before_coordinated_commit");
     claimDisconnect();
@@ -135,33 +135,33 @@ async function within<T>(promise: Promise<T>, milliseconds: number): Promise<T> 
   } finally { if (timer !== undefined) clearTimeout(timer); }
 }
 async function runScenario(mode: string): Promise<Record<string, any>> {
-  const root = mkdtempSync(join(tmpdir(), "ocx-client-guard-")); roots.push(root);
-  const codex = join(root, "codex"); const ocx = join(root, "ocx"); const desktop = join(root, "desktop");
-  for (const directory of [codex, ocx, desktop]) mkdirSync(directory, { recursive: true });
+  const root = mkdtempSync(join(tmpdir(), "occx-client-guard-")); roots.push(root);
+  const codex = join(root, "codex"); const occx = join(root, "occx"); const desktop = join(root, "desktop");
+  for (const directory of [codex, occx, desktop]) mkdirSync(directory, { recursive: true });
   const client = {
     serverUrl: "https://hub.example.test", managementUrl: "https://hub.example.test",
-    managementTransport: "direct", selectedClients: ["codex"], tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+    managementTransport: "direct", selectedClients: ["codex"], tokenEnv: "OPENCCX_API_AUTH_TOKEN",
     apiKeyId: "client-fixture",
     tokenFingerprint: (await import("node:crypto")).createHash("sha256").update("test-key").digest("hex"),
     protocolVersion: 1, connectedAt: "2026-01-01T00:00:00.000Z",
   };
-  writeFileSync(join(ocx, "config.json"), JSON.stringify({
+  writeFileSync(join(occx, "config.json"), JSON.stringify({
     port: 19999, providers: {}, defaultProvider: "openai", runtimeRole: "client",
     client, syncResumeHistory: false, clientIntegrations: { codex: true },
   }));
-  writeFileSync(join(ocx, "service-api-token"), "test-key\n", { mode: 0o600 });
+  writeFileSync(join(occx, "service-api-token"), "test-key\n", { mode: 0o600 });
   writeFileSync(join(codex, "config.toml"), mode === "external"
     ? 'model_provider = "user-managed"\n[model_providers.user-managed]\nbase_url = "https://user.example.test/v1"\n'
     : 'model = "gpt-5"\n');
-  if (mode === "legacy") writeFileSync(join(codex, "opencodex.config.toml"), '# user reference\nmodel = "gpt-5"\n');
-  if (mode === "external") writeFileSync(join(codex, "opencodex-journal.json"), "guarded journal sentinel\n");
+  if (mode === "legacy") writeFileSync(join(codex, "openccx.config.toml"), '# user reference\nmodel = "gpt-5"\n');
+  if (mode === "external") writeFileSync(join(codex, "openccx-journal.json"), "guarded journal sentinel\n");
   coordinators.push(resolveCodexCoordinatorDatabasePath(resolveEffectiveUserIdentity(), realpathSync.native(codex)));
   const child = Bun.spawn({
     cmd: [process.execPath, "--eval", SCRIPT], cwd: repoRoot(),
     env: {
-      ...process.env, CODEX_HOME: codex, OPENCODEX_HOME: ocx,
-      OPENCODEX_CLAUDE_DESKTOP_CONFIG_DIR: desktop,
-      OCX_GUARD_SCENARIO: mode, OCX_GUARD_ROOT: root,
+      ...process.env, CODEX_HOME: codex, OPENCCX_HOME: occx,
+      OPENCCX_CLAUDE_DESKTOP_CONFIG_DIR: desktop,
+      OCCX_GUARD_SCENARIO: mode, OCCX_GUARD_ROOT: root,
       PATH: [dirname(process.execPath), ...(process.platform === "win32"
         ? [join(process.env.SystemRoot ?? "C:\\Windows", "System32")]
         : ["/usr/bin", "/bin", "/usr/sbin", "/sbin"])].join(delimiter),

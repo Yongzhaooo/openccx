@@ -121,14 +121,14 @@ describe("claude discovery aliases", () => {
 
 describe("claudeCodeAlias — readable-or-hash shared helper (devlog 050 / audit 051 #2)", () => {
   test("readable form when representable; both forms decode to the same route", () => {
-    expect(claudeCodeAlias("gemini", "gemini-3-pro")).toBe("claude-ocx-gemini--gemini-3-pro");
-    expect(claudeCodeNativeAlias("gpt-5.6-sol")).toBe("claude-ocx-native--gpt-5.6-sol");
+    expect(claudeCodeAlias("gemini", "gemini-3-pro")).toBe("claude-occx-gemini--gemini-3-pro");
+    expect(claudeCodeNativeAlias("gpt-5.6-sol")).toBe("claude-occx-native--gpt-5.6-sol");
     expect(resolveInboundModel(claudeCodeAlias("gemini", "gemini-3-pro"), undefined)).toBe("gemini/gemini-3-pro");
     expect(resolveInboundModel(claudeCodeNativeAlias("gpt-5.6-sol"), undefined)).toBe("gpt-5.6-sol");
     // Readable id with the [1m] context marker (picker variant row) decodes too —
     // strip happens before alias resolution, case-insensitively (audit 051 #4).
-    expect(resolveInboundModel("claude-ocx-native--gpt-5.6-sol[1m]", undefined)).toBe("gpt-5.6-sol");
-    expect(resolveInboundModel("claude-ocx-gemini--gemini-3-pro[1M]", undefined)).toBe("gemini/gemini-3-pro");
+    expect(resolveInboundModel("claude-occx-native--gpt-5.6-sol[1m]", undefined)).toBe("gpt-5.6-sol");
+    expect(resolveInboundModel("claude-occx-gemini--gemini-3-pro[1M]", undefined)).toBe("gemini/gemini-3-pro");
   });
 
   test("anthropic canonical ids pass through unchanged (native passthrough preserved)", () => {
@@ -138,10 +138,10 @@ describe("claudeCodeAlias — readable-or-hash shared helper (devlog 050 / audit
 
   test("slash-containing model ids stay readable under v2 (no desktop-3p hash)", () => {
     expect(claudeCodeAlias("openrouter", "anthropic/claude-opus-4-8")).toBe(
-      "claude-ocx2-openrouter--anthropic~sclaude-opus-4-8",
+      "claude-occx2-openrouter--anthropic~sclaude-opus-4-8",
     );
-    expect(claudeCodeAlias("mock", "path/model")).toBe("claude-ocx2-mock--path~smodel");
-    expect(resolveInboundModel("claude-ocx2-openrouter--anthropic~sclaude-opus-4-8", undefined)).toBe(
+    expect(claudeCodeAlias("mock", "path/model")).toBe("claude-occx2-mock--path~smodel");
+    expect(resolveInboundModel("claude-occx2-openrouter--anthropic~sclaude-opus-4-8", undefined)).toBe(
       "openrouter/anthropic/claude-opus-4-8",
     );
   });
@@ -157,6 +157,6 @@ describe("claudeCodeAlias — readable-or-hash shared helper (devlog 050 / audit
     ]) {
       expect(id).toMatch(/^claude-opus-4-8-[a-z][0-9a-z]{2}$/);
     }
-    expect(claudeCodeAlias("mock", "has~tilde")).toBe("claude-ocx2-mock--has~ttilde");
+    expect(claudeCodeAlias("mock", "has~tilde")).toBe("claude-occx2-mock--has~ttilde");
   });
 });

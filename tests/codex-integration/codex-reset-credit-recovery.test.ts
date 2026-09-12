@@ -1567,15 +1567,15 @@ describe("Codex reset-credit recovery coordinator", () => {
   });
 
   test("refuses process-state reset without the repository test preload", async () => {
-    const originalGuard = process.env.OCX_TEST_HOME_GUARD;
-    process.env.OCX_TEST_HOME_GUARD = "0";
+    const originalGuard = process.env.OCCX_TEST_HOME_GUARD;
+    process.env.OCCX_TEST_HOME_GUARD = "0";
     try {
       await expect(resetCodexResetCreditRecoveryProcessStateForTests()).rejects.toThrow(
         "resetProcessStateForTests is available only under the repository test preload",
       );
     } finally {
-      if (originalGuard === undefined) delete process.env.OCX_TEST_HOME_GUARD;
-      else process.env.OCX_TEST_HOME_GUARD = originalGuard;
+      if (originalGuard === undefined) delete process.env.OCCX_TEST_HOME_GUARD;
+      else process.env.OCCX_TEST_HOME_GUARD = originalGuard;
     }
   });
 

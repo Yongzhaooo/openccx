@@ -1,20 +1,20 @@
 import { expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
-import type { OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
-const baseProvider: OcxProviderConfig = {
+const baseProvider: OccxProviderConfig = {
   adapter: "openai-chat",
   baseUrl: "https://api.openai.com/v1",
   apiKey: "sk-test",
   authMode: "key",
 };
 
-function bodyFor(provider: OcxProviderConfig, parsed: OcxParsedRequest): Record<string, unknown> {
+function bodyFor(provider: OccxProviderConfig, parsed: OccxParsedRequest): Record<string, unknown> {
   const request = createOpenAIChatAdapter(provider).buildRequest(parsed) as { body: string };
   return JSON.parse(request.body) as Record<string, unknown>;
 }
 
-function assistantToolCall(id: string, name: string): OcxMessage {
+function assistantToolCall(id: string, name: string): OccxMessage {
   return {
     role: "assistant",
     content: [{ type: "toolCall", id, name, arguments: {} }],
@@ -23,7 +23,7 @@ function assistantToolCall(id: string, name: string): OcxMessage {
 }
 
 test("native OpenAI defers developer guidance until pending tool results are complete", () => {
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: "gpt-test",
     context: {
       messages: [
@@ -44,12 +44,12 @@ test("native OpenAI defers developer guidance until pending tool results are com
 });
 
 test("native OpenAI Chat uses reasoning_effort instead of the gateway reasoning object", () => {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     ...baseProvider,
     reasoningWireFormat: "gateway-object",
     reasoningEffortMap: { high: "high", none: "none" },
   };
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: "gpt-test",
     context: { messages: [{ role: "user", content: "think", timestamp: 0 }] },
     stream: false,
@@ -62,12 +62,12 @@ test("native OpenAI Chat uses reasoning_effort instead of the gateway reasoning 
 });
 
 test("native OpenAI Chat represents disabled reasoning with reasoning_effort none", () => {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     ...baseProvider,
     reasoningWireFormat: "gateway-object",
     reasoningEffortMap: { none: "none" },
   };
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: "gpt-test",
     context: { messages: [{ role: "user", content: "short", timestamp: 0 }] },
     stream: false,
@@ -80,13 +80,13 @@ test("native OpenAI Chat represents disabled reasoning with reasoning_effort non
 });
 
 test("non-native gateway targets keep their reasoning object", () => {
-  const provider: OcxProviderConfig = {
+  const provider: OccxProviderConfig = {
     ...baseProvider,
     baseUrl: "https://gateway.example.test/v1",
     reasoningWireFormat: "gateway-object",
     reasoningEffortMap: { high: "adaptive" },
   };
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: "fixture-model",
     context: { messages: [{ role: "user", content: "think", timestamp: 0 }] },
     stream: false,
@@ -99,7 +99,7 @@ test("non-native gateway targets keep their reasoning object", () => {
 });
 
 test("paired image-only tool results retain their flattened tool-row fallback", () => {
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId: "gpt-test",
     context: {
       messages: [

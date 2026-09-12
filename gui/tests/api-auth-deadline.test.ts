@@ -52,10 +52,10 @@ async function installMockAuthFetch(handler: typeof fetch): Promise<void> {
 function sessionDocumentHtml(token: string, csrf: string, origin: string): string {
   return [
     "<!doctype html><html><head>",
-    `<meta name="opencodex-session-token" content="${token}">`,
-    `<meta name="opencodex-session-csrf" content="${csrf}">`,
-    `<meta name="opencodex-session-origin" content="${origin}">`,
-    `<meta name="opencodex-session-server-origin" content="${origin}">`,
+    `<meta name="openccx-session-token" content="${token}">`,
+    `<meta name="openccx-session-csrf" content="${csrf}">`,
+    `<meta name="openccx-session-origin" content="${origin}">`,
+    `<meta name="openccx-session-server-origin" content="${origin}">`,
     "</head><body></body></html>",
   ].join("");
 }
@@ -73,7 +73,7 @@ function pathnameOf(input: RequestInfo | URL): string {
  */
 function declareRuntimeRole(role: string): void {
   const meta = document.createElement("meta");
-  meta.setAttribute("name", "opencodex-runtime-role");
+  meta.setAttribute("name", "openccx-runtime-role");
   meta.setAttribute("content", role);
   document.head.append(meta);
 }
@@ -81,7 +81,7 @@ function declareRuntimeRole(role: string): void {
 /** Declare the bind's credential requirement, as `serveGuiFile` does from `isApiAuthRequired`. */
 function declareManagementAuthRequired(required: boolean): void {
   const meta = document.createElement("meta");
-  meta.setAttribute("name", "opencodex-management-auth-required");
+  meta.setAttribute("name", "openccx-management-auth-required");
   meta.setAttribute("content", required ? "1" : "0");
   document.head.append(meta);
 }
@@ -94,7 +94,7 @@ function hangUntilAborted(signal?: AbortSignal | null): Promise<Response> {
 }
 
 const MINTED = () => {
-  const response = new Response(sessionDocumentHtml("ocx_session_fresh", "fresh-csrf", "http://localhost"), {
+  const response = new Response(sessionDocumentHtml("occx_session_fresh", "fresh-csrf", "http://localhost"), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
@@ -104,10 +104,10 @@ const MINTED = () => {
 
 test("a shared-target bootstrap watchdog does not block or clear the machine target", async () => {
   for (const [name, content] of [
-    ["opencodex-session-token", "ocx_session_machine"],
-    ["opencodex-session-csrf", "machine-csrf"],
-    ["opencodex-session-origin", "http://localhost"],
-    ["opencodex-session-server-origin", "http://localhost"],
+    ["openccx-session-token", "occx_session_machine"],
+    ["openccx-session-csrf", "machine-csrf"],
+    ["openccx-session-origin", "http://localhost"],
+    ["openccx-session-server-origin", "http://localhost"],
   ]) {
     const meta = document.createElement("meta");
     meta.setAttribute("name", name);
@@ -128,8 +128,8 @@ test("a shared-target bootstrap watchdog does not block or clear the machine tar
       return hangUntilAborted(init?.signal);
     }
     if (url.origin === "https://hub.example.test") return new Response("unauthorized", { status: 401 });
-    const token = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("x-opencodex-api-key");
-    return new Response("{}", { status: token === "ocx_session_machine" ? 200 : 401 });
+    const token = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("x-openccx-api-key");
+    return new Response("{}", { status: token === "occx_session_machine" ? 200 : 401 });
   }) as typeof fetch;
   await installMockAuthFetch(mockFetch);
 
@@ -150,8 +150,8 @@ test("hung bootstrap fails the wave within the deadline and a later wave re-boot
       if (bootstrapHangs) return hangUntilAborted(init?.signal);
       return MINTED();
     }
-    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-OpenCodex-API-Key");
-    if (key === "ocx_session_fresh") return new Response("{}", { status: 200 });
+    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-Openccx-API-Key");
+    if (key === "occx_session_fresh") return new Response("{}", { status: 200 });
     return new Response("unauthorized", { status: 401 });
   }) as typeof fetch;
   await installMockAuthFetch(mockFetch);
@@ -275,8 +275,8 @@ test("caller abort during a pending resolution unwinds only that caller", async 
         releaseBootstrap = () => resolve(MINTED());
       });
     }
-    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-OpenCodex-API-Key");
-    if (key === "ocx_session_fresh") return new Response("{}", { status: 200 });
+    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-Openccx-API-Key");
+    if (key === "occx_session_fresh") return new Response("{}", { status: 200 });
     return new Response("unauthorized", { status: 401 });
   }) as typeof fetch;
   await installMockAuthFetch(mockFetch);
@@ -316,8 +316,8 @@ test("the retried request carries the caller signal", async () => {
   const mockFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (pathnameOf(input) === "/opencodex-session") return MINTED();
     seenSignals.push(init?.signal ?? (input instanceof Request ? input.signal : undefined));
-    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-OpenCodex-API-Key");
-    if (key === "ocx_session_fresh") return new Response("{}", { status: 200 });
+    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-Openccx-API-Key");
+    if (key === "occx_session_fresh") return new Response("{}", { status: 200 });
     return new Response("unauthorized", { status: 401 });
   }) as typeof fetch;
   await installMockAuthFetch(mockFetch);
@@ -345,8 +345,8 @@ test("a signal-dropping hung bootstrap is bounded by the whole-resolution watchd
       if (bootstrapZombie) return new Promise<Response>(() => {});
       return MINTED();
     }
-    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-OpenCodex-API-Key");
-    if (key === "ocx_session_fresh") return new Response("{}", { status: 200 });
+    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-Openccx-API-Key");
+    if (key === "occx_session_fresh") return new Response("{}", { status: 200 });
     return new Response("unauthorized", { status: 401 });
   }) as typeof fetch;
   await installMockAuthFetch(mockFetch);
@@ -382,7 +382,7 @@ test("the watchdog never bounds the prompt: slow user input stacks no dialogs an
       bootstrapCalls += 1;
       return new Response("unauthorized", { status: 401 });
     }
-    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-OpenCodex-API-Key");
+    const key = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("X-Openccx-API-Key");
     if (key === "manual-admin-token") return new Response("{}", { status: 200 });
     return new Response("unauthorized", { status: 401 });
   }) as typeof fetch;

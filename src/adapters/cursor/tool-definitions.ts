@@ -1,10 +1,10 @@
 import { create, fromJson, toBinary, type JsonValue } from "@bufbuild/protobuf";
 import { ValueSchema } from "@bufbuild/protobuf/wkt";
-import type { OcxRequestOptions, OcxTool } from "../../types";
+import type { OccxRequestOptions, OccxTool } from "../../types";
 import { McpToolDefinitionSchema, McpToolsSchema, type McpToolDefinition } from "./gen/agent_pb";
-import { CURSOR_EDIT_FILE_TOOL, CURSOR_MULTI_EDIT_TOOL, cursorRequestAdvertisesApplyPatch, cursorToolAllowedByChoice, cursorToolWireName, OCX_RESPONSES_TOOL_PROVIDER } from "./tool-naming";
+import { CURSOR_EDIT_FILE_TOOL, CURSOR_MULTI_EDIT_TOOL, cursorRequestAdvertisesApplyPatch, cursorToolAllowedByChoice, cursorToolWireName, OCCX_RESPONSES_TOOL_PROVIDER } from "./tool-naming";
 import { CURSOR_EDIT_FILE_INPUT_SCHEMA, CURSOR_MULTI_EDIT_INPUT_SCHEMA, cursorToolInputSchema } from "./tool-schemas";
-export { OCX_RESPONSES_TOOL_PROVIDER, CODEX_EXEC_COMMAND_TOOL, CODEX_SHELL_COMMAND_TOOL, CODEX_UNIFIED_EXEC_TOOL, CODEX_WAIT_TOOL, CODEX_APPLY_PATCH_TOOL, CODEX_TOOL_SEARCH_TOOL, CURSOR_EDIT_FILE_TOOL, CURSOR_MULTI_EDIT_TOOL, CURSOR_STRUCTURED_EDIT_TOOLS, CURSOR_EXEC_COMMAND_TOOL, CODEX_SHELL_BRIDGE_TOOL_NAMES, isCodexShellBridgeToolName, resolveShellBridgeAliasKey, cursorToolChoiceAliases, isBareCodexShellBridgeTool, isCursorExecutionPathTool, isCursorWaitTool, isCursorCodeModeExecTool, cursorRequestUsesCodeMode, cursorRequestHasShellAlias, cursorRequestAdvertisesApplyPatch, isCursorStructuredEditToolName, isCursorSyntheticStructuredEditTool, cursorToolWireName, normalizeCursorWireName, normalizeCursorTextToolMarkers, responsesToolNameFromCursorWire, cursorToolAllowedByChoice } from "./tool-naming";
+export { OCCX_RESPONSES_TOOL_PROVIDER, CODEX_EXEC_COMMAND_TOOL, CODEX_SHELL_COMMAND_TOOL, CODEX_UNIFIED_EXEC_TOOL, CODEX_WAIT_TOOL, CODEX_APPLY_PATCH_TOOL, CODEX_TOOL_SEARCH_TOOL, CURSOR_EDIT_FILE_TOOL, CURSOR_MULTI_EDIT_TOOL, CURSOR_STRUCTURED_EDIT_TOOLS, CURSOR_EXEC_COMMAND_TOOL, CODEX_SHELL_BRIDGE_TOOL_NAMES, isCodexShellBridgeToolName, resolveShellBridgeAliasKey, cursorToolChoiceAliases, isBareCodexShellBridgeTool, isCursorExecutionPathTool, isCursorWaitTool, isCursorCodeModeExecTool, cursorRequestUsesCodeMode, cursorRequestHasShellAlias, cursorRequestAdvertisesApplyPatch, isCursorStructuredEditToolName, isCursorSyntheticStructuredEditTool, cursorToolWireName, normalizeCursorWireName, normalizeCursorTextToolMarkers, responsesToolNameFromCursorWire, cursorToolAllowedByChoice } from "./tool-naming";
 export { CURSOR_EXEC_COMMAND_INPUT_SCHEMA, CURSOR_FREEFORM_INPUT_SCHEMA, CURSOR_EDIT_FILE_INPUT_SCHEMA, CURSOR_MULTI_EDIT_INPUT_SCHEMA, CODEX_SHELL_BRIDGE_ARG_NORMALIZE_SCHEMA, cursorToolInputSchema, cursorToolArgNormalizeSchema, shellBridgeRequiredCommandKeys, defaultShellBridgeArgNormalizeSchema, cursorShellBridgeDropError, nonEmptyShellBridgeCommandFromArgs, cursorShellBridgeArgsValid } from "./tool-schemas";
 export { CURSOR_SHELL_ALIAS_SYSTEM_NOTE, CURSOR_GENERIC_TOOL_USE_USER_HINT, isGenericToolUseCountDemoPrompt, requestedCursorToolUseCount, shouldAppendCursorGenericToolUseHint, appendCursorGenericToolUseHint, shouldUseNativeExecOnlyForGenericToolUse, cursorToolsForActivePrompt, buildCursorToolGuidanceSystemNote } from "./tool-guidance";
 
@@ -23,9 +23,9 @@ export { CURSOR_SHELL_ALIAS_SYSTEM_NOTE, CURSOR_GENERIC_TOOL_USE_USER_HINT, isGe
  * must not gain sibling tools the client did not ask for.
  */
 export function cursorStructuredEditTools(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
-): OcxTool[] {
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
+): OccxTool[] {
   if (!cursorRequestAdvertisesApplyPatch(tools, toolChoice)) return [];
   if (toolChoice && toolChoice !== "auto" && toolChoice !== "required") return [];
   // Never shadow an already-advertised bare tool with the same name (a client catalog could
@@ -33,19 +33,19 @@ export function cursorStructuredEditTools(
   const existingBareNames = new Set(
     (tools ?? []).filter(tool => !tool.namespace).map(tool => tool.name),
   );
-  const candidates: OcxTool[] = [
+  const candidates: OccxTool[] = [
     {
       name: CURSOR_EDIT_FILE_TOOL,
       cursorStructuredEdit: true,
       description:
-        "Replace one block of text in a file. OpenCodex converts the replacement into a Codex apply_patch change. Copy old_string and new_string with their exact leading whitespace — Codex may locate a line after trimming indent, but it writes new_string verbatim, so stripped indent silently corrupts the file. An empty old_string with a non-empty new_string creates a new file (Add File). If the same text appears more than once, the first match is updated. Matching is line-based, so an edit cannot add or remove only the file's final newline, and old_string/new_string that are identical after line normalization are rejected as a no-op.",
+        "Replace one block of text in a file. Openccx converts the replacement into a Codex apply_patch change. Copy old_string and new_string with their exact leading whitespace — Codex may locate a line after trimming indent, but it writes new_string verbatim, so stripped indent silently corrupts the file. An empty old_string with a non-empty new_string creates a new file (Add File). If the same text appears more than once, the first match is updated. Matching is line-based, so an edit cannot add or remove only the file's final newline, and old_string/new_string that are identical after line normalization are rejected as a no-op.",
       parameters: { ...CURSOR_EDIT_FILE_INPUT_SCHEMA },
     },
     {
       name: CURSOR_MULTI_EDIT_TOOL,
       cursorStructuredEdit: true,
       description:
-        "Apply several text replacements to one file. OpenCodex converts them into one Codex apply_patch change. Copy each old_string/new_string with exact leading whitespace. If a later edit's old_string is the text after an earlier replacement, OpenCodex folds those edits into one original-file hunk. Independent edits stay separate hunks. An empty old_string with a non-empty new_string creates a new file (Add File); do not mix that with an independent Update on the same path. If the same text appears more than once, the first match is updated. Matching is line-based, so an edit cannot add or remove only the file's final newline, and identical old/new after line normalization are rejected as a no-op.",
+        "Apply several text replacements to one file. Openccx converts them into one Codex apply_patch change. Copy each old_string/new_string with exact leading whitespace. If a later edit's old_string is the text after an earlier replacement, Openccx folds those edits into one original-file hunk. Independent edits stay separate hunks. An empty old_string with a non-empty new_string creates a new file (Add File); do not mix that with an independent Update on the same path. If the same text appears more than once, the first match is updated. Matching is line-based, so an edit cannot add or remove only the file's final newline, and identical old/new after line normalization are rejected as a no-op.",
       parameters: { ...CURSOR_MULTI_EDIT_INPUT_SCHEMA },
     },
   ];
@@ -58,8 +58,8 @@ export function cursorStructuredEditTools(
  * and neither name is shadowed by an existing bare tool in the client catalog.
  */
 export function cursorRequestAdvertisesStructuredEdits(
-  tools: readonly Pick<OcxTool, "namespace" | "name" | "freeform">[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly Pick<OccxTool, "namespace" | "name" | "freeform">[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): boolean {
   return cursorStructuredEditTools(tools, toolChoice).length > 0;
 }
@@ -78,8 +78,8 @@ export function encodeCursorInputSchema(schema: unknown): Uint8Array {
 }
 
 export function buildCursorToolDefinitions(
-  tools: readonly OcxTool[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly OccxTool[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): McpToolDefinition[] {
   if (!tools?.length) return [];
   return tools.filter(tool => cursorToolAllowedByChoice(tool, toolChoice, tools)).map(tool => {
@@ -87,7 +87,7 @@ export function buildCursorToolDefinitions(
     return create(McpToolDefinitionSchema, {
       name: wireName,
       toolName: wireName,
-      providerIdentifier: OCX_RESPONSES_TOOL_PROVIDER,
+      providerIdentifier: OCCX_RESPONSES_TOOL_PROVIDER,
       description: tool.description,
       inputSchema: encodeCursorInputSchema(cursorToolInputSchema(tool)),
     });
@@ -96,8 +96,8 @@ export function buildCursorToolDefinitions(
 
 /** Exact byte size of the protobuf field value Cursor receives for client tool registration. */
 export function cursorMcpToolsEncodedSize(
-  tools: readonly OcxTool[] | undefined,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tools: readonly OccxTool[] | undefined,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): number {
   const definitions = buildCursorToolDefinitions(tools, toolChoice);
   return toBinary(McpToolsSchema, create(McpToolsSchema, { mcpTools: definitions })).byteLength;
@@ -105,8 +105,8 @@ export function cursorMcpToolsEncodedSize(
 
 /** Exact additive contribution of one repeated McpToolDefinition entry. */
 export function cursorMcpToolEncodedSize(
-  tool: OcxTool,
-  toolChoice?: OcxRequestOptions["toolChoice"],
+  tool: OccxTool,
+  toolChoice?: OccxRequestOptions["toolChoice"],
 ): number {
   return cursorMcpToolsEncodedSize([tool], toolChoice);
 }

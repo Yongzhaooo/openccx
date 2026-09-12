@@ -19,7 +19,7 @@ import { assemblePolicyCandidateEvidence } from "../../src/routing/compatibility
 import { setCompatibilityEvidenceProvider, resetCompatibilityEvidenceProviderForTests } from "../../src/routing/compatibility/provider-slot";
 import { labCompatibilityEvidenceProvider } from "../../src/routing/compatibility/lab-evidence-provider";
 import { getRoutingProfile } from "../../src/routing/profile";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const config = {
   providers: { a: { baseUrl: "https://a.test", adapter: "openai-responses", apiKey: "k" } },
@@ -30,7 +30,7 @@ const config = {
       compatibility: { requiredSuites: [{ suiteId: "responses-core", evidenceLayer: "live_route_compatibility" }] },
     },
   },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 describe("relocation equivalence", () => {
   test("every candidate gets a compatibility object when requirements exist, even unresolvable ones", () => {

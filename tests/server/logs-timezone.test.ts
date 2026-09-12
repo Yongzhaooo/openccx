@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { ManagementRequest as Request } from "../helpers/management-auth";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-const config = { providers: [] } as unknown as OcxConfig;
+const config = { providers: [] } as unknown as OccxConfig;
 
 /**
  * #725: the dashboard rendered request-log timestamps in the BROWSER's zone, so a proxy

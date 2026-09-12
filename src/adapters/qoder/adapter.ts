@@ -1,4 +1,4 @@
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../types";
 import type { AdapterRequest, ProviderAdapter } from "../base";
 import { mapReasoningEffort } from "../../reasoning-effort";
 import { buildSystemPrompt } from "../coding-agent/protocol";
@@ -13,7 +13,7 @@ export function buildQoderChildEnv(profile: QoderProfile, apiKey: string): Recor
 }
 
 /** Single-shot, tools-disabled Qoder CLI invocation; Codex remains the tool owner. */
-export function buildQoderArgs(parsed: OcxParsedRequest, provider: OcxProviderConfig): string[] {
+export function buildQoderArgs(parsed: OccxParsedRequest, provider: OccxProviderConfig): string[] {
   const args = [
     "-p",
     "--output-format", "stream-json",
@@ -99,7 +99,7 @@ export function guardQoderScaffolding(emit: (event: AdapterEvent) => void): (eve
   };
 }
 
-export function createQoderAdapter(provider: OcxProviderConfig, deps: QoderAdapterDeps = {}): ProviderAdapter {
+export function createQoderAdapter(provider: OccxProviderConfig, deps: QoderAdapterDeps = {}): ProviderAdapter {
   return {
     name: "qoder",
     buildRequest(): AdapterRequest {

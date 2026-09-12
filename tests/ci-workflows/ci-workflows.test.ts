@@ -15,7 +15,7 @@ import { repoRoot } from "../helpers/repo-root";
 
 /** Final consolidated gate comment body (the single bot message). */
 function lastGateCommentBody(result: HarnessResult): string {
-  const marker = "<!-- opencodex-pr-gate -->";
+  const marker = "<!-- openccx-pr-gate -->";
   const updates = (callsTo(result, "issues.updateComment") as Array<{ body: string }>)
     .filter(call => call.body.includes(marker));
   if (updates.length > 0) return updates[updates.length - 1]!.body;
@@ -746,7 +746,7 @@ describe("GitHub Actions hardening", () => {
     expect(workflow).not.toContain('healthz || echo "healthz not ready yet"');
     expect(workflow).not.toContain("sleep 8");
     expect(workflow).toContain("systemd service has no positive MainPID before crash test");
-    expect(workflow).toContain("Get-ScheduledTask -TaskName opencodex-proxy -ErrorAction SilentlyContinue");
+    expect(workflow).toContain("Get-ScheduledTask -TaskName openccx-proxy -ErrorAction SilentlyContinue");
     expect(workflow).toContain("launchd artifact or proxy survived uninstall");
     expect(workflow).toContain("scheduled task or proxy survived uninstall");
     expect(workflow).not.toMatch(/uses:\s+\S+@(?:v\d+|main|master)\b/);
@@ -1676,7 +1676,7 @@ describe("GitHub Actions hardening", () => {
     const BOT = "github-actions[bot]";
     const MARKER = "<!-- pr-quality-enforcer -->";
     const LEGACY_MARKER = "<!-- wrong-branch-enforcer -->";
-    const GATE_MARKER = "<!-- opencodex-pr-gate -->";
+    const GATE_MARKER = "<!-- openccx-pr-gate -->";
     const READINESS_MARKER = "<!-- pr-quality-readiness -->";
     const CHECKLIST_START = "<!-- pr-quality-readiness-checklist:start -->";
     const CHECKLIST_END = "<!-- pr-quality-readiness-checklist:end -->";
@@ -2968,7 +2968,7 @@ describe("GitHub Actions hardening", () => {
         "graphql",
       ]));
       expect(callsTo(result, "pulls.update")).toEqual([
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
       ]);
       expect(
         (callsTo(result, "issues.createComment") as [{ body: string }])
@@ -3285,9 +3285,9 @@ describe("GitHub Actions hardening", () => {
       });
 
       expect(callsTo(result, "pulls.get")).toEqual([
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 4242 },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 4242 },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 4242 },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 4242 },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 4242 },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 4242 },
       ]);
       expect(callsTo(result, "repos.listPullRequestsAssociatedWithCommit")).toEqual([]);
       expect(methodsOf(result)).toContain("issues.listComments");
@@ -3340,7 +3340,7 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.list")).toHaveLength(1);
       expect(callsTo(result, "pulls.list")[0]).toMatchObject({
         owner: "lidge-jun",
-        repo: "opencodex",
+        repo: "openccx",
         state: "open",
       });
       expect(result.logs.join(" ")).toContain("skipping ambiguous/stale revalidation");
@@ -3371,7 +3371,7 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.list")).toHaveLength(1);
       expect(callsTo(result, "pulls.list")[0]).toMatchObject({
         owner: "lidge-jun",
-        repo: "opencodex",
+        repo: "openccx",
         state: "open",
       });
       expect(result.logs.join(" ")).toContain("skipping ambiguous/stale revalidation");
@@ -3520,7 +3520,7 @@ describe("GitHub Actions hardening", () => {
       const HYGIENE_BLOCK_END = "<!-- pr-hygiene-block:end -->";
       const existingGateBody = [
         GATE_MARKER,
-        '<!-- opencodex-pr-gate-state:{"version":1,"active":true,"autoDraftedByBot":false,"titlePrefixedByBot":false} -->',
+        '<!-- openccx-pr-gate-state:{"version":1,"active":true,"autoDraftedByBot":false,"titlePrefixedByBot":false} -->',
         "",
         "## ⏳ DRAFT",
         "- PR is kept in draft.",
@@ -3777,7 +3777,7 @@ describe("GitHub Actions hardening", () => {
         "issues.deleteComment",
       ]));
       expect(callsTo(result, "pulls.update")).toEqual([
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Port the runtime entry" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Port the runtime entry" },
       ]);
       const cleared = lastReadinessCommentBody(result);
       expect(cleared).toContain('"active":false');
@@ -3829,11 +3829,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "[WRONG BRANCH] Port the runtime entry" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "[WRONG BRANCH] Port the runtime entry" },
       ]);
       expect(lastEnforcerCommentBody(result)).toContain('"active":true');
       expect(lastEnforcerCommentBody(result)).toContain('"autoDraftedByBot":true');
@@ -3875,11 +3875,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
       ]);
 
       // The single comment create addresses this PR, by its own number.
@@ -3909,7 +3909,7 @@ describe("GitHub Actions hardening", () => {
           number: 42,
           base: {
             ref: parentHead,
-            repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+            repo: { name: "openccx", owner: { login: "lidge-jun" } },
           },
           title: "Stacked child",
           draft: false,
@@ -3920,7 +3920,7 @@ describe("GitHub Actions hardening", () => {
             number: 41,
             head: {
               ref: parentHead,
-              repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+              repo: { name: "openccx", owner: { login: "lidge-jun" } },
             },
           },
         ],
@@ -3940,7 +3940,7 @@ describe("GitHub Actions hardening", () => {
         number: 1000 + i,
         head: {
           ref: `feature/filler-${i}`,
-          repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+          repo: { name: "openccx", owner: { login: "lidge-jun" } },
         },
       }));
       const result = await run({
@@ -3948,7 +3948,7 @@ describe("GitHub Actions hardening", () => {
           number: 42,
           base: {
             ref: parentHead,
-            repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+            repo: { name: "openccx", owner: { login: "lidge-jun" } },
           },
           title: "Stacked child beyond page one",
           draft: false,
@@ -3960,7 +3960,7 @@ describe("GitHub Actions hardening", () => {
               number: 41,
               head: {
                 ref: parentHead,
-                repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+                repo: { name: "openccx", owner: { login: "lidge-jun" } },
               },
             },
           ],
@@ -3986,7 +3986,7 @@ describe("GitHub Actions hardening", () => {
             number: 99,
             head: {
               ref: "feature/other",
-              repo: { name: "opencodex", owner: { login: "lidge-jun" } },
+              repo: { name: "openccx", owner: { login: "lidge-jun" } },
             },
           },
         ],
@@ -4001,13 +4001,13 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           title: "[WRONG BRANCH] Orphan stack",
         },
@@ -4048,11 +4048,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(restored, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Add a thing" },
       ]);
     });
 
@@ -4077,7 +4077,7 @@ describe("GitHub Actions hardening", () => {
         "issues.deleteComment",
       ]));
       expect(callsTo(result, "pulls.update")).toEqual([
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Add a thing" },
       ]);
       const drafts = callsTo(result, "graphql") as [{ query: string }];
       expect(drafts).toHaveLength(2);
@@ -4101,11 +4101,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Add a thing (v2)" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Add a thing (v2)" },
       ]);
     });
 
@@ -4145,11 +4145,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(wentWrong, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "[WRONG BRANCH] Add a thing" },
       ]);
 
       // …and the reverse: the event says main, the live PR says dev. No writes.
@@ -4440,7 +4440,7 @@ describe("GitHub Actions hardening", () => {
         "issues.deleteComment",
       ]));
         expect(callsTo(restored, "pulls.update")).toEqual([
-          { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Add a thing" },
+          { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Add a thing" },
         ]);
         const cleared = lastReadinessCommentBody(restored);
         expect(cleared).toContain('"version":1');
@@ -4498,7 +4498,7 @@ describe("GitHub Actions hardening", () => {
         "issues.deleteComment",
       ]));
       expect(callsTo(loose, "pulls.update")).toEqual([
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "Add a thing" },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "Add a thing" },
       ]);
 
       // And the falsy side is symmetric: `null` and `0` skip their own
@@ -4559,7 +4559,7 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
@@ -4584,11 +4584,11 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
-        { owner: "lidge-jun", repo: "opencodex", pull_number: 42, title: "[WRONG BRANCH] " },
+        { owner: "lidge-jun", repo: "openccx", pull_number: 42, title: "[WRONG BRANCH] " },
       ]);
       expect(methodsOf(result)).toEqual(readsWrongBase([
         "pulls.update",
@@ -4614,7 +4614,7 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
@@ -4647,7 +4647,7 @@ describe("GitHub Actions hardening", () => {
       expect(callsTo(result, "pulls.update")).toEqual([
         {
           owner: "lidge-jun",
-          repo: "opencodex",
+          repo: "openccx",
           pull_number: 42,
           body: expect.stringContaining(CHECKLIST_START),
         },
@@ -5247,7 +5247,7 @@ describe("GitHub Actions hardening", () => {
     expect(helperSrc).toContain("Authoritative control state comes only from verified bot-owned comments");
     expect(helperSrc).toContain("sourceComplete");
     expect(helperSrc).not.toContain("writeFileControlState");
-    expect(helperSrc).not.toContain(".ocx-translation-state");
+    expect(helperSrc).not.toContain(".occx-translation-state");
   });
 
   test("React Doctor workflow is SHA-pinned, engine-pinned, gating, and read-only", async () => {
@@ -5384,7 +5384,7 @@ describe("doctor-gui-if-changed", () => {
         DOCTOR_FILES: "gui/src/App.tsx",
         DOCTOR_CMD: "bun ../scripts/fixtures/doctor-huge-output.ts",
         // Tiny buffer so the fixture's stdout trips the overflow branch.
-        OCX_DOCTOR_MAX_BUFFER: "256",
+        OCCX_DOCTOR_MAX_BUFFER: "256",
       },
     });
     expect(run.exitCode).not.toBe(0);
@@ -5561,7 +5561,7 @@ test.skipIf(process.platform === "win32")("release shell recovers only unverifie
     { mode: "missing-receipt", dry: false, status: 1, receipt: false, verification: "", reads: 0 },
   ];
   for (const scenario of scenarios) {
-    const dir = mkdtempSync(join(tmpdir(), "ocx-publication-"));
+    const dir = mkdtempSync(join(tmpdir(), "occx-publication-"));
     const output = join(dir, "output");
     const summary = join(dir, "summary");
     const calls = join(dir, "calls");

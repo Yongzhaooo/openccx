@@ -261,7 +261,7 @@ describe("bridge stream lifecycle (RC1 / RC2)", () => {
     }
     await reader.cancel();
     expect(text).toContain("event: response.heartbeat");
-    expect(text).not.toContain(": opencodex heartbeat");
+    expect(text).not.toContain(": openccx heartbeat");
   });
 
   test("RC3: the grok surface opts into comment keep-alives (strict decoder safety)", async () => {
@@ -280,7 +280,7 @@ describe("bridge stream lifecycle (RC1 / RC2)", () => {
       if (value) text += dec.decode(value, { stream: true });
     }
     await reader.cancel();
-    expect(text).toContain(": opencodex heartbeat\n\n");
+    expect(text).toContain(": openccx heartbeat\n\n");
     expect(text).not.toContain("event: response.heartbeat");
   });
 

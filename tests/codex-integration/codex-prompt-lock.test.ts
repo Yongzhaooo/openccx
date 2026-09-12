@@ -23,9 +23,9 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function lockPath(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-lock-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-lock-"));
   roots.push(dir);
-  return join(dir, "opencodex-prompt.lock");
+  return join(dir, "openccx-prompt.lock");
 }
 
 /** Owner alive, clock fixed. */

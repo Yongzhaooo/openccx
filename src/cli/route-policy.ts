@@ -10,11 +10,11 @@ import {
 } from "./runtime-api";
 
 const USAGE = `Usage:
-  ocx route policy list [--json]
-  ocx route policy show <id> [--json]
-  ocx route policy dry-run <id> [--model-context <tokens>] [--tools]
+  occx route policy list [--json]
+  occx route policy show <id> [--json]
+  occx route policy dry-run <id> [--model-context <tokens>] [--tools]
       [--image] [--structured-output] [--json]
-  ocx route policy evaluate <id> [--model-context <tokens>] [--tools]
+  occx route policy evaluate <id> [--model-context <tokens>] [--tools]
       [--image] [--structured-output] [--json]`;
 
 interface ProfileRow {

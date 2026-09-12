@@ -19,7 +19,7 @@ import { FREE_PROVIDER_DIRECTORY } from "../../src/providers/free-directory";
 import { applyProviderConfigHints } from "../../src/codex/catalog";
 import { routeModel } from "../../src/router";
 import { resolveAdapter } from "../../src/server";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 function nativeTemplate(): Record<string, unknown> {
   return {
@@ -244,7 +244,7 @@ describe("provider registry parity", () => {
   });
 
   test("OpenAI API route max-input metadata is trusted and user values only lower it", () => {
-    const makeConfig = (value: number, context = 2_000_000): OcxConfig => ({
+    const makeConfig = (value: number, context = 2_000_000): OccxConfig => ({
       port: 10100,
       defaultProvider: "openai-apikey",
       providers: {
@@ -272,7 +272,7 @@ describe("provider registry parity", () => {
         "glm-5.2": 100_000,
         "glm-5.2[1m]": 800_000,
       };
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "zai",
         providers: {
@@ -304,7 +304,7 @@ describe("provider registry parity", () => {
         "glm-5.2": 128_000,
         "glm-5.2[1m]": 128_000,
       };
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "zai",
         providers: {
@@ -541,7 +541,7 @@ describe("provider registry parity", () => {
     // bracketed GLM ids, and that vendor's OpenAI path returns 400 code 1211 for them.
     expect(optedInProviders).toEqual(["kimi", "zai", "zhipu-bigmodel-coding", "kimi-code"]);
 
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "zai",
       providers: {
@@ -666,7 +666,7 @@ describe("provider registry parity", () => {
       { adapter: "openai-responses", baseUrl: "https://custom.example.test/api/v1" },
       { adapter: "openai-chat", baseUrl: "https://open.bigmodel.cn/api/v1" },
     ]) {
-      const provider: OcxProviderConfig = {
+      const provider: OccxProviderConfig = {
         ...transport, authMode: "key", apiKey: "test-custom-key", liveModels: true,
         models: ["glm-5.3"], modelContextWindows: { "glm-5.3": 32_768 },
         modelReasoningEfforts: { "glm-5.3": ["medium"] },
@@ -676,7 +676,7 @@ describe("provider registry parity", () => {
       const enriched = structuredClone(provider);
       enrichProviderFromRegistry(id, enriched);
       expect(enriched).toEqual(provider);
-      const config: OcxConfig = { port: 10100, defaultProvider: id, providers: { [id]: provider } };
+      const config: OccxConfig = { port: 10100, defaultProvider: id, providers: { [id]: provider } };
       const routed = routeModel(config, `${id}/glm-5.3`);
       expect(routed.provider).toMatchObject(provider);
       expect(routed.provider.modelContextWindows).toEqual({ "glm-5.3": 32_768 });
@@ -763,7 +763,7 @@ describe("provider registry parity", () => {
       // Key-pool 429 rotation rebuilds the provider from the persisted config (not the routed
       // one), so the flag must survive seeding/enrichment, not just the router's registry backfill.
       expect(providerConfigSeed(entry!).promptCacheKey).toBe(true);
-      const enriched: OcxProviderConfig = { adapter: "openai-chat", baseUrl: entry!.baseUrl };
+      const enriched: OccxProviderConfig = { adapter: "openai-chat", baseUrl: entry!.baseUrl };
       enrichProviderFromCatalog(providerId, enriched);
       expect(enriched.promptCacheKey).toBe(true);
       expect(entry?.noReasoningModels).not.toContain("k3");
@@ -861,12 +861,12 @@ describe("provider registry parity", () => {
     expect(providerConfigSeed(nvidia).freeTier).toBe(true);
 
     // Enrich backfills only when the user config leaves freeTier unset.
-    const unset: OcxProviderConfig = { adapter: nvidia.adapter, baseUrl: nvidia.baseUrl };
+    const unset: OccxProviderConfig = { adapter: nvidia.adapter, baseUrl: nvidia.baseUrl };
     enrichProviderFromRegistry("nvidia", unset);
     expect(unset.freeTier).toBe(true);
 
     // A user-set explicit false is preserved.
-    const optedOut: OcxProviderConfig = { adapter: nvidia.adapter, baseUrl: nvidia.baseUrl, freeTier: false };
+    const optedOut: OccxProviderConfig = { adapter: nvidia.adapter, baseUrl: nvidia.baseUrl, freeTier: false };
     enrichProviderFromRegistry("nvidia", optedOut);
     expect(optedOut.freeTier).toBe(false);
 
@@ -986,7 +986,7 @@ describe("provider registry parity", () => {
     expect(seed.modelInputModalities?.auto).toEqual(["text", "image"]);
     expect(seed.modelInputModalities?.["composer-2.5"]).toEqual(["text", "image"]);
 
-    const savedCursor: OcxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
+    const savedCursor: OccxProviderConfig = { adapter: "cursor", baseUrl: "https://api2.cursor.sh" };
     enrichProviderFromCatalog("cursor", savedCursor);
     expect(savedCursor).toMatchObject({
       liveModels: true,
@@ -1424,7 +1424,7 @@ describe("free-provider directory isolation", () => {
   });
 
   test("a custom provider named after a directory entry keeps its own destination", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "qoder",
       providers: {
@@ -1449,7 +1449,7 @@ describe("free-provider directory isolation", () => {
   });
 
   test("a custom provider named codebuddy keeps its own destination (preserveCustomDestination)", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "codebuddy",
       providers: {

@@ -16,7 +16,7 @@ import { FREE_PROVIDER_DIRECTORY } from "../../src/providers/free-directory";
 import { PROVIDER_REGISTRY, type ProviderRegistryEntry } from "../../src/providers/registry";
 import { routedSlug } from "../../src/providers/slug-codec";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withStubbedProviderFetch } from "../helpers/catalog-provider-fetch";
 import { fixturePath } from "../helpers/repo-root";
 
@@ -61,7 +61,7 @@ function registryEntry(id: ProviderId): ProviderRegistryEntry {
   return entry;
 }
 
-function providerConfig(id: ProviderId, overrides: Partial<OcxProviderConfig> = {}): OcxConfig {
+function providerConfig(id: ProviderId, overrides: Partial<OccxProviderConfig> = {}): OccxConfig {
   const provider = PROVIDERS[id];
   return {
     port: 10100,
@@ -258,7 +258,7 @@ describe("DigitalOcean and Scaleway providers", () => {
         digitalocean: providerConfig("digitalocean").providers.digitalocean!,
         scaleway: providerConfig("scaleway").providers.scaleway!,
       },
-    } satisfies OcxConfig);
+    } satisfies OccxConfig);
     const models = await gatherRoutedModels(config);
     const digitaloceanModels = models.filter(row => row.provider === "digitalocean");
     const scalewayModels = models.filter(row => row.provider === "scaleway");

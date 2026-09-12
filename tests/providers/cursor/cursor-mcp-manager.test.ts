@@ -16,7 +16,7 @@ import { handleCursorNativeExec } from "../../../src/adapters/cursor/native-exec
 import { resolveMcpServers } from "../../../src/adapters/cursor/mcp-config";
 import { CursorMcpManager, CursorMcpPayloadTooLargeError, McpCatalogLimitError } from "../../../src/adapters/cursor/mcp-manager";
 import { buildMcpToolDefinitions, mcpDepsFromManager } from "../../../src/adapters/cursor/native-exec-mcp";
-import type { OcxProviderConfig } from "../../../src/types";
+import type { OccxProviderConfig } from "../../../src/types";
 
 const textEncoder = new TextEncoder();
 // 1x1 transparent PNG, base64 — exercises real image-content fidelity (not a placeholder).
@@ -107,7 +107,7 @@ describe("Cursor MCP manager", () => {
         disabled: { command: "node", enabled: false },
         empty: {},
       },
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
     const names = resolveMcpServers(provider).map(s => s.serverName).sort();
     expect(names).toEqual(["ok", "remote"]);
   });
@@ -147,7 +147,7 @@ describe("Cursor MCP manager", () => {
     const defs = await buildMcpToolDefinitions(manager);
     const echo = defs.find(d => d.toolName === "echo");
     expect(echo).toBeDefined();
-    expect(echo?.providerIdentifier).toBe("opencodex");
+    expect(echo?.providerIdentifier).toBe("openccx");
     const schema = toJson(ValueSchema, fromBinary(ValueSchema, echo!.inputSchema)) as { type?: string };
     expect(schema.type).toBe("object");
   });
@@ -249,7 +249,7 @@ describe("Cursor MCP deps via native-exec dispatcher", () => {
     });
     try {
       const deps = mcpDepsFromManager(manager);
-      const result = await deps.mcp!(create(McpArgsSchema, { name: "shot", toolName: "shot", providerIdentifier: "opencodex" }));
+      const result = await deps.mcp!(create(McpArgsSchema, { name: "shot", toolName: "shot", providerIdentifier: "openccx" }));
       expect(result.result.case).toBe("error");
       expect(limitError).toBeInstanceOf(CursorMcpPayloadTooLargeError);
       expect((limitError as CursorMcpPayloadTooLargeError).kind).toBe("result");
@@ -265,7 +265,7 @@ describe("Cursor MCP deps via native-exec dispatcher", () => {
     const manager = makeManager(clientTransport);
     const deps = mcpDepsFromManager(manager);
 
-    const args = create(McpArgsSchema, { name: "echo", toolName: "echo", providerIdentifier: "opencodex" });
+    const args = create(McpArgsSchema, { name: "echo", toolName: "echo", providerIdentifier: "openccx" });
     args.args = { text: textEncoder.encode(JSON.stringify("world")) };
 
     const reply = decode((await handleCursorNativeExec(execMessage({ case: "mcpArgs", value: args }), deps))[0]);
@@ -284,7 +284,7 @@ describe("Cursor MCP deps via native-exec dispatcher", () => {
     const manager = makeManager(clientTransport);
     const deps = mcpDepsFromManager(manager);
 
-    const args = create(McpArgsSchema, { name: "shot", toolName: "shot", providerIdentifier: "opencodex" });
+    const args = create(McpArgsSchema, { name: "shot", toolName: "shot", providerIdentifier: "openccx" });
     const reply = decode((await handleCursorNativeExec(execMessage({ case: "mcpArgs", value: args }), deps))[0]);
     expect(reply.message.case).toBe("mcpResult");
     expect(reply.message.value.result.case).toBe("success");
@@ -306,7 +306,7 @@ describe("Cursor MCP deps via native-exec dispatcher", () => {
     const manager = makeManager(clientTransport);
     const deps = mcpDepsFromManager(manager);
 
-    const args = create(McpArgsSchema, { name: "ghost", toolName: "ghost", providerIdentifier: "opencodex" });
+    const args = create(McpArgsSchema, { name: "ghost", toolName: "ghost", providerIdentifier: "openccx" });
     const reply = decode((await handleCursorNativeExec(execMessage({ case: "mcpArgs", value: args }), deps))[0]);
     expect(reply.message.case).toBe("mcpResult");
     expect(reply.message.value.result.case).toBe("toolNotFound");
@@ -318,7 +318,7 @@ describe("Cursor MCP deps via native-exec dispatcher", () => {
     const manager = makeManager(clientTransport);
     const deps = mcpDepsFromManager(manager);
 
-    const args = create(McpArgsSchema, { name: "boom", toolName: "boom", providerIdentifier: "opencodex" });
+    const args = create(McpArgsSchema, { name: "boom", toolName: "boom", providerIdentifier: "openccx" });
     const reply = decode((await handleCursorNativeExec(execMessage({ case: "mcpArgs", value: args }), deps))[0]);
     expect(reply.message.case).toBe("mcpResult");
     expect(reply.message.value.result.case).toBe("success");

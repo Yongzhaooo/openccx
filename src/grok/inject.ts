@@ -25,13 +25,13 @@ export interface GrokInjectResult {
   skippedReason?: "no-grok-home" | "orphaned-marker" | "non-loopback";
 }
 
-const BEGIN_MARKER = "# >>> opencodex managed block — do not edit (removed by `ocx stop`) >>>";
-const END_MARKER = "# <<< opencodex managed block <<<";
+const BEGIN_MARKER = "# >>> openccx managed block — do not edit (removed by `occx stop`) >>>";
+const END_MARKER = "# <<< openccx managed block <<<";
 // Grok 0.2.109 (2026-07-21) shipped working [model_providers.<id>] inheritance: base_url,
 // api_backend, api_key, and extra_headers declared on the provider are applied to inference
 // routing for inheriting models (verified in grok-build's with_provider_defaults →
 // resolve_model_list → sampling_config_for_model → SamplingClient chain). We emit one shared
-// [model_providers.opencodex] table and each [model.*] references it via model_provider.
+// [model_providers.openccx] table and each [model.*] references it via model_provider.
 
 /**
  * INTERNAL API shared with `./inspect` (WP2, devlog 260803_integrations_toggle_all/012).
@@ -306,8 +306,8 @@ function canonicalDottedKey(raw: string): string[] {
 
 /**
  * `[model.<alias>]` table headers the USER owns (outside our fence) — reserved for collisions.
- * TOML admits equivalent header spellings for BOTH segments (`["model"."ocx-mine"]`,
- * `['model'.ocx-mine]`, `[ model . ocx-mine ]`); all of them redefine the same table, so each
+ * TOML admits equivalent header spellings for BOTH segments (`["model"."occx-mine"]`,
+ * `['model'.occx-mine]`, `[ model . occx-mine ]`); all of them redefine the same table, so each
  * form is canonicalized before it is reserved.
  */
 function userModelAliases(content: string, region: ManagedRegion | null): Set<string> {
@@ -323,13 +323,13 @@ function userModelAliases(content: string, region: ManagedRegion | null): Set<st
 }
 
 /** The api_key literal every generated entry carries. It is necessary, but not ownership alone. */
-const OPENCODEX_API_KEY = "opencodex-loopback";
-const OPENCODEX_GROK_MARKER = "x-opencodex-grok";
+const OPENCCX_API_KEY = "openccx-loopback";
+const OPENCCX_GROK_MARKER = "x-openccx-grok";
 
-/** The provider id opencodex owns inside ~/.grok/config.toml. */
-const OPENCODEX_PROVIDER_ID = "opencodex";
+/** The provider id openccx owns inside ~/.grok/config.toml. */
+const OPENCCX_PROVIDER_ID = "openccx";
 
-/** A plain `[model.<alias>]` table outside the fence that opencodex itself wrote. */
+/** A plain `[model.<alias>]` table outside the fence that openccx itself wrote. */
 interface OrphanTable {
   alias: string;
   /** The model id this entry routes to — used to find its replacement alias. */
@@ -399,12 +399,12 @@ function hasInlineOwnershipMarker(value: string | undefined): boolean {
   // The reconstructed fold of a Grok dotted re-serialization writes bare `1` for the
   // boolean literal, so both `= "1"` and `= 1` spellings are accepted here.
   return value !== undefined
-    && /^\{[ \t]*["']x-opencodex-grok["'][ \t]*=[ \t]*(?:"1"|'1'|1)[ \t]*\}$/.test(value);
+    && /^\{[ \t]*["']x-openccx-grok["'][ \t]*=[ \t]*(?:"1"|'1'|1)[ \t]*\}$/.test(value);
 }
 
 /** Historical deterministic alias, including collision suffixes allocated by the writer. */
 function isGeneratedAliasForModel(alias: string, modelId: string): boolean {
-  const base = `ocx-${modelId.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+  const base = `occx-${modelId.replace(/[^A-Za-z0-9_-]/g, "-")}`;
   if (alias === base) return true;
   if (!alias.startsWith(`${base}-`)) return false;
   const suffix = alias.slice(base.length + 1);
@@ -417,7 +417,7 @@ function isLegacyGeneratedTable(alias: string, keys: ReadonlyMap<string, string>
   return modelId !== undefined
     && modelId.length > 0
     && keys.get("api_backend") === "chat_completions"
-    && keys.get("name") === `OCX ${modelId}`
+    && keys.get("name") === `OCCX ${modelId}`
     && isGeneratedAliasForModel(alias, modelId);
 }
 
@@ -435,7 +435,7 @@ function isDisabledProviderModelId(
 }
 
 /**
- * Model tables OUTSIDE the fence that opencodex itself wrote (#511).
+ * Model tables OUTSIDE the fence that openccx itself wrote (#511).
  *
  * These are entries from a version that predates the markers (or predates
  * `context_window`). Because they sit outside the fence, `userModelAliases` reserves
@@ -452,16 +452,16 @@ function isDisabledProviderModelId(
  *   - `api_key` equal to our own literal;
  *   - a loopback `base_url`, so an entry that merely copied our key while pointing at a
  *     remote host is left alone.
- *   - `x-opencodex-grok = "1"` in generated inline/child extra_headers, OR the historical
- *     chat_completions + `name = "OCX <model>"` + deterministic generated alias shape.
- *   - PROVIDER-INHERITANCE shape: `model_provider = "opencodex"` with no api_key/base_url of
- *     its own, adopting the verdict of the `[model_providers.opencodex]` table it references
+ *   - `x-openccx-grok = "1"` in generated inline/child extra_headers, OR the historical
+ *     chat_completions + `name = "OCCX <model>"` + deterministic generated alias shape.
+ *   - PROVIDER-INHERITANCE shape: `model_provider = "openccx"` with no api_key/base_url of
+ *     its own, adopting the verdict of the `[model_providers.openccx]` table it references
  *     (the current block shape carries no per-model evidence; this mirrors Codex-side
  *     classifyCodexRouting).
  * A loopback base_url ALONE is not enough: aiming your own model at the local proxy is a
  * legitimate thing to do.
  *
- * Also sweeps orphaned `[model_providers.opencodex]` blocks from a previous managed block
+ * Also sweeps orphaned `[model_providers.openccx]` blocks from a previous managed block
  * that used the provider-inheritance shape. Grok's re-serializer promotes the inline
  * `extra_headers = { ... }` into a separate `[model_providers.<id>.extra_headers]`
  * sub-table, which can split the parent's body (its own keys then live inside the child's
@@ -473,7 +473,7 @@ function isDisabledProviderModelId(
  * durable marker lives on the provider (never on the inheriting model), so the sweep is
  * what keeps explicit ownership of inherited entries verifiable after a rewrite.
  */
-function findOpencodexOrphans(content: string, region: ManagedRegion | null): OrphanTable[] {
+function findOpenccxOrphans(content: string, region: ManagedRegion | null): OrphanTable[] {
   const orphans: OrphanTable[] = [];
   // A pre-fence orphan's body must stop AT the fence. The managed block opens with a
   // COMMENT, not a table header, so a span that runs to "the next table header" swallows
@@ -494,7 +494,7 @@ function findOpencodexOrphans(content: string, region: ManagedRegion | null): Or
   // an orphan of a previous managed block (a leftover here collides with the regenerated
   // block's provider table — duplicate key — and alias rewriting skips provider orphans
   // because they have no alias and no model id). The dot-terminated prefix keeps a user's
-  // `[model_providers.opencodex_backup]` out of scope.
+  // `[model_providers.openccx_backup]` out of scope.
   const ownedProviderIds = new Set<string>();
   for (const [position, header] of headers.entries()) {
     if (header.array || header.segments.length !== 2 || header.segments[0] !== "model_providers") continue;
@@ -525,16 +525,16 @@ function findOpencodexOrphans(content: string, region: ManagedRegion | null): Or
       additionalRanges.push({ start: child.index, end: childEnd });
     }
     const keys = tableBodyKeys(body);
-    if (keys.get("api_key") !== OPENCODEX_API_KEY) continue;
+    if (keys.get("api_key") !== OPENCCX_API_KEY) continue;
     if (!isLoopbackBaseUrl(keys.get("base_url"))) continue;
     // The durable marker may sit inline on the provider, or be promoted by Grok's
     // re-serializer into `[model_providers.<id>.extra_headers]` — where the folded body
-    // shows it as a bare `x-opencodex-grok = "1"` assignment. Both forms decide.
+    // shows it as a bare `x-openccx-grok = "1"` assignment. Both forms decide.
     if (!hasInlineOwnershipMarker(keys.get("extra_headers"))
-      && keys.get(OPENCODEX_GROK_MARKER) !== "1") continue;
+      && keys.get(OPENCCX_GROK_MARKER) !== "1") continue;
     ownedProviderIds.add(header.segments[1]!);
     if (insideRegion) continue;
-    if (header.segments[1] === OPENCODEX_PROVIDER_ID) {
+    if (header.segments[1] === OPENCCX_PROVIDER_ID) {
       orphans.push({
         alias: "",
         modelId: "",
@@ -554,7 +554,7 @@ function findOpencodexOrphans(content: string, region: ManagedRegion | null): Or
     const modelId = keys.get("model");
     if (!modelId) continue;
     // Two shapes carry our ownership signal. The current managed block routes every model
-    // through a shared provider table (`model_provider = "opencodex"`), so a re-serialized
+    // through a shared provider table (`model_provider = "openccx"`), so a re-serialized
     // unfenced entry has NO api_key/base_url of its own — the evidence lives on the provider
     // table it references (Codex-side precedent: classifyCodexRouting follows model_provider
     // for the same reason). Inheritance is accepted only from a provider that itself passed
@@ -563,11 +563,11 @@ function findOpencodexOrphans(content: string, region: ManagedRegion | null): Or
     // [model.*] table, and inheritance alone must not grant removal authority over it.
     const providerId = keys.get("model_provider");
     const inheritedOwned =
-      providerId === OPENCODEX_PROVIDER_ID
-      && ownedProviderIds.has(OPENCODEX_PROVIDER_ID)
+      providerId === OPENCCX_PROVIDER_ID
+      && ownedProviderIds.has(OPENCCX_PROVIDER_ID)
       && isGeneratedAliasForModel(header.segments[1]!, modelId);
     if (!inheritedOwned) {
-      if (keys.get("api_key") !== OPENCODEX_API_KEY) continue;
+      if (keys.get("api_key") !== OPENCCX_API_KEY) continue;
       if (!isLoopbackBaseUrl(keys.get("base_url"))) continue;
     }
     let hasOwnershipMarker = hasInlineOwnershipMarker(keys.get("extra_headers"));
@@ -587,7 +587,7 @@ function findOpencodexOrphans(content: string, region: ManagedRegion | null): Or
       additionalRanges.push({ start: child.index, end: childEnd });
       if (!child.array && child.segments.length === 3 && child.segments[2] === "extra_headers") {
         const childKeys = tableBodyKeys(content.slice(child.index + child.length, childEnd));
-        if (childKeys.get(OPENCODEX_GROK_MARKER) === "1") hasOwnershipMarker = true;
+        if (childKeys.get(OPENCCX_GROK_MARKER) === "1") hasOwnershipMarker = true;
       }
     }
     const legacyGenerated = isLegacyGeneratedTable(header.segments[1]!, keys);
@@ -894,7 +894,7 @@ function transformAliasReferences(
     }
     let located = false;
     for (const candidate of probeCandidates) {
-      let sentinel = `__opencodex_reference_probe_${targetIndex}_${candidate.valueStart}__`;
+      let sentinel = `__openccx_reference_probe_${targetIndex}_${candidate.valueStart}__`;
       while (sentinel === target.alias) sentinel += "_";
       const probe = content.slice(0, candidate.valueStart)
         + tomlString(sentinel)
@@ -965,9 +965,9 @@ function orphanedMarkerResult(action: string): GrokInjectResult {
   return {
     ok: false,
     changed: false,
-    message: `Grok config ${action} refused: found the opencodex begin marker without its end marker. `
+    message: `Grok config ${action} refused: found the openccx begin marker without its end marker. `
       + "The managed region boundary is ambiguous, so nothing was modified. "
-      + "Repair ~/.grok/config.toml manually (see config.toml.bak-opencodex) and re-run.",
+      + "Repair ~/.grok/config.toml manually (see config.toml.bak-openccx) and re-run.",
     skippedReason: "orphaned-marker",
   };
 }
@@ -1003,20 +1003,20 @@ export function buildGrokManagedBlock(
   const lines = [
     BEGIN_MARKER,
     "",
-    `[model_providers.${OPENCODEX_PROVIDER_ID}]`,
+    `[model_providers.${OPENCCX_PROVIDER_ID}]`,
     `base_url = ${tomlString(baseUrl)}`,
     'api_backend = "responses"',
-    'api_key = "opencodex-loopback"',
+    'api_key = "openccx-loopback"',
     // Best-effort attribution tag for the usage dashboard. Upstream Grok sends
     // extra_headers verbatim on inference calls (11-custom-models.md). This is NOT a
     // security boundary — any loopback client could send the same header.
-    'extra_headers = { "x-opencodex-grok" = "1" }',
+    'extra_headers = { "x-openccx-grok" = "1" }',
   ];
   const aliasCounts = new Map<string, number>();
   const taken = new Set(reservedAliases ?? []);
 
   for (const model of models) {
-    const baseAlias = `ocx-${model.id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+    const baseAlias = `occx-${model.id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
     let count = (aliasCounts.get(baseAlias) ?? 0) + 1;
     let alias = count === 1 ? baseAlias : `${baseAlias}-${count}`;
     // User-owned [model.<alias>] tables outside the fence are reserved: emitting a
@@ -1034,8 +1034,8 @@ export function buildGrokManagedBlock(
       "",
       `[model.${alias}]`,
       `model = ${tomlString(model.id)}`,
-      `model_provider = ${tomlString(OPENCODEX_PROVIDER_ID)}`,
-      `name = ${tomlString(model.name ?? `OCX ${model.id}`)}`,
+      `model_provider = ${tomlString(OPENCCX_PROVIDER_ID)}`,
+      `name = ${tomlString(model.name ?? `OCCX ${model.id}`)}`,
     );
     if (Number.isFinite(model.contextWindow) && (model.contextWindow ?? 0) > 0) {
       lines.push(`context_window = ${model.contextWindow}`);
@@ -1110,15 +1110,15 @@ export function injectGrokConfig(
       ok: true, // a deliberate policy skip, not a failure — it must never block startup
       changed: removed.changed,
       skippedReason: "non-loopback",
-      message: `Grok auto-registration skipped: opencodex is bound to the non-loopback host `
+      message: `Grok auto-registration skipped: openccx is bound to the non-loopback host `
         + `"${opts.hostname}", where requests need your admission token. A managed block would `
         + `either store that secret in ~/.grok/config.toml or overwrite it on the next start, so `
-        + `add the models yourself OUTSIDE the opencodex markers (see the Grok Build guide).${cleanup}`,
+        + `add the models yourself OUTSIDE the openccx markers (see the Grok Build guide).${cleanup}`,
     };
   }
 
   const configPath = join(grokHome, "config.toml");
-  const backupPath = join(grokHome, "config.toml.bak-opencodex");
+  const backupPath = join(grokHome, "config.toml.bak-openccx");
   try {
     const configExisted = existsSync(configPath);
     const rawContent = configExisted ? readFileSync(configPath, "utf8") : "";
@@ -1141,7 +1141,7 @@ export function injectGrokConfig(
     const emittedModelIds = new Set(models
       .filter(model => !opts.excluded?.has(model.id))
       .map(model => model.id));
-    const orphans = findOpencodexOrphans(originalContent, originalRegion)
+    const orphans = findOpenccxOrphans(originalContent, originalRegion)
       .filter(orphan =>
         // A provider table carries no alias and no model id: its strict predicate (our key
         // + loopback + durable marker) is itself the deletion authority, and a leftover
@@ -1200,7 +1200,7 @@ export function injectGrokConfig(
 
     const output = applyEol(nextContent, eol);
     if (output === rawContent) {
-      return { ok: true, changed: false, message: "Grok config already contains the current opencodex managed block." };
+      return { ok: true, changed: false, message: "Grok config already contains the current openccx managed block." };
     }
     // Back up before a first-time fence write AND before any sweep, since adopting an orphan
     // deletes a table the user has in their file. Previously the adjacent-orphan layout got a
@@ -1212,8 +1212,8 @@ export function injectGrokConfig(
       ok: true,
       changed: true,
       message: region
-        ? "Updated the opencodex managed block in Grok config."
-        : "Added the opencodex managed block to Grok config.",
+        ? "Updated the openccx managed block in Grok config."
+        : "Added the openccx managed block to Grok config.",
     };
   } catch (error) {
     return errorResult("inject", error);
@@ -1249,7 +1249,7 @@ export function stripGrokConfig(opts: { grokHome?: string } = {}): GrokInjectRes
     let stripped: string;
     let orphanCount = 0;
     if (originalRegion) {
-      const fullOrphans = findOpencodexOrphans(content, originalRegion)
+      const fullOrphans = findOpenccxOrphans(content, originalRegion)
         .filter(orphan => orphan.ownership === "explicit");
       let removalEnd = originalRegion.end;
       if (content.startsWith("\n", removalEnd)) removalEnd += 1;
@@ -1263,9 +1263,9 @@ export function stripGrokConfig(opts: { grokHome?: string } = {}): GrokInjectRes
       else if (restOfFile.length === 0 && prefix.endsWith("\n")) prefix = prefix.slice(0, -1);
       // Keep the old fence boundary while sweeping. Concatenating first would let the last
       // pre-fence orphan absorb comment-only or bare-key user content appended after the fence.
-      const prefixOrphans = findOpencodexOrphans(prefix, null)
+      const prefixOrphans = findOpenccxOrphans(prefix, null)
         .filter(orphan => orphan.ownership === "explicit");
-      const tailOrphans = findOpencodexOrphans(restOfFile, null)
+      const tailOrphans = findOpenccxOrphans(restOfFile, null)
         .filter(orphan => orphan.ownership === "explicit");
       const removedAliases = new Set(
         [...fullOrphans, ...prefixOrphans, ...tailOrphans]
@@ -1301,13 +1301,13 @@ export function stripGrokConfig(opts: { grokHome?: string } = {}): GrokInjectRes
         false,
       );
     } else {
-      // Retired or otherwise non-emitted OpenCodex tables may intentionally remain outside the
+      // Retired or otherwise non-emitted Openccx tables may intentionally remain outside the
       // fence while the integration is enabled. Teardown owns those strictly identified tables
       // even after Grok has re-serialized the file and dropped our marker comments.
-      const orphans = findOpencodexOrphans(content, null)
+      const orphans = findOpenccxOrphans(content, null)
         .filter(orphan => orphan.ownership === "explicit");
       if (orphans.length === 0) {
-        return { ok: true, changed: false, message: "No opencodex managed block found in Grok config." };
+        return { ok: true, changed: false, message: "No openccx managed block found in Grok config." };
       }
       orphanCount = orphans.length;
       stripped = removeOrphanTables(content, orphans);
@@ -1316,15 +1316,15 @@ export function stripGrokConfig(opts: { grokHome?: string } = {}): GrokInjectRes
         new Set(orphans.map(orphan => orphan.alias).filter(alias => alias !== "")),
       );
     }
-    if (orphanCount > 0) copyBackupOnce(configPath, join(grokHome, "config.toml.bak-opencodex"));
+    if (orphanCount > 0) copyBackupOnce(configPath, join(grokHome, "config.toml.bak-openccx"));
     atomicWriteFile(configPath, applyEol(stripped, eol));
 
     return {
       ok: true,
       changed: true,
       message: originalRegion
-        ? "Removed the opencodex managed block from Grok config."
-        : "Removed stale opencodex-managed model entries from Grok config.",
+        ? "Removed the openccx managed block from Grok config."
+        : "Removed stale openccx-managed model entries from Grok config.",
     };
   } catch (error) {
     return errorResult("strip", error);

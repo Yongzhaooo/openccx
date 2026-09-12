@@ -2,7 +2,7 @@
  * The Codex switch route.
  *
  * The thing worth proving here is not that a boolean lands in a file. It is that
- * turning Codex OFF is not `ocx stop`: the proxy keeps serving, `/healthz` keeps
+ * turning Codex OFF is not `occx stop`: the proxy keeps serving, `/healthz` keeps
  * answering, other clients keep routing, and only Codex goes back to its own
  * path. A per-client switch that took the whole proxy down would be a kill
  * switch with a misleading label.
@@ -18,16 +18,16 @@ import { join } from "node:path";
 
 import { handleManagementAPI } from "../../src/server/management-api";
 import type { ManagementApiDeps } from "../../src/server/management/context";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let fixtureRoot = "";
 let codexHome = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 const cleanup: string[] = [];
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -36,7 +36,7 @@ function baseConfig(): OcxConfig {
         baseUrl: "https://chatgpt.com/backend-api/codex",
         authMode: "forward",
       },
-    } as OcxConfig["providers"],
+    } as OccxConfig["providers"],
     defaultProvider: "openai",
   };
 }
@@ -48,7 +48,7 @@ function testDeps(overrides: Partial<ManagementApiDeps> = {}): ManagementApiDeps
   } as ManagementApiDeps;
 }
 
-function dispatch(config: OcxConfig, path: string, init?: RequestInit, deps: ManagementApiDeps = testDeps()) {
+function dispatch(config: OccxConfig, path: string, init?: RequestInit, deps: ManagementApiDeps = testDeps()) {
   const url = new URL(`http://127.0.0.1:10100${path}`);
   return handleManagementAPI(
     new Request(url, { ...init, headers: { Host: url.host, ...(init?.headers ?? {}) } }),
@@ -58,7 +58,7 @@ function dispatch(config: OcxConfig, path: string, init?: RequestInit, deps: Man
   );
 }
 
-async function put(config: OcxConfig, body: unknown, deps?: ManagementApiDeps) {
+async function put(config: OccxConfig, body: unknown, deps?: ManagementApiDeps) {
   const res = await dispatch(config, "/api/native-integrations/codex", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -73,28 +73,28 @@ function persistedCodexIntent(): unknown {
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   // Native realpath resolves macOS /var aliases and expands Windows RUNNER~1
   // short names, matching the filesystem identity that the status row reports.
-  fixtureRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-codex-toggle-")));
+  fixtureRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-codex-toggle-")));
   codexHome = join(fixtureRoot, "codex");
   mkdirSync(codexHome);
   cleanup.push(fixtureRoot);
-  process.env.OPENCODEX_HOME = fixtureRoot;
+  process.env.OPENCCX_HOME = fixtureRoot;
   process.env.CODEX_HOME = codexHome;
   writeFileSync(join(fixtureRoot, "config.json"), JSON.stringify(baseConfig(), null, 2));
   writeFileSync(join(fixtureRoot, "service-state.json"), JSON.stringify({
     version: 2,
     codexHome: process.env.CODEX_HOME?.trim() || join(homedir(), ".codex"),
-    opencodexHome: fixtureRoot,
+    openccxHome: fixtureRoot,
     backend: "scheduler",
   }));
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
@@ -152,7 +152,7 @@ describe("turning Codex off", () => {
       history: { state: expect.any(String) },
     });
     // The decision is on disk. Without this, an OFF lasts until the next
-    // `ocx start` re-syncs over it, which is the defect this phase exists for.
+    // `occx start` re-syncs over it, which is the defect this phase exists for.
     expect(persistedCodexIntent()).toBe(false);
   });
 

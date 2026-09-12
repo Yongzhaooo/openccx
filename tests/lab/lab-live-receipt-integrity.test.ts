@@ -36,7 +36,7 @@ function route(): LabRouteContext {
     upstreamProtocol: "openai-responses",
     surface: "responses-http",
     baseUrl: "https://api.example.com/v1",
-    opencodexCompatibilityVersion: "a".repeat(64),
+    openccxCompatibilityVersion: "a".repeat(64),
     labRunApproval: true,
     allowPrivateNetwork: false,
     requiredClaims: [],
@@ -58,7 +58,7 @@ function passingObservation(): NormalizedObservation {
 }
 
 test("trusted live receipt rejects post-seal outcome mutation", async () => {
-  const home = join(tmpdir(), `ocx-lab-receipt-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const home = join(tmpdir(), `occx-lab-receipt-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(home, { recursive: true, mode: 0o700 });
   try {
     const authority = loadLiveCaseAuthority();

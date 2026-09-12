@@ -14,7 +14,7 @@ import {
 import { clearKeyCooldowns } from "../../../src/providers/key-failover";
 import { fastPolicyForModel } from "../../../src/providers/service-tier";
 import { handleChatCompletions } from "../../../src/server/chat-completions";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const PROVIDER_NAME = "native-tier-fixture";
@@ -26,7 +26,7 @@ afterEach(() => {
   clearKeyCooldowns(PROVIDER_NAME);
 });
 
-function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig {
+function provider(overrides: Partial<OccxProviderConfig> = {}): OccxProviderConfig {
   return {
     adapter: "openai-chat",
     baseUrl: "https://native-tier.example.test/v1",
@@ -37,7 +37,7 @@ function provider(overrides: Partial<OcxProviderConfig> = {}): OcxProviderConfig
 }
 
 function nativeBody(
-  target: OcxProviderConfig,
+  target: OccxProviderConfig,
   callerTier: string | undefined,
   modelId = MODEL_ID,
   fastMode?: boolean,
@@ -59,7 +59,7 @@ function nativeBody(
 }
 
 function mainPathBody(
-  target: OcxProviderConfig,
+  target: OccxProviderConfig,
   callerTier: string | undefined,
   modelId = MODEL_ID,
   fastMode?: boolean,
@@ -67,7 +67,7 @@ function mainPathBody(
   const policy = fastPolicyForModel(target, modelId, PROVIDER_NAME, "chat");
   const tierDecision = decideTier(policy, fastMode, callerTier);
   const serviceTier = tierValueAfterDecision(tierDecision, callerTier);
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId,
     stream: false,
     context: { messages: [{ role: "user", content: "ping" }], tools: [] },
@@ -93,11 +93,11 @@ function forwardsTier(body: Record<string, unknown>): boolean {
  * provider whose policy drops foreign tiers.
  */
 function undecidedPathBody(
-  target: OcxProviderConfig,
+  target: OccxProviderConfig,
   callerTier: string | undefined,
   modelId = MODEL_ID,
 ): Record<string, unknown> {
-  const parsed: OcxParsedRequest = {
+  const parsed: OccxParsedRequest = {
     modelId,
     stream: false,
     context: { messages: [{ role: "user", content: "ping" }], tools: [] },
@@ -217,7 +217,7 @@ describe("native Chat passthrough service-tier policy", () => {
       port: 0,
       defaultProvider: PROVIDER_NAME,
       providers: { [PROVIDER_NAME]: target },
-    } as OcxConfig;
+    } as OccxConfig;
 
     const response = await handleChatCompletions(
       new Request("http://localhost/v1/chat/completions", {
@@ -247,9 +247,9 @@ describe("native Chat passthrough service-tier policy", () => {
   });
 
   test("key failover rebuilds the request without reintroducing a dropped foreign tier", async () => {
-    const previousHome = process.env.OPENCODEX_HOME;
-    const home = mkdtempSync(join(tmpdir(), "ocx-native-tier-failover-"));
-    process.env.OPENCODEX_HOME = home;
+    const previousHome = process.env.OPENCCX_HOME;
+    const home = mkdtempSync(join(tmpdir(), "occx-native-tier-failover-"));
+    process.env.OPENCCX_HOME = home;
     const captured: Array<{ authorization: string | null; body: Record<string, unknown> }> = [];
     globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
       captured.push({
@@ -283,7 +283,7 @@ describe("native Chat passthrough service-tier policy", () => {
       port: 0,
       defaultProvider: PROVIDER_NAME,
       providers: { [PROVIDER_NAME]: target },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       saveConfig(config);
@@ -306,8 +306,8 @@ describe("native Chat passthrough service-tier policy", () => {
       expect(captured).toHaveLength(2);
       for (const entry of captured) expect(entry.body).not.toHaveProperty("service_tier");
     } finally {
-      if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previousHome;
+      if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previousHome;
       removeTreeWithRetry(home);
     }
   });

@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "../..");
-const project = `ocx-smoke-${randomBytes(12).toString("hex")}`;
+const project = `occx-smoke-${randomBytes(12).toString("hex")}`;
 const image = `${project}:local`;
 const cancelled = new AbortController();
 const outputLimit = 8 * 1024 * 1024;
@@ -170,7 +170,7 @@ async function inspect() {
   check(bindings.length === 1 && bindings[0]!.HostIp === "127.0.0.1", "non-loopback publication");
   const port = Number(bindings[0]!.HostPort);
   check(Number.isInteger(port) && port > 0 && port <= 65535, "invalid host port");
-  const volumes = [".opencodex", ".codex"].map(home => {
+  const volumes = [".openccx", ".codex"].map(home => {
     const mounts = container.Mounts.filter(mount => mount.Destination === `/home/bun/${home}`);
     check(mounts.length === 1, "missing home mount");
     const mount = mounts[0]!;
@@ -190,7 +190,7 @@ const stateProbe = `
   if (!['seed', 'first-ready', 'steady'].includes(phase)) throw new Error('invalid state phase');
   ${fixtureConfigCheck}
   const homes = ['/home/bun/.opencodex', '/home/bun/.codex'];
-  if (process.env.OCX_SERVICE !== '1') throw new Error('image service lifecycle mode missing');
+  if (process.env.OCCX_SERVICE !== '1') throw new Error('image service lifecycle mode missing');
   const uid = process.getuid();
   if (uid === 0) throw new Error('root user');
   const status = readFileSync('/proc/self/status', 'utf8');
@@ -265,7 +265,7 @@ async function request(url: string, path: string, secret?: string) {
     const post = path !== "/healthz" && path !== "/readyz" && path !== "/v1/catalog";
     const response = await fetch(`${url}${path}`, {
       method: post ? "POST" : "GET", redirect: "error", signal: controller.signal,
-      headers: { ...(secret ? { "x-opencodex-api-key": secret } : {}), ...(post ? { "content-type": "application/json" } : {}) },
+      headers: { ...(secret ? { "x-openccx-api-key": secret } : {}), ...(post ? { "content-type": "application/json" } : {}) },
       // Never send an authorized inference request, even with synthetic input.
       body: post ? '{"model":"smoke/synthetic","input":[]}' : undefined,
     });
@@ -343,7 +343,7 @@ async function main() {
   env = {
     PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin", TMPDIR: scratch,
     DOCKER_CONFIG: join(scratch, "docker"), DOCKER_HOST: "unix:///var/run/docker.sock",
-    COMPOSE_DISABLE_ENV_FILE: "1", OPENCODEX_BIND_ADDRESS: "127.0.0.1", OPENCODEX_PORT: "0",
+    COMPOSE_DISABLE_ENV_FILE: "1", OPENCCX_BIND_ADDRESS: "127.0.0.1", OPENCCX_PORT: "0",
   };
   composeArgs = ["compose", "--project-name", project, "--project-directory", root,
     "--env-file", join(scratch, "empty.env"), "-f", join(root, "compose.yaml"), "-f", join(scratch, "override.json")];

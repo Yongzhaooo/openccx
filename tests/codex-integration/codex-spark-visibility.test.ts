@@ -5,31 +5,31 @@ import { mkdtempSync} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, afterEach } from "bun:test";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const SPARK = "GPT-5.3-Codex-Spark Weekly";
 const SPARK_SHORT = "GPT-5.3-Codex-Spark 5h";
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 let home = "";
 
-function baseConfig(showSpark?: boolean): OcxConfig {
+function baseConfig(showSpark?: boolean): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
     providers: {},
     ...(showSpark === undefined ? {} : { showCodexSparkQuota: showSpark }),
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-spark-visibility-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-spark-visibility-"));
+  process.env.OPENCCX_HOME = home;
 });
 
 afterEach(() => {
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 

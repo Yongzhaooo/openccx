@@ -75,9 +75,9 @@ describe("Models manual price editor", () => {
     catalogGate = null;
     getResponse = null;
     putResponse = null;
-    testWindow.localStorage.setItem("ocx-lang", "en");
-    testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
-    testWindow.sessionStorage.setItem("ocx.models.catalog.v1:http://localhost", JSON.stringify({
+    testWindow.localStorage.setItem("occx-lang", "en");
+    testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
+    testWindow.sessionStorage.setItem("occx.models.catalog.v1:http://localhost", JSON.stringify({
       models: rows, providers, selectedModels: {}, disabled: [], contextCaps: {}, contextCapValue: 350_000,
     }));
     globalThis.fetch = (async (input, init) => {

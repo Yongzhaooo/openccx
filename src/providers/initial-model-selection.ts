@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { randomUUID } from "node:crypto";
 import { getProviderRegistryEntry, providerMatchesRegistryTransport } from "./registry";
 import { routedSlug, slugEquivalenceKey } from "./slug-codec";
@@ -6,10 +6,10 @@ import { comboDisabledModelSelectors } from "../combos/types";
 import { providerUsesKeyAuthOverride, resolveProviderApiKey } from "./key-store";
 
 export const INITIAL_MODEL_SELECTION_THRESHOLD = 20;
-type Selection = NonNullable<OcxProviderConfig["initialModelSelection"]>;
+type Selection = NonNullable<OccxProviderConfig["initialModelSelection"]>;
 
 /** Read only the public, non-secret shape; editor input never owns this state. */
-export function initialModelSelection(provider: OcxProviderConfig | undefined): Selection | undefined {
+export function initialModelSelection(provider: OccxProviderConfig | undefined): Selection | undefined {
   const value = provider?.initialModelSelection;
   if (!value || value.version !== 1 || typeof value.registrationId !== "string"
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.registrationId)
@@ -22,11 +22,11 @@ export function initialModelSelection(provider: OcxProviderConfig | undefined): 
   };
 }
 
-export function initialModelSelectionPending(provider: OcxProviderConfig | undefined): boolean {
+export function initialModelSelectionPending(provider: OccxProviderConfig | undefined): boolean {
   return initialModelSelection(provider)?.status === "pending";
 }
 
-function loginConnection(name: string, provider: OcxProviderConfig): boolean {
+function loginConnection(name: string, provider: OccxProviderConfig): boolean {
   const entry = getProviderRegistryEntry(name);
   if (entry && providerMatchesRegistryTransport(name, provider)) {
     if (entry.authKind === "forward") return true;
@@ -40,9 +40,9 @@ function loginConnection(name: string, provider: OcxProviderConfig): boolean {
 /** Registration only: absence on an existing row is legacy/exempt, never a migration trigger. */
 export function initializeProviderModelSelection(
   name: string,
-  next: OcxProviderConfig,
-  existing?: OcxProviderConfig,
-  config?: Pick<OcxConfig, "disabledModels" | "combos" | "modelDiscovery">,
+  next: OccxProviderConfig,
+  existing?: OccxProviderConfig,
+  config?: Pick<OccxConfig, "disabledModels" | "combos" | "modelDiscovery">,
 ): void {
   delete next.initialModelSelection;
   if (existing) {
@@ -70,7 +70,7 @@ export function initializeProviderModelSelection(
 
 /** Count the canonical switch identities that the Models inventory displays. */
 export function reconcileInitialModelSelections(
-  config: OcxConfig,
+  config: OccxConfig,
   models: Iterable<{ provider: string; id: string }>,
   authoritativeProviders: Iterable<string>,
 ): boolean {
@@ -107,7 +107,7 @@ export function reconcileInitialModelSelections(
   return changed;
 }
 
-export function adoptInitialModelSelections(target: OcxConfig, source: OcxConfig): void {
+export function adoptInitialModelSelections(target: OccxConfig, source: OccxConfig): void {
   for (const [name, provider] of Object.entries(source.providers)) {
     if (target.providers[name] && provider.initialModelSelection !== undefined) {
       target.providers[name].initialModelSelection = structuredClone(provider.initialModelSelection);
@@ -115,6 +115,6 @@ export function adoptInitialModelSelections(target: OcxConfig, source: OcxConfig
   }
 }
 
-export function pendingModelSelectionProviders(config: Pick<OcxConfig, "providers">): Set<string> {
+export function pendingModelSelectionProviders(config: Pick<OccxConfig, "providers">): Set<string> {
   return new Set(Object.entries(config.providers).filter(([, provider]) => initialModelSelectionPending(provider)).map(([name]) => name));
 }

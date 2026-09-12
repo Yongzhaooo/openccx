@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -13,7 +13,7 @@ let testDir = "";
 let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -25,7 +25,7 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** Seed the isolated CODEX_HOME with a known sessions tree the endpoint must report. */
@@ -58,16 +58,16 @@ function inventoryCodexHome(codexHome: string): { bytes: number; fileCount: numb
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-api-storage-codex-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-api-storage-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-api-storage-codex-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-api-storage-"));
+  process.env.OPENCCX_HOME = testDir;
   saveConfig(baseConfig());
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
@@ -107,9 +107,9 @@ describe("GET /api/storage", () => {
         "sessions/2026/07/01/rollout-x.jsonl",
       ];
       const coordinationDatabases = [
-        ".opencodex-native-main.claim.sqlite",
-        ".opencodex-native-main.owner.sqlite",
-        ".opencodex-native-profile.lock.sqlite",
+        ".openccx-native-main.claim.sqlite",
+        ".openccx-native-main.owner.sqlite",
+        ".openccx-native-profile.lock.sqlite",
       ];
       const sqliteSidecars = ["-journal", "-wal", "-shm"];
       expect(inventory.paths).toEqual(expect.arrayContaining(fixturePaths));

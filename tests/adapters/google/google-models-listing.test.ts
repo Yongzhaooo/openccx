@@ -6,7 +6,7 @@ import { buildCatalogEntries, gatherRoutedModels as gatherRoutedModelsDirect } f
 import { buildModelsRequest } from "../../../src/oauth";
 import { captureModelCacheGeneration, clearModelCache, getStaleCached } from "../../../src/codex/model-cache";
 import { registerAntigravityDiscoveredWireModels, resolveAntigravityWireModelId } from "../../../src/providers/antigravity-models";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 import { withStubbedProviderFetch } from "../../helpers/catalog-provider-fetch";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
@@ -15,24 +15,24 @@ const gatherRoutedModels: typeof gatherRoutedModelsDirect = (config, options) =>
   gatherRoutedModelsDirect(withStubbedProviderFetch(config), options);
 
 const originalFetch = globalThis.fetch;
-const originalOpencodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearModelCache();
-  if (originalOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpencodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
 });
 
-function configWith(name: string, prov: Partial<OcxProviderConfig>): OcxConfig {
+function configWith(name: string, prov: Partial<OccxProviderConfig>): OccxConfig {
   return {
     providers: { [name]: prov },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("buildModelsRequest google routing", () => {
   test("ai-studio google uses x-goog-api-key + /v1beta/models", () => {
-    const prov = { adapter: "google", authMode: "key", baseUrl: "https://generativelanguage.googleapis.com" } as OcxProviderConfig;
+    const prov = { adapter: "google", authMode: "key", baseUrl: "https://generativelanguage.googleapis.com" } as OccxProviderConfig;
     const { url, headers } = buildModelsRequest(prov, "gk-123", "google");
     expect(url).toBe("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000");
     expect(headers["x-goog-api-key"]).toBe("gk-123");
@@ -40,7 +40,7 @@ describe("buildModelsRequest google routing", () => {
   });
 
   test("custom google-adapter provider without googleMode defaults to ai-studio", () => {
-    const prov = { adapter: "google", authMode: "key", baseUrl: "https://example.com" } as OcxProviderConfig;
+    const prov = { adapter: "google", authMode: "key", baseUrl: "https://example.com" } as OccxProviderConfig;
     const { url, headers } = buildModelsRequest(prov, "gk-123", "my-gemini");
     expect(url).toBe("https://example.com/v1beta/models?pageSize=1000");
     expect(headers["x-goog-api-key"]).toBe("gk-123");
@@ -48,7 +48,7 @@ describe("buildModelsRequest google routing", () => {
 
   test("Antigravity uses its authenticated CCA model-discovery RPC", () => {
     // A saved config may omit googleMode — the registry's cloud-code-assist mode must win.
-    const prov = { adapter: "google", authMode: "oauth", baseUrl: "https://daily-cloudcode-pa.googleapis.com", liveModels: true } as OcxProviderConfig;
+    const prov = { adapter: "google", authMode: "oauth", baseUrl: "https://daily-cloudcode-pa.googleapis.com", liveModels: true } as OccxProviderConfig;
     const { method, url, headers } = buildModelsRequest(prov, "oauth-token", "google-antigravity");
     expect(method).toBe("POST");
     expect(url).toBe("https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels");
@@ -59,7 +59,7 @@ describe("buildModelsRequest google routing", () => {
   });
 
   test("google-vertex without googleMode resolves vertex via registry, not ai-studio", () => {
-    const prov = { adapter: "google", authMode: "key", baseUrl: "https://aiplatform.googleapis.com" } as OcxProviderConfig;
+    const prov = { adapter: "google", authMode: "key", baseUrl: "https://aiplatform.googleapis.com" } as OccxProviderConfig;
     const { url } = buildModelsRequest(prov, "gk-123", "google-vertex");
     expect(url).toBe("https://aiplatform.googleapis.com/models");
   });
@@ -67,8 +67,8 @@ describe("buildModelsRequest google routing", () => {
 
 describe("Antigravity live model discovery", () => {
   test("uses the CCA agent list and applies CCA metadata", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-discovery-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-discovery-"));
+    process.env.OPENCCX_HOME = home;
     writeFileSync(join(home, "auth.json"), JSON.stringify({
       "google-antigravity": {
         activeAccountId: "active",
@@ -176,8 +176,8 @@ describe("Antigravity live model discovery", () => {
   });
 
   test("degrades malformed CCA agent IDs to the configured static catalog", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-malformed-discovery-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-malformed-discovery-"));
+    process.env.OPENCCX_HOME = home;
     writeFileSync(join(home, "auth.json"), JSON.stringify({
       "google-antigravity": {
         activeAccountId: "active",
@@ -217,8 +217,8 @@ describe("Antigravity live model discovery", () => {
   });
 
   test("does not register wire mappings from a stale CCA discovery", async () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-antigravity-stale-discovery-"));
-    process.env.OPENCODEX_HOME = home;
+    const home = mkdtempSync(join(tmpdir(), "occx-antigravity-stale-discovery-"));
+    process.env.OPENCCX_HOME = home;
     writeFileSync(join(home, "auth.json"), JSON.stringify({
       "google-antigravity": {
         activeAccountId: "active",
@@ -308,7 +308,7 @@ describe("buildModelsRequest anthropic routing", () => {
       authMode: "key",
       apiKeyTransport: "bearer",
       baseUrl: "https://gateway.example.com/v1",
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     const { url, headers } = buildModelsRequest(prov, "sk-ant", "gateway");
     expect(url).toBe("https://gateway.example.com/v1/models?limit=1000");
     expect(headers["Authorization"]).toBe("Bearer sk-ant");
@@ -321,7 +321,7 @@ describe("buildModelsRequest anthropic routing", () => {
       adapter: "anthropic",
       authMode: "key",
       baseUrl: "https://gateway.example.com",
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     const { url, headers } = buildModelsRequest(prov, "sk-ant", "gateway");
     expect(url).toBe("https://gateway.example.com/v1/models?limit=1000");
     expect(headers["x-api-key"]).toBe("sk-ant");

@@ -63,7 +63,7 @@ export type FindAvailablePortOptions = {
   preferRetryIntervalMs?: number;
   /**
    * When false, never bind `port: 0` — prefer-retry then throw if the preferred port
-   * stays busy. Used for explicit `ocx start --port N` and service-baked pins so an
+   * stays busy. Used for explicit `occx start --port N` and service-baked pins so an
    * update restart cannot hop to a random ephemeral listener (PR #152 gap).
    */
   allowEphemeralFallback?: boolean;
@@ -166,7 +166,7 @@ export function shouldPersistSelectedPort(
   // A sibling start (`--port X` beside a live proxy on the configured port) is a
   // second instance, not a new home for this config. Persisting its port rewrote
   // config.port under the still-running configured-port proxy, and the next
-  // `ocx service` install then baked the sibling's port into the service and
+  // `occx service` install then baked the sibling's port into the service and
   // re-pointed every client at a listener that no longer existed.
   if (options.sibling) return false;
   return selectedPort === preferredPort && configPort !== selectedPort;

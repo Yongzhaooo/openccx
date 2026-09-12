@@ -31,7 +31,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function root(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-journal-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-journal-"));
   roots.push(dir);
   return dir;
 }
@@ -44,8 +44,8 @@ afterEach(() => {
 function scenario(opts: { config: string | null; store: string | null }) {
   const dir = root();
   const configPath = join(dir, "config.toml");
-  const storePath = join(dir, "opencodex-prompt.json");
-  const journalPath = join(dir, "opencodex-prompt.journal");
+  const storePath = join(dir, "openccx-prompt.json");
+  const journalPath = join(dir, "openccx-prompt.journal");
 
   const preConfigBytes = "PRE_C";
   const postConfigBytes = "POST_C";
@@ -122,7 +122,7 @@ describe("classification", () => {
 
 describe("path binding", () => {
   test("normalizes lexical segments without following the recorded path", () => {
-    expect(sameRecoveryPath("/tmp/ocx/a/../config.toml", "/tmp/ocx/config.toml", "linux")).toBe(true);
+    expect(sameRecoveryPath("/tmp/occx/a/../config.toml", "/tmp/occx/config.toml", "linux")).toBe(true);
   });
 
   test("uses case-insensitive identity only on Windows", () => {
@@ -137,7 +137,7 @@ describe("recovery", () => {
     const dir = root();
     expect(recoverIfNeeded(join(dir, "absent.journal"), {
       configPath: join(dir, "config.toml"),
-      storePath: join(dir, "opencodex-prompt.json"),
+      storePath: join(dir, "openccx-prompt.json"),
     })).toEqual({ ok: true, action: "none" });
   });
 
@@ -189,7 +189,7 @@ describe("recovery", () => {
 
   test("a corrupt journal is recovery_required, and nothing is written", () => {
     const s = scenario({ config: "POST_C", store: "PRE_S" });
-    writeFileSync(s.journalPath, "ocx-journal-v1 deadbeef\n{\"configPath\":\"/x\"}", "utf8");
+    writeFileSync(s.journalPath, "occx-journal-v1 deadbeef\n{\"configPath\":\"/x\"}", "utf8");
     const result = recover(s);
     expect(result.ok).toBe(false);
     expect(read(s.configPath)).toBe("POST_C");
@@ -228,7 +228,7 @@ describe("recovery", () => {
       const s = scenario({ config: "PRE_C", store: "PRE_S" });
       const attackerDir = root();
       const attackerConfigPath = join(attackerDir, "config.toml");
-      const attackerStorePath = join(attackerDir, "opencodex-prompt.json");
+      const attackerStorePath = join(attackerDir, "openccx-prompt.json");
       writeFileSync(attackerConfigPath, "POST_C", "utf8");
       writeFileSync(attackerStorePath, "PRE_S", "utf8");
 
@@ -279,7 +279,7 @@ describe("durable write", () => {
 
   test("successful durable writes release temp ACL memos", () => {
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     setPlatformForTests("win32");
     setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "" }));
@@ -300,7 +300,7 @@ describe("durable write", () => {
 
   test("a temp that disappears during hardening still releases its memo", () => {
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     setPlatformForTests("win32");
     const dir = root();

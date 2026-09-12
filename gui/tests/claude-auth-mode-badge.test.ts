@@ -61,23 +61,23 @@ test("the manual env snippet follows markerMode under auto", () => {
   const base = { maxContextTokens: null, autoContext: false, autoCompactWindow: null, effectiveModelEnv: {}, port: 10100 };
 
   const autoProxy = buildManualEnv({ ...base, authMode: "auto", markerMode: "proxy" });
-  expect(autoProxy).toContain("export ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+  expect(autoProxy).toContain("export ANTHROPIC_AUTH_TOKEN=openccx-proxy");
   expect(autoProxy).toContain("CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST=1");
 
   const autoSubscription = buildManualEnv({ ...base, authMode: "auto", markerMode: "subscription" });
-  expect(autoSubscription).not.toContain("ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+  expect(autoSubscription).not.toContain("ANTHROPIC_AUTH_TOKEN=openccx-proxy");
   expect(autoSubscription).not.toContain("CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST");
 
   // Older proxy: no markerMode -> historical subscription default, not a proxy guess.
   const degraded = buildManualEnv({ ...base, authMode: "auto" });
-  expect(degraded).not.toContain("ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+  expect(degraded).not.toContain("ANTHROPIC_AUTH_TOKEN=openccx-proxy");
 });
 
 test("an explicit manual mode still drives the snippet directly", () => {
   const base = { maxContextTokens: null, autoContext: false, autoCompactWindow: null, effectiveModelEnv: {}, port: 10100 };
   // markerMode is deliberately contradictory here: the explicit choice must win.
   expect(buildManualEnv({ ...base, authMode: "proxy", markerMode: "subscription" }))
-    .toContain("export ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+    .toContain("export ANTHROPIC_AUTH_TOKEN=openccx-proxy");
   expect(buildManualEnv({ ...base, authMode: "subscription", markerMode: "proxy" }))
-    .not.toContain("export ANTHROPIC_AUTH_TOKEN=opencodex-proxy");
+    .not.toContain("export ANTHROPIC_AUTH_TOKEN=openccx-proxy");
 });

@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import type { ProviderAdapter } from "../../src/adapters/base";
-import type { AdapterEvent, OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxProviderConfig } from "../../src/types";
 
 const actualResolver = await import("../../src/server/adapter-resolve");
-let adapterFactory: ((provider: OcxProviderConfig) => ProviderAdapter) | undefined;
+let adapterFactory: ((provider: OccxProviderConfig) => ProviderAdapter) | undefined;
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     return adapterFactory?.(provider) ?? actualResolver.resolveAdapter(provider, cacheRetention);
   },
 }));
@@ -18,7 +18,7 @@ afterEach(() => {
   adapterFactory = undefined;
 });
 
-function config(adapter: string): OcxConfig {
+function config(adapter: string): OccxConfig {
   return {
     port: 0,
     defaultProvider: "fixture",
@@ -30,7 +30,7 @@ function config(adapter: string): OcxConfig {
         apiKey: "fixture-key",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function post(adapter: string, stream: boolean, abortSignal?: AbortSignal): Promise<Response> {

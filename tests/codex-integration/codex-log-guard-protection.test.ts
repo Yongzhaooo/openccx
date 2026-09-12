@@ -15,7 +15,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 const roots: string[] = [];
 
 function makeRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-protect-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-protect-"));
   roots.push(root);
   return root;
 }
@@ -128,7 +128,7 @@ describe("Codex Log Guard protection", () => {
       { level: "WARN", target: "hyper_util" },
       { level: "INFO", target: "codex_core" },
     ]);
-    expect(triggers(databasePath).map(row => row.name)).toEqual(["opencodex_log_guard_compat_v1"]);
+    expect(triggers(databasePath).map(row => row.name)).toEqual(["openccx_log_guard_compat_v1"]);
   });
 
   test("compat suppresses descendant targets, matching upstream Targets prefix semantics", async () => {
@@ -237,7 +237,7 @@ describe("Codex Log Guard protection", () => {
     const { codexHome, databasePath } = fixture();
     const db = new Database(databasePath);
     db.exec(`
-      CREATE TRIGGER opencodex_log_guard_compat_v1 BEFORE INSERT ON logs
+      CREATE TRIGGER openccx_log_guard_compat_v1 BEFORE INSERT ON logs
       BEGIN SELECT 1; END;
     `);
     db.close();
@@ -285,7 +285,7 @@ describe("Codex Log Guard protection", () => {
     expect(status.protection).toEqual({ desiredMode: "compat", observedMode: "off", state: "drifted" });
   });
 
-  test("unprotect removes only OpenCodex-owned triggers", async () => {
+  test("unprotect removes only Openccx-owned triggers", async () => {
     const { codexHome, databasePath } = fixture();
     const deps = testDeps(codexHome);
     expect(protectCodexLogs("quiet", deps).ok).toBe(true);
@@ -311,11 +311,11 @@ describe("Codex Log Guard protection", () => {
   test("Disable still works after the Codex schema moves out from under us", async () => {
     // Protect is correctly refused on an unrecognized schema, but gating Disable
     // the same way stranded an installed trigger: the user kept an active
-    // OpenCodex trigger with no in-product way to remove it.
+    // Openccx trigger with no in-product way to remove it.
     const { codexHome, databasePath } = fixture();
     const deps = testDeps(codexHome);
     expect(protectCodexLogs("compat", deps).ok).toBe(true);
-    expect(triggers(databasePath).map(row => row.name)).toEqual(["opencodex_log_guard_compat_v1"]);
+    expect(triggers(databasePath).map(row => row.name)).toEqual(["openccx_log_guard_compat_v1"]);
 
     // Simulate a Codex upgrade adding a column, so the exact-schema check fails.
     const db = new Database(databasePath);
@@ -329,7 +329,7 @@ describe("Codex Log Guard protection", () => {
     expect(triggers(databasePath)).toEqual([]);
   });
   test("a schema change between inspection and the locked write is refused", () => {
-    // TOCTOU: the lock serializes OpenCodex against itself, not against Codex or
+    // TOCTOU: the lock serializes Openccx against itself, not against Codex or
     // another SQLite writer. The locked recheck used to compare column NAMES
     // only - strictly weaker than the inspector's contract - so a migration
     // landing in that window let Protect install a row-dropping trigger on a

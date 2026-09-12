@@ -16,7 +16,7 @@ import { providerConfigSeed } from "../../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../../src/providers/registry";
 import { resolveWireProtocolOverride } from "../../../src/server/adapter-resolve";
 import { handleResponses } from "../../../src/server/responses/core";
-import type { OcxConfig, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../../src/types";
 
 const RESPONSES_ONLY = [
   "gpt-5.3-codex",
@@ -47,11 +47,11 @@ describe("Copilot discovery-only models do not widen the cold-start seed", () =>
       try {
         clearModelCache("github-copilot");
         globalThis.fetch = (async () => Response.json({ data: DISCOVERY_ONLY.map(id => ({ id })) })) as typeof fetch;
-        const live = await fetchProviderModels("github-copilot", { ...provider, fetch: globalThis.fetch } as OcxProviderConfig, 0);
+        const live = await fetchProviderModels("github-copilot", { ...provider, fetch: globalThis.fetch } as OccxProviderConfig, 0);
         expect(live.map(model => model.id).sort()).toEqual([...DISCOVERY_ONLY].sort());
         clearModelCache("github-copilot");
         globalThis.fetch = (async () => new Response("unavailable", { status: 503 })) as typeof fetch;
-        const fallback = await fetchProviderModels("github-copilot", { ...provider, fetch: globalThis.fetch } as OcxProviderConfig, 0);
+        const fallback = await fetchProviderModels("github-copilot", { ...provider, fetch: globalThis.fetch } as OccxProviderConfig, 0);
         expect(fallback.map(model => model.id).sort()).toEqual([...provider.models!].sort());
         for (const model of DISCOVERY_ONLY) expect(fallback.some(row => row.id === model)).toBe(false);
       } finally {
@@ -63,7 +63,7 @@ describe("Copilot discovery-only models do not widen the cold-start seed", () =>
   }
 });
 
-function copilotProvider(): OcxProviderConfig {
+function copilotProvider(): OccxProviderConfig {
   // The entry's allowKeyAuthOverride lets tests use key auth instead of live OAuth.
   return { ...providerConfigSeed(getProviderRegistryEntry("github-copilot")!), authMode: "key", apiKey: "sk-test" };
 }
@@ -119,7 +119,7 @@ describe("explicit modelAdapters beat the registry default in both directions", 
 describe("the registry default is isolated to the copilot provider", () => {
   for (const model of RESPONSES_ONLY) {
     test(`${model} on another provider is untouched`, () => {
-      const other: OcxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.com/v1", apiKey: "sk-test" };
+      const other: OccxProviderConfig = { adapter: "openai-chat", baseUrl: "https://example.com/v1", apiKey: "sk-test" };
       for (const inbound of INBOUNDS) {
         expect(resolveWireProtocolOverride("some-custom", model, other, inbound).adapter)
           .toBe("openai-chat");
@@ -153,7 +153,7 @@ describe("the wire default survives the handleResponses replay", () => {
 
   async function drive(model: string, inboundWire?: "responses" | "chat" | "anthropic"): Promise<string> {
     const urls = captureUpstreamUrl();
-    const config = { providers: { "github-copilot": copilotProvider() } } as unknown as OcxConfig;
+    const config = { providers: { "github-copilot": copilotProvider() } } as unknown as OccxConfig;
     await handleResponses(
       new Request("http://localhost/v1/responses", {
         method: "POST",

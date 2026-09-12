@@ -13,7 +13,7 @@ import {
 } from "../../../src/oauth/kiro-credentials";
 import { getAccountCredential, getAccountSet, saveCredential, setActiveAccount } from "../../../src/oauth/store";
 import type { OAuthController, OAuthCredentials } from "../../../src/oauth/types";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const ENV_KEYS = [
@@ -22,7 +22,7 @@ const ENV_KEYS = [
   // so both must be isolated or a Windows runner would read the real user profile.
   "LOCALAPPDATA",
   "USERPROFILE",
-  "OPENCODEX_HOME",
+  "OPENCCX_HOME",
   "KIRO_ACCESS_TOKEN",
   "KIRO_REFRESH_TOKEN",
   "KIRO_PROFILE_ARN",
@@ -37,7 +37,7 @@ const ENV_KEYS = [
 const originalEnv = new Map(ENV_KEYS.map(key => [key, process.env[key]]));
 let tmp: string;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -61,7 +61,7 @@ function kiroCliDbPath(): string {
 }
 
 function kiroCliRecoveryPath(): string {
-  return `${kiroCliDbPath()}.opencodex-recovery`;
+  return `${kiroCliDbPath()}.openccx-recovery`;
 }
 
 function amazonQDbPath(): string {
@@ -124,7 +124,7 @@ beforeEach(() => {
   process.env.HOME = tmp;
   process.env.LOCALAPPDATA = join(tmp, "AppData", "Local");
   process.env.USERPROFILE = tmp;
-  process.env.OPENCODEX_HOME = join(tmp, "opencodex");
+  process.env.OPENCCX_HOME = join(tmp, "openccx");
 });
 
 afterEach(() => {

@@ -11,7 +11,7 @@ import {
 } from "../../src/config";
 import { providerManagementConfigError, safeConfigDTO } from "../../src/server/auth-cors";
 import { activeUserCostOverlays, refreshUserCostOverlays, userCostOverlayVersion } from "../../src/usage/user-cost-overlays";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const VALID_COSTS = {
@@ -23,17 +23,17 @@ let testDir = "";
 let previousHome: string | undefined;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  testDir = mkdtempSync(join(tmpdir(), "ocx-model-costs-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  testDir = mkdtempSync(join(tmpdir(), "occx-model-costs-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   // The overlay registry is module-level; reset it so rows loaded by DTO tests
   // cannot leak into other test files in a shared-process run.
-  refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testDir && existsSync(testDir)) removeTreeWithRetry(testDir);
   testDir = "";
 });
@@ -186,7 +186,7 @@ describe("modelCosts config persistence and registry refresh", () => {
 
   test("an unchanged save still refreshes the overlay registry (cooperating CLI write)", () => {
     // Simulate a cooperating CLI process that wrote the overlay to disk without
-    // this process ever seeing it (the ocx login key-provider notify scenario):
+    // this process ever seeing it (the occx login key-provider notify scenario):
     // the bytes match, so persistConfigUnlocked's early-return path must still
     // refresh the registry, otherwise Logs/Usage keep catalog prices.
     const bytes = JSON.stringify({
@@ -200,10 +200,10 @@ describe("modelCosts config persistence and registry refresh", () => {
       },
     }, null, 2) + "\n";
     writeFileSync(getConfigPath(), bytes);
-    refreshUserCostOverlays({ providers: {} } as unknown as OcxConfig);
+    refreshUserCostOverlays({ providers: {} } as unknown as OccxConfig);
     expect(activeUserCostOverlays()).toHaveLength(0);
 
-    const config = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OcxConfig;
+    const config = JSON.parse(readFileSync(getConfigPath(), "utf8")) as OccxConfig;
     const versionBefore = userCostOverlayVersion();
     saveConfig(config);
     expect(activeUserCostOverlays()).toHaveLength(2);
@@ -289,7 +289,7 @@ describe("modelCosts config persistence and registry refresh", () => {
           },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
 
     const rows = activeUserCostOverlays();
     expect(rows).toHaveLength(1);
@@ -307,7 +307,7 @@ describe("modelCosts config persistence and registry refresh", () => {
           },
         },
       },
-    } as unknown as OcxConfig);
+    } as unknown as OccxConfig);
     const rows = activeUserCostOverlays().map(row => row.modelId);
     expect(rows).toContain("deepseek-v4-flash");
     expect(rows).not.toContain("overflow-model");
@@ -430,7 +430,7 @@ describe("modelCosts management validation and DTO", () => {
           },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     const dto = safeConfigDTO(config) as {
       providers: Record<string, { modelCosts?: Record<string, unknown> }>;
     };

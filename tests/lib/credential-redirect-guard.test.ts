@@ -12,7 +12,7 @@ import { fetchWithAttemptDeadline } from "../../src/lib/upstream-retry";
 import { fetchWithHeaderDeadline } from "../../src/server/claude-messages";
 import { fetchGoogleWithRetry } from "../../src/adapters/google-http";
 import { fetchKiroWithRetry } from "../../src/adapters/kiro-retry";
-import type { OcxProviderConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
 
 describe("credential-bearing production transports do not follow redirects", () => {
   const nativeFetch = globalThis.fetch;
@@ -75,7 +75,7 @@ describe("credential-bearing production transports do not follow redirects", () 
         }
       }
       else {
-        const provider = { adapter: "openai-chat", baseUrl: url, fetch: executor } as OcxProviderConfig & { fetch: typeof globalThis.fetch };
+        const provider = { adapter: "openai-chat", baseUrl: url, fetch: executor } as OccxProviderConfig & { fetch: typeof globalThis.fetch };
         const fetcher = providerFetch(provider, undefined, sender === "provider-rebuilt" ? {
           dispatchOverride: (input, sentInit, execute) => execute(input, { ...sentInit, redirect: "follow" }),
         } : {});

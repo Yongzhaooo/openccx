@@ -63,11 +63,11 @@ Every public hash is:
 H(domain, value) = SHA-256(UTF8(domain) || 0x00 || UTF8(JCS(value)))
 ```
 
-The exact V1 domains are `ocx-lab-public:subject:v1`, `ocx-lab-public:record:v1`, `ocx-lab-public:bundle:v1`, `ocx-lab-public:bundle-digest:v1`, `ocx-lab-public:artifact:v1`, `ocx-lab-public:publisher-key:v1`, `ocx-lab-public:revocation:v1`, and `ocx-lab-public:route-registry:v1` for their corresponding identities.
+The exact V1 domains are `occx-lab-public:subject:v1`, `occx-lab-public:record:v1`, `occx-lab-public:bundle:v1`, `occx-lab-public:bundle-digest:v1`, `occx-lab-public:artifact:v1`, `occx-lab-public:publisher-key:v1`, `occx-lab-public:revocation:v1`, and `occx-lab-public:route-registry:v1` for their corresponding identities.
 
-For a bundle, `C = {schemaVersion, exportPolicyVersion, createdDayUtc, publisher, records, artifacts}`. `bundleId = H("ocx-lab-public:bundle:v1", C)`. `bundleDigest = H("ocx-lab-public:bundle-digest:v1", {...C, bundleId})`. Therefore `bundleDigest` and `signature` are excluded from the bundle-digest preimage, and `bundleId`, `bundleDigest`, and `signature` are excluded from the bundle-ID preimage. Ed25519 signs the raw 32 bytes obtained by hex-decoding `bundleDigest`; `signature.signedDigest` must equal `bundleDigest` exactly.
+For a bundle, `C = {schemaVersion, exportPolicyVersion, createdDayUtc, publisher, records, artifacts}`. `bundleId = H("occx-lab-public:bundle:v1", C)`. `bundleDigest = H("occx-lab-public:bundle-digest:v1", {...C, bundleId})`. Therefore `bundleDigest` and `signature` are excluded from the bundle-digest preimage, and `bundleId`, `bundleDigest`, and `signature` are excluded from the bundle-ID preimage. Ed25519 signs the raw 32 bytes obtained by hex-decoding `bundleDigest`; `signature.signedDigest` must equal `bundleDigest` exactly.
 
-A revocation similarly hashes `R = {schemaVersion, issuedDayUtc, publisher, targets, reason}` under `ocx-lab-public:revocation:v1`; `revocationId` and `signature` are excluded from `R`, and Ed25519 signs the raw 32 bytes of `revocationId`. Targets are sorted and unique before hashing.
+A revocation similarly hashes `R = {schemaVersion, issuedDayUtc, publisher, targets, reason}` under `occx-lab-public:revocation:v1`; `revocationId` and `signature` are excluded from `R`, and Ed25519 signs the raw 32 bytes of `revocationId`. Targets are sorted and unique before hashing.
 
 Import verification order is fixed: byte cap; strict UTF-8 and duplicate-key rejection; JSON syntax/structural bounds; closed schema/version/field validation and publisher-key-ID recomputation; public identity/reference and bundle digest recomputation; `signedDigest` equality; Ed25519 key/signature decoding and verification; repository route/suite/scenario/Fabric authority validation; revocation bootstrap only against an already-verified exact target publisher/bundle; persistence only after every preceding check succeeds.
 

@@ -47,7 +47,7 @@ export function buildManualEnv(state: ClaudeManualEnvState): string {
   return [
     `export ANTHROPIC_BASE_URL=${baseUrl}`,
     ...(marker === "proxy"
-      ? ["export ANTHROPIC_AUTH_TOKEN=opencodex-proxy"]
+      ? ["export ANTHROPIC_AUTH_TOKEN=openccx-proxy"]
       : ["# no ANTHROPIC_AUTH_TOKEN: your claude.ai login (and connectors) stay active"]),
     "export CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1",
     // The flag is an auth assertion in current Claude Code. It belongs only to

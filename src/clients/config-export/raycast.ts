@@ -58,7 +58,7 @@ export function buildRaycastClientConfig(ctx: ExportContext): RaycastGeneratedCo
   });
   return {
     providers: [
-      { id: OPENCODE_PROVIDER_ID, name: "OpenCodex", base_url: ctx.baseUrl, models },
+      { id: OPENCODE_PROVIDER_ID, name: "Openccx", base_url: ctx.baseUrl, models },
     ],
   };
 }
@@ -94,7 +94,7 @@ export function summarizeRaycast(
 
 /**
  * Raycast stores providers in a sequence. The stable id selector owns only
- * OpenCodex's element, preserving user-defined providers around it.
+ * Openccx's element, preserving user-defined providers around it.
  */
 export function buildRaycastContribution(ctx: ExportContext): ManagedContribution {
   const doc = buildRaycastClientConfig(ctx);

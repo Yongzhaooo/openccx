@@ -1,6 +1,6 @@
 # Client Integrations
 
-The client-integration subsystem writes one generated OpenCodex provider contribution into a
+The client-integration subsystem writes one generated Openccx provider contribution into a
 third-party client's existing config without taking ownership of the rest of that file. Its core
 promise is reversibility: apply snapshots first, writes atomically, records exactly what it owns,
 and refuses refresh, disable, or restore when the current file cannot be classified safely.
@@ -68,11 +68,11 @@ authoritative. Existing client configs receive the entries on export or managed 
 
 ## Hermes Model Capabilities
 
-Hermes cannot infer custom-provider capabilities from its built-in registry. The OpenCodex
+Hermes cannot infer custom-provider capabilities from its built-in registry. The Openccx
 provider therefore emits `models` as a mapping keyed by the canonical namespaced selector. An
 explicit catalog modality list containing `image` becomes `supports_vision: true`; an explicit,
 non-empty list without `image` becomes `false`; an absent or empty modality list keeps an empty
-model object so Hermes receives no guessed capability. OpenCodex does not emit `supports_video`
+model object so Hermes receives no guessed capability. Openccx does not emit `supports_video`
 because its authoritative input-modality vocabulary currently has no video value.
 
 > Decision record: [ADR-0090](../decisions/ADR-0090-hermes-model-capabilities.md)
@@ -81,7 +81,7 @@ because its authoritative input-modality vocabulary currently has no video value
 
 `fileFingerprint` records the exact whole-file result for restore and for serializers that may lose
 comments. `blockFingerprint` records the exact generated contribution and detects catalog, model,
-port, or provider drift. `fragmentPaths` bounds disable to the paths OpenCodex actually created.
+port, or provider drift. `fragmentPaths` bounds disable to the paths Openccx actually created.
 New records pair the exact contribution fingerprints with semantic fingerprints that recursively
 sort JSON object keys while preserving array order. Existing records without the semantic companion
 fall back to comparing the recorded generated contribution when the catalog has not moved. This
@@ -102,12 +102,12 @@ incomplete policy records fail closed.
 
 ## ZCode Runtime Metadata
 
-ZCode 3.8.1 persists model defaults into `provider.opencodex.models.*` after OpenCodex writes the
+ZCode 3.8.1 persists model defaults into `provider.openccx.models.*` after Openccx writes the
 provider. The accepted derived paths are deliberately narrow:
 
 - `reasoning` for model IDs emitted by that apply;
 - `limit.output` for model IDs emitted by that apply;
-- `limit.context` only when OpenCodex emitted no authoritative context for that model.
+- `limit.context` only when Openccx emitted no authoritative context for that model.
 
 Provider identity and connection fields (`name`, `kind`, `enabled`, `source`, and every `options`
 member), model membership, model names, modalities, and authoritative context limits remain
@@ -138,7 +138,7 @@ separately by `src/lib/local-destinations.ts`. Inference (`localInferenceDestina
 `127.0.0.1` on the unauthenticated loopback listener's effective port when that listener is
 enabled, otherwise the public port on the bind address — `127.0.0.1` for a loopback or wildcard
 bind, and the tailnet or LAN address otherwise, where no loopback data socket exists at all. So
-`ocx claude`, the `system-env` injection, the Claude Desktop profile, the Cursor gateway value,
+`occx claude`, the `system-env` injection, the Claude Desktop profile, the Cursor gateway value,
 the gateway-model cache, the routed vision self-fetch and the API-access loopback fallback all go
 through that resolver rather than composing the port themselves. Management
 (`localManagementOrigin`) is the hub's loopback `hub.managementIngress` when enabled, otherwise
@@ -152,7 +152,7 @@ credential must never be written into an exported client configuration.
 Both resolvers share the same fallback shape, and the inference one additionally reports whether
 its destination demands data-plane admission: the loopback listener and a genuinely loopback bind
 need no credential, while a wildcard or tailnet bind does. Each caller either attaches that
-credential — the `OPENCODEX_API_AUTH_TOKEN` / service-token-file / `apiKeys` ladder, never the
+credential — the `OPENCCX_API_AUTH_TOKEN` / service-token-file / `apiKeys` ladder, never the
 admin token — or logs that it is degrading. Composing `http://127.0.0.1:<public port>` by hand is
 what produced a dead socket on a tailnet-bound hub in the first place.
 
@@ -174,7 +174,7 @@ sibling policy. Profile journal views retain source-store provenance for older l
 Cline CLI uses `providers.json` for connection settings and sibling `models.json` for its
 catalog. `src/integrations/cline-document.ts` separates native documents from raw-byte snapshot
 bundles; `src/integrations/cline-io.ts` projects both files onto the existing writer/journal.
-Only each file's `providers.opencodex` entry is owned. Schema envelopes and the user's default
+Only each file's `providers.openccx` entry is owned. Schema envelopes and the user's default
 provider remain user-owned. Cline's selected model and update timestamp can change during normal
 use; refresh preserves a selection only while its model remains routed. Connection fields and
 catalog membership remain protected.

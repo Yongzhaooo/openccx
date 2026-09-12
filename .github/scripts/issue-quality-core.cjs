@@ -1,7 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Pure issue-quality validation for OpenCodex.
+// Pure issue-quality validation for Openccx.
 // CommonJS, zero runtime dependencies. No GitHub API calls.
 // ---------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ function stripMediaTokens(text) {
  */
 function protectIndentedCodeLines(text) {
   const lines = [];
-  let markerPrefix = "\u0000OCX_ISSUE_CODE_";
+  let markerPrefix = "\u0000OCCX_ISSUE_CODE_";
   while (text.includes(markerPrefix)) markerPrefix += "_";
   let mediaDepth = 0;
   let pendingMediaTag = null;
@@ -687,7 +687,7 @@ function hasSubstantialStructuredContent(body, minSectionLen = 40, minRichSectio
 const FEATURE_NEW_HEADINGS = [
   "What are you trying to accomplish?",
   "What prevents this today?",
-  "What should OpenCodex do?",
+  "What should Openccx do?",
 ];
 const FEATURE_LEGACY_HEADINGS = ["Problem to solve", "Proposed solution"];
 const FEATURE_GOAL_HEADINGS = [
@@ -702,7 +702,7 @@ const FEATURE_BLOCKER_HEADINGS = [
   "Current workaround",
 ];
 const FEATURE_BEHAVIOUR_HEADINGS = [
-  "What should OpenCodex do?",
+  "What should Openccx do?",
   "Expected behaviour",
   "Expected behavior",
   "Proposed solution",
@@ -824,7 +824,7 @@ const AREA_HEURISTIC_BODY_HEADINGS = [
   "Reproduction",
   "What are you trying to accomplish?",
   "What prevents this today?",
-  "What should OpenCodex do?",
+  "What should Openccx do?",
   "Example usage or interface",
   "Current behaviour",
   "Expected behaviour",
@@ -852,7 +852,7 @@ const AREA_HEURISTICS = [
   {
     label: "catalog",
     scope: "full",
-    re: /\b(model catalog|opencodex-catalog|model list|model visibility|virtual model|routed (catalog|entries|slug)|model slug)\b/i,
+    re: /\b(model catalog|openccx-catalog|model list|model visibility|virtual model|routed (catalog|entries|slug)|model slug)\b/i,
   },
   {
     label: "catalog",
@@ -867,7 +867,7 @@ const AREA_HEURISTICS = [
   {
     label: "cli",
     scope: "title",
-    re: /\b(ocx\b|config\.toml|config inject)\b/i,
+    re: /\b(occx\b|config\.toml|config inject)\b/i,
   },
   {
     label: "proxy",
@@ -902,12 +902,12 @@ const AREA_HEURISTICS = [
   {
     label: "install",
     scope: "full",
-    re: /\b(npm (global )?install|packaging|release asset|npx ocx)\b/i,
+    re: /\b(npm (global )?install|packaging|release asset|npx occx)\b/i,
   },
   {
     label: "service",
     scope: "full",
-    re: /\b(ocx service|winsw|scheduler backend|launchd service)\b/i,
+    re: /\b(occx service|winsw|scheduler backend|launchd service)\b/i,
   },
   {
     label: "provider",
@@ -1209,7 +1209,7 @@ function hasConcreteDetail(text) {
   return (
     /\d/.test(c) ||
     /[`{}\[\]<>/\\]/.test(c) ||
-    /\b(ocx|config|api|cli|dashboard|provider|proxy|route|endpoint|workflow|command)\b/i.test(c)
+    /\b(occx|config|api|cli|dashboard|provider|proxy|route|endpoint|workflow|command)\b/i.test(c)
   );
 }
 
@@ -1227,11 +1227,11 @@ function isTooTerseFeatureSection(text) {
  * message in the codex plugin") are not actionable: the report must name a
  * command, an error, a file/config path, or an exact observed output.
  */
-// Commands and exact technical actions, e.g. "ocx start", "run bun",
+// Commands and exact technical actions, e.g. "occx start", "run bun",
 // "send a streaming request", "curl https://...".
 const REPRO_COMMAND_RE = new RegExp([
-    "\\b(?:run|start|stop|restart|install|launch|execute|reproduce|trigger|invoke)\\s+(?:(?:the|an|a)\\s+)?(?:ocx|bun|npm|pnpm|yarn|curl|node|codex|proxy|server|dashboard|plugin)\\b",
-    "\\b(?:ocx|bun|npm|pnpm|yarn|curl|node|codex)\\s+(?:start|run|stop|restart|install|config|--[a-z-]+)\\b",
+    "\\b(?:run|start|stop|restart|install|launch|execute|reproduce|trigger|invoke)\\s+(?:(?:the|an|a)\\s+)?(?:occx|bun|npm|pnpm|yarn|curl|node|codex|proxy|server|dashboard|plugin)\\b",
+    "\\b(?:occx|bun|npm|pnpm|yarn|curl|node|codex)\\s+(?:start|run|stop|restart|install|config|--[a-z-]+)\\b",
     "\\b(?:send|issue|make|post)\\s+(?:a|an|any)\\s+(?:streaming|api|http|json|completion|chat|config|auth|embedding|post|graphql|grpc)\\s+(?:request|call|command|prompt|query)\\b",
     "\\b(?:send|issue|make|post)\\s+(?:a|an|any)\\s+(?:api|curl|endpoint|url)\\b",
     "\\b(?:send|issue|make|post)\\s+(?:a|an|any)\\s+[\\w.-]+\\s+request\\s+to\\s+(?:the\\s+)?(?:endpoint|url|api|server|proxy|\\S+/\\S+)\\b",
@@ -1246,7 +1246,7 @@ const REPRO_FAILURE_RE = new RegExp([
     "\\b(?:status\\s*(?:code\\s*)?|code\\s*|http\\s*)(?:is|of|:)?\\s*[1-5]\\d\\d\\b",
 ].join("|"), "i");
 
-// File, config, and log paths such as ~/.codex/config.toml or C:\\logs\\ocx.log.
+// File, config, and log paths such as ~/.codex/config.toml or C:\\logs\\occx.log.
 const REPRO_PATH_RE = new RegExp([
     "~?/[\\w.@-]+(?:/[\\w.@-]+)+",
     "[A-Za-z]:\\\\(?:[\\w.@-]+\\\\)+[\\w.@-]+",
@@ -1551,7 +1551,7 @@ function validateIssue(issue) {
     // Version "Unknown" / "모름" / "idk" is never actionable, on any form.
     if (!softPass && version !== null && isUnusableVersion(version)) {
       reasons.push("Version is missing or unknown.");
-      guidance.push("Report the installed `@bitkyc08/opencodex` version (for example `2.7.42`) or a commit SHA from `ocx --version`.");
+      guidance.push("Report the installed `@bitkyc08/opencodex` version (for example `2.7.42`) or a commit SHA from `occx --version`.");
     } else if (
       !softPass &&
       isNewBugForm &&
@@ -1561,7 +1561,7 @@ function validateIssue(issue) {
       // Legacy N/A / No response soft-pass stays only for bodies without
       // Client or integration.
       reasons.push("Version is missing.");
-      guidance.push("Add your OpenCodex version so we can reproduce the environment.");
+      guidance.push("Add your Openccx version so we can reproduce the environment.");
     }
 
     if (!softPass && isNewBugForm && os !== null && isUnusableVersion(os)) {
@@ -1592,7 +1592,7 @@ function validateIssue(issue) {
       !isRawPlaceholder(os)
     ) {
       reasons.push("Version and Operating system are both missing.");
-      guidance.push("Add your OpenCodex version and OS so we can reproduce the environment.");
+      guidance.push("Add your Openccx version and OS so we can reproduce the environment.");
     }
 
     if (!softPass) {
@@ -1626,10 +1626,10 @@ function validateIssue(issue) {
     if (isEmpty(expected)) emptyCore.push("expected behaviour");
     // Metadata fields: provider, version, endpoint are required on the form.
     const provider = extractSection(body, "Provider or upstream service");
-    const version = extractSection(body, "OpenCodex version");
+    const version = extractSection(body, "Openccx version");
     const endpoint = extractSection(body, "Endpoint or capability");
     if (provider !== null && isEmpty(provider)) emptyCore.push("provider or upstream service");
-    if (version !== null && isRawPlaceholder(version) === false && isEmpty(version)) emptyCore.push("OpenCodex version");
+    if (version !== null && isRawPlaceholder(version) === false && isEmpty(version)) emptyCore.push("Openccx version");
     if (endpoint !== null && isEmpty(endpoint)) emptyCore.push("endpoint or capability");
     if (emptyCore.length > 0) {
       // Same soft-pass as bug/feature: label- or maintainer-scoped provider

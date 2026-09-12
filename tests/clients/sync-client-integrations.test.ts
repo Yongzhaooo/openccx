@@ -15,19 +15,19 @@ import * as ownedRefresh from "../../src/integrations/owned-refresh";
 import { createIntegrationStateStore, type IntegrationStateStore } from "../../src/integrations/store";
 import type { IntegrationWriterLockSeams } from "../../src/integrations/writer-lock";
 import { applyIntegration, disableIntegrationCoordinated } from "../../src/integrations/writer";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { syncEnabledClientIntegrations } from "../../src/server/management/config-routes";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
- * `ocx sync` used to write the Codex catalog and stop, so a Grok fence or a Desktop profile
- * kept whatever context windows it was created with until the next `ocx start`. That gap is
+ * `occx sync` used to write the Codex catalog and stop, so a Grok fence or a Desktop profile
+ * kept whatever context windows it was created with until the next `occx start`. That gap is
  * how a catalog change (1,050,000 -> 922,000) reached Codex and nothing else.
  *
  * These pin the gate the fan-out asks and the ordering the route depends on.
  */
-describe("ocx sync fans out to enabled native clients and owned file integrations", () => {
-  const base = { port: 10100, defaultProvider: "x", providers: {} } as OcxConfig;
+describe("occx sync fans out to enabled native clients and owned file integrations", () => {
+  const base = { port: 10100, defaultProvider: "x", providers: {} } as OccxConfig;
 
   test("an absent toggle means ON — that is the shipped default, not an opt-in", () => {
     expect(grokIntegrationEnabled(base)).toBe(true);
@@ -35,12 +35,12 @@ describe("ocx sync fans out to enabled native clients and owned file integration
   });
 
   test("an explicit false is the only thing that takes a client out of the fan-out", () => {
-    const grokOff = { ...base, clientIntegrations: { grok: false } } as OcxConfig;
+    const grokOff = { ...base, clientIntegrations: { grok: false } } as OccxConfig;
     expect(grokIntegrationEnabled(grokOff)).toBe(false);
     // Turning one client off must not take the other with it.
     expect(claudeDesktopIntegrationEnabled(grokOff)).toBe(true);
 
-    const desktopOff = { ...base, clientIntegrations: { "claude-desktop": false } } as OcxConfig;
+    const desktopOff = { ...base, clientIntegrations: { "claude-desktop": false } } as OccxConfig;
     expect(claudeDesktopIntegrationEnabled(desktopOff)).toBe(false);
     expect(grokIntegrationEnabled(desktopOff)).toBe(true);
   });
@@ -85,20 +85,20 @@ describe("Desktop sync rechecks persisted state after discovery", () => {
   let previousHome: string | undefined;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    root = mkdtempSync(join(tmpdir(), "ocx-desktop-sync-refresh-"));
-    process.env.OPENCODEX_HOME = root;
+    previousHome = process.env.OPENCCX_HOME;
+    root = mkdtempSync(join(tmpdir(), "occx-desktop-sync-refresh-"));
+    process.env.OPENCCX_HOME = root;
   });
 
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(root);
   });
 
   for (const outcome of ["off", "refresh", "refusal"] as const) {
     test(`${outcome} during discovery preserves fresh Desktop state and MCode fan-out`, async () => {
-      const config: OcxConfig = {
+      const config: OccxConfig = {
         port: 10100,
         defaultProvider: "mock",
         clientIntegrations: { grok: false },
@@ -106,7 +106,7 @@ describe("Desktop sync rechecks persisted state after discovery", () => {
           mock: { adapter: "openai-chat", baseUrl: "https://example.test/v1", models: ["keep", "hidden"] },
           openai: { adapter: "openai-responses", baseUrl: "https://example.test/v1", contextWindow: 400_000 },
         },
-        apiKeys: [{ id: "sync-key", name: "fixture", key: "ocx_old_sync_fixture", createdAt: "2026-01-01T00:00:00.000Z" }],
+        apiKeys: [{ id: "sync-key", name: "fixture", key: "occx_old_sync_fixture", createdAt: "2026-01-01T00:00:00.000Z" }],
         providerContextCaps: { openai: 272_000 },
         claudeCode: { desktopProfile: {
           version: 1,
@@ -155,7 +155,7 @@ describe("Desktop sync rechecks persisted state after discovery", () => {
         const latest = structuredClone(config);
         latest.clientIntegrations = { grok: false, "claude-desktop": outcome !== "off" };
         latest.disabledModels = ["mock/hidden", nativeToDisable!];
-        latest.apiKeys![0]!.key = "ocx_new_sync_fixture";
+        latest.apiKeys![0]!.key = "occx_new_sync_fixture";
         latest.providerContextCaps = { openai: 922_000 };
         latest.providers.openai!.contextWindow = 1_000_000;
         latest.claudeCode!.desktopProfile = {
@@ -185,7 +185,7 @@ describe("Desktop sync rechecks persisted state after discovery", () => {
           expect(port).toBe(12345);
           expect(natives).not.toContain(nativeToDisable);
           expect(routed).toEqual([{ provider: "mock", id: "keep", contextWindow: 123_000 }]);
-          expect(key).toBe("ocx_new_sync_fixture");
+          expect(key).toBe("occx_new_sync_fixture");
           expect(mode).toBe("static");
           expect(profile).toEqual(latest.claudeCode!.desktopProfile);
           expect(limits).toEqual({ cap: 922_000, providerWindow: 1_000_000 });
@@ -203,14 +203,14 @@ describe("Desktop sync rechecks persisted state after discovery", () => {
   }
 });
 
-describe("ocx sync refreshes an already-owned MCode integration", () => {
+describe("occx sync refreshes an already-owned MCode integration", () => {
   const env = {} as NodeJS.ProcessEnv;
   const config = {
     port: 10100,
     hostname: "127.0.0.1",
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-  } as OcxConfig;
+  } as OccxConfig;
   const oldModels: ExportModel[] = [{
     namespaced: "openai/gpt-5.6-sol",
     provider: "openai",
@@ -232,7 +232,7 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
   let configPath: string;
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), "ocx-mcode-auto-sync-"));
+    root = mkdtempSync(join(tmpdir(), "occx-mcode-auto-sync-"));
     home = join(root, "home");
     store = createIntegrationStateStore(join(root, "state", "integrations"));
     const spec = INTEGRATION_CLIENTS.mcode;
@@ -258,9 +258,9 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
     expect(refreshed).toEqual({ client: "mcode", ok: true, changed: true });
 
     const document = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      custom_provider: { opencodex: { models: Record<string, unknown> } };
+      custom_provider: { openccx: { models: Record<string, unknown> } };
     };
-    expect(document.custom_provider.opencodex.models["openai/gpt-5.6-sol"]).toEqual({
+    expect(document.custom_provider.openccx.models["openai/gpt-5.6-sol"]).toEqual({
       limit: { context: 922_000 },
       thinking: { effortOptions: ["low", "medium", "high", "xhigh", "max", "ultra"] },
     });
@@ -271,8 +271,8 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
   test("does nothing and never loads the catalog when no ownership record exists", async () => {
     const before = [
       "custom_provider:",
-      "  opencodex:",
-      "    name: User-owned OpenCodex block",
+      "  openccx:",
+      "    name: User-owned Openccx block",
       "    models: {}",
       "",
     ].join("\n");
@@ -314,7 +314,7 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
 
     const outcome = await refreshOwnedIntegration(input(newModels));
     expect(outcome?.ok).toBe(false);
-    expect(outcome?.reason).toContain("changed after opencodex wrote it");
+    expect(outcome?.reason).toContain("changed after openccx wrote it");
     expect(readFileSync(configPath, "utf8")).toBe(edited);
     expect(JSON.stringify(store.readRecords().mcode)).toBe(recordBefore);
     expect(store.listOperations("mcode").map(row => row.kind)).toEqual(["apply"]);
@@ -328,7 +328,7 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
 
     const outcome = await refreshOwnedIntegration(input(newModels));
     expect(outcome?.ok).toBe(false);
-    expect(outcome?.reason).toContain("changed after opencodex wrote it");
+    expect(outcome?.reason).toContain("changed after openccx wrote it");
     expect(readFileSync(configPath, "utf8")).toBe(edited);
     expect(JSON.stringify(store.readRecords().mcode)).toBe(recordBefore);
     expect(store.listOperations("mcode").map(row => row.kind)).toEqual(["apply"]);
@@ -427,9 +427,9 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
     await secondAcquired;
     expect(await refresh).toEqual({ client: "mcode", ok: true, changed: true });
     const refreshed = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      custom_provider: { opencodex: { models: Record<string, unknown> } };
+      custom_provider: { openccx: { models: Record<string, unknown> } };
     };
-    expect(refreshed.custom_provider.opencodex.models["openai/gpt-5.6-sol"]).toEqual({
+    expect(refreshed.custom_provider.openccx.models["openai/gpt-5.6-sol"]).toEqual({
       limit: { context: 922_000 },
       thinking: { effortOptions: ["low", "medium", "high", "xhigh", "max", "ultra"] },
     });
@@ -441,9 +441,9 @@ describe("ocx sync refreshes an already-owned MCode integration", () => {
     expect(store.readRecords().mcode).toBeUndefined();
     expect(store.listOperations("mcode").map(row => row.kind)).toEqual(["disable", "refresh", "apply"]);
     const finalDocument = Bun.YAML.parse(readFileSync(configPath, "utf8")) as {
-      custom_provider?: { opencodex?: unknown };
+      custom_provider?: { openccx?: unknown };
     };
-    expect(finalDocument.custom_provider?.opencodex).toBeUndefined();
+    expect(finalDocument.custom_provider?.openccx).toBeUndefined();
   });
 });
 
@@ -455,7 +455,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
     hostname: "127.0.0.1",
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-  } as OcxConfig;
+  } as OccxConfig;
   const oldModels: ExportModel[] = [
     { namespaced: "mock/visible", provider: "mock", id: "visible", contextWindow: 128_000 },
     { namespaced: "mock/hidden", provider: "mock", id: "hidden", contextWindow: 64_000 },
@@ -467,7 +467,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
   let store: IntegrationStateStore;
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), "ocx-owned-catalog-refresh-"));
+    root = mkdtempSync(join(tmpdir(), "occx-owned-catalog-refresh-"));
     home = join(root, "home");
     store = createIntegrationStateStore(join(root, "state", "integrations"));
     mkdirSync(join(home, ".aside"), { recursive: true });
@@ -494,7 +494,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
       theme: string;
       providers: {
         personal: typeof sibling;
-        opencodex?: { baseUrl: string; api: string; apiKey: string; models: Array<{ id: string }> };
+        openccx?: { baseUrl: string; api: string; apiKey: string; models: Array<{ id: string }> };
       };
     };
   }
@@ -502,7 +502,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
   test("refreshes both owned catalogs from one lazy load and preserves unrelated settings", async () => {
     for (const clientId of clients) {
       expect(applyIntegration({ ...input(oldModels), clientId }).ok).toBe(true);
-      expect(document(clientId).providers.opencodex?.models.map(model => model.id))
+      expect(document(clientId).providers.openccx?.models.map(model => model.id))
         .toEqual(["mock/hidden", "mock/visible"]);
     }
     let loads = 0;
@@ -514,16 +514,16 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
     expect(loads).toBe(1);
     for (const client of clients) {
       expect(document(client)).toMatchObject({ theme: "dark", providers: { personal: sibling } });
-      expect(document(client).providers.opencodex).toMatchObject({
-        baseUrl: "http://127.0.0.1:10100/v1", api: "openai-completions", apiKey: "opencodex-loopback",
+      expect(document(client).providers.openccx).toMatchObject({
+        baseUrl: "http://127.0.0.1:10100/v1", api: "openai-completions", apiKey: "openccx-loopback",
       });
-      expect(document(client).providers.opencodex?.models.map(model => model.id)).toEqual(["mock/visible"]);
+      expect(document(client).providers.openccx?.models.map(model => model.id)).toEqual(["mock/visible"]);
       expect(store.listOperations(client).map(row => row.kind)).toEqual(["refresh", "apply"]);
     }
   });
 
   test("never loads or writes unowned manual catalogs", async () => {
-    const before = JSON.stringify({ providers: { personal: sibling, opencodex: { models: [{ id: "manual" }] } } });
+    const before = JSON.stringify({ providers: { personal: sibling, openccx: { models: [{ id: "manual" }] } } });
     for (const client of clients) writeFileSync(INTEGRATION_CLIENTS[client].configPath(env, home), before);
     let loads = 0;
     const outcomes = await refreshOwnedCatalogIntegrations(input(async () => {
@@ -574,14 +574,14 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
     expect(applyIntegration({ ...input(oldModels), clientId }).ok).toBe(true);
     const recordBefore = store.readRecords()[clientId];
     const edited = document(clientId);
-    edited.providers.opencodex!.baseUrl = "http://user-edited.invalid/v1";
+    edited.providers.openccx!.baseUrl = "http://user-edited.invalid/v1";
     const before = JSON.stringify(edited);
     const path = INTEGRATION_CLIENTS[clientId].configPath(env, home);
     writeFileSync(path, before);
     const outcomes = await refreshOwnedCatalogIntegrations(input(filteredModels));
     expect(outcomes).toHaveLength(1);
     expect(outcomes[0]).toMatchObject({ client: clientId, ok: false });
-    expect(outcomes[0]?.reason).toContain("changed after opencodex wrote it");
+    expect(outcomes[0]?.reason).toContain("changed after openccx wrote it");
     expect(readFileSync(path, "utf8")).toBe(before);
     expect(store.readRecords()[clientId]).toEqual(recordBefore);
     expect(store.listOperations(clientId).map(row => row.kind)).toEqual(["apply"]);
@@ -607,7 +607,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
     expect(readFileSync(path, "utf8")).toBe(before);
     expect(store.readRecords().pi).toEqual(recordBefore);
     expect(store.listOperations("pi").map(row => row.kind)).toEqual(["apply"]);
-    expect(document("aside").providers.opencodex?.models.map(model => model.id)).toEqual(["mock/visible"]);
+    expect(document("aside").providers.openccx?.models.map(model => model.id)).toEqual(["mock/visible"]);
     expect(store.listOperations("aside").map(row => row.kind)).toEqual(["refresh", "apply"]);
   });
 
@@ -637,7 +637,7 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
       release();
       expect(await first).toEqual([{ client: clientId, ok: true, changed: true, ...(clientId === "aside" ? { profileId: 0 } : {}) }]);
       expect(await second).toEqual([{ client: clientId, ok: false, reason: "integration_mutation_busy" }]);
-      expect(document(clientId).providers.opencodex?.models.map(model => model.id)).toEqual(["mock/visible"]);
+      expect(document(clientId).providers.openccx?.models.map(model => model.id)).toEqual(["mock/visible"]);
       expect(store.listOperations(clientId).map(row => row.kind)).toEqual(["refresh", "apply"]);
     } finally {
       release();
@@ -646,12 +646,12 @@ describe("owned Pi/Aside catalogs follow filtered model selections", () => {
     }
     expect(await refreshOwnedCatalogIntegrations(input(nextModels), [clientId]))
       .toEqual([{ client: clientId, ok: true, changed: true, ...(clientId === "aside" ? { profileId: 0 } : {}) }]);
-    expect(document(clientId).providers.opencodex?.models.map(model => model.id)).toEqual(["mock/hidden"]);
+    expect(document(clientId).providers.openccx?.models.map(model => model.id)).toEqual(["mock/hidden"]);
     expect(store.listOperations(clientId).map(row => row.kind)).toEqual(["refresh", "refresh", "apply"]);
   });
 });
 
-test("the direct ocx sync command refreshes MCode, Pi, Raycast, omo and server-owned Aside", async () => {
+test("the direct occx sync command refreshes MCode, Pi, Raycast, omo and server-owned Aside", async () => {
   const src = await Bun.file(new URL("../../src/cli/dispatch.ts", import.meta.url)).text();
   const start = src.indexOf("sync: async deps =>");
   const command = src.slice(start, src.indexOf("v2: async deps =>", start));
@@ -679,14 +679,14 @@ test("already-running ensure leaves Raycast untouched when saved host and listen
   const src = await Bun.file(new URL("../../src/cli/index.ts", import.meta.url)).text();
   const command = src.slice(src.indexOf("async function handleEnsure"), src.indexOf("async function handleTrayProxyStart"));
   const executable = new Bun.Transpiler({ loader: "ts" }).transformSync(command);
-  const root = mkdtempSync(join(tmpdir(), "ocx-ensure-raycast-divergence-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-ensure-raycast-divergence-"));
   const configPath = join(root, "providers.yaml");
-  const original = "providers:\n  - id: opencodex\n    base_url: http://127.0.0.1:10237/v1\n";
+  const original = "providers:\n  - id: openccx\n    base_url: http://127.0.0.1:10237/v1\n";
   writeFileSync(configPath, original);
   const savedConfig = {
     port: 10100, hostname: "192.0.2.40", providers: {}, defaultProvider: "mock",
     unauthenticatedLoopbackListener: { enabled: true, port: 10999 },
-  } as OcxConfig;
+  } as OccxConfig;
   let refreshCalls = 0;
   const deps = {
     findProxyOwnerBeforeJournalRecovery: async () => ({ live: { hostname: "127.0.0.1", port: 10237 } }),

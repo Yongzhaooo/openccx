@@ -12,9 +12,9 @@ import {
   SYNTHETIC_VALUE_PATH,
 } from "./constants";
 
-const SANDBOX_DOMAIN = "ocx-lab:fabric-sandbox-profile:v1";
-const VERIFIER_DOMAIN = "ocx-lab:fabric-verifier-manifest:v1";
-const FIXTURE_DOMAIN = "ocx-lab:fabric-task-fixture:v1";
+const SANDBOX_DOMAIN = "occx-lab:fabric-sandbox-profile:v1";
+const VERIFIER_DOMAIN = "occx-lab:fabric-verifier-manifest:v1";
+const FIXTURE_DOMAIN = "occx-lab:fabric-task-fixture:v1";
 
 /** Domain hash of the frozen fabric sandbox profile object. */
 export function sandboxProfileDigest(profile: unknown = SANDBOX_PROFILE_V1): string {

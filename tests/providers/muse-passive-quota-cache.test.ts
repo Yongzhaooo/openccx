@@ -18,8 +18,8 @@ import { captureConfigGeneration } from "../../src/lib/state-store-sweeper";
 import type { ProviderQuota } from "../../src/providers/quota-types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-let opencodexHome: string;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+let openccxHome: string;
 
 const FIRST = { accountId: "muse-first", email: "first@example.com" };
 const SECOND = { accountId: "muse-second", email: "second@example.com" };
@@ -49,8 +49,8 @@ async function seedAccounts(...accounts: Array<{ accountId: string; email: strin
 }
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-muse-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-muse-quota-"));
+  process.env.OPENCCX_HOME = openccxHome;
   clearAccountQuotaCache();
   // The generation-fence test below reconciles with an empty live-key set, which raises
   // lastReconciledGeneration process-wide. Without this reset every later write in the
@@ -60,9 +60,9 @@ beforeEach(() => {
 
 afterEach(() => {
   clearAccountQuotaCache();
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
 });
 
 describe("passive Muse quota cache", () => {
@@ -205,5 +205,5 @@ const PERSIST_SETTLE_MS = 400;
 
 /** Write the on-disk snapshot directly, bypassing the debounce. */
 function writeDiskRows(rows: Record<string, ProviderQuota>): void {
-  writeFileSync(join(opencodexHome, "provider-account-quota-cache.json"), `${JSON.stringify({ version: 1, rows })}\n`);
+  writeFileSync(join(openccxHome, "provider-account-quota-cache.json"), `${JSON.stringify({ version: 1, rows })}\n`);
 }

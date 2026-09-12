@@ -1,4 +1,4 @@
-import type { OcxProviderConfig, RequestPacingRule } from "../types";
+import type { OccxProviderConfig, RequestPacingRule } from "../types";
 import type { GenerationContext } from "../lib/state-store-sweeper";
 
 export const REQUEST_PACING_MAX_QUEUE_DEPTH = 256;
@@ -90,14 +90,14 @@ function normalizedInterval(rule: RequestPacingRule | undefined): number {
   return Math.max(rpmInterval, fixedInterval);
 }
 
-export function requestPacingIntervalMs(provider: OcxProviderConfig, modelId?: string): number {
+export function requestPacingIntervalMs(provider: OccxProviderConfig, modelId?: string): number {
   const policy = provider.requestPacing;
   if (!policy?.enabled) return 0;
   const override = modelId ? policy.models?.[modelId] : undefined;
   return Math.max(normalizedInterval(policy), normalizedInterval(override));
 }
 
-function requestPacingIntervals(provider: OcxProviderConfig, modelId?: string): {
+function requestPacingIntervals(provider: OccxProviderConfig, modelId?: string): {
   providerIntervalMs: number;
   modelIntervalMs: number;
 } {
@@ -196,7 +196,7 @@ function runQueue(providerName: string, state: ProviderPacer): void {
 
 export async function waitForProviderRequestSlot(
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId?: string,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -254,7 +254,7 @@ export async function waitForProviderRequestSlot(
 
 export function providerRequestPacingStatus(
   providerName: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   now = runtime.now(),
 ): ProviderRequestPacingStatus {
   const state = pacers.get(providerName);

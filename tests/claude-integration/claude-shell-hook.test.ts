@@ -24,7 +24,7 @@ function installClaudeCli(): void {
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-claude-hook-"));
+  root = mkdtempSync(join(tmpdir(), "occx-claude-hook-"));
   binDir = join(root, "bin");
   zshrcPath = join(root, ".zshrc");
   mkdirSync(binDir);
@@ -51,10 +51,10 @@ describe("Claude Code shell-hook reconciliation", () => {
     expect(existsSync(zshrcPath)).toBe(false);
   });
 
-  test("removes only the stale OpenCodex hook when Claude Code is absent", () => {
+  test("removes only the stale Openccx hook when Claude Code is absent", () => {
     writeFileSync(zshrcPath, [
       "export USER_SETTING=1",
-      "# opencodex claude-env hook",
+      "# openccx claude-env hook",
       "[ -f ~/.opencodex/claude-env.sh ] && source ~/.opencodex/claude-env.sh",
       "alias keep-me='yes'",
       "",
@@ -68,7 +68,7 @@ describe("Claude Code shell-hook reconciliation", () => {
     const content = readFileSync(zshrcPath, "utf8");
     expect(content).toContain("export USER_SETTING=1");
     expect(content).toContain("alias keep-me='yes'");
-    expect(content).not.toContain("opencodex claude-env hook");
+    expect(content).not.toContain("openccx claude-env hook");
     expect(content).not.toContain("claude-env.sh");
   });
 
@@ -109,7 +109,7 @@ describe("Claude Code shell-hook reconciliation", () => {
       state: "absent",
       reason: "system environment inactive",
     });
-    expect(readFileSync(zshrcPath, "utf8")).not.toContain("opencodex claude-env hook");
+    expect(readFileSync(zshrcPath, "utf8")).not.toContain("openccx claude-env hook");
   });
 
   // A .zshrc with CRLF endings is ordinary on a home directory an editor or another OS has
@@ -124,7 +124,7 @@ describe("Claude Code shell-hook reconciliation", () => {
 
     const result = reconcileShellHook(false);
 
-    expect(readFileSync(zshrcPath, "utf8")).not.toContain("opencodex claude-env hook");
+    expect(readFileSync(zshrcPath, "utf8")).not.toContain("openccx claude-env hook");
     expect(result.state).toBe("absent");
   });
 
@@ -146,7 +146,7 @@ describe("Claude Code shell-hook reconciliation", () => {
     installClaudeCli();
     // The marker is there but the next line is not the block we wrote, so it is not ours to
     // delete. Answering "removed" here would be a claim the user acts on and it would be false.
-    writeFileSync(zshrcPath, "# opencodex claude-env hook\n# hand-edited by the user\n", "utf8");
+    writeFileSync(zshrcPath, "# openccx claude-env hook\n# hand-edited by the user\n", "utf8");
 
     const result = reconcileShellHook(false);
 

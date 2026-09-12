@@ -4,11 +4,11 @@ import { isLocalAttestationSecret } from "./local-management-attestation";
 export const LOCAL_PROVIDER_RELOAD_METHOD = "POST";
 export const LOCAL_PROVIDER_RELOAD_PATH = "/api/providers/reload";
 export const LOCAL_PROVIDER_RELOAD_CAPABILITY_VERSION = "v1";
-export const LOCAL_PROVIDER_RELOAD_EXPECTED_PID_HEADER = "x-opencodex-provider-reload-expected-pid";
-export const LOCAL_PROVIDER_RELOAD_NONCE_HEADER = "x-opencodex-provider-reload-nonce";
-export const LOCAL_PROVIDER_RELOAD_EXPIRES_AT_HEADER = "x-opencodex-provider-reload-expires-at";
-export const LOCAL_PROVIDER_RELOAD_NAME_HEADER = "x-opencodex-provider-reload-name";
-export const LOCAL_PROVIDER_RELOAD_CAPABILITY_HEADER = "x-opencodex-provider-reload-capability";
+export const LOCAL_PROVIDER_RELOAD_EXPECTED_PID_HEADER = "x-openccx-provider-reload-expected-pid";
+export const LOCAL_PROVIDER_RELOAD_NONCE_HEADER = "x-openccx-provider-reload-nonce";
+export const LOCAL_PROVIDER_RELOAD_EXPIRES_AT_HEADER = "x-openccx-provider-reload-expires-at";
+export const LOCAL_PROVIDER_RELOAD_NAME_HEADER = "x-openccx-provider-reload-name";
+export const LOCAL_PROVIDER_RELOAD_CAPABILITY_HEADER = "x-openccx-provider-reload-capability";
 export const LOCAL_PROVIDER_RELOAD_CAPABILITY_TTL_MS = 10_000;
 
 const BASE64URL_256 = /^[A-Za-z0-9_-]{43}$/;
@@ -45,7 +45,7 @@ function capabilityPayload(
   if (!Number.isSafeInteger(pid) || pid <= 0) return null;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
   if (!Number.isSafeInteger(expiresAt) || expiresAt <= 0) return null;
-  return `opencodex-local-provider-reload-v1\n${nonce}\n${method}\n${path}\n${name}\n${pid}\n${port}\n${expiresAt}`;
+  return `openccx-local-provider-reload-v1\n${nonce}\n${method}\n${path}\n${name}\n${pid}\n${port}\n${expiresAt}`;
 }
 
 /** Process-scoped authorization to reload one named provider from protected disk state. */

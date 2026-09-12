@@ -7,7 +7,7 @@ import {
   visibleNativeSlugs,
   type CatalogModel,
 } from "../codex/catalog";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { GrokInjectModel } from "./inject";
 
 /**
@@ -17,7 +17,7 @@ import type { GrokInjectModel } from "./inject";
  * rungs — this function forwards the same lists `/v1/models` already advertises.
  */
 export function buildGrokInjectModels(
-  config: Pick<OcxConfig, "disabledModels" | "combos" | "providers" | "providerContextCaps">,
+  config: Pick<OccxConfig, "disabledModels" | "combos" | "providers" | "providerContextCaps">,
   routed: CatalogModel[],
 ): GrokInjectModel[] {
   const contextLimits = nativeContextLimits(config);
@@ -49,7 +49,7 @@ export function buildGrokInjectModels(
 
 /** Visible routed catalog, then the shared inject list. */
 export function grokInjectModelsFromCatalog(
-  config: OcxConfig,
+  config: OccxConfig,
   catalog: CatalogModel[],
 ): GrokInjectModel[] {
   return buildGrokInjectModels(config, filterCatalogVisibleModels(catalog, config));

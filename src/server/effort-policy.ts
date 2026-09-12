@@ -12,7 +12,7 @@
  * parsed.options.reasoning feeds routed adapters, _rawBody.reasoning.effort feeds the
  * ChatGPT passthrough serializer.
  */
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../types";
 import { modelInList } from "../types";
 import { codexEffortRank, configuredReasoningEfforts, isCodexReasoningEffort, isDeclaredReasoningEffort, modelRecordValue } from "../reasoning-effort";
 import { catalogModelEfforts } from "../codex/catalog";
@@ -43,7 +43,7 @@ export function isThreadSpawnRequest(headers: Headers): boolean {
 }
 
 /** The effective ceiling for this turn, or undefined when no configured cap applies. */
-export function effortCapFor(config: OcxConfig, subagent: boolean): string | undefined {
+export function effortCapFor(config: OccxConfig, subagent: boolean): string | undefined {
   const caps: string[] = [];
   if (config.effortCap && isCodexReasoningEffort(config.effortCap)) caps.push(config.effortCap);
   if (subagent && config.subagentEffortCap && isCodexReasoningEffort(config.subagentEffortCap)) {
@@ -71,7 +71,7 @@ export function effortCapFor(config: OcxConfig, subagent: boolean): string | und
 export function effortCapAppliesTo(
   surface: "v1" | "v2" | null,
   headers: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   compaction = false,
 ): boolean {
   if (compaction) return false;
@@ -116,7 +116,7 @@ export function stripEmptyLadderEffort(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
-export function supportedLadderFor(route: { provider: OcxProviderConfig; modelId: string }): string[] | undefined {
+export function supportedLadderFor(route: { provider: OccxProviderConfig; modelId: string }): string[] | undefined {
   const { provider, modelId } = route;
   if (modelInList(provider.noReasoningModels, modelId)) return [];
   const raw = modelRecordValue(provider.modelReasoningEfforts, modelId) ?? provider.reasoningEfforts;
@@ -165,9 +165,9 @@ export function resolveCappedEffort(cap: string, supported: readonly string[] | 
  * for request-log annotation (`to: "none"` on strip), or null when nothing changed.
  */
 export function applyEffortCap(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   headers: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   supported?: readonly string[] | undefined,
 ): { from: string; to: string; subagent: boolean } | null {
   const subagent = isThreadSpawnRequest(headers);
@@ -202,9 +202,9 @@ export function applyEffortCap(
  * Returns undefined when no valid pinned effort tier is configured.
  */
 export function resolvePinnedEffort(
-  route: { provider: OcxProviderConfig; modelId: string; providerName?: string },
+  route: { provider: OccxProviderConfig; modelId: string; providerName?: string },
   parsedModelId?: string,
-  config?: OcxConfig,
+  config?: OccxConfig,
 ): string | undefined {
   const prov = route.provider;
   const rawProvModel = modelRecordValue(prov.modelPinnedReasoningEfforts, route.modelId)
@@ -231,19 +231,19 @@ interface EffortSnapshot {
   providerName: string;
   modelId: string;
   reasoningPresent: boolean;
-  reasoning: OcxParsedRequest["options"]["reasoning"];
+  reasoning: OccxParsedRequest["options"]["reasoning"];
   rawEffortPresent: boolean;
   rawEffort: unknown;
 }
 
-const effortSnapshots = new WeakMap<OcxParsedRequest, EffortSnapshot>();
+const effortSnapshots = new WeakMap<OccxParsedRequest, EffortSnapshot>();
 
 /** Capture effective synthetic/combo defaults before final model namespace rewriting.
  * A different destination restores effort alone; intervening summary/options edits survive.
  * Credential retries do not change the destination and retain their existing decision.
  */
 export function prepareEffortNormalization(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   route: { providerName: string; modelId: string },
 ): string {
   const raw = parsed._rawBody as { reasoning?: Record<string, unknown> } | undefined;
@@ -328,7 +328,7 @@ export function chatCollabSurface(chatBody: Record<string, unknown>): "v1" | "v2
 export function applyChatEffortCap(
   chatBody: Record<string, unknown>,
   headers: Headers,
-  config: OcxConfig,
+  config: OccxConfig,
   supported?: readonly string[] | undefined,
 ): { from: string; to: string; subagent: boolean } | null {
   const subagent = isThreadSpawnRequest(headers);
@@ -348,9 +348,9 @@ export function applyChatEffortCap(
 }
 
 export function applyPinnedEffort(
-  parsed: OcxParsedRequest,
-  route: { provider: OcxProviderConfig; modelId: string; providerName?: string },
-  config?: OcxConfig,
+  parsed: OccxParsedRequest,
+  route: { provider: OccxProviderConfig; modelId: string; providerName?: string },
+  config?: OccxConfig,
   selector = effortSnapshots.get(parsed)?.selector ?? parsed.modelId,
 ): { from: string | undefined; to: string } | null {
   if (parsed._compactionRequest === true) return null;

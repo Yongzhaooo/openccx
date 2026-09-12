@@ -6,7 +6,7 @@ import { handleManagementAPI } from "../../src/server/management-api";
 import type { ManagementApiDeps } from "../../src/server/management/context";
 import { syncGrokConfig } from "../../src/grok/sync";
 import { injectGrokConfig, type GrokInjectModel } from "../../src/grok/inject";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath } from "../helpers/repo-root";
 
@@ -20,35 +20,35 @@ import { repoPath } from "../helpers/repo-root";
  * operation intended.
  */
 
-const BEGIN = "# >>> opencodex managed block — do not edit (removed by `ocx stop`) >>>";
-const END = "# <<< opencodex managed block <<<";
+const BEGIN = "# >>> openccx managed block — do not edit (removed by `occx stop`) >>>";
+const END = "# <<< openccx managed block <<<";
 
 let grokHome: string;
 let fixtureRoot: string;
 let previousGrokHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 const cleanup: string[] = [];
 
 beforeEach(() => {
   previousGrokHome = process.env.GROK_HOME;
-  grokHome = mkdtempSync(join(tmpdir(), "ocx-grok-toggle-"));
+  grokHome = mkdtempSync(join(tmpdir(), "occx-grok-toggle-"));
   cleanup.push(grokHome);
   process.env.GROK_HOME = grokHome;
   /*
    * `bun test` isolates CODEX_HOME to a temp dir, so the REAL service-state.json
    * (recorded under ~/.opencodex) mismatches it and every disable would refuse
    * home_mismatch — the preflight working as designed, against the wrong
-   * fixture. Give each test an OWNED environment: OPENCODEX_HOME under the
+   * fixture. Give each test an OWNED environment: OPENCCX_HOME under the
    * fixture root plus an install-state recording the current homes.
    */
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  fixtureRoot = mkdtempSync(join(tmpdir(), "ocx-owned-home-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  fixtureRoot = mkdtempSync(join(tmpdir(), "occx-owned-home-"));
   cleanup.push(fixtureRoot);
-  process.env.OPENCODEX_HOME = fixtureRoot;
+  process.env.OPENCCX_HOME = fixtureRoot;
   writeFileSync(join(fixtureRoot, "service-state.json"), JSON.stringify({
     version: 2,
     codexHome: process.env.CODEX_HOME?.trim() || join(homedir(), ".codex"),
-    opencodexHome: fixtureRoot,
+    openccxHome: fixtureRoot,
     backend: "scheduler",
   }));
 });
@@ -56,8 +56,8 @@ beforeEach(() => {
 afterEach(() => {
   if (previousGrokHome === undefined) delete process.env.GROK_HOME;
   else process.env.GROK_HOME = previousGrokHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   while (cleanup.length) removeTreeWithRetry(cleanup.pop()!);
 });
 
@@ -66,13 +66,13 @@ function writeForeignInstallState(): void {
   writeFileSync(join(fixtureRoot, "service-state.json"), JSON.stringify({
     version: 2,
     codexHome: "/foreign/codex-home",
-    opencodexHome: "/foreign/opencodex-home",
+    openccxHome: "/foreign/opencodex-home",
     backend: "scheduler",
   }));
 }
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, hostname: "127.0.0.1", providers: [], ...overrides } as OcxConfig;
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, hostname: "127.0.0.1", providers: [], ...overrides } as OccxConfig;
 }
 
 function configPath(): string {
@@ -88,7 +88,7 @@ function readConfig(): string {
 }
 
 function fencedConfig(userPrefix = "# user's own settings\n"): string {
-  return `${userPrefix}${BEGIN}\n[model.ocx-a]\nmodel = "p/m"\n${END}\n`;
+  return `${userPrefix}${BEGIN}\n[model.occx-a]\nmodel = "p/m"\n${END}\n`;
 }
 
 /**
@@ -107,7 +107,7 @@ function testDeps(overrides: ManagementApiDeps = {}): ManagementApiDeps {
   };
 }
 
-function dispatch(config: OcxConfig, path: string, init?: RequestInit, deps: ManagementApiDeps = testDeps()) {
+function dispatch(config: OccxConfig, path: string, init?: RequestInit, deps: ManagementApiDeps = testDeps()) {
   const url = new URL(`http://127.0.0.1:10100${path}`);
   return handleManagementAPI(
     new Request(url, { ...init, headers: { Host: url.host, ...(init?.headers ?? {}) } }),
@@ -117,7 +117,7 @@ function dispatch(config: OcxConfig, path: string, init?: RequestInit, deps: Man
   );
 }
 
-async function put(config: OcxConfig, enabled: boolean, deps?: ManagementApiDeps) {
+async function put(config: OccxConfig, enabled: boolean, deps?: ManagementApiDeps) {
   const res = await dispatch(config, "/api/native-integrations/grok", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -126,7 +126,7 @@ async function put(config: OcxConfig, enabled: boolean, deps?: ManagementApiDeps
   return { status: res!.status, body: await res!.json() as Record<string, unknown> };
 }
 
-async function get(config: OcxConfig, deps?: ManagementApiDeps) {
+async function get(config: OccxConfig, deps?: ManagementApiDeps) {
   const res = await dispatch(config, "/api/native-integrations", undefined, deps);
   const body = await res!.json() as { clients: Record<string, unknown>[] };
   return body.clients.find(c => c.clientId === "grok")!;
@@ -149,7 +149,7 @@ test("GET reports not-installed when GROK_HOME is missing", async () => {
 });
 
 test("GET reports unsafe and blocks the switch on an orphaned marker", async () => {
-  writeConfig(`# user\n${BEGIN}\n[model.ocx-a]\n`);
+  writeConfig(`# user\n${BEGIN}\n[model.occx-a]\n`);
   const row = await get(baseConfig());
   expect(row.state).toBe("unsafe");
   expect((row.disableBlocked as { reason: string }).reason).toBe("orphaned_marker");
@@ -163,7 +163,7 @@ test("enable regenerates the fence with the catalog's aliases", async () => {
   expect(body.changed).toBe(true);
   const content = readConfig();
   expect(content).toContain(BEGIN);
-  // The writer allocates its own `ocx-`-prefixed alias and carries the aliased
+  // The writer allocates its own `occx-`-prefixed alias and carries the aliased
   // model's id verbatim; the context window must survive the trip.
   expect(content).toContain('model = "fast"');
   expect(content).toContain("context_window = 64000");
@@ -208,7 +208,7 @@ test("toggling to the current state changes nothing", async () => {
 });
 
 test("an orphaned marker refuses BOTH directions and no writer runs", async () => {
-  const orphaned = `# user\n${BEGIN}\n[model.ocx-a]\n`;
+  const orphaned = `# user\n${BEGIN}\n[model.occx-a]\n`;
   writeConfig(orphaned);
   let injectCalled = false;
   const deps = testDeps({
@@ -267,7 +267,7 @@ test("non-loopback enable with no fence reports changed:false", async () => {
 });
 
 test("non-loopback enable over an orphaned marker refuses, never absent", async () => {
-  const orphaned = `# user\n${BEGIN}\n[model.ocx-a]\n`;
+  const orphaned = `# user\n${BEGIN}\n[model.occx-a]\n`;
   writeConfig(orphaned);
   const { status, body } = await put(baseConfig(), true, nonLoopbackDeps());
   expect(status).toBe(409);
@@ -279,9 +279,9 @@ test("enable re-inspects AFTER the catalog fetch (audit r7)", async () => {
   writeConfig("# user only\n");
   const deps = testDeps({
     fetchAllModels: (async () => {
-      // The file becomes orphaned INSIDE the awaiting window — by `ocx
+      // The file becomes orphaned INSIDE the awaiting window — by `occx
       // ensure`, another proxy, a hand edit. The preflight already passed.
-      writeConfig(`${BEGIN}\n[model.ocx-a]\n`);
+      writeConfig(`${BEGIN}\n[model.occx-a]\n`);
       return [];
     }) as never,
   });
@@ -296,7 +296,7 @@ test("the non-loopback outcome inspects AFTER the write (audit r8)", async () =>
     // A fence that becomes orphaned between the recheck and the write: the
     // writer's own result cannot say so, and only the post-inspection can.
     injectGrokConfig: (() => {
-      writeConfig(`${BEGIN}\n[model.ocx-a]\n`);
+      writeConfig(`${BEGIN}\n[model.occx-a]\n`);
       return { ok: true, changed: true, message: "policy skip", skippedReason: "non-loopback" } as const;
     }) as never,
   });
@@ -310,7 +310,7 @@ test("a foreign fence between strip and read is superseded, never absent (audit 
   writeConfig("# user only\n");
   const deps = nonLoopbackDeps({
     injectGrokConfig: (() => {
-      // `ocx ensure` regenerated a well-formed fence in the window.
+      // `occx ensure` regenerated a well-formed fence in the window.
       writeConfig(fencedConfig());
       return { ok: true, changed: true, message: "policy skip", skippedReason: "non-loopback" } as const;
     }) as never,
@@ -429,9 +429,9 @@ test("the route's model list is byte-identical to syncGrokConfig's", async () =>
   const fence = readConfig();
   expect(fence).toContain('model = "fast"');
   expect(fence).not.toContain("stub/m2");
-  expect(fence).not.toContain("ocx-stub-m2");
+  expect(fence).not.toContain("occx-stub-m2");
   expect(fence).not.toContain("stub/m3");
-  expect(fence).not.toContain("ocx-stub-m3");
+  expect(fence).not.toContain("occx-stub-m3");
 });
 
 test("a late orphan surfaced by the WRITER still maps to 409, never to absent", () => {
@@ -445,7 +445,7 @@ test("a late orphan surfaced by the WRITER still maps to 409, never to absent", 
     const deps = testDeps({
       injectGrokConfig: (() => ({
         ok: false, changed: false,
-        message: "Grok config contains an opencodex begin marker without its end marker; refusing to guess where the managed block ends.",
+        message: "Grok config contains an openccx begin marker without its end marker; refusing to guess where the managed block ends.",
         skippedReason: "orphaned-marker",
       }) as const) as never,
     });
@@ -507,7 +507,7 @@ test("no journal row and no snapshot exist for this toggle", () => {
 test("the ownership preflight itself is reachable, not declared", async () => {
   const { assertNativeTeardownOwned } = await import("../../src/integrations/native/ownership-preflight");
   // The beforeEach fixture already records the CURRENT homes under
-  // OPENCODEX_HOME: owned.
+  // OPENCCX_HOME: owned.
   expect(assertNativeTeardownOwned().ok).toBe(true);
   writeForeignInstallState();
   const owned = assertNativeTeardownOwned();

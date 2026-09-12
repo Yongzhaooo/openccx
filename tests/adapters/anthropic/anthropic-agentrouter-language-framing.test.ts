@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../../../src/adapters/anthropic";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
-import type { OcxMessage, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxMessage, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 const createAnthropicAdapter = (...args: Parameters<typeof createAnthropicAdapterProduction>) =>
   withTestTranslatorBudget(createAnthropicAdapterProduction(...args));
@@ -13,11 +13,11 @@ interface TextBlock { type: string; text?: string }
 interface WireMessage { role: string; content: string | TextBlock[] }
 interface WireBody { messages: WireMessage[] }
 
-function providerAt(baseUrl: string): OcxProviderConfig {
+function providerAt(baseUrl: string): OccxProviderConfig {
   return { adapter: "anthropic", baseUrl, apiKey: "key", authMode: "key" };
 }
 
-function requestWith(messages: OcxMessage[]): OcxParsedRequest {
+function requestWith(messages: OccxMessage[]): OccxParsedRequest {
   return {
     modelId: "claude-opus-4-6",
     stream: false,
@@ -26,7 +26,7 @@ function requestWith(messages: OcxMessage[]): OcxParsedRequest {
   };
 }
 
-async function bodyFor(baseUrl: string, messages: OcxMessage[]): Promise<WireBody> {
+async function bodyFor(baseUrl: string, messages: OccxMessage[]): Promise<WireBody> {
   const req = await createAnthropicAdapter(providerAt(baseUrl)).buildRequest(requestWith(messages));
   return JSON.parse(req.body as string) as WireBody;
 }

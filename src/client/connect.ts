@@ -42,8 +42,8 @@ import {
 } from "../lib/service-secrets";
 import { MAX_REMOTE_CATALOG_BYTES } from "../server/catalog-download";
 import type {
-  OcxClientConnectionConfig,
-  OcxConnectedClientId,
+  OccxClientConnectionConfig,
+  OccxConnectedClientId,
 } from "../types";
 import {
   downloadClientCatalog,
@@ -81,7 +81,7 @@ export interface ConnectOptions {
   serverUrl: string;
   managementUrl?: string;
   credential: OneTimeConnectCredential;
-  selectedClients: OcxConnectedClientId[];
+  selectedClients: OccxConnectedClientId[];
   managementTransport: "direct" | "relay";
   noSync?: boolean;
   catalogTimeoutMs?: number;
@@ -110,7 +110,7 @@ function catalogSnapshot(): CatalogSnapshot {
   if (!existsSync(DEFAULT_CATALOG_PATH)) return { kind: "absent" };
   const stat = lstatSync(DEFAULT_CATALOG_PATH);
   if (stat.isSymbolicLink() || !stat.isFile() || stat.size > MAX_REMOTE_CATALOG_BYTES) {
-    throw new Error("existing OpenCodex catalog is not a bounded regular file");
+    throw new Error("existing Openccx catalog is not a bounded regular file");
   }
   const body = readFileSync(DEFAULT_CATALOG_PATH, "utf8");
   return { kind: "file", body, fingerprint: sha256(body) };
@@ -160,7 +160,7 @@ function routingTarget(serverUrl: string): CodexRoutingTarget {
   return {
     baseUrl: `${serverUrl}/v1`,
     requiresAdmissionToken: true,
-    tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+    tokenEnv: "OPENCCX_API_AUTH_TOKEN",
   };
 }
 
@@ -170,7 +170,7 @@ function localGuiOrigin(): string {
 }
 
 function clientKeyName(): string {
-  const raw = `ocx connect ${hostname() || "client"}`;
+  const raw = `occx connect ${hostname() || "client"}`;
   return raw.slice(0, 80);
 }
 
@@ -179,7 +179,7 @@ function releaseCredential(credential: OneTimeConnectCredential): void {
 }
 
 async function rotationAuthority(
-  connection: OcxClientConnectionConfig,
+  connection: OccxClientConnectionConfig,
   options: RotateClientOptions,
   deps: ClientConnectDeps,
 ): Promise<{ kind: "admin"; value: Uint8Array } | { kind: "gui-session"; value: ConnectGuiSession }> {
@@ -193,11 +193,11 @@ async function rotationAuthority(
   return { kind: "gui-session", value: session };
 }
 
-export type ClientRotationResult = OcxClientConnectionConfig & {
+export type ClientRotationResult = OccxClientConnectionConfig & {
   rotationOutcome: "committed" | "rolled_back";
 };
 
-function desktopOwner(connection: OcxClientConnectionConfig): DesktopRemoteOwner {
+function desktopOwner(connection: OccxClientConnectionConfig): DesktopRemoteOwner {
   return { serverUrl: connection.serverUrl, apiKeyId: connection.apiKeyId, connectedAt: connection.connectedAt };
 }
 
@@ -207,7 +207,7 @@ function requireDesktopResult(result: DesktopStoreResult): Extract<DesktopStoreR
 }
 
 function assertRotationCandidates(
-  connection: OcxClientConnectionConfig,
+  connection: OccxClientConnectionConfig,
   currentFingerprint: string,
   backupFingerprint: string,
 ): void {
@@ -222,7 +222,7 @@ function assertRotationCandidates(
 
 function alignDesktopCredential(
   held: ClientLifecycleHeld,
-  connection: OcxClientConnectionConfig,
+  connection: OccxClientConnectionConfig,
   previousFingerprint: string,
   token: { token: string; fingerprint: string },
 ): void {
@@ -257,7 +257,7 @@ function alignDesktopCredential(
 
 function finalizeRotation(
   held: ClientLifecycleHeld,
-  connection: OcxClientConnectionConfig,
+  connection: OccxClientConnectionConfig,
   previousFingerprint: string,
   token: { token: string; fingerprint: string },
   rotationOutcome: ClientRotationResult["rotationOutcome"],
@@ -282,7 +282,7 @@ function finalizeRotation(
 
 async function recoverRotationWithAuthority(
   held: ClientLifecycleHeld,
-  connection: OcxClientConnectionConfig,
+  connection: OccxClientConnectionConfig,
   authority: { kind: "admin"; value: Uint8Array } | { kind: "gui-session"; value: ConnectGuiSession },
   deps: ClientConnectDeps,
 ): Promise<ClientRotationResult> {
@@ -368,7 +368,7 @@ async function rotateConnectedClientKeyHeld(
   options: RotateClientOptions,
   deps: ClientConnectDeps,
 ): Promise<ClientRotationResult> {
-  let connection: OcxClientConnectionConfig | null = null;
+  let connection: OccxClientConnectionConfig | null = null;
   let authority: { kind: "admin"; value: Uint8Array } | { kind: "gui-session"; value: ConnectGuiSession } | null = null;
   let started: { rotationId: string; key: string; createdAt: string } | null = null;
   let markerPersisted = false;
@@ -404,7 +404,7 @@ async function rotateConnectedClientKeyHeld(
     backupCreated = true;
     const rotation = await startClientKeyRotation(connection.managementUrl, authority, connection.apiKeyId, { fetchImpl: deps.fetchImpl });
     started = { rotationId: rotation.rotationId, key: rotation.key, createdAt: rotation.createdAt };
-    const marked: OcxClientConnectionConfig = {
+    const marked: OccxClientConnectionConfig = {
       ...connection,
       pendingOperation: { kind: "rotate", rotationId: rotation.rotationId, newKeyIssuedAt: rotation.createdAt, oldKeyBackupPath: serviceApiTokenBackupPath() },
     };
@@ -495,7 +495,7 @@ function assertConnectingState(expectedTokenFingerprint?: string): void {
 export async function connectClient(
   options: ConnectOptions,
   deps: ClientConnectDeps = {},
-): Promise<OcxClientConnectionConfig> {
+): Promise<OccxClientConnectionConfig> {
   let serverUrl = "";
   let managementUrl = "";
   let issued: IssuedClientKey | null = null;
@@ -583,12 +583,12 @@ export async function connectClient(
     }
 
     const now = (deps.now ?? (() => new Date()))().toISOString();
-    const connection: OcxClientConnectionConfig = {
+    const connection: OccxClientConnectionConfig = {
       serverUrl,
       managementUrl,
       managementTransport: options.managementTransport,
       selectedClients: [...options.selectedClients],
-      tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+      tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       apiKeyId: issued.id,
       tokenFingerprint: persisted.fingerprint,
       protocolVersion: 1,
@@ -721,7 +721,7 @@ export async function syncConnectedClient(
  * Still ownership-checked first: a catalog the user edited or replaced since connect is
  * theirs, and `changed` refuses rather than overwriting it.
  */
-function restorePriorCatalog(connection: OcxClientConnectionConfig): "removed" | "restored" | "absent" | "changed" {
+function restorePriorCatalog(connection: OccxClientConnectionConfig): "removed" | "restored" | "absent" | "changed" {
   if (!existsSync(DEFAULT_CATALOG_PATH)) return "absent";
   try {
     const body = validLocalCatalog();
@@ -747,12 +747,12 @@ function disconnectAtLeast(receipt: DesktopDisconnectReceipt, phase: DesktopDisc
   return DISCONNECT_PHASES.indexOf(receipt.phase) >= DISCONNECT_PHASES.indexOf(phase);
 }
 
-function catalogIsRecordedPrior(connection: OcxClientConnectionConfig, snapshot: CatalogSnapshot): boolean {
+function catalogIsRecordedPrior(connection: OccxClientConnectionConfig, snapshot: CatalogSnapshot): boolean {
   return snapshot.kind === "file" && !!connection.priorCatalog
     && snapshot.fingerprint === sha256(Buffer.from(connection.priorCatalog, "base64").toString("utf8"));
 }
 
-function preflightDisconnectCatalog(connection: OcxClientConnectionConfig, keepCatalog: boolean): void {
+function preflightDisconnectCatalog(connection: OccxClientConnectionConfig, keepCatalog: boolean): void {
   const snapshot = catalogSnapshot();
   if (!keepCatalog && snapshot.kind === "file"
     && !catalogMatchesFingerprint(snapshot.body, connection.catalogFingerprint)
@@ -770,7 +770,7 @@ function verifyDisconnectCatalog(receipt: DesktopDisconnectReceipt): void {
   }
 }
 
-function restoreConnectedCodex(connection: OcxClientConnectionConfig): void {
+function restoreConnectedCodex(connection: OccxClientConnectionConfig): void {
   if (!connection.selectedClients.includes("codex")) return;
   const owner = journalOwner();
   if (owner && owner.kind === "client" && owner.apiKeyId !== connection.apiKeyId) {
@@ -802,7 +802,7 @@ export async function disconnectClient(
       throw new Error("client_disconnect_expected_owner_changed");
     }
     let receipt = previous;
-    let connection: OcxClientConnectionConfig | null = null;
+    let connection: OccxClientConnectionConfig | null = null;
     if (state.kind === "connected") {
       connection = state.value;
       if (connection.pendingOperation) throw new Error("client_rotation_recovery_required");
@@ -843,7 +843,7 @@ export async function disconnectClient(
     }
     let receipt = read.value;
     const state = readClientConnectionState();
-    let connection: OcxClientConnectionConfig | null = null;
+    let connection: OccxClientConnectionConfig | null = null;
     if (state.kind === "connected") {
       if (!sameClientConnectionOwner(state.value, receipt.owner) || state.value.pendingOperation
         || state.value.tokenFingerprint !== receipt.tokenFingerprint) throw new Error("client_disconnect_owner_changed");
@@ -908,7 +908,7 @@ export async function disconnectClient(
  * Drop the cached hub-state document (#4236).
  *
  * It is derived data from a connection that no longer exists, and it is owner-stamped, so a
- * reader would reject it anyway — but leaving it behind means `<OPENCODEX_HOME>/hub-state.json`
+ * reader would reject it anyway — but leaving it behind means `<OPENCCX_HOME>/hub-state.json`
  * keeps naming the previous hub's providers and logins on a machine that is no longer connected
  * to anything, which is exactly the wrong artifact to leave where someone might read it.
  *

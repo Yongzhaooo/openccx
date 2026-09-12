@@ -22,16 +22,16 @@ function installScratchHome(): void {
   // runners: hardenConfigDir() uses the async one, so a sync-only stub still spawned icacls.
   setIcaclsRunnerForTests(() => ICACLS_OK);
   setAsyncIcaclsRunnerForTests(async () => ICACLS_OK);
-  TEST_DIR = mkdtempSync(join(tmpdir(), "ocx-codex-accounts-"));
+  TEST_DIR = mkdtempSync(join(tmpdir(), "occx-codex-accounts-"));
   ACCOUNTS_PATH = join(TEST_DIR, "codex-accounts.json");
-  process.env.OPENCODEX_HOME = TEST_DIR;
+  process.env.OPENCCX_HOME = TEST_DIR;
 }
 
 async function removeScratchHome(): Promise<void> {
   await flushConfigDirHardeningForTests();
   setIcaclsRunnerForTests(null);
   setAsyncIcaclsRunnerForTests(null);
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
   if (TEST_DIR) removeTreeWithRetry(TEST_DIR);
   TEST_DIR = "";
 }

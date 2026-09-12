@@ -10,7 +10,7 @@ import {
 } from "../../src/combos";
 import { comboFailureCooldownScope, comboFailureDecision } from "../../src/combos/failover";
 import { adapterFailureFromMessage, inferHttpStatusFromAdapterMessage } from "../../src/lib/errors";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Cooldown scope and hop/stop verdicts must match a failure's actual blast radius. Before this
@@ -19,7 +19,7 @@ import type { OcxConfig } from "../../src/types";
  * map at all, so a target cooled a moment earlier was picked again immediately.
  */
 
-function comboConfig(): OcxConfig {
+function comboConfig(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",

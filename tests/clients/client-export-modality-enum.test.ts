@@ -9,7 +9,7 @@ import {
   type OpencodeGeneratedConfig,
   type PiGeneratedConfig,
 } from "../../src/clients/config-export";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 /**
  * Sibling of catalog-input-modality-enum.test.ts, whose incident this repeats
@@ -27,12 +27,12 @@ import type { OcxConfig } from "../../src/types";
  * was broken, which is why the whole-catalog assertion at the bottom exists.
  */
 
-const CONFIG: OcxConfig = {
+const CONFIG: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 function ctx(models: ExportModel[]): ExportContext {
   return { baseUrl: "http://127.0.0.1:10100/v1", models, config: CONFIG };
@@ -68,7 +68,7 @@ const MIXED: ExportModel = {
 };
 
 /**
- * Reachable three ways: `ocx models add --modalities audio` (src/cli/models.ts),
+ * Reachable three ways: `occx models add --modalities audio` (src/cli/models.ts),
  * POST /api/custom-models (model-routes.ts ALLOWED_INPUT_MODALITIES), and
  * provider discovery returning an audio-only list.
  */

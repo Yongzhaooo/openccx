@@ -1,5 +1,5 @@
 /**
- * `ocx export` CLI surface (devlog 260731_client_config_export/020 accept criteria).
+ * `occx export` CLI surface (devlog 260731_client_config_export/020 accept criteria).
  *
  * The serializers themselves are covered by tests/config/client-config-export.test.ts; this file
  * covers only what the CLI boundary owns: stdout purity under --json, the human framing,
@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { handleExportCommand, exportModelsFromProxyRows } from "../../src/cli/export-command";
 import { resetCodexModelEntitlementCacheForTests } from "../../src/codex/model-entitlements";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
@@ -24,14 +24,14 @@ const cliPath = join(repoRoot, "src", "cli", "index.ts");
 const servers: Array<ReturnType<typeof Bun.serve>> = [];
 const tempDirs: string[] = [];
 
-function config(extra?: Partial<OcxConfig>): OcxConfig {
+function config(extra?: Partial<OccxConfig>): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** Rows in the shape GET /api/models actually returns, including a disabled one. */
@@ -65,7 +65,7 @@ function fakeProxy(rows: unknown = ROWS) {
   return { port: server.port, baseUrl: `http://127.0.0.1:${server.port}` };
 }
 
-function managementProxy(managementConfig: OcxConfig) {
+function managementProxy(managementConfig: OccxConfig) {
   const server = Bun.serve({
     port: 0,
     async fetch(req) {
@@ -79,7 +79,7 @@ function managementProxy(managementConfig: OcxConfig) {
 }
 
 function tempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-export-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-export-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -111,7 +111,7 @@ function stdout(): string {
   return logs.map(line => `${line}\n`).join("");
 }
 
-async function run(args: string[], extra: { baseUrl: string; config?: OcxConfig }) {
+async function run(args: string[], extra: { baseUrl: string; config?: OccxConfig }) {
   const code = await handleExportCommand(args, {
     baseUrl: extra.baseUrl,
     configImpl: () => extra.config ?? config(),
@@ -119,15 +119,15 @@ async function run(args: string[], extra: { baseUrl: string; config?: OcxConfig 
   return { code, stdout: stdout(), stderr: errors.join("\n") };
 }
 
-describe("ocx export --json (accept criterion 1)", () => {
+describe("occx export --json (accept criterion 1)", () => {
   test("the real /api/models handler refreshes expired GPT-5.6 entitlements before export", async () => {
-    const oldOcxHome = process.env.OPENCODEX_HOME;
+    const oldOccxHome = process.env.OPENCCX_HOME;
     const oldCodexHome = process.env.CODEX_HOME;
     const originalFetch = globalThis.fetch;
     const root = tempDir();
     const codexHome = join(root, "codex");
     mkdirSync(codexHome, { recursive: true });
-    process.env.OPENCODEX_HOME = join(root, "opencodex");
+    process.env.OPENCCX_HOME = join(root, "openccx");
     process.env.CODEX_HOME = codexHome;
     writeFileSync(join(codexHome, "auth.json"), JSON.stringify({
       tokens: { access_token: "export-token", account_id: "export-main" },
@@ -168,15 +168,15 @@ describe("ocx export --json (accept criterion 1)", () => {
         provider: Record<string, { models: Record<string, unknown> }>;
       };
       expect(entitlementFetches).toBe(1);
-      expect(Object.keys(parsed.provider.opencodex!.models)).toEqual(expect.arrayContaining([
+      expect(Object.keys(parsed.provider.openccx!.models)).toEqual(expect.arrayContaining([
         "gpt-5.6-sol",
         "gpt-5.6-terra",
         "gpt-5.6-luna",
       ]));
     } finally {
       globalThis.fetch = originalFetch;
-      if (oldOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = oldOcxHome;
+      if (oldOccxHome === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = oldOccxHome;
       if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
       else process.env.CODEX_HOME = oldCodexHome;
     }
@@ -200,8 +200,8 @@ describe("ocx export --json (accept criterion 1)", () => {
     const proxy = fakeProxy();
     const result = await run(["--client", "opencode", "--json"], { baseUrl: proxy.baseUrl });
     const parsed = JSON.parse(result.stdout) as { provider: Record<string, { options: { baseURL: string } }> };
-    expect(parsed.provider.opencodex!.options.baseURL).toBe(`http://127.0.0.1:${proxy.port}/v1`);
-    expect(parsed.provider.opencodex!.options.baseURL).not.toContain(":10100/");
+    expect(parsed.provider.openccx!.options.baseURL).toBe(`http://127.0.0.1:${proxy.port}/v1`);
+    expect(parsed.provider.openccx!.options.baseURL).not.toContain(":10100/");
   });
 
   test("OpenCode export keeps the live port when saved listener settings point at a future port", async () => {
@@ -218,21 +218,21 @@ describe("ocx export --json (accept criterion 1)", () => {
     });
     expect(code).toBe(0);
     const parsed = JSON.parse(stdout()) as { provider: Record<string, { options: { baseURL: string } }> };
-    expect(parsed.provider.opencodex!.options.baseURL).toBe("http://127.0.0.1:10100/v1");
-    expect(parsed.provider.opencodex!.options.baseURL).not.toContain(":10999/");
+    expect(parsed.provider.openccx!.options.baseURL).toBe("http://127.0.0.1:10100/v1");
+    expect(parsed.provider.openccx!.options.baseURL).not.toContain(":10999/");
   });
 
   test("disabled rows never reach the exported config", async () => {
     const proxy = fakeProxy();
     const result = await run(["--client", "pi", "--json"], { baseUrl: proxy.baseUrl });
     const parsed = JSON.parse(result.stdout) as { providers: Record<string, { models: Array<{ id: string }> }> };
-    const ids = parsed.providers.opencodex!.models.map(model => model.id);
+    const ids = parsed.providers.openccx!.models.map(model => model.id);
     expect(ids).not.toContain("banned/hidden");
     expect(ids).toEqual(["anthropic/claude-opus-5", "custom/no-context", "gpt-5.6-luna"]);
   });
 });
 
-describe("ocx export human output (accept criterion 2)", () => {
+describe("occx export human output (accept criterion 2)", () => {
   test("leads with the JSON, then destination, merge warning, env line, and counts", async () => {
     const proxy = fakeProxy();
     const result = await run(["--client", "opencode"], { baseUrl: proxy.baseUrl });
@@ -241,7 +241,7 @@ describe("ocx export human output (accept criterion 2)", () => {
     expect(result.stdout.startsWith("{\n")).toBe(true);
     expect(result.stdout).toContain(join("opencode", "opencode.json"));
     expect(result.stdout).toContain("Merge this generated configuration into that file; do not replace it.");
-    expect(result.stdout).toContain("export OPENCODEX_OPENCODE_API_KEY=");
+    expect(result.stdout).toContain("export OPENCCX_OPENCODE_API_KEY=");
     // Three visible models; only `custom/no-context` lacks an authoritative window.
     expect(result.stdout).toContain("3 models; 1 omit context limits");
   });
@@ -253,12 +253,12 @@ describe("ocx export human output (accept criterion 2)", () => {
     // Pi resolves `apiKey` before building its model list and hides the provider
     // when an env reference is unset, so a loopback bind ships the non-secret
     // placeholder instead of an env var the user was never told to export.
-    expect(result.stdout).toContain("opencodex-loopback");
-    expect(result.stdout).not.toContain("export OPENCODEX_API_KEY=");
+    expect(result.stdout).toContain("openccx-loopback");
+    expect(result.stdout).not.toContain("export OPENCCX_API_KEY=");
   });
 });
 
-describe("ocx export --out (accept criterion 3)", () => {
+describe("occx export --out (accept criterion 3)", () => {
   test("writes the config to the given path", async () => {
     const proxy = fakeProxy();
     const target = join(tempDir(), "opencode.json");
@@ -293,7 +293,7 @@ describe("ocx export --out (accept criterion 3)", () => {
 
     expect(result.code).toBe(0);
     const written = JSON.parse(readFileSync(target, "utf8")) as { provider: Record<string, unknown> };
-    expect(Object.keys(written.provider)).toEqual(["opencodex"]);
+    expect(Object.keys(written.provider)).toEqual(["openccx"]);
   });
 
   test("without --out nothing is written to the real destination path", async () => {
@@ -308,7 +308,7 @@ describe("ocx export --out (accept criterion 3)", () => {
   });
 });
 
-describe("ocx export argument validation (accept criterion 4)", () => {
+describe("occx export argument validation (accept criterion 4)", () => {
   test("an unknown --client names every valid value", async () => {
     const proxy = fakeProxy();
     const result = await run(["--client", "cursor"], { baseUrl: proxy.baseUrl });
@@ -329,18 +329,18 @@ describe("ocx export argument validation (accept criterion 4)", () => {
     const yamlText = readFileSync(yamlTarget, "utf8");
     expect(yamlText.startsWith("providers:")).toBe(true);
     const parsedYaml = Bun.YAML.parse(yamlText) as {
-      providers: { opencodex: { models: Record<string, { supports_vision?: boolean }> } };
+      providers: { openccx: { models: Record<string, { supports_vision?: boolean }> } };
     };
-    expect(parsedYaml).toHaveProperty("providers.opencodex");
-    expect(parsedYaml.providers.opencodex.models["gpt-5.6-luna"]).toEqual({ supports_vision: true });
-    expect(parsedYaml.providers.opencodex.models["anthropic/claude-opus-5"]).toEqual({ supports_vision: false });
-    expect(parsedYaml.providers.opencodex.models["custom/no-context"]).toEqual({});
+    expect(parsedYaml).toHaveProperty("providers.openccx");
+    expect(parsedYaml.providers.openccx.models["gpt-5.6-luna"]).toEqual({ supports_vision: true });
+    expect(parsedYaml.providers.openccx.models["anthropic/claude-opus-5"]).toEqual({ supports_vision: false });
+    expect(parsedYaml.providers.openccx.models["custom/no-context"]).toEqual({});
 
     const tomlTarget = join(tempDir(), "kimi-config.toml");
     const toml = await run(["--client", "kimi", "--out", tomlTarget], { baseUrl: proxy.baseUrl });
     expect(toml.code).toBe(0);
     const tomlText = readFileSync(tomlTarget, "utf8");
-    expect(Bun.TOML.parse(tomlText)).toHaveProperty("providers.opencodex");
+    expect(Bun.TOML.parse(tomlText)).toHaveProperty("providers.openccx");
     // Exactly one trailing newline, for every format.
     expect(tomlText.endsWith("\n")).toBe(true);
     expect(tomlText.endsWith("\n\n")).toBe(false);
@@ -361,14 +361,14 @@ describe("ocx export argument validation (accept criterion 4)", () => {
   });
 });
 
-describe("ocx export with no live proxy (accept criterion 5)", () => {
+describe("occx export with no live proxy (accept criterion 5)", () => {
   /**
-   * Run through the real dispatcher in a subprocess with an isolated OPENCODEX_HOME whose
+   * Run through the real dispatcher in a subprocess with an isolated OPENCCX_HOME whose
    * configured port has no listener. In-process injection cannot cover this: `findLiveProxy`
    * reads the pid file and config directly, so a proxy running on the developer's machine
    * would be discovered and the assertion would pass for the wrong reason.
    */
-  test("fails through the runtime-api error naming ocx start, emitting no config", () => {
+  test("fails through the runtime-api error naming occx start, emitting no config", () => {
     const probe = Bun.serve({ port: 0, fetch: () => new Response("") });
     const deadPort = probe.port;
     probe.stop(true);
@@ -388,13 +388,13 @@ describe("ocx export with no live proxy (accept criterion 5)", () => {
 
     const result = spawnSync(process.execPath, [cliPath, "export", "--client", "opencode", "--json"], {
       cwd: repoRoot,
-      env: { ...process.env, OPENCODEX_HOME: home },
+      env: { ...process.env, OPENCCX_HOME: home },
       encoding: "utf8",
     });
 
     expect(result.status).not.toBe(0);
     expect(result.stdout).toBe("");
-    expect(result.stderr).toContain("ocx start");
+    expect(result.stderr).toContain("occx start");
     // Routed by the dispatcher, not swallowed by the unknown-command branch.
     expect(result.stderr).not.toContain("Unknown command");
   }, { timeout: 30_000 });
@@ -407,23 +407,23 @@ describe("ocx export with no live proxy (accept criterion 5)", () => {
   });
 });
 
-describe("ocx export never serializes a key (accept criterion 6)", () => {
-  test("no stdout path contains an ocx_ token even when config carries one", async () => {
+describe("occx export never serializes a key (accept criterion 6)", () => {
+  test("no stdout path contains an occx_ token even when config carries one", async () => {
     const proxy = fakeProxy();
-    const withKey = config({ apiKeys: [{ id: "k1", name: "default", key: "ocx_liveSecretValue" }] } as Partial<OcxConfig>);
+    const withKey = config({ apiKeys: [{ id: "k1", name: "default", key: "occx_liveSecretValue" }] } as Partial<OccxConfig>);
     for (const [args, envRef] of [
-      [["--client", "opencode"], "{env:OPENCODEX_OPENCODE_API_KEY}"],
-      [["--client", "opencode", "--json"], "{env:OPENCODEX_OPENCODE_API_KEY}"],
+      [["--client", "opencode"], "{env:OPENCCX_OPENCODE_API_KEY}"],
+      [["--client", "opencode", "--json"], "{env:OPENCCX_OPENCODE_API_KEY}"],
       // Pi ships the non-secret loopback placeholder rather than an env reference;
       // the property under test is unchanged — no real key ever reaches stdout.
-      [["--client", "pi"], "opencodex-loopback"],
-      [["--client", "pi", "--json"], "opencodex-loopback"],
+      [["--client", "pi"], "openccx-loopback"],
+      [["--client", "pi", "--json"], "openccx-loopback"],
     ] as Array<[string[], string]>) {
       logs = [];
       errors = [];
       const result = await run(args, { baseUrl: proxy.baseUrl, config: withKey });
       expect(result.code).toBe(0);
-      expect(result.stdout).not.toContain("ocx_");
+      expect(result.stdout).not.toContain("occx_");
       // The env REFERENCE is present; the value it stands for never is.
       expect(result.stdout).toContain(envRef);
     }
@@ -451,7 +451,7 @@ describe("export row filtering", () => {
 
 describe("export allowlist parity", () => {
   test("the first export rereads selection completed during model discovery", async () => {
-    const previous = process.env.OPENCODEX_HOME;
+    const previous = process.env.OPENCCX_HOME;
     const home = tempDir();
     const path = join(home, "config.json");
     const pending = config({
@@ -469,7 +469,7 @@ describe("export allowlist parity", () => {
     expect(exportModelsFromProxyRows(rows, pending)).toEqual([]);
     let requests = 0;
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       writeFileSync(path, JSON.stringify(pending));
       const code = await handleExportCommand(["--client", "pi", "--json"], {
         baseUrl: "http://127.0.0.1:10123",
@@ -483,17 +483,17 @@ describe("export allowlist parity", () => {
       });
       expect(code).toBe(0);
       expect(requests).toBe(1);
-      expect(JSON.parse(stdout()).providers.opencodex.models.map((row: { id: string }) => row.id))
+      expect(JSON.parse(stdout()).providers.openccx.models.map((row: { id: string }) => row.id))
         .toEqual(["pending/chosen"]);
       expect(pending.providers.pending!.initialModelSelection!.status).toBe("pending");
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
     }
   });
 
   test("post-discovery filtering retains injected config provenance instead of reading local policy", async () => {
-    const previous = process.env.OPENCODEX_HOME;
+    const previous = process.env.OPENCCX_HOME;
     const home = tempDir();
     const path = join(home, "config.json");
     const local = config({ providers: { custom: {
@@ -508,7 +508,7 @@ describe("export allowlist parity", () => {
     let resolved = remote;
     const events: string[] = [];
     try {
-      process.env.OPENCODEX_HOME = home;
+      process.env.OPENCCX_HOME = home;
       const localBytes = JSON.stringify(local);
       writeFileSync(path, localBytes);
       const code = await handleExportCommand(["--client", "pi", "--json"], {
@@ -522,12 +522,12 @@ describe("export allowlist parity", () => {
       });
       expect(code).toBe(0);
       expect(events).toEqual(["fetch", "config"]);
-      expect(JSON.parse(stdout()).providers.opencodex.models.map((row: { id: string }) => row.id))
+      expect(JSON.parse(stdout()).providers.openccx.models.map((row: { id: string }) => row.id))
         .toEqual(["custom/remote-only"]);
       expect(readFileSync(path, "utf8")).toBe(localBytes);
     } finally {
-      if (previous === undefined) delete process.env.OPENCODEX_HOME;
-      else process.env.OPENCODEX_HOME = previous;
+      if (previous === undefined) delete process.env.OPENCCX_HOME;
+      else process.env.OPENCCX_HOME = previous;
     }
   });
 
@@ -565,10 +565,10 @@ describe("export allowlist parity", () => {
 describe("Raycast export uses the live management admission policy", () => {
   for (const secondary of [false, true]) {
     test(`live wildcard bind with secondary=${secondary} wins over saved loopback config`, async () => {
-      const oldHome = process.env.OPENCODEX_HOME;
+      const oldHome = process.env.OPENCCX_HOME;
       const oldCodexHome = process.env.CODEX_HOME;
       const root = tempDir();
-      process.env.OPENCODEX_HOME = join(root, "ocx");
+      process.env.OPENCCX_HOME = join(root, "occx");
       process.env.CODEX_HOME = join(root, "codex");
       mkdirSync(process.env.CODEX_HOME, { recursive: true });
       try {
@@ -601,8 +601,8 @@ describe("Raycast export uses the live management admission policy", () => {
           expect(readFileSync(out, "utf8")).toBe("keep existing export\n");
         }
       } finally {
-        if (oldHome === undefined) delete process.env.OPENCODEX_HOME;
-        else process.env.OPENCODEX_HOME = oldHome;
+        if (oldHome === undefined) delete process.env.OPENCCX_HOME;
+        else process.env.OPENCCX_HOME = oldHome;
         if (oldCodexHome === undefined) delete process.env.CODEX_HOME;
         else process.env.CODEX_HOME = oldCodexHome;
       }

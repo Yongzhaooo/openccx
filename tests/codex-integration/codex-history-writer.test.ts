@@ -52,7 +52,7 @@ function makeTarget(prefix: string): { codexHome: string; target: HistoryWriteTa
  * leaked past its callback still type-checks.
  */
 test("every history writer refuses a permit that is not live", () => {
-  const { codexHome, target } = makeTarget("ocx-history-writer-dead-");
+  const { codexHome, target } = makeTarget("occx-history-writer-dead-");
 
   let leaked!: HistoryWritePermit;
   withHistoryWriteSerialization(codexHome, target.canonicalStateDbPath, permit => {
@@ -73,8 +73,8 @@ test("every history writer refuses a permit that is not live", () => {
 });
 
 test("a live permit for another state database cannot write this one", () => {
-  const first = makeTarget("ocx-history-writer-a-");
-  const second = makeTarget("ocx-history-writer-b-");
+  const first = makeTarget("occx-history-writer-a-");
+  const second = makeTarget("occx-history-writer-b-");
 
   const outcome = withHistoryWriteSerialization(
     first.codexHome,
@@ -90,16 +90,16 @@ test("a live permit for another state database cannot write this one", () => {
 });
 
 test("a writer holding a live permit performs the real transition", () => {
-  const { codexHome, target } = makeTarget("ocx-history-writer-live-");
+  const { codexHome, target } = makeTarget("occx-history-writer-live-");
   const rollout = join(codexHome, "rollout.jsonl");
   writeFileSync(rollout, `${JSON.stringify({
     type: "session_meta",
-    payload: { id: "thread-1", model_provider: "opencodex", source: "exec" },
+    payload: { id: "thread-1", model_provider: "openccx", source: "exec" },
   })}\n`);
 
   const db = new Database(target.canonicalStateDbPath);
   db.run(
-    "INSERT INTO threads (id, rollout_path, model_provider, source, has_user_event, first_user_message) VALUES (?, ?, 'opencodex', 'exec', 1, 'hi')",
+    "INSERT INTO threads (id, rollout_path, model_provider, source, has_user_event, first_user_message) VALUES (?, ?, 'openccx', 'exec', 1, 'hi')",
     ["thread-1", rollout],
   );
   db.close();

@@ -46,7 +46,7 @@ export function minimalFabricChildEnv(scratchRoot: string): Record<string, strin
   const env: Record<string, string> = {
     TZ: "UTC",
     NO_COLOR: "1",
-    OCX_FABRIC_SCRATCH_ROOT: scratchRoot,
+    OCCX_FABRIC_SCRATCH_ROOT: scratchRoot,
     // Executors commonly use os.tmpdir() through libraries they import. Keep
     // those writes inside the same scratch boundary instead of forwarding the
     // user's ambient temp directory (Windows) or falling back to /tmp (POSIX).
@@ -322,7 +322,7 @@ export async function runIsolatedFabricProducer(request: IsolateRequest): Promis
 
 /** Internal test seam. Production callers cannot arm it without the test-home guard. */
 export function setFabricProducerIsolationLimitsForTests(limits?: FabricProducerIsolationLimits): void {
-  if (process.env.OCX_TEST_HOME_GUARD !== "1") {
+  if (process.env.OCCX_TEST_HOME_GUARD !== "1") {
     throw new Error("fabric isolation limits can only be overridden by the test harness");
   }
   if (limits && (

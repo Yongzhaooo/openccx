@@ -11,7 +11,7 @@ import {
 } from "../../src/providers/opencode-zen-rate-limit";
 import { resolveClientRetryAfter } from "../../src/lib/retry-after";
 import { safeConfigDTO } from "../../src/server/auth-cors";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 describe("opencode-zen rate-limit guidance (#1145)", () => {
   test("registry note documents the observed short-window RPM", () => {
@@ -42,7 +42,7 @@ describe("opencode-zen rate-limit guidance (#1145)", () => {
           apiKey: "zen-key",
         },
       },
-    } as OcxConfig) as {
+    } as OccxConfig) as {
       providers: Record<string, { note?: string }>;
     };
 
@@ -143,7 +143,7 @@ describe("opencode-zen rate-limit guidance (#1145)", () => {
 
 /**
  * Zen closed the keyless tier to non-OpenCode clients. The gate is the mere presence of
- * `x-opencode-session`, so opencodex could pass it by inventing a value; it does not, and the
+ * `x-opencode-session`, so openccx could pass it by inventing a value; it does not, and the
  * user-facing failure has to say that rather than leaking `MissingSessionID` through.
  */
 describe("opencode-free keyless tier lock-in (#4121)", () => {
@@ -189,7 +189,7 @@ describe("opencode-free keyless tier lock-in (#4121)", () => {
     expect(enriched).toContain("opencode-zen");
     expect(enriched).toContain("https://opencode.ai/auth");
     expect(enriched).toContain("https://opencode.ai/docs/zen/");
-    // The user is told opencodex declines to impersonate, not that the request merely failed.
+    // The user is told openccx declines to impersonate, not that the request merely failed.
     expect(enriched).toContain("does not send a fabricated OpenCode session header");
   });
 

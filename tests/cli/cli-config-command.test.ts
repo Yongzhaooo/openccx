@@ -9,7 +9,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const repoRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
 const cliPath = join(repoRoot, "src", "cli", "index.ts");
-const isolatedCodexHome = mkdtempSync(join(tmpdir(), "ocx-config-codex-home-"));
+const isolatedCodexHome = mkdtempSync(join(tmpdir(), "occx-config-codex-home-"));
 
 setDefaultTimeout(SPAWN_BUDGET_MS);
 
@@ -23,7 +23,7 @@ function runCli(args: string[], env: Record<string, string> = {}) {
 }
 
 function freshConfig() {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-config-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-config-"));
   const config = {
     port: 10100,
     providers: {
@@ -47,11 +47,11 @@ function freshConfig() {
   return dir;
 }
 
-describe("ocx config display redaction", () => {
+describe("occx config display redaction", () => {
   test("config show --json never prints secret-shaped modelCosts keys", () => {
     const dir = freshConfig();
     try {
-      const result = runCli(["config", "show", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["config", "show", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).not.toContain("sk-abcdef1234567890");
       const parsed = JSON.parse(result.stdout);
@@ -66,7 +66,7 @@ describe("ocx config display redaction", () => {
   test("config get providers.<name>.modelCosts --json drops secret-shaped keys", () => {
     const dir = freshConfig();
     try {
-      const result = runCli(["config", "get", "providers.blsc.modelCosts", "--json"], { OPENCODEX_HOME: dir });
+      const result = runCli(["config", "get", "providers.blsc.modelCosts", "--json"], { OPENCCX_HOME: dir });
       expect(result.status).toBe(0);
       expect(result.stdout).not.toContain("sk-abcdef1234567890");
       const parsed = JSON.parse(result.stdout);

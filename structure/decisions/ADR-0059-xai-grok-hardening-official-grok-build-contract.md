@@ -6,7 +6,7 @@
 
 - 목적과 의도: Prevent Grok Build from classifying a visibly streamed answer as empty and replaying
   the same billable turn when the terminal snapshot is sparse.
-- 기존 구현 및 제약 조건: OpenCodex already reconstructed missing terminal output for provider
+- 기존 구현 및 제약 조건: Openccx already reconstructed missing terminal output for provider
   opt-ins, but preserved explicit empty arrays; Grok Build discarded ordinary completed-item events
   when constructing its final conversation response.
 - 검토한 주요 대안: Change every caller's empty-array semantics; accept a turn merely because a

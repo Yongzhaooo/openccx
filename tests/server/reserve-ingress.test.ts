@@ -9,7 +9,7 @@ import { SERVER_BUDGET_MS } from "../helpers/test-budget";
 type Credential = "dedicated" | "bearer" | "external";
 function headers(credential: Credential): Record<string, string> {
   if (credential === "bearer") return { authorization: `Bearer ${PROXY_KEY}` };
-  return { "x-opencodex-api-key": PROXY_KEY,
+  return { "x-openccx-api-key": PROXY_KEY,
     authorization: `Bearer ${credential === "external" ? EXTERNAL : ACCESS}`,
     "chatgpt-account-id": credential === "external" ? "external-fixture-account" : ACCOUNT };
 }
@@ -121,13 +121,13 @@ describe("Reserve eligibility trusts receiving-listener admission", () => {
       const publicResult = await fixture.request("public", "responses", "gpt-reserve", {
         ...headers("external"), host: new URL(fixture.publicBase).host,
         "x-forwarded-for": "127.0.0.1", "x-forwarded-host": "localhost",
-        "x-opencodex-admission-source": "loopback",
+        "x-openccx-admission-source": "loopback",
       }, spoof);
       expect(publicResult.status).toBe(200);
       expect(delta(fixture.counters, before)).toMatchObject({ wham: 0, credential: 0, inference: 1 });
       const localBefore = snapshot(fixture.counters);
       const localResult = await fixture.request("local", "responses", "gpt-reserve", {
-        ...headers("dedicated"), "x-opencodex-admission-source": "dedicated",
+        ...headers("dedicated"), "x-openccx-admission-source": "dedicated",
       }, { ...spoof, admission: { kind: "environment", source: "dedicated" }, codexDesktopAuthless: false });
       expect(localResult.status).toBe(429);
       expect(delta(fixture.counters, localBefore)).toMatchObject({ wham: 1, inference: 0 });
@@ -207,7 +207,7 @@ describe("Reserve eligibility trusts receiving-listener admission", () => {
 });
 
 describe("terminal routed vision helpers cannot spend Reserve", () => {
-  const terminal = { "x-opencodex-vision-describe": "1" };
+  const terminal = { "x-openccx-vision-describe": "1" };
 
   test.each([
     ["chat", "openai/gpt-reserve"], ["chat", "main/gpt-reserve"],

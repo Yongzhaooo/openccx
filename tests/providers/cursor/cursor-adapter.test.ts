@@ -14,7 +14,7 @@ import {
 } from "../../../src/adapters/cursor/checkpoint-store";
 import { create, toBinary } from "@bufbuild/protobuf";
 import { ConversationStateStructureSchema } from "../../../src/adapters/cursor/gen/agent_pb";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 import type { CursorClientMessage, CursorRunRequest, CursorServerMessage } from "../../../src/adapters/cursor/types";
 import type { CursorTransportFactoryInput } from "../../../src/adapters/cursor/transport";
 import { withTestTranslatorBudget } from "../../helpers/translator-budget";
@@ -23,12 +23,12 @@ import { CursorRootEnvelopeLimitError } from "../../../src/adapters/cursor/curso
 const createCursorAdapter = (...args: Parameters<typeof createCursorAdapterProduction>) =>
   withTestTranslatorBudget(createCursorAdapterProduction(...args));
 
-const provider: OcxProviderConfig = {
+const provider: OccxProviderConfig = {
   adapter: "cursor",
   baseUrl: "https://api2.cursor.sh",
 };
 
-const parsed: OcxParsedRequest = {
+const parsed: OccxParsedRequest = {
   modelId: "cursor/auto",
   context: { messages: [] },
   stream: false,
@@ -221,7 +221,7 @@ describe("Cursor adapter live transport", () => {
           writeClient() {},
         }),
       });
-      const body: OcxParsedRequest = {
+      const body: OccxParsedRequest = {
         modelId: "cursor/auto",
         context: { messages: [{ role: "user", content: "hi", timestamp: 1 }] },
         stream: false,
@@ -251,7 +251,7 @@ describe("Cursor adapter live transport", () => {
       },
     });
 
-    const parent: OcxParsedRequest = {
+    const parent: OccxParsedRequest = {
       modelId: "cursor/auto",
       context: { messages: [{ role: "user", content: "hi", timestamp: 1 }] },
       stream: false,
@@ -263,7 +263,7 @@ describe("Cursor adapter live transport", () => {
     expect(captured[0]?.sessionId).toBeTruthy();
     expect(captured[0]?.sessionId).toBe(parent._cursorConversationId);
 
-    const helper: OcxParsedRequest = {
+    const helper: OccxParsedRequest = {
       modelId: "cursor/auto",
       context: { messages: [{ role: "user", content: "summarize", timestamp: 1 }] },
       stream: false,
@@ -316,7 +316,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const events: AdapterEvent[] = [];
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: {
         messages: [
@@ -375,7 +375,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const events: AdapterEvent[] = [];
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: {
         messages: [
@@ -429,7 +429,7 @@ describe("Cursor adapter live transport", () => {
 
     const owner = "app:desktop-recovery-owner";
     const identityScope = "acct-desktop-recovery";
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: {
         messages: [
@@ -490,7 +490,7 @@ describe("Cursor adapter live transport", () => {
         },
       }),
     });
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: { messages: [{ role: "user", content: "retry me", timestamp: 1 }] },
       stream: false,
@@ -533,7 +533,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const events: AdapterEvent[] = [];
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: { messages: [{ role: "user", content: "run a command", timestamp: 1 }] },
       stream: false,
@@ -564,7 +564,7 @@ describe("Cursor adapter live transport", () => {
       rekeyContextUsage: (from, to) => rekeyCalls.push([from, to]),
     });
 
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: {
         messages: [
@@ -617,7 +617,7 @@ describe("Cursor adapter live transport", () => {
       rekeyContextUsage: (from, to) => rekeyCalls.push([from, to]),
     });
 
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/auto",
       context: { messages: [{ role: "user", content: "summarize", timestamp: 1 }] },
       stream: false,
@@ -658,7 +658,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const threadId = "parent-thread-isolate-remember";
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: { messages: [{ role: "user", content: "helper ask", timestamp: 1 }] },
       stream: false,
@@ -695,7 +695,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const events: AdapterEvent[] = [];
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/gpt-5.6-sol",
       context: {
         messages: [
@@ -751,7 +751,7 @@ describe("Cursor adapter live transport", () => {
     });
 
     const events: AdapterEvent[] = [];
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       ...parsed,
       modelId: "cursor/grok-4.6",
       context: { messages: [{ role: "user", content: "hi", timestamp: 1 }] },
@@ -795,7 +795,7 @@ describe("Cursor adapter live transport", () => {
         writeClient() {},
       }),
     });
-    const body: OcxParsedRequest = {
+    const body: OccxParsedRequest = {
       modelId: "cursor/auto",
       context: { messages: [{ role: "user", content: "summarize", timestamp: 1 }] },
       stream: false,

@@ -4,7 +4,7 @@
 // a measurably faster queue than the plain SSE POST path. Measured 2026-08-12
 // KST (same account, same payload, strictly sequential): gpt-5.6-luna TTFT p50
 // ~1.0s over WS vs ~3.9s over SSE. Codex CLI itself defaults to the WS
-// transport; opencodex previously always POSTed SSE, which is where its extra
+// transport; openccx previously always POSTed SSE, which is where its extra
 // 2-3s of TTFT came from.
 //
 // The wrapper only swaps the transport. It dials wss:// with the same headers,

@@ -32,7 +32,7 @@ test("native-alias catalog rows are routed state, never pristine backup input", 
     models: [{
       slug: "gpt-5.6-sol",
       owned_by: "combo",
-      opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+      openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     }],
   })).toBe(true);
 });
@@ -74,7 +74,7 @@ test("disabling a shadowed native row keeps its compatibility combo but removes 
     null, [slug], [aliasModel(slug)], undefined, false, "default", new Set([slug]), ["main"],
     new Set([slug]), new Set([slug]),
   );
-  expect(rows.find(row => row.slug === slug)?.opencodex_catalog_kind).toBe(CODEX_NATIVE_ALIAS_CATALOG_KIND);
+  expect(rows.find(row => row.slug === slug)?.openccx_catalog_kind).toBe(CODEX_NATIVE_ALIAS_CATALOG_KIND);
   expect(rows.find(row => row.slug === `main/${slug}`)).toBeUndefined();
 });
 
@@ -93,7 +93,7 @@ test("transient preservation keeps a native alias without input modalities", () 
     slug,
     display_name: "Nova Sol",
     owned_by: "combo",
-    opencodex_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
+    openccx_catalog_kind: CODEX_NATIVE_ALIAS_CATALOG_KIND,
     visibility: "list",
   };
   const rows = mergeCatalogEntriesForSync(

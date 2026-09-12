@@ -19,14 +19,14 @@ export function domainHash(domain: string, payload: Uint8Array | string): string
 }
 
 export const LAB_DOMAIN = {
-  event: "ocx-lab:event:v1",
-  subject: "ocx-lab:subject:v1",
-  claimSourceManifest: "ocx-lab:claim-source-manifest:v1",
-  scenarioManifest: "ocx-lab:scenario-manifest:v1",
-  suiteManifest: "ocx-lab:suite-manifest:v1",
-  fixture: "ocx-lab:fixture:v1",
-  localFingerprint: "ocx-lab:local-fingerprint:v1",
-  artifactBytes: "ocx-lab:artifact-bytes:v1",
+  event: "occx-lab:event:v1",
+  subject: "occx-lab:subject:v1",
+  claimSourceManifest: "occx-lab:claim-source-manifest:v1",
+  scenarioManifest: "occx-lab:scenario-manifest:v1",
+  suiteManifest: "occx-lab:suite-manifest:v1",
+  fixture: "occx-lab:fixture:v1",
+  localFingerprint: "occx-lab:local-fingerprint:v1",
+  artifactBytes: "occx-lab:artifact-bytes:v1",
 } as const;
 
 export function eventIdForPayload(eventWithoutId: unknown): string {

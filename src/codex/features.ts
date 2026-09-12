@@ -1,9 +1,9 @@
 /**
  * features.ts — codex feature-flag view for $CODEX_HOME/config.toml.
  *
- * Scope boundary: this module mirrors only the flags opencodex has to READ
+ * Scope boundary: this module mirrors only the flags openccx has to READ
  * directly from config.toml:
- *   - `multi_agent_v2`, because opencodex migrates its concurrency value across
+ *   - `multi_agent_v2`, because openccx migrates its concurrency value across
  *     the v1/v2 boundary and exposes the multi-agent config surface;
  *   - `default_mode_request_user_input` (Codex Auth page toggle), because the
  *     management API needs a live reader for the flag it manages.
@@ -14,16 +14,16 @@
  * `code_mode_host` changed from a boolean to a table (it is Stage::Stable and
  * default-enabled upstream), `enable_fanout` and `item_ids` were retired to
  * Stage::Removed ("useless but kept for backward compatibility"), and several
- * under-development flags were added. Delegation is what keeps opencodex out of
+ * under-development flags were added. Delegation is what keeps openccx out of
  * that churn.
  *
  * Used by the catalog v2-gated-ultra policy (devlog/260709_v2_gated_ultra) and the
- * `ocx v2` toggle surface. The FLAG itself is never written here — toggling goes
+ * `occx v2` toggle surface. The FLAG itself is never written here — toggling goes
  * through the official `codex features enable|disable` CLI (format-preserving).
  * The one write this module owns is the numeric
  * `features.multi_agent_v2.max_concurrent_threads_per_session` scalar
  * (setMaxConcurrentThreads): the codex CLI has no persisted setter for nested
- * feature config (`-c` is per-invocation only), so ocx does a scoped,
+ * feature config (`-c` is per-invocation only), so occx does a scoped,
  * EOL-preserving line edit — same practice as codex/inject.ts.
  *
  * CODEX_HOME is resolved at CALL time (activeCodexConfigPath pattern, mirrors
@@ -38,7 +38,7 @@ import { AtomicWriteResidualTempError, AtomicWriteSecretResidualError, atomicWri
 import { forgetEphemeralSecretPath } from "../lib/windows-secret-acl";
 import { CODEX_CONFIG_PATH } from "./paths";
 import { resolveAndPersistCodexRuntime } from "./runtime";
-import { canonicalizeOpenCodexModeHint } from "./multi-agent-mode-policy";
+import { canonicalizeOpenccxModeHint } from "./multi-agent-mode-policy";
 
 /** Upstream codex-rs feature key: allow `request_user_input` in Default mode. */
 export const DEFAULT_MODE_REQUEST_USER_INPUT_FEATURE_KEY = "default_mode_request_user_input";
@@ -286,7 +286,7 @@ export function isDefaultModeRequestUserInputEnabled(configPath?: string): boole
  * TRUE when config.toml still carries `[agents] max_threads` — codex-rs REFUSES to
  * boot with that key while multi_agent_v2 is enabled ("agents.max_threads cannot be
  * set when features.multi_agent_v2 is enabled", core/src/config/mod.rs:1421). The
- * `ocx v2 on` flow warns about it instead of editing config itself.
+ * `occx v2 on` flow warns about it instead of editing config itself.
  */
 export function hasAgentsMaxThreads(configPath?: string): boolean {
   const content = readConfigText(configPath);
@@ -427,7 +427,7 @@ export function setMaxConcurrentThreads(value: number, configPath?: string, migr
   const headerIdx = lines.findIndex(l => headerRe.test(l));
   if (headerIdx === -1) {
     const featuresHeader = lines.findIndex(l => /^\s*\[features\]\s*(?:#.*)?$/.test(l));
-    if (featuresHeader === -1) return { ok: false, error: "multi_agent_v2 feature config not found — enable v2 first (ocx v2 on)" };
+    if (featuresHeader === -1) return { ok: false, error: "multi_agent_v2 feature config not found — enable v2 first (occx v2 on)" };
     let featuresEnd = lines.length;
     for (let i = featuresHeader + 1; i < lines.length; i++) {
       if (/^\s*\[/.test(lines[i])) { featuresEnd = i; break; }
@@ -452,7 +452,7 @@ export function setMaxConcurrentThreads(value: number, configPath?: string, migr
       atomicWriteFile(path, applyEol(lines.join("\n"), eol));
       return { ok: true, changed: true };
     }
-    return { ok: false, error: "multi_agent_v2 feature config not found — enable v2 first (ocx v2 on)" };
+    return { ok: false, error: "multi_agent_v2 feature config not found — enable v2 first (occx v2 on)" };
   }
   let end = lines.length;
   for (let i = headerIdx + 1; i < lines.length; i++) {
@@ -1077,7 +1077,7 @@ export const MODE_HINT_UNSUPPORTED_ERROR =
  */
 export function setMultiAgentModeHintText(value: string | null, configPath?: string): ConfigEditResult {
   // The upstream `multi_agent_mode_hint_text` key is newer than the v2 config
-  // surface opencodex already manages; an older Codex build rejects the unknown
+  // surface openccx already manages; an older Codex build rejects the unknown
   // member (`#[serde(deny_unknown_fields)]`) and fails to start. Probe the
   // installed runtime binary for the key string and refuse the write when the
   // binary provably lacks it. A probe that cannot run (missing binary,
@@ -1092,7 +1092,7 @@ export function setMultiAgentModeHintText(value: string | null, configPath?: str
       };
     }
   }
-  const canonicalValue = value === null ? null : canonicalizeOpenCodexModeHint(value);
+  const canonicalValue = value === null ? null : canonicalizeOpenccxModeHint(value);
   return setV2StringField("multi_agent_mode_hint_text", canonicalValue, configPath);
 }
 
@@ -1177,7 +1177,7 @@ function isNativeExecutable(buf: Buffer): boolean {
 
 /**
  * Candidate native codex binaries to probe. The resolved `command` may be the
- * opencodex shim or the npm JS wrapper (`codex.opencodex-real`), neither of
+ * openccx shim or the npm JS wrapper (`codex.openccx-real`), neither of
  * which embeds the Rust config schema. The real binary ships under the
  * platform package's `vendor/<triple>/bin/codex`; also try adjacent wrappers.
  */
@@ -1197,7 +1197,7 @@ function codexNativeBinaryCandidates(command: string): string[] {
     }
   };
 
-  // Follow the resolved command to its real location. The opencodex shim and
+  // Follow the resolved command to its real location. The openccx shim and
   // the npm JS wrapper resolve to `@openai/codex/bin/codex.js`; the native
   // binary lives in the sibling platform package's vendor directory.
   if (selectedPath) {
@@ -1229,7 +1229,7 @@ function codexNativeBinaryCandidates(command: string): string[] {
   return [...out];
 }
 
-/** Backing paths tied to this exact OCX shim entry in codex-shim.json. */
+/** Backing paths tied to this exact OCCX shim entry in codex-shim.json. */
 function selectedShimBackingPaths(commandPath: string): string[] {
   try {
     const state = JSON.parse(readFileSync(join(getConfigDir(), "codex-shim.json"), "utf8")) as {
@@ -1247,7 +1247,7 @@ function selectedShimBackingPaths(commandPath: string): string[] {
         .filter((value): value is string => typeof value === "string" && value.length > 0 && resolve(value) !== selected);
     }
   } catch {
-    // Not an OCX-owned shim, or no readable state.
+    // Not an OCCX-owned shim, or no readable state.
   }
   return [];
 }
@@ -1357,7 +1357,7 @@ function ensureDisabledV2Config(value: number | null, configPath?: string, migra
  * limit. The active backend's own key wins; the other backend's key is translated
  * across the root-agent slot. Display path only — never throws: a stored value
  * outside the translatable range is returned raw (at that magnitude the ±1 root
- * slot is already below float precision, and crashing `ocx v2 status` or
+ * slot is already below float precision, and crashing `occx v2 status` or
  * `GET /api/v2` is not a price worth paying for a translation that means nothing).
  * Migration code uses `discoverStoredThreadLimit` instead, which keeps provenance.
  */
@@ -1421,7 +1421,7 @@ export function isAtomicResidualError(error: unknown): boolean {
 function applyConfigEditsAtomically(path: string, edit: (tempPath: string) => ConfigEditResult): ConfigEditResult {
   const content = readConfigText(path);
   if (content === null) return { ok: false, error: `config.toml not readable at ${path}` };
-  const tempPath = `${path}.ocx-migration.${process.pid}.${++migrationEditSeq}`;
+  const tempPath = `${path}.occx-migration.${process.pid}.${++migrationEditSeq}`;
   // An inner residual temp (AtomicWriteResidualTempError) keeps its
   // destination-keyed memo: fail-closed while the residual exists.
   let innerResidual = false;

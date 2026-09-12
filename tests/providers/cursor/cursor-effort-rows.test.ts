@@ -19,29 +19,29 @@ import {
 import { handleResponses } from "../../../src/server/responses";
 import { startServer } from "../../../src/server";
 import type { RequestLogContext } from "../../../src/server/request-log";
-import type { OcxConfig } from "../../../src/types";
+import type { OccxConfig } from "../../../src/types";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 import { SERVER_BUDGET_MS } from "../../helpers/test-budget";
 
 setDefaultTimeout(SERVER_BUDGET_MS);
 
-const previousHome = process.env.OPENCODEX_HOME;
+const previousHome = process.env.OPENCCX_HOME;
 let testHome = "";
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-cursor-effort-rows-"));
-  process.env.OPENCODEX_HOME = testHome;
+  testHome = mkdtempSync(join(tmpdir(), "occx-cursor-effort-rows-"));
+  process.env.OPENCCX_HOME = testHome;
 });
 
 afterEach(() => {
   resetCodexModelEntitlementCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
 
-function discoveryConfig(cursorEffortRows?: boolean): OcxConfig {
+function discoveryConfig(cursorEffortRows?: boolean): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -77,7 +77,7 @@ function discoveryConfig(cursorEffortRows?: boolean): OcxConfig {
   };
 }
 
-async function rawModelList(config: OcxConfig): Promise<{ text: string; data: Array<Record<string, unknown>> }> {
+async function rawModelList(config: OccxConfig): Promise<{ text: string; data: Array<Record<string, unknown>> }> {
   saveConfig(config);
   const server = startServer(0, { managementApi: { loadCursorEffortTable: () => null } });
   try {
@@ -115,7 +115,7 @@ function mockChatUpstream(): { server: ReturnType<typeof Bun.serve>; captured: A
   return { server, captured };
 }
 
-function ingressConfig(baseUrl: string): OcxConfig {
+function ingressConfig(baseUrl: string): OccxConfig {
   return {
     port: 0,
     cursorEffortRows: true,
@@ -267,7 +267,7 @@ describe("Cursor effort variant rows", () => {
           model: "claude-fallback-model",
           max_tokens: 128,
           stream: false,
-          system: [{ type: "text", text: "<!-- ocx-route: claude-effort-row-fixture--max -->" }],
+          system: [{ type: "text", text: "<!-- occx-route: claude-effort-row-fixture--max -->" }],
           messages: [{ role: "user", content: "hello" }],
         }),
       }), config, { model: "", provider: "" } as RequestLogContext);

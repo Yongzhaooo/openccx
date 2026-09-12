@@ -19,7 +19,7 @@ describe("startup star prompt", () => {
     expect(pkg.files ?? []).not.toContain("scripts/postinstall.mjs");
   });
 
-  test("ocx start waits for the interactive prompt before sync/injection", async () => {
+  test("occx start waits for the interactive prompt before sync/injection", async () => {
     const cli = await readText("src/cli/index.ts");
     const promptIndex = cli.indexOf("await maybeShowStarPrompt()");
     const syncIndex = cli.indexOf("await syncModelsToCodex(port)");
@@ -38,7 +38,7 @@ describe("startup star prompt", () => {
     expect(prompt).toContain("Star it on GitHub (via gh)?");
   });
 
-  test("an agent driving ocx is told to ask the user instead of answering", async () => {
+  test("an agent driving occx is told to ask the user instead of answering", async () => {
     const prompt = await readText("src/cli/star-prompt.ts");
     const guardIndex = prompt.indexOf("if (isAgentDriven()) {");
     const markerIndex = prompt.indexOf("writeFileSync(marker");
@@ -70,7 +70,7 @@ describe("startup star prompt", () => {
     // Issue #879: the relay is bounded. The agent asks once; it is the CLI that
     // re-arms on a later version, not the agent repeating every reply.
     expect(prompt).toContain("Do NOT repeat the question in later");
-    expect(prompt).toContain("at most once per opencodex version");
+    expect(prompt).toContain("at most once per openccx version");
   });
 
   test("the agent deferral is bounded by a .star-deferred record, never the marker", async () => {
@@ -128,12 +128,12 @@ describe("startup star prompt", () => {
     // header: the admin token is readable by anything running as the user, so a
     // header-shaped check is forgeable by the exact caller this guard refuses.
     expect(routes).toMatch(/principal === "gui-session"/);
-    expect(routes).not.toMatch(/hasBrowserSessionEvidence[\s\S]*?headers\.get\("x-opencodex-csrf-token"\)/);
+    expect(routes).not.toMatch(/hasBrowserSessionEvidence[\s\S]*?headers\.get\("x-openccx-csrf-token"\)/);
   });
 
   test("the consent rule is written down where agents and users read it", async () => {
     // The normative rule lives in AGENTS_INSTALL.md, read by an agent that
-    // INSTALLS or RUNS opencodex. It was moved out of AGENTS.md because that
+    // INSTALLS or RUNS openccx. It was moved out of AGENTS.md because that
     // file is loaded for every code change, and the consent boundary applies to
     // none of them — a development-facing file is the wrong trigger surface.
     const install = await readText("AGENTS_INSTALL.md");
@@ -180,14 +180,14 @@ describe("startup star prompt", () => {
     expect(prompt).not.toMatch(/system\s*prompt|encourage|remind the user/i);
   });
 
-  test("ocx init offers the Codex autostart shim by default", async () => {
+  test("occx init offers the Codex autostart shim by default", async () => {
     const init = await readText("src/cli/init.ts");
 
     expect(init).toContain("Install Codex autostart shim? [Y/n]");
     expect(init).toContain("installCodexShim");
   });
 
-  test("ocx service install gets the prompt too, after the service is up", async () => {
+  test("occx service install gets the prompt too, after the service is up", async () => {
     const service = await readText("src/service.ts");
     const installIndex = service.indexOf("await installServiceSafely(backend, ops.install)");
     const promptIndex = service.indexOf("await maybeShowStarPrompt()");
@@ -204,8 +204,8 @@ describe("startup star prompt", () => {
   test("the service-installed proxy still cannot prompt", async () => {
     const prompt = await readText("src/cli/star-prompt.ts");
 
-    // The supervised child always carries OCX_SERVICE=1; that guard is what makes
+    // The supervised child always carries OCCX_SERVICE=1; that guard is what makes
     // the `service install` call site the only interactive moment for those users.
-    expect(prompt).toContain("if (process.env.OCX_SERVICE ||");
+    expect(prompt).toContain("if (process.env.OCCX_SERVICE ||");
   });
 });

@@ -43,7 +43,7 @@ const SID_PATTERN = /^S-1-(?:\d+-)+\d+$/i;
  * A zh-CN Windows 10 host measured 3.2s for the SID expression and 4.6s for the
  * `Add-Type` LocalAppData expression — per spawn, with a bare
  * `powershell.exe -NoProfile -Command exit` costing ~3s where a typical desktop
- * pays ~150ms — so ordinary spawn jitter breached 8s intermittently and `ocx sync`
+ * pays ~150ms — so ordinary spawn jitter breached 8s intermittently and `occx sync`
  * failed with "Windows effective-account lookup timed out" (#2914).
  *
  * That is the same contention the CI branch was widened for, which is what makes
@@ -106,9 +106,9 @@ function windowsIdentityPowerShellCommand(expression: string): string[] {
   // explicitly UTF-16LE, so Korean and Western profile paths arrive unchanged.
   const deterministicOutput = [
     "$ErrorActionPreference = 'Stop'",
-    `$ocxValue = [string](${expression})`,
-    "$ocxBytes = [System.Text.Encoding]::Unicode.GetBytes($ocxValue)",
-    "[Console]::Out.Write([Convert]::ToBase64String($ocxBytes))",
+    `$occxValue = [string](${expression})`,
+    "$occxBytes = [System.Text.Encoding]::Unicode.GetBytes($occxValue)",
+    "[Console]::Out.Write([Convert]::ToBase64String($occxBytes))",
   ].join("; ");
   return [
     resolveTrustedWindowsPowerShellExe(),
@@ -159,15 +159,15 @@ function windowsLocalAppDataExpression(): string {
     '[DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern int '
     + 'SHGetKnownFolderPath(ref System.Guid id, uint flags, System.IntPtr token, out System.IntPtr path);';
   const statements = [
-    `$ocxShell = Add-Type -MemberDefinition '${signature}'`
-      + " -Name OcxKnownFolder -Namespace OcxIdentity -PassThru",
-    `$ocxFolderId = [System.Guid]'${WINDOWS_LOCAL_APPDATA_FOLDER_ID}'`,
-    "$ocxPathPtr = [System.IntPtr]::Zero",
-    "$ocxHr = $ocxShell::SHGetKnownFolderPath([ref]$ocxFolderId, "
-      + `${WINDOWS_KF_FLAG_DEFAULT_PATH}, [System.IntPtr]::Zero, [ref]$ocxPathPtr)`,
-    "if ($ocxHr -ne 0) { throw 'SHGetKnownFolderPath failed' }",
-    "try { [System.Runtime.InteropServices.Marshal]::PtrToStringUni($ocxPathPtr) }"
-      + " finally { [System.Runtime.InteropServices.Marshal]::FreeCoTaskMem($ocxPathPtr) }",
+    `$occxShell = Add-Type -MemberDefinition '${signature}'`
+      + " -Name OccxKnownFolder -Namespace OccxIdentity -PassThru",
+    `$occxFolderId = [System.Guid]'${WINDOWS_LOCAL_APPDATA_FOLDER_ID}'`,
+    "$occxPathPtr = [System.IntPtr]::Zero",
+    "$occxHr = $occxShell::SHGetKnownFolderPath([ref]$occxFolderId, "
+      + `${WINDOWS_KF_FLAG_DEFAULT_PATH}, [System.IntPtr]::Zero, [ref]$occxPathPtr)`,
+    "if ($occxHr -ne 0) { throw 'SHGetKnownFolderPath failed' }",
+    "try { [System.Runtime.InteropServices.Marshal]::PtrToStringUni($occxPathPtr) }"
+      + " finally { [System.Runtime.InteropServices.Marshal]::FreeCoTaskMem($occxPathPtr) }",
   ];
   return `$(${statements.join("; ")})`;
 }
@@ -333,7 +333,7 @@ function resolveTrustedPosixTmp(): string {
 
 function resolvePosixRuntimeRoot(uid: number): string {
   const realTmp = resolveTrustedPosixTmp();
-  const root = join(realTmp, `opencodex-runtime-v1-${uid}`);
+  const root = join(realTmp, `openccx-runtime-v1-${uid}`);
   ensurePrivatePosixDirectory(root, uid);
   return root;
 }
@@ -343,7 +343,7 @@ export type CoordinatorNamespaceProbe =
   | { readonly status: "missing" };
 
 /**
- * Read-only namespace probe for diagnostics (`ocx doctor`).
+ * Read-only namespace probe for diagnostics (`occx doctor`).
  *
  * Unlike the runtime resolvers, this never creates the root or the lock
  * directories: a doctor run must observe the namespace, not initialize it.
@@ -353,7 +353,7 @@ export type CoordinatorNamespaceProbe =
  */
 export function probeCodexCoordinatorNamespace(identity: UserIdentity): CoordinatorNamespaceProbe {
   if (identity.platform === "posix") {
-    const root = join(resolveTrustedPosixTmp(), `opencodex-runtime-v1-${identity.uid}`);
+    const root = join(resolveTrustedPosixTmp(), `openccx-runtime-v1-${identity.uid}`);
     let entry;
     try {
       entry = lstatSync(root);
@@ -376,7 +376,7 @@ export function probeCodexCoordinatorNamespace(identity: UserIdentity): Coordina
   if (!SID_PATTERN.test(identity.sid)) refuse("The coordinator identity contains an invalid SID.");
   const localAppData = powershellValue(windowsLocalAppDataExpression());
   if (!isAbsolute(localAppData)) refuse("Windows LocalAppData resolution returned a relative path.");
-  const root = resolve(localAppData, "OpenCodex", "Runtime", "v1", identity.sid.toUpperCase());
+  const root = resolve(localAppData, "Openccx", "Runtime", "v1", identity.sid.toUpperCase());
   let entry;
   try {
     entry = lstatSync(root);
@@ -410,7 +410,7 @@ function resolveWindowsRuntimeRoot(identity: Extract<UserIdentity, { platform: "
   // The SID and known-folder values come from the effective token/.NET OS APIs,
   // never USERPROFILE or LOCALAPPDATA. WP11 adds descriptor/reparse/ACL checks at
   // the stable-database open boundary where those checks can cover SQLite too.
-  const root = resolve(localAppData, "OpenCodex", "Runtime", "v1", identity.sid.toUpperCase());
+  const root = resolve(localAppData, "Openccx", "Runtime", "v1", identity.sid.toUpperCase());
   try {
     mkdirSync(root, { recursive: true });
   } catch (cause) {

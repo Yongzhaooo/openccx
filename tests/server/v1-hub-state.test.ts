@@ -20,10 +20,10 @@ import { join } from "node:path";
 import { saveConfig } from "../../src/config";
 import { startServer } from "../../src/server";
 import { MAX_HUB_STATE_BYTES, parseHubStateBody } from "../../src/remote/hub-state";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const DATA_KEY = "ocx_data_hubstatereader";
+const DATA_KEY = "occx_data_hubstatereader";
 // Deliberately NOT an `sk-…` shape: the privacy scan refuses one in a tracked file, and the
 // assertion below only needs a distinctive string to hunt for in the response bytes.
 const PROVIDER_KEY = "provider-credential-hub-state-9e1f";
@@ -31,11 +31,11 @@ const OAUTH_ACCESS = "oauth-access-hub-state-7c2a";
 const OAUTH_REFRESH = "oauth-refresh-hub-state-4b8d";
 const OAUTH_EMAIL = "hub-operator@example.test";
 
-const previousHome = process.env.OPENCODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
+const previousHome = process.env.OPENCCX_HOME;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
 let testHome = "";
 
-function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function hubConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 0,
     // Non-loopback so admission is required and the origin check is live.
@@ -59,7 +59,7 @@ function hubConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
     subagentModelsVersion: 1,
     apiKeys: [{ id: "client-one", name: "laptop", key: DATA_KEY, createdAt: "2026-09-01T00:00:00.000Z" }],
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /** The legacy single-credential shape normalizes on load, which is all this needs. */
@@ -75,16 +75,16 @@ function writeLoggedInXai(): void {
 }
 
 beforeEach(() => {
-  testHome = mkdtempSync(join(tmpdir(), "ocx-hub-state-"));
-  process.env.OPENCODEX_HOME = testHome;
-  process.env.OPENCODEX_API_AUTH_TOKEN = "hub-admission-secret";
+  testHome = mkdtempSync(join(tmpdir(), "occx-hub-state-"));
+  process.env.OPENCCX_HOME = testHome;
+  process.env.OPENCCX_API_AUTH_TOKEN = "hub-admission-secret";
 });
 
 afterEach(() => {
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
   if (testHome) removeTreeWithRetry(testHome);
   testHome = "";
 });
@@ -110,7 +110,7 @@ describe("GET /v1/hub-state", () => {
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(200);
       expect(res.headers.get("cache-control")).toBe("no-store");
@@ -151,7 +151,7 @@ describe("GET /v1/hub-state", () => {
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(200);
       const text = await res.text();
@@ -173,7 +173,7 @@ describe("GET /v1/hub-state", () => {
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
         method: "HEAD",
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toBe("application/json");
@@ -189,7 +189,7 @@ describe("GET /v1/hub-state", () => {
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY, origin: "https://attacker.test" },
+        headers: { "x-openccx-api-key": DATA_KEY, origin: "https://attacker.test" },
       });
       expect(res.status).toBe(403);
       expect(await res.json()).toMatchObject({ error: { code: "origin_rejected" } });
@@ -203,7 +203,7 @@ describe("GET /v1/hub-state", () => {
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(404);
       // A distinct code, not the generic not_found: it is what tells "this host is not a hub"
@@ -221,11 +221,11 @@ describe("GET /v1/hub-state", () => {
     for (let i = 0; i < 201; i += 1) {
       providers[`p${i}`] = { adapter: "openai-chat", baseUrl: "https://example.test/v1", models: ["m"] };
     }
-    saveConfig(hubConfig({ providers: providers as OcxConfig["providers"], defaultProvider: "p0" }));
+    saveConfig(hubConfig({ providers: providers as OccxConfig["providers"], defaultProvider: "p0" }));
     const server = startServer(0);
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
-        headers: { "x-opencodex-api-key": DATA_KEY },
+        headers: { "x-openccx-api-key": DATA_KEY },
       });
       expect(res.status).toBe(200);
       const state = parseHubStateBody(await res.json());
@@ -243,7 +243,7 @@ describe("GET /v1/hub-state", () => {
     try {
       const res = await fetch(new URL("/v1/hub-state", server.url), {
         method: "POST",
-        headers: { "x-opencodex-api-key": DATA_KEY, "content-type": "application/json" },
+        headers: { "x-openccx-api-key": DATA_KEY, "content-type": "application/json" },
         body: "{}",
       });
       expect(res.status).not.toBe(200);

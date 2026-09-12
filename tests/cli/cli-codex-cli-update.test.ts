@@ -78,7 +78,7 @@ describe("Codex CLI update CLI", () => {
           path: "C:\\managed",
           pathExt: ".CMD",
           managerRoots: { FNM_DIR: "C:\\custom-manager" },
-          configDir: "C:\\opencodex",
+          configDir: "C:\\openccx",
         },
       }),
     };
@@ -97,7 +97,7 @@ describe("Codex CLI update CLI", () => {
         PATH: "C:\\managed",
         PATHEXT: ".CMD",
       });
-      expect(received?.configDir).toBe("C:\\opencodex");
+      expect(received?.configDir).toBe("C:\\openccx");
     } finally {
       initializeNodeLauncherContext(["bun", "cli"], {});
     }

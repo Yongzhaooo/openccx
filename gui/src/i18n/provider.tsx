@@ -18,7 +18,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const meta = LOCALES.find(l => l.code === locale) ?? LOCALES[0];
     document.documentElement.lang = meta.htmlLang;
-    try { localStorage.setItem("ocx-lang", locale); } catch { /* ignore */ }
+    try { localStorage.setItem("occx-lang", locale); } catch { /* ignore */ }
   }, [locale]);
 
   const t: TFn = useCallback(

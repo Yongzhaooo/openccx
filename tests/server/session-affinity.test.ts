@@ -5,21 +5,21 @@ import { resolveCodexAccountForThread, clearThreadAccountMap, formatCodexProvide
 import { CODEX_ACCOUNT_LOG_LABEL_RE, fallbackCodexAccountLogLabel } from "../../src/codex/account-label";
 import { updateAccountQuota, clearAccountQuota } from "../../src/codex/auth-api";
 import { saveCodexAccountCredential } from "../../src/codex/account-store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const TEST_DIR = join(import.meta.dir, ".tmp-session-affinity-test");
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 let previousCodexHome: string | undefined;
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     providers: {},
     codexAccounts: [],
     activeCodexAccountId: undefined,
     autoSwitchThreshold: 80,
     ...overrides,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function saveTestCredential(id: string): void {
@@ -31,7 +31,7 @@ function saveTestCredential(id: string): void {
   });
 }
 
-function makeActivePoolConfig(active: string, ids: string[] = [active]): OcxConfig {
+function makeActivePoolConfig(active: string, ids: string[] = [active]): OccxConfig {
   for (const id of ids) saveTestCredential(id);
   return makeConfig({
     activeCodexAccountId: active,
@@ -41,10 +41,10 @@ function makeActivePoolConfig(active: string, ids: string[] = [active]): OcxConf
 
 describe("resolveCodexAccountForThread", () => {
   beforeEach(() => {
-    previousOpencodexHome = process.env.OPENCODEX_HOME;
+    previousOpenccxHome = process.env.OPENCCX_HOME;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
-    process.env.OPENCODEX_HOME = TEST_DIR;
+    process.env.OPENCCX_HOME = TEST_DIR;
     // Isolate the main-account credential source: TEST_DIR has no auth.json, so the
     // main account is deterministically absent and cannot become a rotation target.
     previousCodexHome = process.env.CODEX_HOME;
@@ -56,8 +56,8 @@ describe("resolveCodexAccountForThread", () => {
   afterEach(() => {
     clearAccountQuota();
     clearThreadAccountMap();
-    if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpencodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);

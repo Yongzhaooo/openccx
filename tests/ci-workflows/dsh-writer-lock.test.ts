@@ -18,7 +18,7 @@ import {
   withIntegrationWriterLock,
   type IntegrationWriterLockSeams,
 } from "../../src/integrations/writer-lock";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 function eexist(): Error & { code: string } {
@@ -117,14 +117,14 @@ const CONFIG = {
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 let root: string;
 let home: string;
 let store: IntegrationStateStore;
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), "ocx-dsh-lock-"));
+  root = mkdtempSync(join(tmpdir(), "occx-dsh-lock-"));
   home = join(root, "home");
   mkdirSync(home, { recursive: true });
   store = createIntegrationStateStore(join(root, "state", "integrations"));

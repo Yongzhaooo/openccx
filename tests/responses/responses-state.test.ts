@@ -79,7 +79,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
  * failing in the fixture before the behaviour under test runs.
  */
 const canSymlink = (() => {
-  const probeDir = mkdtempSync(join(tmpdir(), "ocx-state-symlink-probe-"));
+  const probeDir = mkdtempSync(join(tmpdir(), "occx-state-symlink-probe-"));
   try {
     symlinkSync(join(probeDir, "probe-target"), join(probeDir, "probe-link"));
     return true;
@@ -123,7 +123,7 @@ const ICACLS_OK = { success: true, exitCode: 0, timedOut: false, stdout: "" };
 function isSpillAclTarget(args: string[]): boolean {
   return args.some(arg => arg.includes(RESPONSE_SPILL_DIR_NAME));
 }
-const SYNTHETIC_SID = { success: true, exitCode: 0, timedOut: false, stdout: "S-1-5-21-1-2-3-1001\nocx-test\n" };
+const SYNTHETIC_SID = { success: true, exitCode: 0, timedOut: false, stdout: "S-1-5-21-1-2-3-1001\noccx-test\n" };
 function forceWindowsAclLane(): void {
   setPlatformForTests("win32");
   setWindowsPrincipalRunnerForTests(() => SYNTHETIC_SID);
@@ -277,14 +277,14 @@ function rememberLarge(id: string, text: string, providers?: Parameters<typeof r
 }
 
 describe("Responses previous_response_id state", () => {
-  // Sandbox OPENCODEX_HOME: the state store now snapshots to disk, and these tests must never
+  // Sandbox OPENCCX_HOME: the state store now snapshots to disk, and these tests must never
   // touch the real ~/.opencodex.
   let home: string;
-  const priorHome = process.env["OPENCODEX_HOME"];
+  const priorHome = process.env["OPENCCX_HOME"];
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocx-state-test-"));
-    process.env["OPENCODEX_HOME"] = home;
+    home = mkdtempSync(join(tmpdir(), "occx-state-test-"));
+    process.env["OPENCCX_HOME"] = home;
     clearResponseStateMemoryForTests();
     // Generic cases assert the synchronous spill lane. A Windows host would otherwise route
     // them through the queued async publication and they would read stale state.
@@ -331,15 +331,15 @@ describe("Responses previous_response_id state", () => {
     resetWindowsPrincipalForTests();
     setStatForTests(null);
     resetHardenedStateForTests();
-    delete process.env.OPENCODEX_ACL_TIMEOUT_MS;
+    delete process.env.OPENCCX_ACL_TIMEOUT_MS;
     setResponseSpillShutdownBudgetForTests(null);
     setResponseSpillAsyncAclAttemptBudgetForTests(null);
     setResponseStateByteCapForTests(null);
     setSpilledResponseByteCapForTests(null);
     clearResponseStateForTests();
     removeTreeWithRetry(home);
-    if (priorHome === undefined) delete process.env["OPENCODEX_HOME"];
-    else process.env["OPENCODEX_HOME"] = priorHome;
+    if (priorHome === undefined) delete process.env["OPENCCX_HOME"];
+    else process.env["OPENCCX_HOME"] = priorHome;
   });
 
   test("expands later input with stored prior input and output", () => {
@@ -1051,7 +1051,7 @@ describe("Responses previous_response_id state", () => {
 
   test("Windows spill retries one transient ACL timeout without installing a tombstone", async () => {
     forceWindowsAclLane();
-    process.env.OPENCODEX_ACL_TIMEOUT_MS = "1000";
+    process.env.OPENCCX_ACL_TIMEOUT_MS = "1000";
     let clock = 0;
     let grantCalls = 0;
     setNowForTests(() => clock);
@@ -1143,8 +1143,8 @@ describe("Responses previous_response_id state", () => {
 
   test("Windows stable-directory memo refusals stay distinct after the runner becomes healthy", async () => {
     forceWindowsAclLane();
-    const previousVerify = process.env.OPENCODEX_ACL_VERIFY_EXISTING;
-    delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
+    const previousVerify = process.env.OPENCCX_ACL_VERIFY_EXISTING;
+    delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
     let clock = 0;
     let grantCalls = 0;
     setNowForTests(() => clock);
@@ -1187,8 +1187,8 @@ describe("Responses previous_response_id state", () => {
         expect(spillTempNames(home)).toHaveLength(0);
       }
     } finally {
-      if (previousVerify === undefined) delete process.env.OPENCODEX_ACL_VERIFY_EXISTING;
-      else process.env.OPENCODEX_ACL_VERIFY_EXISTING = previousVerify;
+      if (previousVerify === undefined) delete process.env.OPENCCX_ACL_VERIFY_EXISTING;
+      else process.env.OPENCCX_ACL_VERIFY_EXISTING = previousVerify;
     }
   });
 
@@ -1841,7 +1841,7 @@ describe("Responses previous_response_id state", () => {
 
   test("spill temp cleanup forgets successful ACL memos and retains failed removals", () => {
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     forceWindowsAclLane();
     setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "" }));
@@ -1903,7 +1903,7 @@ describe("Responses previous_response_id state", () => {
     const valid = writeResponseSpillDurably("resp_valid_spill_owner", {
       createdAt: Date.now(),
       items: ["valid"],
-      providers: { __ocxOwner: owner, kiro: { conversationId: "kiro-valid" } },
+      providers: { __occxOwner: owner, kiro: { conversationId: "kiro-valid" } },
     });
     expect(readResponseSpill("resp_valid_spill_owner", valid).ok).toBe(true);
 
@@ -1911,7 +1911,7 @@ describe("Responses previous_response_id state", () => {
       createdAt: Date.now(),
       items: ["invalid"],
       providers: {
-        __ocxOwner: { ...owner, version: 2 },
+        __occxOwner: { ...owner, version: 2 },
         kiro: { conversationId: "must-not-load" },
       } as never,
     });
@@ -2444,7 +2444,7 @@ describe("Responses previous_response_id state", () => {
   test("persistent snapshot I/O failure does not schedule background retry passes", async () => {
     const blockedHome = join(home, "not-a-directory");
     writeFileSync(blockedHome, "file blocks config directory creation");
-    process.env["OPENCODEX_HOME"] = blockedHome;
+    process.env["OPENCCX_HOME"] = blockedHome;
     rememberLarge("resp_persist_failure", "payload");
     expect(responseStatePersistPendingForTests()).toBe(true);
 
@@ -2626,7 +2626,7 @@ describe("Responses previous_response_id state", () => {
     const old = new Date(Date.now() - 20 * 60_000);
     utimesSync(tempPath, old, old);
     const previousUsername = process.env.USERNAME;
-    process.env.USERNAME = "ocx-test-user";
+    process.env.USERNAME = "occx-test-user";
     resetHardenedStateForTests();
     forceWindowsAclLane();
     setIcaclsRunnerForTests(() => ({ success: false, exitCode: null, timedOut: true, stdout: "" }));
@@ -2830,12 +2830,12 @@ describe("Responses previous_response_id state", () => {
   test("recovers only old response-state temps owned by dead processes", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     const deadPid = findDeadPid();
-    const stale = join(home, `responses-state.json.ocx.${deadPid}.1.tmp`);
-    const live = join(home, "responses-state.json.ocx.5252.2.tmp");
-    const current = join(home, `responses-state.json.ocx.${process.pid}.3.tmp`);
-    const young = join(home, "responses-state.json.ocx.6262.4.tmp");
-    const unrelated = join(home, "responses-state.json.ocx.7272.tmp");
-    const directory = join(home, "responses-state.json.ocx.8282.5.tmp");
+    const stale = join(home, `responses-state.json.occx.${deadPid}.1.tmp`);
+    const live = join(home, "responses-state.json.occx.5252.2.tmp");
+    const current = join(home, `responses-state.json.occx.${process.pid}.3.tmp`);
+    const young = join(home, "responses-state.json.occx.6262.4.tmp");
+    const unrelated = join(home, "responses-state.json.occx.7272.tmp");
+    const directory = join(home, "responses-state.json.occx.8282.5.tmp");
     for (const path of [stale, live, current, young, unrelated]) writeFileSync(path, "private state");
     mkdirSync(directory);
     for (const path of [stale, live, current, unrelated, directory]) utimesSync(path, old, old);
@@ -2857,14 +2857,14 @@ describe("Responses previous_response_id state", () => {
   test.skipIf(!canSymlink)("load sweeps stale temps in a symlinked snapshot's real directory", () => {
     // Atomic writes place their temp beside the RESOLVED target, so a dotfiles-managed
     // config dir strands temps where a scan of the literal home would never find them.
-    const realDir = mkdtempSync(join(tmpdir(), "ocx-state-real-"));
+    const realDir = mkdtempSync(join(tmpdir(), "occx-state-real-"));
     const realSnapshot = join(realDir, "responses-state.json");
     writeFileSync(realSnapshot, JSON.stringify({ version: 2, states: [] }));
     symlinkSync(realSnapshot, join(home, "responses-state.json"));
 
     // This test drives the REAL load path, whose sweep probes live pids with kill(pid, 0).
     const deadPid = findDeadPid();
-    const stranded = join(realDir, `responses-state.json.ocx.${deadPid}.1.tmp`);
+    const stranded = join(realDir, `responses-state.json.occx.${deadPid}.1.tmp`);
     writeFileSync(stranded, "private state");
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     utimesSync(stranded, old, old);
@@ -2878,7 +2878,7 @@ describe("Responses previous_response_id state", () => {
 
   test("stale temp recovery is best-effort when unlink fails", () => {
     const deadPid = findDeadPid();
-    const path = join(home, `responses-state.json.ocx.${deadPid}.1.tmp`);
+    const path = join(home, `responses-state.json.occx.${deadPid}.1.tmp`);
     writeFileSync(path, "private state");
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     utimesSync(path, old, old);
@@ -2895,8 +2895,8 @@ describe("Responses previous_response_id state", () => {
 
   test("stale temp recovery stops at injectable enumeration and cleanup caps", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const first = "responses-state.json.ocx.7001.1.tmp";
-    const second = "responses-state.json.ocx.7002.2.tmp";
+    const first = "responses-state.json.occx.7001.1.tmp";
+    const second = "responses-state.json.occx.7002.2.tmp";
     for (const name of [first, second]) {
       const path = join(home, name);
       writeFileSync(path, "private state");
@@ -2943,8 +2943,8 @@ describe("Responses previous_response_id state", () => {
     // wrote anything. Here nothing touches the continuation store at all.
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     const deadPid = findDeadPid();
-    const stale = join(home, `responses-state.json.ocx.${deadPid}.1.tmp`);
-    const young = join(home, "responses-state.json.ocx.6262.4.tmp");
+    const stale = join(home, `responses-state.json.occx.${deadPid}.1.tmp`);
+    const young = join(home, "responses-state.json.occx.6262.4.tmp");
     for (const path of [stale, young]) writeFileSync(path, "private state");
     utimesSync(stale, old, old);
 
@@ -2959,7 +2959,7 @@ describe("Responses previous_response_id state", () => {
     // Without the floor this file is immortal: the liveness probe matches a recycled pid
     // and the 15-minute grace is a lower bound that never expires the skip.
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const path = join(home, "responses-state.json.ocx.9101.1.tmp");
+    const path = join(home, "responses-state.json.occx.9101.1.tmp");
     writeFileSync(path, "private state");
     utimesSync(path, old, old);
 
@@ -2975,7 +2975,7 @@ describe("Responses previous_response_id state", () => {
   test("the 15-minute grace outranks the boot floor", () => {
     // A temp written after boot but younger than the grace must survive even though the
     // floor would otherwise retire its liveness probe. This ordering is the safety argument.
-    const path = join(home, "responses-state.json.ocx.9102.1.tmp");
+    const path = join(home, "responses-state.json.occx.9102.1.tmp");
     writeFileSync(path, "private state");
 
     const result = recoverStaleResponseStateTemps(home, {
@@ -2989,7 +2989,7 @@ describe("Responses previous_response_id state", () => {
 
   test("this process's own temps are never reclaimed, even before boot", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const path = join(home, `responses-state.json.ocx.${process.pid}.1.tmp`);
+    const path = join(home, `responses-state.json.occx.${process.pid}.1.tmp`);
     writeFileSync(path, "private state");
     utimesSync(path, old, old);
 
@@ -3004,7 +3004,7 @@ describe("Responses previous_response_id state", () => {
 
   test("a future or non-finite boot time disables the floor instead of trusting it", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const path = join(home, "responses-state.json.ocx.9103.1.tmp");
+    const path = join(home, "responses-state.json.occx.9103.1.tmp");
     writeFileSync(path, "private state");
     utimesSync(path, old, old);
 
@@ -3021,7 +3021,7 @@ describe("Responses previous_response_id state", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     const deadPid = findDeadPid();
     expect(deadPid).not.toBe(process.pid);
-    const path = join(home, `responses-state.json.ocx.${deadPid}.1.tmp`);
+    const path = join(home, `responses-state.json.occx.${deadPid}.1.tmp`);
     writeFileSync(path, "private state");
     utimesSync(path, old, old);
 
@@ -3046,9 +3046,9 @@ describe("Responses previous_response_id state", () => {
     // to reclaim files it will then refuse to touch (or vice versa).
     const old = new Date(Date.now() - 60 * 60 * 1_000);
     const deadPid = findDeadPid();
-    const stale = join(home, `responses-state.json.ocx.${deadPid}.1.tmp`);
-    const live = join(home, "responses-state.json.ocx.5252.2.tmp");
-    const young = join(home, "responses-state.json.ocx.6262.3.tmp");
+    const stale = join(home, `responses-state.json.occx.${deadPid}.1.tmp`);
+    const live = join(home, "responses-state.json.occx.5252.2.tmp");
+    const young = join(home, "responses-state.json.occx.6262.3.tmp");
     for (const path of [stale, live, young]) writeFileSync(path, "private state");
     for (const path of [stale, live]) utimesSync(path, old, old);
 
@@ -3072,7 +3072,7 @@ describe("Responses previous_response_id state", () => {
     // maxCleanups counts removals. A report removes nothing, so bounding it by that budget
     // would under-report precisely the large backlog an operator needs to see.
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const names = [7301, 7302, 7303].map(pid => `responses-state.json.ocx.${pid}.1.tmp`);
+    const names = [7301, 7302, 7303].map(pid => `responses-state.json.occx.${pid}.1.tmp`);
     for (const name of names) {
       const path = join(home, name);
       writeFileSync(path, "private state");
@@ -3093,7 +3093,7 @@ describe("Responses previous_response_id state", () => {
 
   test("the periodic scan stops at its wall-clock deadline", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const names = ["responses-state.json.ocx.9201.1.tmp", "responses-state.json.ocx.9202.2.tmp"];
+    const names = ["responses-state.json.occx.9201.1.tmp", "responses-state.json.occx.9202.2.tmp"];
     for (const name of names) {
       const path = join(home, name);
       writeFileSync(path, "private state");
@@ -3131,7 +3131,7 @@ describe("Responses previous_response_id state", () => {
 
   test("a truncated scan closes the directory iterator", () => {
     const old = new Date(Date.now() - 60 * 60 * 1_000);
-    const names = ["responses-state.json.ocx.9301.1.tmp", "responses-state.json.ocx.9302.2.tmp"];
+    const names = ["responses-state.json.occx.9301.1.tmp", "responses-state.json.occx.9302.2.tmp"];
     for (const name of names) {
       const path = join(home, name);
       writeFileSync(path, "private state");
@@ -3188,7 +3188,7 @@ describe("Responses previous_response_id state", () => {
       { model: "kiro/gpt-5.6-sol", input: "hello" },
       first,
       {
-        __ocxOwner: {
+        __occxOwner: {
           version: 1,
           providerName: "kiro",
           providerDestinationIdentity: `destination:${"a".repeat(64)}`,
@@ -3204,7 +3204,7 @@ describe("Responses previous_response_id state", () => {
     clearResponseStateMemoryForTests();
 
     expect(previousResponseProviderState(first.id as string)).toEqual({
-      __ocxOwner: {
+      __occxOwner: {
         version: 1,
         providerName: "kiro",
         providerDestinationIdentity: `destination:${"a".repeat(64)}`,
@@ -3608,11 +3608,11 @@ describe("Responses previous_response_id state", () => {
 
 describe("Responses state admission boundary (oversized direct-spill)", () => {
   let home: string;
-  const priorHome = process.env["OPENCODEX_HOME"];
+  const priorHome = process.env["OPENCCX_HOME"];
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocx-state-admission-"));
-    process.env["OPENCODEX_HOME"] = home;
+    home = mkdtempSync(join(tmpdir(), "occx-state-admission-"));
+    process.env["OPENCCX_HOME"] = home;
     clearResponseStateMemoryForTests();
     // Every case here asserts the synchronous direct-spill lane; see the outer describe.
     setPlatformForTests("linux");
@@ -3631,8 +3631,8 @@ describe("Responses state admission boundary (oversized direct-spill)", () => {
     resetHardenedStateForTests();
     clearResponseStateForTests();
     removeTreeWithRetry(home);
-    if (priorHome === undefined) delete process.env["OPENCODEX_HOME"];
-    else process.env["OPENCODEX_HOME"] = priorHome;
+    if (priorHome === undefined) delete process.env["OPENCCX_HOME"];
+    else process.env["OPENCCX_HOME"] = priorHome;
   });
 
   function completedResponse(id: string, text: string) {

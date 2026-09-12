@@ -2,7 +2,7 @@
  * Rebuild the packaged GUI when a merge or pull brought `gui/` changes.
  * Used by the `post-merge` git hook. Skip with: git pull --no-verify
  *
- * Why this exists: `ocx` serves `gui/dist`, which is generated output and
+ * Why this exists: `occx` serves `gui/dist`, which is generated output and
  * therefore gitignored. A fast-forward advances `gui/src` but leaves `gui/dist`
  * at whatever was last built, so the dashboard keeps rendering the OLD bundle
  * while the source says otherwise — sidebar rows that were deleted stay on

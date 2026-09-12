@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { atomicWriteFileAsync, getConfigDir, resolveWriteTarget } from "../config";
 import { enforceAppOwnedMemoryBudget, type RetainedStoreSnapshot } from "../lib/app-owned-memory";
 import { windowsSecretAclApplies } from "../lib/windows-secret-acl";
-import type { OcxProviderContinuationState } from "../types";
+import type { OccxProviderContinuationState } from "../types";
 import {
   cleanupSupersededResponseSpillPublication,
   createResponseSpillPublicationControl,
@@ -81,7 +81,7 @@ const PERIODIC_TEMP_MAX_CLEANUPS = 64;
  *  network-mounted config dir each `lstat` can cost 10-20 ms, which would stall in-flight
  *  streams. Reclaim is idempotent, so a truncated tick simply resumes on the next one. */
 const PERIODIC_TEMP_SCAN_DEADLINE_MS = 25;
-const RESPONSE_STATE_TEMP_NAME = /^responses-state\.json\.ocx\.(\d+)\.(\d+)\.tmp$/;
+const RESPONSE_STATE_TEMP_NAME = /^responses-state\.json\.occx\.(\d+)\.(\d+)\.tmp$/;
 const MAX_SNAPSHOT_REWRITE_ATTEMPTS = 4;
 const RESPONSE_SPILL_SHUTDOWN_BUDGET_MS = 5_000;
 const RESPONSE_SPILL_SHUTDOWN_FALLBACK_RESERVE_MS = 4_000;
@@ -95,7 +95,7 @@ interface ResidentResponseState {
   items: unknown[];
   /** Index in `items` where provider output begins; see clientCarriedPrefixLength. */
   providerOutputStart?: number;
-  providers?: OcxProviderContinuationState;
+  providers?: OccxProviderContinuationState;
   sizeBytes: number;
 }
 
@@ -105,7 +105,7 @@ interface SpilledResponseState {
   clientThreadId?: string;
   /** Mirrors the spilled payload boundary so a spilled entry keeps its anchor. */
   providerOutputStart?: number;
-  providers?: OcxProviderContinuationState;
+  providers?: OccxProviderContinuationState;
   spill: ResponseSpillRef;
   sizeBytes: number;
 }
@@ -1245,7 +1245,7 @@ interface LegacySnapshotState {
   createdAt?: unknown;
   clientThreadId?: unknown;
   items?: unknown;
-  providers?: OcxProviderContinuationState;
+  providers?: OccxProviderContinuationState;
   conversationId?: unknown;
   cursorCheckpointUsable?: unknown;
 }
@@ -1706,7 +1706,7 @@ async function persistNow(path: string, awaitFollowUp = false): Promise<void> {
 }
 
 function schedulePersist(): void {
-  // Resolve the target path NOW: tests (and anything else) may swap OPENCODEX_HOME before the
+  // Resolve the target path NOW: tests (and anything else) may swap OPENCCX_HOME before the
   // debounce fires, and a late write must land in the home that owned the recorded state.
   schedulePersistAt(snapshotPath());
 }
@@ -1991,7 +1991,7 @@ export function reclaimAbandonedResponseStateTemps(
 }
 
 /**
- * Report-only counterpart for `ocx doctor`: applies every selection gate and unlinks
+ * Report-only counterpart for `occx doctor`: applies every selection gate and unlinks
  * nothing. It runs the SAME predicate as the reclaim, so the report and the subsequent
  * removal cannot disagree about which files are reclaimable.
  */
@@ -2201,7 +2201,7 @@ export function previousResponseConversationId(responseId: string | undefined): 
   return previousResponseProviderState(responseId)?.cursor?.conversationId;
 }
 
-export function previousResponseProviderState(responseId: string | undefined): OcxProviderContinuationState | undefined {
+export function previousResponseProviderState(responseId: string | undefined): OccxProviderContinuationState | undefined {
   if (!responseId) return undefined;
   ensureLoaded();
   pruneResponses();
@@ -2317,7 +2317,7 @@ export function markBodyNonPersistable(body: unknown): void {
 export function rememberResponseState(
   requestBody: unknown,
   response: { id?: unknown; output?: unknown; status?: unknown; incomplete_details?: unknown },
-  providerState?: OcxProviderContinuationState | string,
+  providerState?: OccxProviderContinuationState | string,
   opts?: { force?: boolean; clientThreadId?: string },
 ): void {
   if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) return;
@@ -2336,7 +2336,7 @@ export function rememberResponseState(
       || (details as { reason?: unknown }).reason !== "max_output_tokens") return;
   } else if (response.status !== undefined && response.status !== "completed") return;
   ensureLoaded();
-  const normalizedProviderState: OcxProviderContinuationState = typeof providerState === "string"
+  const normalizedProviderState: OccxProviderContinuationState = typeof providerState === "string"
     ? { cursor: { conversationId: providerState } }
     : structuredClone(providerState ?? {});
   if (normalizedProviderState.cursor?.conversationId) {

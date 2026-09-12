@@ -10,7 +10,7 @@ import { pinSponsors, type CatalogPreset } from "../src/components/provider-cata
 
 const row = (id: string, label: string, sponsor?: CatalogPreset["sponsor"]): CatalogPreset => ({
   id, label, adapter: "openai-chat", baseUrl: `https://${id}.example/v1`, auth: "key",
-  ...(sponsor ? { sponsor, sponsorUrl: `https://${id}.example/?utm_source=opencodex` } : {}),
+  ...(sponsor ? { sponsor, sponsorUrl: `https://${id}.example/?utm_source=openccx` } : {}),
 });
 
 test("sponsors are pinned first, Main before Standard, alphabetical within a tier", () => {

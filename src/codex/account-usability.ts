@@ -7,7 +7,7 @@ import {
   isMainAccountTokenLive,
 } from "./main-account";
 import { hasLegacyMainCodexPoolAccount, isSelectableCodexPoolAccount } from "./account-id";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { isNativeMainTrafficBlocked } from "./native-profile-startup";
 import { isMainAccountHardLocked } from "./main-account-hard-lock";
 
@@ -43,7 +43,7 @@ export type CodexAccountUnusableReason =
  * can never claim an account is fine while routing drops it, or name a cause routing did not use.
  */
 export function codexAccountUnusableReason(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   options: CodexAccountUsabilityOptions = {},
 ): CodexAccountUnusableReason | undefined {
@@ -81,7 +81,7 @@ export function codexAccountUnusableReason(
 }
 
 export function isCodexAccountUsable(
-  config: OcxConfig,
+  config: OccxConfig,
   accountId: string,
   options: CodexAccountUsabilityOptions = {},
 ): boolean {

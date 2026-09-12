@@ -116,7 +116,7 @@ export const CURSOR_ROUTER_MODEL_IDS = [
 ] as const;
 
 /**
- * Cursor models that cannot see images natively. OpenCodex routes them through the vision
+ * Cursor models that cannot see images natively. Openccx routes them through the vision
  * sidecar (the catalog still advertises image so Codex can attach). Evidence:
  * - Composer family: Cursor staff — text-only; "Model does not support images"
  * - Auto / router modes: Cursor docs omit Images for Auto Cost; staff — pick Claude/GPT for images

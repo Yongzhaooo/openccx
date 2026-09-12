@@ -56,7 +56,7 @@ import {
   type CodexHistoryJobOutcome,
 } from "./history-job";
 import {
-  OCX_SECTION_MARKER,
+  OCCX_SECTION_MARKER,
   REALTIME_WS_BASE_URL_KEY,
   hasInjectedCodexRouting,
   hasInjectedOpenaiBaseUrl,
@@ -84,7 +84,7 @@ import {
   transformManagedSubagentDefaults,
   type ManagedSubagentDefaults,
 } from "./subagent-defaults";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import { effectiveLoopbackListenerPort, isLoopbackHostname, shouldInjectApiAuthHeader } from "./loopback-target";
 
 export { effectiveLoopbackListenerPort, isLoopbackHostname, shouldInjectApiAuthHeader } from "./loopback-target";
@@ -95,7 +95,7 @@ export { hasInjectedCodexRouting, hasInjectedOpenaiBaseUrl };
 
 export function externalCodexModelProvider(content: string): string | null {
   const provider = resolveEffectiveProjectModelProvider(content).provider;
-  return provider && provider !== "openai" && provider !== "opencodex"
+  return provider && provider !== "openai" && provider !== "openccx"
     ? provider
     : null;
 }
@@ -126,24 +126,24 @@ export function applyEol(content: string, eol: "\r\n" | "\n"): string {
 
 /**
  * Design B (2026-07-06): loopback installs no longer re-tag the provider. Instead of
- * `model_provider = "opencodex"` + a `[model_providers.opencodex]` table, we set the official
+ * `model_provider = "openccx"` + a `[model_providers.openccx]` table, we set the official
  * built-in override `openai_base_url` (codex-rs config_toml.rs) so codex's own `openai`
  * provider points at the proxy. Threads keep `model_provider = "openai"`, so history never
  * needs remapping or restore. Non-loopback binds keep the legacy table injection because the
- * built-in provider cannot carry the `x-opencodex-api-key` env header.
+ * built-in provider cannot carry the `x-openccx-api-key` env header.
  */
 
 export interface InjectCodexOptions {
   /**
    * Absolute or CODEX_HOME-relative catalog path to advertise to Codex. Pass `null` only when the
-   * opencodex catalog could not be materialized; Codex will then keep its native catalog instead of
+   * openccx catalog could not be materialized; Codex will then keep its native catalog instead of
    * failing on a missing model_catalog_json file.
    */
   catalogPath?: string | null;
   /**
    * How long to wait for the Codex write lock before reporting contention.
    *
-   * Bounded by default so a stuck holder cannot wedge `ocx start`; an explicit
+   * Bounded by default so a stuck holder cannot wedge `occx start`; an explicit
    * caller that is willing to wait can raise it.
    */
   lockTimeoutMs?: number;
@@ -173,7 +173,7 @@ function runClientWriteGuard(guard: InjectCodexOptions["beforeClientWrite"]): vo
 export interface CodexRoutingTarget {
   baseUrl: string;
   requiresAdmissionToken: boolean;
-  tokenEnv: "OPENCODEX_API_AUTH_TOKEN";
+  tokenEnv: "OPENCCX_API_AUTH_TOKEN";
   /**
    * Opt-in authless Codex Desktop mode (#1107): inject the dedicated provider table with
    * `requires_openai_auth = false` so Desktop skips the ChatGPT login gate. Only ever true for
@@ -199,7 +199,7 @@ function validateCodexRoutingTarget(target: CodexRoutingTarget): CodexRoutingTar
     || parsed.pathname !== "/v1"
     || parsed.search
     || parsed.hash
-    || target.tokenEnv !== "OPENCODEX_API_AUTH_TOKEN"
+    || target.tokenEnv !== "OPENCCX_API_AUTH_TOKEN"
   ) {
     throw new TypeError("Codex routing target must be a canonical HTTP(S) /v1 URL without credentials, query, or fragment");
   }
@@ -216,7 +216,7 @@ function usesProviderTable(target: CodexRoutingTarget): boolean {
 export function standaloneCodexRoutingTarget(
   port: number,
   config?: Pick<
-    OcxConfig,
+    OccxConfig,
     "hostname" | "unauthenticatedLoopbackListener" | "codexDesktopAuthless" | "codexClientCompaction"
   >,
 ): CodexRoutingTarget {
@@ -230,7 +230,7 @@ export function standaloneCodexRoutingTarget(
   return {
     baseUrl: `http://${providerBaseHost(hostname)}:${effectivePort}/v1`,
     requiresAdmissionToken,
-    tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+    tokenEnv: "OPENCCX_API_AUTH_TOKEN",
     ...(config?.codexDesktopAuthless === true && !requiresAdmissionToken
       ? { desktopAuthless: true }
       : {}),
@@ -247,7 +247,7 @@ function routingTargetOrigin(target: CodexRoutingTarget): string {
 function configuredManagedSubagentDefaults(
   config:
     | Pick<
-        OcxConfig,
+        OccxConfig,
         "injectionModel" | "injectionEffort" | "syncCodexSubagentDefaults"
       >
     | undefined,
@@ -262,8 +262,8 @@ function configuredManagedSubagentDefaults(
 }
 
 /**
- * The `[model_providers.opencodex]` TABLE only. A table is position-independent in TOML, so it is
- * safe to append at EOF. The bare root key `model_provider = "opencodex"` is NOT included here —
+ * The `[model_providers.openccx]` TABLE only. A table is position-independent in TOML, so it is
+ * safe to append at EOF. The bare root key `model_provider = "openccx"` is NOT included here —
  * it must live at the document root (before any table header) and is set separately by
  * setRootModelProvider(). Appending the bare key at EOF was the original bug: it nested under
  * whatever `[table]` happened to be open last (e.g. `[plugins."chrome@openai-bundled"]`), so Codex
@@ -306,7 +306,7 @@ export function buildProviderTableBlock(
     ? validateCodexRoutingTarget({
         baseUrl: `http://${providerBaseHost(hostname)}:${portOrTarget}/v1`,
         requiresAdmissionToken: includeApiAuthHeader,
-        tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+        tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       })
     : validateCodexRoutingTarget(portOrTarget);
   return buildProviderTableBlockForTarget(target, supportsWebsockets);
@@ -318,9 +318,9 @@ function buildProviderTableBlockForTarget(
 ): string {
   const lines = [
     "",
-    OCX_SECTION_MARKER,
-    "[model_providers.opencodex]",
-    'name = "OpenCodex Proxy"',
+    OCCX_SECTION_MARKER,
+    "[model_providers.openccx]",
+    'name = "Openccx Proxy"',
     `base_url = ${tomlString(target.baseUrl)}`,
     'wire_api = "responses"',
     // false only in the authless Desktop opt-in (#1107); true keeps the App/TUI account gate.
@@ -372,7 +372,7 @@ export function buildRealtimeWsBaseUrlLine(target: CodexRoutingTarget): string {
 }
 
 /**
- * Design B root-key injection: place `OCX_SECTION_MARKER` + `openai_base_url` at the document
+ * Design B root-key injection: place `OCCX_SECTION_MARKER` + `openai_base_url` at the document
  * ROOT (before the first table header). Idempotent: an existing marker-owned line is rewritten
  * in place. A user's OWN root `openai_base_url` (no marker above it) is respected — we keep it
  * and inject nothing, reporting `keptUserBaseUrl` so the caller can surface it.
@@ -401,7 +401,7 @@ export function setRootOpenaiBaseUrl(
 
   for (let i = 0; i < rootEnd; i++) {
     if (!isRootOpenaiBaseUrlLine(lines[i])) continue;
-    const markerOwned = i > 0 && lines[i - 1].includes(OCX_SECTION_MARKER);
+    const markerOwned = i > 0 && lines[i - 1].includes(OCCX_SECTION_MARKER);
     if (!markerOwned) return { content, keptUserBaseUrl: true };
     lines[i] = key;
     return { content: lines.join("\n"), keptUserBaseUrl: false };
@@ -412,7 +412,7 @@ export function setRootOpenaiBaseUrl(
       content:
         content.replace(/\n+$/, "") +
         "\n" +
-        OCX_SECTION_MARKER +
+        OCCX_SECTION_MARKER +
         "\n" +
         key +
         "\n",
@@ -421,7 +421,7 @@ export function setRootOpenaiBaseUrl(
   }
   let insertAt = firstTable;
   while (insertAt > 0 && lines[insertAt - 1].trim() === "") insertAt--;
-  lines.splice(insertAt, 0, OCX_SECTION_MARKER, key);
+  lines.splice(insertAt, 0, OCCX_SECTION_MARKER, key);
   return { content: lines.join("\n"), keptUserBaseUrl: false };
 }
 
@@ -435,20 +435,20 @@ function setRootOpenaiBaseUrlForTarget(
   const key = contextCompatibleBaseLine(content, buildOpenaiBaseUrlLineForTarget(target));
   for (let index = 0; index < rootEnd; index += 1) {
     if (!isRootOpenaiBaseUrlLine(lines[index])) continue;
-    const markerOwned = index > 0 && lines[index - 1].includes(OCX_SECTION_MARKER);
+    const markerOwned = index > 0 && lines[index - 1].includes(OCCX_SECTION_MARKER);
     if (!markerOwned) return { content, keptUserBaseUrl: true };
     lines[index] = key;
     return { content: lines.join("\n"), keptUserBaseUrl: false };
   }
   if (firstTable === -1) {
     return {
-      content: `${content.replace(/\n+$/, "")}\n${OCX_SECTION_MARKER}\n${key}\n`,
+      content: `${content.replace(/\n+$/, "")}\n${OCCX_SECTION_MARKER}\n${key}\n`,
       keptUserBaseUrl: false,
     };
   }
   let insertAt = firstTable;
   while (insertAt > 0 && lines[insertAt - 1].trim() === "") insertAt -= 1;
-  lines.splice(insertAt, 0, OCX_SECTION_MARKER, key);
+  lines.splice(insertAt, 0, OCCX_SECTION_MARKER, key);
   return { content: lines.join("\n"), keptUserBaseUrl: false };
 }
 
@@ -472,15 +472,15 @@ export function setRootRealtimeWsBaseUrl(
   const key = buildRealtimeWsBaseUrlLine(validateCodexRoutingTarget(target));
   for (let index = 0; index < rootEnd; index += 1) {
     if (!isRootRealtimeWsBaseUrlLine(lines[index])) continue;
-    const markerOwned = index > 0 && lines[index - 1].includes(OCX_SECTION_MARKER);
+    const markerOwned = index > 0 && lines[index - 1].includes(OCCX_SECTION_MARKER);
     if (!markerOwned) return { content, keptUserRealtimeWsBaseUrl: true };
     lines[index] = key;
     return { content: lines.join("\n"), keptUserRealtimeWsBaseUrl: false };
   }
   for (let index = 0; index < rootEnd; index += 1) {
     if (!isRootOpenaiBaseUrlLine(lines[index])) continue;
-    if (!(index > 0 && lines[index - 1].includes(OCX_SECTION_MARKER))) continue;
-    lines.splice(index + 1, 0, OCX_SECTION_MARKER, key);
+    if (!(index > 0 && lines[index - 1].includes(OCCX_SECTION_MARKER))) continue;
+    lines.splice(index + 1, 0, OCCX_SECTION_MARKER, key);
     return { content: lines.join("\n"), keptUserRealtimeWsBaseUrl: false };
   }
   // No marker-owned routing override to attach to: the override has no owner, so inject nothing.
@@ -499,7 +499,7 @@ export function stripInjectedOpenaiBaseUrl(content: string): string {
   const rootEnd = firstTable === -1 ? lines.length : firstTable;
   const drop = new Set<number>();
   for (let i = 0; i < rootEnd; i++) {
-    if (!lines[i].includes(OCX_SECTION_MARKER)) continue;
+    if (!lines[i].includes(OCCX_SECTION_MARKER)) continue;
     if (i + 1 < rootEnd && (isRootOpenaiBaseUrlLine(lines[i + 1]) || isRootRealtimeWsBaseUrlLine(lines[i + 1]))) {
       drop.add(i);
       drop.add(i + 1);
@@ -512,7 +512,7 @@ export function stripInjectedOpenaiBaseUrl(content: string): string {
 }
 
 export type CodexRoutingKind =
-  "native" | "opencodex-local" | "custom-local" | "custom-remote" | "unknown";
+  "native" | "openccx-local" | "custom-local" | "custom-remote" | "unknown";
 
 type RoutingEndpointKind = "local" | "remote" | "unknown";
 
@@ -555,13 +555,13 @@ function classifyRoutingEndpoint(value: string): RoutingEndpointKind {
   }
 }
 
-/** Classify actual routing dependency separately from opencodex ownership. */
+/** Classify actual routing dependency separately from openccx ownership. */
 export function classifyCodexRouting(content: string): CodexRoutingKind {
   const rootBaseUrl = rootTomlString(content, "openai_base_url");
   if (rootBaseUrl) {
     const endpoint = classifyRoutingEndpoint(rootBaseUrl);
     if (endpoint === "unknown") return "unknown";
-    if (hasInjectedOpenaiBaseUrl(content)) return "opencodex-local";
+    if (hasInjectedOpenaiBaseUrl(content)) return "openccx-local";
     return endpoint === "local" ? "custom-local" : "custom-remote";
   }
   const rootProvider = rootTomlString(content, "model_provider");
@@ -576,11 +576,11 @@ export function classifyCodexRouting(content: string): CodexRoutingKind {
     if (providerBaseUrl) {
       const endpoint = classifyRoutingEndpoint(providerBaseUrl);
       if (endpoint === "unknown") return "unknown";
-      if (rootProvider === "opencodex") return "opencodex-local";
+      if (rootProvider === "openccx") return "openccx-local";
       return endpoint === "local" ? "custom-local" : "custom-remote";
     }
     if (
-      rootProvider === "opencodex" ||
+      rootProvider === "openccx" ||
       providerTableExists ||
       rootProvider !== "openai"
     )
@@ -612,9 +612,9 @@ export function getCodexRoutingKind(): CodexRoutingKind {
 
 /**
  * Strip every existing `model_provider` line that we must not duplicate: any line set to
- * "opencodex" (wherever it sits — including a previously mis-nested one under a table), plus any
+ * "openccx" (wherever it sits — including a previously mis-nested one under a table), plus any
  * ROOT-level model_provider (before the first table) of any value, since we override the global.
- * A `model_provider` legitimately inside a user table/profile with a non-opencodex value is left
+ * A `model_provider` legitimately inside a user table/profile with a non-openccx value is left
  * untouched.
  */
 function stripExistingModelProvider(content: string): string {
@@ -623,7 +623,7 @@ function stripExistingModelProvider(content: string): string {
   const out: string[] = [];
   lines.forEach((line, i) => {
     if (/^\s*model_provider\s*=/.test(line)) {
-      const isOurs = /^\s*model_provider\s*=\s*"opencodex"\s*$/.test(line);
+      const isOurs = /^\s*model_provider\s*=\s*"openccx"\s*$/.test(line);
       const isRoot = firstTable === -1 || i < firstTable;
       if (isOurs || isRoot) return; // drop it
     }
@@ -665,13 +665,13 @@ function stripRootRoutedModel(content: string): string {
 }
 
 /**
- * Insert `model_provider = "opencodex"` at the document ROOT — immediately before the first table
+ * Insert `model_provider = "openccx"` at the document ROOT — immediately before the first table
  * header (TOML root keys must precede all tables). If there are no tables, append it to the root body.
  */
 function setRootModelProvider(content: string): string {
   const lines = content.split("\n");
   const firstTable = lines.findIndex((l) => /^\s*\[/.test(l));
-  const key = 'model_provider = "opencodex"';
+  const key = 'model_provider = "openccx"';
   if (firstTable === -1) {
     return content.replace(/\n+$/, "") + "\n" + key + "\n";
   }
@@ -691,7 +691,7 @@ function readRootModelCatalogPath(content: string): string | null {
     const match = modelCatalogAssignment.exec(lines[index]);
     if (!match) continue;
     const catalogPath = parseTomlString(match[1]);
-    if (!isOpencodexCatalogPath(catalogPath)) return catalogPath;
+    if (!isOpenccxCatalogPath(catalogPath)) return catalogPath;
     ownedCatalogPath ??= catalogPath;
   }
   return ownedCatalogPath;
@@ -709,7 +709,7 @@ function setRootModelCatalogPath(content: string, catalogPath: string): string {
     const m = modelCatalogAssignment.exec(lines[i]);
     if (!m) continue;
     const existing = parseTomlString(m[1]);
-    if (isOpencodexCatalogPath(existing)) {
+    if (isOpenccxCatalogPath(existing)) {
       ownedAssignments.push(i);
     } else {
       hasUserAssignment = true;
@@ -738,12 +738,12 @@ function removeProfileSection(content: string): string {
   const filtered: string[] = [];
   let inProfile = false;
   for (const line of lines) {
-    if (line.trim() === "[profiles.opencodex]") {
+    if (line.trim() === "[profiles.openccx]") {
       inProfile = true;
       continue;
     }
     if (inProfile) {
-      if (/^\s*\[/.test(line) && line.trim() !== "[profiles.opencodex]") {
+      if (/^\s*\[/.test(line) && line.trim() !== "[profiles.openccx]") {
         inProfile = false;
         filtered.push(line);
       }
@@ -767,7 +767,7 @@ function normalizeServiceTier(content: string): string {
 }
 
 function ensureFastModeFeature(content: string, fastMode?: boolean): string {
-  // Tri-state fast mode (see OcxConfig.fastMode): true forces `fast_mode = true`,
+  // Tri-state fast mode (see OccxConfig.fastMode): true forces `fast_mode = true`,
   // false forces `fast_mode = false`, and undefined leaves the user's config
   // untouched (no [features] table is added and an existing fast_mode line is
   // preserved as-is). Table and key matching accept the valid TOML spellings
@@ -800,11 +800,11 @@ function ensureFastModeFeature(content: string, fastMode?: boolean): string {
   return lines.join("\n");
 }
 
-function isOpencodexCatalogPath(path: string): boolean {
-  return path.replace(/\\/g, "/").split("/").pop() === "opencodex-catalog.json";
+function isOpenccxCatalogPath(path: string): boolean {
+  return path.replace(/\\/g, "/").split("/").pop() === "openccx-catalog.json";
 }
 
-function stripOpencodexCatalogPath(content: string): string {
+function stripOpenccxCatalogPath(content: string): string {
   const modelCatalogAssignment = tomlStringPattern("model_catalog_json");
   const lines = content.split("\n");
   const firstTable = lines.findIndex((line) => /^\s*\[/.test(line));
@@ -813,7 +813,7 @@ function stripOpencodexCatalogPath(content: string): string {
     .filter((line, index) => {
       if (index >= rootEnd) return true;
       const m = modelCatalogAssignment.exec(line);
-      return !m || !isOpencodexCatalogPath(parseTomlString(m[1]));
+      return !m || !isOpenccxCatalogPath(parseTomlString(m[1]));
     })
     .join("\n");
 }
@@ -832,7 +832,7 @@ export function buildProfileFile(
     ? validateCodexRoutingTarget({
         baseUrl: `http://${providerBaseHost(hostname)}:${portOrTarget}/v1`,
         requiresAdmissionToken: includeApiAuthHeaderOrFastMode === true,
-        tokenEnv: "OPENCODEX_API_AUTH_TOKEN",
+        tokenEnv: "OPENCCX_API_AUTH_TOKEN",
       })
     : validateCodexRoutingTarget(portOrTarget);
   return buildProfileFileForTarget(
@@ -853,10 +853,10 @@ function buildProfileFileForTarget(
   const host = new URL(origin).host;
   // Design B (loopback): the reference/fallback file documents the root override form.
   // Non-loopback keeps the legacy provider-table shape (built-in provider cannot carry
-  // the x-opencodex-api-key env header); explicit Desktop policies share that shape.
+  // the x-openccx-api-key env header); explicit Desktop policies share that shape.
   if (!usesProviderTable(target)) {
     const lines = [
-      "# OpenCodex proxy fallback config (Design B)",
+      "# Openccx proxy fallback config (Design B)",
       `# Root override that points Codex's built-in openai provider at the proxy on ${host}.`,
       "# Merge these root keys into ~/.codex/config.toml manually if auto-injection was removed.",
       buildOpenaiBaseUrlLineForTarget(target),
@@ -866,9 +866,9 @@ function buildProfileFileForTarget(
     return lines.join("\n");
   }
   const lines = [
-    "# OpenCodex proxy profile — use with: codex --profile opencodex",
-    `# Routes all model requests through the opencodex proxy at ${host}`,
-    'model_provider = "opencodex"',
+    "# Openccx proxy profile — use with: codex --profile openccx",
+    `# Routes all model requests through the openccx proxy at ${host}`,
+    'model_provider = "openccx"',
   ];
   if (catalogPath) lines.push(`model_catalog_json = ${tomlString(catalogPath)}`);
   if (fastMode !== undefined) lines.push("", "[features]", `fast_mode = ${fastMode ? "true" : "false"}`);
@@ -885,7 +885,7 @@ export function chooseCatalogPathForInjection(
   const existing = readRootModelCatalogPath(content);
   if (existing) {
     const resolved = resolveCodexConfigPath(existing);
-    if (!isOpencodexCatalogPath(resolved) || existsSync(resolved))
+    if (!isOpenccxCatalogPath(resolved) || existsSync(resolved))
       return existing;
   }
 
@@ -922,7 +922,7 @@ export function setBeforeHistoryArtifactCommitForTests(hook: typeof beforeHistor
 
 export async function injectCodexConfig(
   port: number,
-  config?: OcxConfig,
+  config?: OccxConfig,
   options: InjectCodexOptions = {},
 ): Promise<CodexInjectResult> {
   try { return await injectCodexConfigImpl(port, config, options); }
@@ -934,13 +934,13 @@ export async function injectCodexConfig(
 
 async function injectCodexConfigImpl(
   port: number,
-  config?: OcxConfig,
+  config?: OccxConfig,
   options: InjectCodexOptions = {},
 ): Promise<CodexInjectResult> {
   // Point Codex at the unauthenticated loopback listener when it is enabled (#1102).
   //
   // Resolved here rather than at the call sites because every caller already passes the proxy
-  // port and the config together: startup sync, `ocx sync`, and the ensure path would each
+  // port and the config together: startup sync, `occx sync`, and the ensure path would each
   // need the same two-line change, and a caller that missed it would silently emit a base_url
   // requiring a credential the directly-spawned app-server does not have.
   //
@@ -990,14 +990,14 @@ async function injectCodexConfigImpl(
         : {}),
       message:
         `⚠️ Codex routing NOT injected: config.toml selects the external model_provider ${tomlString(activeProvider)}.\n` +
-        `  OpenCodex preserves external provider configuration so existing ${tomlString(activeProvider)} session history stays visible.\n` +
+        `  Openccx preserves external provider configuration so existing ${tomlString(activeProvider)} session history stays visible.\n` +
         `  Configure that provider for Responses passthrough at ${routingTarget.baseUrl}` +
-        `${routingTarget.requiresAdmissionToken ? ` with x-opencodex-api-key from ${routingTarget.tokenEnv}` : ""}.\n` +
-        `  For direct injection, switch to the built-in openai provider, remove any user-owned root openai_base_url, and rerun 'ocx start'.`,
+        `${routingTarget.requiresAdmissionToken ? ` with x-openccx-api-key from ${routingTarget.tokenEnv}` : ""}.\n` +
+        `  For direct injection, switch to the built-in openai provider, remove any user-owned root openai_base_url, and rerun 'occx start'.`,
     };
   }
 
-  // Marker-owned native defaults are OpenCodex residue, never part of the
+  // Marker-owned native defaults are Openccx residue, never part of the
   // user's journal baseline. Clean them before either snapshotting or adding a
   // root routing key: inserting that key ahead of a marker-owned first table
   // would otherwise separate the table marker from its header. Ambiguous
@@ -1010,7 +1010,7 @@ async function injectCodexConfigImpl(
     return {
       success: false,
       message:
-        `Codex config injection refused: existing OpenCodex-managed native sub-agent defaults are ambiguous: ${nativeDefaultsBaseline.error}. ` +
+        `Codex config injection refused: existing Openccx-managed native sub-agent defaults are ambiguous: ${nativeDefaultsBaseline.error}. ` +
         `No files were changed; inspect ${CODEX_CONFIG_PATH}.`,
     };
   }
@@ -1040,7 +1040,7 @@ async function injectCodexConfigImpl(
   // Idempotent clean-up of any prior injection: drop the provider table (marker-based) and every
   // stray/mis-nested model_provider line, so re-injecting can't duplicate keys or leave the buggy
   // table-nested key behind.
-  // Design B form FIRST: removeOcxSection also keys on the marker line, so a root-level
+  // Design B form FIRST: removeOccxSection also keys on the marker line, so a root-level
   // marker + openai_base_url pair must be gone before it scans or it would swallow root keys.
   content = stripInjectedOpenaiBaseUrl(content);
   // #1798: after a Codex app rewrite the markers are gone but the values we recorded writing
@@ -1053,8 +1053,8 @@ async function injectCodexConfigImpl(
     journaledInjectedOpenaiBaseUrl({ readOnly: !!options.beforeClientWrite }),
     journaledInjectedRealtimeWsBaseUrl({ readOnly: !!options.beforeClientWrite }),
   );
-  if (hasOcxProviderTable(content)) {
-    content = removeOcxSection(content);
+  if (hasOccxProviderTable(content)) {
+    content = removeOccxSection(content);
   }
   content = removeProfileSection(content);
   content = stripExistingModelProvider(content);
@@ -1068,12 +1068,12 @@ async function injectCodexConfigImpl(
   );
   content = catalogPath
     ? setRootModelCatalogPath(content, catalogPath)
-    : stripOpencodexCatalogPath(content);
+    : stripOpenccxCatalogPath(content);
 
   // Provider-table form: non-loopback admission or an explicit Desktop policy.
   const providerTableMode = usesProviderTable(routingTarget);
   // Client compaction is the one table form that must not orphan existing threads. It changes
-  // the DEFAULT provider to `opencodex`, but a thread already tagged `openai` keeps resolving
+  // the DEFAULT provider to `openccx`, but a thread already tagged `openai` keeps resolving
   // to Codex's built-in entry, and without the root override that entry is api.openai.com —
   // the thread would resume outside this proxy and outside configured routing. Keeping the
   // marker-owned root override alongside the table fixes that at the source: codex builds its
@@ -1086,7 +1086,7 @@ async function injectCodexConfigImpl(
   // chose, so an `openai`-tagged thread follows their configuration rather than this proxy.
   //
   // Re-tagging history was the alternative and it cannot be made durable: the length-preserving
-  // first-line repair cannot grow "openai" into "opencodex" without pre-existing padding, and
+  // first-line repair cannot grow "openai" into "openccx" without pre-existing padding, and
   // codex re-appends that stale first line whenever it writes git or memory-mode metadata.
   //
   // Authless is excluded on purpose: its whole point is a provider that carries
@@ -1102,7 +1102,7 @@ async function injectCodexConfigImpl(
   let keptUserRealtimeWsBaseUrl = false;
   if (providerTableMode) {
     // Legacy (non-loopback) injection: the built-in openai provider cannot carry the
-    // x-opencodex-api-key env header, so keep the opencodex provider table + root re-tag.
+    // x-openccx-api-key env header, so keep the openccx provider table + root re-tag.
     // The authless opt-in needs the same table because only a dedicated provider can carry
     // requires_openai_auth = false.
     // 1) Root key BEFORE the first table header (must be a global, not nested under a table).
@@ -1139,7 +1139,7 @@ async function injectCodexConfigImpl(
   const desiredSubagentDefaults = configuredManagedSubagentDefaults(config);
   const routingOwnershipWarning =
     keptUserBaseUrl && desiredSubagentDefaults
-      ? "Native Codex sub-agent defaults were not injected: a user-owned root openai_base_url prevents OpenCodex from managing active Codex routing."
+      ? "Native Codex sub-agent defaults were not injected: a user-owned root openai_base_url prevents Openccx from managing active Codex routing."
       : undefined;
   const managedDefaults = transformManagedSubagentDefaults(
     content,
@@ -1476,7 +1476,7 @@ async function injectCodexConfigImpl(
   // the root override alongside its table precisely so it does NOT have to touch history: an
   // existing `openai`-tagged thread still reaches this proxy through the built-in entry. So it
   // skips this unit, and future-only means what it says — no provider metadata is rewritten and
-  // no `ocx1:` payload is touched.
+  // no `occx1:` payload is touched.
   // History runs in a Worker under H, not on this thread.
   //
   // The three surfaces it touches — the SQLite rows, the backup manifest, and the
@@ -1517,7 +1517,7 @@ async function injectCodexConfigImpl(
 
   const catalogMessage = catalogPath
     ? `  Codex model catalog: ${catalogPath}\n`
-    : `  Codex model catalog not injected because no opencodex catalog file exists yet.\n`;
+    : `  Codex model catalog not injected because no openccx catalog file exists yet.\n`;
   const ejected = (history as { ejectedRows?: number }).ejectedRows ?? 0;
   const migratedRows = (history.rows ?? 0) + ejected;
   const historyMessage =
@@ -1530,7 +1530,7 @@ async function injectCodexConfigImpl(
       : history.failed
         ? formatApplyHistoryFailure(historyOutcome, providerTableMode)
         : providerTableMode
-          ? `  Codex resume history: ${history.rows} thread(s) made visible for opencodex; originals backed up for restore.\n`
+          ? `  Codex resume history: ${history.rows} thread(s) made visible for openccx; originals backed up for restore.\n`
           : migratedRows > 0
             ? `  Codex resume history: restored original provider metadata for ${migratedRows} manifest-backed thread(s) (one-time).\n`
             : `  Codex resume history: no backed-up metadata pending; untracked routed history left unchanged.\n`;
@@ -1546,15 +1546,15 @@ async function injectCodexConfigImpl(
       success: true,
       ...(nativeSubagentDefaultsWarning ? { nativeSubagentDefaultsWarning } : {}),
       message:
-        `Injected opencodex as default provider into Codex config (client-side compaction mode; ChatGPT auth remains required).\n` +
-        `  Your root openai_base_url was left exactly as you set it, so opencodex did not add its own.\n` +
+        `Injected openccx as default provider into Codex config (client-side compaction mode; ChatGPT auth remains required).\n` +
+        `  Your root openai_base_url was left exactly as you set it, so openccx did not add its own.\n` +
         catalogMessage +
         historyMessage +
         managedDefaultsMessage +
-        `  New threads use the injected opencodex provider and route through the proxy.\n` +
+        `  New threads use the injected openccx provider and route through the proxy.\n` +
         `  Threads already tagged openai resolve through Codex's built-in provider, which your root openai_base_url points at.\n` +
         `  No root URL change is required to enable client-side compaction for new threads.\n` +
-        `  Fallback: codex --profile opencodex (same behavior)`,
+        `  Fallback: codex --profile openccx (same behavior)`,
     };
   }
   if (keptUserBaseUrl) {
@@ -1564,21 +1564,21 @@ async function injectCodexConfigImpl(
         ? { nativeSubagentDefaultsWarning }
         : {}),
       message:
-        `⚠️ Codex routing NOT injected: your config already sets a root openai_base_url, and opencodex never overwrites a user-owned override.\n` +
+        `⚠️ Codex routing NOT injected: your config already sets a root openai_base_url, and openccx never overwrites a user-owned override.\n` +
         catalogMessage +
         historyMessage +
         managedDefaultsMessage +
-        `  To route plain codex through the proxy, remove your openai_base_url line from ~/.codex/config.toml and rerun 'ocx start'.\n` +
+        `  To route plain codex through the proxy, remove your openai_base_url line from ~/.codex/config.toml and rerun 'occx start'.\n` +
         `  Reference config: ${CODEX_PROFILE_PATH}`,
     };
   }
   const headline = routingTarget.desktopAuthless === true
-    ? `Injected opencodex as default provider into Codex config (authless Desktop mode: requires_openai_auth = false).\n`
+    ? `Injected openccx as default provider into Codex config (authless Desktop mode: requires_openai_auth = false).\n`
     : routingTarget.clientCompaction === true
-      ? `Injected opencodex as default provider into Codex config (client-side compaction mode; ChatGPT auth remains required).\n`
+      ? `Injected openccx as default provider into Codex config (client-side compaction mode; ChatGPT auth remains required).\n`
     : providerTableMode
-      ? `Injected opencodex as default provider into Codex config.\n`
-      : `Pointed Codex's built-in openai provider at the opencodex proxy (openai_base_url + realtime sideband override).\n`;
+      ? `Injected openccx as default provider into Codex config.\n`
+      : `Pointed Codex's built-in openai provider at the openccx proxy (openai_base_url + realtime sideband override).\n`;
   return {
     success: true,
     ...(nativeSubagentDefaultsWarning ? { nativeSubagentDefaultsWarning } : {}),
@@ -1587,57 +1587,57 @@ async function injectCodexConfigImpl(
       catalogMessage +
       historyMessage +
       managedDefaultsMessage +
-      `  All models now route through opencodex proxy (like OpenRouter).\n` +
+      `  All models now route through openccx proxy (like OpenRouter).\n` +
       `  OpenAI models (gpt-5.5, etc.) are passed through to OpenAI.\n` +
       `  Custom models route to their configured providers.\n` +
       (providerTableMode
-        ? `  Fallback: codex --profile opencodex (same behavior)`
+        ? `  Fallback: codex --profile openccx (same behavior)`
         : `  Fallback reference: ${CODEX_PROFILE_PATH}`),
   };
 }
 
 /**
- * Sub-table headers like `[model_providers.opencodex.env_http_headers]` appear when a Codex app
+ * Sub-table headers like `[model_providers.openccx.env_http_headers]` appear when a Codex app
  * config rewrite re-serializes the provider's inline `env_http_headers` table. They define the
- * same `model_providers.opencodex` provider, so cleanup must remove them too — otherwise the
+ * same `model_providers.openccx` provider, so cleanup must remove them too — otherwise the
  * provider survives with no `name` and Codex rejects the whole config
  * ("provider name must not be empty"). The dot terminator keeps a user's
- * `[model_providers.opencodex_backup]`-style tables out of scope.
+ * `[model_providers.openccx_backup]`-style tables out of scope.
  */
-function isOcxProviderHeaderLine(trimmedLine: string): boolean {
+function isOccxProviderHeaderLine(trimmedLine: string): boolean {
   // Root form matched by regex, not equality: TOML v1.0 allows a trailing comment
-  // (`[model_providers.opencodex] # comment`), and an exact compare would miss that form.
+  // (`[model_providers.openccx] # comment`), and an exact compare would miss that form.
   // The sub-table prefix check already tolerates trailing comments by construction.
   return (
-    /^\[model_providers\.opencodex\]\s*(?:#.*)?$/.test(trimmedLine) ||
-    trimmedLine.startsWith("[model_providers.opencodex.")
+    /^\[model_providers\.openccx\]\s*(?:#.*)?$/.test(trimmedLine) ||
+    trimmedLine.startsWith("[model_providers.openccx.")
   );
 }
 
-function hasOcxProviderTable(content: string): boolean {
+function hasOccxProviderTable(content: string): boolean {
   return content
     .split("\n")
-    .some((line) => isOcxProviderHeaderLine(line.trim()));
+    .some((line) => isOccxProviderHeaderLine(line.trim()));
 }
 
-function removeOcxSection(content: string): string {
+function removeOccxSection(content: string): string {
   const lines = content.split("\n");
   const filtered: string[] = [];
-  let inOcxSection = false;
+  let inOccxSection = false;
   for (const line of lines) {
     if (
-      line.includes(OCX_SECTION_MARKER) ||
-      isOcxProviderHeaderLine(line.trim())
+      line.includes(OCCX_SECTION_MARKER) ||
+      isOccxProviderHeaderLine(line.trim())
     ) {
-      inOcxSection = true;
+      inOccxSection = true;
       continue;
     }
-    if (inOcxSection) {
+    if (inOccxSection) {
       // End the injected section at the next table header that ISN'T our own. Exact match on the
       // provider name (plus our own sub-tables) so a user's
-      // "[model_providers.opencodex_backup]" (or similar) is preserved, not swallowed.
-      if (/^\s*\[/.test(line) && !isOcxProviderHeaderLine(line.trim())) {
-        inOcxSection = false;
+      // "[model_providers.openccx_backup]" (or similar) is preserved, not swallowed.
+      if (/^\s*\[/.test(line) && !isOccxProviderHeaderLine(line.trim())) {
+        inOccxSection = false;
         filtered.push(line);
       }
       continue;
@@ -1652,7 +1652,7 @@ function removeOcxSection(content: string): string {
   );
 }
 
-interface StripOpencodexConfigResult {
+interface StripOpenccxConfigResult {
   content: string;
   managedDefaultsError: string | null;
 }
@@ -1662,52 +1662,52 @@ interface StripOpencodexConfigResult {
  * ambiguous: keep the associated value, but return the transform error so the
  * caller cannot report a complete restore.
  */
-function stripOpencodexConfigResult(
+function stripOpenccxConfigResult(
   content: string,
   journaledBaseUrl: string | null = null,
   journaledRealtimeWsBaseUrl: string | null = null,
-): StripOpencodexConfigResult {
+): StripOpenccxConfigResult {
   let out = content;
-  const hadRootOcxProvider =
-    readRootTomlString(out, "model_provider") === "opencodex";
+  const hadRootOccxProvider =
+    readRootTomlString(out, "model_provider") === "openccx";
   // #1798: marker adjacency is FORMATTING evidence, and a Codex app rewrite keeps values
   // while dropping comments. Fall back to VALUE evidence -- the exact URL we recorded
   // writing -- so an app-rewritten config is still recognized as ours.
   const hadInjectedBaseUrl = hasInjectedOpenaiBaseUrl(out)
     || (journaledBaseUrl !== null && rootTomlString(out, "openai_base_url") === journaledBaseUrl);
-  out = stripInjectedOpenaiBaseUrl(out); // before removeOcxSection — it keys on the marker line too
+  out = stripInjectedOpenaiBaseUrl(out); // before removeOccxSection — it keys on the marker line too
   out = stripJournaledOpenaiBaseUrl(out, journaledBaseUrl, journaledRealtimeWsBaseUrl);
-  if (hasOcxProviderTable(out)) {
-    out = removeOcxSection(out);
+  if (hasOccxProviderTable(out)) {
+    out = removeOccxSection(out);
   }
   out = removeProfileSection(out);
-  // Regex (not exact-string) removal so compact `model_provider="opencodex"` is stripped too —
+  // Regex (not exact-string) removal so compact `model_provider="openccx"` is stripped too —
   // must match the detection regex above, or a detected line could survive un-removed.
   out = out
     .split("\n")
-    .filter((l) => !/^\s*model_provider\s*=\s*"opencodex"\s*$/.test(l))
+    .filter((l) => !/^\s*model_provider\s*=\s*"openccx"\s*$/.test(l))
     .join("\n");
   // Routed root model ids (`model = "provider/slug"`) only make sense while the proxy serves
   // them — strip on both the legacy re-tag form and the Design B injected-base-url form.
-  if (hadRootOcxProvider || hadInjectedBaseUrl) out = stripRootRoutedModel(out);
+  if (hadRootOccxProvider || hadInjectedBaseUrl) out = stripRootRoutedModel(out);
   const managedDefaults = transformManagedSubagentDefaults(out, null);
   if (managedDefaults.ok) out = managedDefaults.content;
-  out = stripOpencodexCatalogPath(out);
+  out = stripOpenccxCatalogPath(out);
   return {
     content: out.replace(/\n{3,}/g, "\n\n").trimEnd() + "\n",
     managedDefaultsError: !managedDefaults.ok ? managedDefaults.error : null,
   };
 }
 
-/** Pure transform: strip the opencodex provider block + `model_provider = "opencodex"` lines. */
-export function stripOpencodexConfig(content: string): string {
-  return stripOpencodexConfigResult(content).content;
+/** Pure transform: strip the openccx provider block + `model_provider = "openccx"` lines. */
+export function stripOpenccxConfig(content: string): string {
+  return stripOpenccxConfigResult(content).content;
 }
 
-function hasOpencodexRouting(content: string): boolean {
+function hasOpenccxRouting(content: string): boolean {
   return (
-    hasOcxProviderTable(content) ||
-    /^\s*model_provider\s*=\s*"opencodex"/m.test(content) ||
+    hasOccxProviderTable(content) ||
+    /^\s*model_provider\s*=\s*"openccx"/m.test(content) ||
     hasInjectedOpenaiBaseUrl(content)
   );
 }
@@ -1722,7 +1722,7 @@ export function removeCodexConfig(
       unlinkSync(CODEX_PROFILE_PATH);
     return {
       success: true,
-      message: `Codex config not found; no native restore was needed${options.preserveProfile ? "." : ", and the opencodex profile was removed if present."}`,
+      message: `Codex config not found; no native restore was needed${options.preserveProfile ? "." : ", and the openccx profile was removed if present."}`,
     };
   }
   const rawContent = readFileSync(CODEX_CONFIG_PATH, "utf-8");
@@ -1734,23 +1734,23 @@ export function removeCodexConfig(
   // ownership verdict, which must agree with what was actually removed.
   const journaledBaseUrl = journaledInjectedOpenaiBaseUrl();
   const journaledRealtimeWsBaseUrl = journaledInjectedRealtimeWsBaseUrl();
-  const had = hasOpencodexRouting(content)
+  const had = hasOpenccxRouting(content)
     || (journaledBaseUrl !== null && rootTomlString(content, "openai_base_url") === journaledBaseUrl)
     || (journaledRealtimeWsBaseUrl !== null
       && rootTomlString(content, REALTIME_WS_BASE_URL_KEY) === journaledRealtimeWsBaseUrl);
-  const stripped = stripOpencodexConfigResult(content, journaledBaseUrl, journaledRealtimeWsBaseUrl);
+  const stripped = stripOpenccxConfigResult(content, journaledBaseUrl, journaledRealtimeWsBaseUrl);
   if (had || stripped.content !== content) {
     atomicWriteFile(CODEX_CONFIG_PATH, applyEol(stripped.content, eol));
   }
   if (!options.preserveProfile && existsSync(CODEX_PROFILE_PATH))
     unlinkSync(CODEX_PROFILE_PATH);
   const removedMessage = had
-    ? `Removed opencodex routing from Codex config${options.preserveProfile ? "." : " + profile."}`
-    : "opencodex not present in Codex config.";
+    ? `Removed openccx routing from Codex config${options.preserveProfile ? "." : " + profile."}`
+    : "openccx not present in Codex config.";
   if (stripped.managedDefaultsError) {
     const routingMessage = had
       ? removedMessage
-      : "No opencodex routing was present in Codex config.";
+      : "No openccx routing was present in Codex config.";
     return {
       success: false,
       message:
@@ -1832,7 +1832,7 @@ function failedHistoryRestore(
             : "Codex resume history could NOT be restored because the backup or restore target failed integrity checks; unverified provider metadata was left unchanged."
         : detail
           ? `Codex resume history could NOT be restored: ${detail}`
-          : "Codex resume history could NOT be restored; the reason was not recorded. Run 'ocx doctor'.",
+          : "Codex resume history could NOT be restored; the reason was not recorded. Run 'occx doctor'.",
   };
 }
 
@@ -1947,7 +1947,7 @@ function restoreCodexConfigInlineImpl(kind: string): CodexRestoreConfigResult {
       };
     }
     const restored = journal.configRestored
-      ? { success: true, message: "Codex config restored from opencodex journal." }
+      ? { success: true, message: "Codex config restored from openccx journal." }
       : removeCodexConfig({ preserveProfile: journal.profileRestored || journal.profileChanged });
     return restored.success
       ? {
@@ -2154,7 +2154,7 @@ async function restoreNativeCodexAsyncImpl(
     ? {
         state: "ok", changed: outcome.rows > 0 || outcome.files > 0, rows: outcome.rows, files: outcome.files, ejectedRows: 0,
         message: outcome.rows > 0
-          ? `Resume history metadata restored from opencodex backup (${outcome.rows} thread(s)); original providers preserved.`
+          ? `Resume history metadata restored from openccx backup (${outcome.rows} thread(s)); original providers preserved.`
           : "No backed-up resume-history metadata was pending; untracked routed history was left unchanged.",
       }
     : outcome.kind === "skipped"
@@ -2227,7 +2227,7 @@ export function restoreNativeCodex(options: { skipHistory?: boolean; revalidateD
           files: rawHistory.files,
           ejectedRows: rawHistory.ejectedRows ?? 0,
           message: rawHistory.rows > 0
-            ? `Resume history metadata restored from opencodex backup (${rawHistory.rows} thread(s)); original providers preserved.`
+            ? `Resume history metadata restored from openccx backup (${rawHistory.rows} thread(s)); original providers preserved.`
             : "No backed-up resume-history metadata was pending; untracked routed history was left unchanged.",
         };
   const message = catalog.removed > 0

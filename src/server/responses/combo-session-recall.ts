@@ -1,11 +1,11 @@
 /** Process-local recall of the last completed combo response on an explicit session lane. */
 import { getCombo, targetKey } from "../../combos/types";
 import { captureConfigGeneration, type GenerationContext } from "../../lib/state-store-sweeper";
-import type { OcxConfig, OcxComboTarget } from "../../types";
+import type { OccxConfig, OccxComboTarget } from "../../types";
 
 interface ComboRecallEntry {
   comboId: string;
-  target: Pick<OcxComboTarget, "provider" | "model">;
+  target: Pick<OccxComboTarget, "provider" | "model">;
   responseModel: string;
   at: number;
 }
@@ -25,7 +25,7 @@ function ownsEntry(context: Pick<GenerationContext, "comboIds" | "comboTargets" 
 export function rememberComboForLane(
   lane: string | undefined,
   comboId: string,
-  target: Pick<OcxComboTarget, "provider" | "model">,
+  target: Pick<OccxComboTarget, "provider" | "model">,
   responseModel: string,
   writerGeneration: number,
 ): void {
@@ -44,7 +44,7 @@ export function rememberComboForLane(
 }
 
 export function recallComboForLane(
-  config: OcxConfig,
+  config: OccxConfig,
   lane: string | undefined,
   model: string,
 ): string | undefined {

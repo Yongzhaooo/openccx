@@ -1,5 +1,5 @@
 import { booleanRecordConfigError } from "../../config/provider-validation";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 
 /**
  * Provider-management validation that belongs to the provider editor, not the
@@ -30,7 +30,7 @@ function publicServiceTierRecord(value: unknown): Record<string, boolean> | unde
  * DTO. `safeConfigDTO` remains the owner of auth/cors redaction; this helper
  * only projects a boolean model capability used by the management UI.
  */
-export function withProviderServiceTierDTO(dto: unknown, config: OcxConfig): unknown {
+export function withProviderServiceTierDTO(dto: unknown, config: OccxConfig): unknown {
   if (!dto || typeof dto !== "object" || Array.isArray(dto)) return dto;
   const root = dto as { providers?: unknown };
   if (!root.providers || typeof root.providers !== "object" || Array.isArray(root.providers)) return dto;

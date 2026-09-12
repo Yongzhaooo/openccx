@@ -1,6 +1,6 @@
 /** Isolated, process-local API-key quota rows. Never publishes provider/routing caches. */
 import { createHash } from "node:crypto";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { apiKeyPoolEntryId } from "./api-keys";
 import { resolveProviderApiKey } from "./key-store";
 import type { ProviderQuota } from "./quota-types";
@@ -48,7 +48,7 @@ export function clearProviderApiKeyQuotaCache(): void {
  */
 export function cachedApiKeyQuota(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   keyId: string,
   key: string,
 ): ProviderQuota | null {
@@ -68,7 +68,7 @@ export function cachedApiKeyQuota(
 /** Test seam: keyed on identity(), so it takes the raw key rather than an account id. */
 export function setCachedProviderApiKeyQuotaForTests(
   name: string,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   keyId: string,
   key: string,
   quota: ProviderQuota | null,
@@ -92,12 +92,12 @@ export async function mapQuotaRoster<T, R>(rows: readonly T[], read: (row: T) =>
   return out;
 }
 
-function roster(provider: OcxProviderConfig) {
+function roster(provider: OccxProviderConfig) {
   return provider.apiKeyPool?.length ? provider.apiKeyPool
     : provider.apiKey ? [{ id: apiKeyPoolEntryId(provider.apiKey), key: provider.apiKey }] : [];
 }
 
-function identity(name: string, provider: OcxProviderConfig, id: string, key: string): string {
+function identity(name: string, provider: OccxProviderConfig, id: string, key: string): string {
   return createHash("sha256").update(JSON.stringify([
     "quota-key", name, provider.adapter, provider.baseUrl, provider.authMode ?? "key",
     provider.disabled === true, id, key,
@@ -149,10 +149,10 @@ async function readEntry(
 }
 
 export async function readProviderApiKeyQuotas(
-  config: OcxConfig,
+  config: OccxConfig,
   name: string,
   force: boolean,
-  probe: (provider: OcxProviderConfig, config: OcxConfig) => Promise<KeyQuotaProbeOutcome>,
+  probe: (provider: OccxProviderConfig, config: OccxConfig) => Promise<KeyQuotaProbeOutcome>,
 ): Promise<ProviderApiKeyQuota[]> {
   const liveProvider = config.providers[name];
   if (!liveProvider) return [];

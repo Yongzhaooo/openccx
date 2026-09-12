@@ -1,5 +1,5 @@
 import { readPidFileValue, readRuntimePort } from "../config/process-state";
-import { isOpencodexHealthz, probeHostname } from "../server/proxy-liveness";
+import { isOpenccxHealthz, probeHostname } from "../server/proxy-liveness";
 import { directLocalHttpFetch } from "../server/direct-local-http";
 import { isProcessAlive } from "../lib/process-control";
 
@@ -46,10 +46,10 @@ export function isConnectionRefused(error: unknown): boolean {
 
 /**
  * A proxy killed by a native trap or SIGKILL never runs the exit cleanup that removes
- * `ocx.pid` and `runtime-port.json` (only SIGINT/SIGTERM/SIGHUP and normal exit are
+ * `occx.pid` and `runtime-port.json` (only SIGINT/SIGTERM/SIGHUP and normal exit are
  * wired to it), so both records outlive it. That makes "crashed" and "never started"
  * distinguishable — and #1419 is what it costs when we discard the distinction: the
- * reporter's unsupervised `ocx gui` proxy died and every later command said only
+ * reporter's unsupervised `occx gui` proxy died and every later command said only
  * "not running", never that a previous process had exited or that a service would
  * have restarted it.
  *
@@ -100,8 +100,8 @@ export async function checkProxyHealth(target: ListenTarget): Promise<HealthChec
       return { ok: false, url, message, label: `${url} ${message}` };
     }
     const body = await response.json().catch(() => null) as { service?: unknown; status?: unknown; version?: unknown; uptime?: unknown } | null;
-    if (!isOpencodexHealthz(body)) {
-      const message = "responded, but not an opencodex proxy";
+    if (!isOpenccxHealthz(body)) {
+      const message = "responded, but not an openccx proxy";
       return { ok: false, url, message, label: `${url} ${message}` };
     }
     const version = typeof body?.version === "string" ? ` v${body.version}` : "";
@@ -117,8 +117,8 @@ export async function checkProxyHealth(target: ListenTarget): Promise<HealthChec
 }
 
 /**
- * The ONE evidence gatherer for stale-process state, shared by `ocx status` and
- * `ocx doctor`.
+ * The ONE evidence gatherer for stale-process state, shared by `occx status` and
+ * `occx doctor`.
  *
  * It deliberately probes the port named by the STALE RECORD, not the configured display
  * port. Review found the two commands disagreeing precisely here: a proxy that hopped to

@@ -1,7 +1,7 @@
 /**
  * Meta Model API direct provider (`meta-model`).
  *
- * Muse Spark reached opencodex through resellers first (Command Code, OpenCode Zen).
+ * Muse Spark reached openccx through resellers first (Command Code, OpenCode Zen).
  * This entry adds Meta's own endpoint, built entirely from published spec — no API key
  * was issued, so every value here is a documented claim rather than a probe result.
  *
@@ -17,7 +17,7 @@ import { createResponsesPassthroughAdapter as createResponsesPassthroughAdapterP
 import { enrichProviderFromRegistry, providerConfigSeed } from "../../src/providers/derive";
 import { getProviderRegistryEntry } from "../../src/providers/registry";
 import { routeModel } from "../../src/router";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createResponsesPassthroughAdapter = (...args: Parameters<typeof createResponsesPassthroughAdapterProduction>) =>
@@ -87,7 +87,7 @@ describe("Meta Model API provider (meta-model)", () => {
    * model reference to a different vendor and a different bill.
    */
   test("meta/muse-spark-1.3 still reaches command-code with the direct provider configured", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "command-code",
       providers: {
@@ -109,7 +109,7 @@ describe("Meta Model API provider (meta-model)", () => {
    * request body, not the registry array that looked correct throughout.
    */
   test("minimal reaches the wire as minimal, not low", () => {
-    const provider = { ...providerConfigSeed(entry()), apiKey: "meta-test-key" } as OcxProviderConfig;
+    const provider = { ...providerConfigSeed(entry()), apiKey: "meta-test-key" } as OccxProviderConfig;
     const request = createResponsesPassthroughAdapter(provider).buildRequest({
       modelId: "muse-spark-1.3",
       context: { messages: [] },
@@ -128,12 +128,12 @@ describe("Meta Model API provider (meta-model)", () => {
    */
   test("a same-named custom provider keeps its own destination", () => {
     expect(entry().preserveCustomDestination).toBe(true);
-    const custom: OcxProviderConfig = {
+    const custom: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://internal.example/v1",
       apiKey: "someone-elses-key",
       authMode: "key",
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     enrichProviderFromRegistry("meta-model", custom);
     expect(custom.baseUrl).toBe("https://internal.example/v1");
     expect(custom.apiKey).toBe("someone-elses-key");

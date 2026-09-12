@@ -165,7 +165,7 @@ export function atomicWriteFile(
   recordOwnedConfigPath(getConfigDir(), path);
   const target = resolveWriteTarget(path);
   assertResolvedTargetAllowed(path, target);
-  const tmp = `${target}.ocx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
+  const tmp = `${target}.occx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
   let hardened = false;
   let ownsTemp = false;
   const effective: AtomicWriteIO = io ?? {
@@ -256,7 +256,7 @@ export async function atomicWriteFileAsync(
   };
   const target = resolveWriteTarget(path);
   assertResolvedTargetAllowed(path, target);
-  const tmp = `${target}.ocx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
+  const tmp = `${target}.occx.${process.pid}.${nextAtomicTempSequence()}.tmp`;
   let hardened = false;
   try {
     if (io) ownsTemp = true;

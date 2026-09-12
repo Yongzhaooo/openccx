@@ -187,7 +187,7 @@ jobs:
             );
             const { owner, repo } = context.repo;
             const issue_number = context.payload.issue.number;
-            const MARKER = "<!-- opencodex-dedup-bot -->";
+            const MARKER = "<!-- openccx-dedup-bot -->";
             const payload = JSON.parse(process.env.MATCHES || '{}');
             // Consume only the normalised parse output — never raw model text.
             const sanitize = (v) => String(v || '')

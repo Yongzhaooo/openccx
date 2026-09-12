@@ -1,4 +1,4 @@
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../types";
 import { toolChoiceToolPredicate } from "../types";
 import type { ImageBridgePlan, VideoBridgePlan } from "./types";
 import { resolveProviderApiKey } from "../providers/key-store";
@@ -15,7 +15,7 @@ function clampImageTimeoutMs(value: unknown): number | undefined {
   return Math.max(1, Math.min(MAX_IMAGE_TIMEOUT_MS, Math.floor(value)));
 }
 
-export function findXaiProvider(config: OcxConfig): { name: string; provider: OcxProviderConfig } | undefined {
+export function findXaiProvider(config: OccxConfig): { name: string; provider: OccxProviderConfig } | undefined {
   // Primary: well-known name "xai"
   const xai = config.providers["xai"];
   if (xai && xai.disabled !== true) return { name: "xai", provider: xai };
@@ -35,14 +35,14 @@ export function findXaiProvider(config: OcxConfig): { name: string; provider: Oc
  * OAuth / Grok CLI proxy transport is not used here (that path is chat-oriented and not a
  * supported Images transport), so oauth-only configs deliberately do not arm the bridge.
  */
-export function resolveXaiImageApiKey(provider: OcxProviderConfig): string | undefined {
+export function resolveXaiImageApiKey(provider: OccxProviderConfig): string | undefined {
   if (provider.authMode === "oauth") return undefined;
   const apiKey = resolveProviderApiKey(provider.apiKey)?.trim();
   return apiKey || undefined;
 }
 
 /** Token for the /v1/images → Imagine relay. OAuth reuses the Grok CLI grant. */
-export async function resolveXaiImageAuthToken(provider: OcxProviderConfig): Promise<string | undefined> {
+export async function resolveXaiImageAuthToken(provider: OccxProviderConfig): Promise<string | undefined> {
   if (provider.authMode === "oauth") {
     try {
       const token = (await getValidAccessToken("xai"))?.trim();
@@ -55,9 +55,9 @@ export async function resolveXaiImageAuthToken(provider: OcxProviderConfig): Pro
 }
 
 export async function planImageBridge(
-  config: OcxConfig,
-  parsed: OcxParsedRequest,
-  routedProvider: OcxProviderConfig,
+  config: OccxConfig,
+  parsed: OccxParsedRequest,
+  routedProvider: OccxProviderConfig,
 ): Promise<ImageBridgePlan | undefined> {
   if (config.images?.bridgeEnabled !== true) return undefined;
   if (!parsed._imageGeneration) return undefined;
@@ -110,9 +110,9 @@ const DEFAULT_VIDEO_MODEL = "grok-imagine-video";
  *   3. an xAI provider with a valid API key is available
  */
 export async function planVideoBridge(
-  config: OcxConfig,
-  parsed: OcxParsedRequest,
-  routedProvider: OcxProviderConfig,
+  config: OccxConfig,
+  parsed: OccxParsedRequest,
+  routedProvider: OccxProviderConfig,
 ): Promise<VideoBridgePlan | undefined> {
   if (config.images?.videoBridgeEnabled !== true) return undefined;
   const toolNames = new Set<string>();

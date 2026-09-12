@@ -16,7 +16,7 @@
  * was not.
  */
 import { PROVIDER_REGISTRY } from "./registry";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 export interface StaleContextWindow {
   /** Registry provider id whose saved rows may carry the wrong window. */
@@ -28,7 +28,7 @@ export interface StaleContextWindow {
 }
 
 export interface StaleContextWindowProjection {
-  config: OcxConfig;
+  config: OccxConfig;
   changed: boolean;
   warnings: string[];
 }
@@ -62,7 +62,7 @@ function providerStillMatchesRegistry(id: string, adapter: unknown): boolean {
 
 /** Pure projection. The caller decides whether to persist. */
 export function projectStaleContextWindows(
-  config: OcxConfig,
+  config: OccxConfig,
   entries: readonly StaleContextWindow[] = STALE_CONTEXT_WINDOWS,
 ): StaleContextWindowProjection {
   const warnings: string[] = [];

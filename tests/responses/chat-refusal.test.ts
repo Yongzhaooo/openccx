@@ -6,7 +6,7 @@ import {
   responsesSseToChatCompletionsSse,
 } from "../../src/chat/outbound";
 import { jsonCompletionSse, nativeChatSse } from "../../src/server/chat-native-sse";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { resetProviderRequestPacingForTest } from "../../src/providers/request-pacing";
@@ -399,18 +399,18 @@ describe("Chat refusal collection and native serialization", () => {
 describe("refusal handler delivery matrix", () => {
   const originalFetch = globalThis.fetch;
   let isolatedHome: IsolatedCodexHome | undefined;
-  let previousOcxHome: string | undefined;
+  let previousOccxHome: string | undefined;
   beforeEach(() => {
-    previousOcxHome = process.env.OPENCODEX_HOME;
-    isolatedHome = installIsolatedCodexHome("ocx-refusal-fixture-");
-    process.env.OPENCODEX_HOME = isolatedHome.path;
+    previousOccxHome = process.env.OPENCCX_HOME;
+    isolatedHome = installIsolatedCodexHome("occx-refusal-fixture-");
+    process.env.OPENCCX_HOME = isolatedHome.path;
     globalThis.fetch = (async () => { throw new Error("unstubbed external transport"); }) as typeof fetch;
   });
   afterEach(() => {
     globalThis.fetch = originalFetch;
     resetProviderRequestPacingForTest();
-    if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOcxHome;
+    if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOccxHome;
     isolatedHome?.restore();
   });
   for (const native of [true, false]) {
@@ -439,7 +439,7 @@ describe("refusal handler delivery matrix", () => {
               "refusal-fixture": { adapter: native ? "openai-chat" : "openai-responses",
                 baseUrl: "https://refusal.example.test/v1", apiKey: "fixture-key", authMode: "key" },
             },
-          } as OcxConfig;
+          } as OccxConfig;
           const response = await handleChatCompletions(new Request("http://localhost/v1/chat/completions", {
             method: "POST", headers: { "content-type": "application/json" },
             body: JSON.stringify({ model, stream: clientSse, messages: [{ role: "user", content: "inert fixture" }] }),

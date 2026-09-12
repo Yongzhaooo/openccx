@@ -29,7 +29,7 @@ import {
 } from "../../src/codex/catalog/filesystem-evidence";
 import type { CatalogSourceEvidence } from "../../src/codex/convergence-types";
 import { saveConfig } from "../../src/config";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 interface ManifestEntry {
@@ -46,11 +46,11 @@ interface ManifestEntry {
 
 let testRoot = "";
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return { port: 10100, providers: {}, defaultProvider: "openai" };
 }
 
@@ -89,21 +89,21 @@ function recursiveManifest(root: string): readonly ManifestEntry[] {
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "ocx-filesystem-evidence-")));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  testRoot = realpathSync.native(mkdtempSync(join(tmpdir(), "occx-filesystem-evidence-")));
   codexHome = join(testRoot, "codex-home");
-  opencodexHome = join(testRoot, "opencodex-home");
+  openccxHome = join(testRoot, "openccx-home");
   mkdirSync(codexHome, { recursive: true });
-  mkdirSync(opencodexHome, { recursive: true });
+  mkdirSync(openccxHome, { recursive: true });
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
 });
 
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testRoot);
 });
 
@@ -200,7 +200,7 @@ test("populated and scratch gather sessions perform zero filesystem writes", () 
   saveConfig(config());
   const configPath = join(codexHome, "config.toml");
   const activePath = join(codexHome, "active.json");
-  const authPath = join(opencodexHome, "oauth.json");
+  const authPath = join(openccxHome, "oauth.json");
   writeFileSync(configPath, "model_catalog_json = \"active.json\"\n");
   writeFileSync(activePath, JSON.stringify({
     models: [{ slug: "gpt-5.5", base_instructions: "observed" }],

@@ -7,7 +7,7 @@ import {
 import { compileCodeModeHelperInput } from "../../src/responses/code-mode-helper-compat";
 import { createRoutedCustomToolRestoreBlockRewrite } from "../../src/server/responses-custom-tool-repair";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
 function dataPayload(block: string): Record<string, unknown> {
@@ -1228,7 +1228,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -1299,7 +1299,7 @@ describe("routed Responses custom-tool compatibility", () => {
           supportsResponsesCustomTools: false,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -1402,7 +1402,7 @@ describe("routed Responses custom-tool compatibility", () => {
           supportsResponsesCustomTools: false,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -1511,7 +1511,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const tools = [{ type: "custom", name: "exec", description: "Run JavaScript", format: { type: "grammar", syntax: "lark" } }];
 
     try {
@@ -1607,7 +1607,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -1655,7 +1655,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const execTool = {
       type: "custom",
       name: "exec",
@@ -1802,7 +1802,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -1841,7 +1841,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const upstreamItem = {
       type: "custom_tool_call",
       id: "ctc_patch",
@@ -1945,7 +1945,7 @@ describe("routed Responses custom-tool compatibility", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     const upstreamItem = {
       type: "custom_tool_call",
       id: "ctc_patch",
@@ -2056,7 +2056,7 @@ describe("routed Responses custom-tool compatibility", () => {
           modelPreferHostedTools: { "deepseek-v4-flash": ["image_generation"] },
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -2115,7 +2115,7 @@ describe("routed Responses custom-tool compatibility", () => {
           authMode: "forward",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {

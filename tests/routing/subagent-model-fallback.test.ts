@@ -31,7 +31,7 @@ import {
   CODEX_QUOTA_PROBE_INTERVAL_MS,
   recordCodexUpstreamOutcome,
 } from "../../src/codex/routing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 // beforeEach writes three Codex credentials (NTFS ACL harden on Windows). Under
@@ -40,7 +40,7 @@ import { removeTreeWithRetry } from "../helpers/remove-tree";
 setDefaultTimeout(30_000);
 
 const savedCodexHome = process.env.CODEX_HOME;
-const savedOpencodexHome = process.env.OPENCODEX_HOME;
+const savedOpenccxHome = process.env.OPENCCX_HOME;
 let testDir: string;
 
 function installPoolCredential(accountId: string, now = Date.now()): void {
@@ -52,7 +52,7 @@ function installPoolCredential(accountId: string, now = Date.now()): void {
   });
 }
 
-function cfg(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function cfg(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -84,7 +84,7 @@ function cfg(overrides: Partial<OcxConfig> = {}): OcxConfig {
 }
 
 function codexHomeFixture(): string {
-  const dir = mkdtempSync(join(tmpdir(), "ocx-subagent-fallback-"));
+  const dir = mkdtempSync(join(tmpdir(), "occx-subagent-fallback-"));
   mkdirSync(join(dir, "agents"), { recursive: true });
   process.env.CODEX_HOME = dir;
   return dir;
@@ -93,8 +93,8 @@ function codexHomeFixture(): string {
 // Credential writes can hit Windows ACL harden stalls under full-suite isolate
 // load (GHA windows-latest: beforeEach/afterEach hook timed out ~7.6s).
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-subagent-fb-"));
-  process.env.OPENCODEX_HOME = testDir;
+  testDir = mkdtempSync(join(tmpdir(), "occx-subagent-fb-"));
+  process.env.OPENCCX_HOME = testDir;
   process.env.CODEX_HOME = testDir;
   installPoolCredential("pool-a");
   installPoolCredential("account-a");
@@ -108,8 +108,8 @@ beforeEach(() => {
 afterEach(() => {
   if (savedCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = savedCodexHome;
-  if (savedOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = savedOpencodexHome;
+  if (savedOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = savedOpenccxHome;
   clearAccountQuota();
   resetSubagentModelFallbackStateForTests();
   clearAccountNeedsReauth("pool-a");

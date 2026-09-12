@@ -4,7 +4,7 @@ import { normalizeOpenCodeGoAdditionalTools } from "./opencode-go-additional-too
 import { isXaiResponsesDestination } from "../providers/xai-transport";
 import { createHash } from "node:crypto";
 import type { IncomingMeta, ProviderAdapter } from "./base";
-import { namespacedToolName, type AdapterEvent, type OcxParsedRequest, type OcxProviderConfig, type OcxUsage, type TierDecision } from "../types";
+import { namespacedToolName, type AdapterEvent, type OccxParsedRequest, type OccxProviderConfig, type OccxUsage, type TierDecision } from "../types";
 import { catalogModelSupportsReasoningSummaries } from "../codex/catalog";
 import { applyCodexRoutingHint, CODEX_RESPONSES_LITE_HEADER, CODEX_ROUTING_HINT_HEADER } from "../codex/forward-transport-headers";
 import { COMPACT_PROMPT, compactionItemToText, decodeCompactionSummary, isCompactionItemType } from "../responses/compaction";
@@ -18,7 +18,7 @@ import {
   isCanonicalOpenAiForwardProvider,
   isOpenAiOperatedResponsesDestination,
 } from "../providers/openai-tiers";
-import { OCX_REASONING_PREFIX } from "../responses/reasoning-envelope";
+import { OCCX_REASONING_PREFIX } from "../responses/reasoning-envelope";
 import { configuredReasoningEfforts, mapReasoningEffort, modelRecordValue } from "../reasoning-effort";
 import type { TranslatorBudget } from "../lib/translator-budget";
 import { rewriteRoutedCustomToolsForUpstream } from "../responses/custom-tool-compat";
@@ -64,10 +64,10 @@ export const FORWARD_HEADERS = [
 /**
  * Sanitize reasoning input by field policy, not by preserving each item's shape. Retaining a
  * native `encrypted_content` guarantees only that blob value: `status` is always removed;
- * proxy-owned `ocxr1:` envelopes are always removed; and native blobs are removed when the caller
+ * proxy-owned `occxr1:` envelopes are always removed; and native blobs are removed when the caller
  * requests stripping after a route-identity change or opaque-blob recovery. On routed/non-OpenAI
  * destinations, a present non-array `content` field is omitted. Otherwise non-empty array content
- * is blanked unless raw reasoning preservation is enabled; removing an `ocxr1:` envelope selects
+ * is blanked unless raw reasoning preservation is enabled; removing an `occxr1:` envelope selects
  * the same blanking path when non-array omission is not active.
  */
 export function sanitizeReasoningInputContent(
@@ -88,12 +88,12 @@ export function sanitizeReasoningInputContent(
     const rec = item as Record<string, unknown>;
     if (rec.type !== "reasoning") return item;
     const hasRawContent = Array.isArray(rec.content) && rec.content.length > 0;
-    // ocxr1 envelopes are proxy-minted (Anthropic signatures), not OpenAI encryption — the native
+    // occxr1 envelopes are proxy-minted (Anthropic signatures), not OpenAI encryption — the native
     // backend cannot decrypt them and would reject the request. Strip regardless of content shape.
-    const hasOcxEnvelope = typeof rec.encrypted_content === "string" && rec.encrypted_content.startsWith(OCX_REASONING_PREFIX);
+    const hasOccxEnvelope = typeof rec.encrypted_content === "string" && rec.encrypted_content.startsWith(OCCX_REASONING_PREFIX);
     const hasOutputStatus = Object.prototype.hasOwnProperty.call(rec, "status");
     const hasEncryptedContent = Object.prototype.hasOwnProperty.call(rec, "encrypted_content");
-    const stripEncryptedContent = hasOcxEnvelope
+    const stripEncryptedContent = hasOccxEnvelope
       || (opts?.stripEncryptedContent === true && hasEncryptedContent);
     // Codex serializes an absent reasoning content channel as `"content": null`. The field is
     // optional and null carries nothing, but a strict gateway rejects the item on its declared type
@@ -115,7 +115,7 @@ export function sanitizeReasoningInputContent(
     const stripOutputStatus = hasOutputStatus;
     const blankContent = !dropNullContentChannel
       && !opts?.preserveRawReasoningContent
-      && (hasRawContent || hasOcxEnvelope);
+      && (hasRawContent || hasOccxEnvelope);
     if (!blankContent && !stripOutputStatus && !stripEncryptedContent && !dropNullContentChannel) {
       return item;
     }
@@ -246,7 +246,7 @@ function stripCanonicalOnlyToolFields(body: unknown, includeCapabilityGated: boo
 
 /**
  * Codex keeps this ChatGPT-internal item metadata when its configured provider name is `openai`.
- * Loopback OpenCodex injection intentionally retains that provider identity for history continuity,
+ * Loopback Openccx injection intentionally retains that provider identity for history continuity,
  * even when the proxy ultimately routes the request to a public Responses destination. Those
  * destinations reject the private field as an unknown `input[*]` parameter, so remove it at the
  * noncanonical boundary without mutating the caller-owned raw body.
@@ -294,7 +294,7 @@ function stripItemIdsWhenUnstored(body: unknown): unknown {
  * Normalize replayed compaction items for the destination backend.
  *
  * A compaction item carries an `encrypted_content` blob the client replays verbatim on every later
- * turn, and only the backend that minted it can decode it. Proxy-minted `ocx1:` envelopes are
+ * turn, and only the backend that minted it can decode it. Proxy-minted `occx1:` envelopes are
  * transparent base64 rather than encryption, so no upstream can read them and they always become
  * plain user messages. Native blobs have multiple possible minters, so a destination's ability to
  * decode its own blobs does not make a blob from a previous serving identity portable. On a known
@@ -304,7 +304,7 @@ function stripItemIdsWhenUnstored(body: unknown): unknown {
  *
  * A bare `context_compaction` marker carries no blob and is forwarded untouched.
  */
-function scrubOcxCompactionItems(
+function scrubOccxCompactionItems(
   body: unknown,
   destinationDecodesNativeBlob: boolean,
   threadServingIdentityChanged: boolean,
@@ -336,7 +336,7 @@ function scrubOcxCompactionItems(
  * Strip unsupported `reasoning` sub-parameters for native slugs that reject them (e.g. Spark).
  * codex-rs injects `reasoning.context` and `reasoning.summary` based on catalog flags; Spark's
  * backend rejects both. The catalog fix prevents `use_responses_lite` from being set, but this
- * is a defense-in-depth guard so stale on-disk catalogs don't break until the user runs `ocx sync`.
+ * is a defense-in-depth guard so stale on-disk catalogs don't break until the user runs `occx sync`.
  */
 function stripUnsupportedReasoningParams(body: unknown): unknown {
   if (!isPlainObject(body)) return body;
@@ -391,7 +391,7 @@ function stripCanonicalForwardPromptCacheOptions(body: unknown): unknown {
  */
 function stripDisabledReasoningSummaries(
   body: unknown,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): unknown {
   if (modelRecordValue(provider.modelSupportsReasoningSummaries, modelId) !== false || !isPlainObject(body)) {
@@ -434,7 +434,7 @@ function stripDisabledReasoningSummaries(
  */
 function stripDisabledVerbosity(
   body: unknown,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): unknown {
   if (modelRecordValue(provider.modelSupportsVerbosity, modelId) !== false || !isPlainObject(body)) {
@@ -454,7 +454,7 @@ function stripDisabledVerbosity(
  */
 function normalizeConfiguredReasoningSummaryDelivery(
   body: unknown,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): unknown {
   const delivery = modelRecordValue(provider.modelReasoningSummaryDelivery, modelId);
@@ -628,7 +628,7 @@ const SPARK_RESERVED_FUNCTIONS_NAMESPACE = "functions";
  */
 function mapRoutedResponsesReasoningEffort(
   body: unknown,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
 ): unknown {
   if (provider.authMode === "forward") return body;
@@ -865,7 +865,7 @@ function promoteClientLoadedTools(body: unknown): unknown {
 }
 
 const MAX_RESPONSES_CALL_ID_LENGTH = 64;
-const REPAIRED_CALL_ID_PREFIX = "call_ocx_";
+const REPAIRED_CALL_ID_PREFIX = "call_occx_";
 const REPAIRED_CALL_ID_DIGEST_LENGTH = MAX_RESPONSES_CALL_ID_LENGTH - REPAIRED_CALL_ID_PREFIX.length;
 
 /**
@@ -1185,7 +1185,7 @@ function repairOrphanedInputItems(body: unknown, dropReasoning: boolean, synthes
         if (!hasOutput && callId) {
           changed = true;
           const name = typeof item.name === "string" && item.name.length > 0 ? item.name : callId;
-          const text = `[ocx] no tool result was recorded for "${name}"; execution status unknown — do not treat this as success, failure, or user-provided input.`;
+          const text = `[occx] no tool result was recorded for "${name}"; execution status unknown — do not treat this as success, failure, or user-provided input.`;
           syntheticKeys.add(`${isFnCall ? "function" : "custom"}:${callId}`);
           pendingSyntheticOutputs.push(isFnCall
             ? { type: "function_call_output", call_id: callId, output: text }
@@ -1375,7 +1375,7 @@ function normalizeResponsesToolResultAdjacency(body: unknown): unknown {
  * - the target is the ChatGPT backend (`authMode: "forward"`), whose Codex REST endpoint
  *   categorically rejects the parameter with `{"detail":"Unsupported parameter:
  *   previous_response_id"}` (strict allowlist; it also rejects `metadata` and
- *   `max_output_tokens`). Codex only sends the id on WS turns, and ocx converts those to
+ *   `max_output_tokens`). Codex only sends the id on WS turns, and occx converts those to
  *   internal HTTP requests, so forwarding it upstream is a guaranteed 400 — stripping is
  *   strictly better even when the local replay state missed. API-key mode keeps the field on
  *   unexpanded requests: the platform `/v1/responses` supports real server-side storage.
@@ -1657,7 +1657,7 @@ function preferHostedImageGenToolChoice(toolChoice: unknown): unknown {
  */
 function preferConfiguredHostedTools(
   body: unknown,
-  provider: OcxProviderConfig,
+  provider: OccxProviderConfig,
   modelId: string,
   selectedModelId?: string,
 ): unknown {
@@ -1998,7 +1998,7 @@ function normalizeImageGenClientTools(body: unknown): unknown {
  * carries a tool the upstream model 400s on. No-op (returns the original reference) when nothing
  * matches, keeping the common path allocation-free.
  */
-function stripUnsupportedHostedTools(body: unknown, provider: Pick<OcxProviderConfig, "baseUrl">): unknown {
+function stripUnsupportedHostedTools(body: unknown, provider: Pick<OccxProviderConfig, "baseUrl">): unknown {
   if (!isPlainObject(body)) return body;
   const model = typeof body.model === "string" ? body.model : "";
   const filterTools = (tools: unknown[]): unknown[] => {
@@ -2257,7 +2257,7 @@ function buildRoutedCompactionBody(body: unknown): unknown {
 }
 
 /** Read the Responses `usage` block, if the gateway sent one. */
-function usageFromResponsesPayload(payload: unknown): OcxUsage | undefined {
+function usageFromResponsesPayload(payload: unknown): OccxUsage | undefined {
   if (!isPlainObject(payload) || !isPlainObject(payload.usage)) return undefined;
   const usage = payload.usage;
   const inputTokens = typeof usage.input_tokens === "number" ? usage.input_tokens : 0;
@@ -2307,12 +2307,12 @@ function responsesErrorMessage(payload: unknown): string {
   return "upstream compaction failed";
 }
 
-export function createResponsesPassthroughAdapter(provider: OcxProviderConfig): ProviderAdapter & { passthrough: true } {
+export function createResponsesPassthroughAdapter(provider: OccxProviderConfig): ProviderAdapter & { passthrough: true } {
   return {
     name: "openai-responses",
     passthrough: true as const,
 
-    buildRequest(parsed: OcxParsedRequest, incoming: IncomingMeta) {
+    buildRequest(parsed: OccxParsedRequest, incoming: IncomingMeta) {
       const translatorBudget = incoming.translatorBudget;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       let url: string;
@@ -2487,7 +2487,7 @@ export function createResponsesPassthroughAdapter(provider: OcxProviderConfig): 
               stripInvalidItemIds(
                 stripUnsupportedHostedTools(
                   sanitizeReasoningInputContent(
-                    scrubOcxCompactionItems(
+                    scrubOccxCompactionItems(
                       outBody,
                       destinationDecodesNativeCompactionBlob(provider),
                       threadServingIdentityChanged,
@@ -2587,7 +2587,7 @@ export function createResponsesPassthroughAdapter(provider: OcxProviderConfig): 
       let deltas = "";
       let doneText = "";
       let snapshot = "";
-      let usage: OcxUsage | undefined;
+      let usage: OccxUsage | undefined;
       let compactionEncryptedContent: string | undefined;
       let completedSeen = false;
       for await (const event of decodeServerSentEvents(response.body, { translatorBudget: budget })) {

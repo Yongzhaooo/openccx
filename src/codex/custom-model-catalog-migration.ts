@@ -1,5 +1,5 @@
 import { routedSlug, slugEquivalenceKey } from "../providers/slug-codec";
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 
 const MIGRATION_FIELD = "customModelCatalogMigration";
 const MIGRATION_VERSION = 1;
@@ -87,7 +87,7 @@ function customModelSlugs(config: unknown): CustomModelSlugSet {
   return { kind: "valid", byKey };
 }
 
-function copyMigrationField(target: OcxConfig, source: OcxConfig): void {
+function copyMigrationField(target: OccxConfig, source: OccxConfig): void {
   const targetRecord = target as unknown as ConfigRecord;
   const sourceRecord = source as unknown as ConfigRecord;
   if (Object.hasOwn(sourceRecord, MIGRATION_FIELD)) {
@@ -106,11 +106,11 @@ function copyMigrationField(target: OcxConfig, source: OcxConfig): void {
  */
 export function projectCustomModelCatalogMigration(
   persistedConfig: unknown,
-  candidateConfig: OcxConfig,
-): OcxConfig {
+  candidateConfig: OccxConfig,
+): OccxConfig {
   const persistedState = parseMigrationState(persistedConfig);
   const candidateState = parseMigrationState(candidateConfig);
-  const projected = { ...candidateConfig } as OcxConfig;
+  const projected = { ...candidateConfig } as OccxConfig;
   const projectedRecord = projected as unknown as ConfigRecord;
 
   if (persistedState.kind === "unsupported") {
@@ -163,14 +163,14 @@ export function projectCustomModelCatalogMigration(
 
 /** Copy only the internal migration state after the projected write succeeds. */
 export function adoptCustomModelCatalogMigration(
-  target: OcxConfig,
-  projected: OcxConfig,
+  target: OccxConfig,
+  projected: OccxConfig,
 ): void {
   copyMigrationField(target, projected);
 }
 
-/** Canonical slugs that may classify old, unmarked OpenCodex custom rows. */
-export function legacyCustomModelCatalogSlugs(config: OcxConfig): ReadonlySet<string> {
+/** Canonical slugs that may classify old, unmarked Openccx custom rows. */
+export function legacyCustomModelCatalogSlugs(config: OccxConfig): ReadonlySet<string> {
   const state = parseMigrationState(config);
   return new Set(state.kind === "supported" ? state.state.legacyOwnedSlugs : []);
 }

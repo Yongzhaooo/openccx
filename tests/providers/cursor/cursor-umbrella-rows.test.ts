@@ -16,14 +16,14 @@ import {
   cursorModelReasoningEfforts,
 } from "../../../src/adapters/cursor/discovery";
 import { createCursorRequest } from "../../../src/adapters/cursor/request-builder";
-import type { OcxParsedRequest } from "../../../src/types";
+import type { OccxParsedRequest } from "../../../src/types";
 
-function parsedFor(modelId: string, reasoning?: string): OcxParsedRequest {
+function parsedFor(modelId: string, reasoning?: string): OccxParsedRequest {
   return {
     modelId,
     context: { systemPrompt: [], messages: [{ role: "user", content: "hi" }] },
     options: reasoning ? { reasoning } : {},
-  } as OcxParsedRequest;
+  } as OccxParsedRequest;
 }
 
 describe("cursor umbrella picker rows (devlog 260828_cursor_umbrella_catalog)", () => {

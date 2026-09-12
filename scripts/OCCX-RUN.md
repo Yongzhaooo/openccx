@@ -1,21 +1,21 @@
-# ocx-run — remote long-job runner
+# occx-run — remote long-job runner
 
-`~/bin/ocx-run` on the remote box. Use it for anything that takes minutes:
+`~/bin/occx-run` on the remote box. Use it for anything that takes minutes:
 suites, typechecks, builds, long probes.
 
 The ssh alias is `lidge-ai` (`~/.ssh/config`); plain `lidge` does not resolve.
 The examples below use the short name for readability — substitute the alias your
 config actually defines.
 
-**Install is a copy, not a rewrite.** `~/bin/ocx-run` is not preinstalled on every
+**Install is a copy, not a rewrite.** `~/bin/occx-run` is not preinstalled on every
 host, and a fresh box reports `No such file or directory` rather than anything that
 looks like a PATH problem. Check first, and if it is missing, copy this repository's
-`scripts/ocx-run` to `~/bin/ocx-run` and `chmod +x` it:
+`scripts/occx-run` to `~/bin/occx-run` and `chmod +x` it:
 
 ```bash
-ssh <host> 'ls -l ~/bin/ocx-run' || {
-  scp scripts/ocx-run <host>:bin/ocx-run
-  ssh <host> 'chmod +x ~/bin/ocx-run'
+ssh <host> 'ls -l ~/bin/occx-run' || {
+  scp scripts/occx-run <host>:bin/occx-run
+  ssh <host> 'chmod +x ~/bin/occx-run'
 }
 ```
 
@@ -43,13 +43,13 @@ non-interactive `ssh` does not read `~/.bashrc`, so a plain `bun` exits 127.
 ```bash
 # launch (returns immediately when backgrounded)
 ssh lidge 'export PATH=$HOME/bin:$PATH
-  nohup ocx-run suite ~/ocx-boundary/repo 40m bun run test > /dev/null 2>&1 &'
+  nohup occx-run suite ~/occx-boundary/repo 40m bun run test > /dev/null 2>&1 &'
 
 # check — RUNNING shows time since last output, so a wedge is visible
-ssh lidge 'export PATH=$HOME/bin:$PATH; ocx-run status'
+ssh lidge 'export PATH=$HOME/bin:$PATH; occx-run status'
 
-ssh lidge 'export PATH=$HOME/bin:$PATH; ocx-run tail suite 40'
-ssh lidge 'export PATH=$HOME/bin:$PATH; ocx-run stop suite'
+ssh lidge 'export PATH=$HOME/bin:$PATH; occx-run tail suite 40'
+ssh lidge 'export PATH=$HOME/bin:$PATH; occx-run stop suite'
 ```
 
 `export PATH=$HOME/bin:$PATH` is needed because the invoking ssh is
@@ -65,11 +65,11 @@ suite: FAIL rc=1 ...
 suite: TIMEOUT after 40m (rc=124) ...
 ```
 
-Pick a ceiling above the honest runtime: the opencodex suite is ~210s idle, so
+Pick a ceiling above the honest runtime: the openccx suite is ~210s idle, so
 `40m` is generous. A `TIMEOUT` means investigate, not retry with a bigger number.
 
 ## Note on the local machine
 
 `bun run test` already queues behind another runner via `scripts/test.ts`.
-Do not set `OCX_TEST_NO_QUEUE=1` to "go faster" — that bypass is what let four
+Do not set `OCCX_TEST_NO_QUEUE=1` to "go faster" — that bypass is what let four
 suites stack locally and turn a 210s run into 13 minutes.

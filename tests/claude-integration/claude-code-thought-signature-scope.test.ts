@@ -10,15 +10,15 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 
 import type { ProviderAdapter } from "../../src/adapters/base";
-import type { AdapterEvent, OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 const actualResolver = await import("../../src/server/adapter-resolve");
 
-let adapterFactory: ((provider: OcxProviderConfig) => ProviderAdapter) | undefined;
+let adapterFactory: ((provider: OccxProviderConfig) => ProviderAdapter) | undefined;
 
 mock.module("../../src/server/adapter-resolve", () => ({
   ...actualResolver,
-  resolveAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long") {
+  resolveAdapter(provider: OccxProviderConfig, cacheRetention?: "none" | "short" | "long") {
     return adapterFactory?.(provider) ?? actualResolver.resolveAdapter(provider, cacheRetention);
   },
 }));
@@ -29,21 +29,21 @@ afterEach(() => {
   adapterFactory = undefined;
 });
 
-function captureAdapter(captured: OcxParsedRequest[]): ProviderAdapter {
+function captureAdapter(captured: OccxParsedRequest[]): ProviderAdapter {
   return {
     name: "capture-replay-scope",
     buildRequest: () => ({ url: "https://capture.test", method: "POST", headers: {}, body: "{}" }),
     async *parseStream(): AsyncGenerator<AdapterEvent> {
       yield { type: "done" };
     },
-    async runTurn(parsed: OcxParsedRequest, _incoming, emit) {
+    async runTurn(parsed: OccxParsedRequest, _incoming, emit) {
       captured.push(parsed);
       emit({ type: "done" });
     },
   };
 }
 
-function testConfig(): OcxConfig {
+function testConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "a",
@@ -56,14 +56,14 @@ function testConfig(): OcxConfig {
         models: ["m1"],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function drive(options: {
   promptCacheKey?: string;
   promptCacheKeyIsSharedCohort?: boolean;
-}): Promise<OcxParsedRequest> {
-  const captured: OcxParsedRequest[] = [];
+}): Promise<OccxParsedRequest> {
+  const captured: OccxParsedRequest[] = [];
   adapterFactory = () => captureAdapter(captured);
   const body: Record<string, unknown> = {
     model: "m1",

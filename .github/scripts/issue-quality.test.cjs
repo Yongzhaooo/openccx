@@ -36,11 +36,11 @@ function featureBodyWithGoal(goal) {
     "### What are you trying to accomplish?",
     goal,
     "### What prevents this today?",
-    "Port resets to 10100 after every ocx stop command.",
-    "### What should OpenCodex do?",
+    "Port resets to 10100 after every occx stop command.",
+    "### What should Openccx do?",
     "Persist the last used port in config across restarts.",
     "### Example usage or interface",
-    "ocx start --port 8080 && ocx stop && ocx start",
+    "occx start --port 8080 && occx stop && occx start",
   ].join("\n");
 }
 
@@ -50,7 +50,7 @@ function featureBodyWithExample(example) {
     "Route voice requests to a configured fallback provider when the primary quota is exhausted.",
     "### What prevents this today?",
     "Voice mode is hard-wired to the primary Codex quota and cannot switch providers.",
-    "### What should OpenCodex do?",
+    "### What should Openccx do?",
     "Expose a setting to choose the fallback voice model and provider.",
     "### Example usage or interface",
     example,
@@ -70,10 +70,10 @@ describe("detectIssueKind", () => {
       "Route requests to a fallback provider.",
       "### What prevents this today?",
       "No fallback support.",
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       "Fall back automatically.",
       "### Example usage or interface",
-      "ocx config set routing.fallback anthropic",
+      "occx config set routing.fallback anthropic",
     ].join("\n");
     assert.equal(detectIssueKind({ title: "Add fallback routing", body, labels: ["enhancement"] }), "feature");
   });
@@ -81,7 +81,7 @@ describe("detectIssueKind", () => {
   it("detects legacy feature form with [Feature]: prefix", () => {
     const body = [
       "### Problem to solve",
-      "I want opencodex to support streaming.",
+      "I want openccx to support streaming.",
       "### Proposed solution",
       "Add SSE passthrough.",
     ].join("\n");
@@ -97,7 +97,7 @@ describe("detectIssueKind", () => {
       "### Summary",
       "Proxy crashes on startup.",
       "### Reproduction",
-      "1. ocx start",
+      "1. occx start",
       "### Version",
       "2.7.31",
       "### Operating system",
@@ -122,7 +122,7 @@ describe("detectIssueKind", () => {
       "Codex CLI",
       "### Provider or upstream service",
       "anthropic",
-      "### OpenCodex version",
+      "### Openccx version",
       "2.7.31",
       "### Endpoint or capability",
       "/v1/messages",
@@ -176,13 +176,13 @@ describe("validateIssue - feature", () => {
       "Route Studio models through the user's WordPress.com account.",
       "### What prevents this today?",
       "The provider needs two wire formats and one shared OAuth identity.",
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       "Add a first-class provider with model-specific transport selection.",
       "### Example usage or interface",
       "#### CLI flow",
       "```bash",
       "# This heading-shaped shell comment must stay inside the fence",
-      "ocx login wordpress-studio",
+      "occx login wordpress-studio",
       "```",
       "#### Dashboard flow",
       "Providers -> WordPress Studio Code -> Log in",
@@ -226,7 +226,7 @@ describe("validateIssue - feature", () => {
       repeated,
       "### What prevents this today?",
       repeated,
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       repeated,
       "### Example usage or interface",
       repeated,
@@ -252,7 +252,7 @@ describe("validateIssue - feature", () => {
       img,
       "### What prevents this today?",
       repeated,
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       repeated,
       "### Example usage or interface",
       repeated,
@@ -283,7 +283,7 @@ describe("validateIssue - feature", () => {
       mdImg,
       "### What prevents this today?",
       repeated,
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       repeated,
       "### Example usage or interface",
       repeated,
@@ -309,7 +309,7 @@ describe("validateIssue - feature", () => {
       mdImg,
       "### What prevents this today?",
       repeated,
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       repeated,
       "### Example usage or interface",
       repeated,
@@ -335,7 +335,7 @@ describe("validateIssue - feature", () => {
       mdImg,
       "### What prevents this today?",
       repeated,
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       repeated,
       "### Example usage or interface",
       repeated,
@@ -470,11 +470,11 @@ describe("validateIssue - feature", () => {
       "### What are you trying to accomplish?",
       "Pin the proxy port across restarts.",
       "### What prevents this today?",
-      "Port resets to 10100 after ocx stop.",
-      "### What should OpenCodex do?",
+      "Port resets to 10100 after occx stop.",
+      "### What should Openccx do?",
       "Remember the last used port in config.",
       "### Example usage or interface",
-      "ocx start --port 8080 && ocx stop && ocx start  # still 8080",
+      "occx start --port 8080 && occx stop && occx start  # still 8080",
     ].join("\n");
     const result = validateIssue({ title: "Persist port across restarts", body, labels: ["enhancement"] });
     assert.equal(result.kind, "feature");
@@ -489,7 +489,7 @@ describe("validateIssue - feature", () => {
       "Quota for Chatgpt running out that can no longer use voice mode. Would like to change other model for that",
       "### What prevents this today?",
       "No usage without codex quota",
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       "Change another voice model",
       "### Example usage or interface",
       "NA",
@@ -522,7 +522,7 @@ describe("validateIssue - feature", () => {
         "Route voice requests to a configured fallback provider when the primary quota is exhausted.",
         "### What prevents this today?",
         "Voice mode is hard-wired to the primary Codex quota and cannot switch providers.",
-        "### What should OpenCodex do?",
+        "### What should Openccx do?",
         "Expose a setting to choose the fallback voice model and provider.",
         "### Example usage or interface",
         example,
@@ -543,7 +543,7 @@ describe("validateIssue - feature", () => {
       "Route voice requests to a configured fallback provider when the primary quota is exhausted.",
       "### What prevents this today?",
       "Voice mode is hard-wired to the primary Codex quota and cannot switch providers.",
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       "Expose a setting to choose the fallback voice model and provider.",
       "### Example usage or interface",
       "",
@@ -574,7 +574,7 @@ describe("validateIssue - feature", () => {
       "\u4ee3\u7406\u670d\u52a1\u5668\u9700\u8981\u652f\u6301\u591a\u4e2a\u4e0a\u6e38\u63d0\u4f9b\u5546\u7684\u81ea\u52a8\u6545\u969c\u8f6c\u79fb\uff0c\u5f53\u4e3b\u63d0\u4f9b\u5546\u8fd4\u56de\u9519\u8bef\u65f6\u81ea\u52a8\u5207\u6362\u5230\u5907\u7528\u63d0\u4f9b\u5546\u3002",
       "### What prevents this today?",
       "\u76ee\u524d\u4ee3\u7406\u4e0d\u652f\u6301\u6545\u969c\u8f6c\u79fb\uff0c\u9700\u8981\u624b\u52a8\u91cd\u542f\u5e76\u66f4\u6539\u914d\u7f6e\u3002",
-      "### What should OpenCodex do?",
+      "### What should Openccx do?",
       "\u5f53\u4e3b\u63d0\u4f9b\u5546\u8fd4\u56de 5xx \u6216\u8d85\u65f6\u65f6\uff0c\u81ea\u52a8\u5c06\u8bf7\u6c42\u8f6c\u53d1\u5230\u914d\u7f6e\u7684\u5907\u7528\u63d0\u4f9b\u5546\u3002",
       "### Example usage or interface",
       "```json\n{\"routing\":{\"fallback_provider\":\"anthropic\"}}\n```",
@@ -697,9 +697,9 @@ describe("validateIssue - feature", () => {
   it("treats only commands, errors, paths, or exact actions as actionable reproduction detail", () => {
     assert.equal(hasActionableReproductionDetail("1. choose model deepseek\n2. send a message in codex plugin"), false);
     assert.equal(hasActionableReproductionDetail("I want to work with deepseek in VSCode, but it dont reply"), false);
-    assert.equal(hasActionableReproductionDetail("1. ocx start --port 10100\n2. Send a request"), true);
-    assert.equal(hasActionableReproductionDetail("Run ocx start and send any streaming request."), true);
-    assert.equal(hasActionableReproductionDetail("ocx start on Raspberry Pi 4, send any streaming request."), true);
+    assert.equal(hasActionableReproductionDetail("1. occx start --port 10100\n2. Send a request"), true);
+    assert.equal(hasActionableReproductionDetail("Run occx start and send any streaming request."), true);
+    assert.equal(hasActionableReproductionDetail("occx start on Raspberry Pi 4, send any streaming request."), true);
     assert.equal(hasActionableReproductionDetail("send a request"), false);
     assert.equal(hasActionableReproductionDetail("make a call"), false);
     assert.equal(hasActionableReproductionDetail("post a command"), false);
@@ -847,7 +847,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "",
       "### Reproduction",
-      "1. Run ocx start\n2. Send a request",
+      "1. Run occx start\n2. Send a request",
       "### Version",
       "2.7.42",
       "### Operating system",
@@ -868,7 +868,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy segfaults on ARM64 when streaming is enabled.",
       "### Reproduction",
-      "ocx start on Raspberry Pi 4, send any streaming request.",
+      "occx start on Raspberry Pi 4, send any streaming request.",
       "### Version",
       "2.7.30",
       "### Operating system",
@@ -888,7 +888,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "The proxy crashes when streaming is enabled.",
       "### Reproduction",
-      "Run ocx start and send a streaming request.",
+      "Run occx start and send a streaming request.",
     ].join("\n");
     const result = validateIssue({ title: "[Bug]: crash on streaming", body, labels: ["bug"] });
     assert.equal(result.kind, "bug");
@@ -900,7 +900,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy crashes on startup.",
       "### Reproduction",
-      "Run ocx start.",
+      "Run occx start.",
       "### Version",
       "_No response_",
       "### OS",
@@ -917,7 +917,7 @@ describe("validateIssue - bug", () => {
         "### Summary",
         "Proxy crashes on startup when streaming is enabled.",
         "### Reproduction",
-        "Run ocx start and send any streaming request.",
+        "Run occx start and send any streaming request.",
         "### Version",
         placeholder,
         "### Operating system",
@@ -941,7 +941,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy crashes.",
       "### Reproduction",
-      "Run ocx start.",
+      "Run occx start.",
       "### Version",
       "",
       "### Operating system",
@@ -973,9 +973,9 @@ describe("validateIssue - bug", () => {
         "### Area",
         "CLI",
         "### Summary",
-        "The OpenCodex proxy keeps dropping the Codex CLI connection mid-request.",
+        "The Openccx proxy keeps dropping the Codex CLI connection mid-request.",
         "### Reproduction",
-        "1. ocx start --port 10100",
+        "1. occx start --port 10100",
         "2. Send any Codex CLI request through the proxy",
         "3. Observe the connection drop",
         "### Version",
@@ -1044,7 +1044,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy returns 502 when streaming is enabled on Windows.",
       "### Reproduction",
-      "1. ocx start",
+      "1. occx start",
       "2. Send a streaming /v1/responses request",
       "### Version",
       "2.7.42",
@@ -1066,7 +1066,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy returns 502 when streaming is enabled on Windows.",
       "### Reproduction",
-      "1. ocx start",
+      "1. occx start",
       "2. Send a streaming /v1/responses request",
       "### Operating system",
       "Windows 11",
@@ -1086,7 +1086,7 @@ describe("validateIssue - bug", () => {
       "### Summary",
       "Proxy returns 502 when streaming is enabled on Windows.",
       "### Reproduction",
-      "1. ocx start",
+      "1. occx start",
       "2. Send a streaming /v1/responses request",
       "### Version",
       "2.7.42",
@@ -1104,7 +1104,7 @@ describe("validateIssue - bug", () => {
       "### Area",
       "CLI",
       "### Summary",
-      "The OpenCodex proxy keeps dropping the Codex CLI connection mid-request.",
+      "The Openccx proxy keeps dropping the Codex CLI connection mid-request.",
       "### Reproduction",
       "Unexpected interruption",
       "### Version",
@@ -1164,9 +1164,9 @@ describe("validateIssue - bug", () => {
       "### Area",
       "CLI",
       "### Summary",
-      "The OpenCodex proxy keeps dropping the Codex CLI connection mid-request.",
+      "The Openccx proxy keeps dropping the Codex CLI connection mid-request.",
       "### Reproduction",
-      "1. ocx start --port 10100",
+      "1. occx start --port 10100",
       "2. Send any Codex CLI request through the proxy",
       "3. Observe the connection drop",
       "### Version",
@@ -1196,7 +1196,7 @@ describe("validateIssue - provider-compatibility", () => {
       "Codex CLI",
       "### Provider or upstream service",
       "mistral",
-      "### OpenCodex version",
+      "### Openccx version",
       "2.7.31",
       "### Endpoint or capability",
       "/v1/chat/completions",
@@ -1222,7 +1222,7 @@ describe("validateIssue - provider-compatibility", () => {
       "Codex CLI",
       "### Provider or upstream service",
       "anthropic",
-      "### OpenCodex version",
+      "### Openccx version",
       "2.7.31",
       "### Endpoint or capability",
       "/v1/messages",
@@ -1248,7 +1248,7 @@ describe("validateIssue - provider-compatibility", () => {
       "Codex CLI",
       "### Provider or upstream service",
       "",
-      "### OpenCodex version",
+      "### Openccx version",
       "2.7.31",
       "### Endpoint or capability",
       "",
@@ -1400,9 +1400,9 @@ describe("normalisation", () => {
 
 describe("extractSection", () => {
   it("extracts content between headings", () => {
-    const body = "### Summary\nProxy crashes.\n### Reproduction\nRun ocx start.";
+    const body = "### Summary\nProxy crashes.\n### Reproduction\nRun occx start.";
     assert.equal(extractSection(body, "Summary"), "Proxy crashes.");
-    assert.equal(extractSection(body, "Reproduction"), "Run ocx start.");
+    assert.equal(extractSection(body, "Reproduction"), "Run occx start.");
   });
 
   it("returns null for missing sections", () => {
@@ -1533,7 +1533,7 @@ describe("translated feature headings and soft-pass", () => {
       "### Expected behaviour",
       "Catalog should advertise image input when the vision sidecar covers the model.",
       "### Environment",
-      "opencodex 2.7.36 on macOS with Codex App.",
+      "openccx 2.7.36 on macOS with Codex App.",
     ].join("\n");
     const result = validateIssue({
       title: "[Feature]: Auto-advertise image inputModalities for noVisionModels",
@@ -1588,7 +1588,7 @@ describe("translated feature headings and soft-pass", () => {
     // Summary/Reproduction headings but is clearly actionable.
     const body = [
       "## 환경",
-      "- opencodex 2.7.41 (launchd, port 10100)",
+      "- openccx 2.7.41 (launchd, port 10100)",
       "- Claude Desktop 3P + Anthropic OAuth (Pro/Max)",
       "- Auto Mode classifier model = `claude-sonnet-5`",
       "",
@@ -1597,7 +1597,7 @@ describe("translated feature headings and soft-pass", () => {
       "then retry the same payload up to 5 times. Dashboard previously showed 502.",
       "",
       "## 재현",
-      "1. `ocx login anthropic` and enable Claude Desktop 3P gateway key mode",
+      "1. `occx login anthropic` and enable Claude Desktop 3P gateway key mode",
       "2. Enable Auto Mode and trigger a tool permission classifier turn",
       "3. Observe five identical 64-token incomplete terminals for one approval",
       "",
@@ -1637,7 +1637,7 @@ describe("translated feature headings and soft-pass", () => {
       body: [
         "### Provider or upstream service",
         "custom-openai-compatible gateway hosted on our internal mesh",
-        "### OpenCodex version",
+        "### Openccx version",
         "2.7.41",
         "### Endpoint or capability",
         "`POST /v1/responses` with streaming tool calls",
@@ -1727,7 +1727,7 @@ describe("translated feature headings and soft-pass", () => {
         "### Summary",
         "Proxy segfaults on ARM64 when streaming is enabled.",
         "### Reproduction",
-        "ocx start on Raspberry Pi 4, send any streaming request.",
+        "occx start on Raspberry Pi 4, send any streaming request.",
         "### Version",
         "2.7.36",
         "### Operating system",
@@ -1818,7 +1818,7 @@ describe("validateIssue - freeform / non-template", () => {
       "### Description",
       "Proxy returns 502 when streaming is enabled on Windows.",
       "### Reproduction",
-      "1. ocx start",
+      "1. occx start",
       "2. Send a streaming request",
       "3. Observe 502",
       "### Log entry",
@@ -1857,7 +1857,7 @@ describe("validateIssue - freeform / non-template", () => {
       "### Summary",
       "Proxy segfaults on ARM64 when streaming is enabled.",
       "### Reproduction",
-      "ocx start on Raspberry Pi 4, send any streaming request.",
+      "occx start on Raspberry Pi 4, send any streaming request.",
       "### Version",
       "2.7.30",
       "### Operating system",
@@ -1878,7 +1878,7 @@ describe("validateIssue - freeform / non-template", () => {
       "### Summary",
       "Something went wrong in the proxy.",
       "### Reproduction",
-      "Run ocx start.",
+      "Run occx start.",
     ].join("\n");
     assert.equal(detectIssueKind({ title: "Something went wrong", body, labels: [] }), null);
     const result = validateIssue({ title: "Something went wrong", body, labels: [] });

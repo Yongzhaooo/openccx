@@ -773,7 +773,7 @@ export function relaySseWithHeartbeat(
 ): ReadableStream<Uint8Array> | null {
   if (!body) return null;
   const reader = body.getReader();
-  const heartbeat = new TextEncoder().encode(": opencodex keepalive\n\n");
+  const heartbeat = new TextEncoder().encode(": openccx keepalive\n\n");
   let timer: ReturnType<typeof setInterval> | undefined;
   let closed = false;
   let clientCancelled = false;

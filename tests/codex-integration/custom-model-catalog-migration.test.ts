@@ -4,9 +4,9 @@ import {
   projectCustomModelCatalogMigration,
   legacyCustomModelCatalogSlugs,
 } from "../../src/codex/custom-model-catalog-migration";
-import type { OcxConfig, OcxCustomModel } from "../../src/types";
+import type { OccxConfig, OccxCustomModel } from "../../src/types";
 
-function config(customModels?: OcxCustomModel[]): OcxConfig {
+function config(customModels?: OccxCustomModel[]): OccxConfig {
   return {
     port: 10100,
     providers: {
@@ -20,7 +20,7 @@ function config(customModels?: OcxCustomModel[]): OcxConfig {
   };
 }
 
-function custom(modelId: string): OcxCustomModel {
+function custom(modelId: string): OccxCustomModel {
   return {
     id: `id-${modelId}`,
     provider: "routed",

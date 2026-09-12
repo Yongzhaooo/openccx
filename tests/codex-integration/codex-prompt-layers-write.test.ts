@@ -20,14 +20,14 @@ import {
 } from "../../src/codex/prompt-journal";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const MARKER = "# Auto-injected by opencodex";
+const MARKER = "# Auto-injected by openccx";
 const roots: string[] = [];
 
 function fixture(config?: string, store?: string) {
-  const root = mkdtempSync(join(tmpdir(), "ocx-prompt-write-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-prompt-write-"));
   roots.push(root);
   const configPath = join(root, "config.toml");
-  const storePath = join(root, "opencodex-prompt.json");
+  const storePath = join(root, "openccx-prompt.json");
   if (config !== undefined) writeFileSync(configPath, config, "utf8");
   if (store !== undefined) writeFileSync(storePath, store, "utf8");
   return { root, configPath, storePath };
@@ -174,7 +174,7 @@ describe("custom layers", () => {
   test("the retired fence text is now ordinary body text", () => {
     const paths = fixture("model = \"x\"\n");
     const snap = readPromptLayers(paths);
-    const body = "# >>> ocx-layer:abc123 not a delimiter";
+    const body = "# >>> occx-layer:abc123 not a delimiter";
     expect(writeCustomLayers([layer({ body })], snap.revision, paths).ok).toBe(true);
     expect(readPromptLayers(paths).custom[0]!.body).toBe(body);
   });
@@ -215,7 +215,7 @@ describe("transaction", () => {
   test("a pre-existing journal blocks the write until it is resolved", () => {
     const paths = fixture("model = \"x\"\n");
     const snap = readPromptLayers(paths);
-    writeFileSync(join(paths.root, "opencodex-prompt.journal"), "garbage", "utf8");
+    writeFileSync(join(paths.root, "openccx-prompt.journal"), "garbage", "utf8");
     const result = setToggle("apps", false, snap.revision, paths);
     expect(result).toMatchObject({ ok: false, error: "recovery_required" });
     expect(read(paths.configPath)).toBe('model = "x"\n');
@@ -224,7 +224,7 @@ describe("transaction", () => {
   test("a forged journal cannot redirect recovery away from the active paths", () => {
     const paths = fixture('model = "x"\n');
     const attacker = fixture("ATTACKER_POST_CONFIG", "ATTACKER_PRE_STORE");
-    const journalPath = join(paths.root, "opencodex-prompt.journal");
+    const journalPath = join(paths.root, "openccx-prompt.journal");
     const record: JournalRecord = {
       configPath: attacker.configPath,
       storePath: attacker.storePath,
@@ -253,7 +253,7 @@ describe("transaction", () => {
     const paths = fixture("model = \"x\"\n");
     const snap = readPromptLayers(paths);
     writeFileSync(
-      join(paths.root, "opencodex-prompt.lock"),
+      join(paths.root, "openccx-prompt.lock"),
       JSON.stringify({ token: "other", pid: process.pid, acquiredAt: Date.now() }),
       "utf8",
     );
@@ -350,8 +350,8 @@ describe("transaction", () => {
     // The three things the old behaviour got wrong, asserted separately because each
     // one is independently damaging.
     expect(read(paths.configPath)).toBe(before);
-    expect(existsSync(join(paths.root, "opencodex-prompt.journal"))).toBe(false);
-    expect(existsSync(join(paths.root, "opencodex-prompt.lock"))).toBe(false);
+    expect(existsSync(join(paths.root, "openccx-prompt.journal"))).toBe(false);
+    expect(existsSync(join(paths.root, "openccx-prompt.lock"))).toBe(false);
 
     // And the next write is not poisoned by the failed one.
     removeTreeWithRetry(paths.storePath);

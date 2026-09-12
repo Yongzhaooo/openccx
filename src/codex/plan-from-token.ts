@@ -3,7 +3,7 @@ import {
   loadConfig,
   mutatePersistedConfig,
 } from "../config";
-import type { CodexAccount, OcxConfig } from "../types";
+import type { CodexAccount, OccxConfig } from "../types";
 import { isSelectableCodexPoolAccount, isValidCodexAccountId } from "./account-id";
 import {
   getCodexAccountCredential,
@@ -18,7 +18,7 @@ interface FreshPoolPlanUpdate {
   credentialGeneration: number;
 }
 
-function configuredPoolAccount(config: OcxConfig, accountId: string): CodexAccount | null {
+function configuredPoolAccount(config: OccxConfig, accountId: string): CodexAccount | null {
   if (!isValidCodexAccountId(accountId)) return null;
   return (config.codexAccounts ?? [])
     .find(account => account.id === accountId && isSelectableCodexPoolAccount(account)) ?? null;
@@ -42,7 +42,7 @@ function jwtMayWritePlan(account: CodexAccount, generation: number): boolean {
   return whamGeneration !== undefined && generation > whamGeneration;
 }
 
-function collectJwtPoolPlanUpdates(runtimeConfig: OcxConfig): FreshPoolPlanUpdate[] {
+function collectJwtPoolPlanUpdates(runtimeConfig: OccxConfig): FreshPoolPlanUpdate[] {
   const updates: FreshPoolPlanUpdate[] = [];
   for (const account of (runtimeConfig.codexAccounts ?? []).filter(isSelectableCodexPoolAccount)) {
     const jwtPlan = jwtPlanFromPoolCredential(account.id);
@@ -57,7 +57,7 @@ function collectJwtPoolPlanUpdates(runtimeConfig: OcxConfig): FreshPoolPlanUpdat
 
 const appliedJwtPlans = new Map<string, string>();
 
-function persistJwtPlanUpdates(runtimeConfig: OcxConfig, updates: FreshPoolPlanUpdate[]): void {
+function persistJwtPlanUpdates(runtimeConfig: OccxConfig, updates: FreshPoolPlanUpdate[]): void {
   if (updates.length === 0) return;
   let outcome: ReturnType<typeof mutatePersistedConfig<FreshPoolPlanUpdate[]>>;
   try {
@@ -107,7 +107,7 @@ function persistJwtPlanUpdates(runtimeConfig: OcxConfig, updates: FreshPoolPlanU
  * label. Generation-gated, same fail-closed lock policy as the WHAM plan patch. Does not
  * overwrite a plan that already matches the token.
  */
-export function reconcileCodexPlansFromTokens(runtimeConfig: OcxConfig = loadConfig()): void {
+export function reconcileCodexPlansFromTokens(runtimeConfig: OccxConfig = loadConfig()): void {
   persistJwtPlanUpdates(runtimeConfig, collectJwtPoolPlanUpdates(runtimeConfig));
 }
 

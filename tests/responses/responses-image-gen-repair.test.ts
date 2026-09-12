@@ -5,7 +5,7 @@ import {
   restoreImageGenCallsInJson,
 } from "../../src/server/responses-image-gen-repair";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { finalizeTranslatorBudgetResponse } from "../../src/lib/translator-budget";
 import { createTestTranslatorBudget } from "../helpers/translator-budget";
 
@@ -182,7 +182,7 @@ describe("Responses image-gen call restoration", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -242,7 +242,7 @@ describe("Responses image-gen call restoration", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
@@ -314,7 +314,7 @@ describe("Responses image-gen call restoration", () => {
           apiKey: "fixture-key",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
 
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {

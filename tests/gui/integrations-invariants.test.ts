@@ -11,7 +11,7 @@ import { createIntegrationStateStore, type IntegrationStateStore } from "../../s
 import { readIntegrationState, readPath } from "../../src/integrations/state";
 import { applyIntegration, disableIntegration, restoreIntegration } from "../../src/integrations/writer";
 import { printSubcommandUsage, printUsage } from "../../src/cli/help";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 /**
@@ -28,12 +28,12 @@ const MODELS: ExportModel[] = [
   { namespaced: "anthropic/claude-opus-4-8", provider: "anthropic", id: "claude-opus-4-8", contextWindow: 200_000 },
 ];
 
-const CONFIG: OcxConfig = {
+const CONFIG: OccxConfig = {
   port: 10100,
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as unknown as OcxConfig;
+} as unknown as OccxConfig;
 
 let home: string;
 let store: IntegrationStateStore;
@@ -68,7 +68,7 @@ function installClient(clientId: IntegrationClientId): string {
 }
 
 beforeEach(() => {
-  const base = mkdtempSync(join(tmpdir(), "ocx-integrations-invariants-"));
+  const base = mkdtempSync(join(tmpdir(), "occx-integrations-invariants-"));
   home = join(base, "home");
   storeRoot = join(base, "store", "integrations");
   mkdirSync(home, { recursive: true });
@@ -112,10 +112,10 @@ describe("the client registries cannot drift apart", () => {
   });
 
   test("source preservation and cross-process locking are registry capabilities", () => {
-    expect(INTEGRATION_CLIENTS.omp.sourcePreservingYaml?.path).toEqual(["providers", "opencodex"]);
-    expect(INTEGRATION_CLIENTS.hermes.sourcePreservingYaml?.path).toEqual(["providers", "opencodex"]);
+    expect(INTEGRATION_CLIENTS.omp.sourcePreservingYaml?.path).toEqual(["providers", "openccx"]);
+    expect(INTEGRATION_CLIENTS.hermes.sourcePreservingYaml?.path).toEqual(["providers", "openccx"]);
     expect(INTEGRATION_CLIENTS.dsh.sourcePreservingYaml?.path).toEqual([
-      "llm-pi-ai", "providers", "opencodex",
+      "llm-pi-ai", "providers", "openccx",
     ]);
     expect(INTEGRATION_CLIENT_IDS.filter(id => INTEGRATION_CLIENTS[id].writerLock)).toEqual(["dsh", "mcode", "cline"]);
     expect(INTEGRATION_CLIENTS.dsh.writerLock).toEqual({ suffix: ".lock" });
@@ -214,7 +214,7 @@ describe("every client survives a full lifecycle", () => {
       const record = store.readRecords()[clientId]!;
       expect(record.fragmentPaths.length).toBeGreaterThan(0);
       // Read through the writer's own segment grammar: Raycast's path holds a
-      // `[id=opencodex]` selector into a sequence, not a map key.
+      // `[id=openccx]` selector into a sequence, not a map key.
       for (const path of record.fragmentPaths) {
         expect(readPath(afterApply, path)).toBeDefined();
       }
@@ -359,7 +359,7 @@ describe("a container we would have to replace is refused, not overwritten", () 
 
   test("disable refuses a blocked container instead of throwing", () => {
     /*
-     * The GUI locks the switch for `unsafe`, but `ocx integration client
+     * The GUI locks the switch for `unsafe`, but `occx integration client
      * disable` and direct API callers do not — and the removal path
      * dereferences a record that a blocked container never has, so this threw
      * a TypeError and surfaced as a 500.
@@ -401,14 +401,14 @@ describe("openclaw follows the config path its gateway actually reads", () => {
     expect(applyIntegration(write).ok).toBe(true);
 
     // The overridden file gained our block…
-    expect(readFileSync(relocated, "utf8")).toContain("opencodex");
+    expect(readFileSync(relocated, "utf8")).toContain("openccx");
     // …the record points at it, so a later disable cannot go looking elsewhere…
     expect(store.readRecords().openclaw?.configPath).toBe(relocated);
     // …and the default path was never created.
     expect(existsSync(join(home, ".openclaw", "openclaw.json"))).toBe(false);
 
     expect(disableIntegration(write).ok).toBe(true);
-    expect(readFileSync(relocated, "utf8")).not.toContain("opencodex");
+    expect(readFileSync(relocated, "utf8")).not.toContain("openccx");
     expect(readFileSync(relocated, "utf8")).toContain("keep-me");
   });
 
@@ -452,7 +452,7 @@ describe("openclaw's legacy layout is discovered, not declared obsolete", () => 
       env, home, store,
     };
     expect(applyIntegration(write).ok).toBe(true);
-    expect(readFileSync(legacyFile, "utf8")).toContain("opencodex");
+    expect(readFileSync(legacyFile, "utf8")).toContain("openccx");
     // No modern file conjured beside it.
     expect(existsSync(join(home, ".openclaw", "openclaw.json"))).toBe(false);
   });
@@ -507,7 +507,7 @@ describe("a real user document is not rejected for being richer than ours", () =
     const applied = parseConfig(readFileSync(configPath, "utf8"), "yaml") as Record<string, unknown>;
     const providers = applied.providers as Record<string, Record<string, unknown>>;
     expect(providers.mine!.token).toBeNull();
-    expect(providers.opencodex).toBeDefined();
+    expect(providers.openccx).toBeDefined();
 
     expect(disableIntegration(write).ok).toBe(true);
     expect(parseConfig(readFileSync(configPath, "utf8"), "yaml")).toEqual(parseConfig(seed, "yaml"));
@@ -667,7 +667,7 @@ describe("the base URL is composed, never interpolated", () => {
       const configPath = installClient("hermes");
       const result = applyIntegration({
         clientId: "hermes", models: MODELS, port: 10100,
-        config: { ...CONFIG, hostname } as OcxConfig,
+        config: { ...CONFIG, hostname } as OccxConfig,
         env: TEST_ENV, home, store,
       });
       expect(result.ok).toBe(true);
@@ -684,7 +684,7 @@ describe("a restore never launders a foreign edit into owned content", () => {
      * The chain: apply, user edits the file by hand, confirmed drift-restore
      * rewinds it (snapshotting the edited bytes first), then undo THAT restore
      * — which puts the user's edited bytes back on disk carrying a record that
-     * describes what opencodex wrote. Overwriting that record's fingerprint
+     * describes what openccx wrote. Overwriting that record's fingerprint
      * made the state read `current`, and disable then deleted the user's own
      * field as if it were ours.
      */
@@ -773,6 +773,6 @@ describe("the CLI names every client it supports", () => {
     }
     expect(output).not.toContain("Print an opencode/Pi config");
     // The headless toggle added alongside the WP4 routes is discoverable.
-    expect(output).toContain("ocx integration client");
+    expect(output).toContain("occx integration client");
   });
 });

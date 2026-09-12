@@ -15,13 +15,13 @@ import {
   resetStorageCleanupPolicyJobForTestsAsync,
   setStorageCleanupPolicyJobTestHooks,
 } from "../../src/storage/policy-job";
-import type { OcxConfig, StorageCleanupPolicy } from "../../src/types";
+import type { OccxConfig, StorageCleanupPolicy } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let configHome = "";
 let previousHome: string | undefined;
 
-function baseConfig(): OcxConfig {
+function baseConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -33,16 +33,16 @@ function baseConfig(): OcxConfig {
         authMode: "forward",
       },
     },
-    apiKeys: [{ id: "revoked", name: "Revoked", key: "ocx_revoked", createdAt: "2026-01-01" }],
-  } as OcxConfig;
+    apiKeys: [{ id: "revoked", name: "Revoked", key: "occx_revoked", createdAt: "2026-01-01" }],
+  } as OccxConfig;
 }
 
 beforeEach(async () => {
   await resetStorageCleanupPolicyJobForTestsAsync();
   setStorageCleanupPolicyJobTestHooks(null);
-  previousHome = process.env.OPENCODEX_HOME;
-  configHome = mkdtempSync(join(tmpdir(), "ocx-storage-policy-config-race-"));
-  process.env.OPENCODEX_HOME = configHome;
+  previousHome = process.env.OPENCCX_HOME;
+  configHome = mkdtempSync(join(tmpdir(), "occx-storage-policy-config-race-"));
+  process.env.OPENCCX_HOME = configHome;
   setPersistedConfigMutationBeforeCommitForTests(null);
   saveConfig(baseConfig());
 });
@@ -51,8 +51,8 @@ afterEach(async () => {
   await resetStorageCleanupPolicyJobForTestsAsync();
   setStorageCleanupPolicyJobTestHooks(null);
   setPersistedConfigMutationBeforeCommitForTests(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (configHome) removeTreeWithRetry(configHome);
   configHome = "";
 });

@@ -108,7 +108,7 @@ function parseKeyPayload(value: unknown): OAuthCredentials {
 function assertDurableApiKey(apiKey: string): void {
   const key = apiKey.trim();
   if (!key.startsWith(ORCAROUTER_KEY_PREFIX) || key.length > 4096 || /[\r\n]/.test(key)) {
-    throw new Error("OrcaRouter API key is invalid; reconnect with ocx login orcarouter-oauth");
+    throw new Error("OrcaRouter API key is invalid; reconnect with occx login orcarouter-oauth");
   }
 }
 
@@ -135,7 +135,7 @@ export class OrcaRouterOAuthFlow extends OAuthCallbackFlow {
       code_challenge: pkce.challenge,
       code_challenge_method: "S256",
       state,
-      app_name: "OpenCodex",
+      app_name: "Openccx",
       scope: "api",
     }).toString();
     return {
@@ -196,5 +196,5 @@ export async function refreshOrcaRouterKey(apiKey: string): Promise<never> {
   // This hook is reached only after upstream rejected the durable key. There is no refresh
   // grant to replay, so classify the credential as terminal and let the shared generation-safe
   // refresh path mark this exact account as needing a new browser login.
-  throw new Error("invalid_grant: OrcaRouter API keys cannot be refreshed; reconnect with ocx login orcarouter-oauth");
+  throw new Error("invalid_grant: OrcaRouter API keys cannot be refreshed; reconnect with occx login orcarouter-oauth");
 }

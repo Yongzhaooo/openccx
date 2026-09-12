@@ -29,7 +29,7 @@ beforeEach(() => {
   clearClientResourceStoresForTests();
   previous = new Map(globals.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   win = new Window({ url: "http://localhost/#models" });
-  win.localStorage.setItem("ocx-lang", "en");
+  win.localStorage.setItem("occx-lang", "en");
   const values = { document: win.document, window: win, navigator: win.navigator,
     localStorage: win.localStorage, sessionStorage: win.sessionStorage, IS_REACT_ACT_ENVIRONMENT: true };
   for (const [key, value] of Object.entries(values)) Object.defineProperty(globalThis, key, { configurable: true, value });
@@ -164,7 +164,7 @@ test("forward/backward drop and Up/Down controls submit the complete routed list
 test("external, self, fixed and expired drag tokens cannot reorder", async () => {
   await render(); await reply(0, initial());
   const original = ["p/f", "p/a", "p/b", "p/c"], external = transfer();
-  external.setData("application/x-ocx-picker-order", "external");
+  external.setData("application/x-occx-picker-order", "external");
   await dragEvent(row("p/b"), "drop", external); expect(order()).toEqual(original);
   await drop("p/a", "p/a"); await drop("p/a", "p/f"); expect(order()).toEqual(original);
   const local = transfer(); await dragEvent(button("Drag p/a"), "dragstart", local);
@@ -303,7 +303,7 @@ for (const availability of ["absent", "throws"] as const)
     await reply(requests.findIndex(r => r.url === "/right/api/subagent-models"), initial());
     const left = host.querySelector<HTMLElement>('[data-editor="left"]')!;
     const right = host.querySelector<HTMLElement>('[data-editor="right"]')!;
-    const original = ["p/f", "p/a", "p/b", "p/c"], type = "application/x-ocx-picker-order";
+    const original = ["p/f", "p/a", "p/b", "p/c"], type = "application/x-occx-picker-order";
     const leftDrag = transfer(), rightDrag = transfer();
     await dragEvent(button("Drag p/a", left), "dragstart", leftDrag);
     await dragEvent(button("Drag p/a", right), "dragstart", rightDrag);
@@ -353,8 +353,8 @@ test("Models pins cache-inferred Custom across late parent GET publication, then
     contextCaps: {}, contextCapValue: 350_000 };
   const custom = { ...initial(), pickerOrder: ["p/c", "p/a", "p/f", "p/b"] };
   for (const base of ["/a", "/b"]) {
-    win.sessionStorage.setItem(`ocx.models.catalog.v1:${base}`, JSON.stringify(catalog));
-    win.sessionStorage.setItem(`ocx.models.catalog.v1:${base}:picker-order`, JSON.stringify(base === "/a" ? custom
+    win.sessionStorage.setItem(`occx.models.catalog.v1:${base}`, JSON.stringify(catalog));
+    win.sessionStorage.setItem(`occx.models.catalog.v1:${base}:picker-order`, JSON.stringify(base === "/a" ? custom
       : { ...initial(), pickerOrder: [] }));
   }
   const deferredFetch = globalThis.fetch;
@@ -380,7 +380,7 @@ test("Models pins cache-inferred Custom across late parent GET publication, then
   expect(order()).toEqual(["p/f", "p/c", "p/b", "p/a"]); expect(button("Save draft").disabled).toBe(false);
   // Integration seam: publish the same parent resource state a late GET would install.
   const late = deferred<PickerOrderSettings>();
-  const publication = late.promise.then(value => setClientResourceData("ocx.models.catalog.v1:/a:picker-order", value));
+  const publication = late.promise.then(value => setClientResourceData("occx.models.catalog.v1:/a:picker-order", value));
   await act(async () => { late.resolve({ ...initial(), pickerOrderMode: "provider" }); await publication; });
   expect(host.querySelector(".picker-order-editor")).toBe(editor);
   expect(order()).toEqual(["p/f", "p/c", "p/b", "p/a"]); expect(button("Save draft").disabled).toBe(false);

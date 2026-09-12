@@ -30,7 +30,7 @@ import {
 import { mergeLogDelta, parseLogPollResponse } from "./log-poll";
 
 function logsCacheKey(apiBase: string): string {
-  return `ocx.logs.list.v1:${apiBase}`;
+  return `occx.logs.list.v1:${apiBase}`;
 }
 
 const EMPTY_LOGS: LogEntry[] = [];

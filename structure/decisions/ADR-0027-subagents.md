@@ -4,9 +4,9 @@
 
 ## Decision record
 
-- 목적과 의도: keep generated Claude Code `ocx-*.md` roster files synchronized when the proxy is
+- 목적과 의도: keep generated Claude Code `occx-*.md` roster files synchronized when the proxy is
   started or ensured on Linux, Windows, and macOS, including background service restarts.
-- 기존 구현 및 제약 조건: explicit `ocx claude` launches and Management API writes reconciled the
+- 기존 구현 및 제약 조건: explicit `occx claude` launches and Management API writes reconciled the
   files, while the startup call inside `injectSystemEnv` ran only on macOS with system-env enabled.
   `startServer` is also used as an in-process library/test primitive and cannot safely mutate the
   real user home on every invocation.
@@ -18,7 +18,7 @@
   duplicate call.
 - 다른 대안 대신 이 방식을 선택한 이유: it covers every supported service entrypoint without
   adding home-directory side effects to server-library consumers or creating a second roster format.
-- 장점, 단점 및 영향: stale OpenCodex-owned definitions converge on every daemon start, disabled integration
+- 장점, 단점 및 영향: stale Openccx-owned definitions converge on every daemon start, disabled integration
   prunes them without provider discovery, and catalog failure falls back to unmarked definitions so
-  startup remains available. A later dashboard save or `ocx claude` launch restores missing context
+  startup remains available. A later dashboard save or `occx claude` launch restores missing context
   markers after a transient failure.

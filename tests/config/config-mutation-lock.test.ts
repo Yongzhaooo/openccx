@@ -6,16 +6,16 @@ import { ConfigMutationLockError, deleteConfigTopLevelKey, getConfigPath, initia
 import { InitialConfigPublicationError, publishInitialConfigNoReplace } from "../../src/config/initialize";
 import { nextAtomicTempSequence } from "../../src/config/atomic-write";
 import { CodexCredentialRefreshLockTimeoutError, getCodexAccountCredential, saveCodexAccountCredential } from "../../src/codex/account-store";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest, managementHeaders } from "../helpers/management-auth";
 import { watchdogMs } from "../helpers/ci-watchdog";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { repoPath, repoRoot } from "../helpers/repo-root";
 
 let testRoot = "";
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
-function config(port = 10100): OcxConfig {
+function config(port = 10100): OccxConfig {
   // Initial publication validates the candidate before reaching the filesystem;
   // unlike a replacing save, it cannot accept a dangling default provider.
   return {
@@ -66,14 +66,14 @@ async function waitForOwnedChild(child: ReturnType<typeof Bun.spawn>): Promise<n
 }
 
 beforeEach(() => {
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
+  previousOpenccxHome = process.env.OPENCCX_HOME;
   testRoot = mkdtempSync(join(import.meta.dir, ".tmp-config-mutation-lock-"));
-  process.env.OPENCODEX_HOME = testRoot;
+  process.env.OPENCCX_HOME = testRoot;
 });
 
 afterEach(() => {
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testRoot);
 });
 
@@ -92,7 +92,7 @@ test("a live cross-process holder is not stolen and runtime writers fail immedia
   `;
   const child = Bun.spawn([process.execPath, "-e", childSource], {
     cwd: repoRoot(),
-    env: { ...process.env, OPENCODEX_HOME: testRoot },
+    env: { ...process.env, OPENCCX_HOME: testRoot },
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
@@ -159,7 +159,7 @@ test("an abruptly exited holder releases the OS-backed transaction without stale
   `;
   const child = Bun.spawn([process.execPath, "-e", childSource], {
     cwd: repoRoot(),
-    env: { ...process.env, OPENCODEX_HOME: testRoot },
+    env: { ...process.env, OPENCCX_HOME: testRoot },
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
@@ -180,7 +180,7 @@ test("a throwing mutation releases the lock and leaves writers available", () =>
   expect(loadConfig().port).toBe(50500);
 });
 
-const initTemps = () => readdirSync(testRoot).filter(name => name.includes(".ocx.") && name.endsWith(".tmp"));
+const initTemps = () => readdirSync(testRoot).filter(name => name.includes(".occx.") && name.endsWith(".tmp"));
 
 test("initial publication rejects a missing default provider before writing candidate bytes", () => {
   let wrote = false;
@@ -249,7 +249,7 @@ test("real link collision preserves the winner and does not advance generation o
 
 test("exclusive temp collision does not remove or modify somebody else's file", () => {
   const sequence = nextAtomicTempSequence() + 1;
-  const occupied = `${getConfigPath()}.ocx.${process.pid}.${sequence}.tmp`;
+  const occupied = `${getConfigPath()}.occx.${process.pid}.${sequence}.tmp`;
   writeFileSync(occupied, "other staged bytes", { flag: "wx" });
   expect(() => publishInitialConfigNoReplace(getConfigPath(), "candidate bytes")).toThrow(InitialConfigPublicationError);
   expect(readFileSync(occupied, "utf8")).toBe("other staged bytes");
@@ -272,7 +272,7 @@ test("failed hardening occurs before candidate bytes are written", () => {
   } catch (error) { failure = error; }
   expect(failure).toBeInstanceOf(InitialConfigPublicationError);
   expect((failure as Error).message).toContain("permissions could not be secured");
-  expect((failure as Error).message).toContain("OPENCODEX_HOME");
+  expect((failure as Error).message).toContain("OPENCCX_HOME");
   expect((failure as Error).message).not.toContain("private ACL failure detail");
   expect(failure).toMatchObject({ publication: "not-published", hardLinkUnavailable: false, residualTemp: false });
   expect(wrote).toBe(false);
@@ -303,7 +303,7 @@ test.each(["EOPNOTSUPP", "ENOTSUP", "ENOSYS", "EXDEV", "EPERM"])("unsupported/de
   } catch (error) {
     expect(error).toBeInstanceOf(InitialConfigPublicationError);
     expect((error as InitialConfigPublicationError).hardLinkUnavailable).toBe(true);
-    expect((error as Error).message).toContain("OPENCODEX_HOME");
+    expect((error as Error).message).toContain("OPENCCX_HOME");
     expect((error as Error).message).toContain("private file permissions");
     expect((error as Error).message).not.toContain("do not print raw error");
     expect((error as Error).message).not.toContain("permissions could not be secured");
@@ -403,7 +403,7 @@ test("management API maps config mutation lock contention to retryable 503", asy
   `;
   const child = Bun.spawn([process.execPath, "-e", childSource], {
     cwd: repoRoot(),
-    env: { ...process.env, OPENCODEX_HOME: testRoot },
+    env: { ...process.env, OPENCCX_HOME: testRoot },
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",

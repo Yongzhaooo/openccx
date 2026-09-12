@@ -5,7 +5,7 @@ import { fastPolicyForModel } from "../../src/providers/service-tier";
 import * as adapterResolveModule from "../../src/server/adapter-resolve";
 import type { RequestLogContext } from "../../src/server/request-log";
 import { handleResponses } from "../../src/server/responses/core";
-import type { OcxConfig, OcxProviderConfig } from "../../src/types";
+import type { OccxConfig, OccxProviderConfig } from "../../src/types";
 
 const originalFetch = globalThis.fetch;
 
@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 async function driveResponses(args: {
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   providerName?: string;
   model?: string;
   callerTier?: string;
@@ -36,7 +36,7 @@ async function driveResponses(args: {
     defaultProvider: providerName,
     providers: { [providerName]: args.provider },
     ...(args.fastMode === undefined ? {} : { fastMode: args.fastMode }),
-  } as OcxConfig;
+  } as OccxConfig;
   const logCtx: RequestLogContext = { model: "", provider: "" };
   const requestBody = {
     model: `${providerName}/${model}`,
@@ -60,7 +60,7 @@ async function driveResponses(args: {
   return { outboundBody: bodies[0]!, logCtx };
 }
 
-const supportedResponsesProvider = (): OcxProviderConfig => ({
+const supportedResponsesProvider = (): OccxProviderConfig => ({
   adapter: "openai-responses",
   baseUrl: "https://supported.example.test/v1",
   authMode: "key",
@@ -68,7 +68,7 @@ const supportedResponsesProvider = (): OcxProviderConfig => ({
   supportsServiceTier: true,
 });
 
-const unclassifiedResponsesProvider = (): OcxProviderConfig => ({
+const unclassifiedResponsesProvider = (): OccxProviderConfig => ({
   adapter: "openai-responses",
   baseUrl: "https://unclassified.example.test/v1",
   authMode: "key",
@@ -106,7 +106,7 @@ describe("FastWire characterization: supported-route fastMode tri-state", () => 
     const providerName = `sk-ant-api03-${"A".repeat(40)}`;
     const model = `model\n${"x".repeat(100)}`;
     const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       ...supportedResponsesProvider(),
       fastWire: null,
     };
@@ -343,7 +343,7 @@ describe("FastWire characterization: rawBody observation point", () => {
         defaultProvider: providerName,
         fastMode: true,
         providers: { [providerName]: supportedResponsesProvider() },
-      } as OcxConfig;
+      } as OccxConfig;
       const request = new Request("http://localhost/v1/responses", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -367,7 +367,7 @@ describe("FastWire characterization: rawBody observation point", () => {
 describe("FastWire characterization: known bugs", () => {
   test("characterization: native chat passthrough honors exact-model false", () => {
     // FastWire #1886 native-chat policy fix: exact-model false now strips the caller tier.
-    const provider: OcxProviderConfig = {
+    const provider: OccxProviderConfig = {
       adapter: "openai-chat",
       baseUrl: "https://native-chat.example.test/v1",
       authMode: "key",

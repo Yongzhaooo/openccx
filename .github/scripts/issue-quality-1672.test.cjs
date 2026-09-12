@@ -44,7 +44,7 @@ describe("issue #1672 regression", () => {
     const genericFailure =
       "Codex sync did not complete. Fix the reported Codex config issue and retry.";
     const body = bugBody({
-      summary: `ocx sync\n${genericFailure}`,
+      summary: `occx sync\n${genericFailure}`,
       reproduction: genericFailure,
     });
 
@@ -66,8 +66,8 @@ describe("issue #1672 regression", () => {
     const genericFailure =
       "Codex sync did not complete. Fix the reported Codex config issue and retry.";
     const body = bugBody({
-      summary: ["Run `ocx sync`.", genericFailure].join("\n"),
-      reproduction: ["1. Run `ocx sync`.", `2. ${genericFailure}`].join("\n"),
+      summary: ["Run `occx sync`.", genericFailure].join("\n"),
+      reproduction: ["1. Run `occx sync`.", `2. ${genericFailure}`].join("\n"),
     });
 
     const result = validateIssue({
@@ -87,7 +87,7 @@ describe("issue #1672 regression", () => {
   it("normalizes identical multi-line ordered lists on both sides", () => {
     const genericFailure =
       "Codex sync did not complete. Fix the reported Codex config issue and retry.";
-    const repeated = ["1. Run `ocx sync`.", `2. ${genericFailure}`].join("\n");
+    const repeated = ["1. Run `occx sync`.", `2. ${genericFailure}`].join("\n");
     const body = bugBody({
       summary: repeated,
       reproduction: repeated,
@@ -120,13 +120,13 @@ describe("issue #1672 regression", () => {
     const body = bugBody({
       summary: genericFailure,
       reproduction: [
-        "1. Run `ocx sync`.",
+        "1. Run `occx sync`.",
         `2. Observe: ${genericFailure}`,
       ].join("\n"),
     });
 
     const result = validateIssue({
-      title: "ocx sync fails after configuration injection",
+      title: "occx sync fails after configuration injection",
       body,
       labels: ["bug"],
     });

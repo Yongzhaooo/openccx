@@ -37,8 +37,8 @@ interface TrustedLiveResultReceipt {
 }
 
 const TRUSTED_RESULT_RECEIPTS = new WeakMap<object, TrustedLiveResultReceipt>();
-const LIVE_AUTHORITY_DOMAIN = "ocx-lab:live-authority:v1";
-const TRUSTED_LIVE_RESULT_DOMAIN = "ocx-lab:trusted-live-result:v1";
+const LIVE_AUTHORITY_DOMAIN = "occx-lab:live-authority:v1";
+const TRUSTED_LIVE_RESULT_DOMAIN = "occx-lab:trusted-live-result:v1";
 
 function trustedResultDigest(result: LiveScenarioRunResult): string {
   const payload = {

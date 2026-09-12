@@ -12,7 +12,7 @@ import {
   type ExportContext,
   type ZcodeGeneratedConfig,
 } from "../../src/clients/config-export";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { handleZcodeCommand } from "../../src/cli/integrations";
 
 const CONFIG = {
@@ -20,7 +20,7 @@ const CONFIG = {
   hostname: "127.0.0.1",
   defaultProvider: "mock",
   providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
-} as OcxConfig;
+} as OccxConfig;
 
 function context(): ExportContext {
   return {
@@ -38,11 +38,11 @@ function context(): ExportContext {
 }
 
 describe("ZCode client config", () => {
-  test("adds only provider.opencodex in ZCode's observed v2 schema", () => {
+  test("adds only provider.openccx in ZCode's observed v2 schema", () => {
     const document = buildClientConfig("zcode", context()) as ZcodeGeneratedConfig;
     expect(Object.keys(document)).toEqual(["provider"]);
     const provider = document.provider[OPENCODE_PROVIDER_ID]!;
-    expect(provider.name).toBe("OpenCodex");
+    expect(provider.name).toBe("Openccx");
     expect(provider.kind).toBe("openai");
     expect(provider.enabled).toBe(true);
     expect(provider.source).toBe("custom");
@@ -82,7 +82,7 @@ describe("ZCode client config", () => {
 
   test("native JSON round-trips and never carries a credential", () => {
     const sentinel = ["sk", "live", "zcode", "sentinel"].join("-");
-    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OcxConfig;
+    const withKey = { ...CONFIG, apiKeys: [{ key: sentinel }] } as OccxConfig;
     const built = buildClientConfigText("zcode", { ...context(), config: withKey });
     expect(built.format).toBe("json");
     expect(JSON.parse(built.text)).toEqual(built.document as never);
@@ -90,7 +90,7 @@ describe("ZCode client config", () => {
     expect(built.text).toContain(LOOPBACK_API_KEY_PLACEHOLDER);
   });
 
-  test("the contribution owns exactly the provider.opencodex path", () => {
+  test("the contribution owns exactly the provider.openccx path", () => {
     const contribution = buildClientContribution("zcode", context());
     expect(contribution.clientId).toBe("zcode");
     expect(contribution.fragments.map(f => f.path)).toEqual([["provider", OPENCODE_PROVIDER_ID]]);
@@ -162,7 +162,7 @@ describe("ZCode reasoning export", () => {
   });
 });
 
-describe("ocx zcode CLI alias", () => {
+describe("occx zcode CLI alias", () => {
   /** Captures the client-integration requests the alias forwards. */
   function fakeRuntime(): { deps: { baseUrl: string; fetchImpl: typeof fetch }; requests: Array<{ path: string; method: string; body: unknown }> } {
     const requests: Array<{ path: string; method: string; body: unknown }> = [];

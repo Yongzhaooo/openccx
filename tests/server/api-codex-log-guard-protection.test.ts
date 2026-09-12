@@ -6,13 +6,13 @@ import { join } from "node:path";
 
 import type { CodexLogGuardMode, CodexLogGuardProtectionDeps } from "../../src/codex/log-guard/protection";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const roots: string[] = [];
 const originalCodexHome = process.env.CODEX_HOME;
-const originalOpenCodexHome = process.env.OPENCODEX_HOME;
+const originalOpenccxHome = process.env.OPENCCX_HOME;
 
 function createLogsDb(path: string): void {
   const db = new Database(path);
@@ -42,20 +42,20 @@ function createLogsDb(path: string): void {
 }
 
 function fixture(): { databasePath: string; protectionDeps: CodexLogGuardProtectionDeps } {
-  const root = mkdtempSync(join(tmpdir(), "ocx-log-guard-api-protect-"));
+  const root = mkdtempSync(join(tmpdir(), "occx-log-guard-api-protect-"));
   roots.push(root);
   const codexHome = join(root, "codex-home");
-  const ocxHome = join(root, "ocx-home");
+  const occxHome = join(root, "occx-home");
   mkdirSync(codexHome);
-  mkdirSync(ocxHome);
+  mkdirSync(occxHome);
   writeFileSync(join(codexHome, "config.toml"), "");
-  writeFileSync(join(ocxHome, "config.json"), JSON.stringify({
+  writeFileSync(join(occxHome, "config.json"), JSON.stringify({
     port: 0,
     defaultProvider: "openai",
     providers: {},
   }));
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = ocxHome;
+  process.env.OPENCCX_HOME = occxHome;
   const databasePath = join(codexHome, "logs_2.sqlite");
   createLogsDb(databasePath);
 
@@ -73,8 +73,8 @@ function fixture(): { databasePath: string; protectionDeps: CodexLogGuardProtect
   return { databasePath, protectionDeps };
 }
 
-function config(): OcxConfig {
-  return { port: 0, defaultProvider: "openai", providers: {} } as OcxConfig;
+function config(): OccxConfig {
+  return { port: 0, defaultProvider: "openai", providers: {} } as OccxConfig;
 }
 
 async function request(
@@ -96,8 +96,8 @@ async function request(
 afterEach(() => {
   if (originalCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = originalCodexHome;
-  if (originalOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalOpenCodexHome;
+  if (originalOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalOpenccxHome;
   for (const root of roots.splice(0)) removeTreeWithRetry(root);
 });
 

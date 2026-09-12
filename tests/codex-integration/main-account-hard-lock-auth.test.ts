@@ -32,7 +32,7 @@ import { mapCodexAuthContextErrorToResponse } from "../../src/server/responses/c
 import { handleResponses } from "../../src/server/responses/core";
 import { handleResponsesCompact } from "../../src/server/responses/compact";
 import { setIcaclsRunnerForTests } from "../../src/lib/windows-secret-acl";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { helperPath, repoRoot } from "../helpers/repo-root";
 import { INTERNAL_DEADLINE_MS, SPAWN_BUDGET_MS } from "../helpers/test-budget";
@@ -52,7 +52,7 @@ function bearer(expired = false): string {
   return `header.${payload}.signature`;
 }
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "openai",
@@ -95,7 +95,7 @@ function forbidPhysicalReads(): void {
   spyOn(mainAccount, "isMainAccountCredentialUsable").mockImplementation(forbidden);
 }
 
-function addAlternative(cfg: OcxConfig): void {
+function addAlternative(cfg: OccxConfig): void {
   cfg.codexAccounts = [{ id: "hard-lock-pool", email: "pool@example.test", isMain: false }];
   saveCodexAccountCredential("hard-lock-pool", {
     accessToken: "fixture-pool-access",
@@ -107,10 +107,10 @@ function addAlternative(cfg: OcxConfig): void {
 
 beforeEach(() => {
   tokenExpiry = Math.floor(Date.now() / 1000) + 86_400;
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
-  home = mkdtempSync(join(tmpdir(), "ocx-main-hard-lock-auth-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-main-hard-lock-auth-"));
+  process.env.OPENCCX_HOME = home;
   process.env.CODEX_HOME = home;
   setIcaclsRunnerForTests(() => ({ success: true, exitCode: 0, timedOut: false, stdout: "" }));
   resetMainCodexAccountIdentityTrackingForTests();
@@ -133,8 +133,8 @@ afterEach(() => {
   resetMainCodexAccountIdentityTrackingForTests();
   mainAccount.setMainAccountPlan(null);
   setIcaclsRunnerForTests(null);
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
   removeTreeWithRetry(home);
@@ -147,10 +147,10 @@ describe("startup policy binding read is bounded", () => {
   test.each(boundedReadCases)("bounded startup read handles %s", scenario => {
     const child = Bun.spawnSync([process.execPath, helperPath("bounded-auth-read-child.ts")], {
       cwd: repoRoot(),
-      env: { ...process.env, OCX_BOUNDED_READ_CASE: scenario,
+      env: { ...process.env, OCCX_BOUNDED_READ_CASE: scenario,
         HOME: home, USERPROFILE: home, TMP: home, TEMP: home, TMPDIR: home,
         XDG_RUNTIME_DIR: home, LOCALAPPDATA: join(home, "LocalAppData"),
-        OPENCODEX_HOME: home, CODEX_HOME: home },
+        OPENCCX_HOME: home, CODEX_HOME: home },
       timeout: SPAWN_BUDGET_MS - INTERNAL_DEADLINE_MS, stdout: "pipe", stderr: "pipe",
     });
     // A regressed unbounded FIFO read never reaches here: the spawn timeout kills the child.
@@ -183,7 +183,7 @@ describe("main quota policy at native admission", () => {
           ? "hard-lock-conflicting-access-account"
           : scenario === "conflicting-claims" ? "hard-lock-conflicting-claim-account" : restoredId } })).toString("base64url")}.signature`;
       const quota = { weeklyPercent: scenario === "owned-98" ? 98 : 99, updatedAt: Date.now() - 7 * 60 * 60_000 };
-      const identityKey = createHash("sha256").update("opencodex-main-quota-v1\0").update(restoredId).digest("hex");
+      const identityKey = createHash("sha256").update("openccx-main-quota-v1\0").update(restoredId).digest("hex");
       if (scenario.startsWith("invalid-") || scenario === "mismatched-identity") {
         writeFileSync(join(home, "auth.json"), JSON.stringify({ tokens: {
           access_token: scenario === "invalid-access-token" ? 17 : bearer(),
@@ -210,7 +210,7 @@ describe("main quota policy at native admission", () => {
       writeFileSync(fixturePath, JSON.stringify({ scenario, accountId: restoredId, bearer: restoredBearer,
         originalAccountId: accountId, originalBearer: bearer() }));
       const child = Bun.spawnSync([process.execPath, helperPath("main-account-policy-startup-child.ts")], {
-        cwd: repoRoot(), env: { ...process.env, OCX_POLICY_STARTUP_FIXTURE: fixturePath,
+        cwd: repoRoot(), env: { ...process.env, OCCX_POLICY_STARTUP_FIXTURE: fixturePath,
           HOME: home, USERPROFILE: home, TMP: home, TEMP: home, TMPDIR: home,
           XDG_RUNTIME_DIR: home, LOCALAPPDATA: join(home, "LocalAppData") },
         timeout: SPAWN_BUDGET_MS - INTERNAL_DEADLINE_MS, stdout: "pipe", stderr: "pipe",

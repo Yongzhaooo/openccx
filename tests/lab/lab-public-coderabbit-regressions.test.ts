@@ -103,7 +103,7 @@ async function captureCli(argv: string[], home: string): Promise<{ code: number;
 }
 
 test("ancient live-PID mutation owner becomes reclaimable after the absolute ceiling", () => {
-  const home = configDir("ocx-cl10-lock-owner-ceiling-");
+  const home = configDir("occx-cl10-lock-owner-ceiling-");
   ensureLabDirs(home);
   const lockPath = join(labCommunityDir(home), ".mutation-lock");
   mkdirSync(lockPath, { mode: 0o700 });
@@ -122,7 +122,7 @@ test("ancient live-PID mutation owner becomes reclaimable after the absolute cei
 });
 
 test("ancient live-PID reclaim claim cannot block stale lock recovery forever", () => {
-  const home = configDir("ocx-cl10-lock-claim-ceiling-");
+  const home = configDir("occx-cl10-lock-claim-ceiling-");
   ensureLabDirs(home);
   const lockPath = join(labCommunityDir(home), ".mutation-lock");
   mkdirSync(lockPath, { mode: 0o700 });
@@ -152,7 +152,7 @@ test("ancient live-PID reclaim claim cannot block stale lock recovery forever", 
 });
 
 test("foreign origin-directory entries do not consume marker quota", () => {
-  const home = configDir("ocx-cl10-origin-foreign-quota-");
+  const home = configDir("occx-cl10-origin-foreign-quota-");
   ensureLabDirs(home);
   const dir = labPublicOriginDir(home);
   for (let index = 0; index < 1024; index += 1) {
@@ -168,7 +168,7 @@ test("foreign origin-directory entries do not consume marker quota", () => {
 });
 
 test("corrupt origin classification makes export purge report incomplete instead of clean success", () => {
-  const home = configDir("ocx-cl10-origin-purge-incomplete-");
+  const home = configDir("occx-cl10-origin-purge-incomplete-");
   const signed = bundle(home);
   const exportPath = writePublicEvidenceBundle(signed, home);
   importCommunityEvidenceBundle(signed, home);
@@ -191,7 +191,7 @@ test("corrupt origin classification makes export purge report incomplete instead
 });
 
 test("failed CLI verification is a state failure and never prints command usage", async () => {
-  const home = configDir("ocx-cl10-cli-verify-failure-");
+  const home = configDir("occx-cl10-cli-verify-failure-");
   const signed = bundle(home);
   const tampered = { ...signed, bundleDigest: "0".repeat(64) };
   const path = join(home, "tampered.json");
@@ -205,7 +205,7 @@ test("failed CLI verification is a state failure and never prints command usage"
 });
 
 test("revocation canonicalization does not depend on localeCompare", () => {
-  const home = configDir("ocx-cl10-revocation-order-");
+  const home = configDir("occx-cl10-revocation-order-");
   const first = record("2026-08-12");
   const second = record("2026-08-13");
   const signed = bundle(home, [first, second]);

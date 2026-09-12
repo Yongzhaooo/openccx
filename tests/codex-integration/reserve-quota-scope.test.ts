@@ -17,7 +17,7 @@ import {
   recordCodexUpstreamOutcome,
   type CodexQuotaScope,
 } from "../../src/codex/routing";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 const START = 1_800_000_000_000;
@@ -30,7 +30,7 @@ const MODELS = {
 
 // Added-account state deliberately exercises the generic worker's claim filter.
 // It does not represent an allowed added-account Reserve dispatch.
-function makeConfig(): OcxConfig {
+function makeConfig(): OccxConfig {
   return {
     port: 0,
     providers: {
@@ -45,10 +45,10 @@ function makeConfig(): OcxConfig {
     activeCodexAccountId: "reserve-fixture",
     accountPoolStrategy: "fill-first",
     codexAccounts: [{ id: "reserve-fixture", email: "reserve@example.test", plan: "team", isMain: false }],
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function cool(config: OcxConfig, scope: CodexQuotaScope, now = START): void {
+function cool(config: OccxConfig, scope: CodexQuotaScope, now = START): void {
   recordCodexUpstreamOutcome(config, "reserve-fixture", 429, {
     modelId: MODELS[scope],
     resetAt: now + 60 * 60_000,
@@ -65,11 +65,11 @@ describe("Reserve quota scope", () => {
   let calls: number;
 
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
+    previousHome = process.env.OPENCCX_HOME;
     previousCodexHome = process.env.CODEX_HOME;
     previousFetch = globalThis.fetch;
-    directory = mkdtempSync(join(tmpdir(), "ocx-reserve-quota-scope-"));
-    process.env.OPENCODEX_HOME = directory;
+    directory = mkdtempSync(join(tmpdir(), "occx-reserve-quota-scope-"));
+    process.env.OPENCCX_HOME = directory;
     process.env.CODEX_HOME = join(directory, "codex");
     mkdirSync(process.env.CODEX_HOME, { recursive: true });
     clearAccountQuota();
@@ -99,8 +99,8 @@ describe("Reserve quota scope", () => {
     clearAccountQuota();
     clearCodexUpstreamHealth();
     clearCodexCooldownRecoveryProbeState();
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     removeTreeWithRetry(directory);

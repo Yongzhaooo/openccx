@@ -21,7 +21,7 @@ import {
 import { mapOllamaSearchResponse } from "../../src/web-search/ollama-executor";
 import { UNDECLARED_TOOL_CALL_ERROR_CODE } from "../../src/server/responses-undeclared-tool-guard";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig, ProviderWebSearchBridgeConfig } from "../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig, ProviderWebSearchBridgeConfig } from "../../src/types";
 
 /** One SSE event block without its blank-line delimiter. */
 function frame(type: string, payload: Record<string, unknown>): string {
@@ -59,8 +59,8 @@ function clientEvents(body: string): Record<string, unknown>[] {
 
 function providerFixture(
   bridge?: ProviderWebSearchBridgeConfig,
-  overrides: Partial<OcxProviderConfig> = {},
-): OcxProviderConfig {
+  overrides: Partial<OccxProviderConfig> = {},
+): OccxProviderConfig {
   return {
     adapter: "openai-responses",
     baseUrl: "https://ollama.com/v1",
@@ -68,17 +68,17 @@ function providerFixture(
     apiKey: "fixture-key",
     ...(bridge ? { webSearchBridge: bridge } : {}),
     ...overrides,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function parsedFixture(overrides: Record<string, unknown> = {}): OcxParsedRequest {
+function parsedFixture(overrides: Record<string, unknown> = {}): OccxParsedRequest {
   return {
     modelId: "glm-4.7",
     options: {},
     stream: true,
     _webSearch: { type: "web_search" },
     ...overrides,
-  } as unknown as OcxParsedRequest;
+  } as unknown as OccxParsedRequest;
 }
 
 const armed: ProviderWebSearchBridgeConfig = { enabled: true, backend: "ollama" };
@@ -191,7 +191,7 @@ const searchCall = {
   id: "fc_1",
   call_id: "call_1",
   name: "web_search",
-  arguments: "{\"query\":\"opencodex release\"}",
+  arguments: "{\"query\":\"openccx release\"}",
 };
 
 const preamble = {
@@ -261,7 +261,7 @@ describe("the bridged client stream", () => {
       },
       execute: async (queries) => {
         executed.push(queries);
-        return { text: "opencodex 2.50.0 shipped", sources: [{ url: "https://example.test/rel", title: "Releases" }] };
+        return { text: "openccx 2.50.0 shipped", sources: [{ url: "https://example.test/rel", title: "Releases" }] };
       },
     });
 
@@ -287,11 +287,11 @@ describe("the bridged client stream", () => {
     expect(doneItem.status).toBe("completed");
     expect(doneItem.action).toEqual({
       type: "search",
-      query: "opencodex release",
-      queries: ["opencodex release"],
+      query: "openccx release",
+      queries: ["openccx release"],
     });
     expect(doneItem.sources).toEqual([{ url: "https://example.test/rel", title: "Releases" }]);
-    expect(executed).toEqual([["opencodex release"]]);
+    expect(executed).toEqual([["openccx release"]]);
 
     // The second upstream body carries the executed call and its result.
     expect(sent).toHaveLength(1);
@@ -300,7 +300,7 @@ describe("the bridged client stream", () => {
     const call = continuation.input.find(item => item.type === "function_call");
     const output = continuation.input.find(item => item.type === "function_call_output");
     expect(call).toMatchObject({ call_id: "call_1", name: "web_search", arguments: searchCall.arguments });
-    expect(output).toMatchObject({ call_id: "call_1", output: "opencodex 2.50.0 shipped" });
+    expect(output).toMatchObject({ call_id: "call_1", output: "openccx 2.50.0 shipped" });
 
     // Both legs land in one monotonic client numbering, and the terminal snapshot matches it.
     const indexes = events
@@ -542,7 +542,7 @@ describe("bridge helpers", () => {
 });
 
 describe("the reported turn, end to end through handleResponses", () => {
-  function config(bridge?: ProviderWebSearchBridgeConfig): OcxConfig {
+  function config(bridge?: ProviderWebSearchBridgeConfig): OccxConfig {
     return {
       port: 0,
       defaultProvider: "fixture",
@@ -555,7 +555,7 @@ describe("the reported turn, end to end through handleResponses", () => {
           ...(bridge ? { webSearchBridge: bridge } : {}),
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   // Codex's own shape: the hosted web_search declaration plus ordinary client function tools.
@@ -570,7 +570,7 @@ describe("the reported turn, end to end through handleResponses", () => {
   });
 
   async function post(
-    ocxConfig: OcxConfig,
+    occxConfig: OccxConfig,
     legs: string[],
   ): Promise<{ body: string; outbound: string[]; searches: number }> {
     const savedFetch = globalThis.fetch;
@@ -584,7 +584,7 @@ describe("the reported turn, end to end through handleResponses", () => {
       if (url.includes("/api/web_search")) {
         searches += 1;
         return new Response(JSON.stringify({
-          results: [{ title: "Releases", url: "https://example.test/rel", content: "opencodex 2.50.0" }],
+          results: [{ title: "Releases", url: "https://example.test/rel", content: "openccx 2.50.0" }],
         }), { headers: { "content-type": "application/json" } });
       }
       outbound.push(String(init?.body ?? ""));
@@ -597,7 +597,7 @@ describe("the reported turn, end to end through handleResponses", () => {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: clientRequest,
-      }), ocxConfig, { model: "", provider: "" });
+      }), occxConfig, { model: "", provider: "" });
       return { body: await response.text(), outbound, searches };
     } finally {
       globalThis.fetch = savedFetch;
@@ -627,7 +627,7 @@ describe("the reported turn, end to end through handleResponses", () => {
     const continuation = JSON.parse(result.outbound[1]!) as { input: Record<string, unknown>[] };
     const output = continuation.input.find(item => item.type === "function_call_output");
     expect(output).toBeDefined();
-    expect(String(output!.output)).toContain("opencodex 2.50.0");
+    expect(String(output!.output)).toContain("openccx 2.50.0");
     expect(continuation.input.some(item =>
       item.type === "function_call" && item.name === "web_search")).toBe(true);
   });

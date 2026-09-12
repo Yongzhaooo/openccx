@@ -1,10 +1,10 @@
 import { shadowCallTargetsIntersect, shadowSourceModels } from "../../lib/shadow-call";
 import { OPENAI_CODEX_PROVIDER_ID } from "../../providers/openai-tiers";
 import { routeConcreteModel, routeModel } from "../../router";
-import type { OcxConfig } from "../../types";
+import type { OccxConfig } from "../../types";
 
 /** Validate a prospective persisted shadow-call target against its resolved source identities. */
-export function shadowCallTargetError(config: OcxConfig, targetModel: string | undefined): string | null {
+export function shadowCallTargetError(config: OccxConfig, targetModel: string | undefined): string | null {
   if (!targetModel) return null;
 
   let target;

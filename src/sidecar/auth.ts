@@ -11,7 +11,7 @@
  * generation fences) stays in resolveFirstUsableOpenAiSidecar and the
  * executors; this module only answers "is this side worth offering at all?".
  */
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import { listOpenAiForwardSidecarCandidates } from "../providers/openai-sidecar";
 import { OPENAI_CODEX_PROVIDER_ID } from "../providers/openai-tiers";
 import { isCodexAccountUsable } from "../codex/account-usability";
@@ -25,7 +25,7 @@ export interface SidecarAuthState {
   isAnthropicAuth: boolean;
   /** The provider an Anthropic-side executor would dispatch through, when isAnthropicAuth. */
   anthropicProviderName?: string;
-  anthropicProvider?: OcxProviderConfig;
+  anthropicProvider?: OccxProviderConfig;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface SidecarAuthSlot {
 }
 
 /** Login-shaped, not provider-shaped: a forward provider with no credential is NOT Codex auth. */
-function hasUsableCodexLogin(config: OcxConfig): boolean {
+function hasUsableCodexLogin(config: OccxConfig): boolean {
   if (listOpenAiForwardSidecarCandidates(config).length === 0) return false;
   if (isCodexAccountUsable(config, MAIN_CODEX_ACCOUNT_ID)) return true;
   return (config.codexAccounts ?? []).some(account =>
@@ -60,8 +60,8 @@ function hasUsableCodexLogin(config: OcxConfig): boolean {
  * invalid account must not present as auth (audit F1).
  */
 function findAnthropicAuthProvider(
-  config: OcxConfig,
-): { providerName: string; provider: OcxProviderConfig } | undefined {
+  config: OccxConfig,
+): { providerName: string; provider: OccxProviderConfig } | undefined {
   for (const [providerName, provider] of Object.entries(config.providers)) {
     if (provider.disabled === true) continue;
     if (provider.adapter !== "anthropic" || provider.authMode !== "oauth") continue;
@@ -72,7 +72,7 @@ function findAnthropicAuthProvider(
   return undefined;
 }
 
-export function resolveSidecarAuth(config: OcxConfig): SidecarAuthState {
+export function resolveSidecarAuth(config: OccxConfig): SidecarAuthState {
   const anthropic = findAnthropicAuthProvider(config);
   return {
     isCodexAuth: hasUsableCodexLogin(config),

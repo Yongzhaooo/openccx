@@ -5,7 +5,7 @@ import {
 } from "../../src/server/readiness";
 import {
   findLiveProxy,
-  isOpencodexHealthz,
+  isOpenccxHealthz,
   probeHostname,
   probeReadiness,
   proxyIdentityAt,
@@ -22,24 +22,24 @@ function healthz(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
 
-const OURS = { status: "ok", service: "opencodex", version: "2.6.17", uptime: 12, pid: 4242, port: 10100 };
+const OURS = { status: "ok", service: "openccx", version: "2.6.17", uptime: 12, pid: 4242, port: 10100 };
 
-describe("isOpencodexHealthz", () => {
+describe("isOpenccxHealthz", () => {
   test("accepts the explicit service marker", () => {
-    expect(isOpencodexHealthz(OURS)).toBe(true);
-    expect(isOpencodexHealthz({ ...OURS, guiPairCapability: "v1" })).toBe(true);
+    expect(isOpenccxHealthz(OURS)).toBe(true);
+    expect(isOpenccxHealthz({ ...OURS, guiPairCapability: "v1" })).toBe(true);
   });
 
   test("accepts the legacy pre-identity body (still-running old proxy after update)", () => {
-    expect(isOpencodexHealthz({ status: "ok", version: "2.6.16", uptime: 5 })).toBe(true);
+    expect(isOpenccxHealthz({ status: "ok", version: "2.6.16", uptime: 5 })).toBe(true);
   });
 
   test("rejects foreign bodies", () => {
-    expect(isOpencodexHealthz(null)).toBe(false);
-    expect(isOpencodexHealthz({ status: "ok" })).toBe(false);
-    expect(isOpencodexHealthz({ service: "something-else", status: "ok", version: "1", uptime: 1 })).toBe(false);
-    expect(isOpencodexHealthz({ healthy: true } as never)).toBe(false);
-    expect(isOpencodexHealthz({ guiPairCapability: "v1", pid: 4242, port: 10100 })).toBe(false);
+    expect(isOpenccxHealthz(null)).toBe(false);
+    expect(isOpenccxHealthz({ status: "ok" })).toBe(false);
+    expect(isOpenccxHealthz({ service: "something-else", status: "ok", version: "1", uptime: 1 })).toBe(false);
+    expect(isOpenccxHealthz({ healthy: true } as never)).toBe(false);
+    expect(isOpenccxHealthz({ guiPairCapability: "v1", pid: 4242, port: 10100 })).toBe(false);
   });
 });
 
@@ -231,7 +231,7 @@ describe("findLiveProxy", () => {
         String(url).includes("58195") ? healthz(legacyBody) : healthz({ status: "ok" })) as typeof fetch,
     });
 
-    // The record's pid 1111 may be dead/reused — synthesizing it would let `ocx stop`
+    // The record's pid 1111 may be dead/reused — synthesizing it would let `occx stop`
     // kill an unrelated process via the taskkill/kill fallback.
     expect(live).toEqual({ pid: null, port: 58195, hostname: undefined, source: "runtime", version: "2.6.16" });
   });
@@ -559,7 +559,7 @@ describe("runStartupReadinessSync", () => {
 
 // ── validateReadyzBody: strict contract (pure) ─────────────────────────────────
 
-const VALID_BODY = { service: "opencodex", version: "2.6.17", uptime: 12, pid: 4242, port: 10100, status: "ready" as const };
+const VALID_BODY = { service: "openccx", version: "2.6.17", uptime: 12, pid: 4242, port: 10100, status: "ready" as const };
 
 describe("validateReadyzBody strict contract", () => {
   test("accepts a well-formed ready body and echoes the sanitized fields", () => {
@@ -592,7 +592,7 @@ describe("validateReadyzBody strict contract", () => {
   });
 
   test("rejects missing version", () => {
-    expect(validateReadyzBody({ service: "opencodex", uptime: 1, pid: 4242, port: 10100, status: "ready" }, 10100)).toBeNull();
+    expect(validateReadyzBody({ service: "openccx", uptime: 1, pid: 4242, port: 10100, status: "ready" }, 10100)).toBeNull();
   });
 
   test("rejects empty-string version", () => {
@@ -604,7 +604,7 @@ describe("validateReadyzBody strict contract", () => {
   });
 
   test("rejects missing pid", () => {
-    expect(validateReadyzBody({ service: "opencodex", version: "v", uptime: 1, port: 10100, status: "ready" }, 10100)).toBeNull();
+    expect(validateReadyzBody({ service: "openccx", version: "v", uptime: 1, port: 10100, status: "ready" }, 10100)).toBeNull();
   });
 
   test("rejects non-integer / non-positive pid", () => {
@@ -615,7 +615,7 @@ describe("validateReadyzBody strict contract", () => {
   });
 
   test("rejects missing port", () => {
-    expect(validateReadyzBody({ service: "opencodex", version: "v", uptime: 1, pid: 4242, status: "ready" }, 10100)).toBeNull();
+    expect(validateReadyzBody({ service: "openccx", version: "v", uptime: 1, pid: 4242, status: "ready" }, 10100)).toBeNull();
   });
 
   test("rejects out-of-range / non-integer port", () => {
@@ -636,7 +636,7 @@ describe("validateReadyzBody strict contract", () => {
   });
 
   test("rejects missing/malformed status (not a fixed enum value)", () => {
-    expect(validateReadyzBody({ service: "opencodex", version: "v", uptime: 1, pid: 4242, port: 10100 }, 10100)).toBeNull();
+    expect(validateReadyzBody({ service: "openccx", version: "v", uptime: 1, pid: 4242, port: 10100 }, 10100)).toBeNull();
     expect(validateReadyzBody({ ...VALID_BODY, status: "ok" }, 10100)).toBeNull();
     expect(validateReadyzBody({ ...VALID_BODY, status: "READY" }, 10100)).toBeNull();
     expect(validateReadyzBody({ ...VALID_BODY, status: 1 }, 10100)).toBeNull();
@@ -656,7 +656,7 @@ describe("validateReadyzBody strict contract", () => {
 
   test("non-object / null bodies are rejected", () => {
     expect(validateReadyzBody(null, 10100)).toBeNull();
-    expect(validateReadyzBody("opencodex", 10100)).toBeNull();
+    expect(validateReadyzBody("openccx", 10100)).toBeNull();
     expect(validateReadyzBody(undefined, 10100)).toBeNull();
   });
 });
@@ -667,7 +667,7 @@ describe("remote readiness protocol metadata", () => {
     minimumClientProtocol: 1,
     managementUrl: "https://hub.example.test",
   };
-  const invalidMessage = "OpenCodex hub returned invalid remote protocol metadata; upgrade or repair ocx on the hub.";
+  const invalidMessage = "Openccx hub returned invalid remote protocol metadata; upgrade or repair occx on the hub.";
 
   test("parses required fields, canonicalizes the origin, and ignores additive fields", () => {
     expect(parseRemoteReadyMetadata({
@@ -721,7 +721,7 @@ describe("remote readiness protocol metadata", () => {
     expect(checkRemoteProtocolCompatibility({ ...metadata, protocol: 2, minimumClientProtocol: 2 })).toEqual({
       ok: false,
       reason: "hub-too-new",
-      message: "OpenCodex hub requires remote protocol 2; this client supports protocol 1. Upgrade ocx on this client.",
+      message: "Openccx hub requires remote protocol 2; this client supports protocol 1. Upgrade occx on this client.",
     });
   });
 
@@ -729,7 +729,7 @@ describe("remote readiness protocol metadata", () => {
     expect(checkRemoteProtocolCompatibility(metadata, { protocol: 2, minimumHubProtocol: 2 })).toEqual({
       ok: false,
       reason: "hub-too-old",
-      message: "OpenCodex hub provides remote protocol 1; this client requires at least 2. Upgrade ocx on the hub.",
+      message: "Openccx hub provides remote protocol 1; this client requires at least 2. Upgrade occx on the hub.",
     });
   });
 
@@ -771,9 +771,9 @@ function readyz(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 }
 
-const READY_BODY = { service: "opencodex", version: "2.6.17", uptime: 12, pid: 4242, port: 10100, status: "ready" };
-const PENDING_BODY = { service: "opencodex", version: "2.6.17", uptime: 1, pid: 4242, port: 10100, status: "pending" };
-const FAILED_BODY = { service: "opencodex", version: "2.6.17", uptime: 1, pid: 4242, port: 10100, status: "failed" };
+const READY_BODY = { service: "openccx", version: "2.6.17", uptime: 12, pid: 4242, port: 10100, status: "ready" };
+const PENDING_BODY = { service: "openccx", version: "2.6.17", uptime: 1, pid: 4242, port: 10100, status: "pending" };
+const FAILED_BODY = { service: "openccx", version: "2.6.17", uptime: 1, pid: 4242, port: 10100, status: "failed" };
 
 describe("probeReadiness happy path", () => {
   test("accepts a correct 200 + ready body", async () => {
@@ -824,21 +824,21 @@ describe("probeReadiness adversarial contract (never counts ready)", () => {
 
   test("rejects a body missing version", async () => {
     const probe = await probeReadiness(10100, {}, {
-      fetchFn: (async () => readyz({ service: "opencodex", uptime: 1, pid: 4242, port: 10100, status: "ready" }, 200)) as typeof fetch,
+      fetchFn: (async () => readyz({ service: "openccx", uptime: 1, pid: 4242, port: 10100, status: "ready" }, 200)) as typeof fetch,
     });
     expect(probe).toBeNull();
   });
 
   test("rejects a body missing pid", async () => {
     const probe = await probeReadiness(10100, {}, {
-      fetchFn: (async () => readyz({ service: "opencodex", version: "v", uptime: 1, port: 10100, status: "ready" }, 200)) as typeof fetch,
+      fetchFn: (async () => readyz({ service: "openccx", version: "v", uptime: 1, port: 10100, status: "ready" }, 200)) as typeof fetch,
     });
     expect(probe).toBeNull();
   });
 
   test("rejects a body missing port", async () => {
     const probe = await probeReadiness(10100, {}, {
-      fetchFn: (async () => readyz({ service: "opencodex", version: "v", uptime: 1, pid: 4242, status: "ready" }, 200)) as typeof fetch,
+      fetchFn: (async () => readyz({ service: "openccx", version: "v", uptime: 1, pid: 4242, status: "ready" }, 200)) as typeof fetch,
     });
     expect(probe).toBeNull();
   });

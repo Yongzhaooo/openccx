@@ -4,22 +4,22 @@ import { join } from "node:path";
 import { repoPath } from "../helpers/repo-root";
 
 /**
- * bin/ocx.mjs is the Node bin launcher — it executes top-level logic on import, so it
+ * bin/occx.mjs is the Node bin launcher — it executes top-level logic on import, so it
  * cannot be imported by tests. Guard its Windows-critical invariants at the source level.
  */
-const source = readFileSync(repoPath("bin", "ocx.mjs"), "utf8");
+const source = readFileSync(repoPath("bin", "occx.mjs"), "utf8");
 const runtimeSource = readFileSync(repoPath("src", "lib", "bun-runtime.ts"), "utf8");
 const validatorSource = readFileSync(
   repoPath("src", "lib", "bun-binary-validator.mjs"),
   "utf8",
 );
 
-describe("ocx.mjs package launcher (source invariants)", () => {
+describe("occx.mjs package launcher (source invariants)", () => {
   test("the Bun child receives the runtime provenance the launcher actually selected (#848)", () => {
     // The launcher is a plain-Node bin script executing at import time, so this is
     // asserted at the source level: the marker must reach the spawn env, and it must
     // carry the source resolved alongside the chosen binary rather than a literal.
-    expect(source).toContain('const BUN_RUNTIME_SOURCE_ENV = "OCX_BUN_RUNTIME_SOURCE";');
+    expect(source).toContain('const BUN_RUNTIME_SOURCE_ENV = "OCCX_BUN_RUNTIME_SOURCE";');
     expect(source).toContain("[BUN_RUNTIME_SOURCE_ENV]: bunRuntime.source,");
 
     // The stamp must sit inside the spawn's env object, not merely somewhere in the file.
@@ -34,7 +34,7 @@ describe("ocx.mjs package launcher (source invariants)", () => {
     expect(source).toContain('return { path: bin, source: "bundled" };');
 
     // The launcher's literal name must match the TypeScript constant it mirrors.
-    expect(runtimeSource).toContain('export const BUN_RUNTIME_SOURCE_ENV = "OCX_BUN_RUNTIME_SOURCE";');
+    expect(runtimeSource).toContain('export const BUN_RUNTIME_SOURCE_ENV = "OCCX_BUN_RUNTIME_SOURCE";');
   });
 
   test("the updater inspection namespace rejects direct Bun execution of the Node launcher", () => {
@@ -88,7 +88,7 @@ describe("ocx.mjs package launcher (source invariants)", () => {
     expect(source).toContain("const launchProof = randomBytes(32).toString(\"base64url\")");
     expect(source).toContain("[NODE_LAUNCH_CONTEXT_ENV]: launchContext");
     expect(source).toContain("`${NODE_LAUNCH_PROOF_PREFIX}${launchProof}`");
-    expect(source).not.toContain("OCX_PRE_BUN_ANTHROPIC_ENV: preBunAnthropicSlots");
+    expect(source).not.toContain("OCCX_PRE_BUN_ANTHROPIC_ENV: preBunAnthropicSlots");
     // The snapshot must be computed from the launcher's OWN env, before Bun's dotenv load.
     expect(source).toContain("typeof process.env[name] === \"string\" && process.env[name] !== \"\"");
   });
@@ -133,7 +133,7 @@ describe("ocx.mjs package launcher (source invariants)", () => {
   });
 
   test("valid Bun overrides are selected before the bundled runtime", () => {
-    expect(source).toContain('const BUN_OVERRIDE_ENV = "OPENCODEX_BUN_PATH";');
+    expect(source).toContain('const BUN_OVERRIDE_ENV = "OPENCCX_BUN_PATH";');
     expect(source).toContain("const overridePath = resolve(override);");
     expect(source).toContain('if (isRealBunBinary(overridePath)) return { path: overridePath, source: "override" };');
 

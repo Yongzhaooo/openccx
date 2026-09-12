@@ -25,7 +25,7 @@ import {
 } from "../../src/clients/config-export";
 import { buildOpencodeProviderBlockFromCatalog, opencodeCatalogFromProxyRows, opencodeGlobalConfigPath } from "../../src/cli/opencode";
 import { exportModelsFromProxyRows } from "../../src/cli/export-command";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import * as facade from "../../src/clients/config-export";
 import { OPENCODE_PROVIDER_BLOCK_DEFAULT_CONFIG as leafDefaultConfig } from "../../src/clients/config-export/constants";
@@ -54,14 +54,14 @@ function ctx(extra?: Partial<ExportContext>): ExportContext {
   return { baseUrl: BASE_URL, models: FIXTURE, ...extra };
 }
 
-function cfg(extra?: Partial<OcxConfig>): OcxConfig {
+function cfg(extra?: Partial<OccxConfig>): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
     defaultProvider: "mock",
     providers: { mock: { adapter: "openai-chat", baseUrl: "http://127.0.0.1/v1" } },
     ...extra,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 /**
@@ -73,7 +73,7 @@ function cfg(extra?: Partial<OcxConfig>): OcxConfig {
  * dedupe+sort precondition, so it is compared entry-by-entry against the same truth.
  */
 const GOLDEN_OPENCODE_BLOCK = JSON.parse(
-  '{"npm":"@ai-sdk/openai-compatible","name":"OpenCodex","options":{"baseURL":"http://127.0.0.1:10100/v1","apiKey":"{env:OPENCODEX_OPENCODE_API_KEY}"},"models":{"gpt-5.6-luna":{"name":"gpt-5.6-luna (native)","limit":{"context":272000,"output":32000}},"anthropic/claude-opus-5":{"name":"Claude Opus 5 (anthropic)","limit":{"context":200000,"output":32000}},"custom/no-context":{"name":"no-context (custom)"},"tiny/small-ctx":{"name":"small-ctx (tiny)","limit":{"context":8000,"output":8000}}}}',
+  '{"npm":"@ai-sdk/openai-compatible","name":"Openccx","options":{"baseURL":"http://127.0.0.1:10100/v1","apiKey":"{env:OPENCCX_OPENCODE_API_KEY}"},"models":{"gpt-5.6-luna":{"name":"gpt-5.6-luna (native)","limit":{"context":272000,"output":32000}},"anthropic/claude-opus-5":{"name":"Claude Opus 5 (anthropic)","limit":{"context":200000,"output":32000}},"custom/no-context":{"name":"no-context (custom)"},"tiny/small-ctx":{"name":"small-ctx (tiny)","limit":{"context":8000,"output":8000}}}}',
 ) as {
   npm: string;
   name: string;
@@ -117,10 +117,10 @@ describe("split config-export public facade", () => {
       inputModalities: ["text", "image"], reasoningEfforts: ["none", "high"],
     }] });
     const cases = [
-      ["omp", ["providers", "opencodex"], '{"providers":{"opencodex":{"baseUrl":"http://127.0.0.1:10100/v1","api":"openai-completions","apiKey":"opencodex-loopback","models":[{"id":"test/known","name":"known (test)","input":["text","image"],"contextWindow":8192,"maxTokens":8192,"reasoning":true,"thinking":{"mode":"effort","efforts":["high"]}}]}}}'],
-      ["dsh", ["llm-pi-ai", "providers", "opencodex"], '{"llm-pi-ai":{"providers":{"opencodex":{"displayName":"OpenCodex","api":"openai-responses","baseURL":"http://127.0.0.1:10100/v1","headers":{"Authorization":"Bearer ocx_data_dsh"},"models":[{"id":"test/known","name":"known (test)","input":["text","image"],"contextWindow":8192,"reasoningEfforts":{"high":"high"}}]}}}}'],
-      ["mcode", ["custom_provider", "opencodex"], '{"custom_provider":{"opencodex":{"name":"OpenCodex","kind":"custom","enabled":true,"api":"anthropic-messages","options":{"apiKey":"opencodex-loopback","baseURL":"http://127.0.0.1:10100","authMode":"api-key"},"models":{"test/known":{"limit":{"context":8192},"thinking":{"effortOptions":["high"]}}}}}}'],
-      ["zcode", ["provider", "opencodex"], '{"provider":{"opencodex":{"name":"OpenCodex","kind":"openai","enabled":true,"source":"custom","options":{"apiKey":"opencodex-loopback","baseURL":"http://127.0.0.1:10100/v1","apiKeyRequired":true},"models":{"test/known":{"name":"known (test)","modalities":{"input":["text","image"],"output":["text"]},"limit":{"context":8192},"reasoning":{"enabled":true,"variants":["high"]}}}}}}'],
+      ["omp", ["providers", "openccx"], '{"providers":{"openccx":{"baseUrl":"http://127.0.0.1:10100/v1","api":"openai-completions","apiKey":"openccx-loopback","models":[{"id":"test/known","name":"known (test)","input":["text","image"],"contextWindow":8192,"maxTokens":8192,"reasoning":true,"thinking":{"mode":"effort","efforts":["high"]}}]}}}'],
+      ["dsh", ["llm-pi-ai", "providers", "openccx"], '{"llm-pi-ai":{"providers":{"openccx":{"displayName":"Openccx","api":"openai-responses","baseURL":"http://127.0.0.1:10100/v1","headers":{"Authorization":"Bearer occx_data_dsh"},"models":[{"id":"test/known","name":"known (test)","input":["text","image"],"contextWindow":8192,"reasoningEfforts":{"high":"high"}}]}}}}'],
+      ["mcode", ["custom_provider", "openccx"], '{"custom_provider":{"openccx":{"name":"Openccx","kind":"custom","enabled":true,"api":"anthropic-messages","options":{"apiKey":"openccx-loopback","baseURL":"http://127.0.0.1:10100","authMode":"api-key"},"models":{"test/known":{"limit":{"context":8192},"thinking":{"effortOptions":["high"]}}}}}}'],
+      ["zcode", ["provider", "openccx"], '{"provider":{"openccx":{"name":"Openccx","kind":"openai","enabled":true,"source":"custom","options":{"apiKey":"openccx-loopback","baseURL":"http://127.0.0.1:10100/v1","apiKeyRequired":true},"models":{"test/known":{"name":"known (test)","modalities":{"input":["text","image"],"output":["text"]},"limit":{"context":8192},"reasoning":{"enabled":true,"variants":["high"]}}}}}}'],
     ] as const;
     for (const [id, path, expectedBytes] of cases) {
       const built = buildClientConfigText(id, context);
@@ -147,7 +147,7 @@ describe("relocated OpenCode serializer (accept criterion 1)", () => {
   });
 
   test("buildClientConfig('opencode') emits the same entries as the golden", () => {
-    const block = opencodeConfig().provider.opencodex!;
+    const block = opencodeConfig().provider.openccx!;
     expect(block.npm).toBe(GOLDEN_OPENCODE_BLOCK.npm);
     expect(block.name).toBe(GOLDEN_OPENCODE_BLOCK.name);
     expect(block.options).toEqual(GOLDEN_OPENCODE_BLOCK.options);
@@ -159,26 +159,26 @@ describe("relocated OpenCode serializer (accept criterion 1)", () => {
     }
   });
 
-  test("carries the V1 schema and only the opencodex provider key", () => {
+  test("carries the V1 schema and only the openccx provider key", () => {
     const config = opencodeConfig();
     expect(config.$schema).toBe("https://opencode.ai/config.json");
-    expect(Object.keys(config.provider)).toEqual(["opencodex"]);
+    expect(Object.keys(config.provider)).toEqual(["openccx"]);
   });
 
   test("a non-loopback bind moves admission to the header branch", () => {
-    const block = opencodeConfig(ctx({ config: cfg({ hostname: "0.0.0.0" }) })).provider.opencodex!;
+    const block = opencodeConfig(ctx({ config: cfg({ hostname: "0.0.0.0" }) })).provider.openccx!;
     expect(block.options.apiKey).toBeUndefined();
-    expect(block.options.headers).toEqual({ "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF });
+    expect(block.options.headers).toEqual({ "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF });
   });
 
   test("a loopback bind keeps the apiKey branch", () => {
-    const block = opencodeConfig(ctx({ config: cfg({ hostname: "127.0.0.1" }) })).provider.opencodex!;
+    const block = opencodeConfig(ctx({ config: cfg({ hostname: "127.0.0.1" }) })).provider.openccx!;
     expect(block.options.apiKey).toBe(OPENCODE_API_KEY_ENV_REF);
     expect(block.options.headers).toBeUndefined();
   });
 
   test("the label carries the provider suffix, not a bare display name", () => {
-    const models = opencodeConfig().provider.opencodex!.models;
+    const models = opencodeConfig().provider.openccx!.models;
     expect(models["gpt-5.6-luna"]!.name).toBe("gpt-5.6-luna (native)");
     expect(models["anthropic/claude-opus-5"]!.name).toBe("Claude Opus 5 (anthropic)");
     expect(models["custom/no-context"]!.name).toBe("no-context (custom)");
@@ -233,13 +233,13 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
     { namespaced: "opencode-go/none-only", provider: "opencode-go", id: "none-only", reasoningEfforts: ["none"], contextWindow: 1_000_000 },
   ];
 
-  function ladderCtx(config: OcxConfig = cfg()): ExportContext {
+  function ladderCtx(config: OccxConfig = cfg()): ExportContext {
     return { baseUrl: BASE_URL, models: LADDER_ROWS, config };
   }
 
   test("one variant per declared effort, in canonical ladder order", () => {
     const models = (buildClientConfig("opencode", ladderCtx()) as OpencodeGeneratedConfig)
-      .providers.opencodex!.models;
+      .providers.openccx!.models;
     expect(models["opencode-go/glm-5.3"]!.variants).toEqual([
       { id: "low", settings: { reasoningEffort: "low" } },
       { id: "high", settings: { reasoningEffort: "high" } },
@@ -253,7 +253,7 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
 
   test("`none` is never offered: it has no wire effort and would silently no-op", () => {
     const models = (buildClientConfig("opencode", ladderCtx()) as OpencodeGeneratedConfig)
-      .providers.opencodex!.models;
+      .providers.openccx!.models;
     const ids = models["opencode-go/deepseek-v4-flash"]!.variants!.map(variant => variant.id);
     expect(ids).not.toContain("none");
     // A ladder consisting only of `none` leaves nothing selectable at all.
@@ -262,14 +262,14 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
 
   test("a model without a usable ladder carries no variants key at all", () => {
     const models = (buildClientConfig("opencode", ladderCtx()) as OpencodeGeneratedConfig)
-      .providers.opencodex!.models;
+      .providers.openccx!.models;
     expect(models["opencode-go/no-ladder"]!.variants).toBeUndefined();
     expect(models["opencode-go/empty-ladder"]!.variants).toBeUndefined();
   });
 
   test("the legacy block stays variant-free instead of carrying fields opencode ignores", () => {
     const config = buildClientConfig("opencode", ladderCtx()) as OpencodeGeneratedConfig;
-    for (const entry of Object.values(config.provider.opencodex!.models)) {
+    for (const entry of Object.values(config.provider.openccx!.models)) {
       expect(entry).not.toHaveProperty("variants");
       expect(entry).not.toHaveProperty("settings");
     }
@@ -277,8 +277,8 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
 
   test("both blocks describe the same model set and the same connection", () => {
     const config = buildClientConfig("opencode", ladderCtx()) as OpencodeGeneratedConfig;
-    const v1 = config.provider.opencodex!;
-    const v2 = config.providers.opencodex!;
+    const v1 = config.provider.openccx!;
+    const v2 = config.providers.openccx!;
     expect(Object.keys(v2.models)).toEqual(Object.keys(v1.models));
     expect(v2.settings).toEqual(v1.options);
     // opencode V2 merges both blocks by provider and model id, so the same ids must not
@@ -292,8 +292,8 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
 
   test("a non-loopback bind moves admission to the header branch in both blocks", () => {
     const config = buildClientConfig("opencode", ladderCtx(cfg({ hostname: "0.0.0.0" }))) as OpencodeGeneratedConfig;
-    for (const block of [config.provider.opencodex!.options, config.providers.opencodex!.settings]) {
-      expect(block.headers).toEqual({ "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF });
+    for (const block of [config.provider.openccx!.options, config.providers.openccx!.settings]) {
+      expect(block.headers).toEqual({ "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF });
       expect(block.apiKey).toBeUndefined();
     }
   });
@@ -301,7 +301,7 @@ describe("OpenCode V2 block (reasoning-effort variants)", () => {
 
 describe("Pi serializer (accept criterion 2)", () => {
   test("models is an array keyed by id, not a keyed object", () => {
-    const provider = piConfig().providers.opencodex!;
+    const provider = piConfig().providers.openccx!;
     expect(Array.isArray(provider.models)).toBe(true);
     expect(provider.models.map(model => model.id)).toEqual([
       "anthropic/claude-opus-5",
@@ -312,7 +312,7 @@ describe("Pi serializer (accept criterion 2)", () => {
   });
 
   test("provider envelope names the OpenAI-compatible dialect and the loopback placeholder", () => {
-    const provider = piConfig().providers.opencodex!;
+    const provider = piConfig().providers.openccx!;
     expect(provider.baseUrl).toBe(BASE_URL);
     expect(provider.api).toBe("openai-completions");
     expect(provider.apiKey).toBe(LOOPBACK_API_KEY_PLACEHOLDER);
@@ -321,7 +321,7 @@ describe("Pi serializer (accept criterion 2)", () => {
   });
 
   test("cost is omitted on every entry — zeros would assert routed models are free", () => {
-    for (const model of piConfig().providers.opencodex!.models) {
+    for (const model of piConfig().providers.openccx!.models) {
       expect(model).not.toHaveProperty("cost");
     }
     expect(JSON.stringify(piConfig())).not.toContain("cost");
@@ -329,7 +329,7 @@ describe("Pi serializer (accept criterion 2)", () => {
 
   test("reasoning is emitted only for rows with a non-empty effort ladder", () => {
     // The shared fixture carries no ladder anywhere: every entry stays reasoning-free.
-    for (const model of piConfig().providers.opencodex!.models) {
+    for (const model of piConfig().providers.openccx!.models) {
       expect(model).not.toHaveProperty("reasoning");
     }
     const config = piConfig(ctx({
@@ -340,7 +340,7 @@ describe("Pi serializer (accept criterion 2)", () => {
         { namespaced: "d/off", provider: "d", id: "off", reasoningEfforts: ["none", "minimal", "low"] },
       ],
     }));
-    const models = config.providers.opencodex!.models;
+    const models = config.providers.openccx!.models;
     expect(models.find(model => model.id === "a/reasoning")!.reasoning).toBe(true);
     // Pi's level scale is constrained to the ladder: members map to themselves, everything
     // else (incl. minimal, which the Codex ladder has no equivalent for) is hidden.
@@ -369,7 +369,7 @@ describe("Pi serializer (accept criterion 2)", () => {
     const ultraOnly = piConfig(ctx({
       models: [{ namespaced: "e/ultra", provider: "e", id: "ultra", reasoningEfforts: ["ultra"] }],
     }));
-    expect(ultraOnly.providers.opencodex!.models[0]!.thinkingLevelMap).toMatchObject({
+    expect(ultraOnly.providers.openccx!.models[0]!.thinkingLevelMap).toMatchObject({
       max: "ultra",
       off: null,
       minimal: null,
@@ -380,14 +380,14 @@ describe("Pi serializer (accept criterion 2)", () => {
   });
 
   test("contextWindow and maxTokens are omitted when the context window is unknown", () => {
-    const entry = piConfig().providers.opencodex!.models.find(model => model.id === "custom/no-context")!;
+    const entry = piConfig().providers.openccx!.models.find(model => model.id === "custom/no-context")!;
     expect(entry).not.toHaveProperty("contextWindow");
     expect(entry).not.toHaveProperty("maxTokens");
     expect(entry).toEqual({ id: "custom/no-context", name: "no-context (custom)", input: ["text"] });
   });
 
   test("maxTokens uses the schema budget and clamps to a smaller context window", () => {
-    const models = piConfig().providers.opencodex!.models;
+    const models = piConfig().providers.openccx!.models;
     const large = models.find(model => model.id === "gpt-5.6-luna")!;
     expect(large.contextWindow).toBe(272_000);
     expect(large.maxTokens).toBe(SCHEMA_REQUIRED_OUTPUT_BUDGET);
@@ -404,15 +404,15 @@ describe("Pi serializer (accept criterion 2)", () => {
         { namespaced: "c/empty", provider: "c", id: "empty", inputModalities: [] },
       ],
     }));
-    const models = config.providers.opencodex!.models;
+    const models = config.providers.openccx!.models;
     expect(models.find(model => model.id === "a/plain")!.input).toEqual(["text"]);
     expect(models.find(model => model.id === "b/multi")!.input).toEqual(["text", "image"]);
     expect(models.find(model => model.id === "c/empty")!.input).toEqual(["text"]);
   });
 
   test("Pi reuses the OpenCode label rule verbatim", () => {
-    const piNames = piConfig().providers.opencodex!.models.map(model => model.name).sort();
-    const opencodeNames = Object.values(opencodeConfig().provider.opencodex!.models)
+    const piNames = piConfig().providers.openccx!.models.map(model => model.name).sort();
+    const opencodeNames = Object.values(opencodeConfig().provider.openccx!.models)
       .map(entry => entry.name)
       .sort();
     expect(piNames).toEqual(opencodeNames);
@@ -424,7 +424,7 @@ describe("OMP serializer", () => {
     const built = buildClientConfigText("omp", ctx());
     expect(built.format).toBe("yaml");
     const document = buildClientConfig("omp", ctx()) as PiGeneratedConfig;
-    expect(document.providers.opencodex!.models.map(model => model.id)).toEqual([
+    expect(document.providers.openccx!.models.map(model => model.id)).toEqual([
       "anthropic/claude-opus-5",
       "custom/no-context",
       "gpt-5.6-luna",
@@ -432,7 +432,7 @@ describe("OMP serializer", () => {
     ]);
     expect(built.text).toContain("providers:");
     expect(built.text).toContain("anthropic/claude-opus-5");
-    expect(built.text).toContain("apiKey: opencodex-loopback");
+    expect(built.text).toContain("apiKey: openccx-loopback");
   });
 
   test("keeps the provider on completions while opting native OpenAI models into Responses", () => {
@@ -456,9 +456,9 @@ describe("OMP serializer", () => {
       },
     ] satisfies ExportModel[];
     const document = buildClientConfig("omp", ctx({ models })) as {
-      providers: { opencodex: { api: string; models: Array<Record<string, unknown>> } };
+      providers: { openccx: { api: string; models: Array<Record<string, unknown>> } };
     };
-    const provider = document.providers.opencodex;
+    const provider = document.providers.openccx;
     expect(provider.api).toBe("openai-completions");
 
     const native = provider.models.find(model => model.id === "gpt-5.6-terra")!;
@@ -482,9 +482,9 @@ describe("OMP serializer", () => {
         defaultReasoningEffort: "ULTRA",
       }],
     })) as {
-      providers: { opencodex: { models: Array<Record<string, unknown>> } };
+      providers: { openccx: { models: Array<Record<string, unknown>> } };
     };
-    const model = document.providers.opencodex.models[0]!;
+    const model = document.providers.openccx.models[0]!;
     expect(model.reasoning).toBe(true);
     expect(model.thinking).toEqual({ mode: "effort", efforts: ["low", "high"] });
   });
@@ -498,23 +498,23 @@ describe("OMP serializer", () => {
         reasoningEfforts: ["ultra", "none"],
       }],
     })) as {
-      providers: { opencodex: { models: Array<Record<string, unknown>> } };
+      providers: { openccx: { models: Array<Record<string, unknown>> } };
     };
-    expect(document.providers.opencodex.models[0]).not.toHaveProperty("reasoning");
-    expect(document.providers.opencodex.models[0]).not.toHaveProperty("thinking");
+    expect(document.providers.openccx.models[0]).not.toHaveProperty("reasoning");
+    expect(document.providers.openccx.models[0]).not.toHaveProperty("thinking");
   });
 });
 
 describe("DSH rc.6 serializer", () => {
-  test("owns only llm-pi-ai.providers.opencodex with a loopback Responses profile", () => {
+  test("owns only llm-pi-ai.providers.openccx with a loopback Responses profile", () => {
     const document = dshConfig();
     expect(Object.keys(document)).toEqual(["llm-pi-ai"]);
-    expect(Object.keys(document["llm-pi-ai"].providers)).toEqual(["opencodex"]);
-    const provider = document["llm-pi-ai"].providers.opencodex!;
-    expect(provider.displayName).toBe("OpenCodex");
+    expect(Object.keys(document["llm-pi-ai"].providers)).toEqual(["openccx"]);
+    const provider = document["llm-pi-ai"].providers.openccx!;
+    expect(provider.displayName).toBe("Openccx");
     expect(provider.api).toBe("openai-responses");
     expect(provider.baseURL).toBe(BASE_URL);
-    expect(provider.headers).toEqual({ Authorization: "Bearer ocx_data_dsh" });
+    expect(provider.headers).toEqual({ Authorization: "Bearer occx_data_dsh" });
     expect(provider).not.toHaveProperty("apiKeyEnv");
     expect(document).not.toHaveProperty("agent-default-model");
     expect(document).not.toHaveProperty("deepseek-official");
@@ -531,7 +531,7 @@ describe("DSH rc.6 serializer", () => {
         { namespaced: "a/zero", provider: "a", id: "zero", contextWindow: 0 },
       ],
     }));
-    const models = document["llm-pi-ai"].providers.opencodex!.models;
+    const models = document["llm-pi-ai"].providers.openccx!.models;
     expect(models.map(model => model.id)).toEqual(["a/context", "a/fraction", "a/mixed", "a/unknown", "a/zero"]);
     expect(models.find(model => model.id === "a/unknown")?.input).toEqual(["text"]);
     expect(models.find(model => model.id === "a/mixed")?.input).toEqual(["image"]);
@@ -554,7 +554,7 @@ describe("DSH rc.6 serializer", () => {
         { namespaced: "a/none", provider: "a", id: "none", reasoningEfforts: ["off", "minimal"] },
       ],
     }));
-    const models = document["llm-pi-ai"].providers.opencodex!.models;
+    const models = document["llm-pi-ai"].providers.openccx!.models;
     expect(models.find(model => model.id === "a/reasoning")?.reasoningEfforts).toEqual({
       low: "low",
       medium: "medium",
@@ -588,25 +588,25 @@ describe("DSH rc.6 serializer", () => {
         mixed: { targets: [{ provider: "safe", model: "model" }, { provider: "openai", model: "gpt-5.6-luna" }] },
       },
     });
-    const ids = dshConfig(ctx({ models, config: direct }))["llm-pi-ai"].providers.opencodex!.models.map(model => model.id);
+    const ids = dshConfig(ctx({ models, config: direct }))["llm-pi-ai"].providers.openccx!.models.map(model => model.id);
     expect(ids).toEqual(["combo/safe", "safe/model"]);
 
     const pool = cfg({ ...direct, providers: { ...direct.providers, openai: { ...direct.providers.openai!, codexAccountMode: "pool" } } });
-    expect(dshConfig(ctx({ models, config: pool }))["llm-pi-ai"].providers.opencodex!.models).toHaveLength(models.length);
+    expect(dshConfig(ctx({ models, config: pool }))["llm-pi-ai"].providers.openccx!.models).toHaveLength(models.length);
   });
 });
 
 describe("no credential ever reaches the output (accept criterion 3)", () => {
-  const LIVE_KEY = "ocx_live_do_not_serialize_0123456789";
+  const LIVE_KEY = "occx_live_do_not_serialize_0123456789";
 
-  test("neither serializer emits an ocx_ key even when one exists in config", () => {
-    const withKey = cfg({ apiKeys: [{ key: LIVE_KEY }] } as Partial<OcxConfig>);
+  test("neither serializer emits an occx_ key even when one exists in config", () => {
+    const withKey = cfg({ apiKeys: [{ key: LIVE_KEY }] } as Partial<OccxConfig>);
     const context = ctx({ config: withKey });
     for (const client of EXPORT_CLIENT_IDS) {
       const serialized = JSON.stringify(buildClientConfig(client, context));
       // DSH requires this fixed non-secret loopback bearer. Remove only that
       // exact placeholder before checking that no credential-shaped value leaked.
-      expect(serialized.replaceAll("ocx_data_dsh", "")).not.toContain("ocx_");
+      expect(serialized.replaceAll("occx_data_dsh", "")).not.toContain("occx_");
       expect(serialized).not.toContain(LIVE_KEY);
     }
   });
@@ -652,9 +652,9 @@ describe("stable ordering (accept criterion 4)", () => {
         { namespaced: "gpt-5.6-luna", provider: "openai", id: "gpt-5.6-luna", displayName: "Shadow" },
       ],
     });
-    expect(Object.keys(opencodeConfig(dupes).provider.opencodex!.models)).toEqual(["gpt-5.6-luna"]);
-    expect(piConfig(dupes).providers.opencodex!.models).toHaveLength(1);
-    expect(piConfig(dupes).providers.opencodex!.models[0]!.name).toBe("gpt-5.6-luna (native)");
+    expect(Object.keys(opencodeConfig(dupes).provider.openccx!.models)).toEqual(["gpt-5.6-luna"]);
+    expect(piConfig(dupes).providers.openccx!.models).toHaveLength(1);
+    expect(piConfig(dupes).providers.openccx!.models[0]!.name).toBe("gpt-5.6-luna (native)");
   });
 });
 
@@ -732,7 +732,7 @@ describe("hub-resolved Fast exports", () => {
   });
 
   test("pi Fast rows retain modalities, context and the exact thinking ladder", () => {
-    const models = piConfig(ctx({ models: [eligible] })).providers.opencodex!.models;
+    const models = piConfig(ctx({ models: [eligible] })).providers.openccx!.models;
     expect(models).toHaveLength(2);
     expect(models[1]).toEqual({
       id: "remote/model--fast", name: "Remote Model Fast (remote)", input: ["text", "image"],
@@ -770,7 +770,7 @@ describe("hub-resolved Fast exports", () => {
     expect(expanded.v1.options).toEqual({ baseURL: BASE_URL, apiKey: OPENCODE_API_KEY_ENV_REF });
     expect(expanded.v2.settings).toEqual({ baseURL: BASE_URL, apiKey: OPENCODE_API_KEY_ENV_REF });
     const remote = opencodeProviderBlocks(BASE_URL, [eligible], cfg({ hostname: "0.0.0.0" }));
-    expect(remote.v1.options).toEqual({ baseURL: BASE_URL, headers: { "x-opencodex-api-key": OPENCODE_API_KEY_ENV_REF } });
+    expect(remote.v1.options).toEqual({ baseURL: BASE_URL, headers: { "x-openccx-api-key": OPENCODE_API_KEY_ENV_REF } });
     expect(remote.v2.settings).toEqual(remote.v1.options);
   });
 
@@ -856,12 +856,12 @@ describe("EXPORT_CLIENTS registry", () => {
     expect(built.text).toBe(`{
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "opencodex": {
+    "openccx": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "OpenCodex",
+      "name": "Openccx",
       "options": {
         "baseURL": "http://127.0.0.1:10100/v1",
-        "apiKey": "{env:OPENCODEX_OPENCODE_API_KEY}"
+        "apiKey": "{env:OPENCCX_OPENCODE_API_KEY}"
       },
       "models": {
         "anthropic/claude-opus-5": {
@@ -892,12 +892,12 @@ describe("EXPORT_CLIENTS registry", () => {
     }
   },
   "providers": {
-    "opencodex": {
+    "openccx": {
       "package": "@opencode-ai/ai/providers/openai-compatible",
-      "name": "OpenCodex",
+      "name": "Openccx",
       "settings": {
         "baseURL": "http://127.0.0.1:10100/v1",
-        "apiKey": "{env:OPENCODEX_OPENCODE_API_KEY}"
+        "apiKey": "{env:OPENCCX_OPENCODE_API_KEY}"
       },
       "models": {
         "anthropic/claude-opus-5": {
@@ -936,10 +936,10 @@ describe("EXPORT_CLIENTS registry", () => {
     expect(built.format).toBe("json");
     expect(built.text).toBe(`{
   "providers": {
-    "opencodex": {
+    "openccx": {
       "baseUrl": "http://127.0.0.1:10100/v1",
       "api": "openai-completions",
-      "apiKey": "opencodex-loopback",
+      "apiKey": "openccx-loopback",
       "compat": {
         "sendSessionAffinityHeaders": true
       },
@@ -1044,7 +1044,7 @@ describe("EXPORT_CLIENTS registry", () => {
   });
 
   test("the OMP destination follows its global agent directory and profile selectors", () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-omp-destination-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-omp-destination-"));
     try {
       const defaultAgentDir = join(home, ".omp", "agent");
       expect(ompModelsConfigPath({} as NodeJS.ProcessEnv, home)).toBe(join(defaultAgentDir, "models.yml"));
@@ -1089,7 +1089,7 @@ describe("EXPORT_CLIENTS registry", () => {
     expect(EXPORT_CLIENTS.pi.apiKeyEnv).toBe("");
     expect(EXPORT_CLIENTS.pi.exportHint).toContain("loopback");
     for (const id of EXPORT_CLIENT_IDS) {
-      expect(EXPORT_CLIENTS[id].exportHint).not.toContain("ocx_");
+      expect(EXPORT_CLIENTS[id].exportHint).not.toContain("occx_");
     }
   });
 
@@ -1101,7 +1101,7 @@ describe("EXPORT_CLIENTS registry", () => {
 
   test("an empty catalog still yields a structurally valid document", () => {
     const empty = ctx({ models: [] });
-    expect(opencodeConfig(empty).provider.opencodex!.models).toEqual({});
-    expect(piConfig(empty).providers.opencodex!.models).toEqual([]);
+    expect(opencodeConfig(empty).provider.openccx!.models).toEqual({});
+    expect(piConfig(empty).providers.openccx!.models).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { OPENCODEX_DESKTOP_PROFILE_KEYS, SAFE_DESKTOP_PROFILE_ID, isRecord } from "./desktop-3p-library";
+import { OPENCCX_DESKTOP_PROFILE_KEYS, SAFE_DESKTOP_PROFILE_ID, isRecord } from "./desktop-3p-library";
 
 export type DesktopRemoteOwner = { serverUrl: string; apiKeyId: string; connectedAt: string };
 export type DesktopStoreResult =
@@ -46,13 +46,13 @@ export function canonical(value: unknown): string {
 }
 export function digest(value: string): string { return createHash("sha256").update(value).digest("hex"); }
 export function projection(value: Record<string, unknown>): Projection {
-  return Object.fromEntries(Object.entries(value).filter(([key]) => OPENCODEX_DESKTOP_PROFILE_KEYS.has(key)));
+  return Object.fromEntries(Object.entries(value).filter(([key]) => OPENCCX_DESKTOP_PROFILE_KEYS.has(key)));
 }
 export function projectionHash(value: Record<string, unknown> | null): string {
   return digest(canonical(value === null ? null : projection(value)));
 }
 export function mergeProjection(current: Record<string, unknown>, owned: Projection): Record<string, unknown> {
-  return { ...Object.fromEntries(Object.entries(current).filter(([k]) => !OPENCODEX_DESKTOP_PROFILE_KEYS.has(k))), ...owned };
+  return { ...Object.fromEntries(Object.entries(current).filter(([k]) => !OPENCCX_DESKTOP_PROFILE_KEYS.has(k))), ...owned };
 }
 export function sameOwner(a: DesktopRemoteOwner, b: DesktopRemoteOwner): boolean { return canonical(a) === canonical(b); }
 export function exact(value: Record<string, unknown>, keys: string[]): void {
@@ -100,7 +100,7 @@ export function parseBaseline(value: unknown): Baseline {
   if (value.version !== 1 || typeof value.home !== "string" || typeof value.library !== "string"
     || typeof value.targetId !== "string" || !SAFE_DESKTOP_PROFILE_ID.test(value.targetId)
     || !["known", "standard_fallback"].includes(String(value.kind)) || typeof value.targetExisted !== "boolean"
-    || !isRecord(value.projection) || Object.keys(value.projection).some(k => !OPENCODEX_DESKTOP_PROFILE_KEYS.has(k))) throw new DesktopStoreError("unsafe");
+    || !isRecord(value.projection) || Object.keys(value.projection).some(k => !OPENCCX_DESKTOP_PROFILE_KEYS.has(k))) throw new DesktopStoreError("unsafe");
   if (value.kind === "standard_fallback" && Object.keys(value.projection).length) throw new DesktopStoreError("unsafe");
   if (value.priorSelection !== null) {
     const p = value.priorSelection;

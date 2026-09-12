@@ -18,7 +18,7 @@ test("ApiKeys uses workspace shell (no classic layout toggle)", async () => {
   expect(page).toContain("ApiKeysWorkspace");
   expect(page).not.toContain("viewMode");
   expect(page).not.toContain("readViewMode");
-  expect(page).not.toContain("ocx-apikeys-view");
+  expect(page).not.toContain("occx-apikeys-view");
   expect(page).not.toContain("pws.workspaceToggle");
   expect(page).not.toContain("pws.classicToggle");
 

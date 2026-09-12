@@ -3,7 +3,7 @@ import { createOllamaNativeAdapter } from "../../../src/adapters/ollama-native";
 import { buildCatalogEntries, gatherRoutedModels as gatherRoutedModelsDirect } from "../../../src/codex/catalog";
 import { withStubbedProviderFetch } from "../../helpers/catalog-provider-fetch";
 import { REASONING_EFFORT_OMIT_SENTINEL } from "../../../src/reasoning-effort";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 const gatherRoutedModels: typeof gatherRoutedModelsDirect = (config, options) =>
   gatherRoutedModelsDirect(withStubbedProviderFetch(config), options);
@@ -17,7 +17,7 @@ const gatherRoutedModels: typeof gatherRoutedModelsDirect = (config, options) =>
  * adapter clamps the requested effort onto the provider's real supported ladder. These tests pin
  * the WIRE behavior (what actually reaches /api/chat), not the catalog shape.
  */
-function provider(modelReasoningEfforts: Record<string, string[]>): OcxProviderConfig {
+function provider(modelReasoningEfforts: Record<string, string[]>): OccxProviderConfig {
   return {
     adapter: "ollama-native",
     baseUrl: "https://ollama.com/v1",
@@ -26,11 +26,11 @@ function provider(modelReasoningEfforts: Record<string, string[]>): OcxProviderC
     liveModels: false,
     models: ["deepseek-v4-flash:0731"],
     modelReasoningEfforts: modelReasoningEfforts,
-  } as OcxProviderConfig;
+  } as OccxProviderConfig;
 }
 
-function parsedWith(options: Record<string, unknown>, modelId = "deepseek-v4-flash:0731"): OcxParsedRequest {
-  return { modelId, stream: true, options, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OcxParsedRequest;
+function parsedWith(options: Record<string, unknown>, modelId = "deepseek-v4-flash:0731"): OccxParsedRequest {
+  return { modelId, stream: true, options, context: { messages: [{ role: "user", content: "hi" }] } } as unknown as OccxParsedRequest;
 }
 
 describe("ollama-native — reasoning wire clamp (catalog universality preserved)", () => {

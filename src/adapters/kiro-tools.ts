@@ -1,4 +1,4 @@
-import type { OcxParsedRequest, OcxTool } from "../types";
+import type { OccxParsedRequest, OccxTool } from "../types";
 import { namespacedToolName } from "../types";
 import { normalizeKiroModelId } from "../providers/kiro-models";
 import { isCodexCodeModeExecTool } from "./tool-catalog-nudge";
@@ -166,14 +166,14 @@ function serializedToolCatalogBytes(tools: readonly unknown[]): number {
   return textEncoder.encode(JSON.stringify(tools)).byteLength;
 }
 
-function omittedToolCatalogNotice(kept: number, omitted: readonly OcxTool[], registry: KiroToolNameRegistry): string {
+function omittedToolCatalogNotice(kept: number, omitted: readonly OccxTool[], registry: KiroToolNameRegistry): string {
   const names = omitted.slice(0, 12).map(tool => registry.alias(namespacedToolName(tool.namespace, tool.name)));
   const remainder = omitted.length - names.length;
   const summary = `${names.join(", ")}${remainder > 0 ? `, and ${remainder} more` : ""}`;
-  return `[opencodex] Kiro's outbound catalog budget allows ${kept} of ${kept + omitted.length} client tools this turn. Omitted and unavailable this turn: ${summary}.`;
+  return `[openccx] Kiro's outbound catalog budget allows ${kept} of ${kept + omitted.length} client tools this turn. Omitted and unavailable this turn: ${summary}.`;
 }
 
-function boundedCatalogPriority(tool: OcxTool): number {
+function boundedCatalogPriority(tool: OccxTool): number {
   if (tool.loadedFromToolSearch) return 0;
   // Codex code mode reaches shell, file edits, apply_patch and every MCP helper ONLY as nested
   // `tools.<name>(...)` calls inside this one tool. Dropping it does not shrink the catalog, it
@@ -186,7 +186,7 @@ function boundedCatalogPriority(tool: OcxTool): number {
 }
 
 export function convertKiroToolContext(
-  parsed: OcxParsedRequest,
+  parsed: OccxParsedRequest,
   registry: KiroToolNameRegistry = createKiroToolNameRegistry(),
 ): { tools: unknown[]; systemAdditions: string[]; nameMap: Map<string, string>; registry: KiroToolNameRegistry } {
   const tools = parsed.context.tools ?? [];
@@ -258,6 +258,6 @@ export function convertKiroToolContext(
   };
 }
 
-export function convertKiroTools(parsed: OcxParsedRequest): unknown[] {
+export function convertKiroTools(parsed: OccxParsedRequest): unknown[] {
   return convertKiroToolContext(parsed).tools;
 }

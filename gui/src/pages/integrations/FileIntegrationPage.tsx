@@ -120,7 +120,7 @@ export default function FileIntegrationPage({
     {
       isEmpty: () => false,
       enabled: active,
-      sessionCacheKey: `ocx.integrations.state.v1:${apiBase}:${scopeKey}`,
+      sessionCacheKey: `occx.integrations.state.v1:${apiBase}:${scopeKey}`,
     },
   );
   const historyResource = useDataSurface<IntegrationJournalRow[]>(
@@ -130,7 +130,7 @@ export default function FileIntegrationPage({
     {
       isEmpty: rows => rows.length === 0,
       enabled: active,
-      sessionCacheKey: `ocx.integrations.client-journal.v1:${apiBase}:${scopeKey}`,
+      sessionCacheKey: `occx.integrations.client-journal.v1:${apiBase}:${scopeKey}`,
     },
   );
 

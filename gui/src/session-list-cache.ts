@@ -4,7 +4,7 @@
  */
 
 /** Envelope marker: distinguishes a timestamped entry from a legacy raw value. */
-const CACHED_AT_KEY = "__ocxCachedAt";
+const CACHED_AT_KEY = "__occxCachedAt";
 
 export type SessionListEntry<T> = {
   data: T;

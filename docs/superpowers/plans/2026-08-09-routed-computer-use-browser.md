@@ -2,11 +2,11 @@
 
 > **For Codex:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to execute this plan task-by-task.
 
-**Goal:** Make every non-OpenAI model exposed through the opencodex Codex catalog use Codex's official code-mode executor so Computer Use and Browser remain callable, while preserving native OpenAI metadata and the existing vision, image-generation, and DeepSeek streaming fixes.
+**Goal:** Make every non-OpenAI model exposed through the openccx Codex catalog use Codex's official code-mode executor so Computer Use and Browser remain callable, while preserving native OpenAI metadata and the existing vision, image-generation, and DeepSeek streaming fixes.
 
-**Architecture:** Add one explicit routed-catalog compatibility policy, `tool_mode: "code_mode_only"`, at the common normalization boundary. Apply the same policy to the no-template fallback path. Do not add local UI executors to opencodex; the proxy continues translating Codex's `exec` custom tool into ordinary provider function calling and relaying `custom_tool_call` events back to Codex.
+**Architecture:** Add one explicit routed-catalog compatibility policy, `tool_mode: "code_mode_only"`, at the common normalization boundary. Apply the same policy to the no-template fallback path. Do not add local UI executors to openccx; the proxy continues translating Codex's `exec` custom tool into ordinary provider function calling and relaying `custom_tool_call` events back to Codex.
 
-**Tech Stack:** TypeScript, Bun, `bun:test`, Codex model catalog JSON, opencodex Responses adapters, launchd background service.
+**Tech Stack:** TypeScript, Bun, `bun:test`, Codex model catalog JSON, openccx Responses adapters, launchd background service.
 
 ---
 
@@ -195,7 +195,7 @@ Add a concise subsection explaining:
 
 Non-OpenAI catalog rows use `tool_mode: "code_mode_only"`. This lets Codex expose
 its official `exec` entrypoint and nested MCP tools, including Browser and Computer
-Use, while opencodex routes only the model's ordinary function call. Tool execution,
+Use, while openccx routes only the model's ordinary function call. Tool execution,
 permissions, and confirmation remain local to Codex. Providers without function-call
 support cannot use these tools. Native OpenAI rows keep their upstream tool mode.
 ```
@@ -286,12 +286,12 @@ No commit is needed unless a failing regression requires a scoped test or produc
 - Back up: `~/.opencodex/config.json`
 - Back up: `~/.codex/config.toml`
 - Back up: `~/.codex/opencodex-catalog.json`
-- Back up: `~/Library/LaunchAgents/com.opencodex.proxy.plist`
+- Back up: `~/Library/LaunchAgents/com.openccx.proxy.plist`
 - Replace: installed `@bitkyc08/opencodex` package/runtime
 
 **Step 1: Capture provenance and create a timestamped backup**
 
-Record the installed `ocx` path/version, service PID/runtime path, current git SHA, and SHA-256 hashes of the four configuration/service files. Copy present files into one timestamped directory under `/private/tmp` without printing credentials.
+Record the installed `occx` path/version, service PID/runtime path, current git SHA, and SHA-256 hashes of the four configuration/service files. Copy present files into one timestamped directory under `/private/tmp` without printing credentials.
 
 **Step 2: Build a local package artifact**
 
@@ -299,12 +299,12 @@ Run the repository packaging script and create an npm-compatible tarball from th
 
 **Step 3: Install the exact artifact and repair the service**
 
-Install the local artifact into the same global prefix that owns the current `ocx`, then run:
+Install the local artifact into the same global prefix that owns the current `occx`, then run:
 
 ```bash
-ocx service repair
-ocx sync
-ocx status
+occx service repair
+occx sync
+occx status
 ```
 
 Expected: the launchd service is loaded, the installed runtime provenance points to the new package, port `10100` serves `/healthz`, and sync rewrites catalog/cache successfully.

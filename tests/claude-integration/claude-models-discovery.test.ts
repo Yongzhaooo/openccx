@@ -8,7 +8,7 @@ import {
 } from "../../src/codex/model-entitlements";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { startServer } from "../../src/server";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { ManagementRequest } from "../helpers/management-auth";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
@@ -22,22 +22,22 @@ let previousHome: string | undefined;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-claude-discovery-");
-  testDir = mkdtempSync(join(tmpdir(), "ocx-claude-discovery-"));
-  process.env.OPENCODEX_HOME = testDir;
+  previousHome = process.env.OPENCCX_HOME;
+  isolatedCodexHome = installIsolatedCodexHome("occx-claude-discovery-");
+  testDir = mkdtempSync(join(tmpdir(), "occx-claude-discovery-"));
+  process.env.OPENCCX_HOME = testDir;
 });
 
 afterEach(() => {
   resetCodexModelEntitlementCacheForTests();
-  if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousHome;
+  if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   if (testDir) removeTreeWithRetry(testDir);
 });
 
-function configWithStaticModels(claudeCode?: OcxConfig["claudeCode"]): OcxConfig {
+function configWithStaticModels(claudeCode?: OccxConfig["claudeCode"]): OccxConfig {
   return {
     port: 0,
     defaultProvider: "mock",
@@ -53,7 +53,7 @@ function configWithStaticModels(claudeCode?: OcxConfig["claudeCode"]): OcxConfig
       },
     },
     ...(claudeCode ? { claudeCode } : {}),
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 test("anthropic-version header flips /v1/models to the discovery contract", async () => {
@@ -116,7 +116,7 @@ test("per-surface id style: ?ids= wins, claude-code UA gets readable, unknown UA
   saveConfig(configWithStaticModels());
   const server = startServer(0);
   try {
-    const readable = "claude-ocx-mock--test-model";
+    const readable = "claude-occx-mock--test-model";
     // 1) explicit ?ids=cli -> readable
     let json = await fetch(new URL("/v1/models?flavor=anthropic&ids=cli", server.url)).then(r => r.json()) as { data: { id: string }[] };
     expect(json.data.some(m => m.id === readable)).toBe(true);
@@ -378,13 +378,13 @@ test("Codex discovery restores account rows for supported natives hidden on disk
         models: Array<{
           slug: string;
           visibility?: string;
-          opencodex_catalog_kind?: string;
+          openccx_catalog_kind?: string;
         }>;
       };
     expect(catalog.models.find(model => model.slug === "gpt-5.5")?.visibility).toBe("hide");
     expect(catalog.models.find(model => model.slug === "team/gpt-5.5")).toMatchObject({
       visibility: "list",
-      opencodex_catalog_kind: "account-selector-v1",
+      openccx_catalog_kind: "account-selector-v1",
     });
     expect(catalog.models.find(model => model.slug === "team/gpt-5.6-sol")?.visibility)
       .toBe("hide");
@@ -428,7 +428,7 @@ test("Codex discovery exposes the observed native as a selector row plus one glo
       model_messages: { instructions_template: "You are Codex." },
       base_instructions: "You are Codex.",
       supported_reasoning_levels: [{ effort: "medium", description: "Medium" }],
-      opencodex_account_observed_native: true,
+      openccx_account_observed_native: true,
     }],
   }), "utf8");
   writeFileSync(join(isolatedCodexHome!.path, "auth.json"), JSON.stringify({
@@ -535,7 +535,7 @@ test("disabled canonical OpenAI preserves bare bootstrap rows without advertisin
     },
     codexAccounts: [{ id: "stored-side-account", isMain: false }],
     codexAccountNamespaces: { team: "stored-side-account" },
-  } as OcxConfig;
+  } as OccxConfig;
   saveConfig(config);
   const server = startServer(0);
   try {

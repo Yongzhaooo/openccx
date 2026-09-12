@@ -1,7 +1,7 @@
 import type {
   AttemptTierOutcome,
   FastWire,
-  OcxProviderConfig,
+  OccxProviderConfig,
   TierDecision,
   TierObservationContext,
 } from "../types";
@@ -101,8 +101,8 @@ function exactModelValue<T>(record: Readonly<Record<string, T>>, modelId: string
 
 export function resolveProviderAuthTransport(
   adapter: string,
-  mode: NonNullable<OcxProviderConfig["authMode"]>,
-  apiKeyTransport?: OcxProviderConfig["apiKeyTransport"],
+  mode: NonNullable<OccxProviderConfig["authMode"]>,
+  apiKeyTransport?: OccxProviderConfig["apiKeyTransport"],
 ): FastPolicyAuthTransport {
   if (mode === "oauth") return "oauth_bearer";
   if (mode === "forward") return "forwarded_authorization";

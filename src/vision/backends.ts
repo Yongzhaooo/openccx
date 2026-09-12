@@ -17,7 +17,7 @@
  * this table closed under provider growth: a new provider needs no new
  * describe executor.
  */
-import type { OcxConfig } from "../types";
+import type { OccxConfig } from "../types";
 import type { SidecarAuthState } from "../sidecar/auth";
 import { listOpenAiForwardSidecarCandidates } from "../providers/openai-sidecar";
 import type { VisionCandidateModel, VisionSidecarBackend } from "./eligibility";
@@ -25,7 +25,7 @@ import type { VisionCandidateModel, VisionSidecarBackend } from "./eligibility";
 export interface VisionBackendDescriptor {
   backend: VisionSidecarBackend;
   /** Liveness signal for this backend. */
-  isActive(auth: SidecarAuthState, config: OcxConfig): boolean;
+  isActive(auth: SidecarAuthState, config: OccxConfig): boolean;
   /** Which candidate rows this backend's describe executor can actually run. */
   candidateMatch(candidate: VisionCandidateModel, auth: SidecarAuthState): boolean;
   /**
@@ -88,7 +88,7 @@ export function visionBackendDescriptor(backend: VisionSidecarBackend): VisionBa
  * UNIVERSAL sides when neither is active (fresh install: picker stays
  * populated, permissive-unknown rule); "routed" is active by construction.
  */
-export function activeVisionBackends(auth: SidecarAuthState, config: OcxConfig): VisionSidecarBackend[] {
+export function activeVisionBackends(auth: SidecarAuthState, config: OccxConfig): VisionSidecarBackend[] {
   const active = VISION_BACKENDS.filter(entry => entry.isActive(auth, config)).map(entry => entry.backend);
   return active.includes("openai") || active.includes("anthropic")
     ? active

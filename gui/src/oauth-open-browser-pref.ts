@@ -14,7 +14,7 @@
  * Reads never throw. A browser with storage disabled behaves as "no preference"
  * rather than losing the login.
  */
-const KEY = "ocx.oauth.openBrowser";
+const KEY = "occx.oauth.openBrowser";
 
 export function readOpenBrowserPref(): boolean | undefined {
   try {

@@ -11,7 +11,7 @@ import { handleResponses, isShadowSourceModel } from "../../src/server/responses
 import { shouldInterceptShadowCall } from "../../src/lib/shadow-call";
 import { handleManagementAPI } from "../../src/server/management-api";
 import type { RequestLogContext } from "../../src/server/request-log";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
@@ -97,7 +97,7 @@ describe("shouldInterceptShadowCall", () => {
   });
 });
 
-function interceptConfig(): OcxConfig {
+function interceptConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "xai",
@@ -110,11 +110,11 @@ function interceptConfig(): OcxConfig {
       },
     },
     shadowCallIntercept: { enabled: true, model: "xai/grok-4.5" },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function post(
-  config: OcxConfig,
+  config: OccxConfig,
   model: string,
   requestKind?: string,
   logCtx: RequestLogContext = { model: "", provider: "" },
@@ -262,7 +262,7 @@ describe("shadow call intercept request path (issue #311)", () => {
 function comboInterceptConfig(
   targets: Array<{ provider: string; model: string }>,
   shadowCallIntercept: Record<string, unknown> = { enabled: true, model: "combo/shadow" },
-): OcxConfig {
+): OccxConfig {
   return {
     port: 0,
     defaultProvider: "xai",
@@ -284,7 +284,7 @@ function comboInterceptConfig(
       shadow: { strategy: "failover", targets },
     },
     shadowCallIntercept,
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 function chatOk(text: string): Response {
@@ -384,19 +384,19 @@ describe("a combo shadow-call target enters the failover loop (#4129)", () => {
  * which models are intercepted; every client renders what it reports.
  */
 async function withTempHome<T>(run: () => Promise<T>): Promise<T> {
-  const previousHome = process.env.OPENCODEX_HOME;
-  const dir = mkdtempSync(join(tmpdir(), "ocx-shadow-"));
-  process.env.OPENCODEX_HOME = dir;
+  const previousHome = process.env.OPENCCX_HOME;
+  const dir = mkdtempSync(join(tmpdir(), "occx-shadow-"));
+  process.env.OPENCCX_HOME = dir;
   try {
     return await run();
   } finally {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(dir);
   }
 }
 
-async function shadowApi(config: OcxConfig, method: string, body?: unknown): Promise<Record<string, unknown>> {
+async function shadowApi(config: OccxConfig, method: string, body?: unknown): Promise<Record<string, unknown>> {
   // Management API enforces a same-origin gate; a browserless caller must look local.
   const headers: Record<string, string> = { origin: "http://127.0.0.1:10100", host: "127.0.0.1:10100" };
   if (body !== undefined) headers["content-type"] = "application/json";
@@ -413,7 +413,7 @@ async function shadowApi(config: OcxConfig, method: string, body?: unknown): Pro
   return await res!.json() as Record<string, unknown>;
 }
 
-async function shadowApiResponse(config: OcxConfig, body: unknown): Promise<Response> {
+async function shadowApiResponse(config: OccxConfig, body: unknown): Promise<Response> {
   const req = new Request("http://localhost/api/shadow-call-settings", {
     method: "PUT",
     headers: {
@@ -433,7 +433,7 @@ async function shadowApiResponse(config: OcxConfig, body: unknown): Promise<Resp
 describe("shadow-call settings API reports the intercepted source models", () => {
   test("GET reports the 0.145.0+ helper-model default", async () => {
     await withTempHome(async () => {
-      const body = await shadowApi({ port: 0, defaultProvider: "xai", providers: {} } as OcxConfig, "GET");
+      const body = await shadowApi({ port: 0, defaultProvider: "xai", providers: {} } as OccxConfig, "GET");
       expect(body.sourceModels).toEqual(["gpt-5.6-luna"]);
     });
   });
@@ -452,7 +452,7 @@ describe("shadow-call settings API reports the intercepted source models", () =>
           },
         },
         shadowCallIntercept: { enabled: true, model: "xai/grok-4.5", sourceModels: ["gpt-5.6-luna"] },
-      } as OcxConfig;
+      } as OccxConfig;
       expect((await shadowApi(config, "GET")).sourceModels).toEqual(["gpt-5.6-luna"]);
       const put = await shadowApi(config, "PUT", { enabled: true });
       expect(put.sourceModels).toEqual(["gpt-5.6-luna"]);
@@ -473,7 +473,7 @@ describe("shadow-call settings API reports the intercepted source models", () =>
           },
         },
         shadowCallIntercept: { sourceModels: ["custom-helper"] },
-      } as OcxConfig;
+      } as OccxConfig;
 
       const response = await shadowApiResponse(config, { enabled: true, model: "xai/custom-helper" });
 

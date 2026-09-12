@@ -2,17 +2,17 @@
 
 const crypto = require("crypto");
 
-const MARKER = "<!-- opencodex-issue-inline-translator -->";
+const MARKER = "<!-- openccx-issue-inline-translator -->";
 const END_MARKER = "<!-- /opencodex-issue-inline-translator -->";
-const LEGACY_STATE_RE = /<!-- opencodex-issue-inline-translator-state:([\s\S]*?) -->\s*/;
-const CONTROL_MARKER = "<!-- opencodex-issue-inline-translator-control -->";
+const LEGACY_STATE_RE = /<!-- openccx-issue-inline-translator-state:([\s\S]*?) -->\s*/;
+const CONTROL_MARKER = "<!-- openccx-issue-inline-translator-control -->";
 const CONTROL_STATE_V2_RE =
-  /<!-- opencodex-issue-inline-translator-control-state-v2:([A-Za-z0-9_-]+) -->/;
+  /<!-- openccx-issue-inline-translator-control-state-v2:([A-Za-z0-9_-]+) -->/;
 const CONTROL_STATE_LEGACY_RE =
-  /<!-- opencodex-issue-inline-translator-control-state:([\s\S]*?) -->/;
+  /<!-- openccx-issue-inline-translator-control-state:([\s\S]*?) -->/;
 /** Trailing standalone marker (+ optional final whitespace). Never mid-body. */
 const TRAILING_ORPHAN_BODY_STATE_RE =
-  /<!-- opencodex-issue-inline-translator-control-state-v2:[A-Za-z0-9_-]+ -->[ \t]*(?:\r?\n)?[ \t]*$/;
+  /<!-- openccx-issue-inline-translator-control-state-v2:[A-Za-z0-9_-]+ -->[ \t]*(?:\r?\n)?[ \t]*$/;
 const ISSUE_BODY_MAX = 65536;
 const BOT_LOGIN = "github-actions[bot]";
 const SOURCE_HASH_RE = /^[a-f0-9]{16}$/;
@@ -51,7 +51,7 @@ function findTranslationBlockRange(text) {
 
   let cursor = markerIdx + MARKER.length;
   const afterMarker = String(text).slice(cursor);
-  const legacyState = afterMarker.match(/^\s*<!-- opencodex-issue-inline-translator-state:[\s\S]*? -->\s*/);
+  const legacyState = afterMarker.match(/^\s*<!-- openccx-issue-inline-translator-state:[\s\S]*? -->\s*/);
   if (legacyState) {
     cursor += legacyState.index + legacyState[0].length;
   }
@@ -374,7 +374,7 @@ function buildTranslationControlComment(state) {
   const lang = bookkeepingLanguageLabel(safe);
   return [
     CONTROL_MARKER,
-    `<!-- opencodex-issue-inline-translator-control-state-v2:${encoded} -->`,
+    `<!-- openccx-issue-inline-translator-control-state-v2:${encoded} -->`,
     "",
     `<sub>Automated translation bookkeeping — detected language: ${lang}.</sub>`,
   ].join("\n");

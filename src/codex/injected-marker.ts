@@ -1,5 +1,5 @@
 /**
- * Ownership predicates for `~/.codex/config.toml`: does opencodex own the routing
+ * Ownership predicates for `~/.codex/config.toml`: does openccx own the routing
  * currently written there?
  *
  * These live in their own leaf module rather than in `inject.ts` because
@@ -9,7 +9,7 @@
  */
 import { parseTomlString } from "./paths";
 
-export const OCX_SECTION_MARKER = "# Auto-injected by opencodex";
+export const OCCX_SECTION_MARKER = "# Auto-injected by openccx";
 
 export function isRootOpenaiBaseUrlLine(line: string): boolean {
   return /^\s*openai_base_url\s*=/.test(line);
@@ -104,7 +104,7 @@ export function stripJournaledOpenaiBaseUrl(
     drop.add(i);
     // Take an ownership marker directly above it too, so repeated cycles cannot
     // accumulate orphaned comments.
-    if (i > 0 && lines[i - 1]!.includes(OCX_SECTION_MARKER)) drop.add(i - 1);
+    if (i > 0 && lines[i - 1]!.includes(OCCX_SECTION_MARKER)) drop.add(i - 1);
   }
   if (drop.size === 0) return content;
   return lines.filter((_, i) => !drop.has(i)).join(String.fromCharCode(10));
@@ -115,18 +115,18 @@ export function hasInjectedOpenaiBaseUrl(content: string): boolean {
   const firstTable = lines.findIndex(l => /^\s*\[/.test(l));
   const rootEnd = firstTable === -1 ? lines.length : firstTable;
   for (let i = 1; i < rootEnd; i++) {
-    if (isRootOpenaiBaseUrlLine(lines[i]!) && lines[i - 1]!.includes(OCX_SECTION_MARKER)) return true;
+    if (isRootOpenaiBaseUrlLine(lines[i]!) && lines[i - 1]!.includes(OCCX_SECTION_MARKER)) return true;
   }
   return false;
 }
 
 /**
- * True when the active Codex config is owned by opencodex routing. Covers the
+ * True when the active Codex config is owned by openccx routing. Covers the
  * loopback Design B root override and the legacy/non-loopback provider table.
  * A user-owned `openai_base_url` is intentionally not classified as injected.
  */
 export function hasInjectedCodexRouting(content: string): boolean {
   if (hasInjectedOpenaiBaseUrl(content)) return true;
-  return rootTomlString(content, "model_provider") === "opencodex"
-    && providerTableString(content, "opencodex", "base_url") !== null;
+  return rootTomlString(content, "model_provider") === "openccx"
+    && providerTableString(content, "openccx", "base_url") !== null;
 }

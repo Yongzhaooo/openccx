@@ -14,8 +14,8 @@ import { getKiroAccountExhaustion } from "../../../src/providers/kiro-usage";
 import { removeTreeWithRetry } from "../../helpers/remove-tree";
 
 const originalFetch = globalThis.fetch;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
-let opencodexHome: string;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
+let openccxHome: string;
 
 const ARN_A = "arn:aws:codewhisperer:us-east-1:111111111111:profile/AAAA";
 const ARN_B = "arn:aws:codewhisperer:eu-central-1:222222222222:profile/BBBB";
@@ -49,17 +49,17 @@ function usagePayload(used: number, limit: number, overage = "DISABLED"): string
 }
 
 beforeEach(() => {
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-kiro-quota-"));
-  process.env.OPENCODEX_HOME = opencodexHome;
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-kiro-quota-"));
+  process.env.OPENCCX_HOME = openccxHome;
   clearAccountQuotaCache();
   clearProviderQuotaCache();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
-  removeTreeWithRetry(opencodexHome);
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
+  removeTreeWithRetry(openccxHome);
   clearAccountQuotaCache();
   clearProviderQuotaCache();
 });

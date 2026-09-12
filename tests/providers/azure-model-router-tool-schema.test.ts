@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createOpenAIChatAdapter } from "../../src/adapters/openai-chat";
-import type { OcxParsedRequest, OcxProviderConfig } from "../../src/types";
+import type { OccxParsedRequest, OccxProviderConfig } from "../../src/types";
 
 const toolSchema = {
   oneOf: [
@@ -12,8 +12,8 @@ const toolSchema = {
   not: { type: "null" },
 };
 
-function requestFor(provider: OcxProviderConfig): Record<string, unknown> {
-  const parsed: OcxParsedRequest = {
+function requestFor(provider: OccxProviderConfig): Record<string, unknown> {
+  const parsed: OccxParsedRequest = {
     modelId: "model-router",
     context: {
       messages: [{ role: "user", content: "Use the tool", timestamp: 0 }],

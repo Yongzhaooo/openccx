@@ -15,7 +15,7 @@ import {
 import { waitForNativeMainStartupGate } from "../../src/codex/native-profile-startup";
 import { handleNativeProfileAPI } from "../../src/codex/native-profile-api";
 import type { NativeProfileManager } from "../../src/codex/native-profile-manager";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { ownedServiceHomeInspection } from "../helpers/owned-service-home-inspection";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
@@ -39,18 +39,18 @@ import { saveCodexAccountCredential } from "../../src/codex/account-store";
  */
 
 const originalFetch = globalThis.fetch;
-const previousOcxHome = process.env.OPENCODEX_HOME;
+const previousOccxHome = process.env.OPENCCX_HOME;
 const previousCodexHome = process.env.CODEX_HOME;
-const previousDataToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousCursorTestToken = process.env.OPENCODEX_CURSOR_TEST_TOKEN;
+const previousDataToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousCursorTestToken = process.env.OPENCCX_CURSOR_TEST_TOKEN;
 
-let ocxHome = "";
+let occxHome = "";
 let codexHome = "";
 let routedAuth: Array<string | null> = [];
 let nativeAuth: Array<string | null> = [];
 let nativeAccountIds: Array<string | null> = [];
 
-const ADMISSION_SECRET = "ocx_data_2132secret";
+const ADMISSION_SECRET = "occx_data_2132secret";
 const ROUTED_KEY = "sk-routed-provider-key";
 const inspectNativeCodexOwnership = ownedServiceHomeInspection("bearer admission routed provider test");
 
@@ -65,7 +65,7 @@ function liveJwt(): string {
  * openai row and a key-authenticated routed provider. The routed provider is the one under
  * test; the native row has to exist for the negative case to be reachable.
  */
-function mixedConfig(): OcxConfig {
+function mixedConfig(): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -90,10 +90,10 @@ function mixedConfig(): OcxConfig {
     apiKeys: [
       { id: "env-key", name: "env_key", key: ADMISSION_SECRET, createdAt: "2026-08-20T00:00:00.000Z" },
     ],
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
-function cursorForwardConfig(baseUrl: string, apiKey?: string): OcxConfig {
+function cursorForwardConfig(baseUrl: string, apiKey?: string): OccxConfig {
   return {
     port: 0,
     hostname: "0.0.0.0",
@@ -113,7 +113,7 @@ function cursorForwardConfig(baseUrl: string, apiKey?: string): OcxConfig {
     apiKeys: [
       { id: "env-key", name: "env_key", key: ADMISSION_SECRET, createdAt: "2026-08-20T00:00:00.000Z" },
     ],
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 async function withCursorCaptureServer<T>(
@@ -163,12 +163,12 @@ beforeEach(() => {
   resetVisionDescriptionCache();
   clearComboTargetCooldowns();
   resetSubagentModelFallbackStateForTests();
-  delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-  ocxHome = mkdtempSync(join(tmpdir(), "ocx-2132-home-"));
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-2132-codex-"));
-  process.env.OPENCODEX_HOME = ocxHome;
+  delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+  occxHome = mkdtempSync(join(tmpdir(), "occx-2132-home-"));
+  codexHome = mkdtempSync(join(tmpdir(), "occx-2132-codex-"));
+  process.env.OPENCCX_HOME = occxHome;
   process.env.CODEX_HOME = codexHome;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
   routedAuth = [];
   nativeAuth = [];
   nativeAccountIds = [];
@@ -200,18 +200,18 @@ afterEach(() => {
   closeRequestHistoryIndex();
   clearComboTargetCooldowns();
   resetSubagentModelFallbackStateForTests();
-  if (previousCursorTestToken === undefined) delete process.env.OPENCODEX_CURSOR_TEST_TOKEN;
-  else process.env.OPENCODEX_CURSOR_TEST_TOKEN = previousCursorTestToken;
+  if (previousCursorTestToken === undefined) delete process.env.OPENCCX_CURSOR_TEST_TOKEN;
+  else process.env.OPENCCX_CURSOR_TEST_TOKEN = previousCursorTestToken;
   globalThis.fetch = originalFetch;
-  if (previousOcxHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOcxHome;
+  if (previousOccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOccxHome;
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousDataToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousDataToken;
-  if (ocxHome) removeTreeWithRetry(ocxHome);
+  if (previousDataToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousDataToken;
+  if (occxHome) removeTreeWithRetry(occxHome);
   if (codexHome) removeTreeWithRetry(codexHome);
-  ocxHome = "";
+  occxHome = "";
   codexHome = "";
 });
 
@@ -358,7 +358,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = startServer(0, { inspectNativeCodexOwnership });
       try {
         await postResponses(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: "Bearer cursor-upstream-token",
         });
         expect(capturedAuth).toEqual(["Bearer cursor-upstream-token"]);
@@ -391,7 +391,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = startServer(0, { inspectNativeCodexOwnership });
       try {
         const response = await postResponses(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${ADMISSION_SECRET}`,
         });
         expect(response.status).toBe(401);
@@ -410,7 +410,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = startServer(0, { inspectNativeCodexOwnership });
       try {
         await postResponses(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${ADMISSION_SECRET}`,
         });
         expect(capturedAuth).toEqual(["Bearer cursor-configured-token"]);
@@ -430,7 +430,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         await postChatCompletions(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: "Bearer cursor-upstream-token",
         });
         expect(capturedAuth).toEqual(["Bearer cursor-upstream-token"]);
@@ -484,9 +484,9 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       let settled = false;
       const pending = originalFetch(new URL("/v1/chat/completions", server.url), {
         method: "POST",
-        headers: { "content-type": "application/json", "x-opencodex-api-key": ADMISSION_SECRET,
+        headers: { "content-type": "application/json", "x-openccx-api-key": ADMISSION_SECRET,
           authorization: "Bearer cursor-upstream-token",
-          ...(scenario === "terminal-vision" ? { "x-opencodex-vision-describe": "1" } : {}),
+          ...(scenario === "terminal-vision" ? { "x-openccx-vision-describe": "1" } : {}),
         },
         body: JSON.stringify({ model: "cursorcustom/auto", stream: false, messages: [{ role: "user",
           content: withImage ? [{ type: "text", text: "Describe this image" },
@@ -574,7 +574,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
         if (fenced) expect(await waitForNativeMainStartupGate()).toMatchObject({ status: "blocked" });
         const response = await originalFetch(new URL("/v1/chat/completions", server.url), {
           method: "POST",
-          headers: { "content-type": "application/json", "x-opencodex-api-key": ADMISSION_SECRET,
+          headers: { "content-type": "application/json", "x-openccx-api-key": ADMISSION_SECRET,
             authorization: "Bearer cursor-upstream-token" },
           body: JSON.stringify({ model: "cursorcustom/auto", stream: false, messages: [{ role: "user", content: [
             { type: "text", text: "Describe this image" },
@@ -605,7 +605,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const response = await postChatCompletions(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
         });
         expect(response.status).not.toBe(200);
         expect(capturedAuth).toEqual([]);
@@ -642,7 +642,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const headers = {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${fakeChatGptJwt({ chatgpt_account_id: "caller-openai" })}`,
           "chatgpt-account-id": "caller-openai",
         };
@@ -691,7 +691,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
         writeFileSync(join(codexHome, "auth.json"), JSON.stringify({ tokens: {} }));
         const server = await startOwnedServer();
         try {
-          const headers = { "x-opencodex-api-key": ADMISSION_SECRET, ...extra };
+          const headers = { "x-openccx-api-key": ADMISSION_SECRET, ...extra };
           const response = surface === "Chat"
             ? await postChatCompletions(server.url, "cursorcustom/auto", headers)
             : await postResponses(server.url, "cursorcustom/auto", headers);
@@ -726,7 +726,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
         writeFileSync(join(codexHome, "auth.json"), JSON.stringify({ tokens: {} }));
         const server = await startOwnedServer();
         try {
-          const headers = { "x-opencodex-api-key": ADMISSION_SECRET, authorization: `Bearer ${bearer}`, ...extra };
+          const headers = { "x-openccx-api-key": ADMISSION_SECRET, authorization: `Bearer ${bearer}`, ...extra };
           const response = surface === "Chat"
             ? await postChatCompletions(server.url, "cursorcustom/auto", headers)
             : await postResponses(server.url, "cursorcustom/auto", headers);
@@ -753,7 +753,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const response = await postChatCompletions(server.url, "combo/free", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${openAiPair ? fakeChatGptJwt({ chatgpt_account_id: "caller-openai" }) : "cursor-upstream-token"}`,
           ...(openAiPair ? { "chatgpt-account-id": "caller-openai" } : {}),
         });
@@ -777,7 +777,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = startServer(0, { inspectNativeCodexOwnership });
       try {
         const response = await postResponses(server.url, "combo/free", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${openAiPair ? fakeChatGptJwt({ chatgpt_account_id: "caller-openai" }) : "cursor-upstream-token"}`,
           ...(openAiPair ? { "chatgpt-account-id": "caller-openai" } : {}),
         });
@@ -853,7 +853,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const response = await postResponses(server.url, "combo/native", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: `Bearer ${callerBearer}`,
           ...(accountHeader ? { "chatgpt-account-id": accountHeader } : {}),
         });
@@ -896,7 +896,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const response = await postChatCompletions(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: "Bearer cursor-upstream-token",
           "x-openai-subagent": "collab_spawn",
         });
@@ -931,7 +931,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
       const server = await startOwnedServer();
       try {
         const response = await postResponses(server.url, "cursorcustom/auto", {
-          "x-opencodex-api-key": ADMISSION_SECRET,
+          "x-openccx-api-key": ADMISSION_SECRET,
           authorization: "Bearer cursor-upstream-token",
           "x-openai-subagent": "collab_spawn",
         });
@@ -951,7 +951,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
     const server = await startOwnedServer();
     try {
       const response = await postChatCompletions(server.url, "gpt-5.6-luna", {
-        "x-opencodex-api-key": ADMISSION_SECRET,
+        "x-openccx-api-key": ADMISSION_SECRET,
         authorization: "Bearer caller-native-token",
         "x-openai-subagent": "collab_spawn",
       });
@@ -976,7 +976,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
         const server = startServer(0, { inspectNativeCodexOwnership });
         try {
           const authHeaders = {
-            "x-opencodex-api-key": ADMISSION_SECRET,
+            "x-openccx-api-key": ADMISSION_SECRET,
             authorization: "Bearer cursor-upstream-token",
           };
           const response = surface === "Chat"
@@ -1088,7 +1088,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
         const server = startServer(0, { inspectNativeCodexOwnership });
         try {
           const authHeaders = {
-            "x-opencodex-api-key": ADMISSION_SECRET,
+            "x-openccx-api-key": ADMISSION_SECRET,
             authorization: "Bearer source-route-token",
           };
           const response = surface === "Chat"
@@ -1138,7 +1138,7 @@ describe("bearer admission is not reused as a Cursor upstream credential", () =>
  * reach the wire, whatever the row is called.
  */
 describe("an admission bearer never reaches a canonical ChatGPT transport, whatever the row is named", () => {
-  function customNamedCanonicalConfig(): OcxConfig {
+  function customNamedCanonicalConfig(): OccxConfig {
     const base = mixedConfig();
     return {
       ...base,
@@ -1154,7 +1154,7 @@ describe("an admission bearer never reaches a canonical ChatGPT transport, whate
           defaultModel: "gpt-5.5",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   test("with no stored credential it fails closed instead of forwarding our secret", async () => {
@@ -1267,7 +1267,7 @@ describe("an admission bearer never reaches a canonical ChatGPT transport, whate
       const blocked = await handleNativeProfileAPI(
         switchRequest(),
         switchUrl,
-        {} as OcxConfig,
+        {} as OccxConfig,
         { manager, drainTimeoutMs: 0 },
       );
       expect(blocked?.status).toBe(409);
@@ -1281,7 +1281,7 @@ describe("an admission bearer never reaches a canonical ChatGPT transport, whate
       const switched = await handleNativeProfileAPI(
         switchRequest(),
         switchUrl,
-        {} as OcxConfig,
+        {} as OccxConfig,
         { manager, drainTimeoutMs: 0 },
       );
       expect(switched?.status).toBe(200);

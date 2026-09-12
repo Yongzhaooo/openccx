@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { projectStaleContextWindows, STALE_CONTEXT_WINDOWS } from "../../src/providers/stale-context-window-migration";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function devinConfig(windows: Record<string, number>, adapter = "devin"): OcxConfig {
+function devinConfig(windows: Record<string, number>, adapter = "devin"): OccxConfig {
   return {
     providers: {
       devin: { adapter, baseUrl: "https://server.codeium.com", modelContextWindows: { ...windows } },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 describe("stale context window migration", () => {
@@ -42,7 +42,7 @@ describe("stale context window migration", () => {
   });
 
   test("is a no-op on a config with no such provider", () => {
-    const projection = projectStaleContextWindows({ providers: {} } as unknown as OcxConfig);
+    const projection = projectStaleContextWindows({ providers: {} } as unknown as OccxConfig);
     expect(projection.changed).toBe(false);
     expect(projection.warnings).toEqual([]);
   });

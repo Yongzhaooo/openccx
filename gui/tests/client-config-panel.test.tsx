@@ -28,18 +28,18 @@ const OPENCODE_ENVELOPE_BASE = {
   client: "opencode",
   filename: "opencode.json",
   destination: "/home/dev/.config/opencode/opencode.json",
-  apiKeyEnv: "OPENCODEX_OPENCODE_API_KEY",
-  exportHint: "export OPENCODEX_OPENCODE_API_KEY=<your key>",
+  apiKeyEnv: "OPENCCX_OPENCODE_API_KEY",
+  exportHint: "export OPENCCX_OPENCODE_API_KEY=<your key>",
   modelCount: 2,
   modelsWithoutLimits: 0,
   format: "json",
   mediaType: "application/json",
   config: {
     provider: {
-      opencodex: {
+      openccx: {
         npm: "@ai-sdk/openai-compatible",
-        name: "OpenCodex",
-        options: { baseURL: "http://127.0.0.1:10100/v1", apiKey: "{env:OPENCODEX_OPENCODE_API_KEY}" },
+        name: "Openccx",
+        options: { baseURL: "http://127.0.0.1:10100/v1", apiKey: "{env:OPENCCX_OPENCODE_API_KEY}" },
         models: { "gpt-5.5": { name: "gpt-5.5 (native)" } },
       },
     },
@@ -50,14 +50,14 @@ const PI_ENVELOPE_BASE = {
   client: "pi",
   filename: "pi-models.json",
   destination: "/home/dev/.pi/agent/models.json",
-  apiKeyEnv: "OPENCODEX_PI_API_KEY",
-  exportHint: "export OPENCODEX_PI_API_KEY=<your key>",
+  apiKeyEnv: "OPENCCX_PI_API_KEY",
+  exportHint: "export OPENCCX_PI_API_KEY=<your key>",
   modelCount: 2,
   modelsWithoutLimits: 1,
   format: "json",
   mediaType: "application/json",
   // Pi keys its models as an ARRAY — the shape swap is what proves a real refetch.
-  config: { providers: { opencodex: { models: [{ id: "gpt-5.5" }, { id: "claude-sonnet-4-6" }] } } },
+  config: { providers: { openccx: { models: [{ id: "gpt-5.5" }, { id: "claude-sonnet-4-6" }] } } },
 };
 
 /**
@@ -89,8 +89,8 @@ const KIMI_ENVELOPE = {
   modelsWithoutLimits: 0,
   format: "toml",
   mediaType: "application/toml",
-  text: '[providers.opencodex]\ntype = "openai"\nbase_url = "http://127.0.0.1:10100/v1"\n',
-  config: { providers: { opencodex: { type: "openai", base_url: "http://127.0.0.1:10100/v1" } } },
+  text: '[providers.openccx]\ntype = "openai"\nbase_url = "http://127.0.0.1:10100/v1"\n',
+  config: { providers: { openccx: { type: "openai", base_url: "http://127.0.0.1:10100/v1" } } },
 };
 
 beforeEach(() => {
@@ -196,7 +196,7 @@ test("each row fetches its own client and its dialog renders that client's exact
   const piJson = container.querySelector(".awi-clientconfig-json")!.textContent!;
   const parsed = JSON.parse(piJson) as typeof PI_ENVELOPE.config;
   expect(parsed).toEqual(PI_ENVELOPE.config);
-  expect(Array.isArray(parsed.providers.opencodex.models)).toBe(true);
+  expect(Array.isArray(parsed.providers.openccx.models)).toBe(true);
   expect(piJson).not.toContain("\"npm\"");
 
   await act(async () => { root.unmount(); });
@@ -443,7 +443,7 @@ test("download emits the fetched config under the server-provided filename and n
     const tomlBytes = await blobs[1]!.text();
     expect(tomlBytes).toBe(KIMI_ENVELOPE.text);
     expect(tomlBytes).not.toBe(`${JSON.stringify(KIMI_ENVELOPE.config, null, 2)}\n`);
-    expect(tomlBytes.startsWith("[providers.opencodex]")).toBe(true);
+    expect(tomlBytes.startsWith("[providers.openccx]")).toBe(true);
 
     const announcement = container.querySelector(".sr-only[aria-live='polite']")!.textContent!;
     expect(announcement).toContain("Downloaded kimi-config.toml");
@@ -530,7 +530,7 @@ test("no-key state is informational and leaves copy and download enabled", async
 
   await act(async () => { rowButton(container, "OpenCode", "Details").click(); });
   expect(container.querySelector(".awi-clientconfig-nokey")?.textContent)
-    .toContain("OPENCODEX_OPENCODE_API_KEY has no key behind it yet");
+    .toContain("OPENCCX_OPENCODE_API_KEY has no key behind it yet");
 
   await act(async () => { root.unmount(); });
 });

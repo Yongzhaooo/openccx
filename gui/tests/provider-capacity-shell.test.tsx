@@ -16,7 +16,7 @@ let quotaPayload: unknown;
 let rejectQuotaFetch = false;
 let quotaFetchOverride: (() => Promise<Response>) | null = null;
 
-const QUOTA_CACHE_KEY = "ocx.providers.quotas.v1:";
+const QUOTA_CACHE_KEY = "occx.providers.quotas.v1:";
 const RECOVERY_AT = Date.UTC(2026, 7, 8, 4, 32);
 const providers = {
   openai: { adapter: "openai-responses", authMode: "forward", baseUrl: "https://chatgpt.com/backend-api/codex" },

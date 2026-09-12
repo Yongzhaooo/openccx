@@ -7,7 +7,7 @@ import {
 
 /** Keep the public config type aligned without replacing the heavily-changed shared types file. */
 declare module "../types" {
-  interface OcxVisionSidecarConfig {
+  interface OccxVisionSidecarConfig {
     /** OpenAI Responses reasoning effort used by the vision describer. Default: low. */
     reasoning?: VisionReasoningEffort;
   }

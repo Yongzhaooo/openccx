@@ -21,16 +21,16 @@ import {
 } from "../../src/providers/quota";
 import { captureConfigGeneration } from "../../src/lib/state-store-sweeper";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-const originalHome = process.env.OPENCODEX_HOME;
+const originalHome = process.env.OPENCCX_HOME;
 const originalFetch = globalThis.fetch;
 let home: string;
 
 /** The exact age measured on the live proxy when the missing-Meta-usage defect was reported. */
 const OBSERVED_AGE_MS = 5.39 * 60 * 60_000;
 
-function config(): OcxConfig {
+function config(): OccxConfig {
   return {
     defaultProvider: "meta-muse",
     providers: {
@@ -40,12 +40,12 @@ function config(): OcxConfig {
         baseUrl: "https://api.meta.ai/v1",
       },
     },
-  } as unknown as OcxConfig;
+  } as unknown as OccxConfig;
 }
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), "ocx-observed-marker-"));
-  process.env.OPENCODEX_HOME = home;
+  home = mkdtempSync(join(tmpdir(), "occx-observed-marker-"));
+  process.env.OPENCCX_HOME = home;
   clearProviderQuotaCache();
   clearAccountQuotaCache("meta-muse");
   // No probe may run for a passive provider; a call here is itself a failure.
@@ -58,8 +58,8 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   clearProviderQuotaCache();
   clearAccountQuotaCache("meta-muse");
-  if (originalHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = originalHome;
+  if (originalHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = originalHome;
   removeTreeWithRetry(home);
 });
 

@@ -7,7 +7,7 @@ import { Database } from "bun:sqlite";
 
 import {
   beginCodexTransition,
-  openCodexCoordinatorTransaction,
+  openccxCoordinatorTransaction,
   readCodexTransitionState,
   updateCodexHistoryTransition,
 } from "../../src/codex/transition-state";
@@ -20,18 +20,18 @@ import {
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
 let codexHome = "";
-let opencodexHome = "";
+let openccxHome = "";
 let coordinatorPath = "";
 let previousCodexHome: string | undefined;
-let previousOpencodexHome: string | undefined;
+let previousOpenccxHome: string | undefined;
 
 beforeEach(() => {
   previousCodexHome = process.env.CODEX_HOME;
-  previousOpencodexHome = process.env.OPENCODEX_HOME;
-  codexHome = mkdtempSync(join(tmpdir(), "ocx-transition-state-codex-home-"));
-  opencodexHome = mkdtempSync(join(tmpdir(), "ocx-transition-state-opencodex-home-"));
+  previousOpenccxHome = process.env.OPENCCX_HOME;
+  codexHome = mkdtempSync(join(tmpdir(), "occx-transition-state-codex-home-"));
+  openccxHome = mkdtempSync(join(tmpdir(), "occx-transition-state-openccx-home-"));
   process.env.CODEX_HOME = codexHome;
-  process.env.OPENCODEX_HOME = opencodexHome;
+  process.env.OPENCCX_HOME = openccxHome;
   coordinatorPath = resolveCodexCoordinatorDatabasePath(
     resolveEffectiveUserIdentity(),
     realpathSync.native(codexHome),
@@ -41,13 +41,13 @@ beforeEach(() => {
 afterEach(() => {
   if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
   else process.env.CODEX_HOME = previousCodexHome;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   for (const suffix of ["", "-journal", "-wal", "-shm"]) {
     rmSync(`${coordinatorPath}${suffix}`, { force: true });
   }
   removeTreeWithRetry(codexHome);
-  removeTreeWithRetry(opencodexHome);
+  removeTreeWithRetry(openccxHome);
 });
 
 function transition(txId: string) {
@@ -139,7 +139,7 @@ test("a missing database initializes only from clean integration and native stat
  * `{0,null}`, making an interrupted legacy transition look clean.
  */
 test("a missing database with legacy JSON transition fields is legacy-ambiguous", () => {
-  const integrations = join(opencodexHome, "integrations");
+  const integrations = join(openccxHome, "integrations");
   mkdirSync(integrations, { recursive: true });
   writeFileSync(join(integrations, "codex.json"), JSON.stringify({
     version: 1,
@@ -161,7 +161,7 @@ test("a missing database with legacy JSON transition fields is legacy-ambiguous"
  */
 test("a missing database with native routed residue is legacy-ambiguous", () => {
   writeFileSync(join(codexHome, "config.toml"), [
-    "# Auto-injected by opencodex",
+    "# Auto-injected by openccx",
     'openai_base_url = "http://127.0.0.1:10100/v1"',
     "",
   ].join("\n"));
@@ -393,7 +393,7 @@ test("the row validator refuses every whitespace-only txId", () => {
     // The public reader re-resolves Windows identity through PowerShell for
     // every code point, which makes this exhaustive loop exceed its timeout.
     // Opening the already-resolved path still runs the same row validator.
-    expect(() => openCodexCoordinatorTransaction(coordinatorPath), label)
+    expect(() => openccxCoordinatorTransaction(coordinatorPath), label)
       .toThrow("The positive coordinator row lacks its complete history schedule.");
   }
 }, 15_000);
@@ -405,10 +405,10 @@ test("the row validator refuses every whitespace-only txId", () => {
  */
 test("the opaque coordinator capability cannot reach a second connection", () => {
   expect(readCodexTransitionState().kind).toBe("ready");
-  const controller = openCodexCoordinatorTransaction(coordinatorPath);
+  const controller = openccxCoordinatorTransaction(coordinatorPath);
   try {
     expect(() => {
-      const second = openCodexCoordinatorTransaction(coordinatorPath);
+      const second = openccxCoordinatorTransaction(coordinatorPath);
       second.close();
     }).toThrow();
   } finally {
@@ -425,7 +425,7 @@ test("the opaque coordinator capability cannot reach a second connection", () =>
  */
 test("the opaque capability never exposes a reachable database handle", () => {
   expect(readCodexTransitionState().kind).toBe("ready");
-  const controller = openCodexCoordinatorTransaction(coordinatorPath);
+  const controller = openccxCoordinatorTransaction(coordinatorPath);
   try {
     const ownKeys = Reflect.ownKeys(controller.capability);
     const stringKeys = ownKeys.filter((key): key is string => typeof key === "string");
@@ -490,7 +490,7 @@ test("the opaque capability never exposes a reachable database handle", () => {
 });
 
 test("the opaque coordinator capability is one-shot", () => {
-  const controller = openCodexCoordinatorTransaction(coordinatorPath);
+  const controller = openccxCoordinatorTransaction(coordinatorPath);
   try {
     const expectation = controller.expectation();
     const expected = { nativeGeneration: expectation.nativeBefore, currentTxId: null };

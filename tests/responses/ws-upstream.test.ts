@@ -23,8 +23,8 @@ import {
   CODEX_WS_LIVENESS_PING_INTERVAL_MS,
   shouldUseCodexWsUpstream as rawShouldUseCodexWsUpstream,
 } from "../../src/server/responses/ws-upstream";
-import type { OcxProviderConfig } from "../../src/types";
-import type { OcxConfig } from "../../src/types";
+import type { OccxProviderConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
 const CODEX_URL = "https://chatgpt.com/backend-api/codex/responses";
 const BOUNDED_WS_RUNTIME = "1.4.0";
@@ -250,7 +250,7 @@ describe("providerFetch routing", () => {
         baseCalls += 1;
         return sentinel;
       }) as typeof fetch,
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
     const wrapped = providerFetch(provider, {
       version: "1.4.0",
       versionWithSha: "v1.4.0-canary.1 (0123abcd)",
@@ -273,7 +273,7 @@ describe("providerFetch routing", () => {
         baseCalls.push(String(input));
         return sentinel.clone();
       }) as unknown as typeof fetch,
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
     const wrapped = providerFetch(provider, BOUNDED_WS_RUNTIME);
 
     // Eligible: WS adapter serves it, base fetch untouched.
@@ -305,7 +305,7 @@ describe("providerFetch routing", () => {
         baseCalls.push(String(input));
         return sentinel.clone();
       }) as unknown as typeof fetch,
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
     const wrapped = providerFetch(provider, BOUNDED_WS_RUNTIME);
 
     const wsResponse = await wrapped("https://sub2api.example.com/v1/responses", streamingInit());
@@ -322,7 +322,7 @@ describe("providerFetch routing", () => {
 });
 
 describe("handleResponses Codex WS relay selection", () => {
-  function forwardConfig(): OcxConfig {
+  function forwardConfig(): OccxConfig {
     return {
       port: 0,
       defaultProvider: "openai",
@@ -335,7 +335,7 @@ describe("handleResponses Codex WS relay selection", () => {
           codexAccountMode: "direct",
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
   }
 
   function request(): Request {
@@ -511,7 +511,7 @@ describe("codexWsUpstreamFetch", () => {
       body: JSON.stringify({ model: "gpt-5.5", input: "hello", stream: true, service_tier: "priority" }),
     }), {
       defaultProvider: "openai", providers: { openai: { adapter: "openai-responses", authMode: "forward", codexAccountMode: "direct", baseUrl: "https://chatgpt.com/backend-api/codex" } },
-    } as OcxConfig, { model: "", provider: "" }, { codexWsRuntimeIdentity: BOUNDED_WS_RUNTIME });
+    } as OccxConfig, { model: "", provider: "" }, { codexWsRuntimeIdentity: BOUNDED_WS_RUNTIME });
     await response.text();
     expect(frames).toHaveLength(1);
     expect(frames[0].client_metadata).toEqual({ ws_request_header_x_openai_internal_codex_responses_lite: "true" });
@@ -1564,7 +1564,7 @@ describe("oversized Codex create frames", () => {
         seen.push(init);
         return new Response("sse");
       }) as unknown as typeof fetch,
-    } as unknown as OcxProviderConfig;
+    } as unknown as OccxProviderConfig;
     const wrapped = providerFetch(provider, BOUNDED_WS_RUNTIME);
 
     await wrapped(CODEX_URL, streamingInit({ padding: "x".repeat(CODEX_WS_CREATE_FRAME_LIMIT_BYTES) }));

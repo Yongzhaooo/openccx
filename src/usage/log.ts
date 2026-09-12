@@ -6,7 +6,7 @@ import { enforceAppOwnedMemoryBudget } from "../lib/app-owned-memory";
 import { recordOwnedConfigPath } from "../lib/config-ownership";
 import { sanitizeLogMetadataString } from "../lib/redact";
 import { usageDisplayTotalTokens } from "./totals";
-import type { AttemptTierOutcome, OcxUsage } from "../types";
+import type { AttemptTierOutcome, OccxUsage } from "../types";
 import { normalizeRouteDecisionTrace, type RouteDecisionTraceV1 } from "../routing/trace";
 import { ACCOUNT_LOG_LABEL_RE, CODEX_ACCOUNT_LOG_LABEL_RE } from "../codex/account-label";
 import { claudeCompatibilityReason, normalizeClaudeFeatureCodes, type ClaudeFeatureCode } from "../claude/compatibility";
@@ -106,7 +106,7 @@ export interface PersistedUsageAttempt {
   /** Stable non-PII identity for the Codex pool account that served this attempt. */
   accountLogLabel?: CodexUsageAccountLogLabel;
   inputTokenEstimate?: number;
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   totalTokens?: number;
   errorCode?: string;
   /** Installation-local exact Compatibility Lab route-subject digest for this attempt. */
@@ -162,7 +162,7 @@ export interface PersistedUsageEntry {
   /** TTFT relative to the request start (WP4); unset for non-streaming/tool-only. */
   firstOutputMs?: number;
   usageStatus: UsageStatus;
-  usage?: OcxUsage;
+  usage?: OccxUsage;
   totalTokens?: number;
   attempts?: PersistedUsageAttempt[];
   // Failure diagnostics (devlog/_plan/260716_claudecode_hardening/030): persisted for
@@ -241,7 +241,7 @@ export function usageLogPath(configDir?: string): string {
   return join(configDir ?? getConfigDir(), "usage.jsonl");
 }
 
-export function usageTotalTokens(usage: OcxUsage | undefined): number | undefined {
+export function usageTotalTokens(usage: OccxUsage | undefined): number | undefined {
   return usageDisplayTotalTokens(usage);
 }
 
@@ -257,7 +257,7 @@ function isEstimatedUsageProvider(providerOrAdapter: string): boolean {
 
 export function usageForFinalLog(
   provider: string,
-  usage: OcxUsage | undefined,
+  usage: OccxUsage | undefined,
   /**
    * True when the proxy answered this turn locally and issued no upstream request. Such a turn's
    * zero counts are EXACT, so the provider-wide estimated marking must not apply: Kiro and Cursor
@@ -266,19 +266,19 @@ export function usageForFinalLog(
    * from a real one whose usage frame never arrived.
    */
   locallyAnswered = false,
-): OcxUsage | undefined {
+): OccxUsage | undefined {
   if (!usage) return undefined;
   if (locallyAnswered) return usage;
   if (usage.estimated || isEstimatedUsageProvider(provider)) return { ...usage, estimated: true };
   return usage;
 }
 
-export function usageStatusForFinalLog(usage: OcxUsage | undefined): UsageStatus {
+export function usageStatusForFinalLog(usage: OccxUsage | undefined): UsageStatus {
   if (!usage) return "unreported";
   return usage.estimated ? "estimated" : "reported";
 }
 
-function normalizeUsageValue(usage: OcxUsage | undefined): OcxUsage | undefined {
+function normalizeUsageValue(usage: OccxUsage | undefined): OccxUsage | undefined {
   if (!usage) return undefined;
   return {
     inputTokens: usage.inputTokens,
@@ -337,7 +337,7 @@ function isNonNegativeFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
-function normalizeAttemptUsage(raw: unknown): OcxUsage | null {
+function normalizeAttemptUsage(raw: unknown): OccxUsage | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const usage = raw as Record<string, unknown>;
   if (!isNonNegativeFiniteNumber(usage.inputTokens)
@@ -353,7 +353,7 @@ function normalizeAttemptUsage(raw: unknown): OcxUsage | null {
     if (key in usage && !isNonNegativeFiniteNumber(usage[key])) return null;
   }
   if ("estimated" in usage && typeof usage.estimated !== "boolean") return null;
-  return normalizeUsageValue(usage as unknown as OcxUsage) ?? null;
+  return normalizeUsageValue(usage as unknown as OccxUsage) ?? null;
 }
 
 function normalizeAttemptTierOutcome(raw: unknown): AttemptTierOutcome | null {
@@ -1287,7 +1287,7 @@ function parseUsageLines(lines: string[]): PersistedUsageEntry[] {
 
 /**
  * Read only the newest `limit` usage.jsonl rows without loading the whole append-only
- * file into memory. Used by request-log hydration on `ocx start`.
+ * file into memory. Used by request-log hydration on `occx start`.
  */
 export function readRecentUsageEntries(limit: number, configDir?: string): PersistedUsageEntry[] {
   if (!Number.isFinite(limit) || limit <= 0) return [];

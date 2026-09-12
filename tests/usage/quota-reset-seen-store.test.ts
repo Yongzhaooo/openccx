@@ -122,7 +122,7 @@ describe("quota reset claim store", () => {
 
     const run = async (): Promise<string> => {
       const proc = Bun.spawn([process.execPath, script], {
-        env: { ...process.env, OPENCODEX_HOME: getConfigDir() },
+        env: { ...process.env, OPENCCX_HOME: getConfigDir() },
         stdout: "pipe",
         stderr: "pipe",
       });

@@ -52,7 +52,7 @@ import { getConfigPath, readConfigDiagnostics, saveConfig } from "../../src/conf
 import { routeModel } from "../../src/router";
 import { handleManagementAPI } from "../../src/server/management-api";
 import { handleResponses } from "../../src/server/responses";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { syncCatalogModels } from "../../src/codex/catalog";
 import { injectClaudeAgentDefs } from "../../src/claude/agents-inject";
 import { reconcileComboRotationState } from "../../src/combos/resolve";
@@ -70,7 +70,7 @@ import { repoPath } from "../helpers/repo-root";
 
 const VALID_COMBO = { targets: [{ provider: "a", model: "m1" }] };
 
-function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
+function baseConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     defaultProvider: "a",
@@ -92,7 +92,7 @@ function baseConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
   };
 }
 
-function rrConfig(stickyLimit: number, weights: number[]): OcxConfig {
+function rrConfig(stickyLimit: number, weights: number[]): OccxConfig {
   const providers = baseConfig().providers;
   const names = ["a", "b", "c"];
   return baseConfig({
@@ -111,7 +111,7 @@ function rrConfig(stickyLimit: number, weights: number[]): OcxConfig {
   });
 }
 
-function successfulPicks(config: OcxConfig, count: number): string[] {
+function successfulPicks(config: OccxConfig, count: number): string[] {
   const combo = getCombo(config, "free")!;
   return Array.from({ length: count }, () => {
     const pick = pickComboTarget(config, "free")!;
@@ -121,16 +121,16 @@ function successfulPicks(config: OcxConfig, count: number): string[] {
 }
 
 async function withTempHome<T>(run: (dir: string) => Promise<T> | T): Promise<T> {
-  const previousHome = process.env.OPENCODEX_HOME;
+  const previousHome = process.env.OPENCCX_HOME;
   const previousClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
-  const dir = mkdtempSync(join(tmpdir(), "ocx-combos-"));
-  process.env.OPENCODEX_HOME = dir;
+  const dir = mkdtempSync(join(tmpdir(), "occx-combos-"));
+  process.env.OPENCCX_HOME = dir;
   process.env.CLAUDE_CONFIG_DIR = join(dir, "claude");
   try {
     return await run(dir);
   } finally {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousClaudeConfigDir === undefined) delete process.env.CLAUDE_CONFIG_DIR;
     else process.env.CLAUDE_CONFIG_DIR = previousClaudeConfigDir;
     removeTreeWithRetry(dir);
@@ -142,7 +142,7 @@ function writeRawConfig(config: unknown): void {
 }
 
 async function comboApi(
-  config: OcxConfig,
+  config: OccxConfig,
   method: string,
   path: string,
   body?: unknown,
@@ -158,7 +158,7 @@ async function comboApi(
   });
 }
 
-async function comboApiRaw(config: OcxConfig, method: string, path: string, body: string): Promise<Response | null> {
+async function comboApiRaw(config: OccxConfig, method: string, path: string, body: string): Promise<Response | null> {
   const req = new Request(`http://localhost${path}`, {
     method,
     headers: { "content-type": "application/json" },
@@ -1338,7 +1338,7 @@ describe("combo validation and normalization", () => {
     const cases: Array<{
       id?: string;
       raw: unknown;
-      providers?: OcxConfig["providers"];
+      providers?: OccxConfig["providers"];
       options?: { requireEnabledTarget?: boolean };
       path: Array<string | number>;
       message: string;
@@ -1454,7 +1454,7 @@ describe("combo validation and normalization", () => {
     expect(comboDefaultEffort(baseConfig({
       combos: { free: { defaultEffort: "xhigh", targets: [{ provider: "a", model: "m1" }] } },
     }), "free")).toBe("xhigh");
-    const corrupt = baseConfig() as OcxConfig & { combos: Record<string, { defaultEffort: string; targets: [] }> };
+    const corrupt = baseConfig() as OccxConfig & { combos: Record<string, { defaultEffort: string; targets: [] }> };
     corrupt.combos.free!.defaultEffort = "turbo";
     expect(comboDefaultEffort(corrupt, "free")).toBeNull();
   });
@@ -1470,7 +1470,7 @@ describe("combo validation and normalization", () => {
   });
 
   test("preserves a physical provider named combo while no combos are configured", () => {
-    const config: OcxConfig = {
+    const config: OccxConfig = {
       port: 10100,
       defaultProvider: "combo",
       providers: {
@@ -1481,7 +1481,7 @@ describe("combo validation and normalization", () => {
     expect(preservesPhysicalComboProvider({ ...config, combos: {} })).toBeTrue();
     expect(preservesPhysicalComboProvider({ providers: {}, combos: {} })).toBeFalse();
     expect(preservesPhysicalComboProvider({ ...config, combos: { free: VALID_COMBO } })).toBeFalse();
-    const inheritedProviders = Object.create({ combo: config.providers.combo }) as OcxConfig["providers"];
+    const inheritedProviders = Object.create({ combo: config.providers.combo }) as OccxConfig["providers"];
     expect(preservesPhysicalComboProvider({ providers: inheritedProviders, combos: {} })).toBeFalse();
     expect(routeModel(config, "combo/model")).toMatchObject({
       providerName: "combo",
@@ -1502,7 +1502,7 @@ describe("persisted combo config parity", () => {
         error: expect.stringContaining("combos must be an object"),
       });
 
-      const rows: Array<{ id: string; combo: unknown; providers?: OcxConfig["providers"] }> = [
+      const rows: Array<{ id: string; combo: unknown; providers?: OccxConfig["providers"] }> = [
         { id: "free", combo: { ...VALID_COMBO, strategy: "unexpected" } },
         { id: "free", combo: { ...VALID_COMBO, stickyLimit: 0 } },
         { id: "free", combo: { ...VALID_COMBO, defaultEffort: "turbo" } },

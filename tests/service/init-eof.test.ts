@@ -40,11 +40,11 @@ async function remainingOutput(stream: ReadableStream<Uint8Array>): Promise<stri
   }
 }
 
-describe("ocx init piped stdin (#754)", () => {
+describe("occx init piped stdin (#754)", () => {
   const dirs: string[] = [];
   const coordinators: string[] = [];
   const makeHome = () => {
-    const home = mkdtempSync(join(tmpdir(), "ocx-init-eof-"));
+    const home = mkdtempSync(join(tmpdir(), "occx-init-eof-"));
     dirs.push(home);
     mkdirSync(join(home, "native"), { mode: 0o700 });
     return home;
@@ -53,7 +53,7 @@ describe("ocx init piped stdin (#754)", () => {
     cmd: bootstrap ? [process.execPath, "--eval", bootstrap] : [process.execPath, repoPath("src", "cli", "index.ts"), command],
     cwd: repoRoot(),
     env: {
-      ...process.env, OPENCODEX_HOME: home, CODEX_HOME: join(home, "native"),
+      ...process.env, OPENCCX_HOME: home, CODEX_HOME: join(home, "native"),
       HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: join(home, "xdg"),
       APPDATA: join(home, "appdata"), LOCALAPPDATA: join(home, "localappdata"),
     },
@@ -205,8 +205,8 @@ describe("ocx init piped stdin (#754)", () => {
       const stdout = remainingOutput(proc.stdout);
       expect(await proc.exited).toBe(1);
       const diagnostic = await stderr;
-      expect(diagnostic).toContain("OPENCODEX_HOME");
-      expect(diagnostic).toContain("ocx init");
+      expect(diagnostic).toContain("OPENCCX_HOME");
+      expect(diagnostic).toContain("occx init");
       expect(diagnostic).not.toMatch(/fixture-init-key|private (permission|link|cleanup) detail/);
       if (failure === "permissions") {
         expect(diagnostic).toContain("permissions could not be secured");
@@ -255,7 +255,7 @@ describe("ocx init piped stdin (#754)", () => {
         configApi.withConfigMutationLockSync(() => {});
         if (transition.readCodexTransitionState().kind !== "ready") throw new Error("native coordinator setup failed");
         const path = identity.resolveCodexCoordinatorDatabasePath(identity.resolveEffectiveUserIdentity(), realpathSync.native(process.env.CODEX_HOME));
-        const blocker = transition.openCodexCoordinatorTransaction(path);
+        const blocker = transition.openccxCoordinatorTransaction(path);
         const lockApi = { ...await import("./src/codex/codex-write-lock.ts") };
         mock.module("./src/codex/codex-write-lock.ts", () => ({
           ...lockApi,
@@ -312,8 +312,8 @@ describe("ocx init piped stdin (#754)", () => {
         expect(await stderr).toContain("Setup cancelled. The created config has been kept.");
         expect(readFileSync(nativeConfig, "utf8")).toBe(sentinel);
         expect(readFileSync(join(home, "config.json"), "utf8")).toBe(created);
-        expect(existsSync(join(nativeHome, "opencodex.config.toml"))).toBe(false);
-        expect(existsSync(join(nativeHome, "opencodex-journal.json"))).toBe(false);
+        expect(existsSync(join(nativeHome, "openccx.config.toml"))).toBe(false);
+        expect(existsSync(join(nativeHome, "openccx-journal.json"))).toBe(false);
         expect(existsSync(join(home, "codex-shim.json"))).toBe(false);
       } finally { await stop(proc); }
     }, 30_000);

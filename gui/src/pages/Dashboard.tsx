@@ -30,7 +30,7 @@ export default function Dashboard({ apiBase }: { apiBase: string }) {
     return (
       <EmptyState style={{ marginTop: 40 }} icon={<IconAlert />}
         title={<span style={{ color: "var(--red)" }}>{t("dash.cannotConnect")}</span>}>
-        <Trans k="dash.runStart" cmd="ocx start" />
+        <Trans k="dash.runStart" cmd="occx start" />
       </EmptyState>
     );
   }

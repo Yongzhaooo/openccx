@@ -4,13 +4,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { saveConfig } from "../src/config";
 import { startServer } from "../src/server";
-import type { OcxConfig } from "../src/types";
+import type { OccxConfig } from "../src/types";
 
 export const DSH_RC6_VERSION = "0.1.0-rc.6";
 
 const OUTPUT_LIMIT_BYTES = 256 * 1024;
 const RUN_TIMEOUT_MS = 60_000;
-const TEMPLATE_PLACEHOLDER = "__OCX_BASE_URL__";
+const TEMPLATE_PLACEHOLDER = "__OCCX_BASE_URL__";
 const E2E_MODEL = "dsh-e2e-reasoner";
 const MISSING_MODEL = "dsh-e2e-missing";
 export const DSH_E2E_TOOL_CALLS = [
@@ -46,20 +46,20 @@ export function assertExpectedDshVersion(stdout: string): void {
   }
 }
 
-export function renderDshSettings(template: string, openCodexBaseUrl: string): string {
+export function renderDshSettings(template: string, openccxBaseUrl: string): string {
   let parsed: URL;
   try {
-    parsed = new URL(openCodexBaseUrl);
+    parsed = new URL(openccxBaseUrl);
   } catch {
-    throw new Error("DSH compatibility E2E requires a valid loopback OpenCodex URL");
+    throw new Error("DSH compatibility E2E requires a valid loopback Openccx URL");
   }
   if (parsed.protocol !== "http:" || !["127.0.0.1", "localhost", "::1", "[::1]"].includes(parsed.hostname)) {
-    throw new Error("DSH compatibility E2E requires a loopback OpenCodex URL");
+    throw new Error("DSH compatibility E2E requires a loopback Openccx URL");
   }
   if (template.split(TEMPLATE_PLACEHOLDER).length !== 2) {
     throw new Error(`DSH settings template must contain exactly one ${TEMPLATE_PLACEHOLDER} placeholder`);
   }
-  return template.replace(TEMPLATE_PLACEHOLDER, openCodexBaseUrl.replace(/\/+$/, ""));
+  return template.replace(TEMPLATE_PLACEHOLDER, openccxBaseUrl.replace(/\/+$/, ""));
 }
 
 export function buildDshChildEnv(base: StringEnv, dirs: ChildDirs): StringEnv {
@@ -247,7 +247,7 @@ export function hasExpectedDshToolOutputs(input: unknown): boolean {
   return DSH_E2E_TOOL_CALLS.every(call => outputs.get(call.callId)?.includes(call.marker) === true);
 }
 
-function opencodexConfig(baseUrl: string): OcxConfig {
+function openccxConfig(baseUrl: string): OccxConfig {
   return {
     port: 0,
     hostname: "127.0.0.1",
@@ -263,7 +263,7 @@ function opencodexConfig(baseUrl: string): OcxConfig {
         models: [E2E_MODEL],
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function settingsWithDefaultModel(settings: string, model: string): string {
@@ -278,17 +278,17 @@ async function runCompatibilityE2E(): Promise<void> {
 
   const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
   const template = readFileSync(join(repoRoot, "tests", "fixtures", "dsh-rc6-compat-e2e-settings.yaml"), "utf8");
-  const root = mkdtempSync(join(tmpdir(), "ocx-dsh-rc6-e2e-"));
-  const ocxHome = join(root, "ocx-home");
+  const root = mkdtempSync(join(tmpdir(), "occx-dsh-rc6-e2e-"));
+  const occxHome = join(root, "occx-home");
   const childHome = join(root, "home");
   const dshHome = join(root, "dsh-home");
   const workspace = join(root, "workspace");
-  for (const dir of [ocxHome, childHome, dshHome, workspace]) mkdirSync(dir, { recursive: true, mode: 0o700 });
+  for (const dir of [occxHome, childHome, dshHome, workspace]) mkdirSync(dir, { recursive: true, mode: 0o700 });
   for (const call of DSH_E2E_TOOL_CALLS) {
     writeFileSync(join(workspace, call.filePath), `${call.marker}\n`, { mode: 0o600 });
   }
 
-  const previousOpenCodexHome = process.env.OPENCODEX_HOME;
+  const previousOpenccxHome = process.env.OPENCCX_HOME;
   const requests: UpstreamRequest[] = [];
   let upstream: ReturnType<typeof Bun.serve> | undefined;
   let proxy: ReturnType<typeof startServer> | undefined;
@@ -323,8 +323,8 @@ async function runCompatibilityE2E(): Promise<void> {
       },
     });
 
-    process.env.OPENCODEX_HOME = ocxHome;
-    saveConfig(opencodexConfig(new URL("/v1", upstream.url).toString()));
+    process.env.OPENCCX_HOME = occxHome;
+    saveConfig(openccxConfig(new URL("/v1", upstream.url).toString()));
     proxy = startServer(0);
     const settings = renderDshSettings(template, new URL("/v1", proxy.url).toString());
     writeFileSync(join(dshHome, "settings.yaml"), settings, { mode: 0o600 });
@@ -359,8 +359,8 @@ async function runCompatibilityE2E(): Promise<void> {
   } finally {
     if (proxy) await proxy.stop(true);
     upstream?.stop(true);
-    if (previousOpenCodexHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousOpenCodexHome;
+    if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousOpenccxHome;
     rmSync(root, { recursive: true, force: true });
   }
 }

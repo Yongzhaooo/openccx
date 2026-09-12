@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { AdapterEvent, OcxProviderConfig } from "../types";
+import type { AdapterEvent, OccxProviderConfig } from "../types";
 import type { ProviderAdapter } from "./base";
 import { isTranslatorBudgetExceededError } from "../lib/translator-budget";
 import { cursorExecDeniedMessage, cursorRequestDeclaresFullAccess } from "./cursor/exec-policy";
@@ -72,7 +72,7 @@ export interface CursorAdapterDeps {
 function safeCursorTransportError(err: unknown, sizeContext?: CursorSizeContext): string {
   if (err instanceof CursorTransportDisabledError) return CURSOR_TRANSPORT_DISABLED_MESSAGE;
   if (err instanceof CursorMissingCredentialError) {
-    return "Cursor live transport is enabled, but no Cursor access token is configured. Set provider.apiKey or OPENCODEX_CURSOR_TEST_TOKEN.";
+    return "Cursor live transport is enabled, but no Cursor access token is configured. Set provider.apiKey or OPENCCX_CURSOR_TEST_TOKEN.";
   }
   // A locally raised envelope rejection is already safe, specific, and actionable: it was composed
   // here from our own measurements and contains no upstream text. Passing it through
@@ -100,7 +100,7 @@ function cursorRequestSizeContext(request: { modelId: string; system: string[]; 
   };
 }
 
-export function createCursorAdapter(provider: OcxProviderConfig, deps: CursorAdapterDeps = {}): ProviderAdapter {
+export function createCursorAdapter(provider: OccxProviderConfig, deps: CursorAdapterDeps = {}): ProviderAdapter {
   return {
     name: "cursor",
 
@@ -154,7 +154,7 @@ export function createCursorAdapter(provider: OcxProviderConfig, deps: CursorAda
           try {
             const token = resolveCursorToken(provider, incoming.headers);
             _parsed._cursorIdentityScope = createHash("sha256")
-              .update("ocx:cursor:acct:")
+              .update("occx:cursor:acct:")
               .update(token)
               .digest("hex")
               .slice(0, 16);
@@ -507,7 +507,7 @@ export function createCursorAdapter(provider: OcxProviderConfig, deps: CursorAda
         }
       } catch (err) {
         if (isCursorBenignCancelError(err)) return;
-        const partialUsage = (err as { partialUsage?: import("../types").OcxUsage }).partialUsage;
+        const partialUsage = (err as { partialUsage?: import("../types").OccxUsage }).partialUsage;
         emit({
           type: "error",
           message: isTranslatorBudgetExceededError(err)

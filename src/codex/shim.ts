@@ -35,8 +35,8 @@ import { windowsEnvIndirectBatchValue } from "../lib/win-paths";
 import { isWslRuntime, wslAutomountRoot } from "./home";
 import { truncateRetainedUtf8 } from "../lib/admission";
 
-const SHIM_MARKER = "opencodex codex autostart shim";
-const UNIX_SHIM_REVISION_MARKER = "opencodex unix codex shim revision 2";
+const SHIM_MARKER = "openccx codex autostart shim";
+const UNIX_SHIM_REVISION_MARKER = "openccx unix codex shim revision 2";
 const CODEX_SHIM_PROBE_BYTES = 16 * 1024;
 export const CODEX_SHIM_REPLACEMENT_STABLE_MS = 100;
 export const CODEX_SHIM_STATE_MAX_BYTES = 1024 * 1024;
@@ -44,7 +44,7 @@ const CODEX_SHIM_RESTORE_LOCK_STALE_MS = 30_000;
 const CODEX_SHIM_INSTALL_PROBE_TIMEOUT_MS = 5_000;
 const CODEX_SHIM_INSTALL_PROBE_EXIT_TIMEOUT_MS = 1_000;
 const CODEX_SHIM_REENTRY_EXIT_CODE = 126;
-const CODEX_SHIM_REENTRY_DIAGNOSTIC = "opencodex: saved Codex launcher resolved back to the autostart shim; run ocx codex-shim uninstall and reinstall Codex before enabling codexAutoStart.";
+const CODEX_SHIM_REENTRY_DIAGNOSTIC = "openccx: saved Codex launcher resolved back to the autostart shim; run occx codex-shim uninstall and reinstall Codex before enabling codexAutoStart.";
 const CODEX_SHIM_INSTALL_PROBE_SCRIPT = `
 const { spawn } = require("node:child_process");
 const { readFileSync, writeFileSync } = require("node:fs");
@@ -314,7 +314,7 @@ export type CodexShimAutoRestoreResult =
   | { status: "restored"; message: string };
 
 function cliEntry(): { bun: string; bunRuntimeSource: BunRuntimeSource; cli: string } {
-  // Bundled Bun path (survives `ocx update`); all three shim builders
+  // Bundled Bun path (survives `occx update`); all three shim builders
   // (Unix / Windows cmd / Windows PowerShell) receive it via this entry.
   // This module lives in src/codex/, the CLI entry in src/cli/index.ts.
   // Path and provenance resolve together so the marker always describes this binary.
@@ -577,7 +577,7 @@ export function findCodexOnPath(deps: CodexPathScanDeps = {}): string | null {
     lastShimDiscoveryError = truncateRetainedUtf8(
       `Found a Windows codex at ${skippedInterop} via WSL PATH interop, but no Linux-side codex. ` +
       "Refusing to shim a Windows launcher from WSL (a WSL shim breaks Windows invocations). " +
-      "Install codex inside WSL (npm i -g @openai/codex), or run 'ocx ensure' from Windows to shim the Windows side.",
+      "Install codex inside WSL (npm i -g @openai/codex), or run 'occx ensure' from Windows to shim the Windows side.",
       MAX_DIAGNOSTIC_VALUE_BYTES,
     );
   }
@@ -593,7 +593,7 @@ function findWindowsCodexTargets(): ShimFileState[] | null {
         if (!lstatSync(exe).isDirectory()) {
           lastShimDiscoveryError = truncateRetainedUtf8(
             `Found codex.exe at ${exe}. Refusing to rename a real .exe because exact codex.exe invocations would break; ` +
-            "install a codex.cmd/codex.ps1 launcher or use `ocx service install` for autostart.",
+            "install a codex.cmd/codex.ps1 launcher or use `occx service install` for autostart.",
             MAX_DIAGNOSTIC_VALUE_BYTES,
           );
           return null;
@@ -622,14 +622,14 @@ function findWindowsCodexTargets(): ShimFileState[] | null {
 
 function backupPathFor(path: string): string {
   const ext = extname(path);
-  return ext ? `${path.slice(0, -ext.length)}.opencodex-real${ext}` : `${path}.opencodex-real`;
+  return ext ? `${path.slice(0, -ext.length)}.openccx-real${ext}` : `${path}.openccx-real`;
 }
 
 /**
  * True when a Codex binary lives inside a version manager's install tree.
  *
  * These trees are rewritten in place on upgrade, which destroys both the shim
- * and the sibling .opencodex-real backup it restores from (#2412). The tempting
+ * and the sibling .openccx-real backup it restores from (#2412). The tempting
  * repair — adopt the newly installed binary as a fresh original — is wrong
  * twice: it records a provenance that never happened, and the next upgrade wipes
  * it again, so the repair silently un-repairs on the version manager's schedule.
@@ -655,20 +655,20 @@ export function isVersionManagerOwnedCodexPath(
 /**
  * Why auto-restore refused, in the operator's own terms. Auto-restore used to
  * return a bare `{ status: "ineligible" }`, and the CLI warns only when a
- * message is present, so `ocx start`, `ocx ensure`, and `ocx service repair` all
+ * message is present, so `occx start`, `occx ensure`, and `occx service repair` all
  * reported success while routing quietly stayed native (#2412, the cause behind
  * the misleading green status in #2411).
  */
 function destroyedShimMessage(file: ShimFileState): string {
   const wrapper = existsSync(file.wrapperPath)
-    ? isShim(file.wrapperPath) ? "present but unusable" : "present but not an opencodex shim"
+    ? isShim(file.wrapperPath) ? "present but unusable" : "present but not an openccx shim"
     : "missing";
   const backup = existsSync(file.backupPath) ? "present" : "missing";
   const base = `Codex autostart shim not restored: wrapper ${wrapper} at ${file.wrapperPath}; original backup ${backup} at ${file.backupPath}.`;
   if (!isVersionManagerOwnedCodexPath(file.wrapperPath)) {
-    return `${base} Re-run 'ocx codex-shim install' once the Codex binary is stable.`;
+    return `${base} Re-run 'occx codex-shim install' once the Codex binary is stable.`;
   }
-  return `${base} This Codex binary is owned by a version manager (mise/asdf/volta), so opencodex will not wrap it as a new original — the next upgrade would overwrite the shim and its backup again. Route through Codex instead with 'ocx start', and use 'ocx service install' for autostart.`;
+  return `${base} This Codex binary is owned by a version manager (mise/asdf/volta), so openccx will not wrap it as a new original — the next upgrade would overwrite the shim and its backup again. Route through Codex instead with 'occx start', and use 'occx service install' for autostart.`;
 }
 
 function shQuote(value: string): string {
@@ -690,27 +690,27 @@ export function buildUnixCodexShim(realCodexPath: string, bunPath: string, cliPa
   return `#!/usr/bin/env sh
 # ${SHIM_MARKER}
 # ${UNIX_SHIM_REVISION_MARKER}
-if [ "\${OCX_SHIM_PROBE:-}" = "1" ]; then
-  if [ "\${OCX_SHIM_PROBE_ACTIVE:-}" = "1" ]; then
-    if [ -n "\${OCX_SHIM_PROBE_REENTRY_PATH:-}" ]; then
-      (umask 077; printf '%s\n' recursive > "$OCX_SHIM_PROBE_REENTRY_PATH") 2>/dev/null || true
+if [ "\${OCCX_SHIM_PROBE:-}" = "1" ]; then
+  if [ "\${OCCX_SHIM_PROBE_ACTIVE:-}" = "1" ]; then
+    if [ -n "\${OCCX_SHIM_PROBE_REENTRY_PATH:-}" ]; then
+      (umask 077; printf '%s\n' recursive > "$OCCX_SHIM_PROBE_REENTRY_PATH") 2>/dev/null || true
     fi
     printf '%s\n' ${shQuote(CODEX_SHIM_REENTRY_DIAGNOSTIC)} >&2
     exit ${CODEX_SHIM_REENTRY_EXIT_CODE}
   fi
-  OCX_SHIM_PROBE_ACTIVE=1
-  export OCX_SHIM_PROBE_ACTIVE
+  OCCX_SHIM_PROBE_ACTIVE=1
+  export OCCX_SHIM_PROBE_ACTIVE
 fi
-if [ "\${OCX_SHIM_ACTIVE_PID:-}" = "$$" ]; then
+if [ "\${OCCX_SHIM_ACTIVE_PID:-}" = "$$" ]; then
   printf '%s\n' ${shQuote(CODEX_SHIM_REENTRY_DIAGNOSTIC)} >&2
   exit ${CODEX_SHIM_REENTRY_EXIT_CODE}
 fi
-case "\${OCX_SHIM_ACTIVE_DEPTH:-0}" in
+case "\${OCCX_SHIM_ACTIVE_DEPTH:-0}" in
   0)
-    OCX_SHIM_ACTIVE_DEPTH=1
+    OCCX_SHIM_ACTIVE_DEPTH=1
     ;;
   1)
-    OCX_SHIM_ACTIVE_DEPTH=2
+    OCCX_SHIM_ACTIVE_DEPTH=2
     ;;
   *)
     printf '%s\n' ${shQuote(CODEX_SHIM_REENTRY_DIAGNOSTIC)} >&2
@@ -721,43 +721,43 @@ esac
 # back to this wrapper. An exec chain keeps the same PID. A legitimate nested
 # Codex invocation may enter once with a new PID; repeated child-process
 # redispatch reaches depth 2 and is rejected before it can form an infinite chain.
-OCX_SHIM_ACTIVE_PID=$$
-export OCX_SHIM_ACTIVE_PID OCX_SHIM_ACTIVE_DEPTH
-if [ -z "$OPENCODEX_API_AUTH_TOKEN" ] && [ -f ${shQuote(tokenFile)} ]; then
-  OPENCODEX_API_AUTH_TOKEN="$(cat ${shQuote(tokenFile)})"
-  export OPENCODEX_API_AUTH_TOKEN
+OCCX_SHIM_ACTIVE_PID=$$
+export OCCX_SHIM_ACTIVE_PID OCCX_SHIM_ACTIVE_DEPTH
+if [ -z "$OPENCCX_API_AUTH_TOKEN" ] && [ -f ${shQuote(tokenFile)} ]; then
+  OPENCCX_API_AUTH_TOKEN="$(cat ${shQuote(tokenFile)})"
+  export OPENCCX_API_AUTH_TOKEN
 fi
-ocx_subcommand=""
-ocx_skip_next=0
-for ocx_arg in "$@"; do
-  if [ "$ocx_skip_next" -eq 1 ]; then
-    ocx_skip_next=0
+occx_subcommand=""
+occx_skip_next=0
+for occx_arg in "$@"; do
+  if [ "$occx_skip_next" -eq 1 ]; then
+    occx_skip_next=0
     continue
   fi
-  case "$ocx_arg" in
+  case "$occx_arg" in
     --)
       break
       ;;
     ${valueOptions})
-      ocx_skip_next=1
+      occx_skip_next=1
       ;;
     --help|-h|--version|-V)
-      ocx_subcommand="$ocx_arg"
+      occx_subcommand="$occx_arg"
       break
       ;;
     -*)
       ;;
     *)
-      ocx_subcommand="$ocx_arg"
+      occx_subcommand="$occx_arg"
       break
       ;;
   esac
 done
-case "$ocx_subcommand" in
+case "$occx_subcommand" in
   ${internalCommands}|--help|-h|--version|-V)
     ;;
   *)
-    if [ -z "$OCX_SHIM_BYPASS" ]; then
+    if [ -z "$OCCX_SHIM_BYPASS" ]; then
       ${BUN_RUNTIME_SOURCE_ENV}=${shQuote(bunRuntimeSource)} ${BUN_RUNTIME_PATH_ENV}=${shQuote(bunPath)} ${shQuote(bunPath)} ${shQuote(cliPath)} ensure >/dev/null 2>&1 || true
     fi
     ;;
@@ -862,20 +862,20 @@ function readProbeMetadata(path: string, maxBytes: number): string | null {
 
 function probeUnixShimInstall(wrapperPath: string): UnixShimProbeResult {
   if (process.platform === "win32") return null;
-  const probeDir = mkdtempSync(join(tmpdir(), "opencodex-shim-probe-"));
+  const probeDir = mkdtempSync(join(tmpdir(), "openccx-shim-probe-"));
   const markerPath = join(probeDir, "result");
   const reentryPath = join(probeDir, "reentry");
   const groupPath = join(probeDir, "group");
   const stderrPath = join(probeDir, "stderr");
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    OCX_SHIM_BYPASS: "1",
-    OCX_SHIM_PROBE: "1",
-    OCX_SHIM_PROBE_REENTRY_PATH: reentryPath,
+    OCCX_SHIM_BYPASS: "1",
+    OCCX_SHIM_PROBE: "1",
+    OCCX_SHIM_PROBE_REENTRY_PATH: reentryPath,
   };
-  delete env.OCX_SHIM_ACTIVE_PID;
-  delete env.OCX_SHIM_ACTIVE_DEPTH;
-  delete env.OCX_SHIM_PROBE_ACTIVE;
+  delete env.OCCX_SHIM_ACTIVE_PID;
+  delete env.OCCX_SHIM_ACTIVE_DEPTH;
+  delete env.OCCX_SHIM_PROBE_ACTIVE;
   let groupId = 0;
   let probeStatus: unknown;
   let probeSignal: unknown;
@@ -1031,7 +1031,7 @@ function rollbackFreshShimInstall(journal: readonly FreshShimInstallJournalEntry
           // only when that something is a file we own; when a concurrent updater
           // owns it, this backup is the user's real launcher and deleting it would
           // lose the command entirely. Keep it in that case — a stray
-          // `codex.opencodex-real` is recoverable, a deleted launcher is not.
+          // `codex.openccx-real` is recoverable, a deleted launcher is not.
           if (ownsWrapperNow) unlinkSync(target.backupPath);
         } else {
           // No-replace: sourceOccupied was sampled earlier, so a concurrent
@@ -1070,39 +1070,39 @@ export function buildWindowsCodexShim(realCodexPath: string, bunPath: string, cl
   return `@echo off\r
 rem ${SHIM_MARKER}\r
 setlocal\r
-${windowsBatchSet("OCX_REAL_CODEX", realCodexPath)}\r
-${windowsBatchSet("OCX_BUN", bunPath)}\r
-${windowsBatchSet("OCX_CLI", cliPath)}\r
-${windowsBatchSet("OCX_API_TOKEN_FILE", serviceApiTokenFilePath())}\r
-if "%OPENCODEX_API_AUTH_TOKEN%"=="" if exist "%OCX_API_TOKEN_FILE%" set /p OPENCODEX_API_AUTH_TOKEN=<"%OCX_API_TOKEN_FILE%"\r
-if not "%OCX_SHIM_BYPASS%"=="" goto run_codex\r
+${windowsBatchSet("OCCX_REAL_CODEX", realCodexPath)}\r
+${windowsBatchSet("OCCX_BUN", bunPath)}\r
+${windowsBatchSet("OCCX_CLI", cliPath)}\r
+${windowsBatchSet("OCCX_API_TOKEN_FILE", serviceApiTokenFilePath())}\r
+if "%OPENCCX_API_AUTH_TOKEN%"=="" if exist "%OCCX_API_TOKEN_FILE%" set /p OPENCCX_API_AUTH_TOKEN=<"%OCCX_API_TOKEN_FILE%"\r
+if not "%OCCX_SHIM_BYPASS%"=="" goto run_codex\r
 goto scan_codex_args\r
 :scan_codex_args\r
-if "%~1"=="" goto ensure_ocx\r
-if "%~1"=="--" goto ensure_ocx\r
+if "%~1"=="" goto ensure_occx\r
+if "%~1"=="--" goto ensure_occx\r
 ${valueOptionChecks}\r
 ${internalCommandChecks}\r
 if /I "%~1"=="--help" goto run_codex\r
 if /I "%~1"=="-h" goto run_codex\r
 if /I "%~1"=="--version" goto run_codex\r
 if /I "%~1"=="-V" goto run_codex\r
-set "OCX_SCAN_ARG=%~1"\r
-if "%OCX_SCAN_ARG:~0,1%"=="-" goto shift_codex_arg\r
-goto ensure_ocx\r
+set "OCCX_SCAN_ARG=%~1"\r
+if "%OCCX_SCAN_ARG:~0,1%"=="-" goto shift_codex_arg\r
+goto ensure_occx\r
 :skip_option_value\r
 shift\r
-if "%~1"=="" goto ensure_ocx\r
+if "%~1"=="" goto ensure_occx\r
 :shift_codex_arg\r
 shift\r
 goto scan_codex_args\r
-:ensure_ocx\r
+:ensure_occx\r
 setlocal\r
 ${windowsBatchSet(BUN_RUNTIME_SOURCE_ENV, bunRuntimeSource)}\r
 ${windowsBatchSet(BUN_RUNTIME_PATH_ENV, bunPath)}\r
-"%OCX_BUN%" "%OCX_CLI%" ensure >nul 2>nul\r
+"%OCCX_BUN%" "%OCCX_CLI%" ensure >nul 2>nul\r
 endlocal\r
 :run_codex\r
-"%OCX_REAL_CODEX%" %*\r
+"%OCCX_REAL_CODEX%" %*\r
 `;
 }
 
@@ -1116,11 +1116,11 @@ export function buildWindowsPowerShellCodexShim(realCodexPath: string, bunPath: 
   const tokenFile = serviceApiTokenFilePath();
   return `#!/usr/bin/env pwsh
 # ${SHIM_MARKER}
-$hadApiAuthToken = Test-Path Env:\\OPENCODEX_API_AUTH_TOKEN
-$priorApiAuthToken = $env:OPENCODEX_API_AUTH_TOKEN
+$hadApiAuthToken = Test-Path Env:\\OPENCCX_API_AUTH_TOKEN
+$priorApiAuthToken = $env:OPENCCX_API_AUTH_TOKEN
 try {
-if (-not $env:OPENCODEX_API_AUTH_TOKEN -and (Test-Path -LiteralPath ${psString(tokenFile)})) {
-  $env:OPENCODEX_API_AUTH_TOKEN = (Get-Content -Raw -LiteralPath ${psString(tokenFile)}).Trim()
+if (-not $env:OPENCCX_API_AUTH_TOKEN -and (Test-Path -LiteralPath ${psString(tokenFile)})) {
+  $env:OPENCCX_API_AUTH_TOKEN = (Get-Content -Raw -LiteralPath ${psString(tokenFile)}).Trim()
 }
 $internalCommands = @(${internalCommands})
 $valueOptions = @(${valueOptions})
@@ -1136,7 +1136,7 @@ foreach ($argValue in $args) {
   $subcommand = $argText
   break
 }
-$skipEnsure = $env:OCX_SHIM_BYPASS -or $internalCommands -contains $subcommand -or @("--help", "-h", "--version", "-V") -contains $subcommand
+$skipEnsure = $env:OCCX_SHIM_BYPASS -or $internalCommands -contains $subcommand -or @("--help", "-h", "--version", "-V") -contains $subcommand
 if (-not $skipEnsure) {
   $priorRuntimeSource = $env:${BUN_RUNTIME_SOURCE_ENV}
   $priorRuntimePath = $env:${BUN_RUNTIME_PATH_ENV}
@@ -1153,8 +1153,8 @@ if (-not $skipEnsure) {
 & ${psString(realCodexPath)} @args
 $codexExitCode = $LASTEXITCODE
 } finally {
-  if ($hadApiAuthToken) { $env:OPENCODEX_API_AUTH_TOKEN = $priorApiAuthToken }
-  else { Remove-Item Env:\\OPENCODEX_API_AUTH_TOKEN -ErrorAction SilentlyContinue }
+  if ($hadApiAuthToken) { $env:OPENCCX_API_AUTH_TOKEN = $priorApiAuthToken }
+  else { Remove-Item Env:\\OPENCCX_API_AUTH_TOKEN -ErrorAction SilentlyContinue }
 }
 exit $codexExitCode
 `;
@@ -1383,8 +1383,8 @@ export function inspectCodexShimBackingForCommand(
   const invokesBacking = platform !== "win32"
     ? wrapperProbe.prefix.includes(`exec ${shQuote(backingPath)} "$@"`)
     : wrapperExt === ".cmd" || wrapperExt === ".bat"
-      ? wrapperProbe.prefix.includes(windowsBatchSet("OCX_REAL_CODEX", backingPath))
-        && wrapperProbe.prefix.includes('"%OCX_REAL_CODEX%" %*')
+      ? wrapperProbe.prefix.includes(windowsBatchSet("OCCX_REAL_CODEX", backingPath))
+        && wrapperProbe.prefix.includes('"%OCCX_REAL_CODEX%" %*')
       : wrapperExt === ".ps1"
         ? wrapperProbe.prefix.includes(`& ${psString(backingPath)} @args`)
         : wrapperProbe.prefix.includes(`exec ${shQuote(gitBashPath(backingPath))} "$@"`);
@@ -1453,7 +1453,7 @@ function writeShim(wrapperPath: string, realCodexPath: string): { dev: number; i
     // Hidden and non-executable while staged, so a crash between the write and the
     // rename cannot leave an executable `codex*` artifact that a glob or a shell
     // completion would surface.
-    const staged = join(dirname(wrapperPath), `.${basename(wrapperPath)}.opencodex-staging.${process.pid}.${randomUUID()}`);
+    const staged = join(dirname(wrapperPath), `.${basename(wrapperPath)}.openccx-staging.${process.pid}.${randomUUID()}`);
     let renamed = false;
     try {
       // "wx" fails if the staging path somehow exists, so we never inherit a file.
@@ -2278,7 +2278,7 @@ function installCodexShimInternal(options: InstallCodexShimInternalOptions): { i
       return {
         installed: false,
         message: wrapperChangedDuringProbe
-          ? `Refusing Codex autostart shim because ${reason}. The concurrent launcher was preserved, and your previous launcher was kept alongside it as \`<codex>.opencodex-real\`; retry after the Codex update finishes, and remove that backup once you are satisfied the launcher on PATH is the one you want.`
+          ? `Refusing Codex autostart shim because ${reason}. The concurrent launcher was preserved, and your previous launcher was kept alongside it as \`<codex>.openccx-real\`; retry after the Codex update finishes, and remove that backup once you are satisfied the launcher on PATH is the one you want.`
           : `Refusing Codex autostart shim because ${reason}. The original launcher was restored; reinstall Codex as a concrete executable before enabling codexAutoStart.`,
       };
     }
@@ -2453,7 +2453,7 @@ export function diagnoseCodexShim(): CodexShimDiagnostic {
     const wrapper = existsSync(file.wrapperPath)
       ? isShim(file.wrapperPath)
         ? "shim present"
-        : "present but not an opencodex shim"
+        : "present but not an openccx shim"
       : "missing";
     const backup = existsSync(file.backupPath) ? "present" : "missing";
     return `Codex autostart shim: wrapper ${wrapper} at ${file.wrapperPath}; original backup ${backup} at ${file.backupPath}.`;

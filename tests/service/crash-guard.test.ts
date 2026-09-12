@@ -89,7 +89,7 @@ describe("crash-guard diagnostics", () => {
     await fetch("https://opencodex.invalid.test/v1/models?token=secret").catch(() => {});
     const entry = formatCrashEntry("unhandledRejection", new TypeError("null is not an object"));
     expect(entry).toContain("fetches:");
-    expect(entry).toContain("opencodex.invalid.test/v1/models");
+    expect(entry).toContain("openccx.invalid.test/v1/models");
     expect(entry).not.toContain("token=secret"); // query redacted
   });
 

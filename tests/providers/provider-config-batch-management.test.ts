@@ -7,7 +7,7 @@ import { getConfigPath, loadConfig, saveConfig } from "../../src/config";
 import * as destinationPolicy from "../../src/lib/destination-policy";
 import { safeConfigDTO } from "../../src/server/auth-cors";
 import { handleManagementAPI } from "../../src/server/management-api";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { catalogConvergenceFactory } from "../helpers/catalog-convergence";
 import { clearKeyCooldowns, forgetApiKeyRotationCursor, rotateKeyOn429, selectProactiveApiKey } from "../../src/providers/key-failover";
 import { setActiveProviderApiKey } from "../../src/providers/api-keys";
@@ -20,11 +20,11 @@ type EditorConfig = {
   providers: Record<string, Record<string, unknown>>;
 };
 
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 let testDir: string;
 let isolatedCodexHome: IsolatedCodexHome | null = null;
 
-function seededConfig(): OcxConfig {
+function seededConfig(): OccxConfig {
   return {
     port: 10100,
     hostname: "127.0.0.1",
@@ -51,7 +51,7 @@ function seededConfig(): OcxConfig {
   };
 }
 
-function editorBaseline(config: OcxConfig): EditorConfig {
+function editorBaseline(config: OccxConfig): EditorConfig {
   return {
     defaultProvider: config.defaultProvider,
     providers: Object.fromEntries(Object.entries(config.providers).map(([name, provider]) => [name, {
@@ -63,7 +63,7 @@ function editorBaseline(config: OcxConfig): EditorConfig {
   };
 }
 
-async function putBatch(liveConfig: OcxConfig, body: unknown, onCatalog = () => {}): Promise<Response | null> {
+async function putBatch(liveConfig: OccxConfig, body: unknown, onCatalog = () => {}): Promise<Response | null> {
   const request = new Request("http://127.0.0.1/api/providers", {
     method: "PUT",
     headers: { "content-type": "application/json" },
@@ -75,23 +75,23 @@ async function putBatch(liveConfig: OcxConfig, body: unknown, onCatalog = () => 
 }
 
 beforeEach(() => {
-  testDir = mkdtempSync(join(tmpdir(), "ocx-provider-batch-"));
+  testDir = mkdtempSync(join(tmpdir(), "occx-provider-batch-"));
   mkdirSync(testDir, { recursive: true });
-  process.env.OPENCODEX_HOME = testDir;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-provider-batch-codex-");
+  process.env.OPENCCX_HOME = testDir;
+  isolatedCodexHome = installIsolatedCodexHome("occx-provider-batch-codex-");
 });
 
 afterEach(() => {
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   removeTreeWithRetry(testDir);
 });
 
 describe("atomic provider editor batch", () => {
   test("round-trips an unchanged realistic provider config without rewriting values or secrets", async () => {
-    const liveConfig: OcxConfig = {
+    const liveConfig: OccxConfig = {
       port: 10100,
       hostname: "127.0.0.1",
       defaultProvider: "woong",

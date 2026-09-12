@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { REMOTE_CONTROL_MAX_RELAY_PAYLOAD_BYTES } from "./protocol";
 
-const RPC_FRAME_MAGIC = Uint8Array.of(0x4f, 0x43, 0x58, 0x52); // OCXR
+const RPC_FRAME_MAGIC = Uint8Array.of(0x4f, 0x43, 0x58, 0x52); // OCCXR
 const RPC_FRAME_VERSION = 1;
 const RPC_FRAME_HEADER_BYTES = 30;
 const RPC_FRAME_MESSAGE_ID_BYTES = 16;

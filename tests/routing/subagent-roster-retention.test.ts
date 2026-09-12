@@ -19,13 +19,13 @@ import { handleAgentSettingsRoutes } from "../../src/server/management/agent-set
 import type { ManagementContext } from "../../src/server/management/context";
 import { deleteConfigTopLevelKey, loadConfig, saveConfigPreservingClaudeCode } from "../../src/config";
 import { configHasRebaseProvenance, configRebaseDeletionKeys, projectConfigRebaseProvenance } from "../../src/config/rebase-provenance";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function makeConfig(overrides: Partial<OcxConfig> = {}): OcxConfig {
-  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OcxConfig;
+function makeConfig(overrides: Partial<OccxConfig> = {}): OccxConfig {
+  return { port: 10100, providers: {}, defaultProvider: "openai", ...overrides } as OccxConfig;
 }
 
-async function getRoster(config: OcxConfig): Promise<{ chosen: string[]; available: string[] }> {
+async function getRoster(config: OccxConfig): Promise<{ chosen: string[]; available: string[] }> {
   const res = await handleManagementAPI(
     new Request("http://localhost/api/subagent-models"),
     new URL("http://localhost/api/subagent-models"),
@@ -86,17 +86,17 @@ describe("picker updates preserve roster and persistence intent", () => {
   let directory: string;
   let previousHome: string | undefined;
   beforeEach(() => {
-    previousHome = process.env.OPENCODEX_HOME;
-    directory = mkdtempSync(join(tmpdir(), "ocx-picker-settings-"));
-    process.env.OPENCODEX_HOME = directory;
+    previousHome = process.env.OPENCCX_HOME;
+    directory = mkdtempSync(join(tmpdir(), "occx-picker-settings-"));
+    process.env.OPENCCX_HOME = directory;
   });
   afterEach(() => {
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     removeTreeWithRetry(directory);
   });
   const rows = [{ provider: "alpha", id: "one" }, { provider: "beta", id: "two" }];
-  function context(config: OcxConfig, body: unknown): ManagementContext {
+  function context(config: OccxConfig, body: unknown): ManagementContext {
     const url = new URL("http://localhost/api/subagent-models");
     return {
       url, config, version: "fixture",
@@ -168,7 +168,7 @@ describe("picker updates preserve roster and persistence intent", () => {
     const intent = [...configRebaseDeletionKeys(config)];
     const projected = projectConfigRebaseProvenance(config);
     const ctx = context(config, { models: ["replacement"], pickerOrder });
-    const save = mock((candidate: OcxConfig) => {
+    const save = mock((candidate: OccxConfig) => {
       expect(candidate.subagentModels).toEqual(["replacement"]);
       expect(candidate.modelPickerOrder).toEqual(pickerOrder ?? undefined);
       throw new Error("disk full");

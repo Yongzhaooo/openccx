@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { isAllowedManagementOrigin } from "../../src/server/auth-cors";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 
-function config(partial: Partial<OcxConfig> = {}): OcxConfig {
+function config(partial: Partial<OccxConfig> = {}): OccxConfig {
   return {
     port: 10100,
     hostname: "0.0.0.0",
     providers: {},
     ...partial,
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 describe("management origin behind TLS termination (#760)", () => {

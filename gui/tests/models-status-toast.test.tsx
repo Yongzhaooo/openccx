@@ -32,8 +32,8 @@ beforeEach(() => {
     setInterval: { configurable: true, value: () => 1 },
     clearInterval: { configurable: true, value: () => {} },
   });
-  testWindow.localStorage.setItem("ocx-models-collapsed:v2", JSON.stringify([]));
-  testWindow.sessionStorage.setItem("ocx.models.catalog.v1:http://localhost", JSON.stringify({
+  testWindow.localStorage.setItem("occx-models-collapsed:v2", JSON.stringify([]));
+  testWindow.sessionStorage.setItem("occx.models.catalog.v1:http://localhost", JSON.stringify({
     models: [
       { provider: "anthropic", id: "claude-sonnet-5", namespaced: "anthropic/claude-sonnet-5", disabled: false },
       { provider: "anthropic", id: "claude-opus-4-5", namespaced: "anthropic/claude-opus-4-5", disabled: false },
@@ -260,7 +260,7 @@ test.each([
 });
 
 const catalogRefreshFailures = [
-  { client: "pi", ok: false, reason: "Pi file changed outside opencodex" },
+  { client: "pi", ok: false, reason: "Pi file changed outside openccx" },
   { client: "aside", profileId: 2, ok: false, reason: "Profile file busy" },
 ];
 const integrationWarningCopy = "Model selection saved. Some client catalogs could not be refreshed. Check Integrations before starting a new session.";
@@ -281,7 +281,7 @@ function allOffButton(): HTMLButtonElement {
 
 async function mountModelsForRefreshWarning(): Promise<void> {
   clearClientResourceStoresForTests();
-  testWindow.localStorage.setItem("ocx-lang", "en");
+  testWindow.localStorage.setItem("occx-lang", "en");
   installFakeTimers();
   const { createRoot } = await import("react-dom/client");
   await act(async () => {
@@ -318,7 +318,7 @@ test("a saved selection keeps its success toast and separate catalog warning unt
   expect(warning.hasAttribute("hidden")).toBe(false);
   expect(warning.closest(".action-toast")).toBeNull();
   expect(warning.textContent).toContain(integrationWarningCopy);
-  expect(warning.textContent).toContain("Pi file changed outside opencodex");
+  expect(warning.textContent).toContain("Pi file changed outside openccx");
   expect(warning.textContent).toContain("Profile file busy");
   expect(warning.textContent).toMatch(/aside[\s\S]*2/i);
   await fireTimers(6000);
@@ -327,7 +327,7 @@ test("a saved selection keeps its success toast and separate catalog warning unt
   await act(async () => { allOffButton().click(); });
   await waitForModelsFeedback(() => mutations === 2 && Boolean(container.querySelector(".action-toast.notice-ok")) && !allOffButton().disabled);
   expect(container.querySelector(".models-integration-warning")).toBeNull();
-  expect(container.textContent).not.toContain("Pi file changed outside opencodex");
+  expect(container.textContent).not.toContain("Pi file changed outside openccx");
   expect(container.textContent).not.toContain("Profile file busy");
 });
 
@@ -399,7 +399,7 @@ for (const reportsRefresh of [false, true]) {
     await act(async () => { allOffButton().click(); });
     await waitForModelsFeedback(() => Boolean(container.querySelector(".action-toast.notice-ok")) && !allOffButton().disabled);
     const warningBefore = container.querySelector(".models-integration-warning")?.textContent;
-    expect(warningBefore).toContain("Pi file changed outside opencodex");
+    expect(warningBefore).toContain("Pi file changed outside openccx");
     expect(warningBefore).toContain("Profile file busy");
     await act(async () => { presetButton().click(); });
     await waitForModelsFeedback(() => container.querySelector(".action-toast")?.textContent?.includes("preset matched no models") === true
@@ -507,7 +507,7 @@ test("picker applies only picker fields, keeps Most used on reload, and surfaces
 test("picker Default clears saved order with truly empty model and provider inventories", async () => {
   const baseFetch = globalThis.fetch;
   let written: unknown;
-  testWindow.sessionStorage.removeItem("ocx.models.catalog.v1:http://localhost");
+  testWindow.sessionStorage.removeItem("occx.models.catalog.v1:http://localhost");
   globalThis.fetch = (async (input, init) => {
     if (String(input).endsWith("/api/models") || String(input).endsWith("/api/providers")) return Response.json([]);
     if (String(input).endsWith("/api/subagent-models")) {
@@ -521,7 +521,7 @@ test("picker Default clears saved order with truly empty model and provider inve
     return baseFetch(input, init);
   }) as typeof fetch;
   clearClientResourceStoresForTests();
-  testWindow.localStorage.setItem("ocx-lang", "en");
+  testWindow.localStorage.setItem("occx-lang", "en");
   const { createRoot } = await import("react-dom/client");
   await act(async () => {
     root = createRoot(container);
@@ -554,7 +554,7 @@ test("a late picker GET cannot overwrite a saved order or its session cache", as
   const baseFetch = globalThis.fetch;
   const available = ["anthropic/claude-sonnet-5", "anthropic/claude-opus-4-5"];
   const old = { pickerAvailable: available, pickerOrder: [], pickerOrderMode: null };
-  testWindow.sessionStorage.setItem("ocx.models.catalog.v1:http://localhost:picker-order", JSON.stringify(old));
+  testWindow.sessionStorage.setItem("occx.models.catalog.v1:http://localhost:picker-order", JSON.stringify(old));
   const gets: Array<{ resolve: (response: Response) => void; signal: AbortSignal | null | undefined }> = [];
   let saved: { pickerOrder: string[]; pickerOrderMode: string | null } = { pickerOrder: [], pickerOrderMode: null };
   let writes = 0;
@@ -579,13 +579,13 @@ test("a late picker GET cannot overwrite a saved order or its session cache", as
   expect(gets[0]!.signal?.aborted).toBe(true);
   await act(async () => { gets[0]!.resolve(Response.json(old)); });
   expect(container.querySelector('[aria-label="Picker order"]')?.textContent).toContain("Group by provider");
-  const afterOld = JSON.parse(testWindow.sessionStorage.getItem("ocx.models.catalog.v1:http://localhost:picker-order")!);
+  const afterOld = JSON.parse(testWindow.sessionStorage.getItem("occx.models.catalog.v1:http://localhost:picker-order")!);
   expect(afterOld.pickerOrderMode).toBe("provider");
   expect(afterOld.pickerOrder).toEqual(["anthropic/claude-opus-4-5", "anthropic/claude-sonnet-5"]);
   // The new revalidation is a different request and reads the acknowledged PUT state.
   await act(async () => { gets[1]!.resolve(Response.json({ pickerAvailable: available, ...saved })); });
   expect(container.querySelector('[aria-label="Picker order"]')?.textContent).toContain("Group by provider");
-  const cached = JSON.parse(testWindow.sessionStorage.getItem("ocx.models.catalog.v1:http://localhost:picker-order")!);
+  const cached = JSON.parse(testWindow.sessionStorage.getItem("occx.models.catalog.v1:http://localhost:picker-order")!);
   expect(cached.pickerOrderMode).toBe("provider");
   expect(cached.pickerOrder).toEqual(["anthropic/claude-opus-4-5", "anthropic/claude-sonnet-5"]);
 });
@@ -676,7 +676,7 @@ test("post-save A status cannot replace B's banner after apiBase changes", async
   // The late callback must remain ineligible even when transport ignores cancellation.
   await act(async () => { pending.release("fresh"); });
   expect(container.querySelector(".codex-stale-banner")).not.toBeNull();
-  const savedA = JSON.parse(testWindow.sessionStorage.getItem("ocx.models.catalog.v1:http://localhost:picker-order")!);
+  const savedA = JSON.parse(testWindow.sessionStorage.getItem("occx.models.catalog.v1:http://localhost:picker-order")!);
   expect(savedA.pickerOrderMode).toBe("provider");
 });
 

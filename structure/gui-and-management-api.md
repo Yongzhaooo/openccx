@@ -2,7 +2,7 @@
 
 ## Dashboard serving
 
-The bundled React dashboard is built into `gui/dist` and served by the same Bun proxy. `ocx gui`
+The bundled React dashboard is built into `gui/dist` and served by the same Bun proxy. `occx gui`
 starts the proxy when needed and opens `http://localhost:<port>`.
 
 All ordinary HTTP responses (excluding successful WebSocket upgrades) include `X-Frame-Options: DENY` and
@@ -12,12 +12,12 @@ unsupported; deployments that previously relied on such embedding must open it a
 
 ## Authentication boundaries
 
-OpenCodex uses three mutually exclusive reusable admission credential classes:
+Openccx uses three mutually exclusive reusable admission credential classes:
 
 | Credential class | Sources | Allowed surface |
 | --- | --- | --- |
-| Data plane | `OPENCODEX_API_AUTH_TOKEN`, the `service-api-token` file loaded through `OCX_API_TOKEN_FILE`, and `config.apiKeys` | `/v1/*` HTTP endpoints and new data-plane WebSocket handshakes only |
-| Management plane | `OPENCODEX_ADMIN_AUTH_TOKEN` or the independent protected `admin-api-token` file | `/api/*` only |
+| Data plane | `OPENCCX_API_AUTH_TOKEN`, the `service-api-token` file loaded through `OCCX_API_TOKEN_FILE`, and `config.apiKeys` | `/v1/*` HTTP endpoints and new data-plane WebSocket handshakes only |
+| Management plane | `OPENCCX_ADMIN_AUTH_TOKEN` or the independent protected `admin-api-token` file | `/api/*` only |
 | GUI session | A short-lived token issued only with a legitimate same-origin local dashboard page | `/api/*` only, bound to the issuing origin |
 
 The service token file remains a delivery mechanism for the data-plane environment token; it is not
@@ -25,7 +25,7 @@ a fourth credential class. A management credential that equals any configured da
 does not enable management access. The data plane may continue to start, but `/api/*` remains closed.
 CLI health collection follows the same boundary without transporting the reusable management
 credential. Its local-read HMAC capability is an additional single-use, route-scoped admission
-mechanism, not a reusable credential class. `ocx doctor` and OAuth health derive these capabilities
+mechanism, not a reusable credential class. `occx doctor` and OAuth health derive these capabilities
 from the protected `runtime-port.json` secret for exactly two read-only GETs:
 `/api/codex-auth/accounts` and `/api/system/memory`. Each capability is bound to its method, path,
 nonce, proxy PID, and port. A short expiry is part of the HMAC, and the server consumes each
@@ -76,8 +76,8 @@ its management session to `/v1/*` requests, and pages containing a session boots
 `Cache-Control: no-store`.
 
 Proxy admission credentials must never reach an upstream provider. The forwarding guard rejects the
-`ocx_data_`, `ocx_admin_`, and `ocx_session_` prefixes, historical keys matching
-`^ocx_[0-9a-f]{40}$`, both environment tokens by constant-time comparison, and manually configured
+`occx_data_`, `occx_admin_`, and `occx_session_` prefixes, historical keys matching
+`^occx_[0-9a-f]{40}$`, both environment tokens by constant-time comparison, and manually configured
 data keys by constant-time comparison.
 
 Admission records HOW the credential was presented, not only which one matched
@@ -119,11 +119,11 @@ this document owns is which module holds which area and what invariant that area
 | OAuth | Login/status/logout for OAuth-backed providers, plus multiauth account management: `GET /api/oauth/accounts`, `PUT /api/oauth/accounts/active`, `PUT /api/oauth/accounts/alias`, `DELETE /api/oauth/accounts` list masked accounts per provider, switch the active one, edit its display-only alias, and remove one. The login flow itself is `GET /api/oauth/providers`, `POST /api/oauth/login`, `POST /api/oauth/login/code`, `POST /api/oauth/login/cancel`, `POST /api/oauth/logout`, and `GET /api/oauth/status`; pool controls are `GET/PUT/PATCH /api/oauth/accounts/pool` and `POST /api/oauth/accounts/clear-cooldown`. Login accepts `addAccount: true` to force a fresh browser identity. Device flows return a structured `deviceCode`; the GUI highlights and copies it before the user opens the verification page. |
 | Key providers | `GET /api/key-providers` exposes API-key provider presets for setup and dashboard flows, and `GET/POST/DELETE /api/keys` owns the proxy's own admission keys. Multi-key pool per key-auth provider: `GET /api/providers/keys`, `POST /api/providers/keys`, `PUT /api/providers/keys/active`, `PUT /api/providers/keys/alias`, `DELETE /api/providers/keys` masked list, add (upsert + activate), switch, rename, and remove keys. `provider.apiKey` always mirrors the active pool entry so routing stays single-key. |
 | OpenAI account mode | Report one OpenAI Codex card with Pool/Direct controls and one API-key card. Mode PATCH persists live without restart or catalog identity changes; Pool owns account/quota controls and Direct uses caller/main login only. Main-account DTOs report real credential presence and terminal `needsReauth` state instead of treating missing/invalid native auth as an unknown quota. Selection order has its own route: `PUT /api/codex-auth/accounts/priority` takes `{ id, priority }`, where `priority` is an integer -100..100 or `null` to restore the default, accepts `__main__`, 404s an unknown id, and echoes the stored value. Re-ordering never clears thread affinity, so the response carries no `appliesImmediately`, but it does release any pin — see [`openai-tiers.md`](providers/openai-tiers.md) for why. `PUT /api/codex-auth/active` with a null id releases one too, but that drops the operator's account selection along with it, so this route is the only operator-facing way to clear a pin while leaving the selected account in place. `GET /api/codex-auth/active` reports `pinned`, true only while the manually selected account is still the effective active one, plus `pinnedAccountId`, which names the pinned account whether or not it is the active one. Surfaces should render `pinnedAccountId`: under round-robin and fill-first the pin caps the tier ceiling at its own tier while the strategy cursor moves freely inside that tier, so `pinned` goes false on a sibling's turn even though the pin is still suppressing every higher tier — which is why the dashboard badges `pinnedAccountId` and the GUI controller tracks only the id. `pinned` answers the narrower question of whether routing is *currently* on the operator's choice; no surface in this repo asks it, and a new one almost certainly wants the id instead. |
-| Subagents | Read/write the featured `subagentModels` list capped at five ids. `GET/PUT /api/injection-model` manages the shared delegation model/effort selection, the independent OpenCodex guidance switch, and the default-off `syncCodexSubagentDefaults` opt-in for native Codex subagent defaults. When OpenCodex owns the active Codex routing, native `[agents]` defaults apply to newly created Codex tasks after sync/restart; external user-managed provider configs remain untouched. The defaults do not cause delegation and preserve existing user-owned defaults rather than overwriting them. PUT is partial-update: absent keys are unchanged, `null` clears, and non-object bodies are rejected with 400 before field validation. `syncCodexSubagentDefaults: true` requires a nonblank `model` and a supported Codex reasoning effort when effort is set; clearing `model` (null/empty) always clears effort and disables native-default sync even when the stored effort was invalid. |
+| Subagents | Read/write the featured `subagentModels` list capped at five ids. `GET/PUT /api/injection-model` manages the shared delegation model/effort selection, the independent Openccx guidance switch, and the default-off `syncCodexSubagentDefaults` opt-in for native Codex subagent defaults. When Openccx owns the active Codex routing, native `[agents]` defaults apply to newly created Codex tasks after sync/restart; external user-managed provider configs remain untouched. The defaults do not cause delegation and preserve existing user-owned defaults rather than overwriting them. PUT is partial-update: absent keys are unchanged, `null` clears, and non-object bodies are rejected with 400 before field validation. `syncCodexSubagentDefaults: true` requires a nonblank `model` and a supported Codex reasoning effort when effort is set; clearing `model` (null/empty) always clears effort and disables native-default sync even when the stored effort was invalid. |
 | V2 / Multi-agent mode | `GET/PUT /api/v2` — reports/sets the codex `multi_agent_v2` feature flag, the 3-state `multiAgentMode` override (`v1`/`default`/`v2`), the `keepNativeChatGptOnV1` hybrid pin, and the logical maximum thread count. Selecting `v2` normally enables the native flag; with the hybrid pin it disables that global override so native rows can resolve to v1 while routed rows resolve to v2. Selecting `v1` disables the flag; `default` leaves it unchanged. PUT rejects an explicit enabled flag that conflicts with the selected mode or hybrid pin. Every transition preserves the logical thread limit, is rollback-safe, and resyncs the catalog. GET and successful PUT also return stored `multiAgentModeHintText` plus response-only `multiAgentModeHintRecommendation: { text, revision }`; the recommendation is not a writable or persisted config field. |
-| Logs & Debug | One sidebar entry (`/#logs`) with two tabs. Logs tab: request/runtime logs for local diagnosis. `LogsFilterBar` owns controls over the shared `LogFilterState`; `filterLogs` composes filters over the loaded ring. The logs envelope adds `generatedAt` (proxy epoch milliseconds); the page advances that sample with monotonic elapsed time and retains a browser-clock fallback for older proxies. Reset returns focus to the stable All surface radio. Provider/model options include attempts, model choices match normalized complete identities, and relative-time filtering refreshes every 30 seconds while the Logs tab is active, independently of network auto-refresh. Debug tab (`/#logs/debug`; legacy `/#debug` deep links redirect there): provider + usage toggles, refresh/follow log viewer. `GET/PUT /api/debug`; `GET /api/debug/logs` and `GET /api/debug/usage-logs` (monotonic `after` cursor, legacy `since` accepted). CLI: `ocx debug provider|usage …` (both streams via running proxy API). |
+| Logs & Debug | One sidebar entry (`/#logs`) with two tabs. Logs tab: request/runtime logs for local diagnosis. `LogsFilterBar` owns controls over the shared `LogFilterState`; `filterLogs` composes filters over the loaded ring. The logs envelope adds `generatedAt` (proxy epoch milliseconds); the page advances that sample with monotonic elapsed time and retains a browser-clock fallback for older proxies. Reset returns focus to the stable All surface radio. Provider/model options include attempts, model choices match normalized complete identities, and relative-time filtering refreshes every 30 seconds while the Logs tab is active, independently of network auto-refresh. Debug tab (`/#logs/debug`; legacy `/#debug` deep links redirect there): provider + usage toggles, refresh/follow log viewer. `GET/PUT /api/debug`; `GET /api/debug/logs` and `GET /api/debug/usage-logs` (monotonic `after` cursor, legacy `since` accepted). CLI: `occx debug provider|usage …` (both streams via running proxy API). |
 | Usage | `GET /api/usage` aggregate read-only summary derived from the complete `~/.opencodex/usage.jsonl`; the ledger is streamed in fixed 1 MiB chunks, so the former read-byte and parsed-row caps cannot omit its prefix. The response includes measured / reported / unreported / unsupported / estimated counts, a daily zero-filled grid, and model and provider breakdowns. Never exposes prompts. |
-| System | `POST /api/system/restart` restarts the proxy in place. Local CLI/tray callers first attest the exact runtime PID and port, then send a process-scoped HMAC capability bound to that method, path, PID, and port; the capability authorizes no other management route and is invalid after replacement. The caller observes one absolute deadline and accepts success only after a different runtime PID is healthy on the same port. `GET /api/system/health` is the authenticated scalar-only identity used by shared-plane Dashboard status and restart reconnect polling; it does not widen a Remote Hub management ingress to unauthenticated `/healthz`. `GET /api/system/memory` — service-process runtime/memory identity (pid, Bun version/revision, optional `bunRuntimeSource` provenance, platform, RSS/heap/external/ArrayBuffers scalars, observed memory = max(RSS, external, ArrayBuffers), `bun:jsc` heap context, streamMode + eager-relay gate decision, watchdog snapshot sliced to the last 60 samples) plus privacy-safe `appOwnedBytes` retained-store totals/counters under static store ids. Its response-state block also reports spill-write `initial`/`healthy`/`degraded` status, a consecutive-failure streak, fixed error class, and failure/success timestamps. A successful publication clears the streak in the same process; raw error text and paths never enter this surface. Scalar-only payload; dashboard/admin callers use the standard management gate, while `ocx doctor` may use only the exact process-scoped local-read capability. It must never move to unauthenticated `/healthz`. |
+| System | `POST /api/system/restart` restarts the proxy in place. Local CLI/tray callers first attest the exact runtime PID and port, then send a process-scoped HMAC capability bound to that method, path, PID, and port; the capability authorizes no other management route and is invalid after replacement. The caller observes one absolute deadline and accepts success only after a different runtime PID is healthy on the same port. `GET /api/system/health` is the authenticated scalar-only identity used by shared-plane Dashboard status and restart reconnect polling; it does not widen a Remote Hub management ingress to unauthenticated `/healthz`. `GET /api/system/memory` — service-process runtime/memory identity (pid, Bun version/revision, optional `bunRuntimeSource` provenance, platform, RSS/heap/external/ArrayBuffers scalars, observed memory = max(RSS, external, ArrayBuffers), `bun:jsc` heap context, streamMode + eager-relay gate decision, watchdog snapshot sliced to the last 60 samples) plus privacy-safe `appOwnedBytes` retained-store totals/counters under static store ids. Its response-state block also reports spill-write `initial`/`healthy`/`degraded` status, a consecutive-failure streak, fixed error class, and failure/success timestamps. A successful publication clears the streak in the same process; raw error text and paths never enter this surface. Scalar-only payload; dashboard/admin callers use the standard management gate, while `occx doctor` may use only the exact process-scoped local-read capability. It must never move to unauthenticated `/healthz`. |
 | Stop | `POST /api/stop` — restore native Codex, stop any installed service, and exit the proxy. |
 | Diagnostics/sync | `src/server/management/config-routes.ts` — `GET /api/diagnostics/project-config` reports project-level Codex config that bypasses managed routing; `POST /api/sync` re-runs catalog/config sync. The diagnostic reports the bypass; it does not rewrite the project file. |
 | Sidecar/shadow-call settings | `src/server/management/config-routes.ts` — `GET/PUT /api/sidecar-settings` and `GET/PUT /api/shadow-call-settings`. PUT accepts model and backend (web-search union: openai/anthropic/xai/gemini/exa; xAI is live through stored Grok OAuth, while Gemini/Exa remain inert until their executors ship) plus validated `webSearch.xSearch`, optional `webSearch.exaApiKey` (write/clear only — never echoed by GET or the PUT response; redact.ts strips it from logs), `webSearch.reasoning`, `vision.reasoning`, `vision.enabled`, `vision.maxDescriptionsPerTurn`, and `vision.timeoutMs`; the read and PUT-response payload reports model, backend, reasoning, enabled, the vision per-turn limit, and timeout. `timeoutMs` is validated against the runtime integer bounds in `src/vision/timeout-bounds.ts`. Provider/OAuth credentials live in their stores; `exaApiKey` is the one sidecar-owned secret and follows the write-only contract above. Both shadow-call responses also report the resolved `sourceModels` — the prefixes the runtime actually intercepts (`src/lib/shadow-call.ts`, default `gpt-5.6-luna`; the retired `gpt-5.4-mini` stays available as an explicit `sourceModels` entry for 0.144.x clients), so no client hard-codes a helper slug that a Codex release can invalidate. |
@@ -152,7 +152,7 @@ even though transport logs may additionally report the resolved base model. Deta
 User aliases are display metadata only. Codex pool aliases live on `CodexAccount`, OAuth aliases on
 `ProviderAccount`, and API-key aliases reuse the existing key `label`; account ids, credential
 identity, active selection, and routing never consult these fields. The matching CLI is
-`ocx account alias <provider> <id> <display-name|->` (`rename` is accepted as a synonym).
+`occx account alias <provider> <id> <display-name|->` (`rename` is accepted as a synonym).
 
 OAuth manual and automatic selection share `commitOAuthAccountSelection` in the auth store.
 The caller resolves a usable credential, commits its matching selection, then dispatches it;
@@ -173,7 +173,7 @@ selection controller. These events cannot change credentials or select an accoun
 Selection order is the opposite case and must not be folded into the alias route. `codexAccountPriorities`
 is routing metadata that Pool selection consults, it lives in config rather than on `CodexAccount` so the
 `__main__` Desktop login can carry one, and the alias route's rejection of `__main__` would be wrong for
-it. The matching CLI is `ocx account priority <provider> <id|main> [<value>]`, reading the current order
+it. The matching CLI is `occx account priority <provider> <id|main> [<value>]`, reading the current order
 when the value is omitted. Ordering invariants live in
 [`openai-tiers.md`](providers/openai-tiers.md).
 
@@ -189,19 +189,19 @@ endpoint restores native Codex config, stops any installed service to prevent re
 `process` — describing how the **running service** obtained its Bun binary.
 
 The value is stamped into the launched process's environment as a pair —
-`OCX_BUN_RUNTIME_SOURCE` plus `OCX_BUN_RUNTIME_PATH`, the binary it was minted for — by whichever
+`OCCX_BUN_RUNTIME_SOURCE` plus `OCCX_BUN_RUNTIME_PATH`, the binary it was minted for — by whichever
 launcher selected that binary: the npm Node launcher, the Windows Task Scheduler wrapper, the
 native WinSW service, launchd, systemd, the Codex autostart shim, and the Windows tray host. Both
 halves come from a single `durableBunRuntime()` resolution at each site, so the marker can never
 describe a different binary than the one actually baked.
 
-Launchers that re-exec `process.execPath` instead of resolving a binary — `ocx ensure`, GUI/Claude/
+Launchers that re-exec `process.execPath` instead of resolving a binary — `occx ensure`, GUI/Claude/
 OpenCode start, `POST /api/system/restart`, and the update relaunch — go through
 `withProcessRuntimeProvenance()`. An inherited marker is carried forward only when its recorded
 path is the executable about to run, compared through `realpath` so symlinks, junctions, and
 Windows case differences do not break a valid match. The recorded path is what settles this rather
 than re-deriving the original selection: a service installed with a shell-local override keeps
-neither that shell nor its `OPENCODEX_BUN_PATH`, so re-deriving would demote a correct `override`
+neither that shell nor its `OPENCCX_BUN_PATH`, so re-deriving would demote a correct `override`
 to `process` on the first relaunch. A marker that describes some other binary — inheritance
 travels down a process tree and can outlive the binary it was minted for — is dropped in favor of
 what is actually executing.
@@ -214,14 +214,14 @@ spawns.
 **Trust rule: a reporting surface must never resolve provenance for itself.** Calling
 `durableBunRuntime()` at report time answers "what would this process pick right now", which is
 a different question from "what was the service started with" — and the two diverge exactly when
-the answer matters, such as a `doctor` run in a shell whose `OPENCODEX_BUN_PATH` differs from the
+the answer matters, such as a `doctor` run in a shell whose `OPENCCX_BUN_PATH` differs from the
 installed service's. Read-back goes through `reportedBunRuntimeSource()`, which allowlists the
 three values and returns `undefined` for anything else.
 
 **Backward compatibility: absent is a real answer.** A service installed before this marker
 existed reports no provenance, the endpoint omits the field, and consumers must say the origin is
-unknown rather than infer one. `ocx doctor` relies on this to avoid its previous behavior of
-telling a user to set `OPENCODEX_BUN_PATH` when the override was already active (#848). An
+unknown rather than infer one. `occx doctor` relies on this to avoid its previous behavior of
+telling a user to set `OPENCCX_BUN_PATH` when the override was already active (#848). An
 unrecognized wire value is treated as absent rather than passed through.
 
 `bunRevision` remains informational and carries no capability meaning. Provenance does not feed
@@ -235,20 +235,20 @@ sidebar entry: it is entered from the dashboard's startup-state row, which links
 current state needs remediation or merely reports how routing is protected. Its warning state is derived from active
 Codex routing plus the actual service and launcher-shim installation state; the
 `codexAutoStart` preference alone is never presented as proof of restart protection. The page shows
-copyable repair commands (`ocx service repair` for an installed service or `ocx service install` when none is registered, `ocx codex-shim install`, and `ocx restore`). On
+copyable repair commands (`occx service repair` for an installed service or `occx service install` when none is registered, `occx codex-shim install`, and `occx restore`). On
 Windows it can also install an owned, per-user system tray. The resident tray owns only its icon,
 home-scoped singleton, and HKCU Run registration; fixed proxy actions delegate to the CLI so drain,
 service conflict handling, native restore, and PID identity remain centralized. Tray presence never
 makes `startup.status` protected.
 
 Windows Task Scheduler create failures must not depend solely on localized `schtasks.exe` text.
-When the owned fixed-shape `/create /tn opencodex-proxy /xml ... /f` command exits with status 1,
+When the owned fixed-shape `/create /tn openccx-proxy /xml ... /f` command exits with status 1,
 the effective-token elevation probe may classify it as access denied only when the token is known
 to be non-elevated. An unavailable probe remains `other` and cannot trigger UAC. Query, run, delete,
 native-service, file-write, and foreign task failures never use this fallback.
 
 For a fresh scheduler install whose task is proven absent, registration is the non-destructive
-first phase. OpenCodex writes a unique temporary XML definition in an ACL-hardened private directory
+first phase. Openccx writes a unique temporary XML definition in an ACL-hardened private directory
 outside its config root and asks Task Scheduler to create the owned task without running it. Only
 after that succeeds may it discard
 the consumed staging XML, require scheduler ownership for a config root that was absent at entry,
@@ -332,7 +332,7 @@ state from the redacted config DTO or expose selector mappings. It renders no ac
 before hydration, serializes rapid clicks, rejects stale poll results that started before a mutation,
 and accepts the server-confirmed state after PUT. Product copy describes arbitrary public selectors
 and exact account binding only—there are no built-in Personal/Work roles. A pending catalog refresh
-keeps the saved state and renders fixed `ocx sync` guidance without server/account detail.
+keeps the saved state and renders fixed `occx sync` guidance without server/account detail.
 
 ## Usage accounting
 
@@ -365,7 +365,7 @@ Recommendation-only refreshes preserve unsaved drafts. Switching API servers hid
 previous hint and blocks mode writes until the new server's settings arrive.
 
 An explicit `multiAgentModeHintText` write canonicalizes only the two byte-exact legacy
-OpenCodex presets; other valid custom text keeps its bytes. GET, unrelated PUTs and upgrades
+Openccx presets; other valid custom text keeps its bytes. GET, unrelated PUTs and upgrades
 leave stored hints unchanged. `null` clears the hint, blank strings are rejected, and the
 existing native capability check still precedes writes. The text and revision recommendation
 is supplied independently of stored TOML and is not evidence of native runtime support.
@@ -458,8 +458,8 @@ scan reports `false`, `0`, `false`, and `0`; clients must not interpret those fi
 
 > Decision record: [ADR-0079](decisions/ADR-0079-usage-accounting.md)
 
-For diagnosing upstream-shape / usage-extraction issues run `ocx debug usage on` (or set
-`OPENCODEX_USAGE_DEBUG=1` before start). The proxy then writes a rolling debug record per finalized
+For diagnosing upstream-shape / usage-extraction issues run `occx debug usage on` (or set
+`OPENCCX_USAGE_DEBUG=1` before start). The proxy then writes a rolling debug record per finalized
 request to `~/.opencodex/usage-debug.jsonl` (mode `0o600`, auto-trimmed to the most-recent 100 lines
 once it exceeds 200) with the upstream content-type, body kind (`sse / json / other / none`), a 2KB
 body sample, and the extracted usage. Off by default; the hot path is guarded so production stays
@@ -478,11 +478,11 @@ bases produce no probe; redirect refusal and quota parsing/cache semantics are u
 ## Provider debug logging
 
 Provider transport diagnostics (dropped SSE frames, adapter dial/stream events, etc.) are opt-in:
-`ocx debug provider on` / `ocx debug provider off` on the running proxy, the Debug-page toggle, or `OCX_DEBUG=1` on
-the next start (legacy `OCX_DEBUG_FRAMES` still enables the same path). Lines
-use the `[ocx:<adapter>:<event>]` prefix, go to the proxy terminal, and are buffered for
-`ocx debug provider logs` / `ocx debug provider logs -f`. Usage JSONL tails with
-`ocx debug usage logs [-f]`. Separate from provider buffered logs above.
+`occx debug provider on` / `occx debug provider off` on the running proxy, the Debug-page toggle, or `OCCX_DEBUG=1` on
+the next start (legacy `OCCX_DEBUG_FRAMES` still enables the same path). Lines
+use the `[occx:<adapter>:<event>]` prefix, go to the proxy terminal, and are buffered for
+`occx debug provider logs` / `occx debug provider logs -f`. Usage JSONL tails with
+`occx debug usage logs [-f]`. Separate from provider buffered logs above.
 
 ## Remote credentials and bounded sessions
 

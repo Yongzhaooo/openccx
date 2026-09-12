@@ -16,7 +16,7 @@ import { createLiveCursorTransport } from "../../../src/adapters/cursor/live-tra
 import { createTestTranslatorBudget } from "../../helpers/translator-budget";
 import type { CursorRunRequest, CursorServerMessage } from "../../../src/adapters/cursor/types";
 
-const PROVIDER = "opencodex-responses";
+const PROVIDER = "openccx-responses";
 
 async function withH2Server<T>(
   handler: (stream: http2.ServerHttp2Stream) => void,
@@ -235,8 +235,8 @@ describe("Cursor clean-EOF terminal gate", () => {
 
   test("clean Connect END_STREAM preserves a drained client-tool terminal before its grace timer", async () => {
     await withH2Server(respondWith([
-      toolCallStartedFrame("call_client_1", "ocx_client_echo_a"),
-      clientToolArgsFrame("call_client_1", "ocx_client_echo_a", "A"),
+      toolCallStartedFrame("call_client_1", "occx_client_echo_a"),
+      clientToolArgsFrame("call_client_1", "occx_client_echo_a", "A"),
       cleanConnectEndFrame(),
     ]), async baseUrl => {
       const { messages, failure } = await drain(baseUrl, runRequest(ECHO_TOOL));
@@ -250,8 +250,8 @@ describe("Cursor clean-EOF terminal gate", () => {
 
   test("clean Connect END_STREAM keeps a later open sibling fail-closed after a client-tool drain", async () => {
     await withH2Server(respondWith([
-      toolCallStartedFrame("call_client_2", "ocx_client_echo_a"),
-      clientToolArgsFrame("call_client_2", "ocx_client_echo_a", "A"),
+      toolCallStartedFrame("call_client_2", "occx_client_echo_a"),
+      clientToolArgsFrame("call_client_2", "occx_client_echo_a", "A"),
       toolCallStartedFrame("call_open_2", "apply_patch"),
       cleanConnectEndFrame(),
     ]), async baseUrl => {

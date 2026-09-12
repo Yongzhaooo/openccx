@@ -2,7 +2,7 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { createAnthropicAdapter as createAnthropicAdapterProduction } from "../../src/adapters/anthropic";
 import { createGoogleAdapter as createGoogleAdapterProduction } from "../../src/adapters/google";
 import { createOpenAIChatAdapter as createOpenAIChatAdapterProduction } from "../../src/adapters/openai-chat";
-import type { AdapterEvent, OcxProviderConfig } from "../../src/types";
+import type { AdapterEvent, OccxProviderConfig } from "../../src/types";
 import { parseSidecarSSE } from "../../src/web-search/parse";
 import { withTestTranslatorBudget } from "../helpers/translator-budget";
 
@@ -24,7 +24,7 @@ const INVALID_JSON_PAYLOAD = "{not json}";
 
 // A token distinctive enough that finding it anywhere in a log line proves the frame's content
 // was copied there. Used by the web-search warning-hygiene tests below.
-const MARKER = "ocx-marker-4f21b7a9-do-not-log";
+const MARKER = "occx-marker-4f21b7a9-do-not-log";
 
 const createOpenAIChatAdapter = (...args: Parameters<typeof createOpenAIChatAdapterProduction>) =>
   withTestTranslatorBudget(createOpenAIChatAdapterProduction(...args));
@@ -77,20 +77,20 @@ const openAIChatProvider = {
   baseUrl: "https://example.test/v1",
   apiKey: "sk-test",
   authMode: "key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 const googleProvider = {
   adapter: "google",
   baseUrl: "https://generativelanguage.googleapis.com",
   apiKey: "google-test-key",
   authMode: "key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 const anthropicProvider = {
   adapter: "anthropic",
   baseUrl: "https://example.test",
   apiKey: "key",
-} as OcxProviderConfig;
+} as OccxProviderConfig;
 
 describe("SSE data frames that parse to a non-record", () => {
   describe("openai-chat adapter", () => {

@@ -33,7 +33,7 @@ import {
 } from "./pool-kernel";
 import { parseRetryAfterMs } from "../combos/failover";
 import { sweepExpiredOnWrite } from "../lib/state-store-sweeper";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 
 /** Cap same-request rotations so a short Retry-After cannot spin. Mirrors the Anthropic bound. */
 export const GENERIC_OAUTH_MAX_FAILOVERS_PER_REQUEST = 3;
@@ -94,7 +94,7 @@ function isCooled(provider: string, accountId: string, now: number): boolean {
 }
 
 /** True when this provider participates in generic rotation at all. */
-export function isGenericFailoverProvider(providerName: string, provider: OcxProviderConfig): boolean {
+export function isGenericFailoverProvider(providerName: string, provider: OccxProviderConfig): boolean {
   return provider.authMode === "oauth" && !EXCLUDED_PROVIDERS.has(providerName);
 }
 
@@ -144,7 +144,7 @@ export function hasFailoverAccountQuorum(providerName: string, now = Date.now())
  * `autoSwitchThreshold`.
  */
 export function isGenericOAuthFailoverEnabled(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   now = Date.now(),
 ): boolean {
@@ -161,7 +161,7 @@ export function isGenericOAuthFailoverEnabled(
  * turns it off only when the provider has no override. A malformed value falls through rather
  * than taking a provider out of service.
  */
-function isProactivePreferenceEnabled(config: OcxConfig, providerName: string, now: number): boolean {
+function isProactivePreferenceEnabled(config: OccxConfig, providerName: string, now: number): boolean {
   const provider = config.providers?.[providerName];
   if (!provider || !isGenericFailoverProvider(providerName, provider)) return false;
   const perProvider = provider.oauthAccountFailover?.enabled;
@@ -197,13 +197,13 @@ const DEFAULT_GENERIC_AUTO_SWITCH_THRESHOLD = 80;
  * unflagged code already does. Collapsing them here is what keeps every call site a two-way
  * branch instead of a four-way one.
  */
-function activeGenericStrategy(config: OcxConfig, providerName: string): ActiveGenericStrategy | null {
+function activeGenericStrategy(config: OccxConfig, providerName: string): ActiveGenericStrategy | null {
   if (config.pool?.kernel !== true) return null;
   const raw = config.providers?.[providerName]?.oauthAccountFailover?.strategy;
   return raw === "round-robin" || raw === "fill-first" ? raw : null;
 }
 
-function genericStickyLimit(config: OcxConfig, providerName: string): number {
+function genericStickyLimit(config: OccxConfig, providerName: string): number {
   return normalizeAccountPoolStickyLimit(config.providers?.[providerName]?.oauthAccountFailover?.stickyLimit);
 }
 
@@ -241,7 +241,7 @@ function isOverAutoSwitchThreshold(providerName: string, accountId: string, thre
  * eligible account in the stable ring. Null means "keep the active account".
  */
 function pickFillFirstGenericAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   activeId: string | undefined,
   now: number,
@@ -277,7 +277,7 @@ function pickFillFirstGenericAccount(
  * advance and round-robin would propose the same account forever. This is the same shape
  * `commitAnthropicSelectionRouting` already commits with.
  */
-export function noteGenericPoolSelection(config: OcxConfig, providerName: string, accountId: string): void {
+export function noteGenericPoolSelection(config: OccxConfig, providerName: string, accountId: string): void {
   if (activeGenericStrategy(config, providerName) !== "round-robin") return;
   const poolKey = genericPoolKey(providerName);
   const limit = genericStickyLimit(config, providerName);
@@ -297,7 +297,7 @@ export function noteGenericPoolSelection(config: OcxConfig, providerName: string
  * cooldown applied to an account we then could not use.
  */
 export function rotateGenericOAuthAccountOn429(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   failedAccountId: string,
   retryAfterHeader: string | null | undefined,
@@ -389,7 +389,7 @@ export async function failoverAccountSnapshot(
  * an empty answer means "carry on", not "refuse".
  */
 export function preferredInitialAccount(
-  config: OcxConfig,
+  config: OccxConfig,
   providerName: string,
   now = Date.now(),
 ): string | null {

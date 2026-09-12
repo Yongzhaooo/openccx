@@ -12,7 +12,7 @@
  * wire, so a loop that rebuilds a call only has to carry one field instead of knowing about
  * any provider. Values are treated as opaque: never parsed, merged, re-encoded, or synthesized.
  */
-import type { OcxProviderOpaqueToolCallMetadata } from "../types";
+import type { OccxProviderOpaqueToolCallMetadata } from "../types";
 
 /** Wire shape: `extra_content.google.thought_signature` on a Responses function_call item. */
 interface ResponsesExtraContent {
@@ -41,7 +41,7 @@ export function isCarryableSignature(value: unknown): value is string {
 /** Read provider metadata off an inbound Responses function_call item. */
 export function providerMetadataFromResponsesFunctionCall(
   item: { extra_content?: unknown } | undefined,
-): OcxProviderOpaqueToolCallMetadata | undefined {
+): OccxProviderOpaqueToolCallMetadata | undefined {
   const extra = item?.extra_content;
   if (!isObj(extra)) return undefined;
   const google = (extra as ResponsesExtraContent).google;
@@ -53,7 +53,7 @@ export function providerMetadataFromResponsesFunctionCall(
 
 /** Serialize provider metadata onto an outbound Responses function_call item. */
 export function responsesExtraContentFromProviderMetadata(
-  metadata: OcxProviderOpaqueToolCallMetadata | undefined,
+  metadata: OccxProviderOpaqueToolCallMetadata | undefined,
 ): { extra_content: { google: { thought_signature: string } } } | undefined {
   const signature = metadata?.google?.thoughtSignature;
   if (!isCarryableSignature(signature)) return undefined;
@@ -65,8 +65,8 @@ export function responsesExtraContentFromProviderMetadata(
  * that fans one model response into several calls must copy per call and never share or merge.
  */
 export function cloneProviderOpaqueToolCallMetadata(
-  metadata: OcxProviderOpaqueToolCallMetadata | undefined,
-): OcxProviderOpaqueToolCallMetadata | undefined {
+  metadata: OccxProviderOpaqueToolCallMetadata | undefined,
+): OccxProviderOpaqueToolCallMetadata | undefined {
   const signature = metadata?.google?.thoughtSignature;
   if (!isCarryableSignature(signature)) return undefined;
   return { google: { thoughtSignature: signature } };

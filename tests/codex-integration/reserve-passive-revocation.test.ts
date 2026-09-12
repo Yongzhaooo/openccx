@@ -49,11 +49,11 @@ function ordinaryResponse(): Response {
 }
 
 beforeEach(() => {
-  previousHome = process.env.OPENCODEX_HOME;
+  previousHome = process.env.OPENCCX_HOME;
   previousCodexHome = process.env.CODEX_HOME;
   previousFetch = globalThis.fetch;
-  directory = mkdtempSync(join(tmpdir(), "ocx-reserve-passive-"));
-  process.env.OPENCODEX_HOME = directory;
+  directory = mkdtempSync(join(tmpdir(), "occx-reserve-passive-"));
+  process.env.OPENCCX_HOME = directory;
   process.env.CODEX_HOME = directory;
   clearAccountQuota();
   clearMainAccountInfoCache();
@@ -78,8 +78,8 @@ afterEach(async () => {
   } finally {
     setIcaclsRunnerForTests(null);
     setAsyncIcaclsRunnerForTests(null);
-    if (previousHome === undefined) delete process.env.OPENCODEX_HOME;
-    else process.env.OPENCODEX_HOME = previousHome;
+    if (previousHome === undefined) delete process.env.OPENCCX_HOME;
+    else process.env.OPENCCX_HOME = previousHome;
     if (previousCodexHome === undefined) delete process.env.CODEX_HOME;
     else process.env.CODEX_HOME = previousCodexHome;
     removeTreeWithRetry(directory);

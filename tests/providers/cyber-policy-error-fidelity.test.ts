@@ -16,7 +16,7 @@ import {
 import { formatPassthroughUpstreamError } from "../../src/server/responses/passthrough-error";
 import { consumeComboFailure } from "../../src/server/responses/core";
 import { handleResponses } from "../../src/server/responses";
-import type { AdapterEvent, OcxConfig } from "../../src/types";
+import type { AdapterEvent, OccxConfig } from "../../src/types";
 import { createTestTranslatorBudget, withTestTranslatorBudget } from "../helpers/translator-budget";
 
 const createOpenAIChatAdapter = (...args: Parameters<typeof createOpenAIChatAdapterProduction>) =>
@@ -218,7 +218,7 @@ describe("cyber_policy error fidelity", () => {
           allowPrivateNetwork: true,
         },
       },
-    } as OcxConfig;
+    } as OccxConfig;
     try {
       const response = await handleResponses(new Request("http://localhost/v1/responses", {
         method: "POST",

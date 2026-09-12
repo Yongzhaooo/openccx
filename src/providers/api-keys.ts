@@ -8,7 +8,7 @@
  */
 import { createHash } from "node:crypto";
 import { saveConfigPreservingClaudeCode } from "../config";
-import type { OcxConfig, OcxProviderConfig } from "../types";
+import type { OccxConfig, OccxProviderConfig } from "../types";
 import type { AccountQuotaFields } from "./quota-types";
 import { commitProviderApiKeySelection } from "./api-key-selection";
 
@@ -39,7 +39,7 @@ export function apiKeyPoolEntryId(key: string): string {
 }
 
 /** True for providers whose upstream auth is a configured API key (not oauth/forward). */
-export function isKeyAuthProvider(provider: OcxProviderConfig): boolean {
+export function isKeyAuthProvider(provider: OccxProviderConfig): boolean {
   return provider.authMode !== "oauth" && provider.authMode !== "forward";
 }
 
@@ -51,7 +51,7 @@ export function sanitizeApiKeyValue(value: unknown): string | undefined {
 }
 
 /** Seed the pool from a legacy bare `apiKey`, and keep `apiKey` mirrored to the active entry. */
-function ensurePool(provider: OcxProviderConfig): NonNullable<OcxProviderConfig["apiKeyPool"]> {
+function ensurePool(provider: OccxProviderConfig): NonNullable<OccxProviderConfig["apiKeyPool"]> {
   if (!provider.apiKeyPool) provider.apiKeyPool = [];
   if (provider.apiKeyPool.length === 0 && provider.apiKey) {
     provider.apiKeyPool.push({ id: apiKeyPoolEntryId(provider.apiKey), key: provider.apiKey });
@@ -59,7 +59,7 @@ function ensurePool(provider: OcxProviderConfig): NonNullable<OcxProviderConfig[
   return provider.apiKeyPool;
 }
 
-export function listProviderApiKeys(config: OcxConfig, name: string): { activeId: string | null; keys: ProviderApiKeyInfo[] } {
+export function listProviderApiKeys(config: OccxConfig, name: string): { activeId: string | null; keys: ProviderApiKeyInfo[] } {
   const provider = config.providers[name];
   if (!provider || !isKeyAuthProvider(provider)) return { activeId: null, keys: [] };
   // A GET projects a legacy key without seeding/mutating live configuration.
@@ -80,7 +80,7 @@ export function listProviderApiKeys(config: OcxConfig, name: string): { activeId
 }
 
 /** Add (or upsert) a key and make it ACTIVE. Persists config. */
-export function addProviderApiKey(config: OcxConfig, name: string, key: string, label?: string): { id: string } | { error: string } {
+export function addProviderApiKey(config: OccxConfig, name: string, key: string, label?: string): { id: string } | { error: string } {
   const provider = config.providers[name];
   if (!provider || !isKeyAuthProvider(provider)) return { error: "provider does not use API-key auth" };
   if (typeof key !== "string" || !key.trim()) return { error: "key is required" };
@@ -102,7 +102,7 @@ export function addProviderApiKey(config: OcxConfig, name: string, key: string, 
 }
 
 /** Switch the ACTIVE key (mirrors into `provider.apiKey`). Persists config. */
-export function setActiveProviderApiKey(config: OcxConfig, name: string, id: string): boolean {
+export function setActiveProviderApiKey(config: OccxConfig, name: string, id: string): boolean {
   const committed = commitProviderApiKeySelection(config, name, provider => {
     const entry = provider.apiKeyPool?.find(e => e.id === id)
       ?? (!provider.apiKeyPool?.length && provider.apiKey && apiKeyPoolEntryId(provider.apiKey) === id
@@ -116,7 +116,7 @@ export function setActiveProviderApiKey(config: OcxConfig, name: string, id: str
 }
 
 /** Rename a key slot without changing its id, secret, or active routing state. */
-export function setProviderApiKeyLabel(config: OcxConfig, name: string, id: string, label: string | undefined): boolean {
+export function setProviderApiKeyLabel(config: OccxConfig, name: string, id: string, label: string | undefined): boolean {
   const provider = config.providers[name];
   if (!provider || !isKeyAuthProvider(provider)) return false;
   const entry = ensurePool(provider).find(e => e.id === id);
@@ -128,7 +128,7 @@ export function setProviderApiKeyLabel(config: OcxConfig, name: string, id: stri
 }
 
 /** Remove one key; removing the active one promotes the first remaining. Persists config. */
-export function removeProviderApiKey(config: OcxConfig, name: string, id: string): boolean {
+export function removeProviderApiKey(config: OccxConfig, name: string, id: string): boolean {
   const committed = commitProviderApiKeySelection(config, name, provider => {
     const pool = provider.apiKeyPool?.length ? provider.apiKeyPool
       : provider.apiKey ? [{ id: apiKeyPoolEntryId(provider.apiKey), key: provider.apiKey }] : [];

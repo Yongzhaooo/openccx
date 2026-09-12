@@ -1,5 +1,5 @@
 import { spawn as nodeSpawn, type ChildProcess, type SpawnOptions } from "node:child_process";
-import type { AdapterEvent, OcxParsedRequest, OcxProviderConfig } from "../../types";
+import type { AdapterEvent, OccxParsedRequest, OccxProviderConfig } from "../../types";
 import { commandInvocation } from "../../lib/win-exec";
 import type { IncomingMeta } from "../base";
 import { buildConversationInput, CodingAgentProtocolError, mapStreamMessageToEvents, readJsonLines, type StreamParseState } from "./protocol";
@@ -66,19 +66,19 @@ export function redactSecrets(text: string, tokenEnv: string, credential?: strin
 export interface CodingAgentTurnInput {
   /** Region profiles for this family; the turn fails closed if the base URL matches none. */
   profiles: readonly CodingAgentProviderProfile[];
-  provider: OcxProviderConfig;
-  parsed: OcxParsedRequest;
+  provider: OccxProviderConfig;
+  parsed: OccxParsedRequest;
   incoming: IncomingMeta;
   emit: (event: AdapterEvent) => void;
   /** Family-specific headless argument builder (tools disabled, model, reasoning, system prompt). */
-  buildArgs: (profile: CodingAgentProviderProfile, parsed: OcxParsedRequest, provider: OcxProviderConfig) => string[];
+  buildArgs: (profile: CodingAgentProviderProfile, parsed: OccxParsedRequest, provider: OccxProviderConfig) => string[];
   /** Family-specific scoped env builder (credential + region switch on top of baseScopedEnv). */
   buildEnv: (profile: CodingAgentProviderProfile, apiKey: string) => Record<string, string>;
   deps: CodingAgentDeps;
 }
 
 /**
- * Run one headless coding-agent CLI turn as an OpenCodex `runTurn` (§七/§三十).
+ * Run one headless coding-agent CLI turn as an Openccx `runTurn` (§七/§三十).
  *
  * Single transport for every official coding-agent CLI provider: fail closed on a non-canonical
  * destination, pre-flight the credential and binary, spawn with a scoped env and tools disabled, feed

@@ -15,7 +15,7 @@ import { EXPECTED_PRICE_OVERLAYS } from "../../../src/usage/expected-prices";
 import { mapReasoningEffort } from "../../../src/reasoning-effort";
 import { resolveMatchedPrice } from "../../../src/usage/cost";
 import { createGoogleAdapter } from "../../../src/adapters/google";
-import type { OcxConfig, OcxParsedRequest, OcxProviderConfig } from "../../../src/types";
+import type { OccxConfig, OccxParsedRequest, OccxProviderConfig } from "../../../src/types";
 
 // Google takes the previous Antigravity Flash generation off Cloud Code Assist almost
 // immediately once the next one ships. That makes 3.6 -> 3.7 a REPLACEMENT, and the
@@ -142,7 +142,7 @@ describe("stale discovery cannot republish a retired model", () => {
 });
 
 describe("a saved config survives the retirement", () => {
-  function configWith(selected: string[]): OcxConfig {
+  function configWith(selected: string[]): OccxConfig {
     return {
       providers: {
         "google-antigravity": {
@@ -152,7 +152,7 @@ describe("a saved config survives the retirement", () => {
           defaultModel: selected[0],
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
   }
 
   test("an allowlist naming only the retired model is migrated, not emptied", () => {
@@ -198,7 +198,7 @@ describe("a saved config survives the retirement", () => {
           modelInputModalities: { "gemini-3.6-flash": ["text", "image"] },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
 
     const { config: migrated } = projectModelRenames(config);
     const prov = migrated.providers["google-antigravity"]!;
@@ -224,7 +224,7 @@ describe("a saved config survives the retirement", () => {
           },
         },
       },
-    } as unknown as OcxConfig;
+    } as unknown as OccxConfig;
     projectModelRenames(config);
     const prov = config.providers["google-antigravity"]!;
     const mapped = mapReasoningEffort(prov, "gemini-3.6-flash", "high");
@@ -280,22 +280,22 @@ describe("retirement does not rewrite history", () => {
 // rename landed. These tests were driven red against the pre-fix tree — every one of
 // them returned the un-suffixed id.
 describe("the -tiered wire rename reaches the request path", () => {
-  function directProvider(): OcxProviderConfig {
+  function directProvider(): OccxProviderConfig {
     return {
       adapter: "google",
       baseUrl: "https://generativelanguage.googleapis.com",
       apiKey: "google-test-key",
       authMode: "key",
-    } as OcxProviderConfig;
+    } as OccxProviderConfig;
   }
 
-  function directRequest(modelId: string): OcxParsedRequest {
+  function directRequest(modelId: string): OccxParsedRequest {
     return {
       modelId,
       context: { messages: [{ role: "user", content: "hi" }] },
       stream: false,
       options: {},
-    } as OcxParsedRequest;
+    } as OccxParsedRequest;
   }
 
   test.each([

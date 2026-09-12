@@ -26,7 +26,7 @@ export default function ClaudeCode({ apiBase, active = true }: { apiBase: string
   const t = useT();
   const { locale } = useI18n();
   const localeTag = LOCALES.find(l => l.code === locale)?.htmlLang ?? "en";
-  const cacheKey = `ocx.claude-code.v1:${apiBase}`;
+  const cacheKey = `occx.claude-code.v1:${apiBase}`;
   const resourceKey = `claude-code:${apiBase}`;
   const cachedEntry = useMemo(() => readSessionListCacheEntry<CachedClaudeCode>(cacheKey), [cacheKey]);
   const cached = cachedEntry?.data ?? null;

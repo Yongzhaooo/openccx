@@ -22,13 +22,13 @@ import {
   startServer,
 } from "../../src/server";
 import { beginShutdownDrain, isDraining, resetLifecycleDrainStateForTests } from "../../src/server/lifecycle";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { fakeChatGptJwt } from "../helpers/fake-chatgpt-jwt";
 import { installIsolatedCodexHome, type IsolatedCodexHome } from "../helpers/isolated-codex-home";
 import { removeTreeWithRetry } from "../helpers/remove-tree";
 
-const previousApiToken = process.env.OPENCODEX_API_AUTH_TOKEN;
-const previousOpencodexHome = process.env.OPENCODEX_HOME;
+const previousApiToken = process.env.OPENCCX_API_AUTH_TOKEN;
+const previousOpenccxHome = process.env.OPENCCX_HOME;
 const originalFetch = globalThis.fetch;
 const TEST_DIR = join(import.meta.dir, ".tmp-server-live-test");
 let isolatedCodexHome: IsolatedCodexHome | null = null;
@@ -37,9 +37,9 @@ const DIRECT_CHATGPT_TOKEN = fakeChatGptJwt({ chatgpt_account_id: "acct-123" });
 beforeEach(() => {
   if (existsSync(TEST_DIR)) removeTreeWithRetry(TEST_DIR);
   mkdirSync(TEST_DIR, { recursive: true });
-  process.env.OPENCODEX_HOME = TEST_DIR;
-  delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  isolatedCodexHome = installIsolatedCodexHome("ocx-server-live-codex-");
+  process.env.OPENCCX_HOME = TEST_DIR;
+  delete process.env.OPENCCX_API_AUTH_TOKEN;
+  isolatedCodexHome = installIsolatedCodexHome("occx-server-live-codex-");
   clearCodexUpstreamHealth();
   clearThreadAccountMap();
   clearAccountNeedsReauth("pool-a");
@@ -49,10 +49,10 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  if (previousApiToken === undefined) delete process.env.OPENCODEX_API_AUTH_TOKEN;
-  else process.env.OPENCODEX_API_AUTH_TOKEN = previousApiToken;
-  if (previousOpencodexHome === undefined) delete process.env.OPENCODEX_HOME;
-  else process.env.OPENCODEX_HOME = previousOpencodexHome;
+  if (previousApiToken === undefined) delete process.env.OPENCCX_API_AUTH_TOKEN;
+  else process.env.OPENCCX_API_AUTH_TOKEN = previousApiToken;
+  if (previousOpenccxHome === undefined) delete process.env.OPENCCX_HOME;
+  else process.env.OPENCCX_HOME = previousOpenccxHome;
   isolatedCodexHome?.restore();
   isolatedCodexHome = null;
   clearCodexUpstreamHealth();
@@ -106,7 +106,7 @@ function fakeLiveUpstream(captured: CapturedRequest[], status = 201, location = 
   return upstream;
 }
 
-function forwardConfig(): OcxConfig {
+function forwardConfig(): OccxConfig {
   return {
     port: 0,
     defaultProvider: "openai",
@@ -119,7 +119,7 @@ function forwardConfig(): OcxConfig {
         codexAccountMode: "direct",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function expectReadyProtocolMetadata(body: Record<string, unknown>, managementUrl: string): void {
@@ -212,7 +212,7 @@ test.each(["/v1/live", "/backend-api/codex/live"])("POST %s relays to an OpenAI 
         apiKey: "sk-test-live",
       },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -407,7 +407,7 @@ test("POST /v1/live without an OpenAI upstream returns 400", async () => {
     providers: {
       cursor: { adapter: "cursor", baseUrl: "https://api2.cursor.sh", apiKey: "cursor-token" },
     },
-  } as OcxConfig);
+  } as OccxConfig);
 
   const server = startServer(0);
   try {
@@ -461,7 +461,7 @@ test("a routed pool account's token overrides the caller bearer on the live rela
       { id: "pool-a", email: "pool@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
     ],
     activeCodexAccountId: "pool-a",
-  } as OcxConfig);
+  } as OccxConfig);
   saveCodexAccountCredential("pool-a", {
     accessToken: fakeChatGptJwt({ chatgpt_account_id: "acct-pool-a", email: "pool@example.test" }),
     refreshToken: "pool-refresh-token",
@@ -527,7 +527,7 @@ test("call-create and its sideband join bind to the same pool account (openai/co
       { id: "pool-a", email: "a@example.test", isMain: false, chatgptAccountId: "acct-pool-a" },
       { id: "pool-b", email: "b@example.test", isMain: false, chatgptAccountId: "acct-pool-b" },
     ],
-  } as OcxConfig);
+  } as OccxConfig);
   for (const [id, acct] of [["pool-a", "acct-pool-a"], ["pool-b", "acct-pool-b"]] as const) {
     saveCodexAccountCredential(id, {
       accessToken: fakeChatGptJwt({ chatgpt_account_id: acct, email: `${id}@example.test` }),
@@ -849,7 +849,7 @@ test("standalone GET /v1/live?model= upgrades and relays bidirectionally", async
 
 test("standalone realtime upgrade keeps the auth and origin guards", async () => {
   saveConfig(forwardConfig());
-  process.env.OPENCODEX_API_AUTH_TOKEN = "required-secret";
+  process.env.OPENCCX_API_AUTH_TOKEN = "required-secret";
 
   const server = startServer(0);
   try {
@@ -1234,13 +1234,13 @@ test("sideband relay preserves multibyte UTF-8 frames byte-identically in both d
   }
 });
 
-// The env-gated frame forensic log (OCX_LIVE_FRAME_LOG) records per-frame metadata and
+// The env-gated frame forensic log (OCCX_LIVE_FRAME_LOG) records per-frame metadata and
 // U+FFFD presence without writing full payloads — the attribution tool for multibyte
 // transcript corruption reports.
 test("sideband frame log preserves delivery without recording damaged or clean text", async () => {
   const frameLogPath = join(TEST_DIR, "frames.jsonl");
-  const previousFrameLog = process.env.OCX_LIVE_FRAME_LOG;
-  process.env.OCX_LIVE_FRAME_LOG = frameLogPath;
+  const previousFrameLog = process.env.OCCX_LIVE_FRAME_LOG;
+  process.env.OCCX_LIVE_FRAME_LOG = frameLogPath;
   const FFFD_TEXT = "가볍게 ��기핼봐요";
   const received: string[] = [];
 
@@ -1331,8 +1331,8 @@ test("sideband frame log preserves delivery without recording damaged or clean t
 
     client.close();
   } finally {
-    if (previousFrameLog === undefined) delete process.env.OCX_LIVE_FRAME_LOG;
-    else process.env.OCX_LIVE_FRAME_LOG = previousFrameLog;
+    if (previousFrameLog === undefined) delete process.env.OCCX_LIVE_FRAME_LOG;
+    else process.env.OCCX_LIVE_FRAME_LOG = previousFrameLog;
     globalThis.WebSocket = RealWebSocket;
     await server.stop(true);
     await upstream.stop(true);
@@ -1341,7 +1341,7 @@ test("sideband frame log preserves delivery without recording damaged or clean t
 
 test("frame diagnostics retain only metadata for text, binary, and bounded views", async () => {
   const { logLiveSidebandFrame } = await import("../../src/server/live");
-  const previousFrameLog = process.env.OCX_LIVE_FRAME_LOG;
+  const previousFrameLog = process.env.OCCX_LIVE_FRAME_LOG;
   const frameLogPath = join(TEST_DIR, "frame-metadata.jsonl");
   const damagedText = "private-voice-�";
   const encoded = new TextEncoder().encode(damagedText);
@@ -1357,7 +1357,7 @@ test("frame diagnostics retain only metadata for text, binary, and bounded views
     { data: new Uint8Array([0xff]), kind: "binary", bytes: 1, fffd: true },
   ];
   try {
-    process.env.OCX_LIVE_FRAME_LOG = frameLogPath;
+    process.env.OCCX_LIVE_FRAME_LOG = frameLogPath;
     for (const frame of frames) logLiveSidebandFrame("u2c", frame.data);
     logLiveSidebandFrame("c2u", { privateText: damagedText });
     const raw = readFileSync(frameLogPath, "utf8");
@@ -1372,14 +1372,14 @@ test("frame diagnostics retain only metadata for text, binary, and bounded views
       expect(Number.isNaN(Date.parse(record.ts))).toBe(false);
     });
     for (const content of [damagedText, "safe", "한글", "�"]) expect(raw).not.toContain(content);
-    delete process.env.OCX_LIVE_FRAME_LOG;
+    delete process.env.OCCX_LIVE_FRAME_LOG;
     logLiveSidebandFrame("c2u", damagedText);
     expect(readFileSync(frameLogPath, "utf8")).toBe(raw);
-    process.env.OCX_LIVE_FRAME_LOG = TEST_DIR;
+    process.env.OCCX_LIVE_FRAME_LOG = TEST_DIR;
     expect(() => logLiveSidebandFrame("c2u", damagedText)).not.toThrow();
   } finally {
-    if (previousFrameLog === undefined) delete process.env.OCX_LIVE_FRAME_LOG;
-    else process.env.OCX_LIVE_FRAME_LOG = previousFrameLog;
+    if (previousFrameLog === undefined) delete process.env.OCCX_LIVE_FRAME_LOG;
+    else process.env.OCCX_LIVE_FRAME_LOG = previousFrameLog;
   }
 });
 
@@ -1433,14 +1433,14 @@ describe("GET /readyz", () => {
       expect(healthzRes.status).toBe(200);
       const healthzBody = (await healthzRes.json()) as { status: string; service: string; pid: number };
       expect(healthzBody.status).toBe("ok");
-      expect(healthzBody.service).toBe("opencodex");
+      expect(healthzBody.service).toBe("openccx");
 
       // Readiness is pending right after bind: 503 + Retry-After, sanitized body.
       const readyzRes = await fetch(new URL("/readyz", base));
       expect(readyzRes.status).toBe(503);
       expect(readyzRes.headers.get("retry-after")).toBe("1");
       const readyzBody = (await readyzRes.json()) as Record<string, unknown>;
-      expect(readyzBody.service).toBe("opencodex");
+      expect(readyzBody.service).toBe("openccx");
       expect(readyzBody.status).toBe("pending");
       expect(typeof readyzBody.version).toBe("string");
       expect(typeof readyzBody.uptime).toBe("number");
@@ -1479,7 +1479,7 @@ describe("GET /readyz", () => {
       const health = await fetch(new URL("/healthz", server.url));
       const healthBody = await health.json() as Record<string, unknown>;
       expect(healthBody.guiPairCapability).toBe("v1");
-      expect(JSON.stringify(healthBody)).not.toContain("ocx_session_");
+      expect(JSON.stringify(healthBody)).not.toContain("occx_session_");
       expect(JSON.stringify(healthBody)).not.toContain("csrf");
     } finally {
       await server.stop(true);
@@ -1499,7 +1499,7 @@ describe("GET /readyz", () => {
       expect(res.headers.get("retry-after")).toBeNull();
       const body = (await res.json()) as { status: string; service: string };
       expect(body.status).toBe("ready");
-      expect(body.service).toBe("opencodex");
+      expect(body.service).toBe("openccx");
     } finally {
       await server.stop(true);
     }
@@ -1572,7 +1572,7 @@ describe("GET /readyz", () => {
       // Pending → 503, but it answered (did NOT demand auth → would be 401).
       expect([200, 503]).toContain(res.status);
       const body = (await res.json()) as { service?: string };
-      expect(body.service).toBe("opencodex");
+      expect(body.service).toBe("openccx");
     } finally {
       await server.stop(true);
     }

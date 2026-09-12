@@ -12,7 +12,7 @@ describe("legacy Codex config keys", () => {
   let configPath: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocx-legacy-config-keys-"));
+    dir = mkdtempSync(join(tmpdir(), "occx-legacy-config-keys-"));
     configPath = join(dir, "config.toml");
   });
   afterEach(() => {

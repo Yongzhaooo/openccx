@@ -29,7 +29,7 @@ import {
 import { isInjectionDebugEnabled } from "../../lib/debug-settings";
 import { injectionDebugLog } from "../../lib/injection-debug-log";
 import { modelInList, namespacedToolName } from "../../types";
-import type { AdapterEvent, CodexAccountMode, OcxConfig, OcxParsedRequest, OcxProviderConfig, OcxProviderContinuationState, OcxUsage } from "../../types";
+import type { AdapterEvent, CodexAccountMode, OccxConfig, OccxParsedRequest, OccxProviderConfig, OccxProviderContinuationState, OccxUsage } from "../../types";
 import {
   forceRefreshOAuthAccessSnapshot,
   getOAuthCredentialApiBaseUrl,
@@ -237,16 +237,16 @@ export function compactResponseTooLargeError(): Response {
 
 async function refreshNativeMainCompactContext(args: {
   req: Request;
-  config: OcxConfig;
+  config: OccxConfig;
   modelId?: string;
   admission?: DataPlaneAdmission;
   authCtx: CodexAuthContext;
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   codexAccountMode?: CodexAccountMode;
   substituteMainCredential: boolean;
   options: HandleResponsesCompactOptions;
 }): Promise<
-  | { ok: true; authCtx: CodexAuthContext; provider: OcxProviderConfig; headers: Headers }
+  | { ok: true; authCtx: CodexAuthContext; provider: OccxProviderConfig; headers: Headers }
   | { ok: false; response: Response }
 > {
   const { req, config, authCtx, provider, codexAccountMode, substituteMainCredential, options } = args;
@@ -312,11 +312,11 @@ function isTerminalCompactPoolRefreshFailure(error: unknown): boolean {
  */
 async function refreshPoolCompactContext(args: {
   req: Request;
-  config: OcxConfig;
+  config: OccxConfig;
   modelId?: string;
   admission?: DataPlaneAdmission;
   authCtx: CodexAuthContext & { kind: "pool" };
-  provider: OcxProviderConfig;
+  provider: OccxProviderConfig;
   codexAccountMode?: CodexAccountMode;
   /**
    * Public selector for the account this refresh is for, when the request carried one. The
@@ -328,7 +328,7 @@ async function refreshPoolCompactContext(args: {
   substituteMainCredential: boolean;
   options: HandleResponsesCompactOptions;
 }): Promise<
-  | { ok: true; authCtx: CodexAuthContext; provider: OcxProviderConfig; headers: Headers }
+  | { ok: true; authCtx: CodexAuthContext; provider: OccxProviderConfig; headers: Headers }
   | { ok: false; response: Response; quarantine: boolean; quarantineGeneration?: number }
 > {
   const { req, config, authCtx, provider, codexAccountMode, substituteMainCredential, options } = args;
@@ -410,13 +410,13 @@ async function refreshPoolCompactContext(args: {
  */
 async function resolveAlternateCompactContext(args: {
   req: Request;
-  config: OcxConfig;
-  route: { provider: OcxProviderConfig; codexAccountMode?: CodexAccountMode };
+  config: OccxConfig;
+  route: { provider: OccxProviderConfig; codexAccountMode?: CodexAccountMode };
   selectedModelId: string | undefined;
   excludeAccountId: string | null;
   turnAdmissionLease?: AdmissionLease;
   admission?: DataPlaneAdmission;
-}): Promise<{ authCtx: CodexAuthContext; provider: OcxProviderConfig; headers: Headers } | null> {
+}): Promise<{ authCtx: CodexAuthContext; provider: OccxProviderConfig; headers: Headers } | null> {
   const { req, config, route, selectedModelId, excludeAccountId, turnAdmissionLease } = args;
   if (!route.codexAccountMode || !excludeAccountId) return null;
   try {
@@ -528,7 +528,7 @@ export async function bufferCompactResponse(
 
 export async function handleResponsesCompact(
   req: Request,
-  config: OcxConfig,
+  config: OccxConfig,
   logCtx: RequestLogContext,
   turnAdmissionLease?: AdmissionLease,
   admission?: DataPlaneAdmission,
@@ -833,7 +833,7 @@ export async function handleResponsesCompact(
     // considered. The alternate is one bounded send: a second ladder would multiply the
     // work an already-rejecting pool is doing.
     const sendCompactAttempt = (
-      sendProvider: OcxProviderConfig,
+      sendProvider: OccxProviderConfig,
       sendHeaders: Headers,
       recovery: "normal" | "single",
       sendAuthCtx: CodexAuthContext,
@@ -1144,7 +1144,7 @@ export async function handleResponsesCompact(
   }
 
   // ROUTED model: run the v2 synthetic-compaction turn internally (appends COMPACT_PROMPT, no
-  // tools) and decode the resulting ocx1 envelope into plain v1 replacement-history items.
+  // tools) and decode the resulting occx1 envelope into plain v1 replacement-history items.
   const inputItems = Array.isArray(raw.input) ? (raw.input as unknown[]) : [];
   const internalBody = {
     ...raw,
@@ -1228,12 +1228,12 @@ export async function handleResponsesCompact(
       `compaction turn produced ${compactionItems.length} compaction items, expected exactly 1`,
     );
   }
-  // Native Responses backends return a real opaque OpenAI-encrypted compaction item. OCX cannot
+  // Native Responses backends return a real opaque OpenAI-encrypted compaction item. OCCX cannot
   // and should not decrypt it; preserve that item for /responses/compact callers. Synthetic
-  // routed summaries are our `ocx1:` envelope and must be decoded into v1 history items.
+  // routed summaries are our `occx1:` envelope and must be decoded into v1 history items.
   if (typeof compactionItems[0]!.encrypted_content === "string"
     && compactionItems[0]!.encrypted_content.trim().length > 0
-    && !compactionItems[0]!.encrypted_content.startsWith("ocx1:")) {
+    && !compactionItems[0]!.encrypted_content.startsWith("occx1:")) {
     const result = new Response(JSON.stringify({ output: compactionItems }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -1242,7 +1242,7 @@ export async function handleResponsesCompact(
   }
   const encrypted = compactionItems[0]!.encrypted_content;
   const decoded = typeof encrypted === "string" ? decodeCompactionSummary(encrypted) : null;
-  // An empty `ocx1:` envelope decodes to "" rather than null, so length is what matters.
+  // An empty `occx1:` envelope decodes to "" rather than null, so length is what matters.
   if (decoded === null || decoded.trim().length === 0) {
     return formatErrorResponse(502, "invalid_response_error", "compaction turn produced an empty summary");
   }

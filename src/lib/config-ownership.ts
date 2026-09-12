@@ -14,8 +14,8 @@ import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { GenerationContext } from "./state-store-sweeper";
 import { renameAtomicFile } from "./windows-atomic-replace";
 
-export const CONFIG_OWNER_FILE = ".opencodex-owner.json";
-export const CONFIG_UNINSTALL_MANIFEST = ".opencodex-uninstall.json";
+export const CONFIG_OWNER_FILE = ".openccx-owner.json";
+export const CONFIG_UNINSTALL_MANIFEST = ".openccx-uninstall.json";
 
 export type ConfigRemovalResult = {
   status: "absent" | "removed" | "partial" | "refused";
@@ -56,14 +56,14 @@ const INITIAL_OWNED_PATHS = [
   "crash.log",
   "kimi-device-id",
   "mimo-client-id",
-  "ocx.pid",
-  "opencodex-service-launcher.vbs",
-  "opencodex-service-task.xml",
-  "opencodex-service.cmd",
-  "opencodex-tray-offline.ico",
-  "opencodex-tray-online.ico",
-  "opencodex-tray-warning.ico",
-  "opencodex-tray.ps1",
+  "occx.pid",
+  "openccx-service-launcher.vbs",
+  "openccx-service-task.xml",
+  "openccx-service.cmd",
+  "openccx-tray-offline.ico",
+  "openccx-tray-online.ico",
+  "openccx-tray-warning.ico",
+  "openccx-tray.ps1",
   "responses-state.json",
   "runtime-port.json",
   "service-api-token",
@@ -336,8 +336,8 @@ export function removeOwnedConfigState(configDir: string): ConfigRemovalResult {
 
   // Per-catalog backups are named `catalog-backup-<16 hex>.json` (catalogBackupPathFor), one per
   // CODEX_HOME, so they cannot be enumerated as literal manifest entries the way every other
-  // owned file can. Without this, `ocx uninstall` always reported "unowned files remain" and
-  // refused to remove a home OpenCodex created itself — the file is unambiguously ours, produced
+  // owned file can. Without this, `occx uninstall` always reported "unowned files remain" and
+  // refused to remove a home Openccx created itself — the file is unambiguously ours, produced
   // by our own writer, and the strict hex shape keeps the match from widening.
   for (const name of readdirSync(configDir)) {
     if (!/^catalog-backup-[0-9a-f]{16}\.json$/.test(name)) continue;

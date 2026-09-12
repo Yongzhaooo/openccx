@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { mkdirSync, readFileSync} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type { OcxConfig } from "../../src/types";
+import type { OccxConfig } from "../../src/types";
 import { LAB_PROJECTION_SPEC_VERSION } from "../../src/lab/constants";
 import { ensureLabDirs, labSqlitePath } from "../../src/lab/paths";
 import { LAB_SQLITE_DDL, LAB_SQLITE_SCHEMA_VERSION } from "../../src/lab/projection/schema";
@@ -41,10 +41,10 @@ const HOMES: string[] = [];
 const COMPAT_VERSION = "9".repeat(64);
 
 function tempHome(): string {
-  const dir = join(tmpdir(), `ocx-lab-final-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
+  const dir = join(tmpdir(), `occx-lab-final-review-${process.pid}-${Math.random().toString(16).slice(2)}`);
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   HOMES.push(dir);
-  process.env.OPENCODEX_HOME = dir;
+  process.env.OPENCCX_HOME = dir;
   readInstallationSalt(dir);
   setCompatibilityVersionOverrideForTests(COMPAT_VERSION);
   return dir;
@@ -68,7 +68,7 @@ function livePolicy() {
   };
 }
 
-function liveConfig(): OcxConfig {
+function liveConfig(): OccxConfig {
   return {
     providers: {
       "fixture-provider": {
@@ -79,7 +79,7 @@ function liveConfig(): OcxConfig {
         defaultModel: "fixture-model",
       },
     },
-  } as OcxConfig;
+  } as OccxConfig;
 }
 
 function passObservation(): NormalizedObservation {
@@ -165,7 +165,7 @@ afterEach(() => {
   stopLabAutomationScheduler();
   resetLabAutomationSchedulerStateForTests();
   resetCompatibilityVersionCacheForTests();
-  delete process.env.OPENCODEX_HOME;
+  delete process.env.OPENCCX_HOME;
   for (const dir of HOMES.splice(0)) removeTreeWithRetry(dir);
 });
 

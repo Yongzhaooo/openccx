@@ -31,10 +31,27 @@
 
 ## In progress
 
-（无。尚无已认领的工作。）
+- **Phase 0 — 硬 fork** — paused on branch `openccx/phase-0-fork`（领先 `origin/main` 2 个提交）。
+  resume: `git log openccx/phase-0-fork`。
+  已落地：`4c3555528` 删除 5,041 个 upstream 文件（devlog / docs-site / readme 多语言 /
+  docker+compose / CREDITS+SPONSORS+MAINTAINERS / deploy-docs.yml）；
+  `8fd9c9856` 改名 1,869 文件 + 24 条路径 + 包身份。
+  已验证：`bun run typecheck` 绿、`bun run src/cli/index.ts --version` 输出 `openccx 2.52.0`、
+  上游 URL 与 MIT 版权行完整保留（`lidge-jun/opencodex` 23 文件、`opencodex.me` 17、
+  `bitkyc08/opencodex` 32，畸形形态为 0）。
+  next: 拆 `.github/workflows/` 里写上游的动作，然后建仓库并推。
 
 ## Waiting
 
+- **`~/.opencodex` 已有真实状态** — 阻塞 push。实测 `~/.opencodex` 存在、`~/.openccx` 不存在，
+  说明本机已在用 upstream。改名会把 `config.json` / `auth.json` / `codex-accounts.json` /
+  `usage.jsonl` / 额度缓存全部孤立。需要决定：迁移旧状态，还是保留旧状态目录名。
+- **测试套件在本容器内无法运行** — 阻塞 Phase 0 的测试验收，但不阻塞 push。不是代码缺陷：
+  Claude Desktop 的 MSIX 容器把 `AppData\Local` 写入重定向到
+  `Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\`，而 `src/codex/user-identity.ts:413` 的
+  realpath 一致性校验会把**真实位置原本不存在**的目录名判为 junction/reparse 而拒绝。
+  已用从未存在过的名字 `ZzqProbe9182` 证明同样被重定向，与本次改名无关。
+  → 改名后的验收目前只到 typecheck + CLI 冒烟；跑测试要用**普通终端**（非本 App 容器）。
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。

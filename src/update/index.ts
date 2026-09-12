@@ -42,7 +42,7 @@ export function historyRestoreIncomplete(configDir = getConfigDir()): boolean {
   }
 }
 
-export const PKG = "@bitkyc08/opencodex";
+export const PKG = "openccx";
 const HERE = dirname(fileURLToPath(import.meta.url)); // .../opencodex/src/update
 
 export type Installer = "bun" | "npm" | "pnpm" | "source";

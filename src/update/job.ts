@@ -796,7 +796,7 @@ const NPM_FIELD_VALIDATORS: Record<string, (value: string) => string | null> = {
   //
   // Two narrowing attempts failed here and the second is the instructive one. Extracting any
   // `name@version` also matched `jane.doe@example.com`. Pinning the NAME to our own package
-  // still left the VERSION free: `@bitkyc08/opencodex@99.99.99-JaneDoe` is a valid-looking
+  // still left the VERSION free: `openccx@99.99.99-JaneDoe` is a valid-looking
   // spec, and a semver prerelease identifier can encode anything — the same lesson the
   // `/healthz` version taught in round 13.
   //
@@ -1459,12 +1459,12 @@ export function restartAfterUpdateForTests(
 
 function restartFailureHint(port: number, installer: Installer): string {
   const reinstall = installer === "pnpm"
-    ? "pnpm add -g --allow-build=bun @bitkyc08/opencodex"
+    ? "pnpm add -g --allow-build=bun openccx"
     : installer === "bun"
-      ? "bun add -g @bitkyc08/opencodex"
+      ? "bun add -g openccx"
       : installer === "source"
         ? "git pull && bun install"
-        : "npm install -g --allow-scripts=bun @bitkyc08/opencodex";
+        : "npm install -g --allow-scripts=bun openccx";
   return `Update installed, but the restarted proxy did not stay healthy on port ${port}. `
     + `Try 'occx start --port ${port}'. `
     + "If the update log shows bun postinstall or EPERM warnings, "

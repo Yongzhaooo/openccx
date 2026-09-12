@@ -64,6 +64,9 @@
   **刻意**的 —— 那正是「被删的树持续被检查」的机制，别去清。
 - **Astra 独立审阅**（2026-09-12）推翻了本会话的三个数字与一个结论，均已修正：
   可达性口径（见 Watching）、`structure:check` 的 CI 地位、Phase 1 的删除粒度与验收条件。
+- **D5 Claude Desktop 与 Claude CLI 都保留**（2026-09-12 用户决定）。两个都是产品面。
+  后果：`src/claude/desktop-*`（12 文件 / 2,096 行）**不删**，其经 `codex/desired-state` 与
+  `codex/catalog` 的耦合保留。Phase 1 只删 Codex 专属面，不动 Claude 侧任何东西。
 
 ## Waiting
 
@@ -82,10 +85,6 @@
 - **service / tray 子系统的去留** — 阻塞 Phase 4。删掉它同时减少代码与平台差异
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。
-- **Claude Desktop 支持是否保留** — 独立范围问题，**不阻塞 Codex 专属面的删减**（Astra 指出）。
-  使用迹象：`~/.openccx/start-claude-desktop.ps1`（当天创建，跑 `occx claude desktop apply --static`）
-  与当天的 `desktop-backup-*`。但「脚本存在」只证明使用迹象，不等于「产品决定支持 Desktop」。
-  若砍掉：释放 `src/claude/desktop-*`（12 文件 / 2,096 行）及其 codex 耦合。需要一次明确决定。
 
 ## Next actions
 

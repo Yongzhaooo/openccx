@@ -931,8 +931,6 @@ export const de: Record<TKey, string> = {
   "modal.loginTimeout": "Login-Zeitüberschreitung — versuche es erneut.",
 "nav.codexAuth": "Codex-Auth",
   "nav.codexSet": "Codex-Einstellungen",
-  "codexSet.tab.multiauth": "Multi-Auth",
-  "codexSet.tab.prompt": "Prompt",
   "codexSet.prompt.title": "Prompt-Ebenen",
   "codexSet.prompt.timing": "Gilt für neu gestartete Sitzungen. Laufende Sitzungen behalten ihre aktuellen Prompt-Einstellungen.",
   "codexSet.prompt.staleRevision": "Die Konfiguration wurde anderswo geändert. Die Liste wurde neu geladen.",

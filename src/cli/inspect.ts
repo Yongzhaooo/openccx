@@ -29,7 +29,6 @@ const USAGE = `Usage:
   occx inspect routing-analytics [--json]
   occx inspect pacing [--name <provider>] [--json]
   occx inspect key-providers [--json]
-  occx inspect codex-prompt [--text] [--json]
   occx inspect client-config --client <id> [--json]
   occx inspect star [--json]
   occx inspect windows-tray [--json]
@@ -168,23 +167,6 @@ async function pacing(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   printData(result, wantsJson, summaryLines(result));
 }
 
-async function codexPrompt(argv: string[], deps: RuntimeApiDeps): Promise<void> {
-  const args = [...argv];
-  const wantsJson = takeFlag(args, "--json");
-  const asText = takeFlag(args, "--text");
-  rejectArgs(args, USAGE);
-  if (asText && wantsJson) throw new CliUsageError("--text and --json cannot be combined", USAGE);
-  if (asText) {
-    // The /text variant answers the prompt body itself, so it is printed verbatim rather than
-    // flattened through the summary renderer.
-    const result = await runtimeRequest<unknown>("/api/codex-prompt/text", {}, deps);
-    console.log(typeof result === "string" ? result : JSON.stringify(result, null, 2));
-    return;
-  }
-  const result = await runtimeRequest("/api/codex-prompt", {}, deps);
-  printData(result, wantsJson, summaryLines(result));
-}
-
 async function star(argv: string[], deps: RuntimeApiDeps): Promise<void> {
   const args = [...argv];
   const wantsJson = takeFlag(args, "--json");
@@ -213,7 +195,6 @@ export async function handleInspectCommand(argv: string[], deps: RuntimeApiDeps 
     else if (sub === "windows-tray") await read("/api/windows-tray", rest, deps);
     else if (sub === "pacing") await pacing(rest, deps);
     else if (sub === "client-config") await clientConfig(rest, deps);
-    else if (sub === "codex-prompt") await codexPrompt(rest, deps);
     else if (sub === "star") await star(rest, deps);
     else throw new CliUsageError(`unknown inspect command ${sub}`, USAGE);
   });

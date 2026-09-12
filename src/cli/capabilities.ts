@@ -526,21 +526,6 @@ export const CAPABILITIES: readonly Capability[] = [
     json: "payload",
   },
   {
-    command: ["inspect", "codex-prompt"],
-    summary: "The Codex system prompt state, or the prompt text itself.",
-    routes: [
-      { method: "GET", path: "/api/codex-prompt" },
-      { method: "GET", path: "/api/codex-prompt/text" },
-    ],
-    flags: [
-      { name: "--text", value: "boolean", summary: "Print the prompt body verbatim instead of its metadata." },
-      { name: "--json", value: "boolean", summary: "Emit the prompt metadata as JSON." },
-    ],
-    mutates: false,
-    json: "payload",
-    details: ["Read-only by design: the six mutating prompt routes require a dashboard session."],
-  },
-  {
     command: ["inspect", "client-config"],
     summary: "The generated configuration snippet for a supported client.",
     routes: [{ method: "GET", path: "/api/client-config" }],

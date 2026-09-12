@@ -969,8 +969,6 @@ export const ko: Record<TKey, string> = {
   "nav.integrations": "연동",
 "nav.codexAuth": "Codex 인증",
   "nav.codexSet": "Codex 설정",
-  "codexSet.tab.multiauth": "다중 인증",
-  "codexSet.tab.prompt": "프롬프트",
   "codexSet.prompt.title": "프롬프트 레이어",
   "codexSet.prompt.timing": "새 세션부터 적용됩니다. 실행 중인 세션은 현재 설정을 유지합니다.",
   "codexSet.prompt.staleRevision": "다른 곳에서 설정이 바뀌어 목록을 다시 불러왔습니다.",

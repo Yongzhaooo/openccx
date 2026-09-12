@@ -1211,8 +1211,6 @@ export const zhTW: Record<TKey, string> = {
   "modal.useOauthLogin": "← 使用 OAuth 登入",
 "nav.codexAuth": "Codex 認證",
   "nav.codexSet": "Codex 設定",
-  "codexSet.tab.multiauth": "多帳號認證",
-  "codexSet.tab.prompt": "提示詞",
   "codexSet.prompt.title": "提示詞層",
   "codexSet.prompt.timing": "對新啟動的工作階段生效。執行中的工作階段會保留目前的提示詞設定。",
   "codexSet.prompt.staleRevision": "設定已在別處變更，清單已重新載入。",

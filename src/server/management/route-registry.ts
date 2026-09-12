@@ -155,15 +155,6 @@ export const MANAGEMENT_ROUTES: readonly ManagementRoute[] = [
   { method: "GET", path: "/api/client-integrations/aside/profiles/{profileId}/journal", module: "server/management/aside-profile-routes", mutates: false, mechanism: "prefix-decode" },
   { method: "DELETE", path: "/api/client-integrations/aside/profiles/{profileId}/journal", module: "server/management/aside-profile-routes", mutates: true, mechanism: "prefix-decode", exempt: { reason: "deferred-verb", why: "Aside profile history deletion uses the dashboard journal cleanup; the CLI has scoped history and restore but no deletion verb yet.", owner: "260904_priority65_closeout WP7", ownerDoc: "devlog/_fin/260904_priority65_closeout/060_wp7_rollback_journal_crud.md" } },
   { method: "POST", path: "/api/client-integrations/aside/profiles/{profileId}/restore", module: "server/management/aside-profile-routes", mutates: true, mechanism: "prefix-decode" },
-  // server/management/codex-prompt-routes
-  { method: "GET", path: "/api/codex-prompt", module: "server/management/codex-prompt-routes", mutates: false },
-  { method: "GET", path: "/api/codex-prompt/text", module: "server/management/codex-prompt-routes", mutates: false },
-  { method: "POST", path: "/api/codex-prompt/adopt", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Prompt adoption requires the gui-session principal (codex-prompt-routes.ts:298)." } },
-  { method: "POST", path: "/api/codex-prompt/repair", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Prompt repair requires the gui-session principal (codex-prompt-routes.ts:298)." } },
-  { method: "PUT", path: "/api/codex-prompt/base", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Base prompt write requires the gui-session principal (codex-prompt-routes.ts:298)." } },
-  { method: "PUT", path: "/api/codex-prompt/base/select", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Base prompt selection requires the gui-session principal (codex-prompt-routes.ts:298)." } },
-  { method: "PUT", path: "/api/codex-prompt/custom", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Custom prompt write requires the gui-session principal (codex-prompt-routes.ts:298)." } },
-  { method: "PUT", path: "/api/codex-prompt/toggle", module: "server/management/codex-prompt-routes", mutates: true, exempt: { reason: "session-only", why: "Prompt toggle requires the gui-session principal (codex-prompt-routes.ts:298)." } },
   // server/management/combo-routes
   { method: "DELETE", path: "/api/combos", module: "server/management/combo-routes", mutates: true },
   { method: "GET", path: "/api/combos", module: "server/management/combo-routes", mutates: false },

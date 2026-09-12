@@ -1466,8 +1466,6 @@ export const en = {
   "modal.useOauthLogin": "← Use OAuth login",
 "nav.codexAuth": "Codex Auth",
   "nav.codexSet": "Codex Set",
-  "codexSet.tab.multiauth": "Multi-auth",
-  "codexSet.tab.prompt": "Prompt",
   "codexSet.prompt.title": "Prompt layers",
   "codexSet.prompt.timing": "Applies to newly started sessions. Running sessions keep their current prompt settings.",
   "codexSet.prompt.staleRevision": "The configuration changed elsewhere. The list was reloaded.",

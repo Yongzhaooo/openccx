@@ -950,8 +950,6 @@ export const zh: Record<TKey, string> = {
   "nav.integrations": "集成",
 "nav.codexAuth": "Codex 认证",
   "nav.codexSet": "Codex 设置",
-  "codexSet.tab.multiauth": "多账号认证",
-  "codexSet.tab.prompt": "提示词",
   "codexSet.prompt.title": "提示词层",
   "codexSet.prompt.timing": "对新启动的会话生效。正在运行的会话保持当前的提示词设置。",
   "codexSet.prompt.staleRevision": "配置已在别处更改，列表已重新加载。",

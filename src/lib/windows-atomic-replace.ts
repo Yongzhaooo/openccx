@@ -28,7 +28,6 @@ import { renameSync } from "node:fs";
  */
 export type ReplacePublisher =
   | "config"
-  | "prompt-journal"
   | "config-ownership"
   | "claude-agents"
   | "lab-automation"

@@ -1453,8 +1453,6 @@ export const tr: Record<TKey, string> = {
   "modal.useOauthLogin": "← OAuth girişini kullan",
 "nav.codexAuth": "Codex Kimlik Doğrulama",
   "nav.codexSet": "Codex Ayarları",
-  "codexSet.tab.multiauth": "Çoklu kimlik doğrulama",
-  "codexSet.tab.prompt": "İstem",
   "codexSet.prompt.title": "İstem katmanları",
   "codexSet.prompt.timing": "Yeni başlatılan oturumlara uygulanır. Çalışan oturumlar mevcut istem ayarlarını korur.",
   "codexSet.prompt.staleRevision": "Yapılandırma başka bir yerde değişti. Liste yeniden yüklendi.",

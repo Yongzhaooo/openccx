@@ -1364,8 +1364,6 @@ export const ja: Record<TKey, string> = {
   "modal.useOauthLogin": "← OAuth ログインを使用",
 "nav.codexAuth": "Codex 認証",
   "nav.codexSet": "Codex 設定",
-  "codexSet.tab.multiauth": "マルチ認証",
-  "codexSet.tab.prompt": "プロンプト",
   "codexSet.prompt.title": "プロンプトレイヤー",
   "codexSet.prompt.timing": "新しく開始したセッションから適用されます。実行中のセッションは現在の設定を保持します。",
   "codexSet.prompt.staleRevision": "他の場所で設定が変更されたため、一覧を再読み込みしました。",

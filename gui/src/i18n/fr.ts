@@ -1439,8 +1439,6 @@ export const fr: Record<TKey, string> = {
   "modal.useOauthLogin": "← Utiliser la connexion OAuth",
 "nav.codexAuth": "Authentification Codex",
   "nav.codexSet": "Réglages Codex",
-  "codexSet.tab.multiauth": "Multi-authentification",
-  "codexSet.tab.prompt": "Invite",
   "codexSet.prompt.title": "Couches d'invite",
   "codexSet.prompt.timing": "S'applique aux sessions nouvellement démarrées. Les sessions en cours conservent leurs réglages d'invite actuels.",
   "codexSet.prompt.staleRevision": "La configuration a changé ailleurs. La liste a été rechargée.",

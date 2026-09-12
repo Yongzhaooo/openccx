@@ -1434,8 +1434,6 @@ export const ru: Record<TKey, string> = {
   "modal.useOauthLogin": "← Войти через OAuth",
 "nav.codexAuth": "Аутентификация Codex",
   "nav.codexSet": "Настройки Codex",
-  "codexSet.tab.multiauth": "Мультиаутентификация",
-  "codexSet.tab.prompt": "Промпт",
   "codexSet.prompt.title": "Слои промпта",
   "codexSet.prompt.timing": "Применяется к новым сессиям. Запущенные сессии сохраняют текущие настройки промпта.",
   "codexSet.prompt.staleRevision": "Конфигурация изменилась в другом месте. Список перезагружен.",

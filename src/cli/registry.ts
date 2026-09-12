@@ -303,7 +303,7 @@ export const CLI_COMMANDS: CliCommandEntry[] = [
   },
   {
     name: "inspect",
-    usage: "occx inspect <config|catalog|routing-analytics|pacing|key-providers|codex-prompt|client-config|star|windows-tray> ...",
+    usage: "occx inspect <config|catalog|routing-analytics|pacing|key-providers|client-config|star|windows-tray> ...",
     summary: "Read effective config, catalog, analytics, pacing, and the generated client-config snippet.",
     details: [
       "`inspect star` reads the repository star status only. Starring uses your GitHub identity and is available from the dashboard alone.",

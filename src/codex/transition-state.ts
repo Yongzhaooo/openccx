@@ -283,7 +283,7 @@ export interface CodexCoordinatorAdoptionOptions {
 function fsyncFile(path: string): void {
   // Writable fd on purpose. Windows FlushFileBuffers needs GENERIC_WRITE;
   // openSync(path, "r") is GENERIC_READ only and fails with EPERM (measured on
-  // Windows 11 25H2 / bun 1.3.14). prompt-journal.ts uses the same "r+" open.
+  // Windows 11 25H2 / bun 1.3.14).
   const fd = openSync(path, "r+");
   try { fsyncSync(fd); } finally { closeSync(fd); }
 }

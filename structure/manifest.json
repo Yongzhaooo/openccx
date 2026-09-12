@@ -7,7 +7,7 @@
   "absentPaths": [
     {
       "path": "go/",
-      "reason": "the Go native-runtime experiment is retired; ops/docs-and-release.md documents that no go/ tree is tracked"
+      "reason": "the Go native-runtime experiment is retired; no go/ tree is tracked"
     }
   ],
   "tiers": [
@@ -334,23 +334,6 @@
       "scope": "Service install/repair, platform launchers, tray, and sidecar processes.",
       "documents": [
         "src/server/"
-      ]
-    },
-    {
-      "path": "ops/docs-and-release.md",
-      "tier": 6,
-      "title": "Docs And Release",
-      "scope": "Docs site, workflow map, branch policy, release flow, and cross-platform CI.",
-      "documents": [
-        ".github/",
-        "bin/",
-        "docs-site/",
-        "scripts/",
-        "src/cli.ts",
-        "src/cli/",
-        "src/codex/",
-        "src/lib/",
-        "src/service.ts"
       ]
     },
     {

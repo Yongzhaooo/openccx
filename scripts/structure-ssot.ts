@@ -182,10 +182,9 @@ export function renderIndex(manifest: Manifest): string {
   const lines: string[] = [];
   lines.push("# openccx Structure Index");
   lines.push("");
-  lines.push("This folder is the maintainer source of truth for the current system shape. Public user workflows");
-  lines.push("belong in " + BT + "docs-site/" + BT + ". Development work is recorded in " + BT + "devlog/" + BT + " units — " + BT + "_plan/" + BT + " while open,");
-  lines.push(BT + "_fin/" + BT + " once closed — while " + BT + "docs/" + BT + " keeps investigations and diagnostic notes worth retaining for");
-  lines.push("archaeology, debugging, or source research.");
+  lines.push("This folder is the maintainer source of truth for the current system shape. Superseded or");
+  lines.push("alternative reasoning belongs in " + BT + "decisions/" + BT + ", and " + BT + "docs/" + BT + " keeps investigations and");
+  lines.push("diagnostic notes worth retaining for archaeology, debugging, or source research.");
   lines.push("");
   lines.push(
     "Generated from " + BT + "structure/manifest.json" + BT + " by " + BT + "bun run structure:index" + BT + ". Do not edit by hand; " +

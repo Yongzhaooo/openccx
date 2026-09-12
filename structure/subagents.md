@@ -92,8 +92,6 @@ featured or picker rank. Canonical `opencode-go` rows retain their configured re
 both when generated and when merged from retained catalog state; synthetic max/ultra choices
 are not added to that provider's declared ladder.
 
-Full derivation with per-line citations: `devlog/_plan/260816_codexrs_multiagent_v2_and_history_perf/013_five_cap_v1_vs_v2.md`.
-
 ## Subagents
 
 New non-OAuth provider registrations carry `initialModelSelection` with a unique

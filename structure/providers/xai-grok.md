@@ -2,8 +2,7 @@
 
 ## xAI Grok hardening (official Grok Build contract parity)
 
-Grounded in the open-sourced official client (xai-org/grok-build); unit + evidence:
-`devlog/_fin/260716_grok_build_hardening/`.
+Grounded in the open-sourced official client (xai-org/grok-build).
 
 - **Reasoning folding:** the Responses parser folds `reasoning` items into the FOLLOWING
   assistant turn (`pendingReasoning` in `src/responses/parser.ts`) so the Grok chat wire carries

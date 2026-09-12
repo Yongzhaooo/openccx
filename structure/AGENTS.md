@@ -9,8 +9,6 @@ This file applies to `structure/` and inherits the repository-wide rules in [`AG
 A doc in this folder states **the contract that holds right now**, in the present tense, for one
 subsystem. That is the whole job.
 
-- Public user workflows belong in `docs-site/`.
-- Open work, triage, and investigation belong in `devlog/`.
 - Superseded or alternative reasoning belongs in `decisions/`, not in the doc body.
 - Unreleased security findings belong in scratch space and nowhere in this repository. The rule in
   the root [`AGENTS.md`](../AGENTS.md) binds this folder without exception.

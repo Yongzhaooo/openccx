@@ -39,6 +39,16 @@ PATH, so a launcher-backed job is never misreported as an older plist (#3464).
 
 > Decision record: [ADR-0030](../decisions/ADR-0030-stable-service-launcher-launchd-and-systemd.md)
 
+## Windows service wrapper and incomplete updates
+
+The Windows Task Scheduler wrapper checks the baked Bun and CLI paths before every spawn. When
+either is absent it logs one actionable incomplete-install message and exits with code 3 instead of
+retrying, so a failed npm replacement cannot produce unbounded restart churn. A child that did
+launch and then failed keeps the ordinary retry loop; repairing an incomplete install stays an
+explicit reinstall.
+
+> Decision record: [ADR-0082](../decisions/ADR-0082-windows-service-wrapper-and-incomplete-updates.md)
+
 ## Sidecars
 
 Web search and vision sidecars run only when the main request needs that capability and a usable

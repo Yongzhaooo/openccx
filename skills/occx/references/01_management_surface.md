@@ -257,24 +257,6 @@ Providers that authenticate with an API key rather than OAuth.
 
 JSON mode: `payload`.
 
-### `occx inspect codex-prompt`
-
-The Codex system prompt state, or the prompt text itself.
-
-| Method | Route |
-|---|---|
-| GET | `/api/codex-prompt` |
-| GET | `/api/codex-prompt/text` |
-
-| Flag | Value | Meaning |
-|---|---|---|
-| `--text` | boolean | Print the prompt body verbatim instead of its metadata. |
-| `--json` | boolean | Emit the prompt metadata as JSON. |
-
-JSON mode: `payload`.
-
-- Read-only by design: the six mutating prompt routes require a dashboard session.
-
 ### `occx inspect client-config`
 
 The generated configuration snippet for a supported client.
@@ -769,6 +751,6 @@ JSON mode: `payload`.
 
 ## Counts
 
-- declared capabilities: 41
+- declared capabilities: 40
 - of those, state-changing: 20
 - head-resolved invocations: 2

@@ -75,7 +75,7 @@ Background service, docs, release, and design discipline.
 
 | Doc | Scope |
 | --- | --- |
-| [`ops/service-and-sidecars.md`](ops/service-and-sidecars.md) | Service install/repair, platform launchers, tray, and sidecar processes. |
+| [`ops/service-and-sidecars.md`](ops/service-and-sidecars.md) | Service install/repair, platform launchers, tray, sidecar processes, and the cross-platform CI lanes. |
 | [`design-methodology.md`](design-methodology.md) | Stage ordering for new GUI, CLI, and user-facing surfaces. |
 
 ## Which doc describes which source

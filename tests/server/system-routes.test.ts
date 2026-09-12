@@ -68,9 +68,9 @@ describe("windows replace retry counters", () => {
   });
 
   test("a transient sharing violation is counted under its own code", () => {
-    renameAtomicFile("a", "b", flakyIo(1, "EBUSY"), "prompt-journal");
+    renameAtomicFile("a", "b", flakyIo(1, "EBUSY"), "storage-cleanup");
     expect(readWindowsReplaceRetryCounters()).toEqual({
-      "prompt-journal:EBUSY": { retried: 1, exhausted: 0 },
+      "storage-cleanup:EBUSY": { retried: 1, exhausted: 0 },
     });
   });
 
@@ -112,7 +112,6 @@ describe("windows replace retry counters", () => {
     // grows, it grows deliberately and in review.
     const publishers: ReplacePublisher[] = [
       "config",
-      "prompt-journal",
       "config-ownership",
       "claude-agents",
       "lab-automation",
@@ -127,7 +126,6 @@ describe("windows replace retry counters", () => {
       "config:EBUSY",
       "lab-automation:EBUSY",
       "lab-ledger:EBUSY",
-      "prompt-journal:EBUSY",
       "storage-cleanup:EBUSY",
       "tray:EBUSY",
     ]);

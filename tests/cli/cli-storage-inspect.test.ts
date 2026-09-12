@@ -239,12 +239,13 @@ describe("occx inspect", () => {
     expect(calls).toHaveLength(0);
   });
 
-  test("codex-prompt --text hits the text route and prints it verbatim", async () => {
+  test("codex-prompt is gone, so the command is rejected without a request", async () => {
     const { calls, deps } = harness(() => ({ json: "You are Codex." }));
     const cap = capture();
-    try { await handleInspectCommand(["codex-prompt", "--text"], deps); } finally { cap.restore(); }
-    expect(calls[0]?.path).toBe("/api/codex-prompt/text");
-    expect(cap.out.join("\n")).toBe("You are Codex.");
+    let code: number;
+    try { code = await handleInspectCommand(["codex-prompt", "--text"], deps); } finally { cap.restore(); }
+    expect(code).not.toBe(0);
+    expect(calls).toHaveLength(0);
   });
 });
 

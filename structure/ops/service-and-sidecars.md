@@ -152,3 +152,18 @@ see [Combo editor routing quota](../gui-and-management-api.md#combo-editor-routi
 
 Claude replay carries [Go conversation affinity](../data-planes/inbound-compat.md#claude-affinity-at-final-go-dispatch)
 privately to final dispatch; preliminary route selection does not inject Go-only headers.
+
+## Cross-platform CI lanes
+
+Windows runs only when a maintainer dispatches the CI workflow by hand. It is not on the push
+or pull-request lanes and it is not part of the shipping boundary: Linux, macOS and the gates
+decide whether a change ships, so a green aggregate run says nothing about Windows.
+
+The leg stays in the workflow, sharded, because the sharded promotion run that first put it on
+a shipping lane surfaced roughly 207 Windows-only test failures that had been invisible while
+the leg was skipped. Those are real defects, they predate every released version, and gating
+on them would block shipping fixes to the platforms that pass. Burn the list down against the
+dispatchable leg rather than rediscovering it.
+
+The Windows runner selection (self-hosted versus `windows-latest`) is a stability choice, not
+the security boundary.

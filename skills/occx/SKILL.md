@@ -87,9 +87,6 @@ an agent cannot answer that question for its user — it spends *their* GitHub i
 flag can delegate. Do not route around it with `gh`, a direct HTTP call, or a minted session. If
 starring would be useful, say so and let the user decide.
 
-The same boundary covers the session-gated `/api/codex-prompt` writes: read them with
-`occx inspect codex-prompt`, and leave the writes to the dashboard.
-
 ## Secret-bearing commands
 
 **Do not create an access key or start an access-key rotation from an agent session.**

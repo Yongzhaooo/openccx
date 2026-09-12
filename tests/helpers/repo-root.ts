@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const PACKAGE_NAME = "@bitkyc08/opencodex";
+const PACKAGE_NAME = "openccx";
 let cached: string | null = null;
 
 /**

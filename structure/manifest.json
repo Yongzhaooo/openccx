@@ -331,7 +331,7 @@
       "path": "ops/service-and-sidecars.md",
       "tier": 6,
       "title": "Background Service And Sidecars",
-      "scope": "Service install/repair, platform launchers, tray, and sidecar processes.",
+      "scope": "Service install/repair, platform launchers, tray, sidecar processes, and the cross-platform CI lanes.",
       "documents": [
         "src/server/"
       ]

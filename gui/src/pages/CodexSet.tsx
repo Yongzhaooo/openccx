@@ -12,7 +12,7 @@ import CodexSetMultiauth from "./codex-set-multiauth";
  */
 export default function CodexSet({ apiBase }: { apiBase: string }) {
   return (
-    <div role="tabpanel" id="codex-set-panel-multiauth">
+    <div id="codex-set-panel-multiauth">
       <CodexSetMultiauth apiBase={apiBase} />
     </div>
   );

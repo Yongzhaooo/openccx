@@ -5,7 +5,7 @@
 ## Verification
 
 - List the commands or checks you ran.
-- If this PR changes the GUI, include a screenshot of the UI change in the description.
+- If this PR makes an actual visible UI change, include a screenshot of that change in the description.
 
 ## Checklist
 

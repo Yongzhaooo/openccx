@@ -209,8 +209,8 @@ export function renderIndex(manifest: Manifest): string {
   lines.push("## Which doc describes which source");
   lines.push("");
   lines.push("A source area can be described by more than one doc, because these docs are organised by topic and");
-  lines.push(BT + "src/" + BT + " is organised by module. Changing an area obliges the same change to update every doc listed");
-  lines.push("for it; see [" + BT + "AGENTS.md" + BT + "](AGENTS.md).");
+  lines.push(BT + "src/" + BT + " is organised by module. When an area changes, check every associated doc and update");
+  lines.push("only those whose facts, interfaces, or constraints become inaccurate; see [" + BT + "AGENTS.md" + BT + "](AGENTS.md).");
   lines.push("");
   lines.push("| Source path | Described by |");
   lines.push("| --- | --- |");

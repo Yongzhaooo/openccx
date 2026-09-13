@@ -9,6 +9,11 @@ one local proxy that lets Codex CLI/App/SDK and Claude Code use many LLM
 providers (Claude, Gemini, Grok, DeepSeek, Ollama, and more). The runtime is
 Bun-native TypeScript with no separate server compile step.
 
+## Project status
+
+**Paused.** Perform maintenance and synchronization only when requested. Resume
+product development only on explicit user direction.
+
 ## Repository layout
 
 - `src/` — proxy runtime: routing, provider adapters, config, management API.
@@ -34,8 +39,9 @@ Bun-native TypeScript with no separate server compile step.
   changing shared subsystems. [`structure/INDEX.md`](./structure/INDEX.md) is the
   reading order and the source-ownership table, and
   [`structure/AGENTS.md`](./structure/AGENTS.md) holds the rules for changing
-  anything in there. Ownership is not advisory: changing an owned source area
-  obliges the same change to update its doc, and `bun run structure:check`
+  anything in there. When changing an owned source area, check its associated
+  docs and update any facts, interfaces, or constraints that become inaccurate.
+  `bun run structure:check`
   (wired into the suite by `tests/ci-workflows/structure-ssot.test.ts`) fails on a
   doc that names a path this tree no longer has, on an invariant whose test is
   gone, and on a new `src/` area nobody claimed.
@@ -280,8 +286,12 @@ than nudged.
 - **Opening a pull request:** fill every section of
   `.github/PULL_REQUEST_TEMPLATE.md` (Summary, Verification, Checklist).
   `enforce-target` rejects empty, thin, or malformed descriptions, and a PR
-  whose title or description mentions `gui` must include a screenshot of the
-  UI change in the description. When the PR resolves an issue, add
+  with an actual visible UI change must include a screenshot of that change in
+  the description. A `gui` mention in the title or description alone does not
+  trigger the gate. CI checks shipped GUI source and asset paths; build-only,
+  documentation-only, and test-only changes do not require a screenshot. For a
+  non-visual source change, use the existing maintainer screenshot waiver.
+  When the PR resolves an issue, add
   `Closes #<number>` to link it. GitHub auto-closes the linked issue only
   when the PR merges into the default branch (`main`); PRs here target
   `dev`, so close the issue manually once the change is on `dev`.
@@ -319,8 +329,9 @@ commits in the description.
 
 The **`enforce-target`** CI check rejects pull requests whose head
 ancestry sits on the **`main`** tip while far behind **`dev`**, and rejects
-empty, thin, or malformed descriptions; PRs whose title or description
-mentions `gui` must include a screenshot of the UI change in the description.
+empty, thin, or malformed descriptions. A PR with an actual visible UI change
+must include a screenshot of that change in the description; a `gui` mention
+alone does not trigger the gate.
 Contributor PRs (authors without repository push permission) open in draft and
 stay there until a four-box review-readiness checklist in the description is
 complete: local CI green, branch on the latest `dev` commit, all correct Codex
@@ -362,7 +373,9 @@ reviewers (Codex, CodeRabbit).
   concrete failure mode, and suggest a fix. Avoid vague or purely stylistic
   commentary.
 - **Branch targeting:** flag any pull request that does not target `dev`
-  (releases and maintainer promotions are the only exceptions).
+  except for releases, maintainer promotions, and stacked children targeting
+  the head branch of another open parent PR. Retarget a stacked child to `dev`
+  after the parent lands or closes.
 - **Security boundary (highest priority):** changes touching authentication,
   credential/token handling, OAuth flows, GitHub Actions workflows, release
   automation (`scripts/release.ts`, `.github/workflows/release.yml`), or

@@ -50,7 +50,7 @@ const REVIEW_READINESS_CLAIM_INDEX = {
 const PR_TEMPLATE_BOILERPLATE_LINES = new Set([
   "explain the user-visible or maintainer-facing change.",
   "list the commands or checks you ran.",
-  "if this pr changes the gui, include a screenshot of the ui change in the description.",
+  "if this pr makes an actual visible ui change, include a screenshot of that change in the description.",
   "scope stays focused and avoids unrelated cleanup.",
   "docs or release notes were updated when needed.",
   "security-sensitive changes were reviewed for secrets, auth, and unsafe defaults.",
@@ -170,12 +170,17 @@ function assessPrDescription(body) {
 }
 
 /**
- * True when any changed path is the gui directory or inside it (slash-guarded).
- * Mirrors `guiPathsChanged` in `scripts/doctor-gui-if-changed.ts`.
+ * Identify screenshot candidates in shipped GUI sources and assets. Build
+ * configuration, documentation, and tests alone do not change the visible UI.
+ * A maintainer can waive a remaining non-visual source change.
  */
 function guiPathsChanged(files) {
   return files.some(
-    (file) => file === "gui" || file.startsWith("gui/")
+    (file) =>
+      (file === "gui/index.html" || file.startsWith("gui/src/") || file.startsWith("gui/public/")) &&
+      !/\.(?:md|mdx|d\.ts)$/i.test(file) &&
+      !/\.(?:test|spec)\.[^/]+$/i.test(file) &&
+      !/(?:^|\/)(?:__tests__|__fixtures__|__snapshots__)(?:\/|$)/.test(file)
   );
 }
 
@@ -519,10 +524,10 @@ function collectPrQualityFailures({
     failures.push({ code: "bad_description", reason: desc.reason });
   }
 
-  // PRs that change gui/ must prove the UI change visually. Text cues in the
+  // PRs that change shipped GUI sources/assets need visual evidence. Text cues in the
   // title or description are not enough — "no gui changes" in the body must
   // not arm the gate when the diff is backend-only. A maintainer comment saying
-  // the change does not touch the GUI still waives a gui/ diff false positive.
+  // the change does not touch the GUI still waives a non-visual diff false positive.
   if (
     (guiPathsChanged(changedFilePaths) || filesTruncated) &&
     !hasScreenshotEvidence(body) &&

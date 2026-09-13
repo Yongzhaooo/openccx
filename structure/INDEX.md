@@ -81,8 +81,8 @@ Background service, docs, release, and design discipline.
 ## Which doc describes which source
 
 A source area can be described by more than one doc, because these docs are organised by topic and
-`src/` is organised by module. Changing an area obliges the same change to update every doc listed
-for it; see [`AGENTS.md`](AGENTS.md).
+`src/` is organised by module. When an area changes, check every associated doc and update
+only those whose facts, interfaces, or constraints become inaccurate; see [`AGENTS.md`](AGENTS.md).
 
 | Source path | Described by |
 | --- | --- |

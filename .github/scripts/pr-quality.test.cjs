@@ -98,7 +98,7 @@ describe("assessPrDescription", () => {
       "## Verification",
       "",
       "- List the commands or checks you ran.",
-      "- If this PR changes the GUI, include a screenshot of the UI change in the description.",
+      "- If this PR makes an actual visible UI change, include a screenshot of that change in the description.",
       "",
       "## Checklist",
       "",
@@ -168,8 +168,13 @@ describe("hasGuiCue", () => {
 describe("guiPathsChanged", () => {
   it("matches gui/ paths with a slash guard", () => {
     assert.equal(guiPathsChanged(["gui/src/App.tsx"]), true);
-    assert.equal(guiPathsChanged(["gui"]), true);
-    assert.equal(guiPathsChanged(["scripts/foo.ts", "gui/package.json"]), true);
+    assert.equal(guiPathsChanged(["gui/index.html"]), true);
+    assert.equal(guiPathsChanged(["gui/src/styles.css"]), true);
+    assert.equal(guiPathsChanged(["gui/public/provider-icons/icon.svg"]), true);
+    assert.equal(guiPathsChanged(["scripts/foo.ts", "gui/package.json"]), false);
+    assert.equal(guiPathsChanged(["gui/vite.config.ts", "gui/bun.lock", "gui/tsconfig.json"]), false);
+    assert.equal(guiPathsChanged(["gui/README.md", "gui/src/vite-env.d.ts", "gui/src/App.test.tsx"]), false);
+    assert.equal(guiPathsChanged(["gui/src/__tests__/fixture.tsx", "gui/public/provider-icons/README.md"]), false);
     assert.equal(guiPathsChanged(["scripts/foo.ts"]), false);
     assert.equal(guiPathsChanged(["guitools/x.ts"]), false);
     assert.equal(guiPathsChanged([]), false);
@@ -862,6 +867,18 @@ describe("collectPrQualityFailures", () => {
     assert.ok(!failures.some((f) => f.code === "missing_ui_screenshot"));
   });
 
+  it("does not require a screenshot for GUI build configuration alone", () => {
+    const failures = collectPrQualityFailures({
+      baseRef: "dev",
+      allowedBases: allowed,
+      title: "Update GUI build dependencies",
+      body: richBody,
+      authorPermission: "read",
+      changedFilePaths: ["gui/package.json", "gui/bun.lock", "gui/vite.config.ts"],
+    });
+    assert.ok(!failures.some((f) => f.code === "missing_ui_screenshot"));
+  });
+
   it("flags truncated file lists even when gui/ is not in the partial list", () => {
     const truncatedPaths = Array.from({ length: 3000 }, (_, index) => `scripts/file-${index}.ts`);
     const failures = collectPrQualityFailures({
@@ -1062,7 +1079,7 @@ describe("collectPrQualityFailures", () => {
         "",
         "## Verification",
         "- List the commands or checks you ran.",
-        "- If this PR changes the GUI, include a screenshot of the UI change in the description.",
+        "- If this PR makes an actual visible UI change, include a screenshot of that change in the description.",
         "",
         "## Checklist",
         "- [ ] Scope stays focused and avoids unrelated cleanup.",

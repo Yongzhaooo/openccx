@@ -44,8 +44,9 @@ the inverse.
   the Responses transport doc and the Images doc. An earlier revision of this folder demanded exactly
   one owner per area, and that rule was simply false here — a false rule is worse than none, because
   the gate reports green while the map sends a maintainer to the wrong doc.
-- **Changing an area obliges the same change to update every doc listed for it.** Not a follow-up,
-  not a later cleanup pass.
+- **When changing an area, check every associated doc and update only those whose facts,
+  interfaces, or constraints become inaccurate.** Do not defer a needed correction to a later
+  cleanup pass.
 - Describing an area means naming a path inside it. If a doc explains a subsystem without ever citing
   a path, the map cannot see it, and the area lands in `grace.undocumentedSourceAreas` instead — which
   is a signal to add the path reference, not a place to park work.

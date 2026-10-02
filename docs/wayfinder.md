@@ -1,10 +1,14 @@
 # Wayfinder
 
-**Project outcome:** 一个跨平台（macOS / Windows / Linux）的本地代理，**只**服务 Claude Code：
-把 Anthropic Messages 请求转成国产模型（先行 DeepSeek 官方 API 与 opencode go），显示额度，
-并以独立命名的 MIT fork 分发。简洁和稳定优先于功能覆盖。
+**Project outcome:** 保留 openccx 代码和历史试验作为学习参考。
 
-## 已定决策（2026-09-12）
+2026-09-24 用户决定：放弃独立产品开发，仅作学习实验。当前没有进行中的工作、
+选定的下一步或发布维护承诺；不再推进原裁剪路线。以后只按明确提出的学习问题开展有限实验。
+
+以下保留历史技术证据与旧计划。旧的阶段、待办和阻塞项均已退出当前计划，
+不构成继续开发、同步或发布的指令；其中版本、路径及验收结果只代表记录当时的状态。
+
+## 历史决策（2026-09-12）
 
 - **D1 原地瘦身** — 保留 `src/claude/` 的 Anthropic↔Responses 翻译层、路由、认证；删其余
   provider / adapter / 客户端面。不重写骨架。
@@ -15,7 +19,7 @@
 - **D4 CLI + GUI 保留** — 额度显示走 `occx provider quota` 与 `gui/` 的 Usage 页 +
   Provider workspace 的 QuotaBars。
 
-## 不要动（已核实）
+## 历史技术边界
 
 - **Responses 数据面必须留。** Claude Code 的 `/v1/messages` 是翻译成 Responses 再走
   `handleResponses` 的（`src/server/claude-messages.ts`）。删 Codex **客户端** ≠ 删 Responses
@@ -29,11 +33,11 @@
   （`src/claude/alias.ts:6`）、`occx-route` / `occx-effort` 指令头、`OPENCCX_HOME` 与
   `~/.opencodex` 状态目录。改这些前先确认 `~/.opencodex` 是否已有真实状态会被孤立。
 
-## In progress
+## 历史进度
 
 （无。Phase 0 已完成并推送；Phase 1 尚未认领。）
 
-## Done (rolling)
+## 历史交付与验证
 
 - **Phase 0 — 硬 fork 完成并推送**（2026-09-12）。新仓库 **https://github.com/Yongzhaooo/openccx**
   （PUBLIC，默认分支 `main`，3,367 文件）；远端 `main` = `a1ead2d66`，已与本地 HEAD 核对一致。
@@ -91,7 +95,7 @@
   于是 `repoRoot()` 找不到本包，**所有用它的测试全挂**。我在早先的 `@bitkyc08` 扫描里见过
   这个字符串却没修。已改为 `openccx`。
 
-## Waiting
+## 历史阻塞（已退出当前计划）
 
 - **根测试套件其实跑得起来**（2026-09-13 发现）—— 加 `OCCX_TEST_NO_QUEUE=1` 即可。
   `scripts/test-run-lock.ts:189` 在该变量为 `1` 时直接跳过锁路径解析，于是绕开
@@ -102,7 +106,7 @@
   （`src/tray/windows.ts`、`openccx-service-*.vbs/cmd/task.xml`、macOS `launchctl setenv`），
   但会让 GUI 失去开机自启。需要一次决策。
 
-## Next actions
+## 历史裁剪计划（已放弃）
 
 按顺序，每步有验收点。
 
@@ -159,7 +163,7 @@
    quota / usage / claude / restore 所需，其余删除。*验收：* `occx --help` 的顶层命令面收敛。
 4. **Phase 4 — 跨平台收缩**（依赖 Waiting 中的 service/tray 决策）。
 
-## Watching
+## 历史观察
 
 - **依赖可达性的正确口径**（本会话在这条轴上错了三次 —— 动手前先读这条）。
   工具 `%TEMP%\reach.mjs`（约 60 行）。两种模式回答两个**不同**问题：静态边 = 「加载时是否拉起」；

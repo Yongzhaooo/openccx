@@ -11,8 +11,10 @@ Bun-native TypeScript with no separate server compile step.
 
 ## Project status
 
-**Paused.** Perform maintenance and synchronization only when requested. Resume
-product development only on explicit user direction.
+**Learning archive (user decision, 2026-09-24).** Independent product development
+has been abandoned. Keep the code and historical experiments for optional study;
+there is no active roadmap or maintenance commitment. Run experiments, maintenance,
+or synchronization only when explicitly requested.
 
 ## Repository layout
 

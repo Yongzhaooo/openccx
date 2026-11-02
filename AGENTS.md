@@ -15,7 +15,7 @@ Bun-native TypeScript with no separate server compile step.
 product development only on explicit user direction.
 
 This copy has only a `main` branch: pull requests target `main`,
-`bun run test:changed` compares against `main`, and the `enforce-target`
+`bun run test:changed` compares against `main`, and the `enforce-pr-target`
 workflow is disabled on GitHub. This copy also removed `devlog/`,
 `docs-site/`, `go/`, `MAINTAINERS.md`, and `CREDITS.md`; rules below that
 refer to them, or to `dev` and `preview`, do not apply here. Release and
@@ -175,7 +175,7 @@ it binds you regardless of which mechanism is within reach.
 ```bash
 bun install
 bun run typecheck      # bun x tsc --noEmit (strict)
-bun run test:changed   # import-graph tests against the resolved `dev` merge base
+bun run test:changed   # import-graph tests against the resolved `main` merge base
 bun run test           # full tests/ suite (PR-ready / explicit ask only)
 bun run lint:gui       # GUI eslint
 bun run privacy:scan   # credential/privacy scan used by CI

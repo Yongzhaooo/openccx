@@ -409,15 +409,15 @@ describe("bun test argv", () => {
   });
 
   test("changed-mode stays explicitly filtered without redundant arguments", () => {
-    expect(resolveBunTestArgs(["--changed=dev"]))
-      .toEqual(["--isolate", "--parallel=4", "--changed=dev"]);
+    expect(resolveBunTestArgs(["--changed=main"]))
+      .toEqual(["--isolate", "--parallel=4", "--changed=main"]);
     const mergeBase = "0123456789abcdef0123456789abcdef01234567";
-    expect(resolveBunTestArgs(["--changed=dev"], mergeBase))
+    expect(resolveBunTestArgs(["--changed=main"], mergeBase))
       .toEqual(["--isolate", "--parallel=4", "--changed=" + mergeBase]);
-    expect(resolveBunTestPlan(["--changed=dev"])).toHaveLength(1);
+    expect(resolveBunTestPlan(["--changed=main"])).toHaveLength(1);
   });
 
-  test("changed-mode prefers the first existing conventional dev ref", () => {
+  test("changed-mode prefers the first existing main ref", () => {
     const selectFrom = (...existing: string[]) => {
       const probed: string[] = [];
       const selected = selectChangedComparisonRef(ref => {
@@ -427,21 +427,17 @@ describe("bun test argv", () => {
       return { selected, probed };
     };
 
-    expect(selectFrom("upstream/dev", "origin/dev", "dev")).toEqual({
-      selected: "upstream/dev",
-      probed: ["upstream/dev"],
+    expect(selectFrom("origin/main", "main")).toEqual({
+      selected: "origin/main",
+      probed: ["origin/main"],
     });
-    expect(selectFrom("origin/dev", "dev")).toEqual({
-      selected: "origin/dev",
-      probed: ["upstream/dev", "origin/dev"],
-    });
-    expect(selectFrom("dev")).toEqual({
-      selected: "dev",
-      probed: ["upstream/dev", "origin/dev", "dev"],
+    expect(selectFrom("main")).toEqual({
+      selected: "main",
+      probed: ["origin/main", "main"],
     });
     expect(selectFrom()).toEqual({
       selected: null,
-      probed: ["upstream/dev", "origin/dev", "dev"],
+      probed: ["origin/main", "main"],
     });
   });
 

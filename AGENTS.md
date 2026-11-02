@@ -14,6 +14,13 @@ Bun-native TypeScript with no separate server compile step.
 **Paused.** Perform maintenance and synchronization only when requested. Resume
 product development only on explicit user direction.
 
+This copy has only a `main` branch: pull requests target `main`,
+`bun run test:changed` compares against `main`, and the `enforce-target`
+workflow is disabled on GitHub. This copy also removed `devlog/`,
+`docs-site/`, `go/`, `MAINTAINERS.md`, and `CREDITS.md`; rules below that
+refer to them, or to `dev` and `preview`, do not apply here. Release and
+security-review decisions belong to the repository owner.
+
 ## Repository layout
 
 - `src/` — proxy runtime: routing, provider adapters, config, management API.
@@ -96,34 +103,6 @@ usable, because the window legitimately contains three awaits inside the
 this paragraph was the only thing holding the guarantee.
 
 Design and audit history: `devlog/_fin/260814_lab_core_decoupling/`.
-
-## The `devlog` directory
-
-Planning notes, triage matrices, and investigation artifacts live in `devlog/`,
-tracked like any other documentation. There is no submodule and no private
-mirror. It was a private submodule until the pointer churn outgrew its value:
-1723 commits touched the gitlink, and `dev`, `preview`, and `main` each carried a
-different pointer, so every branch move and promotion dragged a diff.
-
-- `devlog/_plan/` — units still open, one directory per unit, decade-numbered
-  docs.
-- `devlog/_fin/` — closed units, moved here once a terminal outcome is recorded.
-  A `_fin` unit is a record of work already visible in public git history.
-- `devlog/_chase/` — external reference material for parity comparisons.
-  Reference *clones* are gitignored: they are third-party source carrying their
-  own licenses and have no business in this repository's history.
-
-Nothing in the build, typecheck, or test path reads from `devlog/`, so a
-contributor who ignores it entirely still passes every gate. `privacy:scan` does
-read it — that is deliberate, and it is what makes a public devlog safe rather
-than merely visible.
-
-Two mechanical guards in `tests/ci-workflows/repo-hygiene.test.ts` back this up: no `160000`
-gitlink may be tracked anywhere, and neither the vendored reference clones nor
-the security triage excised before publication may reappear in the index. Both
-were driven red once to prove they are not vacuous. The gitlink assertion exists
-because a gitlink in a tree CI does not initialize breaks `actions/checkout` for
-every contributor, which happened twice.
 
 ## Security working notes
 

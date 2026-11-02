@@ -156,9 +156,10 @@ export interface ChangedRunPreflight {
   changedFiles: string[];
 }
 
-const changedComparisonRefs = ["upstream/dev", "origin/dev", "dev"] as const;
+// This fork has no dev branch, and upstream/main is a different project's history.
+const changedComparisonRefs = ["origin/main", "main"] as const;
 
-/** Choose the highest-priority conventional dev ref without assuming which remote is canonical. */
+/** Choose the first existing main ref, preferring the fork's own remote over a stale local branch. */
 export function selectChangedComparisonRef(refExists: (ref: string) => boolean): string | null {
   return changedComparisonRefs.find(refExists) ?? null;
 }
@@ -226,12 +227,12 @@ export function inspectChangedRun(
     );
   }
 
-  const comparisonRef = requestedComparisonRef === "dev"
+  const comparisonRef = requestedComparisonRef === "main"
     ? selectChangedComparisonRef(ref => gitRefExists(ref, cwd, env))
     : requestedComparisonRef;
   if (!comparisonRef) {
     throw new Error(
-      `[test] --changed=dev could not resolve a comparison ref; none of ${changedComparisonRefs.join(", ")} exists.`,
+      `[test] --changed=main could not resolve a comparison ref; none of ${changedComparisonRefs.join(", ")} exists.`,
     );
   }
 
